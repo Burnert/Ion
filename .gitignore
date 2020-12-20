@@ -17,19 +17,19 @@
 mono_crash.*
 
 # Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-[Aa][Rr][Mm]/
-[Aa][Rr][Mm]64/
-bld/
-[Bb]in/
-[Oo]bj/
-[Ll]og/
-[Ll]ogs/
+/[Dd]ebug/
+/[Dd]ebugPublic/
+/[Rr]elease/
+/[Rr]eleases/
+/x64/
+/x86/
+/[Aa][Rr][Mm]/
+/[Aa][Rr][Mm]64/
+/bld/
+/[Bb]in/
+/[Oo]bj/
+/[Ll]og/
+/[Ll]ogs/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
@@ -49,8 +49,8 @@ TestResult.xml
 nunit-*.xml
 
 # Build Results of an ATL Project
-[Dd]ebugPS/
-[Rr]eleasePS/
+/[Dd]ebugPS/
+/[Rr]eleasePS/
 dlldata.c
 
 # Benchmark Results
@@ -157,7 +157,7 @@ AutoTest.Net/
 .sass-cache/
 
 # Installshield output folder
-[Ee]xpress/
+/[Ee]xpress/
 
 # DocProject is a documentation generator add-in
 DocProject/buildhelp/
@@ -223,7 +223,7 @@ _pkginfo.txt
 !?*.[Cc]ache/
 
 # Others
-ClientBin/
+/ClientBin/
 ~$*
 *~
 *.dbmdl
@@ -242,7 +242,7 @@ orleans.codegen.cs
 #bower_components/
 
 # RIA/Silverlight projects
-Generated_Code/
+/Generated_Code/
 
 # Backup & report files from converting an old project file
 # to a newer Visual Studio version. Backup files are not needed,
@@ -326,10 +326,10 @@ __pycache__/
 *.xsd.cs
 
 # OpenCover UI analysis results
-OpenCover/
+/OpenCover/
 
 # Azure Stream Analytics local run output
-ASALocalRun/
+/ASALocalRun/
 
 # MSBuild Binary and Structured Log
 *.binlog
@@ -347,7 +347,7 @@ ASALocalRun/
 healthchecksdb
 
 # Backup folder for Package Reference Convert tool in Visual Studio 2017
-MigrationBackup/
+/MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
@@ -355,3 +355,9 @@ MigrationBackup/
 # Project specific
 Build/
 Intermediate/
+
+# VS project files
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
