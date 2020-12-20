@@ -2,6 +2,7 @@
 
 #include "Core/Core.h"
 
+// Specifies the main class of the application (can be used only once)
 #define USE_APPLICATION_CLASS(name) \
 Ion::Application* Ion::CreateApplication() \
 { \
