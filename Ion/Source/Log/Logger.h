@@ -12,10 +12,7 @@ namespace Ion
 
 		// Client Logger
 
-		FORCEINLINE static std::shared_ptr<spdlog::logger>& GetClientLogger()
-		{
-			return s_ClientLogger;
-		}
+		FORCEINLINE static std::shared_ptr<spdlog::logger>& GetClientLogger() { return s_ClientLogger; }
 
 	private:
 		static std::shared_ptr<spdlog::logger> s_ClientLogger;
@@ -24,10 +21,7 @@ namespace Ion
 		// Engine Logger
 
 	public:
-		FORCEINLINE static std::shared_ptr<spdlog::logger>& GetEngineLogger()
-		{
-			return s_EngineLogger;
-		}
+		FORCEINLINE static std::shared_ptr<spdlog::logger>& GetEngineLogger() { return s_EngineLogger; }
 
 	private:
 		static std::shared_ptr<spdlog::logger> s_EngineLogger;
