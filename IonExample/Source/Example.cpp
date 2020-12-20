@@ -7,7 +7,7 @@ class IonExample : public Ion::Application
 public:
 	void Run() override
 	{
-		printf("Hello World!");
+		ION_LOG_TRACE("From application");
 		getchar();
 	}
 };

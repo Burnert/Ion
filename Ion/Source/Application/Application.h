@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Core/CoreApi.h"
+#include "Core/Core.h"
 
 #define USE_APPLICATION_CLASS(name) \
 Ion::Application* Ion::CreateApplication() \
