@@ -9,3 +9,7 @@
 #else
 	#error "Currently only Windows is supported!";
 #endif
+
+#if defined ION_DEBUG || ION_RELEASE
+	#define ION_LOG_ENABLED
+#endif

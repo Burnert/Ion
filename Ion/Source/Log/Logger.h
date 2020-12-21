@@ -29,7 +29,7 @@ namespace Ion
 	};
 }
 
-#if defined ION_DEBUG || ION_RELEASE
+#ifdef ION_LOG_ENABLED
 
 #ifdef ION_ENGINE
 
