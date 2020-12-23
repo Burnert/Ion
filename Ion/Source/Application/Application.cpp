@@ -6,17 +6,14 @@ namespace Ion {
 
 	Application::Application()
 	{
-		ION_LOG_ENGINE_TRACE("From engine");
+		Ion::KeyPressedEvent key(65, 0);
+		Ion::MouseMovedEvent mouse(500, 200);
 
-		MouseButtonPressedEvent e(1);
-		ION_LOG_ENGINE_INFO(e.Debug_ToString());
+		ION_LOG_ENGINE_INFO(key.Debug_ToString());
+		ION_LOG_ENGINE_INFO(mouse.Debug_ToString());
 	}
 
 	Application::~Application()
-	{
-	}
-
-	void Application::Run()
 	{
 	}
 }

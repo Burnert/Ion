@@ -60,20 +60,21 @@ namespace Ion
 #ifdef ION_LOG_ENABLED
 	#define SET_EVENT_TYPE(type) \
 	static EEventType GetStaticType() { return EEventType::##type; } \
-	virtual EEventType GetType() const override { return GetStaticType(); } \
-	virtual const char* Debug_GetName() const override { return (#type "Event"); }
+	FORCEINLINE virtual EEventType GetType() const override { return GetStaticType(); } \
+	FORCEINLINE virtual const char* Debug_GetName() const override { return (#type"Event"); }
 #else
 	#define SET_EVENT_TYPE(type) \
-	static EEventType GetStaticType() { return EEventType::type; } \
-	virtual EEventType GetType() const override { return GetStaticType(); }
+	static EEventType GetStaticType() { return EEventType::##type; } \
+	FORCEINLINE virtual EEventType GetType() const override { return GetStaticType(); }
 #endif
 
 #define SET_EVENT_CATEGORY(category) \
-	virtual uint GetCategoryFlags() const override { return category; }
+	FORCEINLINE virtual uint GetCategoryFlags() const override { return category; }
 
 #ifdef ION_LOG_ENABLED // Debug / Release
 	#define SET_EVENT_TOSTRING_FORMAT(format) \
-	FORCEINLINE virtual std::string Debug_ToString() const override { \
+	FORCEINLINE virtual std::string Debug_ToString() const override \
+	{ \
 		std::stringstream ss; \
 		ss << Debug_GetName() << ": " << format; \
 		return ss.str(); \

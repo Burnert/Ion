@@ -17,7 +17,7 @@ namespace Ion {
 		Application();
 		virtual ~Application();
 
-		virtual void Run();
+		virtual void Run() = 0;
 	};
 
 	Application* CreateApplication();
