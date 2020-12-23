@@ -356,6 +356,9 @@ healthchecksdb
 Build/
 Intermediate/
 
+# VS Code files
+.vscode/*
+
 # VS project files
 *.sln
 *.vcxproj
