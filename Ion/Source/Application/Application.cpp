@@ -1,19 +1,35 @@
 #include "Application.h"
 
 #include "Event/InputEvent.h"
+#include "Event/EventQueue.h"
 
 namespace Ion {
 
-	Application::Application()
+	Application::Application() :
+		m_EventQueue(std::make_unique<EventQueue>()) 
+	{
+		Logger::Init();
+		Init();
+	}
+
+	Application::~Application() {}
+
+	void Application::Init()
 	{
 		Ion::KeyPressedEvent key(65, 0);
 		Ion::MouseMovedEvent mouse(500, 200);
 
-		ION_LOG_ENGINE_INFO(key.Debug_ToString());
-		ION_LOG_ENGINE_INFO(mouse.Debug_ToString());
-	}
+		ION_LOG_ENGINE_TRACE("Pushing events to queue.");
+		m_EventQueue->PushEvent(key);
+		m_EventQueue->PushEvent(mouse);
 
-	Application::~Application()
-	{
+
+		m_Running = true;
+		while (m_Running)
+		{
+			// Application loop
+
+			m_EventQueue->ProcessEvents();
+		}
 	}
 }

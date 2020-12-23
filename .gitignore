@@ -364,3 +364,6 @@ Intermediate/
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
+
+# Other VS files
+*.hint

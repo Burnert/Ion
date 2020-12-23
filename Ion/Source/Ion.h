@@ -7,6 +7,7 @@
 #include "Event/EngineEvent.h"
 #include "Event/InputEvent.h"
 #include "Event/WindowEvent.h"
+#include "Event/EventQueue.h"
 
 // Entry point ----------------
 #include "Core/EntryPoint.h"
