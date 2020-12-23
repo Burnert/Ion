@@ -3,6 +3,7 @@
 #include "Core/CoreMacros.h"
 #include "Core/CoreTypes.h"
 #include "Core/CoreApi.h"
+#include "Core/Utilities.h"
 
 #include <string>
 #include <sstream>
@@ -48,13 +49,13 @@ namespace Ion
 	enum EEventCategory
 	{
 		EC_None        = 0,
-		EC_Application = BITFLAG(0),
-		EC_Window      = BITFLAG(1),
-		EC_Engine      = BITFLAG(2),
-		EC_Input       = BITFLAG(3),
-		EC_Keyboard    = BITFLAG(4),
-		EC_Mouse       = BITFLAG(5),
-		EC_MouseButton = BITFLAG(6)
+		EC_Application = Bitflag(0),
+		EC_Window      = Bitflag(1),
+		EC_Engine      = Bitflag(2),
+		EC_Input       = Bitflag(3),
+		EC_Keyboard    = Bitflag(4),
+		EC_Mouse       = Bitflag(5),
+		EC_MouseButton = Bitflag(6)
 	};
 
 #ifdef ION_LOG_ENABLED
@@ -83,6 +84,8 @@ namespace Ion
 	#define SET_EVENT_TOSTRING_FORMAT(format)
 #endif
 
+	// Classes
+
 	class ION_API Event
 	{
 		friend class EventDispatcher;
@@ -102,6 +105,7 @@ namespace Ion
 	protected:
 		bool m_Handled = false;
 	};
+
 
 	class EventDispatcher
 	{
@@ -128,11 +132,4 @@ namespace Ion
 	private:
 		Event& m_Event;
 	};
-
-#ifdef ION_LOG_ENABLED
-	FORCEINLINE std::ostream& operator<<(std::ostream& os, const Event& e)
-	{
-		return os << e.Debug_ToString();
-	}
-#endif
 }
