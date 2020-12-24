@@ -7,6 +7,6 @@ typedef unsigned char uchar;
 
 typedef wchar_t wchar;
 
-typedef const char* CStr;
-typedef const wchar* WCStr;
+typedef char* CStr;
+typedef wchar* WCStr;
 
