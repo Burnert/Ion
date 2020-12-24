@@ -5,7 +5,7 @@
 int main(int argc, char** argv)
 {
 	Ion::Application* application = Ion::CreateApplication();
-	application->Run();
+	application->Init();
 	delete application;
 	return 0;
 }

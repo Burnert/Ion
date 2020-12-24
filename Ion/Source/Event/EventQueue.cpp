@@ -1,6 +1,5 @@
 #include "EventQueue.h"
 
-#include "InputEvent.h"
 #include "Log/Logger.h"
 
 #include "Core/Utilities.h"

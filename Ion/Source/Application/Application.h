@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Core.h"
+#include "Event/InputEvent.h"
 
 #include <iostream>
 
@@ -19,11 +20,9 @@ namespace Ion {
 		Application();
 		virtual ~Application();
 
-		virtual void Run() {};
-
-	private:
 		void Init();
 
+	private:
 		bool m_Running = false;
 
 		std::unique_ptr<class EventQueue> m_EventQueue;

@@ -1,15 +1,13 @@
 #include "Ion.h"
 
 #include <stdio.h>
-#include <sstream>
 
 class IonExample : public Ion::Application
 {
 public:
-	void Run() override
+	IonExample()
 	{
-		ION_LOG_TRACE("Application running");
-		getchar();
+		ION_LOG_DEBUG("IonExample constructed.");
 	}
 };
 
