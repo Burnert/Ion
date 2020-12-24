@@ -5,8 +5,6 @@
 
 #include "Log/Logger.h"
 
-static CStr _badFunctionCallMessage = "{0} is not supposed to be called on this platform!";
-
 namespace Ion
 {
 	GenericWindow::GenericWindow()
@@ -14,6 +12,10 @@ namespace Ion
 	}
 
 	GenericWindow::~GenericWindow()
+	{
+	}
+
+	void GenericWindow::Initialize()
 	{
 	}
 
@@ -31,7 +33,7 @@ namespace Ion
 
 	bool GenericWindow::GetDimensions(int& width, int& height) const
 	{
-		ION_LOG_ENGINE_CRITICAL(_badFunctionCallMessage, __FUNCTION__);
+		ION_LOG_ENGINE_BADPLATFORMFUNCTIONCALL();
 		return false;
 	}
 }

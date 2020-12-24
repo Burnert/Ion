@@ -40,6 +40,8 @@ namespace Ion
 #define ION_LOG_ENGINE_ERROR(...)      Ion::Logger::GetEngineLogger()->error(__VA_ARGS__)
 #define ION_LOG_ENGINE_CRITICAL(...)   Ion::Logger::GetEngineLogger()->critical(__VA_ARGS__)
 
+#define ION_LOG_ENGINE_BADPLATFORMFUNCTIONCALL() ION_LOG_ENGINE_CRITICAL("{0} is not supposed to be called on this platform!", __FUNCTION__)
+
 #endif
 
 #define ION_LOG_TRACE(...)             Ion::Logger::GetClientLogger()->trace(__VA_ARGS__)
@@ -59,6 +61,8 @@ namespace Ion
 #define ION_LOG_ENGINE_WARN(...)
 #define ION_LOG_ENGINE_ERROR(...)
 #define ION_LOG_ENGINE_CRITICAL(...)
+
+#define ION_LOG_ENGINE_BADPLATFORMFUNCTIONCALL(...)
 
 #endif
 
