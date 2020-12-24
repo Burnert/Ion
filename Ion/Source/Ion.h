@@ -1,7 +1,11 @@
 #pragma once
 
 #include "Core/Core.h"
-#include "Application/Application.h"
+
+#ifdef ION_PLATFORM_WINDOWS
+#include "Application/Platform/Windows/WindowsApplication.h"
+#endif
+
 #include "Log/Logger.h"
 #include "Event/Event.h"
 #include "Event/EngineEvent.h"

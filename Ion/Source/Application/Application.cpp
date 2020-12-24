@@ -19,7 +19,9 @@ namespace Ion {
 	{
 		// Create a platform specific window.
 		m_ApplicationWindow = Ion::GenericWindow::Create();
-		if (m_ApplicationWindow == nullptr) return;
+
+		m_ApplicationWindow->Initialize();
+		m_ApplicationWindow->SetTitle(L"Ion Engine");
 
 		Ion::KeyPressedEvent key(65, 0);
 		Ion::MouseMovedEvent mouse(500, 200);
@@ -36,13 +38,4 @@ namespace Ion {
 			m_EventQueue->ProcessEvents();
 		}
 	}
-
-	void Application::InitWindows(HINSTANCE hInstance)
-	{
-		m_HInstance = hInstance;
-		Init();
-	}
-
-	HINSTANCE Application::m_HInstance;
-
 }

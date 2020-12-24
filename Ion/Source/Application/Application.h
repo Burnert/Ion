@@ -21,20 +21,12 @@ namespace Ion {
 
 		void Init();
 
-#ifdef ION_PLATFORM_WINDOWS
-		void InitWindows(HINSTANCE hInstance);
-#endif
-
 	private:
 		bool m_Running = false;
 
 		std::unique_ptr<class EventQueue> m_EventQueue;
 
 		std::shared_ptr<GenericWindow> m_ApplicationWindow;
-
-#ifdef ION_PLATFORM_WINDOWS
-		static HINSTANCE m_HInstance;
-#endif
 	};
 
 	Application* CreateApplication();

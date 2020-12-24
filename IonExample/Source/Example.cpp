@@ -2,7 +2,7 @@
 
 #include "Ion.h"
 
-class IonExample : public Ion::Application
+class IonExample : public IonApplication
 {
 public:
 	IonExample()
