@@ -15,11 +15,21 @@ namespace Ion
 	{
 	}
 
-	void GenericWindow::Initialize()
+	bool GenericWindow::Initialize()
+	{
+		ION_LOG_ENGINE_CRITICAL("{0} is not implemented!", __FUNCTION__);
+		return false;
+	}
+
+	void GenericWindow::Show()
 	{
 	}
 
-	void GenericWindow::SetTitle(WCStr title)
+	void GenericWindow::Hide()
+	{
+	}
+
+	void GenericWindow::SetTitle(const WCStr title)
 	{
 	}
 

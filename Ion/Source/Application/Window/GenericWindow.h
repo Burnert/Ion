@@ -1,17 +1,21 @@
 #pragma once
 
 #include "Core/CoreTypes.h"
+#include "Core/CoreApi.h"
 
 namespace Ion
 {
-	class GenericWindow
+	class ION_API GenericWindow
 	{
 	public:
 		virtual ~GenericWindow();
 
-		virtual void Initialize();
+		virtual bool Initialize();
 
-		virtual void SetTitle(WCStr title);
+		virtual void Show();
+		virtual void Hide();
+
+		virtual void SetTitle(const WCStr title);
 
 		virtual void SetEnabled(bool bEnabled);
 
