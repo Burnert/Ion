@@ -109,16 +109,14 @@ namespace Ion
 
 	class EventDispatcher
 	{
-		template<typename T>
+		template<typename T, typename std::enable_if<std::is_base_of<Event, T>::value>::type* = nullptr>
 		using EventFunc = std::function<bool(T&)>;
 
 	public:
 		EventDispatcher(Event& event) :
 			m_Event(event) {}
 
-		// typename std::enable_if<std::is_base_of<Event, T>::value>::type* = nullptr
-
-		template<typename T>
+		template<typename T, typename std::enable_if<std::is_base_of<Event, T>::value>::type* = nullptr>
 		bool Dispatch(EventFunc<T> callback)
 		{
 			if (m_Event.GetType() == T::GetStaticType())
