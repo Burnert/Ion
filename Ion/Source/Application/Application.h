@@ -3,8 +3,6 @@
 #include "Core/Core.h"
 #include "Event/InputEvent.h"
 
-#include <iostream>
-
 // Specifies the main class of the application (can be used only once)
 #define USE_APPLICATION_CLASS(name) \
 Ion::Application* Ion::CreateApplication() \

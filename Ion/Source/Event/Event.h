@@ -5,11 +5,6 @@
 #include "Core/CoreApi.h"
 #include "Core/Utilities.h"
 
-#include <string>
-#include <sstream>
-#include <functional>
-#include <utility>
-
 namespace Ion
 {
 	enum class EEventType
