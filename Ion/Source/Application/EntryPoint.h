@@ -4,8 +4,10 @@
 
 int main(int argc, char** argv)
 {
+	HINSTANCE hInstance = GetModuleHandle(NULL);
+
 	Ion::Application* application = Ion::CreateApplication();
-	application->Init();
+	application->InitWindows(hInstance);
 	delete application;
 	return 0;
 }

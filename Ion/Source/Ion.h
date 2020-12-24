@@ -10,4 +10,4 @@
 #include "Event/EventQueue.h"
 
 // Entry point ----------------
-#include "Core/EntryPoint.h"
+#include "Application/EntryPoint.h"

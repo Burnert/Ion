@@ -10,13 +10,17 @@ namespace Ion {
 	Application::Application() :
 		m_EventQueue(std::make_unique<EventQueue>()) 
 	{
-		Logger::Init(); 
+		Logger::Init();
 	}
 
 	Application::~Application() {}
 
 	void Application::Init()
 	{
+		// Create a platform specific window.
+		m_ApplicationWindow = Ion::GenericWindow::Create();
+		if (m_ApplicationWindow == nullptr) return;
+
 		Ion::KeyPressedEvent key(65, 0);
 		Ion::MouseMovedEvent mouse(500, 200);
 
@@ -33,7 +37,12 @@ namespace Ion {
 		}
 	}
 
+	void Application::InitWindows(HINSTANCE hInstance)
+	{
+		m_HInstance = hInstance;
+		Init();
+	}
 
-
+	HINSTANCE Application::m_HInstance;
 
 }

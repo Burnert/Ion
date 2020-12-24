@@ -7,8 +7,9 @@ namespace Ion
 	class GenericWindow
 	{
 	public:
-		GenericWindow();
 		virtual ~GenericWindow();
+
+		virtual void Initialize();
 
 		virtual void SetTitle(WCStr title);
 
@@ -16,6 +17,15 @@ namespace Ion
 
 		virtual void Resize();
 		virtual bool GetDimensions(int& width, int& height) const;
+
+		// Implemented per platform.
+		static std::shared_ptr<GenericWindow> Create();
+
+	protected:
+		// Protected constructor: Only shared_ptrs of this class can be made.
+		GenericWindow();
 	};
+
+	
 }
 
