@@ -16,6 +16,9 @@ project "Ion"
 	kind "SharedLib"
 	language "C++"
 
+	pchheader "IonPCH.h"
+	pchsource "Ion/Source/IonPCH.cpp"
+
 	targetdir ("Build/" .. outputdir .. "/%{prj.name}")
 	objdir ("Intermediate/" .. outputdir .. "/%{prj.name}")
 

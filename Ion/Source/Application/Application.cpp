@@ -1,3 +1,5 @@
+#include "IonPCH.h"
+
 #include "Application.h"
 
 #include "Event/InputEvent.h"
@@ -8,7 +10,7 @@ namespace Ion {
 	Application::Application() :
 		m_EventQueue(std::make_unique<EventQueue>()) 
 	{
-		Logger::Init();
+		Logger::Init(); 
 	}
 
 	Application::~Application() {}

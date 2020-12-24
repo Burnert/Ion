@@ -1,6 +1,6 @@
-#include "Ion.h"
+#include "IonPCH.h"
 
-#include <stdio.h>
+#include "Ion.h"
 
 class IonExample : public Ion::Application
 {
