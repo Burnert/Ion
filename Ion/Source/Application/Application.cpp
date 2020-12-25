@@ -5,11 +5,14 @@
 #include "Event/InputEvent.h"
 #include "Event/EventQueue.h"
 
+#define BIND_MEMBER_FUNC(x) std::bind(&x, this, std::placeholders::_1)
+
 namespace Ion {
 
 	Application::Application() :
-		m_EventQueue(std::make_unique<EventQueue>()) 
+		m_EventQueue(std::make_unique<EventQueue>())
 	{
+		m_EventQueue->SetEventHandler(BIND_MEMBER_FUNC(Application::EventHandler));
 		Logger::Init();
 	}
 
@@ -23,14 +26,9 @@ namespace Ion {
 		m_ApplicationWindow->Initialize();
 		m_ApplicationWindow->SetTitle(L"Ion Engine");
 
+		m_ApplicationWindow->SetEventCallback(BIND_MEMBER_FUNC(Application::OnEvent));
+
 		m_ApplicationWindow->Show();
-
-		Ion::KeyPressedEvent key(65, 0);
-		Ion::MouseMovedEvent mouse(500, 200);
-
-		ION_LOG_ENGINE_DEBUG("Pushing events to queue.");
-		m_EventQueue->PushEvent(key);
-		m_EventQueue->PushEvent(mouse);
 
 		m_Running = true;
 		while (m_Running)
@@ -41,7 +39,27 @@ namespace Ion {
 		}
 	}
 
-	void Application::PollEvents()
+	void Application::OnEvent(std::shared_ptr<Event> event)
 	{
+		m_EventQueue->PushEvent(event);
+	}
+
+	void Application::EventHandler(Event& event)
+	{
+		EventDispatcher dispatcher(event);
+		dispatcher.Dispatch<WindowCloseEvent>(BIND_MEMBER_FUNC(Application::OnWindowCloseEvent));
+		dispatcher.Dispatch<WindowResizeEvent>(BIND_MEMBER_FUNC(Application::OnWindowResizeEvent));
+	}
+
+	bool Application::OnWindowCloseEvent(WindowCloseEvent& event)
+	{
+		ION_LOG_ENGINE_DEBUG("Close event: {0}", event.Debug_ToString());
+		//m_Running = false;
+		return true;
+	}
+
+	bool Application::OnWindowResizeEvent(WindowResizeEvent& event)
+	{
+		return true;
 	}
 }
