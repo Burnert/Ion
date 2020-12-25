@@ -54,7 +54,7 @@ namespace Ion {
 	bool Application::OnWindowCloseEvent(WindowCloseEvent& event)
 	{
 		ION_LOG_ENGINE_DEBUG("Close event: {0}", event.Debug_ToString());
-		//m_Running = false;
+		m_Running = false;
 		return true;
 	}
 
