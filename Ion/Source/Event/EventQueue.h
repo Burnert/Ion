@@ -10,9 +10,9 @@ namespace Ion
 		using EventPtr = std::shared_ptr<Event>;
 	public:
 		template<typename EventT, typename std::enable_if<std::is_base_of<Event, EventT>::value>::type* = nullptr>
-		void PushEvent(EventT& event)
+		void PushEvent(std::shared_ptr<EventT> event)
 		{
-			m_Events.push_back(std::make_shared<EventT>(event));
+			m_Events.push_back(event);
 		}
 
 		bool ProcessEvents();
