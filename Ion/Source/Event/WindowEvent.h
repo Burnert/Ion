@@ -6,7 +6,7 @@ namespace Ion
 {
 	// Window Events
 	
-	class ION_API WindowEvent : Event
+	class ION_API WindowEvent : public Event
 	{
 	public:
 		FORCEINLINE int GetWindowHandle() const { return m_WindowHandle; }
@@ -22,7 +22,7 @@ namespace Ion
 	};
 
 
-	class ION_API WindowCloseEvent : WindowEvent
+	class ION_API WindowCloseEvent : public WindowEvent
 	{
 	public:
 		WindowCloseEvent(int windowHandle) :
@@ -33,7 +33,7 @@ namespace Ion
 	};
 
 
-	class ION_API WindowResizeEvent : WindowEvent
+	class ION_API WindowResizeEvent : public WindowEvent
 	{
 	public:
 		WindowResizeEvent(int windowHandle, uint width, uint height) :
@@ -49,7 +49,7 @@ namespace Ion
 	};
 
 
-	class ION_API WindowMovedEvent : WindowEvent
+	class ION_API WindowMovedEvent : public WindowEvent
 	{
 	public:
 		WindowMovedEvent(int windowHandle, uint x, uint y) :
