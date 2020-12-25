@@ -21,6 +21,9 @@ namespace Ion {
 
 		void Init();
 
+	protected:
+		virtual void PollEvents();
+
 	private:
 		bool m_Running = false;
 

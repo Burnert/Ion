@@ -23,6 +23,8 @@ namespace Ion {
 		m_ApplicationWindow->Initialize();
 		m_ApplicationWindow->SetTitle(L"Ion Engine");
 
+		m_ApplicationWindow->Show();
+
 		Ion::KeyPressedEvent key(65, 0);
 		Ion::MouseMovedEvent mouse(500, 200);
 
@@ -34,8 +36,12 @@ namespace Ion {
 		while (m_Running)
 		{
 			// Application loop
-
+			PollEvents();
 			m_EventQueue->ProcessEvents();
 		}
+	}
+
+	void Application::PollEvents()
+	{
 	}
 }

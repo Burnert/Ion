@@ -12,6 +12,9 @@ namespace Ion
 
 		FORCEINLINE static HINSTANCE GetHInstance() { return m_HInstance; }
 
+	protected:
+		virtual void PollEvents() override;
+
 	private:
 		static HINSTANCE m_HInstance;
 	};

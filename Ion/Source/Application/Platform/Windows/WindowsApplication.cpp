@@ -10,5 +10,16 @@ namespace Ion
 		Init();
 	}
 
+	void WindowsApplication::PollEvents()
+	{
+		MSG message;
+
+		while (PeekMessage(&message, NULL, 0, 0, PM_REMOVE))
+		{
+			TranslateMessage(&message);
+			DispatchMessage(&message);
+		}
+	}
+
 	HINSTANCE WindowsApplication::m_HInstance;
 }
