@@ -78,6 +78,17 @@ namespace Ion
 
 				return 0;
 			}
+
+			case WM_SIZE:
+			{
+				int width  = LOWORD(lParam);
+				int height = HIWORD(lParam);
+				auto event = new WindowResizeEvent((ulong)hWnd, width, height);
+				event->NoDefer();
+				windowRef.m_EventCallback(event->MakeShared());
+
+				return 0;
+			}
 		}
 
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);
@@ -129,6 +140,7 @@ namespace Ion
 		WindowStyle |= WS_CAPTION;
 		WindowStyle |= WS_MINIMIZEBOX;
 		WindowStyle |= WS_SYSMENU;
+		WindowStyle |= WS_SIZEBOX;
 
 		WindowStyleEx |= WS_EX_APPWINDOW;
 		WindowStyleEx |= WS_EX_WINDOWEDGE;
