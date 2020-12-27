@@ -40,7 +40,7 @@ namespace Ion
 		{
 			PostQuitMessage(0);
 
-			auto event = new WindowCloseEvent((int)hWnd);
+			auto event = new WindowCloseEvent((ulong)hWnd);
 			windowRef.m_EventCallback(event->MakeShared());
 
 			return 0;
@@ -48,7 +48,31 @@ namespace Ion
 
 		switch (uMsg)
 		{
+			case WM_MOVE:
+			{
+				int xPos = LOWORD(lParam);
+				int yPos = HIWORD(lParam);
+				auto event = new WindowMovedEvent((ulong)hWnd, xPos, yPos);
+				windowRef.m_EventCallback(event->MakeShared());
 
+				return 0;
+			}
+
+			case WM_SETFOCUS:
+			{
+				auto event = new WindowFocusEvent((ulong)hWnd);
+				windowRef.m_EventCallback(event->MakeShared());
+
+				return 0;
+			}
+
+			case WM_KILLFOCUS:
+			{
+				auto event = new WindowLostFocusEvent((ulong)hWnd);
+				windowRef.m_EventCallback(event->MakeShared());
+
+				return 0;
+			}
 		}
 
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);

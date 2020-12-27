@@ -10,8 +10,8 @@ namespace Ion
 	class ION_API GenericWindow
 	{
 	public:
-		using SharedEvent = std::shared_ptr<Event>;
-		using EventCallback = std::function<void(SharedEvent)>;
+		using EventPtr = std::shared_ptr<Event>;
+		using EventCallback = std::function<void(EventPtr)>;
 
 		virtual ~GenericWindow();
 

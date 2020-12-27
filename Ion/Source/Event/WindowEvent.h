@@ -9,24 +9,24 @@ namespace Ion
 	class ION_API WindowEvent : public Event
 	{
 	public:
-		FORCEINLINE int GetWindowHandle() const { return m_WindowHandle; }
+		FORCEINLINE ulong GetWindowHandle() const { return m_WindowHandle; }
 
 		SET_EVENT_CATEGORY(EC_Application | EC_Window)
 
 	protected:
-		WindowEvent(int windowHandle) :
-			m_WindowHandle(windowHandle) {}
+		WindowEvent(ulong windowHandle) :
+			m_WindowHandle(windowHandle) { }
 
 	private:
-		int m_WindowHandle;
+		ulong m_WindowHandle;
 	};
 
 
 	class ION_API WindowCloseEvent : public WindowEvent
 	{
 	public:
-		WindowCloseEvent(int windowHandle) :
-			WindowEvent(windowHandle) {}
+		WindowCloseEvent(ulong windowHandle) :
+			WindowEvent(windowHandle) { }
 
 		SET_EVENT_TYPE(WindowClose)
 		SET_EVENT_TOSTRING_FORMAT("{window: " << GetWindowHandle() << "}")
@@ -36,10 +36,10 @@ namespace Ion
 	class ION_API WindowResizeEvent : public WindowEvent
 	{
 	public:
-		WindowResizeEvent(int windowHandle, uint width, uint height) :
+		WindowResizeEvent(ulong windowHandle, uint width, uint height) :
 			WindowEvent(windowHandle),
 			m_Width(width),
-			m_Height(height) {}
+			m_Height(height) { }
 
 		SET_EVENT_TYPE(WindowResize)
 		SET_EVENT_TOSTRING_FORMAT("{window: " << GetWindowHandle() << ", width: " << m_Width << ", height: " << m_Height << "}")
@@ -52,15 +52,37 @@ namespace Ion
 	class ION_API WindowMovedEvent : public WindowEvent
 	{
 	public:
-		WindowMovedEvent(int windowHandle, uint x, uint y) :
+		WindowMovedEvent(ulong windowHandle, uint x, uint y) :
 			WindowEvent(windowHandle),
 			m_X(x),
-			m_Y(y) {}
+			m_Y(y) { }
 
 		SET_EVENT_TYPE(WindowMoved)
 		SET_EVENT_TOSTRING_FORMAT("{window: " << GetWindowHandle() << ", x: " << m_X << ", y: " << m_Y << "}")
 
 	private:
 		uint m_X, m_Y;
+	};
+
+
+	class ION_API WindowFocusEvent : public WindowEvent
+	{
+	public:
+		WindowFocusEvent(ulong windowHandle) :
+			WindowEvent(windowHandle) { }
+
+		SET_EVENT_TYPE(WindowFocus)
+		SET_EVENT_TOSTRING_FORMAT("{window: " << GetWindowHandle() << "}")
+	};
+
+
+	class ION_API WindowLostFocusEvent : public WindowEvent
+	{
+	public:
+		WindowLostFocusEvent(ulong windowHandle) :
+			WindowEvent(windowHandle) { }
+
+		SET_EVENT_TYPE(WindowLostFocus)
+		SET_EVENT_TOSTRING_FORMAT("{window: " << GetWindowHandle() << "}")
 	};
 }

@@ -16,7 +16,7 @@ namespace Ion {
 
 	class ION_API Application
 	{
-		using SharedEvent = std::shared_ptr<Event>;
+		using EventPtr = std::shared_ptr<Event>;
 	public:
 		Application();
 		virtual ~Application();
@@ -27,17 +27,19 @@ namespace Ion {
 		// Platform specific method for polling application events / messages.
 		virtual void PollEvents() { };
 
-		virtual void OnEvent(SharedEvent event);
+		virtual void OnEvent(EventPtr event);
 		virtual void EventHandler(Event& event);
 
 		virtual bool OnWindowCloseEvent(WindowCloseEvent& event);
+		virtual bool OnWindowMovedEvent(WindowMovedEvent& event);
 		virtual bool OnWindowResizeEvent(WindowResizeEvent& event);
+		virtual bool OnWindowFocusEvent(WindowFocusEvent& event);
+		virtual bool OnWindowLostFocusEvent(WindowLostFocusEvent& event);
 
 	private:
 		bool m_Running = false;
 
 		std::unique_ptr<class EventQueue> m_EventQueue;
-
 		std::shared_ptr<GenericWindow> m_ApplicationWindow;
 	};
 
