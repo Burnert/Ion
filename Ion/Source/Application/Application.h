@@ -14,6 +14,8 @@ Ion::Application* Ion::CreateApplication() \
 
 namespace Ion {
 
+	class EventQueue;
+
 	class ION_API Application
 	{
 		using EventPtr = std::shared_ptr<Event>;
@@ -39,7 +41,7 @@ namespace Ion {
 	private:
 		bool m_Running = false;
 
-		std::unique_ptr<class EventQueue> m_EventQueue;
+		std::unique_ptr<EventQueue> m_EventQueue;
 		std::shared_ptr<GenericWindow> m_ApplicationWindow;
 	};
 
