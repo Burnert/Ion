@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Core/Core.h"
-#include "Event/InputEvent.h"
-#include "Event/WindowEvent.h"
+#include "Core/Event/InputEvent.h"
+#include "Core/Event/WindowEvent.h"
 #include "Application/Window/GenericWindow.h"
 
 // Specifies the main class of the application (can be used only once)

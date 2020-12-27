@@ -2,8 +2,8 @@
 
 #include "Application.h"
 
-#include "Event/InputEvent.h"
-#include "Event/EventQueue.h"
+#include "Core/Event/InputEvent.h"
+#include "Core/Event/EventQueue.h"
 
 #define BIND_MEMBER_FUNC(x) std::bind(&x, this, std::placeholders::_1)
 

@@ -7,11 +7,11 @@
 #endif
 
 #include "Log/Logger.h"
-#include "Event/Event.h"
-#include "Event/EngineEvent.h"
-#include "Event/InputEvent.h"
-#include "Event/WindowEvent.h"
-#include "Event/EventQueue.h"
+#include "Core/Event/Event.h"
+#include "Core/Event/EngineEvent.h"
+#include "Core/Event/InputEvent.h"
+#include "Core/Event/WindowEvent.h"
+#include "Core/Event/EventQueue.h"
 
 // Entry point ----------------
 #include "Application/EntryPoint.h"

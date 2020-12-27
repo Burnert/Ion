@@ -3,7 +3,7 @@
 #include "Core/CoreTypes.h"
 #include "Core/CoreApi.h"
 
-#include "Event/Event.h"
+#include "Core/Event/Event.h"
 
 namespace Ion
 {

@@ -3,8 +3,8 @@
 #include "WindowsWindow.h"
 #include "WindowsApplication.h"
 
-#include "Event/Event.h"
-#include "Event/WindowEvent.h"
+#include "Core/Event/Event.h"
+#include "Core/Event/WindowEvent.h"
 
 
 #include "Log/Logger.h"
