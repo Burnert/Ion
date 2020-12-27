@@ -11,7 +11,7 @@
 
 namespace Ion
 {
-	static const CStr _windowNotCreatedMessage = "Cannot {0} before the window is initialized!";
+	static const CStr _windowNoInitMessage = "Cannot {0} before the window is initialized!";
 
 	// Generic Window
 
@@ -48,15 +48,7 @@ namespace Ion
 
 		switch (uMsg)
 		{
-			case WM_MOVE:
-			{
-				int xPos = LOWORD(lParam);
-				int yPos = HIWORD(lParam);
-				auto event = new WindowMovedEvent((ulong)hWnd, xPos, yPos);
-				windowRef.m_EventCallback(event->MakeShared());
-
-				return 0;
-			}
+			// Deferred events
 
 			case WM_SETFOCUS:
 			{
@@ -69,6 +61,19 @@ namespace Ion
 			case WM_KILLFOCUS:
 			{
 				auto event = new WindowLostFocusEvent((ulong)hWnd);
+				windowRef.m_EventCallback(event->MakeShared());
+
+				return 0;
+			}
+
+			// Non-Deferred events
+
+			case WM_MOVE:
+			{
+				int xPos = LOWORD(lParam);
+				int yPos = HIWORD(lParam);
+				auto event = new WindowMovedEvent((ulong)hWnd, xPos, yPos);
+				event->NoDefer();
 				windowRef.m_EventCallback(event->MakeShared());
 
 				return 0;
@@ -163,7 +168,7 @@ namespace Ion
 	{
 		if (m_HWnd == NULL)
 		{
-			ION_LOG_ENGINE_CRITICAL(_windowNotCreatedMessage, "show the window");
+			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "show the window");
 			return;
 		}
 
@@ -180,7 +185,7 @@ namespace Ion
 	{
 		if (m_HWnd == NULL)
 		{
-			ION_LOG_ENGINE_CRITICAL(_windowNotCreatedMessage, "hide the window");
+			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "hide the window");
 			return;
 		}
 
@@ -221,7 +226,7 @@ namespace Ion
 	{
 		if (m_HWnd == NULL)
 		{
-			ION_LOG_ENGINE_CRITICAL(_windowNotCreatedMessage, "get the HDC");
+			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "get the HDC");
 			return NULL;
 		}
 

@@ -84,6 +84,8 @@ namespace Ion
 	class ION_API Event
 	{
 		friend class EventDispatcher;
+		friend class Application;
+
 	public:
 		FORCEINLINE virtual EEventType GetType() const = 0;
 		FORCEINLINE virtual uint GetCategoryFlags() const = 0;
@@ -97,6 +99,12 @@ namespace Ion
 		FORCEINLINE virtual const char* Debug_GetName() const = 0;
 		FORCEINLINE virtual std::string Debug_ToString() const { return Debug_GetName(); }
 #endif
+		/* Handle the event instantly after it occurs. */
+		void NoDefer()
+		{ 
+			m_Defer = false;
+		}
+
 		// Utility
 
 		std::shared_ptr<Event> MakeShared()
@@ -106,6 +114,7 @@ namespace Ion
 
 	protected:
 		bool m_Handled = false;
+		bool m_Defer = true;
 	};
 
 

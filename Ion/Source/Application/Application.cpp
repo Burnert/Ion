@@ -41,7 +41,10 @@ namespace Ion {
 
 	void Application::OnEvent(EventPtr event)
 	{
-		m_EventQueue->PushEvent(event);
+		if (event->m_Defer)
+			m_EventQueue->PushEvent(event);
+		else
+			EventHandler(*event);
 	}
 
 	void Application::EventHandler(Event& event)
