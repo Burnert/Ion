@@ -28,7 +28,7 @@ namespace Ion {
 		virtual void PollEvents() { };
 
 		virtual void OnEvent(EventPtr event);
-		virtual void EventHandler(Event& event);
+		virtual void DispatchEvent(Event& event);
 
 		virtual bool OnWindowCloseEvent(WindowCloseEvent& event);
 		virtual bool OnWindowMovedEvent(WindowMovedEvent& event);

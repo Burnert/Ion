@@ -12,7 +12,7 @@ namespace Ion {
 	Application::Application() :
 		m_EventQueue(std::make_unique<EventQueue>())
 	{
-		m_EventQueue->SetEventHandler(BIND_MEMBER_FUNC(Application::EventHandler));
+		m_EventQueue->SetEventHandler(BIND_MEMBER_FUNC(Application::DispatchEvent));
 		Logger::Init();
 	}
 
@@ -44,10 +44,10 @@ namespace Ion {
 		if (event->m_Defer)
 			m_EventQueue->PushEvent(event);
 		else
-			EventHandler(*event);
+			DispatchEvent(*event);
 	}
 
-	void Application::EventHandler(Event& event)
+	void Application::DispatchEvent(Event& event)
 	{
 		ION_LOG_ENGINE_DEBUG("Event: {0}", event.Debug_ToString());
 
