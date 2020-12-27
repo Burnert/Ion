@@ -2,7 +2,10 @@
 
 #include "WindowsWindow.h"
 #include "WindowsApplication.h"
+
+#include "Event/Event.h"
 #include "Event/WindowEvent.h"
+
 
 #include "Log/Logger.h"
 
@@ -37,8 +40,8 @@ namespace Ion
 		{
 			PostQuitMessage(0);
 
-			std::shared_ptr<WindowCloseEvent> e = std::make_shared<WindowCloseEvent>(reinterpret_cast<int>(hWnd));
-			windowRef.m_EventCallback(e);
+			SharedEvent event = Event::MakeShared<WindowCloseEvent>((int)hWnd);
+			windowRef.m_EventCallback(event);
 
 			return 0;
 		}

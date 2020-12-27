@@ -46,7 +46,7 @@ namespace Ion
 		ION_LOG_ENGINE_BADPLATFORMFUNCTIONCALL();
 		return false;
 	}
-	void GenericWindow::SetEventCallback(std::function<void(std::shared_ptr<Event>)> callback)
+	void GenericWindow::SetEventCallback(EventCallback callback)
 	{
 		m_EventCallback = callback;
 	}

@@ -8,6 +8,11 @@
 
 namespace Ion
 {
+	void EventQueue::PushEvent(EventPtr event)
+	{
+		m_Events.push_back(event);
+	}
+
 	bool EventQueue::ProcessEvents()
 	{
 		if (!m_Events.empty())

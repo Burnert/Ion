@@ -39,7 +39,7 @@ namespace Ion {
 		}
 	}
 
-	void Application::OnEvent(std::shared_ptr<Event> event)
+	void Application::OnEvent(SharedEvent event)
 	{
 		m_EventQueue->PushEvent(event);
 	}

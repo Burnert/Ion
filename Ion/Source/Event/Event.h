@@ -97,6 +97,14 @@ namespace Ion
 		FORCEINLINE virtual const char* Debug_GetName() const = 0;
 		FORCEINLINE virtual std::string Debug_ToString() const { return Debug_GetName(); }
 #endif
+		// Utility
+
+		template<typename EventT, typename... Types>
+		static std::enable_if_t<std::is_base_of_v<Event, EventT>, std::shared_ptr<EventT>> MakeShared(Types&&... args)
+		{
+			return std::make_shared<EventT>(args...);
+		}
+
 	protected:
 		bool m_Handled = false;
 	};
