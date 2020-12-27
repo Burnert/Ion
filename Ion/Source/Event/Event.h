@@ -99,10 +99,9 @@ namespace Ion
 #endif
 		// Utility
 
-		template<typename EventT>
-		static std::enable_if_t<std::is_base_of_v<Event, EventT>, std::shared_ptr<EventT>> MakeShared(EventT* eventPtr)
+		std::shared_ptr<Event> MakeShared()
 		{
-			return std::shared_ptr<EventT>(eventPtr);
+			return std::shared_ptr<Event>(this);
 		}
 
 	protected:

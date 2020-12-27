@@ -40,7 +40,8 @@ namespace Ion
 		{
 			PostQuitMessage(0);
 
-			windowRef.m_EventCallback(Event::MakeShared(new WindowCloseEvent((int)hWnd)));
+			auto event = new WindowCloseEvent((int)hWnd);
+			windowRef.m_EventCallback(event->MakeShared());
 
 			return 0;
 		}
