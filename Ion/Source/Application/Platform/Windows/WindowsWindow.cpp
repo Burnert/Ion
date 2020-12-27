@@ -199,16 +199,25 @@ namespace Ion
 
 	void WindowsWindow::SetTitle(const WCStr title)
 	{
-		if (m_HWnd != NULL)
+		if (m_HWnd == NULL)
 		{
-			m_Title = title;
-
-			SetWindowText(m_HWnd, m_Title.c_str());
+			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "set the title");
+			return;
 		}
+
+		m_Title = title;
+
+		SetWindowText(m_HWnd, m_Title.c_str());
 	}
 
 	void WindowsWindow::SetEnabled(bool bEnabled)
 	{
+		if (m_HWnd == NULL)
+		{
+			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "enable the window");
+			return;
+		}
+
 		EnableWindow(m_HWnd, bEnabled);
 	}
 
