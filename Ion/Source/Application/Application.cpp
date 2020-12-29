@@ -52,36 +52,31 @@ namespace Ion {
 		ION_LOG_ENGINE_DEBUG("Event: {0}", event.Debug_ToString());
 
 		EventDispatcher dispatcher(event);
-		dispatcher.Dispatch<WindowCloseEvent>     (BIND_MEMBER_FUNC(Application::OnWindowCloseEvent));
-		dispatcher.Dispatch<WindowMovedEvent>     (BIND_MEMBER_FUNC(Application::OnWindowMovedEvent));
-		dispatcher.Dispatch<WindowResizeEvent>    (BIND_MEMBER_FUNC(Application::OnWindowResizeEvent));
-		dispatcher.Dispatch<WindowFocusEvent>     (BIND_MEMBER_FUNC(Application::OnWindowFocusEvent));
-		dispatcher.Dispatch<WindowLostFocusEvent> (BIND_MEMBER_FUNC(Application::OnWindowLostFocusEvent));
-	}
 
-	bool Application::OnWindowCloseEvent(WindowCloseEvent& event)
-	{
-		m_Running = false;
-		return true;
-	}
+		dispatcher.Dispatch<WindowCloseEvent>([this](WindowCloseEvent& event)
+		{
+			m_Running = false;
+			return true;
+		});
 
-	bool Application::OnWindowMovedEvent(WindowMovedEvent& event)
-	{
-		return true;
-	}
+		dispatcher.Dispatch<WindowMovedEvent>([this](WindowMovedEvent& event)
+		{
+			return true;
+		});
 
-	bool Application::OnWindowResizeEvent(WindowResizeEvent& event)
-	{
-		return true;
-	}
+		dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& event)
+		{
+			return true;
+		});
 
-	bool Application::OnWindowFocusEvent(WindowFocusEvent& event)
-	{
-		return true;
-	}
+		dispatcher.Dispatch<WindowFocusEvent>([this](WindowFocusEvent& event)
+		{
+			return true;
+		});
 
-	bool Application::OnWindowLostFocusEvent(WindowLostFocusEvent& event)
-	{
-		return true;
+		dispatcher.Dispatch<WindowLostFocusEvent> ([this](WindowLostFocusEvent& event)
+		{
+			return true;
+		});
 	}
 }

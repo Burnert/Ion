@@ -32,17 +32,12 @@ namespace Ion {
 		virtual void OnEvent(EventPtr event);
 		virtual void DispatchEvent(Event& event);
 
-		virtual bool OnWindowCloseEvent(WindowCloseEvent& event);
-		virtual bool OnWindowMovedEvent(WindowMovedEvent& event);
-		virtual bool OnWindowResizeEvent(WindowResizeEvent& event);
-		virtual bool OnWindowFocusEvent(WindowFocusEvent& event);
-		virtual bool OnWindowLostFocusEvent(WindowLostFocusEvent& event);
-
 	private:
 		bool m_Running = false;
 
 		std::unique_ptr<EventQueue> m_EventQueue;
 		std::shared_ptr<GenericWindow> m_ApplicationWindow;
+		
 	};
 
 	Application* CreateApplication();
