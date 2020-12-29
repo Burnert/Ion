@@ -9,23 +9,23 @@ namespace Ion
 	class ION_API WindowEvent : public Event
 	{
 	public:
-		FORCEINLINE ulong GetWindowHandle() const { return m_WindowHandle; }
+		FORCEINLINE ullong GetWindowHandle() const { return m_WindowHandle; }
 
 		SET_EVENT_CATEGORY(EC_Application | EC_Window)
 
 	protected:
-		WindowEvent(ulong windowHandle) :
+		WindowEvent(ullong windowHandle) :
 			m_WindowHandle(windowHandle) { }
 
 	private:
-		ulong m_WindowHandle;
+		ullong m_WindowHandle;
 	};
 
 
 	class ION_API WindowCloseEvent : public WindowEvent
 	{
 	public:
-		WindowCloseEvent(ulong windowHandle) :
+		WindowCloseEvent(ullong windowHandle) :
 			WindowEvent(windowHandle) { }
 
 		SET_EVENT_TYPE(WindowClose)
@@ -36,7 +36,7 @@ namespace Ion
 	class ION_API WindowResizeEvent : public WindowEvent
 	{
 	public:
-		WindowResizeEvent(ulong windowHandle, uint width, uint height) :
+		WindowResizeEvent(ullong windowHandle, uint width, uint height) :
 			WindowEvent(windowHandle),
 			m_Width(width),
 			m_Height(height) { }
@@ -52,7 +52,7 @@ namespace Ion
 	class ION_API WindowMovedEvent : public WindowEvent
 	{
 	public:
-		WindowMovedEvent(ulong windowHandle, uint x, uint y) :
+		WindowMovedEvent(ullong windowHandle, uint x, uint y) :
 			WindowEvent(windowHandle),
 			m_X(x),
 			m_Y(y) { }
@@ -68,7 +68,7 @@ namespace Ion
 	class ION_API WindowFocusEvent : public WindowEvent
 	{
 	public:
-		WindowFocusEvent(ulong windowHandle) :
+		WindowFocusEvent(ullong windowHandle) :
 			WindowEvent(windowHandle) { }
 
 		SET_EVENT_TYPE(WindowFocus)
@@ -79,7 +79,7 @@ namespace Ion
 	class ION_API WindowLostFocusEvent : public WindowEvent
 	{
 	public:
-		WindowLostFocusEvent(ulong windowHandle) :
+		WindowLostFocusEvent(ullong windowHandle) :
 			WindowEvent(windowHandle) { }
 
 		SET_EVENT_TYPE(WindowLostFocus)

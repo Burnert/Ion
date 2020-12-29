@@ -42,7 +42,7 @@ namespace Ion
 		{
 			PostQuitMessage(0);
 
-			DeferredEventPtr event = Event::CreateDeferredEvent<WindowCloseEvent>((ulong)hWnd);
+			DeferredEventPtr event = Event::CreateDeferredEvent<WindowCloseEvent>((ullong)hWnd);
 			windowRef.m_EventCallback(*event);
 
 			return 0;
@@ -54,7 +54,7 @@ namespace Ion
 
 			case WM_SETFOCUS:
 			{
-				DeferredEventPtr event = Event::CreateDeferredEvent<WindowFocusEvent>((ulong)hWnd);
+				DeferredEventPtr event = Event::CreateDeferredEvent<WindowFocusEvent>((ullong)hWnd);
 				windowRef.m_EventCallback(*event);
 
 				return 0;
@@ -62,7 +62,7 @@ namespace Ion
 
 			case WM_KILLFOCUS:
 			{
-				DeferredEventPtr event = Event::CreateDeferredEvent<WindowLostFocusEvent>((ulong)hWnd);
+				DeferredEventPtr event = Event::CreateDeferredEvent<WindowLostFocusEvent>((ullong)hWnd);
 				windowRef.m_EventCallback(*event);
 
 				return 0;
@@ -74,7 +74,7 @@ namespace Ion
 			{
 				int xPos = LOWORD(lParam);
 				int yPos = HIWORD(lParam);
-				auto event = WindowMovedEvent((ulong)hWnd, xPos, yPos);
+				auto event = WindowMovedEvent((ullong)hWnd, xPos, yPos);
 				windowRef.m_EventCallback(event);
 
 				return 0;
@@ -84,7 +84,7 @@ namespace Ion
 			{
 				int width  = LOWORD(lParam);
 				int height = HIWORD(lParam);
-				auto event = WindowResizeEvent((ulong)hWnd, width, height);
+				auto event = WindowResizeEvent((ullong)hWnd, width, height);
 				windowRef.m_EventCallback(event);
 
 				return 0;
