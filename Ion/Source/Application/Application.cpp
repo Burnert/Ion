@@ -4,6 +4,7 @@
 
 #include "Core/Event/InputEvent.h"
 #include "Core/Event/EventQueue.h"
+#include "Core/Event/EventDispatcher.h"
 
 #define BIND_MEMBER_FUNC(x) std::bind(&x, this, std::placeholders::_1)
 
@@ -53,6 +54,8 @@ namespace Ion {
 
 		EventDispatcher dispatcher(event);
 
+		// Window events
+
 		dispatcher.Dispatch<WindowCloseEvent>([this](WindowCloseEvent& event)
 		{
 			m_Running = false;
@@ -78,5 +81,7 @@ namespace Ion {
 		{
 			return true;
 		});
+
+		dispatcher.Handled();
 	}
 }

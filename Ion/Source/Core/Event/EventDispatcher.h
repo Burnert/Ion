@@ -24,6 +24,8 @@ namespace Ion
 			return false;
 		}
 
+		FORCEINLINE bool Handled() { return m_Event.m_Handled; }
+
 	private:
 		Event& m_Event;
 	};
