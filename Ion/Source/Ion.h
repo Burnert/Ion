@@ -8,6 +8,7 @@
 
 #include "Log/Logger.h"
 #include "Core/Event/Event.h"
+#include "Core/Event/EventDispatcher.h"
 #include "Core/Event/EngineEvent.h"
 #include "Core/Event/InputEvent.h"
 #include "Core/Event/WindowEvent.h"
