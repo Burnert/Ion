@@ -24,10 +24,10 @@ namespace Ion {
 		// Create a platform specific window.
 		m_ApplicationWindow = Ion::GenericWindow::Create();
 
+		m_ApplicationWindow->SetEventCallback(BIND_MEMBER_FUNC(Application::OnEvent));
+
 		m_ApplicationWindow->Initialize();
 		m_ApplicationWindow->SetTitle(L"Ion Engine");
-
-		m_ApplicationWindow->SetEventCallback(BIND_MEMBER_FUNC(Application::OnEvent));
 
 		m_ApplicationWindow->Show();
 
@@ -40,12 +40,12 @@ namespace Ion {
 		}
 	}
 
-	void Application::OnEvent(Event* event)
+	void Application::OnEvent(Event& event)
 	{
-		if (event->m_Defer)
-			m_EventQueue->PushEvent(event->MakeShared());
+		if (event.IsDeferred())
+			m_EventQueue->PushEvent(event.MakeShared());
 		else
-			DispatchEvent(*event);
+			DispatchEvent(event);
 	}
 
 	void Application::DispatchEvent(Event& event)

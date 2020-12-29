@@ -84,7 +84,6 @@ namespace Ion
 	class ION_API Event
 	{
 		friend class EventDispatcher;
-		friend class Application;
 
 	public:
 		FORCEINLINE virtual EEventType GetType() const = 0;
@@ -99,21 +98,30 @@ namespace Ion
 		FORCEINLINE virtual const char* Debug_GetName() const = 0;
 		FORCEINLINE virtual std::string Debug_ToString() const { return Debug_GetName(); }
 #endif
-		/* Handle the event instantly after it occurs. */
-		void NoDefer()
-		{ 
-			m_Defer = false;
-		}
 
+		FORCEINLINE bool IsDeferred() const { return m_Defer; }
+		
 		// Utility
 
+		/* Don't ever call this on stack allocated (non-deferred) events! */
 		std::shared_ptr<Event> MakeShared()
 		{
 			return std::shared_ptr<Event>(this);
 		}
 
+		/* Creates an event that is called after the application loop is completed. */
+		template<typename EventT, typename... Types>
+		static std::enable_if_t<std::is_base_of_v<Event, EventT>, EventT*> CreateDeferredEvent(Types&&... args)
+		{
+			EventT* event = new EventT(args...);
+			event->m_Defer = true;
+			return event;
+		}
+
 	protected:
 		bool m_Handled = false;
-		bool m_Defer = true;
+		bool m_Defer = false;
 	};
+
+	using DeferredEventPtr = Event*;
 }

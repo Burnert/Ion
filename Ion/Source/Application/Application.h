@@ -30,7 +30,7 @@ namespace Ion {
 		// Platform specific method for polling application events / messages.
 		virtual void PollEvents() { };
 
-		virtual void OnEvent(Event* event);
+		virtual void OnEvent(Event& event);
 		virtual void DispatchEvent(Event& event);
 
 	private:

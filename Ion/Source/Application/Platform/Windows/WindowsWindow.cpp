@@ -36,12 +36,14 @@ namespace Ion
 	{
 		WindowsWindow& windowRef = *(WindowsWindow*)GetProp(hWnd, L"WinObj");
 
+		// Handle destroy event first
+
 		if (uMsg == WM_DESTROY)
 		{
 			PostQuitMessage(0);
 
-			auto event = new WindowCloseEvent((ulong)hWnd);
-			windowRef.m_EventCallback(event);
+			DeferredEventPtr event = Event::CreateDeferredEvent<WindowCloseEvent>((ulong)hWnd);
+			windowRef.m_EventCallback(*event);
 
 			return 0;
 		}
@@ -52,16 +54,16 @@ namespace Ion
 
 			case WM_SETFOCUS:
 			{
-				auto event = new WindowFocusEvent((ulong)hWnd);
-				windowRef.m_EventCallback(event);
+				DeferredEventPtr event = Event::CreateDeferredEvent<WindowFocusEvent>((ulong)hWnd);
+				windowRef.m_EventCallback(*event);
 
 				return 0;
 			}
 
 			case WM_KILLFOCUS:
 			{
-				auto event = new WindowLostFocusEvent((ulong)hWnd);
-				windowRef.m_EventCallback(event);
+				DeferredEventPtr event = Event::CreateDeferredEvent<WindowLostFocusEvent>((ulong)hWnd);
+				windowRef.m_EventCallback(*event);
 
 				return 0;
 			}
@@ -73,8 +75,7 @@ namespace Ion
 				int xPos = LOWORD(lParam);
 				int yPos = HIWORD(lParam);
 				auto event = WindowMovedEvent((ulong)hWnd, xPos, yPos);
-				event.NoDefer();
-				windowRef.m_EventCallback(&event);
+				windowRef.m_EventCallback(event);
 
 				return 0;
 			}
@@ -84,8 +85,7 @@ namespace Ion
 				int width  = LOWORD(lParam);
 				int height = HIWORD(lParam);
 				auto event = WindowResizeEvent((ulong)hWnd, width, height);
-				event.NoDefer();
-				windowRef.m_EventCallback(&event);
+				windowRef.m_EventCallback(event);
 
 				return 0;
 			}
