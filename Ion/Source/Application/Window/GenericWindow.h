@@ -11,7 +11,7 @@ namespace Ion
 	{
 	public:
 		using EventPtr = std::shared_ptr<Event>;
-		using EventCallback = std::function<void(EventPtr)>;
+		using EventCallback = std::function<void(Event*)>;
 
 		virtual ~GenericWindow();
 

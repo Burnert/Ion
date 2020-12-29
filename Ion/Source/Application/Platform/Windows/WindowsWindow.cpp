@@ -41,7 +41,7 @@ namespace Ion
 			PostQuitMessage(0);
 
 			auto event = new WindowCloseEvent((ulong)hWnd);
-			windowRef.m_EventCallback(event->MakeShared());
+			windowRef.m_EventCallback(event);
 
 			return 0;
 		}
@@ -53,7 +53,7 @@ namespace Ion
 			case WM_SETFOCUS:
 			{
 				auto event = new WindowFocusEvent((ulong)hWnd);
-				windowRef.m_EventCallback(event->MakeShared());
+				windowRef.m_EventCallback(event);
 
 				return 0;
 			}
@@ -61,7 +61,7 @@ namespace Ion
 			case WM_KILLFOCUS:
 			{
 				auto event = new WindowLostFocusEvent((ulong)hWnd);
-				windowRef.m_EventCallback(event->MakeShared());
+				windowRef.m_EventCallback(event);
 
 				return 0;
 			}
@@ -72,9 +72,9 @@ namespace Ion
 			{
 				int xPos = LOWORD(lParam);
 				int yPos = HIWORD(lParam);
-				auto event = new WindowMovedEvent((ulong)hWnd, xPos, yPos);
-				event->NoDefer();
-				windowRef.m_EventCallback(event->MakeShared());
+				auto event = WindowMovedEvent((ulong)hWnd, xPos, yPos);
+				event.NoDefer();
+				windowRef.m_EventCallback(&event);
 
 				return 0;
 			}
@@ -83,9 +83,9 @@ namespace Ion
 			{
 				int width  = LOWORD(lParam);
 				int height = HIWORD(lParam);
-				auto event = new WindowResizeEvent((ulong)hWnd, width, height);
-				event->NoDefer();
-				windowRef.m_EventCallback(event->MakeShared());
+				auto event = WindowResizeEvent((ulong)hWnd, width, height);
+				event.NoDefer();
+				windowRef.m_EventCallback(&event);
 
 				return 0;
 			}

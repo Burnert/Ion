@@ -18,8 +18,9 @@ namespace Ion {
 
 	class ION_API Application
 	{
-		using EventPtr = std::shared_ptr<Event>;
 	public:
+		using EventPtr = std::shared_ptr<Event>;
+
 		Application();
 		virtual ~Application();
 
@@ -29,7 +30,7 @@ namespace Ion {
 		// Platform specific method for polling application events / messages.
 		virtual void PollEvents() { };
 
-		virtual void OnEvent(EventPtr event);
+		virtual void OnEvent(Event* event);
 		virtual void DispatchEvent(Event& event);
 
 	private:

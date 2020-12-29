@@ -40,10 +40,10 @@ namespace Ion {
 		}
 	}
 
-	void Application::OnEvent(EventPtr event)
+	void Application::OnEvent(Event* event)
 	{
 		if (event->m_Defer)
-			m_EventQueue->PushEvent(event);
+			m_EventQueue->PushEvent(event->MakeShared());
 		else
 			DispatchEvent(*event);
 	}

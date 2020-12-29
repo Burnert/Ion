@@ -10,6 +10,7 @@
 #include "CoreMacros.h"
 #include "CoreTypes.h"
 
+#include "Core/Event/Event.h"
+
 #include "Log/Logger.h"
 
-#include "Core/Event/Event.h"
