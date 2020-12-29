@@ -21,6 +21,28 @@ namespace Ion {
 
 	void Application::Init()
 	{
+		// Layer example
+
+		using LayerPtr = std::shared_ptr<Layer>;
+		m_LayerStack = std::make_unique<LayerStack>();
+		LayerPtr layer1 = m_LayerStack->PushLayer<Layer>("Test1");
+		LayerPtr overlay1 = m_LayerStack->PushOverlayLayer<Layer>("Overlay1");
+		LayerPtr layer2 = m_LayerStack->PushLayer<Layer>("Test2");
+		LayerPtr layer3 = m_LayerStack->PushLayer<Layer>("Test3");
+		LayerPtr overlay2 = m_LayerStack->PushOverlayLayer<Layer>("Overlay2");
+
+		auto findTest = m_LayerStack->GetLayer("Test2");
+		ASSERT(findTest != nullptr)
+		auto findTest2 = m_LayerStack->GetLayer("TestNotFound");
+		ASSERT(findTest2 == nullptr)
+
+		m_LayerStack->RemoveLayer("Test1");
+		m_LayerStack->RemoveLayer("Overlay1");
+
+		layer3->SetEnabled(false);
+
+		// End Layer example
+
 		// Create a platform specific window.
 		m_ApplicationWindow = Ion::GenericWindow::Create();
 
@@ -31,13 +53,32 @@ namespace Ion {
 
 		m_ApplicationWindow->Show();
 
-		m_Running = true;
-		while (m_Running)
+		m_bRunning = true;
+		while (m_bRunning)
 		{
 			// Application loop
 			PollEvents();
+
+			Update(0.0f);
+			Render();
+
 			m_EventQueue->ProcessEvents();
 		}
+	}
+
+	void Application::PollEvents()
+	{
+		// Platform specific
+	}
+
+	void Application::Update(float DeltaTime)
+	{
+		m_LayerStack->OnUpdate(DeltaTime);
+	}
+
+	void Application::Render()
+	{
+		m_LayerStack->OnRender();
 	}
 
 	void Application::OnEvent(Event& event)
@@ -58,30 +99,10 @@ namespace Ion {
 
 		dispatcher.Dispatch<WindowCloseEvent>([this](WindowCloseEvent& event)
 		{
-			m_Running = false;
+			m_bRunning = false;
 			return true;
 		});
 
-		dispatcher.Dispatch<WindowMovedEvent>([this](WindowMovedEvent& event)
-		{
-			return true;
-		});
-
-		dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& event)
-		{
-			return true;
-		});
-
-		dispatcher.Dispatch<WindowFocusEvent>([this](WindowFocusEvent& event)
-		{
-			return true;
-		});
-
-		dispatcher.Dispatch<WindowLostFocusEvent> ([this](WindowLostFocusEvent& event)
-		{
-			return true;
-		});
-
-		dispatcher.Handled();
+		m_LayerStack->OnEvent(event);
 	}
 }
