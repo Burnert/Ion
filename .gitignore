@@ -357,7 +357,7 @@ Build/
 Intermediate/
 
 # VS Code files
-.vscode/*
+.vscode/
 
 # VS project files
 *.sln
