@@ -32,7 +32,7 @@ namespace Ion
 		FORCEINLINE uint GetRepeatCount() const { return m_RepeatCount; }
 
 		SET_EVENT_TYPE(KeyPressed)
-		SET_EVENT_TOSTRING_FORMAT("{keyCode: " << GetKeyCode() << "} (repeat " << m_RepeatCount << ")")
+		SET_EVENT_TOSTRING_FORMAT("{ keyCode: " << GetKeyCode() << " } (repeat " << m_RepeatCount << ")")
 
 	private:
 		uint m_RepeatCount;
@@ -46,7 +46,7 @@ namespace Ion
 			KeyboardEvent(keyCode) {}
 
 		SET_EVENT_TYPE(KeyReleased)
-		SET_EVENT_TOSTRING_FORMAT("{ keyCode: " << GetKeyCode() << "}")
+		SET_EVENT_TOSTRING_FORMAT("{ keyCode: " << GetKeyCode() << " }")
 	};
 
 	// Mouse Events
@@ -62,7 +62,7 @@ namespace Ion
 
 		SET_EVENT_TYPE(MouseMoved)
 		SET_EVENT_CATEGORY(EC_Input | EC_Mouse)
-		SET_EVENT_TOSTRING_FORMAT("{x: " << m_X << ", y: " << m_Y << "}")
+		SET_EVENT_TOSTRING_FORMAT("{ x: " << m_X << ", y: " << m_Y << " }")
 
 	private:
 		float m_X, m_Y;
@@ -79,7 +79,7 @@ namespace Ion
 
 		SET_EVENT_TYPE(MouseScrolled)
 		SET_EVENT_CATEGORY(EC_Input | EC_Mouse)
-		SET_EVENT_TOSTRING_FORMAT("{offset: " << m_Offset << "}")
+		SET_EVENT_TOSTRING_FORMAT("{ offset: " << m_Offset << " }")
 
 	private:
 		float m_Offset;
@@ -110,7 +110,7 @@ namespace Ion
 			MouseButtonEvent(button) {}
 
 		SET_EVENT_TYPE(MouseButtonPressed)
-		SET_EVENT_TOSTRING_FORMAT("{button: " << GetMouseButton() << "}")
+		SET_EVENT_TOSTRING_FORMAT("{ button: " << GetMouseButton() << " }")
 	};
 
 
@@ -121,6 +121,6 @@ namespace Ion
 			MouseButtonEvent(button) {}
 
 		SET_EVENT_TYPE(MouseButtonPressed)
-		SET_EVENT_TOSTRING_FORMAT("{button: " << GetMouseButton() << "}")
+		SET_EVENT_TOSTRING_FORMAT("{ button: " << GetMouseButton() << " }")
 	};
 }

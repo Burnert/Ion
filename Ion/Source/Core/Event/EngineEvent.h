@@ -16,7 +16,7 @@ namespace Ion
 
 		SET_EVENT_CATEGORY(EC_Application | EC_Engine)
 		SET_EVENT_TYPE(EngineTick)
-		SET_EVENT_TOSTRING_FORMAT("{deltaTime: " << m_DeltaTime << "}")
+		SET_EVENT_TOSTRING_FORMAT("{ deltaTime: " << m_DeltaTime << " }")
 
 	private:
 		float m_DeltaTime;

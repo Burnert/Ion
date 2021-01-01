@@ -42,7 +42,7 @@ namespace Ion
 			m_Height(height) { }
 
 		SET_EVENT_TYPE(WindowResize)
-		SET_EVENT_TOSTRING_FORMAT("{window: " << GetWindowHandle() << ", width: " << m_Width << ", height: " << m_Height << "}")
+		SET_EVENT_TOSTRING_FORMAT("{ window: " << GetWindowHandle() << ", width: " << m_Width << ", height: " << m_Height << " }")
 
 	private:
 		uint m_Width, m_Height;
@@ -58,7 +58,7 @@ namespace Ion
 			m_Y(y) { }
 
 		SET_EVENT_TYPE(WindowMoved)
-		SET_EVENT_TOSTRING_FORMAT("{window: " << GetWindowHandle() << ", x: " << m_X << ", y: " << m_Y << "}")
+		SET_EVENT_TOSTRING_FORMAT("{ window: " << GetWindowHandle() << ", x: " << m_X << ", y: " << m_Y << " }")
 
 	private:
 		int m_X, m_Y;
@@ -72,7 +72,7 @@ namespace Ion
 			WindowEvent(windowHandle) { }
 
 		SET_EVENT_TYPE(WindowFocus)
-		SET_EVENT_TOSTRING_FORMAT("{window: " << GetWindowHandle() << "}")
+		SET_EVENT_TOSTRING_FORMAT("{ window: " << GetWindowHandle() << " }")
 	};
 
 
@@ -83,6 +83,6 @@ namespace Ion
 			WindowEvent(windowHandle) { }
 
 		SET_EVENT_TYPE(WindowLostFocus)
-		SET_EVENT_TOSTRING_FORMAT("{window: " << GetWindowHandle() << "}")
+		SET_EVENT_TOSTRING_FORMAT("{ window: " << GetWindowHandle() << " }")
 	};
 }
