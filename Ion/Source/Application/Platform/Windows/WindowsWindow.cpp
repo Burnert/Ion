@@ -72,8 +72,9 @@ namespace Ion
 
 			case WM_MOVE:
 			{
-				int xPos = LOWORD(lParam);
-				int yPos = HIWORD(lParam);
+				POINTS pos = MAKEPOINTS(lParam);
+				int xPos = pos.x;
+				int yPos = pos.y;
 				auto event = WindowMovedEvent((ullong)hWnd, xPos, yPos);
 				windowRef.m_EventCallback(event);
 

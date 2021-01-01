@@ -52,7 +52,7 @@ namespace Ion
 	class ION_API WindowMovedEvent : public WindowEvent
 	{
 	public:
-		WindowMovedEvent(ullong windowHandle, uint x, uint y) :
+		WindowMovedEvent(ullong windowHandle, int x, int y) :
 			WindowEvent(windowHandle),
 			m_X(x),
 			m_Y(y) { }
@@ -61,7 +61,7 @@ namespace Ion
 		SET_EVENT_TOSTRING_FORMAT("{window: " << GetWindowHandle() << ", x: " << m_X << ", y: " << m_Y << "}")
 
 	private:
-		uint m_X, m_Y;
+		int m_X, m_Y;
 	};
 
 
