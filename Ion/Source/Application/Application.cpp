@@ -11,7 +11,8 @@
 namespace Ion {
 
 	Application::Application() :
-		m_EventQueue(std::make_unique<EventQueue>())
+		m_EventQueue(std::make_unique<EventQueue>()),
+		m_LayerStack(std::make_unique<LayerStack>())
 	{
 		m_EventQueue->SetEventHandler(BIND_MEMBER_FUNC(Application::DispatchEvent));
 		Logger::Init();
@@ -21,28 +22,6 @@ namespace Ion {
 
 	void Application::Init()
 	{
-		// Layer example
-
-		using LayerPtr = std::shared_ptr<Layer>;
-		m_LayerStack = std::make_unique<LayerStack>();
-		LayerPtr layer1 = m_LayerStack->PushLayer<Layer>("Test1");
-		LayerPtr overlay1 = m_LayerStack->PushOverlayLayer<Layer>("Overlay1");
-		LayerPtr layer2 = m_LayerStack->PushLayer<Layer>("Test2");
-		LayerPtr layer3 = m_LayerStack->PushLayer<Layer>("Test3");
-		LayerPtr overlay2 = m_LayerStack->PushOverlayLayer<Layer>("Overlay2");
-
-		auto findTest = m_LayerStack->GetLayer("Test2");
-		ASSERT(findTest != nullptr)
-		auto findTest2 = m_LayerStack->GetLayer("TestNotFound");
-		ASSERT(findTest2 == nullptr)
-
-		m_LayerStack->RemoveLayer("Test1");
-		m_LayerStack->RemoveLayer("Overlay1");
-
-		layer3->SetEnabled(false);
-
-		// End Layer example
-
 		// Create a platform specific window.
 		m_ApplicationWindow = Ion::GenericWindow::Create();
 
