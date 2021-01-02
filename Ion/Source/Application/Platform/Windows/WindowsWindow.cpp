@@ -5,7 +5,7 @@
 
 #include "Core/Event/Event.h"
 #include "Core/Event/WindowEvent.h"
-
+#include "Core/Event/InputEvent.h"
 
 #include "Log/Logger.h"
 
@@ -32,10 +32,37 @@ namespace Ion
 		m_HWnd(NULL)
 	{}
 
+	void WindowsWindow::Update_Application()
+	{
+		// Shift hack:
+		if (m_bBothShiftsPressed)
+		{
+			byte keyState = 0;
+			keyState |= (GetAsyncKeyState(VK_LSHIFT) & 0x8000) >> 14;
+			keyState |= (GetAsyncKeyState(VK_RSHIFT) & 0x8000) >> 15;
+			if (keyState != 0x3)
+			{
+				uint actualKeyCode;
+				// Left shift held, so right shift released and vice-versa
+				if (keyState == 0x2)
+					actualKeyCode = VK_RSHIFT;
+				else 
+					actualKeyCode = VK_LSHIFT;
+				m_bBothShiftsPressed = false;
+				
+				WindowsApplication::TranslateKeyCode(&actualKeyCode);
+
+				auto event = KeyReleasedEvent(VK_SHIFT, actualKeyCode);
+				m_EventCallback(event);
+			}
+		}
+	}
+
 	LRESULT WindowsWindow::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		WindowsWindow& windowRef = *(WindowsWindow*)GetProp(hWnd, L"WinObj");
 
+		// --------------------------
 		// Handle destroy event first
 
 		if (uMsg == WM_DESTROY)
@@ -50,7 +77,9 @@ namespace Ion
 
 		switch (uMsg)
 		{
-			// Deferred events
+			//                 //
+			// Deferred events //
+			//                 //
 
 			case WM_SETFOCUS:
 			{
@@ -68,7 +97,9 @@ namespace Ion
 				return 0;
 			}
 
-			// Non-Deferred events
+			//                     //
+			// Non-Deferred events //
+			//                     //
 
 			case WM_MOVE:
 			{
@@ -86,6 +117,181 @@ namespace Ion
 				int width  = LOWORD(lParam);
 				int height = HIWORD(lParam);
 				auto event = WindowResizeEvent((ullong)hWnd, width, height);
+				windowRef.m_EventCallback(event);
+
+				return 0;
+			}
+
+			// Keyboard events
+
+			case WM_KEYDOWN:
+			case WM_SYSKEYDOWN:
+			case WM_KEYUP:
+			case WM_SYSKEYUP:
+			{
+				uint keyCode       = (uint)wParam;
+				uint actualKeyCode = keyCode;
+				bool bState        = (HIWORD(lParam) & KF_UP);
+				bool bExtendedKey  = (HIWORD(lParam) & KF_EXTENDED);
+
+				if (keyCode == VK_CONTROL)
+				{
+					// HACK:
+					// Right Alt key press sends a Left Ctrl key message
+					// and then the actual Alt one, but we don't need that,
+					// so if this sequence gets detected the Left Ctrl
+					// message has to be discarded.
+					if (!bExtendedKey)
+					{
+						MSG nextMsg;
+						if (PeekMessage(&nextMsg, NULL, 0, 0, PM_NOREMOVE))
+						{
+							if (nextMsg.message == WM_KEYDOWN ||
+								nextMsg.message == WM_SYSKEYDOWN ||
+								nextMsg.message == WM_KEYUP ||
+								nextMsg.message == WM_SYSKEYUP)
+							{
+								if (nextMsg.wParam == VK_MENU &&
+									(HIWORD(nextMsg.lParam) & KF_EXTENDED))
+									// Discard the LCtrl right before the RAlt
+									break;
+							}
+						}
+						actualKeyCode = VK_LCONTROL;
+					}
+					else
+					{
+						actualKeyCode = VK_RCONTROL;
+					}
+				}
+				else if (keyCode == VK_SHIFT)
+				{
+					// HACK:
+					// When releasing a Shift key when both right and left
+					// are pressed, Windows doesn't send a message. If both
+					// keys are down we start checking each frame if one
+					// of them was released and fire a proper event.
+					//
+					// Rest of the code in Update_Application()
+					if ((GetKeyState(VK_LSHIFT) & 0x8000) &&
+						(GetKeyState(VK_RSHIFT) & 0x8000))
+					{
+						m_bBothShiftsPressed = true;
+					}
+
+					// Note:
+					// Distinguishing between left and right Shift keys
+					// is a bit diffrent from the other keys.
+					byte scanCode = LOBYTE(HIWORD(lParam));
+
+					if (scanCode == 0x36)
+						actualKeyCode = VK_RSHIFT;
+					else
+						actualKeyCode = VK_LSHIFT;
+				}
+				else if (keyCode == VK_MENU)
+				{
+					if (bExtendedKey)
+						actualKeyCode = VK_RMENU;
+					else
+						actualKeyCode = VK_LMENU;
+				}
+
+				// Translate Windows keycodes to internal ones
+				WindowsApplication::TranslateKeyCode(&keyCode);
+				WindowsApplication::TranslateKeyCode(&actualKeyCode);
+
+				// Up: true, Down: false
+				if (bState)
+				{
+					// HACK:
+					// Print screen key doesn't send a key down message,
+					// so upon release send PressedEvent before the ReleaseEvent.
+					if (keyCode == VK_SNAPSHOT)
+					{
+						auto printScreenPressed = KeyPressedEvent(keyCode, actualKeyCode, 1);
+						windowRef.m_EventCallback(printScreenPressed);
+					}
+
+					auto event = KeyReleasedEvent(keyCode, actualKeyCode);
+					windowRef.m_EventCallback(event);
+				}
+				else
+				{
+					ushort repeatCount = LOWORD(lParam);
+
+					auto event = KeyPressedEvent(keyCode, actualKeyCode, repeatCount);
+					windowRef.m_EventCallback(event);
+				}
+
+				return 0;
+			}
+
+			// Mouse events
+
+			case WM_LBUTTONUP:
+			case WM_RBUTTONUP:
+			case WM_MBUTTONUP:
+			case WM_XBUTTONUP:
+			case WM_LBUTTONDOWN:
+			case WM_RBUTTONDOWN:
+			case WM_MBUTTONDOWN:
+			case WM_XBUTTONDOWN:
+			{
+				uint keyCode;
+				bool bState = 
+					uMsg == WM_LBUTTONUP ||
+					uMsg == WM_RBUTTONUP ||
+					uMsg == WM_MBUTTONUP ||
+					uMsg == WM_XBUTTONUP;
+
+				if (uMsg <= WM_LBUTTONDBLCLK)
+					keyCode = VK_LBUTTON;
+				else if (uMsg <= WM_RBUTTONDBLCLK)
+					keyCode = VK_RBUTTON;
+				else if (uMsg <= WM_MBUTTONDBLCLK)
+					keyCode = VK_MBUTTON;
+				else if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1)
+					keyCode = VK_XBUTTON1;
+				else
+					keyCode = VK_XBUTTON2;
+					
+				// Up: true, Down: false
+				if (bState)
+				{
+					auto event = MouseButtonReleasedEvent(keyCode);
+					windowRef.m_EventCallback(event);
+				}
+				else
+				{
+					auto event = MouseButtonPressedEvent(keyCode);
+					windowRef.m_EventCallback(event);
+				}
+
+				return 0;
+			}
+
+			case WM_MOUSEMOVE:
+			{
+				RECT clientRect;
+				GetClientRect(hWnd, &clientRect);
+				
+				int xPos = GET_X_LPARAM(lParam);
+				int yPos = GET_Y_LPARAM(lParam);
+
+				float xNormalised = (float)xPos / clientRect.right;
+				float yNormalised = (float)yPos / clientRect.bottom;
+
+				auto event = MouseMovedEvent(xNormalised, yNormalised);
+				windowRef.m_EventCallback(event);
+
+				return 0;
+			}
+
+			case WM_MOUSEWHEEL:
+			{
+				float delta = (float)GET_WHEEL_DELTA_WPARAM(wParam);
+				auto event = MouseScrolledEvent(delta);
 				windowRef.m_EventCallback(event);
 
 				return 0;
@@ -254,5 +460,7 @@ namespace Ion
 
 		return GetDC(m_HWnd);
 	}
+
+	bool WindowsWindow::m_bBothShiftsPressed = false;
 }
 

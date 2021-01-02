@@ -37,12 +37,13 @@ namespace Ion {
 		virtual void OnEvent(Event& event);
 		virtual void DispatchEvent(Event& event);
 
+		FORCEINLINE std::shared_ptr<GenericWindow> GetApplicationWindow() const { return m_Window; }
+
 	private:
 		bool m_bRunning = false;
 
+		std::shared_ptr<GenericWindow> m_Window;
 		std::unique_ptr<EventQueue> m_EventQueue;
-		std::shared_ptr<GenericWindow> m_ApplicationWindow;
-		
 		std::unique_ptr<LayerStack> m_LayerStack;
 	};
 

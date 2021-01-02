@@ -23,14 +23,14 @@ namespace Ion {
 	void Application::Init()
 	{
 		// Create a platform specific window.
-		m_ApplicationWindow = Ion::GenericWindow::Create();
+		m_Window = Ion::GenericWindow::Create();
 
-		m_ApplicationWindow->SetEventCallback(BIND_MEMBER_FUNC(Application::OnEvent));
+		m_Window->SetEventCallback(BIND_MEMBER_FUNC(Application::OnEvent));
 
-		m_ApplicationWindow->Initialize();
-		m_ApplicationWindow->SetTitle(L"Ion Engine");
+		m_Window->Initialize();
+		m_Window->SetTitle(L"Ion Engine");
 
-		m_ApplicationWindow->Show();
+		m_Window->Show();
 
 		m_bRunning = true;
 		while (m_bRunning)

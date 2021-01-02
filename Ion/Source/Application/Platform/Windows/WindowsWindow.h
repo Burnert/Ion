@@ -6,6 +6,7 @@ namespace Ion
 {
 	class ION_API WindowsWindow : public GenericWindow
 	{
+		friend class WindowsApplication;
 	public:
 		static std::shared_ptr<WindowsWindow> Create();
 
@@ -32,6 +33,8 @@ namespace Ion
 		// Protected constructor: Only shared_ptrs of this class can be made.
 		WindowsWindow();
 
+		void Update_Application();
+
 		static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	private:
@@ -41,5 +44,7 @@ namespace Ion
 
 		// Should be true after Initialize() has been called.
 		bool m_bRegistered = false;
+
+		static bool m_bBothShiftsPressed;
 	};
 }

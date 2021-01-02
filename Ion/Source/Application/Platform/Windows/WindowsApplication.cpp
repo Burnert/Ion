@@ -1,6 +1,7 @@
 #include "IonPCH.h"
 
 #include "WindowsApplication.h"
+#include "WindowsWindow.h"
 
 namespace Ion
 {
@@ -19,6 +20,19 @@ namespace Ion
 			TranslateMessage(&message);
 			DispatchMessage(&message);
 		}
+	}
+
+	void WindowsApplication::Update(float DeltaTime)
+	{
+		std::shared_ptr window = std::static_pointer_cast<WindowsWindow>(GetApplicationWindow());
+		window->Update_Application();
+	}
+
+	bool WindowsApplication::TranslateKeyCode(uint* keyCode)
+	{
+		// Placeholder implementation
+		// TODO: make a proper one
+		return true;
 	}
 
 	HINSTANCE WindowsApplication::m_HInstance;

@@ -12,8 +12,13 @@ namespace Ion
 
 		FORCEINLINE static HINSTANCE GetHInstance() { return m_HInstance; }
 
+		/* Translates a Windows key code to Ion's internal key code */
+		static bool TranslateKeyCode(uint* keyCode);
+
 	protected:
 		virtual void PollEvents() override;
+
+		virtual void Update(float DeltaTime) override;
 
 	private:
 		static HINSTANCE m_HInstance;

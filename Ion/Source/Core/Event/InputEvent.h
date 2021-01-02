@@ -10,29 +10,32 @@ namespace Ion
 	{
 	public:
 		FORCEINLINE uint GetKeyCode() const { return m_KeyCode; }
+		FORCEINLINE uint GetActualKeyCode() const { return m_ActualKeyCode; }
 
 		SET_EVENT_CATEGORY(EC_Input | EC_Keyboard)
 
 	protected:
-		KeyboardEvent(uint keyCode) : 
-			m_KeyCode(keyCode) {}
+		KeyboardEvent(uint keyCode, uint actualKeyCode) :
+			m_KeyCode(keyCode),
+			m_ActualKeyCode(actualKeyCode) {}
 
 	private:
 		uint m_KeyCode;
+		uint m_ActualKeyCode;
 	};
 
 
 	class ION_API KeyPressedEvent : public KeyboardEvent
 	{
 	public:
-		KeyPressedEvent(uint keyCode, uint repeatCount) :
-			KeyboardEvent(keyCode),
+		KeyPressedEvent(uint keyCode, uint actualKeyCode, uint repeatCount) :
+			KeyboardEvent(keyCode, actualKeyCode),
 			m_RepeatCount(repeatCount) {}
 
 		FORCEINLINE uint GetRepeatCount() const { return m_RepeatCount; }
 
 		SET_EVENT_TYPE(KeyPressed)
-		SET_EVENT_TOSTRING_FORMAT("{ keyCode: " << GetKeyCode() << " } (repeat " << m_RepeatCount << ")")
+		SET_EVENT_TOSTRING_FORMAT("{ keyCode: " << GetKeyCode() << ", actualKeyCode: " << GetActualKeyCode() << " } (repeat " << m_RepeatCount << ")")
 
 	private:
 		uint m_RepeatCount;
@@ -42,11 +45,11 @@ namespace Ion
 	class ION_API KeyReleasedEvent : public KeyboardEvent
 	{
 	public:
-		KeyReleasedEvent(uint keyCode) :
-			KeyboardEvent(keyCode) {}
+		KeyReleasedEvent(uint keyCode, uint actualKeyCode) :
+			KeyboardEvent(keyCode, actualKeyCode) {}
 
 		SET_EVENT_TYPE(KeyReleased)
-		SET_EVENT_TOSTRING_FORMAT("{ keyCode: " << GetKeyCode() << " }")
+		SET_EVENT_TOSTRING_FORMAT("{ keyCode: " << GetKeyCode() << ", actualKeyCode: " << GetActualKeyCode() << " }")
 	};
 
 	// Mouse Events
