@@ -13,8 +13,8 @@
 #include "Core/Event/InputEvent.h"
 #include "Core/Event/WindowEvent.h"
 #include "Core/Event/EventQueue.h"
-#include "Application/Layer/Layer.h"
-#include "Application/Layer/LayerStack.h"
+#include "Core/Layer/Layer.h"
+#include "Core/Layer/LayerStack.h"
 
 // Entry point ----------------
 #include "Application/EntryPoint.h"

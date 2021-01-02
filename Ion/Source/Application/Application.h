@@ -3,8 +3,8 @@
 #include "Core/Core.h"
 #include "Core/Event/InputEvent.h"
 #include "Core/Event/WindowEvent.h"
+#include "Core/Layer/LayerStack.h"
 #include "Application/Window/GenericWindow.h"
-#include "Application/Layer/LayerStack.h"
 
 // Specifies the main class of the application (can be used only once)
 #define USE_APPLICATION_CLASS(name) \
