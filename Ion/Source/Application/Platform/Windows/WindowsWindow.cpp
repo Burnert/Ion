@@ -6,6 +6,7 @@
 #include "Core/Event/Event.h"
 #include "Core/Event/WindowEvent.h"
 #include "Core/Event/InputEvent.h"
+#include "Core/Input.h"
 
 #include "Log/Logger.h"
 
@@ -45,14 +46,12 @@ namespace Ion
 				uint actualKeyCode;
 				// Left shift held, so right shift released and vice-versa
 				if (keyState == 0x2)
-					actualKeyCode = VK_RSHIFT;
+					actualKeyCode = Key::RShift;
 				else 
-					actualKeyCode = VK_LSHIFT;
+					actualKeyCode = Key::LShift;
 				m_bBothShiftsPressed = false;
-				
-				WindowsApplication::TranslateKeyCode(&actualKeyCode);
 
-				auto event = KeyReleasedEvent(VK_SHIFT, actualKeyCode);
+				auto event = KeyReleasedEvent(Key::Shift, actualKeyCode);
 				m_EventCallback(event);
 			}
 		}
@@ -201,13 +200,25 @@ namespace Ion
 				WindowsApplication::TranslateKeyCode(&keyCode);
 				WindowsApplication::TranslateKeyCode(&actualKeyCode);
 
+				// HACK:
+				// Windows doesn't have a separate keycode for keypad Enter button,
+				// but the key is extended in this case. Therefore, if the keycode
+				// is an extended Enter key, change the internal (translated)
+				// keycode to KP_Enter.
+				if (keyCode == Key::Enter && bExtendedKey)
+				{
+					keyCode = Key::KP_Enter;
+					actualKeyCode = Key::KP_Enter;
+				}
+
 				// Up: true, Down: false
 				if (bState)
 				{
 					// HACK:
 					// Print screen key doesn't send a key down message,
 					// so upon release send PressedEvent before the ReleaseEvent.
-					if (keyCode == VK_SNAPSHOT)
+					// At this point keycode variables are already translated.
+					if (keyCode == Key::PrintScr)
 					{
 						auto printScreenPressed = KeyPressedEvent(keyCode, actualKeyCode, 1);
 						windowRef.m_EventCallback(printScreenPressed);
@@ -238,7 +249,7 @@ namespace Ion
 			case WM_MBUTTONDOWN:
 			case WM_XBUTTONDOWN:
 			{
-				uint keyCode;
+				uint button;
 				bool bState = 
 					uMsg == WM_LBUTTONUP ||
 					uMsg == WM_RBUTTONUP ||
@@ -246,25 +257,25 @@ namespace Ion
 					uMsg == WM_XBUTTONUP;
 
 				if (uMsg <= WM_LBUTTONDBLCLK)
-					keyCode = VK_LBUTTON;
+					button = Mouse::Left;
 				else if (uMsg <= WM_RBUTTONDBLCLK)
-					keyCode = VK_RBUTTON;
+					button = Mouse::Right;
 				else if (uMsg <= WM_MBUTTONDBLCLK)
-					keyCode = VK_MBUTTON;
+					button = Mouse::Middle;
 				else if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1)
-					keyCode = VK_XBUTTON1;
+					button = Mouse::Button4;
 				else
-					keyCode = VK_XBUTTON2;
+					button = Mouse::Button5;
 					
 				// Up: true, Down: false
 				if (bState)
 				{
-					auto event = MouseButtonReleasedEvent(keyCode);
+					auto event = MouseButtonReleasedEvent(button);
 					windowRef.m_EventCallback(event);
 				}
 				else
 				{
-					auto event = MouseButtonPressedEvent(keyCode);
+					auto event = MouseButtonPressedEvent(button);
 					windowRef.m_EventCallback(event);
 				}
 

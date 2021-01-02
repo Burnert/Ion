@@ -28,11 +28,11 @@ namespace Ion
 		window->Update_Application();
 	}
 
-	bool WindowsApplication::TranslateKeyCode(uint* keyCode)
+	bool WindowsApplication::TranslateKeyCode(uint* keyCodePtr)
 	{
-		// Placeholder implementation
-		// TODO: make a proper one
-		return true;
+		uint& keyCode = *keyCodePtr;
+		*keyCodePtr = WindowsApplication::m_InputKeyCodeLookup[keyCode];
+		return (bool)(*keyCodePtr);
 	}
 
 	HINSTANCE WindowsApplication::m_HInstance;
