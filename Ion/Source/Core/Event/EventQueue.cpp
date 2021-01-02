@@ -4,7 +4,7 @@
 
 #include "Log/Logger.h"
 
-#include "Core/Utilities.h"
+#include "Core/CoreUtilities.h"
 
 namespace Ion
 {

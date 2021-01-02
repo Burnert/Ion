@@ -3,7 +3,7 @@
 #include "Core/CoreMacros.h"
 #include "Core/CoreTypes.h"
 #include "Core/CoreApi.h"
-#include "Core/Utilities.h"
+#include "Core/CoreUtilities.h"
 #include "Log/Logger.h"
 
 namespace Ion
