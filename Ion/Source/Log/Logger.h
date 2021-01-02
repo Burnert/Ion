@@ -42,6 +42,15 @@ namespace Ion
 
 #define ION_LOG_ENGINE_BADPLATFORMFUNCTIONCALL() ION_LOG_ENGINE_CRITICAL("{0} is not supposed to be called on this platform!", __FUNCTION__)
 
+// Side independent
+
+#define LOG_TRACE(...)                 ION_LOG_ENGINE_TRACE(__VA_ARGS__)
+#define LOG_DEBUG(...)                 ION_LOG_ENGINE_DEBUG(__VA_ARGS__)
+#define LOG_INFO(...)                  ION_LOG_ENGINE_INFO(__VA_ARGS__)
+#define LOG_WARN(...)                  ION_LOG_ENGINE_WARN(__VA_ARGS__)
+#define LOG_ERROR(...)                 ION_LOG_ENGINE_ERROR(__VA_ARGS__)
+#define LOG_CRITICAL(...)              ION_LOG_ENGINE_CRITICAL(__VA_ARGS__)
+
 #endif
 
 #define ION_LOG_TRACE(...)             Ion::Logger::GetClientLogger()->trace(__VA_ARGS__)
@@ -50,6 +59,15 @@ namespace Ion
 #define ION_LOG_WARN(...)              Ion::Logger::GetClientLogger()->warn(__VA_ARGS__)
 #define ION_LOG_ERROR(...)             Ion::Logger::GetClientLogger()->error(__VA_ARGS__)
 #define ION_LOG_CRITICAL(...)          Ion::Logger::GetClientLogger()->critical(__VA_ARGS__)
+
+// Side independent
+
+#define LOG_TRACE(...)                 ION_LOG_TRACE(__VA_ARGS__)
+#define LOG_DEBUG(...)                 ION_LOG_DEBUG(__VA_ARGS__)
+#define LOG_INFO(...)                  ION_LOG_INFO(__VA_ARGS__)
+#define LOG_WARN(...)                  ION_LOG_WARN(__VA_ARGS__)
+#define LOG_ERROR(...)                 ION_LOG_ERROR(__VA_ARGS__)
+#define LOG_CRITICAL(...)              ION_LOG_CRITICAL(__VA_ARGS__)
 
 #else
 
@@ -61,8 +79,6 @@ namespace Ion
 #define ION_LOG_ENGINE_WARN(...)
 #define ION_LOG_ENGINE_ERROR(...)
 #define ION_LOG_ENGINE_CRITICAL(...)
-
-#define ION_LOG_ENGINE_BADPLATFORMFUNCTIONCALL(...)
 
 #endif
 
