@@ -6,7 +6,7 @@
 #include "Core/Event/Event.h"
 #include "Core/Event/WindowEvent.h"
 #include "Core/Event/InputEvent.h"
-#include "Core/Input.h"
+#include "Core/Input/Input.h"
 
 #include "Log/Logger.h"
 

@@ -2,7 +2,7 @@
 
 #include "Core/CoreApi.h"
 #include "Application/Application.h"
-#include "Core/Input.h"
+#include "Core/Input/Input.h"
 
 namespace Ion
 {
