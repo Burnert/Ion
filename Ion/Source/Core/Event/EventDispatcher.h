@@ -4,7 +4,7 @@
 
 namespace Ion
 {
-	class EventDispatcher
+	class ION_API EventDispatcher
 	{
 		template<typename T, typename std::enable_if<std::is_base_of<Event, T>::value>::type* = nullptr>
 		using EventFunc = std::function<bool(T&)>;
@@ -18,13 +18,13 @@ namespace Ion
 		{
 			if (m_Event.GetType() == T::GetStaticType())
 			{
-				m_Event.m_Handled = callback(*(T*)&m_Event);
+				m_Event.m_bHandled = callback(*(T*)&m_Event);
 				return true;
 			}
 			return false;
 		}
 
-		FORCEINLINE bool Handled() { return m_Event.m_Handled; }
+		FORCEINLINE bool Handled() const { return m_Event.m_bHandled; }
 
 	private:
 		Event& m_Event;

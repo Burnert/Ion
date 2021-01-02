@@ -35,7 +35,7 @@ namespace Ion
 		FORCEINLINE uint GetRepeatCount() const { return m_RepeatCount; }
 
 		SET_EVENT_TYPE(KeyPressed)
-		SET_EVENT_TOSTRING_FORMAT("{ keyCode: " << GetKeyCode() << ", actualKeyCode: " << GetActualKeyCode() << " } (repeat " << m_RepeatCount << ")")
+		SET_EVENT_TOSTRING_FORMAT("{ keyCode: " << std::hex << GetKeyCode() << ", actualKeyCode: " << GetActualKeyCode() << " } (repeat " << std::dec << m_RepeatCount << ")")
 
 	private:
 		uint m_RepeatCount;
@@ -49,7 +49,7 @@ namespace Ion
 			KeyboardEvent(keyCode, actualKeyCode) {}
 
 		SET_EVENT_TYPE(KeyReleased)
-		SET_EVENT_TOSTRING_FORMAT("{ keyCode: " << GetKeyCode() << ", actualKeyCode: " << GetActualKeyCode() << " }")
+		SET_EVENT_TOSTRING_FORMAT("{ keyCode: " << std::hex << GetKeyCode() << ", actualKeyCode: " << GetActualKeyCode() << " }")
 	};
 
 	// Mouse Events

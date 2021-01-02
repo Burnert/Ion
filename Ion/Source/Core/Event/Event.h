@@ -4,6 +4,7 @@
 #include "Core/CoreTypes.h"
 #include "Core/CoreApi.h"
 #include "Core/Utilities.h"
+#include "Log/Logger.h"
 
 namespace Ion
 {
@@ -99,13 +100,14 @@ namespace Ion
 		FORCEINLINE virtual std::string Debug_ToString() const { return Debug_GetName(); }
 #endif
 
-		FORCEINLINE bool IsDeferred() const { return m_Defer; }
+		FORCEINLINE bool IsDeferred() const { return m_bDefer; }
 		
 		// Utility
 
 		/* Don't ever call this on stack allocated (non-deferred) events! */
 		std::shared_ptr<Event> MakeShared()
 		{
+			ASSERT(m_bDefer)
 			return std::shared_ptr<Event>(this);
 		}
 
@@ -114,13 +116,13 @@ namespace Ion
 		static std::enable_if_t<std::is_base_of_v<Event, EventT>, EventT*> CreateDeferredEvent(Types&&... args)
 		{
 			EventT* event = new EventT(args...);
-			event->m_Defer = true;
+			event->m_bDefer = true;
 			return event;
 		}
 
 	protected:
-		bool m_Handled = false;
-		bool m_Defer = false;
+		bool m_bHandled = false;
+		bool m_bDefer = false;
 	};
 
 	using DeferredEventPtr = Event*;
