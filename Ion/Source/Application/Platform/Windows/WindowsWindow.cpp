@@ -308,6 +308,15 @@ namespace Ion
 
 				return 0;
 			}
+
+			case WM_SYSCOMMAND:
+			{
+				// If system menu is activated by LAlt key
+				// return 0 so Windows doesn't beep, because
+				// there is actually no menu.
+				if (wParam == SC_KEYMENU && HIWORD(lParam) <= 0)
+					return 0;
+			}
 		}
 
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);
