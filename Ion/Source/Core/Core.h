@@ -11,4 +11,3 @@
 #include "CoreTypes.h"
 
 #include "Log/Logger.h"
-

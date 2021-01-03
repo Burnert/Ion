@@ -2,6 +2,7 @@
 
 #include "WindowsApplication.h"
 #include "WindowsWindow.h"
+#include "Core/Platform/Windows/WindowsInput.h"
 
 namespace Ion
 {
@@ -31,7 +32,7 @@ namespace Ion
 	bool WindowsApplication::TranslateKeyCode(uint* keyCodePtr)
 	{
 		uint& keyCode = *keyCodePtr;
-		*keyCodePtr = WindowsApplication::m_InputKeyCodeLookup[keyCode];
+		*keyCodePtr = WindowsInput::InputKeyCodeLookup[keyCode];
 		return (bool)(*keyCodePtr);
 	}
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/CoreTypes.h"
+#include "Core/CoreApi.h"
 
 namespace Ion
 {
@@ -154,4 +155,14 @@ namespace Ion
 			RAlt            = 0xC5,
 		};
 	}
+
+	using MouseButton = Mouse::Mouse;
+	using KeyCode = Key::Key;
+
+	class ION_API InputManager
+	{
+	public:
+		virtual bool IsKeyPressed(KeyCode keyCode) const;
+		virtual bool IsMouseButtonPressed(MouseButton mouseButton) const;
+	};
 }
