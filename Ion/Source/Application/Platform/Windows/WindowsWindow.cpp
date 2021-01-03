@@ -7,6 +7,7 @@
 #include "Core/Event/WindowEvent.h"
 #include "Core/Event/InputEvent.h"
 #include "Core/Input/Input.h"
+#include "Core/Platform/Windows/WindowsInput.h"
 
 #include "Log/Logger.h"
 
@@ -197,8 +198,8 @@ namespace Ion
 				}
 
 				// Translate Windows keycodes to internal ones
-				WindowsApplication::TranslateKeyCode(&keyCode);
-				WindowsApplication::TranslateKeyCode(&actualKeyCode);
+				WindowsInputManager::TranslateKeyCode(&keyCode);
+				WindowsInputManager::TranslateKeyCode(&actualKeyCode);
 
 				// HACK:
 				// Windows doesn't have a separate keycode for keypad Enter button,
