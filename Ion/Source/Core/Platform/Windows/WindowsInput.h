@@ -11,9 +11,21 @@ namespace Ion
 		virtual bool IsKeyPressed(KeyCode keyCode) const override;
 		virtual bool IsMouseButtonPressed(MouseButton mouseButton) const override;
 
-		/* Translates a Windows key code to Ion's internal key code.
+		/* Translates a Windows key code to internal Ion key code.
 		   When the key code is invalid (0) it returns false. */
 		static bool TranslateKeyCode(uint* keyCodePtr);
+
+		/* Translates an internal Ion key code back to a Windows virtual key */
+		static inline uint TranslateKeyCodeReverse(ushort internalKeyCode)
+		{
+			// This is too slow
+			for (int i = 0; i < 256; ++i)
+			{
+				if (s_InputKeyCodeLookup[i] == internalKeyCode)
+					return s_InputKeyCodeLookup[i];
+			}
+			return 0;
+		}
 
 		static constexpr uint s_InputKeyCodeLookup[256] = {
 			// 0x00 ---------------------------
