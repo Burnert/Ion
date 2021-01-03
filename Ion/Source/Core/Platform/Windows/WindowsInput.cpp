@@ -13,5 +13,12 @@ namespace Ion
     {
         return false;
     }
+
+    bool WindowsInputManager::TranslateKeyCode(uint* keyCodePtr)
+    {
+        uint& keyCode = *keyCodePtr;
+        *keyCodePtr = s_InputKeyCodeLookup[keyCode];
+        return (bool)(*keyCodePtr);
+    }
 }
 

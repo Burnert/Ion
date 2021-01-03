@@ -10,11 +10,12 @@ namespace Ion
 	public:
 		virtual bool IsKeyPressed(KeyCode keyCode) const override;
 		virtual bool IsMouseButtonPressed(MouseButton mouseButton) const override;
-	};
 
-	namespace WindowsInput
-	{
-		constexpr uint InputKeyCodeLookup[256] = {
+		/* Translates a Windows key code to Ion's internal key code.
+		   When the key code is invalid (0) it returns false. */
+		static bool TranslateKeyCode(uint* keyCodePtr);
+
+		static constexpr uint s_InputKeyCodeLookup[256] = {
 			// 0x00 ---------------------------
 			0x00, // 0x00 : Invalid keycode
 			Mouse::Left,
@@ -202,6 +203,5 @@ namespace Ion
 			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		};
-	}
-
+	};
 }

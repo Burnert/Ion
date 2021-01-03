@@ -29,12 +29,5 @@ namespace Ion
 		window->Update_Application();
 	}
 
-	bool WindowsApplication::TranslateKeyCode(uint* keyCodePtr)
-	{
-		uint& keyCode = *keyCodePtr;
-		*keyCodePtr = WindowsInput::InputKeyCodeLookup[keyCode];
-		return (bool)(*keyCodePtr);
-	}
-
 	HINSTANCE WindowsApplication::m_HInstance;
 }
