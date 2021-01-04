@@ -6,6 +6,11 @@
 
 namespace Ion
 {
+	WindowsApplication* WindowsApplication::Get()
+	{
+		return static_cast<WindowsApplication*>(Application::Get());
+	}
+
 	void WindowsApplication::InitWindows(HINSTANCE hInstance)
 	{
 		m_HInstance = hInstance;

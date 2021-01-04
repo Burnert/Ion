@@ -7,7 +7,7 @@ namespace Ion
 {
 	namespace Mouse
 	{
-		enum Mouse : ushort
+		enum Mouse : byte
 		{
 			Invalid         = 0x00,
 
@@ -21,7 +21,7 @@ namespace Ion
 	
 	namespace Key
 	{
-		enum Key : ushort
+		enum Key : byte
 		{
 			Invalid         = 0x00,
 
@@ -161,8 +161,33 @@ namespace Ion
 
 	class ION_API InputManager
 	{
+		friend class Application;
+
 	public:
 		virtual bool IsKeyPressed(KeyCode keyCode) const;
+		virtual bool IsKeyRepeated(KeyCode keyCode) const;
 		virtual bool IsMouseButtonPressed(MouseButton mouseButton) const;
+
+		static std::shared_ptr<InputManager> Get();
+
+		/* Transforms ActualKeyCode to normal KeyCode
+		   for LShift returns Shift, etc. */
+		KeyCode TransformKeyCode(KeyCode actualKeyCode) const;
+
+	protected:
+		InputManager();
+		virtual ~InputManager() { }
+
+		static byte InputPressedFlag;
+		static byte InputRepeatedFlag;
+
+		void OnEvent(Event& event);
+
+	private:
+		byte m_InputStates[256];
+		static std::shared_ptr<InputManager> s_Instance;
+
+		bool OnKeyPressedEvent(KeyPressedEvent& event);
+		bool OnKeyReleasedEvent(KeyReleasedEvent& event);
 	};
 }

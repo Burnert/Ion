@@ -4,18 +4,16 @@
 
 namespace Ion
 {
-	bool WindowsInputManager::IsKeyPressed(KeyCode keyCode) const
+	std::shared_ptr<InputManager> InputManager::Get()
 	{
-		uint windowsKeyCode = TranslateKeyCodeReverse(keyCode);
-		return GetAsyncKeyState(windowsKeyCode) & 0x8000;
+		if (s_Instance == nullptr)
+		{
+			s_Instance = std::make_shared<WindowsInputManager>();
+		}
+		return s_Instance;
 	}
 
-	bool WindowsInputManager::IsMouseButtonPressed(MouseButton mouseButton) const
-	{
-		return false;
-	}
-
-	bool WindowsInputManager::TranslateKeyCode(uint* keyCodePtr)
+	bool WindowsInputManager::TranslateWindowsKeyCode(uint* keyCodePtr)
 	{
 		uint& keyCode = *keyCodePtr;
 		*keyCodePtr = s_InputKeyCodeLookup[keyCode];

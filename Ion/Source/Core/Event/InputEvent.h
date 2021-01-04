@@ -28,17 +28,17 @@ namespace Ion
 	class ION_API KeyPressedEvent : public KeyboardEvent
 	{
 	public:
-		KeyPressedEvent(uint keyCode, uint actualKeyCode, uint repeatCount) :
+		KeyPressedEvent(uint keyCode, uint actualKeyCode, bool bRepeated) :
 			KeyboardEvent(keyCode, actualKeyCode),
-			m_RepeatCount(repeatCount) {}
+			m_bRepeated(bRepeated) {}
 
-		FORCEINLINE uint GetRepeatCount() const { return m_RepeatCount; }
+		FORCEINLINE bool IsRepeated() const { return m_bRepeated; }
 
 		SET_EVENT_TYPE(KeyPressed)
-		SET_EVENT_TOSTRING_FORMAT("{ keyCode: " << std::hex << GetKeyCode() << ", actualKeyCode: " << GetActualKeyCode() << " } (repeat " << std::dec << m_RepeatCount << ")")
+		SET_EVENT_TOSTRING_FORMAT("{ keyCode: " << std::hex << GetKeyCode() << ", actualKeyCode: " << GetActualKeyCode() << " }" << (m_bRepeated ? " (repeated)" : ""))
 
 	private:
-		uint m_RepeatCount;
+		bool m_bRepeated;
 	};
 
 

@@ -5,10 +5,17 @@
 #include "Core/Event/InputEvent.h"
 #include "Core/Event/EventQueue.h"
 #include "Core/Event/EventDispatcher.h"
+#include "Core/Input/Input.h"
 
-#define BIND_MEMBER_FUNC(x) std::bind(&x, this, std::placeholders::_1)
-
-namespace Ion {
+namespace Ion
+{
+	Application* Application::Get()
+	{
+		// This goes off when Application was not yet created.
+		// (shouldn't ever happen, unless you're doing something weird)
+		ASSERT(s_Instance);
+		return s_Instance;
+	}
 
 	Application::Application() :
 		m_EventQueue(std::make_unique<EventQueue>()),
@@ -22,8 +29,10 @@ namespace Ion {
 
 	void Application::Init()
 	{
+		m_InputManager = InputManager::Get();
+
 		// Create a platform specific window.
-		m_Window = Ion::GenericWindow::Create();
+		m_Window = GenericWindow::Create();
 
 		m_Window->SetEventCallback(BIND_MEMBER_FUNC(Application::OnEvent));
 
@@ -76,12 +85,16 @@ namespace Ion {
 
 		// Window events
 
-		dispatcher.Dispatch<WindowCloseEvent>([this](WindowCloseEvent& event)
-		{
-			m_bRunning = false;
-			return true;
-		});
+		dispatcher.Dispatch<WindowCloseEvent>(
+			[this](WindowCloseEvent& event)
+			{
+				m_bRunning = false;
+				return false;
+			});
 
+		m_InputManager->OnEvent(event);
 		m_LayerStack->OnEvent(event);
 	}
+
+	Application* Application::s_Instance = nullptr;
 }

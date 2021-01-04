@@ -7,6 +7,8 @@
 
 #define BITFLAG(x) (1 << (x))
 
+#define BIND_MEMBER_FUNC(x) std::bind(&x, this, std::placeholders::_1)
+
 // Debug macros
 
 #ifdef ION_DEBUG

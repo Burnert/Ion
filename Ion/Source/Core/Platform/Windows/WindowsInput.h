@@ -7,18 +7,20 @@ namespace Ion
 {
 	class ION_API WindowsInputManager : public InputManager
 	{
-	public:
-		virtual bool IsKeyPressed(KeyCode keyCode) const override;
-		virtual bool IsMouseButtonPressed(MouseButton mouseButton) const override;
+		friend class WindowsApplication;
 
+	public:
 		/* Translates a Windows key code to internal Ion key code.
 		   When the key code is invalid (0) it returns false. */
-		static bool TranslateKeyCode(uint* keyCodePtr);
+		static bool TranslateWindowsKeyCode(uint* keyCodePtr);
 
 		/* Translates an internal Ion key code back to a Windows virtual key */
-		static inline uint TranslateKeyCodeReverse(ushort internalKeyCode)
+		static inline uint TranslateWindowsKeyCodeReverse(ushort internalKeyCode)
 		{
 			// This is too slow
+			// Should be another LUT
+			// but I don't have time for it now.
+			// @TODO: Make a LUT in the future.
 			for (int i = 0; i < 256; ++i)
 			{
 				if (s_InputKeyCodeLookup[i] == internalKeyCode)

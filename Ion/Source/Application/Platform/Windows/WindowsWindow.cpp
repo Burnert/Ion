@@ -32,7 +32,7 @@ namespace Ion
 
 	WindowsWindow::WindowsWindow() :
 		m_HWnd(NULL)
-	{}
+	{ }
 
 	void WindowsWindow::Update_Application()
 	{
@@ -131,7 +131,7 @@ namespace Ion
 			{
 				uint keyCode       = (uint)wParam;
 				uint actualKeyCode = keyCode;
-				bool bState        = (HIWORD(lParam) & KF_UP);
+				bool bState        = !(HIWORD(lParam) & KF_UP);
 				bool bExtendedKey  = (HIWORD(lParam) & KF_EXTENDED);
 
 				if (keyCode == VK_CONTROL)
@@ -198,8 +198,8 @@ namespace Ion
 				}
 
 				// Translate Windows keycodes to internal ones
-				WindowsInputManager::TranslateKeyCode(&keyCode);
-				WindowsInputManager::TranslateKeyCode(&actualKeyCode);
+				WindowsInputManager::TranslateWindowsKeyCode(&keyCode);
+				WindowsInputManager::TranslateWindowsKeyCode(&actualKeyCode);
 
 				// HACK:
 				// Windows doesn't have a separate keycode for keypad Enter button,
@@ -212,8 +212,16 @@ namespace Ion
 					actualKeyCode = Key::KP_Enter;
 				}
 
-				// Up: true, Down: false
+				// Down: true, Up: false
 				if (bState)
+				{
+					// If the key is already pressed it means it was repeated
+					bool bRepeated = WindowsApplication::Get()->GetInputManager()->IsKeyPressed((KeyCode)actualKeyCode);
+
+					auto event = KeyPressedEvent(keyCode, actualKeyCode, bRepeated);
+					windowRef.m_EventCallback(event);
+				}
+				else
 				{
 					// HACK:
 					// Print screen key doesn't send a key down message,
@@ -221,18 +229,11 @@ namespace Ion
 					// At this point keycode variables are already translated.
 					if (keyCode == Key::PrintScr)
 					{
-						auto printScreenPressed = KeyPressedEvent(keyCode, actualKeyCode, 1);
+						auto printScreenPressed = KeyPressedEvent(keyCode, actualKeyCode, false);
 						windowRef.m_EventCallback(printScreenPressed);
 					}
 
 					auto event = KeyReleasedEvent(keyCode, actualKeyCode);
-					windowRef.m_EventCallback(event);
-				}
-				else
-				{
-					ushort repeatCount = LOWORD(lParam);
-
-					auto event = KeyPressedEvent(keyCode, actualKeyCode, repeatCount);
 					windowRef.m_EventCallback(event);
 				}
 
@@ -252,10 +253,10 @@ namespace Ion
 			{
 				uint button;
 				bool bState = 
-					uMsg == WM_LBUTTONUP ||
-					uMsg == WM_RBUTTONUP ||
-					uMsg == WM_MBUTTONUP ||
-					uMsg == WM_XBUTTONUP;
+					uMsg == WM_LBUTTONDOWN ||
+					uMsg == WM_RBUTTONDOWN ||
+					uMsg == WM_MBUTTONDOWN ||
+					uMsg == WM_XBUTTONDOWN;
 
 				if (uMsg <= WM_LBUTTONDBLCLK)
 					button = Mouse::Left;
@@ -268,15 +269,15 @@ namespace Ion
 				else
 					button = Mouse::Button5;
 					
-				// Up: true, Down: false
+				// Down: true, Up: false
 				if (bState)
 				{
-					auto event = MouseButtonReleasedEvent(button);
+					auto event = MouseButtonPressedEvent(button);
 					windowRef.m_EventCallback(event);
 				}
 				else
 				{
-					auto event = MouseButtonPressedEvent(button);
+					auto event = MouseButtonReleasedEvent(button);
 					windowRef.m_EventCallback(event);
 				}
 

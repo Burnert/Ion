@@ -4,11 +4,16 @@
 #include "Application/Application.h"
 #include "Core/Input/Input.h"
 
+class WindowsInputManager;
+class WindowsWindow;
+
 namespace Ion
 {
 	class ION_API WindowsApplication : public Application
 	{
 	public:
+		static WindowsApplication* Get();
+
 		void InitWindows(HINSTANCE hInstance);
 
 		FORCEINLINE static HINSTANCE GetHInstance() { return m_HInstance; }
