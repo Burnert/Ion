@@ -224,7 +224,7 @@ namespace Ion
 				if (bState)
 				{
 					// If the key is already pressed it means it was repeated
-					bool bRepeated = WindowsApplication::Get()->GetInputManager()->IsKeyPressed((KeyCode)actualKeyCode);
+					bool bRepeated = InputManager::Get()->IsKeyPressed((KeyCode)actualKeyCode);
 
 					auto event = KeyPressedEvent(keyCode, actualKeyCode, bRepeated);
 					windowRef.m_EventCallback(event);
@@ -292,6 +292,15 @@ namespace Ion
 				return 0;
 			}
 
+			case WM_MOUSEWHEEL:
+			{
+				float delta = (float)GET_WHEEL_DELTA_WPARAM(wParam);
+				auto event = MouseScrolledEvent(delta);
+				windowRef.m_EventCallback(event);
+
+				return 0;
+			}
+
 			case WM_MOUSEMOVE:
 			{
 				RECT clientRect;
@@ -304,15 +313,6 @@ namespace Ion
 				float yNormalised = (float)yPos / clientRect.bottom;
 
 				auto event = MouseMovedEvent(xNormalised, yNormalised);
-				windowRef.m_EventCallback(event);
-
-				return 0;
-			}
-
-			case WM_MOUSEWHEEL:
-			{
-				float delta = (float)GET_WHEEL_DELTA_WPARAM(wParam);
-				auto event = MouseScrolledEvent(delta);
 				windowRef.m_EventCallback(event);
 
 				return 0;

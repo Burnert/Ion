@@ -37,8 +37,6 @@ namespace Ion
 
 		static Application* Get();
 
-		FORCEINLINE std::shared_ptr<InputManager> GetInputManager() const { return m_InputManager; }
-
 	protected:
 		Application();
 

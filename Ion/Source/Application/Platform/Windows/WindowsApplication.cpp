@@ -30,8 +30,7 @@ namespace Ion
 
 	void WindowsApplication::Update(float DeltaTime)
 	{
-		std::shared_ptr window = std::static_pointer_cast<WindowsWindow>(GetApplicationWindow());
-		window->Update_Application();
+		std::static_pointer_cast<WindowsWindow>(GetApplicationWindow())->Update_Application();
 	}
 
 	HINSTANCE WindowsApplication::m_HInstance;
