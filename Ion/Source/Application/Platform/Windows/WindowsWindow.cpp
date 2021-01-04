@@ -292,6 +292,31 @@ namespace Ion
 				return 0;
 			}
 
+			case WM_INPUT:
+			{
+				uint size;
+				GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &size, sizeof(RAWINPUTHEADER));
+				byte* buffer = new byte[size];
+				if (buffer == NULL)
+					return 0;
+
+				if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, buffer, &size, sizeof(RAWINPUTHEADER)) != size)
+					LOG_WARN("GetRawInputData does not return correct size!");
+
+				RAWINPUT* rawInput = (RAWINPUT*)buffer;
+
+				if (rawInput->header.dwType == RIM_TYPEMOUSE)
+				{
+					LOG_INFO("RawInput Mouse data: ButtonFlags={0}, X={1} Y={2}", 
+						rawInput->data.mouse.usButtonFlags, 
+						rawInput->data.mouse.lLastX,
+						rawInput->data.mouse.lLastY);
+				}
+
+				delete[] buffer;
+				return 0;
+			}
+
 			case WM_MOUSEWHEEL:
 			{
 				float delta = (float)GET_WHEEL_DELTA_WPARAM(wParam);
@@ -409,6 +434,19 @@ namespace Ion
 		}
 
 		SetProp(m_HWnd, L"WinObj", this);
+
+		// Raw Input
+
+		RAWINPUTDEVICE mouseRid;
+		mouseRid.usUsagePage = 0x01;
+		mouseRid.usUsage = 0x02;
+		mouseRid.dwFlags = 0;
+		mouseRid.hwndTarget = m_HWnd;
+
+		if (!RegisterRawInputDevices(&mouseRid, 1, sizeof(mouseRid)))
+		{
+			LOG_WARN("Cannot register Raw Input devices!");
+		}
 
 		return true;
 	}
