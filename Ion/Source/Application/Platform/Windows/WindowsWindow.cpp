@@ -146,6 +146,14 @@ namespace Ion
 						MSG nextMsg;
 						if (PeekMessage(&nextMsg, NULL, 0, 0, PM_NOREMOVE))
 						{
+							// HACK: (of a hack)
+							// I don't know what the fuck this is, but Windows
+							// sometimes decides to send a 0x60 message (which isn't
+							// documented anywhere btw) before the RAlt one, so I have to
+							// check it here so it doesn't lock the LControl key.
+							if (nextMsg.message == 0x60)
+								break;
+
 							if (nextMsg.message == WM_KEYDOWN ||
 								nextMsg.message == WM_SYSKEYDOWN ||
 								nextMsg.message == WM_KEYUP ||
