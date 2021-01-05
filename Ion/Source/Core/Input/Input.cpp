@@ -26,7 +26,9 @@ namespace Ion
 		}
 	}
 
-	InputManager::InputManager()
+	InputManager::InputManager() :
+		// Use Raw Input by default
+		m_MouseInputType(MouseInputType::RawInput)
 	{
 		memset(m_InputStates, 0, sizeof(m_InputStates));
 	}

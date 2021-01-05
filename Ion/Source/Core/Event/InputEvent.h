@@ -123,7 +123,57 @@ namespace Ion
 		MouseButtonReleasedEvent(uint button) :
 			MouseButtonEvent(button) {}
 
-		SET_EVENT_TYPE(MouseButtonPressed)
+		SET_EVENT_TYPE(MouseButtonReleased)
 		SET_EVENT_TOSTRING_FORMAT("{ button: " << GetMouseButton() << " }")
+	};
+
+	// -------------------
+	// Raw Input ---------
+
+
+	// Mouse events
+
+	class ION_API RawInputMouseMovedEvent : public MouseMovedEvent
+	{
+	public:
+		RawInputMouseMovedEvent(float x, float y) :
+			MouseMovedEvent(x, y) { }
+
+		SET_EVENT_TYPE(RawInputMouseMoved)
+		SET_EVENT_CATEGORY(EC_Input | EC_Mouse | EC_RawInput)
+	};
+
+
+	class ION_API RawInputMouseScrolledEvent : public MouseScrolledEvent
+	{
+	public:
+		RawInputMouseScrolledEvent(float offset) :
+			MouseScrolledEvent(offset) { }
+
+		SET_EVENT_TYPE(RawInputMouseScrolled)
+		SET_EVENT_CATEGORY(EC_Input | EC_Mouse | EC_RawInput)
+	};
+
+	// Mouse Button Events
+
+	class ION_API RawInputMouseButtonPressedEvent : public MouseButtonPressedEvent
+	{
+	public:
+		RawInputMouseButtonPressedEvent(uint button) :
+			MouseButtonPressedEvent(button) { }
+
+		SET_EVENT_TYPE(RawInputMouseButtonPressed)
+		SET_EVENT_CATEGORY(EC_Input | EC_Mouse | EC_MouseButton | EC_RawInput)
+	};
+
+
+	class ION_API RawInputMouseButtonReleasedEvent : public MouseButtonReleasedEvent
+	{
+	public:
+		RawInputMouseButtonReleasedEvent(uint button) :
+			MouseButtonReleasedEvent(button) { }
+
+		SET_EVENT_TYPE(RawInputMouseButtonReleased)
+		SET_EVENT_CATEGORY(EC_Input | EC_Mouse | EC_MouseButton | EC_RawInput)
 	};
 }

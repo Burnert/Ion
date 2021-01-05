@@ -3,7 +3,7 @@
 #include "Core/CoreMacros.h"
 #include "Core/CoreTypes.h"
 
-NODISCARD constexpr int Bitflag(byte bit) noexcept { return 1u << bit; }
+NODISCARD constexpr uint Bitflag(byte bit) noexcept { return 1u << bit; }
 
 template<typename T, typename U, 
 	std::enable_if_t<std::is_integral_v<T>>* = nullptr,

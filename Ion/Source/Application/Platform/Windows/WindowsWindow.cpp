@@ -62,6 +62,10 @@ namespace Ion
 	{
 		WindowsWindow& windowRef = *(WindowsWindow*)GetProp(hWnd, L"WinObj");
 
+		// --------------------------------------
+		// Convert Windows messages to Ion Events
+		// --------------------------------------
+
 		// --------------------------
 		// Handle destroy event first
 
@@ -292,31 +296,6 @@ namespace Ion
 				return 0;
 			}
 
-			case WM_INPUT:
-			{
-				uint size;
-				GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &size, sizeof(RAWINPUTHEADER));
-				byte* buffer = new byte[size];
-				if (buffer == NULL)
-					return 0;
-
-				if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, buffer, &size, sizeof(RAWINPUTHEADER)) != size)
-					LOG_WARN("GetRawInputData does not return correct size!");
-
-				RAWINPUT* rawInput = (RAWINPUT*)buffer;
-
-				if (rawInput->header.dwType == RIM_TYPEMOUSE)
-				{
-					LOG_INFO("RawInput Mouse data: ButtonFlags={0}, X={1} Y={2}", 
-						rawInput->data.mouse.usButtonFlags, 
-						rawInput->data.mouse.lLastX,
-						rawInput->data.mouse.lLastY);
-				}
-
-				delete[] buffer;
-				return 0;
-			}
-
 			case WM_MOUSEWHEEL:
 			{
 				float delta = (float)GET_WHEEL_DELTA_WPARAM(wParam);
@@ -330,7 +309,7 @@ namespace Ion
 			{
 				RECT clientRect;
 				GetClientRect(hWnd, &clientRect);
-				
+
 				int xPos = GET_X_LPARAM(lParam);
 				int yPos = GET_Y_LPARAM(lParam);
 
@@ -350,6 +329,111 @@ namespace Ion
 				// there is actually no menu.
 				if (wParam == SC_KEYMENU && HIWORD(lParam) <= 0)
 					return 0;
+			}
+
+			// Raw Input
+
+			case WM_INPUT:
+			{
+				// Don't bother if RawInput is not enabled.
+				if (!InputManager::IsRawInputEnabled())
+					break;
+
+				uint size;
+				GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &size, sizeof(RAWINPUTHEADER));
+				byte* buffer = new byte[size];
+				if (buffer == NULL)
+					return 0;
+
+				if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, buffer, &size, sizeof(RAWINPUTHEADER)) != size)
+					LOG_WARN("GetRawInputData does not return correct size!");
+
+				RAWINPUT* rawInput = (RAWINPUT*)buffer;
+
+				// Mouse Input
+				if (rawInput->header.dwType == RIM_TYPEMOUSE)
+				{
+					RAWMOUSE* data = &rawInput->data.mouse;
+
+					if (InputManager::GetMouseInputType() == MouseInputType::RawInput)
+					{
+						// Note: Literally every input action can be packed
+						// as a single event so everything here has to be checked
+						// each time to make sure not to miss any.
+
+						// Post RawInputMouseMoveEvent if the mouse actually moved on this message
+						if (data->lLastX != 0 ||
+							data->lLastY != 0)
+						{
+							auto event = RawInputMouseMovedEvent((float)data->lLastX, (float)data->lLastY);
+							windowRef.m_EventCallback(event);
+						}
+
+						// Mouse Scrolled Event
+						if (data->usButtonFlags & RI_MOUSE_WHEEL)
+						{
+							auto event = RawInputMouseScrolledEvent((float)(short)data->usButtonData);
+							windowRef.m_EventCallback(event);
+						}
+
+						// Mouse Button Pressed Event
+						// 0x0155 - mouse pressed button flags combined
+						if (data->usButtonFlags & 0x0155)
+						{
+							// There can be multiple presses in one message so I have
+							// to loop through all of them here so everything gets
+							// sent as an event.
+							for (uint flag = Bitflag(0); flag != Bitflag(10); flag <<= 2)
+							{
+								uint buttonFlag = data->usButtonFlags & flag;
+								if (buttonFlag)
+								{
+									uint button;
+									switch (buttonFlag)
+									{
+									case RI_MOUSE_LEFT_BUTTON_DOWN:     button = Mouse::Left;      break;
+									case RI_MOUSE_RIGHT_BUTTON_DOWN:    button = Mouse::Right;     break;
+									case RI_MOUSE_MIDDLE_BUTTON_DOWN:   button = Mouse::Middle;    break;
+									case RI_MOUSE_BUTTON_4_DOWN:        button = Mouse::Button4;   break;
+									case RI_MOUSE_BUTTON_5_DOWN:        button = Mouse::Button5;   break;
+									}
+
+									auto event = RawInputMouseButtonPressedEvent(button);
+									windowRef.m_EventCallback(event);
+								}
+							}
+						}
+
+						// Mouse Button Released Event
+						// 0x02AA - mouse released button flags combined
+						if (data->usButtonFlags & 0x02AA)
+						{
+							// Similar loop for button releases
+							for (uint flag = Bitflag(1); flag != Bitflag(11); flag <<= 2)
+							{
+								uint buttonFlag = data->usButtonFlags & flag;
+								if (buttonFlag)
+								{
+									uint button;
+									switch (buttonFlag)
+									{
+									case RI_MOUSE_LEFT_BUTTON_UP:     button = Mouse::Left;      break;
+									case RI_MOUSE_RIGHT_BUTTON_UP:    button = Mouse::Right;     break;
+									case RI_MOUSE_MIDDLE_BUTTON_UP:   button = Mouse::Middle;    break;
+									case RI_MOUSE_BUTTON_4_UP:        button = Mouse::Button4;   break;
+									case RI_MOUSE_BUTTON_5_UP:        button = Mouse::Button5;   break;
+									}
+
+									auto event = RawInputMouseButtonReleasedEvent(button);
+									windowRef.m_EventCallback(event);
+								}
+							}
+						}
+					}
+				}
+
+				delete[] buffer;
+				return 0;
 			}
 		}
 

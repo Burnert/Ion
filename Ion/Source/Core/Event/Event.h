@@ -35,14 +35,18 @@ namespace Ion
 
 		MouseButtonPressed,
 		MouseButtonReleased,
+		RawInputMouseButtonPressed,
+		RawInputMouseButtonReleased,
 
 		// Mouse
 
 		MouseMoved,
-		MouseScrolled
+		MouseScrolled,
+		RawInputMouseMoved,
+		RawInputMouseScrolled,
 	};
 
-	enum EEventCategory
+	enum EEventCategory : uint
 	{
 		EC_None        = 0,
 		EC_Application = Bitflag(0),
@@ -51,7 +55,8 @@ namespace Ion
 		EC_Input       = Bitflag(3),
 		EC_Keyboard    = Bitflag(4),
 		EC_Mouse       = Bitflag(5),
-		EC_MouseButton = Bitflag(6)
+		EC_MouseButton = Bitflag(6),
+		EC_RawInput    = Bitflag(7),
 	};
 
 #ifdef ION_LOG_ENABLED

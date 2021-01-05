@@ -159,6 +159,12 @@ namespace Ion
 	using MouseButton = Mouse::Mouse;
 	using KeyCode = Key::Key;
 
+	enum class ION_API MouseInputType
+	{
+		Default = 1,
+		RawInput = 2,
+	};
+
 	class ION_API InputManager
 	{
 		friend class Application;
@@ -173,6 +179,11 @@ namespace Ion
 		/* Transforms ActualKeyCode to normal KeyCode
 		   for LShift returns Shift, etc. */
 		KeyCode TransformKeyCode(KeyCode actualKeyCode) const;
+
+		static MouseInputType GetMouseInputType() { return Get()->m_MouseInputType; }
+
+		// @TODO: you know what
+		static bool IsRawInputEnabled() { return true; }
 
 	protected:
 		InputManager();
@@ -189,5 +200,7 @@ namespace Ion
 
 		bool OnKeyPressedEvent(KeyPressedEvent& event);
 		bool OnKeyReleasedEvent(KeyReleasedEvent& event);
+
+		MouseInputType m_MouseInputType;
 	};
 }
