@@ -35,6 +35,7 @@ namespace Ion
 
 		MouseButtonPressed,
 		MouseButtonReleased,
+		MouseDoubleClick,
 		RawInputMouseButtonPressed,
 		RawInputMouseButtonReleased,
 

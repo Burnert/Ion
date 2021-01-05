@@ -263,24 +263,13 @@ namespace Ion
 			case WM_MBUTTONDOWN:
 			case WM_XBUTTONDOWN:
 			{
-				uint button;
-				bool bState = 
+				uint button = MouseButtonFromMessage(uMsg, wParam);;
+				bool bState =
 					uMsg == WM_LBUTTONDOWN ||
 					uMsg == WM_RBUTTONDOWN ||
 					uMsg == WM_MBUTTONDOWN ||
 					uMsg == WM_XBUTTONDOWN;
 
-				if (uMsg <= WM_LBUTTONDBLCLK)
-					button = Mouse::Left;
-				else if (uMsg <= WM_RBUTTONDBLCLK)
-					button = Mouse::Right;
-				else if (uMsg <= WM_MBUTTONDBLCLK)
-					button = Mouse::Middle;
-				else if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1)
-					button = Mouse::Button4;
-				else
-					button = Mouse::Button5;
-					
 				// Down: true, Up: false
 				if (bState)
 				{
@@ -292,6 +281,22 @@ namespace Ion
 					auto event = MouseButtonReleasedEvent(button);
 					windowRef.m_EventCallback(event);
 				}
+
+				return 0;
+			}
+
+			case WM_LBUTTONDBLCLK:
+			case WM_RBUTTONDBLCLK:
+			case WM_MBUTTONDBLCLK:
+			case WM_XBUTTONDBLCLK:
+			{
+				uint button = MouseButtonFromMessage(uMsg, wParam);
+
+				auto pressedEvent = MouseButtonPressedEvent(button);
+				windowRef.m_EventCallback(pressedEvent);
+
+				auto doubleClickEvent = MouseDoubleClickEvent(button);
+				windowRef.m_EventCallback(doubleClickEvent);
 
 				return 0;
 			}
@@ -329,6 +334,8 @@ namespace Ion
 				// there is actually no menu.
 				if (wParam == SC_KEYMENU && HIWORD(lParam) <= 0)
 					return 0;
+
+				break;
 			}
 
 			// Raw Input
@@ -438,6 +445,20 @@ namespace Ion
 		}
 
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);
+	}
+
+	MouseButton WindowsWindow::MouseButtonFromMessage(UINT uMsg, WPARAM wParam)
+	{
+		if (uMsg <= WM_LBUTTONDBLCLK)
+			return Mouse::Left;
+		else if (uMsg <= WM_RBUTTONDBLCLK)
+			return Mouse::Right;
+		else if (uMsg <= WM_MBUTTONDBLCLK)
+			return Mouse::Middle;
+		else if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1)
+			return Mouse::Button4;
+		else
+			return Mouse::Button5;
 	}
 
 	WindowsWindow::~WindowsWindow() {}

@@ -117,6 +117,17 @@ namespace Ion
 	};
 
 
+	class ION_API MouseDoubleClickEvent : public MouseButtonEvent
+	{
+	public:
+		MouseDoubleClickEvent(uint button) :
+			MouseButtonEvent(button) {}
+
+		SET_EVENT_TYPE(MouseDoubleClick)
+		SET_EVENT_TOSTRING_FORMAT("{ button: " << GetMouseButton() << " }")
+	};
+
+
 	class ION_API MouseButtonReleasedEvent : public MouseButtonEvent
 	{
 	public:

@@ -46,5 +46,7 @@ namespace Ion
 		bool m_bRegistered = false;
 
 		static bool m_bBothShiftsPressed;
+
+		static MouseButton MouseButtonFromMessage(UINT uMsg, WPARAM wParam);
 	};
 }
