@@ -7,6 +7,8 @@
 #include "Core/Event/EventDispatcher.h"
 #include "Core/Input/Input.h"
 
+#include "Core/Profiling/DebugProfiler.h"
+
 namespace Ion
 {
 	Application* Application::Get()
@@ -44,13 +46,23 @@ namespace Ion
 		m_bRunning = true;
 		while (m_bRunning)
 		{
-			// Application loop
-			PollEvents();
+			{
+				SCOPED_TIMER(Timer_MainLoop, "Main Loop", "Game");
 
-			Update(0.0f);
-			Render();
+				// Application loop
+				PollEvents();
 
-			m_EventQueue->ProcessEvents();
+				using namespace std::chrono_literals;
+				std::this_thread::sleep_for(0.4s);
+
+				Update(0.0f);
+				Render();
+
+				m_EventQueue->ProcessEvents();
+			}
+
+			DebugTimeInfo infoMainLoop = DebugProfiler::FindTimer("Timer_MainLoop")->GetTimeInfo();
+			LOG_WARN("{0} Info: {1}", infoMainLoop.Name, infoMainLoop.GetTimeNs());
 		}
 	}
 
