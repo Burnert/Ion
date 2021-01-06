@@ -46,5 +46,5 @@ NODISCARD constexpr inline std::enable_if_t<std::is_integral_v<T>, bool> GetBitf
 template<typename T>
 NODISCARD constexpr inline std::enable_if_t<std::is_integral_v<T>, T> BooleanToBitmask(bool boolean) noexcept
 {
-	return (T)-(long long)boolean;
+	return (T)-(llong)boolean;
 }

@@ -9,5 +9,9 @@
 #include "CoreApi.h"
 #include "CoreMacros.h"
 #include "CoreTypes.h"
-
+#include "CoreUtilities.h"
+#include "Core/Event/Event.h"
 #include "Log/Logger.h"
+#include "Input/Input.h"
+#include "Layer/Layer.h"
+#include "Profiling/DebugProfiler.h"

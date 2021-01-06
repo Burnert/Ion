@@ -165,6 +165,9 @@ namespace Ion
 		RawInput = 2,
 	};
 
+	class KeyPressedEvent;
+	class KeyReleasedEvent;
+
 	class ION_API InputManager
 	{
 		friend class Application;
