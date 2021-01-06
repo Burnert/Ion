@@ -7,10 +7,12 @@
 #include "Core/Event/EventDispatcher.h"
 #include "Core/Input/Input.h"
 
-#include "Core/Profiling/DebugProfiler.h"
 
 namespace Ion
 {
+	DECLARE_PERFORMANCE_COUNTER(Counter_MainLoop, "Main Loop", "Game");
+	DECLARE_PERFORMANCE_COUNTER(Counter_MainLoop_Section, "Main Loop Section", "Game");
+
 	Application* Application::Get()
 	{
 		// This goes off when Application was not yet created.
@@ -47,13 +49,20 @@ namespace Ion
 		while (m_bRunning)
 		{
 			{
-				SCOPED_TIMER(Timer_MainLoop, "Main Loop", "Game");
+				SCOPED_PERFORMANCE_COUNTER(Counter_MainLoop);
 
 				// Application loop
 				PollEvents();
 
 				using namespace std::chrono_literals;
-				std::this_thread::sleep_for(0.4s);
+				std::this_thread::sleep_for(0.2s);
+
+				MANUAL_PERFORMANCE_COUNTER(Counter_MainLoop_Section);
+				Counter_MainLoop_Section->Start();
+
+				std::this_thread::sleep_for(0.2s);
+
+				Counter_MainLoop_Section->Stop();
 
 				Update(0.0f);
 				Render();
@@ -61,8 +70,11 @@ namespace Ion
 				m_EventQueue->ProcessEvents();
 			}
 
-			DebugTimeInfo infoMainLoop = DebugProfiler::FindTimer("Timer_MainLoop")->GetTimeInfo();
-			LOG_WARN("{0} Info: {1}", infoMainLoop.Name, infoMainLoop.GetTimeNs());
+			COUNTER_TIME_INFO(dataMainLoop, "Counter_MainLoop");
+			COUNTER_TIME_INFO(dataMainLoopSection, "Counter_MainLoop_Section");
+
+			LOG_WARN("{0} Data: {1}", dataMainLoop.Name, dataMainLoop.GetTimeNs());
+			LOG_WARN("{0} Data: {1}", dataMainLoopSection.Name, dataMainLoopSection.GetTimeNs());
 		}
 	}
 

@@ -4,27 +4,32 @@
 
 namespace Ion
 {
-	// --------------------
-	// Debug Timer --------
+namespace Performance
+{
+	// ----------------------------
+	// Performance Counter --------
 
-	DebugTimer::DebugTimer(std::string&& name, std::string&& type)
-		: m_TimeInfo({ name, type })
+	DebugCounter::DebugCounter(std::string&& name, std::string&& type)
+		: m_CounterData({ name, type })
 	{ }
 
-	void DebugTimer::Start()
+	void DebugCounter::Start()
 	{
-		std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
-		m_StartTime = startTime;
+		LOG_INFO("Started Counter [{0}]", m_CounterData.Name);
+		m_StartTime = std::chrono::steady_clock::now();
 	}
 
-	void DebugTimer::Stop()
+	void DebugCounter::Stop()
 	{
-		std::chrono::steady_clock::time_point endTime = std::chrono::steady_clock::now();
-		m_TimeInfo.m_Time = (endTime - m_StartTime).count();
+		LOG_INFO("Stopped Counter [{0}]", m_CounterData.Name);
+		m_EndTime = std::chrono::steady_clock::now();
+		m_CounterData.m_Time = (m_EndTime - m_StartTime).count();
 	}
 
 	// -----------------------
 	// Debug Profiler --------
+
+	DebugProfiler* DebugProfiler::s_Instance = nullptr;
 
 	DebugProfiler* DebugProfiler::Get()
 	{
@@ -34,53 +39,80 @@ namespace Ion
 		return s_Instance;
 	}
 
-	DebugTimer* DebugProfiler::RegisterTimer(std::string&& id, std::string&& name, std::string&& type)
+	DebugCounter* DebugProfiler::RegisterCounter(std::string&& id, std::string&& name, std::string&& type)
 	{
-		if (!IsTimerRegistered(id))
+		DebugProfiler* instance = Get();
+		if (!IsCounterRegistered(id))
 		{
-			DebugTimer* timer = new DebugTimer(std::move(name), std::move(type));
-			Get()->m_Timers[id] = timer;
+			DebugCounter* timer = new DebugCounter(std::move(name), std::move(type));
+			instance->m_RegisteredCounters[id] = timer;
 		}
-		return Get()->m_Timers[id];
+		return instance->m_RegisteredCounters[id];
 	}
 
-	DebugTimer* DebugProfiler::FindTimer(const std::string& id)
+	DebugCounter* DebugProfiler::FindCounter(const std::string& id)
 	{
-		auto info = Get()->m_Timers.find(id);
-		if (info != Get()->m_Timers.end())
+		DebugProfiler* instance = Get();
+		auto info = instance->m_RegisteredCounters.find(id);
+		if (info != instance->m_RegisteredCounters.end())
 			return (*info).second;
 		
 		return nullptr;
 	}
 
-	bool DebugProfiler::IsTimerRegistered(const std::string& id)
+	bool DebugProfiler::IsCounterRegistered(const std::string& id)
 	{
-		return Get()->m_Timers.find(id) != Get()->m_Timers.end();
+		DebugProfiler* instance = Get();
+		return instance->m_RegisteredCounters.find(id) != instance->m_RegisteredCounters.end();
 	}
 
-	DebugProfiler* DebugProfiler::s_Instance = nullptr;
+	// -----------------------
+	// Scoped Counter --------
 
-	// ---------------------
-	// Scoped Timer --------
-
-	ScopedTimer::ScopedTimer(std::string&& name, std::string&& type)
-		: m_Name(name), m_Type(type), m_Timer(nullptr)
+	ScopedCounter::ScopedCounter()
+		: ScopedCounter(nullptr)
 	{ }
 
-	ScopedTimer::~ScopedTimer()
+	ScopedCounter::ScopedCounter(DebugCounter* counterHandle)
+		: m_CounterHandle(counterHandle)
 	{
-		LOG_INFO("Stopped Timer [{0}]", m_Name);
-		m_Timer->Stop();
+		m_CounterHandle->Start();
 	}
 
-	void ScopedTimer::Register(std::string&& id)
+	ScopedCounter::~ScopedCounter()
 	{
-		m_Timer = DebugProfiler::RegisterTimer(std::move(id), std::move(m_Name), std::move(m_Type));
+		m_CounterHandle->Stop();
 	}
 
-	void ScopedTimer::Start()
+	void ScopedCounter::Assign(DebugCounter* counterHandle)
 	{
-		LOG_INFO("Started Timer [{0}]", m_Name);
-		m_Timer->Start();
+		m_CounterHandle = counterHandle;
 	}
+
+	// -----------------------
+	// Manual Counter --------
+
+	ManualCounter::ManualCounter()
+		: ManualCounter(nullptr)
+	{ }
+
+	ManualCounter::ManualCounter(DebugCounter* counterHandle)
+		: m_CounterHandle(counterHandle)
+	{ }
+
+	void ManualCounter::Assign(DebugCounter* counterHandle)
+	{
+		m_CounterHandle = counterHandle;
+	}
+
+	void ManualCounter::Start()
+	{
+		m_CounterHandle->Start();
+	}
+
+	void ManualCounter::Stop()
+	{
+		m_CounterHandle->Stop();
+	}
+}
 }
