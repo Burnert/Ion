@@ -159,7 +159,7 @@ namespace Ion
 	using MouseButton = Mouse::Mouse;
 	using KeyCode = Key::Key;
 
-	enum class ION_API MouseInputType
+	enum class MouseInputType
 	{
 		Default = 1,
 		RawInput = 2,
