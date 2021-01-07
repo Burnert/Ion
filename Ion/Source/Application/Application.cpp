@@ -7,6 +7,7 @@
 #include "Core/Event/EventDispatcher.h"
 #include "Core/Input/Input.h"
 
+#include "Core/Platform/PlatformCore.h"
 
 namespace Ion
 {
@@ -70,8 +71,8 @@ namespace Ion
 				m_EventQueue->ProcessEvents();
 			}
 
-			COUNTER_TIME_INFO(dataMainLoop, "Counter_MainLoop");
-			COUNTER_TIME_INFO(dataMainLoopSection, "Counter_MainLoop_Section");
+			COUNTER_TIME_DATA(dataMainLoop, "Counter_MainLoop");
+			COUNTER_TIME_DATA(dataMainLoopSection, "Counter_MainLoop_Section");
 
 			LOG_WARN("{0} Data: {1}", dataMainLoop.Name, dataMainLoop.GetTimeNs());
 			LOG_WARN("{0} Data: {1}", dataMainLoopSection.Name, dataMainLoopSection.GetTimeNs());

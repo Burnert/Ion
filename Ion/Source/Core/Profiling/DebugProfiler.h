@@ -21,7 +21,7 @@ Ion::Performance::ScopedCounter id = Ion::Performance::ScopedCounter(DebugPerfor
 std::shared_ptr<Ion::Performance::ManualCounter> id = std::make_shared<Ion::Performance::ManualCounter>(DebugPerformance_##id)
 
 /* Retrieves PerformanceCounterData struct from a declared timer. */
-#define COUNTER_TIME_INFO(varName, counterId) \
+#define COUNTER_TIME_DATA(varName, counterId) \
 Ion::Performance::PerformanceCounterData varName = Ion::Performance::DebugProfiler::FindCounter(counterId)->GetData()
 
 namespace Ion
