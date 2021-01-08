@@ -15,6 +15,7 @@ project "Ion"
 	location "Ion"
 	kind "SharedLib"
 	language "C++"
+	characterset "Unicode"
 
 	pchheader "IonPCH.h"
 	pchsource "Ion/Source/IonPCH.cpp"
@@ -67,6 +68,7 @@ project "IonExample"
 	location "IonExample"
 	kind "ConsoleApp"
 	language "C++"
+	characterset "Unicode"
 
 	targetdir ("Build/" .. outputdir .. "/%{prj.name}")
 	objdir ("Intermediate/" .. outputdir .. "/%{prj.name}")

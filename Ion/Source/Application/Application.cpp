@@ -46,6 +46,24 @@ namespace Ion
 
 		m_Window->Show();
 
+		File f(TEXT("testfile.txt"));
+		std::string line;
+
+		f.Open(IO::FM_Read | IO::FM_Write);
+		f.WriteLine("abcdefgh");
+		f.ReadLine(line);
+		f.AddOffset(-2000);
+		f.Close();
+
+		LOG_DEBUG("File {0}", f.Exists() ? "exists" : "does not exist");
+
+		File f2;
+		f2.Open(IO::FM_Read);
+		LOG_DEBUG("File is {0}", f2.IsOpen() ? "open" : "closed");
+		f2.Close();
+
+		f2.Delete();
+
 		m_bRunning = true;
 		while (m_bRunning)
 		{

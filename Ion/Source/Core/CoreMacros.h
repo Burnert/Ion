@@ -9,6 +9,13 @@
 
 #define BIND_MEMBER_FUNC(x) std::bind(&x, this, std::placeholders::_1)
 
+#undef TEXT
+#ifdef UNICODE
+#define TEXT(x) L##x
+#else
+#define TEXT(x) x
+#endif
+
 // Debug macros
 
 #ifdef ION_DEBUG
