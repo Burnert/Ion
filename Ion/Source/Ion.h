@@ -15,6 +15,7 @@
 #include "Core/Event/EventQueue.h"
 #include "Core/Layer/Layer.h"
 #include "Core/Layer/LayerStack.h"
+#include "Core/Platform/PlatformCore.h"
 
 // Entry point ----------------
 #include "Application/EntryPoint.h"

@@ -46,7 +46,7 @@ namespace Performance
 		ullong m_Time = 0;
 	};
 
-	/* Timer initialisation and maintenance should be performed by a helper class. */
+	/* Counter initialisation and maintenance should be performed by a helper class. */
 	class DebugCounter
 	{
 		friend class DebugProfiler;

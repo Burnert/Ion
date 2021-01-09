@@ -33,7 +33,7 @@ namespace Ion
 		// Protected constructor: Only shared_ptrs of this class can be made.
 		WindowsWindow();
 
-		void Update_Application();
+		void PollEvents_Application();
 
 		static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 

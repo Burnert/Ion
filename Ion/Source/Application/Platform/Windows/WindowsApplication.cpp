@@ -26,11 +26,28 @@ namespace Ion
 			TranslateMessage(&message);
 			DispatchMessage(&message);
 		}
+
+		std::static_pointer_cast<WindowsWindow>(GetApplicationWindow())->PollEvents_Application();
 	}
 
 	void WindowsApplication::Update(float DeltaTime)
 	{
-		std::static_pointer_cast<WindowsWindow>(GetApplicationWindow())->Update_Application();
+		Application::Update(DeltaTime);
+	}
+
+	void WindowsApplication::Render()
+	{
+		Application::Render();
+	}
+
+	void WindowsApplication::OnEvent(Event& event)
+	{
+		Application::OnEvent(event);
+	}
+
+	void WindowsApplication::DispatchEvent(Event& event)
+	{
+		Application::DispatchEvent(event);
 	}
 
 	HINSTANCE WindowsApplication::m_HInstance;

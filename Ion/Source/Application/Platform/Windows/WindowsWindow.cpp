@@ -34,7 +34,7 @@ namespace Ion
 		m_HWnd(NULL)
 	{ }
 
-	void WindowsWindow::Update_Application()
+	void WindowsWindow::PollEvents_Application()
 	{
 		// Shift hack:
 		if (m_bBothShiftsPressed)
@@ -184,7 +184,7 @@ namespace Ion
 					// keys are down we start checking each frame if one
 					// of them was released and fire a proper event.
 					//
-					// Rest of the code in Update_Application()
+					// Rest of the code in PollEvents_Application()
 					if ((GetKeyState(VK_LSHIFT) & 0x8000) &&
 						(GetKeyState(VK_RSHIFT) & 0x8000))
 					{

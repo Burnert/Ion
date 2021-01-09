@@ -11,9 +11,6 @@
 
 namespace Ion
 {
-	DECLARE_PERFORMANCE_COUNTER(Counter_MainLoop, "Main Loop", "Game");
-	DECLARE_PERFORMANCE_COUNTER(Counter_MainLoop_Section, "Main Loop Section", "Game");
-
 	Application* Application::Get()
 	{
 		// This goes off when Application was not yet created.
@@ -46,55 +43,13 @@ namespace Ion
 
 		m_Window->Show();
 
-		File f(TEXT("testfile.txt"));
-		std::string line;
+		// Call client overriden Init function
+		OnInit();
 
-		f.Open(IO::FM_Read | IO::FM_Write);
-		f.WriteLine("abcdefgh1___");
-		f.ReadLine(line);
-		f.AddOffset(-2000);
-		f.Close();
+		RunGameLoop();
 
-		LOG_DEBUG("File {0}", f.Exists() ? "exists" : "does not exist");
-
-		File f2;
-		f2.Open(IO::FM_Read);
-		LOG_DEBUG("File is {0}", f2.IsOpen() ? "open" : "closed");
-		f2.Close();
-
-		f2.Delete();
-
-		m_bRunning = true;
-		while (m_bRunning)
-		{
-			{
-				SCOPED_PERFORMANCE_COUNTER(Counter_MainLoop);
-
-				// Application loop
-				PollEvents();
-
-				using namespace std::chrono_literals;
-				std::this_thread::sleep_for(0.2s);
-
-				MANUAL_PERFORMANCE_COUNTER(Counter_MainLoop_Section);
-				Counter_MainLoop_Section->Start();
-
-				std::this_thread::sleep_for(0.2s);
-
-				Counter_MainLoop_Section->Stop();
-
-				Update(0.0f);
-				Render();
-
-				m_EventQueue->ProcessEvents();
-			}
-
-			COUNTER_TIME_DATA(dataMainLoop, "Counter_MainLoop");
-			COUNTER_TIME_DATA(dataMainLoopSection, "Counter_MainLoop_Section");
-
-			LOG_WARN("{0} Data: {1}", dataMainLoop.Name, dataMainLoop.GetTimeNs());
-			LOG_WARN("{0} Data: {1}", dataMainLoopSection.Name, dataMainLoopSection.GetTimeNs());
-		}
+		// Call client overriden Shutdown function
+		OnShutdown();
 	}
 
 	void Application::PollEvents()
@@ -105,11 +60,13 @@ namespace Ion
 	void Application::Update(float DeltaTime)
 	{
 		m_LayerStack->OnUpdate(DeltaTime);
+		OnUpdate(DeltaTime);
 	}
 
 	void Application::Render()
 	{
 		m_LayerStack->OnRender();
+		OnRender();
 	}
 
 	void Application::OnEvent(Event& event)
@@ -126,8 +83,7 @@ namespace Ion
 
 		EventDispatcher dispatcher(event);
 
-		// Window events
-
+		// Handle close event in application
 		dispatcher.Dispatch<WindowCloseEvent>(
 			[this](WindowCloseEvent& event)
 			{
@@ -137,6 +93,22 @@ namespace Ion
 
 		m_InputManager->OnEvent(event);
 		m_LayerStack->OnEvent(event);
+		OnClientEvent(event);
+	}
+
+	void Application::RunGameLoop()
+	{
+		m_bRunning = true;
+		while (m_bRunning)
+		{
+			// Application loop
+			PollEvents();
+
+			Update(0.0f);
+			Render();
+
+			m_EventQueue->ProcessEvents();
+		}
 	}
 
 	Application* Application::s_Instance = nullptr;
