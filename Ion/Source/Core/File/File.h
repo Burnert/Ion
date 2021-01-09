@@ -9,9 +9,9 @@ namespace Ion
 	{
 		enum FileType : byte
 		{
-			FT_Text = 0,
+			FT_Text   = 0,
 			FT_Binary = 1,
-			FT_Other = 0xFF,
+			FT_Other  = 0xFF,
 		};
 
 		enum FileMode : byte

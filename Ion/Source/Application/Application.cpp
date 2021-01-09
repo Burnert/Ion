@@ -50,7 +50,7 @@ namespace Ion
 		std::string line;
 
 		f.Open(IO::FM_Read | IO::FM_Write);
-		f.WriteLine("abcdefgh");
+		f.WriteLine("abcdefgh1___");
 		f.ReadLine(line);
 		f.AddOffset(-2000);
 		f.Close();

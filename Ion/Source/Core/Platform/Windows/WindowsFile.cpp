@@ -12,6 +12,7 @@ namespace Ion
 	WindowsFile::WindowsFile(const std::wstring& filename) :
 		FileBase(filename),
 		m_FileHandle(INVALID_HANDLE_VALUE),
+		m_Offset({ 0 }),
 		m_Mode((IO::FileMode)0)
 	{ }
 
@@ -180,17 +181,12 @@ namespace Ion
 				tempBuffer[count] = '\n';
 
 				ulong bytesWritten;
-				BOOL result = WriteFile(m_FileHandle, tempBuffer, (DWORD)(count + 1), &bytesWritten, NULL);
-				if (!result)
+				if (!WriteFile(m_FileHandle, tempBuffer, (DWORD)(count + 1), &bytesWritten, NULL))
 				{
 					Windows::PrintLastError(TEXT("Cannot write file! {0}"), m_Filename);
-					//DWORD lastError = GetLastError();
-					//WINDOWS_FORMAT_ERROR_MESSAGE(errorMsg, lastError);
-					//LOG_ERROR(TEXT("Error ({0})\n{1}"), m_Filename, errorMsg);
 				}
 				LOG_DEBUG("Written {0} bytes.", bytesWritten);
-
-				AddOffset(bytesWritten);
+				delete[] tempBuffer;
 			}
 		}
 	}
@@ -224,13 +220,9 @@ namespace Ion
 		{
 			LARGE_INTEGER _count;
 			_count.QuadPart = count;
-			BOOL result = SetFilePointerEx(m_FileHandle, _count, &m_Offset, FILE_CURRENT);
-			if (!result)
+			if (!SetFilePointerEx(m_FileHandle, _count, &m_Offset, FILE_CURRENT))
 			{
 				Windows::PrintLastError(TEXT("Cannot add file offset! {0}"), m_Filename);
-				//DWORD lastError = GetLastError();
-				//WINDOWS_FORMAT_ERROR_MESSAGE(errorMsg, lastError);
-				//LOG_ERROR(TEXT("Cannot add file offset! ({0})\n{1}"), m_Filename, errorMsg);
 				return false;
 			}
 			return true;
@@ -244,13 +236,9 @@ namespace Ion
 		{
 			LARGE_INTEGER _count;
 			_count.QuadPart = count;
-			BOOL result = SetFilePointerEx(m_FileHandle, _count, &m_Offset, FILE_BEGIN);
-			if (!result)
+			if (!SetFilePointerEx(m_FileHandle, _count, &m_Offset, FILE_BEGIN))
 			{
 				Windows::PrintLastError(TEXT("Cannot set file offset! {0}"), m_Filename);
-				//DWORD lastError = GetLastError();
-				//WINDOWS_FORMAT_ERROR_MESSAGE(errorMsg, lastError);
-				//LOG_ERROR(TEXT("Cannot set file offset! ({0})\n{1}"), m_Filename, errorMsg);
 				return false;
 			}
 			return true;
