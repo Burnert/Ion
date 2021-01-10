@@ -51,8 +51,8 @@ namespace Ion
 	void InputManager::OnEvent(Event& event)
 	{
 		EventDispatcher dispatcher(event);
-		dispatcher.Dispatch<KeyPressedEvent>(BIND_MEMBER_FUNC(InputManager::OnKeyPressedEvent));
-		dispatcher.Dispatch<KeyReleasedEvent>(BIND_MEMBER_FUNC(InputManager::OnKeyReleasedEvent));
+		dispatcher.Dispatch<KeyPressedEvent>(BIND_METHOD_1P(InputManager::OnKeyPressedEvent));
+		dispatcher.Dispatch<KeyReleasedEvent>(BIND_METHOD_1P(InputManager::OnKeyReleasedEvent));
 	}
 
 	bool InputManager::OnKeyPressedEvent(KeyPressedEvent& event)

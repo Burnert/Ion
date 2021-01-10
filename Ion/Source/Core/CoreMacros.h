@@ -7,7 +7,8 @@
 
 #define BITFLAG(x) (1 << (x))
 
-#define BIND_MEMBER_FUNC(x) std::bind(&x, this, std::placeholders::_1)
+#define BIND_METHOD(x)    std::bind(&x, this)
+#define BIND_METHOD_1P(x) std::bind(&x, this, std::placeholders::_1)
 
 #undef TEXT
 #ifdef UNICODE

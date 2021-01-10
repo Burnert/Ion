@@ -74,7 +74,8 @@ namespace Ion
 		static Application* s_Instance;
 
 	private:
-		void RunGameLoop();
+		/* Main engine loop function */
+		void RunMainLoop();
 
 		bool m_bRunning = false;
 
@@ -83,6 +84,8 @@ namespace Ion
 
 		std::unique_ptr<EventQueue> m_EventQueue;
 		std::unique_ptr<LayerStack> m_LayerStack;
+
+		std::thread::id m_MainThreadId;
 	};
 
 	Application* CreateApplication();

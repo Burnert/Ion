@@ -21,9 +21,10 @@ namespace Ion
 
 	Application::Application() :
 		m_EventQueue(std::make_unique<EventQueue>()),
-		m_LayerStack(std::make_unique<LayerStack>())
+		m_LayerStack(std::make_unique<LayerStack>()),
+		m_MainThreadId(std::this_thread::get_id())
 	{
-		m_EventQueue->SetEventHandler(BIND_MEMBER_FUNC(Application::DispatchEvent));
+		m_EventQueue->SetEventHandler(BIND_METHOD_1P(Application::DispatchEvent));
 		Logger::Init();
 	}
 
@@ -36,7 +37,7 @@ namespace Ion
 		// Create a platform specific window.
 		m_Window = GenericWindow::Create();
 
-		m_Window->SetEventCallback(BIND_MEMBER_FUNC(Application::OnEvent));
+		m_Window->SetEventCallback(BIND_METHOD_1P(Application::OnEvent));
 
 		m_Window->Initialize();
 		m_Window->SetTitle(L"Ion Engine");
@@ -46,7 +47,7 @@ namespace Ion
 		// Call client overriden Init function
 		OnInit();
 
-		RunGameLoop();
+		RunMainLoop();
 
 		// Call client overriden Shutdown function
 		OnShutdown();
@@ -96,7 +97,7 @@ namespace Ion
 		OnClientEvent(event);
 	}
 
-	void Application::RunGameLoop()
+	void Application::RunMainLoop()
 	{
 		m_bRunning = true;
 		while (m_bRunning)

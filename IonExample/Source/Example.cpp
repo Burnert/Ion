@@ -53,8 +53,8 @@ public:
 		COUNTER_TIME_DATA(dataMainLoop, "Counter_MainLoop");
 		COUNTER_TIME_DATA(dataMainLoopSection, "Counter_MainLoop_Section");
 
-		LOG_WARN("{0} Data: {1}", dataMainLoop.Name, dataMainLoop.GetTimeNs());
-		LOG_WARN("{0} Data: {1}", dataMainLoopSection.Name, dataMainLoopSection.GetTimeNs());
+		LOG_WARN("{0} Data: {1}", dataMainLoop.Name, dataMainLoop.GetTimeMs());
+		LOG_WARN("{0} Data: {1}", dataMainLoopSection.Name, dataMainLoopSection.GetTimeMs());
 	}
 
 	virtual void OnRender() override
