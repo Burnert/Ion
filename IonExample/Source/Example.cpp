@@ -28,7 +28,21 @@ public:
 		f.Write(fbuffer, 4);
 		f.Write(fbuffer, 4);
 
+		f.SetOffset(0);
+
+		byte frbuffer[29];
+		f.Read(frbuffer, 29);
+		char sfrbuffer[30];
+		memcpy_s(sfrbuffer, 29, frbuffer, 29);
+		sfrbuffer[29] = '\0';
+
+		LOG_INFO("Bytes read: {0}", sfrbuffer);
+		f.Delete();
+		f.SetOffset(-1);
+
 		f.Close();
+
+		LOG_TRACE("File done -------------------");
 	}
 
 	virtual void OnUpdate(float DeltaTime) override

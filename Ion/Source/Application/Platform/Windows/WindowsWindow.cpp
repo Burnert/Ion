@@ -353,7 +353,10 @@ namespace Ion
 					return 0;
 
 				if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, buffer, &size, sizeof(RAWINPUTHEADER)) != size)
+				{
 					LOG_WARN("GetRawInputData does not return correct size!");
+					return 0;
+				}
 
 				RAWINPUT* rawInput = (RAWINPUT*)buffer;
 

@@ -3,6 +3,23 @@
 #include "WindowsFile.h"
 #include "Core/Platform/Windows/WindowsCore.h"
 
+#ifdef ION_LOG_ENABLED
+
+#define PRINT_HANDLE_ERROR() \
+LOG_ERROR(TEXT("File '{0}' cannot be accessed before it is physically opened!"), m_Filename);
+#define PRINT_READ_ERROR() \
+LOG_ERROR(TEXT("File '{0}' cannot be read because the Read access mode was not specified when opening the file!"), m_Filename);
+#define PRINT_WRITE_ERROR() \
+LOG_ERROR(TEXT("File '{0}' cannot be written because the Write access mode was not specified when opening the file!"), m_Filename);
+
+#else
+
+#define PRINT_HANDLE_ERROR()
+#define PRINT_READ_ERROR()
+#define PRINT_WRITE_ERROR()
+
+#endif
+
 namespace Ion
 {
 	WindowsFile::WindowsFile()
@@ -43,13 +60,17 @@ namespace Ion
 
 	bool WindowsFile::Open(byte mode)
 	{
+		// This makes sure the filename is not blank before opening the file.
+		// If it is, then clearly something went wrong.
+		ASSERT(IsFilenameValid())
+
 		// Handle errors first
 		if (m_FileHandle != INVALID_HANDLE_VALUE)
 		{
-			LOG_ERROR(TEXT("File {0} is already open!"), m_Filename);
+			LOG_ERROR(TEXT("File '{0}' is already open!"), m_Filename);
 			return false;
 		}
-		else if ((mode & (IO::FM_Read | IO::FM_Write)) == 0)
+		if ((mode & (IO::FM_Read | IO::FM_Write)) == 0)
 		{
 			LOG_ERROR(TEXT("FileMode has to have either Read or Write flag set!"));
 			return false;
@@ -74,20 +95,20 @@ namespace Ion
 			DWORD lastError = GetLastError();
 			if (lastError == ERROR_FILE_NOT_FOUND)
 			{
-				LOG_WARN(TEXT("File {0} not found!"), m_Filename);
+				LOG_WARN(TEXT("File '{0}' not found!"), m_Filename);
 
 				m_FileHandle = CreateFile(m_Filename.c_str(), dwDesiredAccess, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-				LOG_TRACE(TEXT("File {0} created."), m_Filename);
+				LOG_TRACE(TEXT("File '{0}' created."), m_Filename);
 			}
 			else
 			{
 				WINDOWS_FORMAT_ERROR_MESSAGE(errorMsg, lastError);
-				LOG_ERROR(TEXT("File {0} cannot be opened!\n{1}"), m_Filename, std::wstring(errorMsg));
+				LOG_ERROR(TEXT("File '{0}' cannot be opened!\n{1}"), m_Filename, std::wstring(errorMsg));
 				return false;
 			}
 		}
 
-		LOG_TRACE(TEXT("File {0} opened."), m_Filename);
+		LOG_TRACE(TEXT("File '{0}' opened."), m_Filename);
 		return true;
 	}
 
@@ -95,7 +116,7 @@ namespace Ion
 	{
 		if (m_FileHandle != INVALID_HANDLE_VALUE)
 		{
-			LOG_TRACE(TEXT("File {0} was closed."), m_Filename);
+			LOG_TRACE(TEXT("File '{0}' was closed."), m_Filename);
 			CloseHandle(m_FileHandle);
 			m_FileHandle = INVALID_HANDLE_VALUE;
 		}
@@ -103,151 +124,181 @@ namespace Ion
 
 	bool WindowsFile::Delete()
 	{
-		if (!DeleteFile(m_Filename.c_str()))
+		if (m_FileHandle != INVALID_HANDLE_VALUE)
 		{
-			DWORD lastError = GetLastError();
-			if (lastError == ERROR_FILE_NOT_FOUND)
-			{
-				LOG_ERROR(TEXT("File {0} cannot be deleted because it does not exist!"), m_Filename);
-			}
-			else if (lastError == ERROR_ACCESS_DENIED)
-			{
-				LOG_ERROR(TEXT("File {0} cannot be deleted. Access denied!"), m_Filename);
-			}
-			else
-			{
-				WINDOWS_FORMAT_ERROR_MESSAGE(errorMsg, lastError);
-				LOG_ERROR(TEXT("File {0} cannot be deleted!\n{1}"), m_Filename, std::wstring(errorMsg));
-			}
+			LOG_ERROR(TEXT("Cannot delete '{0}' before it is closed!"), m_Filename);
 			return false;
 		}
-		LOG_INFO(TEXT("File {0} was deleted."), m_Filename);
+
+		if (!DeleteFile(m_Filename.c_str()))
+		{
+			Windows::PrintLastError(TEXT("Cannot write file! '{0}'"), m_Filename);
+			return false;
+		}
+		LOG_INFO(TEXT("File '{0}' was deleted."), m_Filename);
 		return true;
 	}
 
-	void WindowsFile::Read(byte* outBuffer, ullong count)
+	bool WindowsFile::Read(byte* outBuffer, ullong count)
 	{
-		if (m_FileHandle != INVALID_HANDLE_VALUE)
+		// Handle internal errors
+		if (m_FileHandle == INVALID_HANDLE_VALUE)
 		{
-			if (m_Mode & IO::FM_Read)
-			{
-				LOG_DEBUG(TEXT("[Placeholder] Read File {0}"), m_Filename);
-			}
+			PRINT_HANDLE_ERROR();
+			return false;
 		}
+		if (!(m_Mode & IO::FM_Read))
+		{
+			PRINT_READ_ERROR();
+			return false;
+		}
+
+		ulong bytesRead;
+		if (!ReadFile(m_FileHandle, outBuffer, (DWORD)count, &bytesRead, NULL))
+		{
+			Windows::PrintLastError(TEXT("Cannot read file! '{0}'"), m_Filename);
+			return false;
+		}
+		LOG_DEBUG("Read {0} bytes.", bytesRead);
+		return true;
 	}
 
-	void WindowsFile::ReadLine(char* outBuffer, ullong size)
+	bool WindowsFile::ReadLine(char* outBuffer, ullong size)
 	{
-		if (m_FileHandle != INVALID_HANDLE_VALUE)
+		// Handle internal errors
+		if (m_FileHandle == INVALID_HANDLE_VALUE)
 		{
-			if (m_Mode & IO::FM_Read)
-			{
-				LOG_DEBUG(TEXT("[Placeholder] ReadLine File {0}"), m_Filename);
-			}
+			PRINT_HANDLE_ERROR();
+			return false;
 		}
+		if (!(m_Mode & IO::FM_Read))
+		{
+			PRINT_READ_ERROR();
+			return false;
+		}
+
+		LOG_DEBUG(TEXT("[Placeholder] ReadLine File '{0}'"), m_Filename);
+		return true;
 	}
 
-	void WindowsFile::ReadLine(std::string& outStr)
+	bool WindowsFile::ReadLine(std::string& outStr)
 	{
-		if (m_FileHandle != INVALID_HANDLE_VALUE)
+		// Handle internal errors
+		if (m_FileHandle == INVALID_HANDLE_VALUE)
 		{
-			if (m_Mode & IO::FM_Read)
-			{
-				LOG_DEBUG(TEXT("[Placeholder] ReadLine File {0}"), m_Filename);
-			}
+			PRINT_HANDLE_ERROR();
+			return false;
 		}
+		if (!(m_Mode & IO::FM_Read))
+		{
+			PRINT_READ_ERROR();
+			return false;
+		}
+
+		LOG_DEBUG(TEXT("[Placeholder] ReadLine File '{0}'"), m_Filename);
+		return true;
 	}
 
-	void WindowsFile::Write(const byte* inBuffer, ullong count)
+	bool WindowsFile::Write(const byte* inBuffer, ullong count)
 	{
-		if (m_FileHandle != INVALID_HANDLE_VALUE)
+		// Handle internal errors
+		if (m_FileHandle == INVALID_HANDLE_VALUE)
 		{
-			if (m_Mode & IO::FM_Write)
-			{
-				ulong bytesWritten;
-				if (!WriteFile(m_FileHandle, inBuffer, (DWORD)count, &bytesWritten, NULL))
-				{
-					Windows::PrintLastError(TEXT("Cannot write file! {0}"), m_Filename);
-				}
-				LOG_DEBUG("Written {0} bytes.", bytesWritten);
-			}
+			PRINT_HANDLE_ERROR();
+			return false;
 		}
+		if (!(m_Mode & IO::FM_Write))
+		{
+			PRINT_WRITE_ERROR();
+			return false;
+		}
+
+		ulong bytesWritten;
+		if (!WriteFile(m_FileHandle, inBuffer, (DWORD)count, &bytesWritten, NULL))
+		{
+			Windows::PrintLastError(TEXT("Cannot write file! '{0}'"), m_Filename);
+			return false;
+		}
+		LOG_DEBUG("Written {0} bytes.", bytesWritten);
+		return true;
 	}
 
-	void WindowsFile::WriteLine(const char* inBuffer, ullong count)
+	bool WindowsFile::WriteLine(const char* inBuffer, ullong count)
 	{
-		if (m_FileHandle != INVALID_HANDLE_VALUE)
+		// Handle internal errors
+		if (m_FileHandle == INVALID_HANDLE_VALUE)
 		{
-			if (m_Mode & IO::FM_Write)
-			{
-				// Copy the inBuffer and set the last character to NewLine
-				char* tempBuffer = new char[count + 1];
-				memcpy_s(tempBuffer, count, inBuffer, count);
-				tempBuffer[count] = '\n';
-
-				ulong bytesWritten;
-				if (!WriteFile(m_FileHandle, tempBuffer, (DWORD)(count + 1), &bytesWritten, NULL))
-				{
-					Windows::PrintLastError(TEXT("Cannot write file! {0}"), m_Filename);
-				}
-				LOG_DEBUG("Written {0} bytes.", bytesWritten);
-				delete[] tempBuffer;
-			}
+			PRINT_HANDLE_ERROR();
+			return false;
 		}
+		if (!(m_Mode & IO::FM_Write))
+		{
+			PRINT_WRITE_ERROR();
+			return false;
+		}
+
+		// Copy the inBuffer and set the last character to NewLine
+		char* tempBuffer = new char[count + 1];
+		memcpy_s(tempBuffer, count, inBuffer, count);
+		tempBuffer[count] = '\n';
+
+		ulong bytesWritten;
+		if (!WriteFile(m_FileHandle, tempBuffer, (DWORD)(count + 1), &bytesWritten, NULL))
+		{
+			Windows::PrintLastError(TEXT("Cannot write file! '{0}'"), m_Filename);
+			return false;
+		}
+		delete[] tempBuffer;
+
+		LOG_DEBUG("Written {0} bytes.", bytesWritten);
+		return true;
 	}
 
-	void WindowsFile::WriteLine(const std::string& inStr)
+	bool WindowsFile::WriteLine(const std::string& inStr)
 	{
-		if (m_FileHandle != INVALID_HANDLE_VALUE)
-		{
-			if (m_Mode & IO::FM_Write)
-			{
-				WriteLine(inStr.c_str(), inStr.size());
-			}
-		}
-	}
-
-	bool WindowsFile::IsOpen() const
-	{
-		return m_FileHandle != INVALID_HANDLE_VALUE;
+		return WriteLine(inStr.c_str(), inStr.size());
 	}
 
 	bool WindowsFile::Exists() const
 	{
 		DWORD attributes = GetFileAttributes(m_Filename.c_str());
-		return attributes != INVALID_FILE_ATTRIBUTES && 
+		return attributes != INVALID_FILE_ATTRIBUTES &&
 			!(attributes & FILE_ATTRIBUTE_DIRECTORY);
 	}
 
 	bool WindowsFile::AddOffset(llong count)
 	{
-		if (m_FileHandle != INVALID_HANDLE_VALUE)
+		if (m_FileHandle == INVALID_HANDLE_VALUE)
 		{
-			LARGE_INTEGER _count;
-			_count.QuadPart = count;
-			if (!SetFilePointerEx(m_FileHandle, _count, &m_Offset, FILE_CURRENT))
-			{
-				Windows::PrintLastError(TEXT("Cannot add file offset! {0}"), m_Filename);
-				return false;
-			}
-			return true;
+			PRINT_HANDLE_ERROR();
+			return false;
 		}
-		return false;
+
+		LARGE_INTEGER _count;
+		_count.QuadPart = count;
+		if (!SetFilePointerEx(m_FileHandle, _count, &m_Offset, FILE_CURRENT))
+		{
+			Windows::PrintLastError(TEXT("Cannot add file offset! '{0}'"), m_Filename);
+			return false;
+		}
+		return true;
 	}
 
 	bool WindowsFile::SetOffset(llong count)
 	{
-		if (m_FileHandle != INVALID_HANDLE_VALUE)
+		if (m_FileHandle == INVALID_HANDLE_VALUE)
 		{
-			LARGE_INTEGER _count;
-			_count.QuadPart = count;
-			if (!SetFilePointerEx(m_FileHandle, _count, &m_Offset, FILE_BEGIN))
-			{
-				Windows::PrintLastError(TEXT("Cannot set file offset! {0}"), m_Filename);
-				return false;
-			}
-			return true;
+			PRINT_HANDLE_ERROR();
+			return false;
 		}
-		return false;
+
+		LARGE_INTEGER _count;
+		_count.QuadPart = count;
+		if (!SetFilePointerEx(m_FileHandle, _count, &m_Offset, FILE_BEGIN))
+		{
+			Windows::PrintLastError(TEXT("Cannot set file offset! '{0}'"), m_Filename);
+			return false;
+		}
+		return true;
 	}
 }

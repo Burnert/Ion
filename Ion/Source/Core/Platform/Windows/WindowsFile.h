@@ -24,20 +24,24 @@ namespace Ion
 		virtual void Close() override;
 		virtual bool Delete() override;
 
-		virtual void Read(byte* outBuffer, ullong count) override;
-		virtual void ReadLine(char* outBuffer, ullong count) override;
-		virtual void ReadLine(std::string& outStr) override;
-		virtual void Write(const byte* inBuffer, ullong count) override;
-		virtual void WriteLine(const char* inBuffer, ullong count) override;
-		virtual void WriteLine(const std::string& inStr) override;
+		virtual bool Read(byte* outBuffer, ullong count) override;
+		virtual bool ReadLine(char* outBuffer, ullong count) override;
+		virtual bool ReadLine(std::string& outStr) override;
+		virtual bool Write(const byte* inBuffer, ullong count) override;
+		virtual bool WriteLine(const char* inBuffer, ullong count) override;
+		virtual bool WriteLine(const std::string& inStr) override;
 
-		virtual bool IsOpen() const override;
+		virtual bool AddOffset(llong count) override;
+		virtual bool SetOffset(llong count) override;
+
+		FORCEINLINE virtual bool IsOpen() const override
+		{
+			return m_FileHandle != INVALID_HANDLE_VALUE;
+		}
 		virtual bool Exists() const override;
 
 		// End of IFile interface
 
-		bool AddOffset(llong count);
-		bool SetOffset(llong count);
 
 	private:
 		HANDLE m_FileHandle;

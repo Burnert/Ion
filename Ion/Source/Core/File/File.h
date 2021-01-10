@@ -31,12 +31,15 @@ namespace Ion
 		virtual void Close() = 0;
 		virtual bool Delete() = 0;
 
-		virtual void Read(byte* outBuffer, ullong count) = 0;
-		virtual void ReadLine(char* outBuffer, ullong count) = 0;
-		virtual void ReadLine(std::string& outStr) = 0;
-		virtual void Write(const byte* inBuffer, ullong count) = 0;
-		virtual void WriteLine(const char* inBuffer, ullong count) = 0;
-		virtual void WriteLine(const std::string& inStr) = 0;
+		virtual bool Read(byte* outBuffer, ullong count) = 0;
+		virtual bool ReadLine(char* outBuffer, ullong count) = 0;
+		virtual bool ReadLine(std::string& outStr) = 0;
+		virtual bool Write(const byte* inBuffer, ullong count) = 0;
+		virtual bool WriteLine(const char* inBuffer, ullong count) = 0;
+		virtual bool WriteLine(const std::string& inStr) = 0;
+
+		virtual bool AddOffset(llong count) = 0;
+		virtual bool SetOffset(llong count) = 0;
 
 		virtual bool IsOpen() const = 0;
 		virtual bool Exists() const = 0;
@@ -63,6 +66,8 @@ namespace Ion
 		virtual bool SetType_Impl(IO::FileType type);
 	public: 
 		FORCEINLINE IO::FileType GetType() const { return m_Type; }
+
+		FORCEINLINE bool IsFilenameValid() const { return m_Filename != TEXT(""); }
 
 	protected:
 		std::wstring m_Filename;

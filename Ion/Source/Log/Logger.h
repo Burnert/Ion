@@ -74,6 +74,8 @@ namespace Ion
 		#define ION_LOG_ENGINE_WARN(...)
 		#define ION_LOG_ENGINE_ERROR(...)
 		#define ION_LOG_ENGINE_CRITICAL(...)
+
+		#define ION_LOG_ENGINE_BADPLATFORMFUNCTIONCALL()
 	#endif
 
 	#define ION_LOG_TRACE(...)
@@ -82,4 +84,11 @@ namespace Ion
 	#define ION_LOG_WARN(...)
 	#define ION_LOG_ERROR(...)
 	#define ION_LOG_CRITICAL(...)
+
+	#define LOG_TRACE(...)   
+	#define LOG_DEBUG(...)   
+	#define LOG_INFO(...)    
+	#define LOG_WARN(...)    
+	#define LOG_ERROR(...)   
+	#define LOG_CRITICAL(...)
 #endif
