@@ -23,13 +23,13 @@ LOG_ERROR(TEXT("File '{0}' cannot be written because the Write access mode was n
 namespace Ion
 {
 	WindowsFile::WindowsFile()
-		: WindowsFile(L"")
+		: WindowsFile(TEXT(""))
 	{ }
 
 	WindowsFile::WindowsFile(const std::wstring& filename) :
 		FileBase(filename),
 		m_FileHandle(INVALID_HANDLE_VALUE),
-		m_Offset({ 0 }),
+		m_Offset({ 0, 0 }),
 		m_Mode((IO::FileMode)0)
 	{ }
 
@@ -93,23 +93,32 @@ namespace Ion
 		if (m_FileHandle == INVALID_HANDLE_VALUE)
 		{
 			DWORD lastError = GetLastError();
-			if (lastError == ERROR_FILE_NOT_FOUND)
-			{
-				LOG_WARN(TEXT("File '{0}' not found!"), m_Filename);
+			if (lastError != ERROR_FILE_NOT_FOUND)
+				goto lError;
 
-				m_FileHandle = CreateFile(m_Filename.c_str(), dwDesiredAccess, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-				LOG_TRACE(TEXT("File '{0}' created."), m_Filename);
-			}
-			else
-			{
-				WINDOWS_FORMAT_ERROR_MESSAGE(errorMsg, lastError);
-				LOG_ERROR(TEXT("File '{0}' cannot be opened!\n{1}"), m_Filename, std::wstring(errorMsg));
-				return false;
-			}
+			LOG_WARN(TEXT("File '{0}' not found!"), m_Filename);
+
+			m_FileHandle = CreateFile(m_Filename.c_str(), dwDesiredAccess, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+			if (m_FileHandle == INVALID_HANDLE_VALUE)
+				goto lError;
+
+			LOG_TRACE(TEXT("File '{0}' created."), m_Filename);
+		}
+
+		if (mode & IO::FM_Write && mode & IO::FM_Append)
+		{
+			// Set the pointer to the end of the file
+			llong offset = GetSize();
+			SetOffset(offset);
 		}
 
 		LOG_TRACE(TEXT("File '{0}' opened."), m_Filename);
 		return true;
+
+		// Other error
+	lError:
+		Windows::PrintLastError(TEXT("File '{0}' cannot be opened!"), m_Filename);
+		return false;
 	}
 
 	void WindowsFile::Close()
@@ -259,13 +268,6 @@ namespace Ion
 		return WriteLine(inStr.c_str(), inStr.size());
 	}
 
-	bool WindowsFile::Exists() const
-	{
-		DWORD attributes = GetFileAttributes(m_Filename.c_str());
-		return attributes != INVALID_FILE_ATTRIBUTES &&
-			!(attributes & FILE_ATTRIBUTE_DIRECTORY);
-	}
-
 	bool WindowsFile::AddOffset(llong count)
 	{
 		if (m_FileHandle == INVALID_HANDLE_VALUE)
@@ -300,5 +302,25 @@ namespace Ion
 			return false;
 		}
 		return true;
+	}
+	
+	llong WindowsFile::GetSize() const
+	{
+		if (m_FileHandle == INVALID_HANDLE_VALUE)
+		{
+			PRINT_HANDLE_ERROR();
+			return -1ll;
+		}
+
+		LARGE_INTEGER fileSize;
+		GetFileSizeEx(m_FileHandle, &fileSize);
+		return fileSize.QuadPart;
+	}
+
+	bool WindowsFile::Exists() const
+	{
+		DWORD attributes = GetFileAttributes(m_Filename.c_str());
+		return attributes != INVALID_FILE_ATTRIBUTES &&
+			!(attributes & FILE_ATTRIBUTE_DIRECTORY);
 	}
 }

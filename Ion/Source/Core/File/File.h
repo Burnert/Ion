@@ -41,6 +41,8 @@ namespace Ion
 		virtual bool AddOffset(llong count) = 0;
 		virtual bool SetOffset(llong count) = 0;
 
+		virtual llong GetSize() const = 0;
+
 		virtual bool IsOpen() const = 0;
 		virtual bool Exists() const = 0;
 	};

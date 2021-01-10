@@ -34,6 +34,8 @@ namespace Ion
 		virtual bool AddOffset(llong count) override;
 		virtual bool SetOffset(llong count) override;
 
+		virtual llong GetSize() const override;
+
 		FORCEINLINE virtual bool IsOpen() const override
 		{
 			return m_FileHandle != INVALID_HANDLE_VALUE;
@@ -41,7 +43,6 @@ namespace Ion
 		virtual bool Exists() const override;
 
 		// End of IFile interface
-
 
 	private:
 		HANDLE m_FileHandle;

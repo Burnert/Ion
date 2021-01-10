@@ -5,7 +5,7 @@
 namespace Ion
 {
 	FileBase::FileBase()
-		: FileBase(L"")
+		: FileBase(TEXT(""))
 	{ }
 
 	FileBase::FileBase(const std::wstring& filename)

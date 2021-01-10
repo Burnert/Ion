@@ -18,7 +18,7 @@ public:
 		Ion::File f(TEXT("testfile.txt"));
 		std::string line;
 
-		f.Open(Ion::IO::FM_Read | Ion::IO::FM_Write);
+		f.Open(Ion::IO::FM_Read | Ion::IO::FM_Write | Ion::IO::FM_Append);
 
 		f.WriteLine("abcdefgh1___");
 
