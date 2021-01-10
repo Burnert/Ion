@@ -19,19 +19,16 @@ public:
 		std::string line;
 
 		f.Open(Ion::IO::FM_Read | Ion::IO::FM_Write);
+
 		f.WriteLine("abcdefgh1___");
-		f.ReadLine(line);
-		f.AddOffset(-2000);
+
+		byte fbuffer[4] = { 1, 6, 25, 66 };
+		f.Write(fbuffer, 4);
+		f.Write(fbuffer, 4);
+		f.Write(fbuffer, 4);
+		f.Write(fbuffer, 4);
+
 		f.Close();
-
-		LOG_DEBUG("File {0}", f.Exists() ? "exists" : "does not exist");
-
-		Ion::File f2;
-		f2.Open(Ion::IO::FM_Read);
-		LOG_DEBUG("File is {0}", f2.IsOpen() ? "open" : "closed");
-		f2.Close();
-
-		f2.Delete();
 	}
 
 	virtual void OnUpdate(float DeltaTime) override

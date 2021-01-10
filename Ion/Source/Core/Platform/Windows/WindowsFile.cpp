@@ -164,7 +164,12 @@ namespace Ion
 		{
 			if (m_Mode & IO::FM_Write)
 			{
-				LOG_DEBUG(TEXT("[Placeholder] Write File {0}"), m_Filename);
+				ulong bytesWritten;
+				if (!WriteFile(m_FileHandle, inBuffer, (DWORD)count, &bytesWritten, NULL))
+				{
+					Windows::PrintLastError(TEXT("Cannot write file! {0}"), m_Filename);
+				}
+				LOG_DEBUG("Written {0} bytes.", bytesWritten);
 			}
 		}
 	}
