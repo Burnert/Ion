@@ -9,7 +9,7 @@ namespace Ion
 	{ }
 
 	FileBase::FileBase(const std::wstring& filename)
-		: m_Filename(filename), m_Type(IO::FT_Text)
+		: m_Filename(filename), m_Type(IO::FT_Text), m_FileSize(-1)
 	{ }
 
 	bool FileBase::SetFilename(const std::wstring& filename)

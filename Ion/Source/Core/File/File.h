@@ -74,5 +74,20 @@ namespace Ion
 	protected:
 		std::wstring m_Filename;
 		IO::FileType m_Type;
+
+		// Caches
+		mutable llong m_FileSize;
+		/* Invalidates file size cache and retrieves the new size. */
+		FORCEINLINE void UpdateFileSizeCache() const { m_FileSize = -1; GetSize(); }
+		/* Sets the file size cache to the size specified. */
+		FORCEINLINE void UpdateFileSizeCache(llong newFileSize) const { m_FileSize = newFileSize; }
+		// Debug
+#ifdef ION_DEBUG
+		bool m_DebugLog = false;
+	public:
+		/* Do not call this in any other configuration other than Debug!
+		   Enables low level logging for operations on this file. */
+		FORCEINLINE void EnableDebugLog() { m_DebugLog = true; }
+#endif
 	};
 }

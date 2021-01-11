@@ -96,23 +96,34 @@ namespace Ion
 			if (lastError != ERROR_FILE_NOT_FOUND)
 				goto lError;
 
-			LOG_WARN(TEXT("File '{0}' not found!"), m_Filename);
+#ifdef ION_DEBUG
+			if (m_DebugLog)
+				LOG_WARN(TEXT("File '{0}' not found!"), m_Filename);
+#endif
 
 			m_FileHandle = CreateFile(m_Filename.c_str(), dwDesiredAccess, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
 			if (m_FileHandle == INVALID_HANDLE_VALUE)
 				goto lError;
 
-			LOG_TRACE(TEXT("File '{0}' created."), m_Filename);
+#ifdef ION_DEBUG
+			if (m_DebugLog)
+				LOG_DEBUG(TEXT("File '{0}' created."), m_Filename);
+#endif
 		}
+
+		UpdateFileSizeCache();
 
 		if (mode & IO::FM_Write && mode & IO::FM_Append)
 		{
 			// Set the pointer to the end of the file
-			llong offset = GetSize();
+			llong offset = m_FileSize;
 			SetOffset(offset);
 		}
 
-		LOG_TRACE(TEXT("File '{0}' opened."), m_Filename);
+#ifdef ION_DEBUG
+		if (m_DebugLog)
+			LOG_TRACE(TEXT("File '{0}' opened."), m_Filename);
+#endif
 		return true;
 
 		// Other error
@@ -125,7 +136,10 @@ namespace Ion
 	{
 		if (m_FileHandle != INVALID_HANDLE_VALUE)
 		{
-			LOG_TRACE(TEXT("File '{0}' was closed."), m_Filename);
+#ifdef ION_DEBUG
+			if (m_DebugLog)
+				LOG_TRACE(TEXT("File '{0}' was closed."), m_Filename);
+#endif
 			CloseHandle(m_FileHandle);
 			m_FileHandle = INVALID_HANDLE_VALUE;
 		}
@@ -141,10 +155,13 @@ namespace Ion
 
 		if (!DeleteFile(m_Filename.c_str()))
 		{
-			Windows::PrintLastError(TEXT("Cannot write file '{0}'!"), m_Filename);
+			Windows::PrintLastError(TEXT("Cannot delete file '{0}'!"), m_Filename);
 			return false;
 		}
-		LOG_INFO(TEXT("File '{0}' was deleted."), m_Filename);
+#ifdef ION_DEBUG
+		if (m_DebugLog)
+			LOG_DEBUG(TEXT("File '{0}' was deleted."), m_Filename);
+#endif
 		return true;
 	}
 
@@ -169,108 +186,72 @@ namespace Ion
 			return false;
 		}
 		// Retrieves the file pointer
-		SetFilePointerEx(m_FileHandle, { 0 }, &m_Offset, FILE_CURRENT);
+		m_Offset.QuadPart += bytesRead;
 
-		LOG_DEBUG("Read {0} bytes.", bytesRead);
+#ifdef ION_DEBUG
+		if (m_DebugLog)
+			LOG_TRACE("Read {0} bytes.", bytesRead);
+#endif
 		return true;
 	}
 
 	bool WindowsFile::ReadLine_Internal(char* outBuffer, ullong count, ullong* outReadCount, bool* bOutOverflow)
 	{
-		// @TODO: Optimise the whole thing
-
 		if (bOutOverflow != nullptr)
 			*bOutOverflow = false;
 
 		llong initialOffset = m_Offset.QuadPart;
-		llong fileSize = GetSize();
-		ullong remainingBufferSize = count;
-		ullong localOffset = 0;
-		while (true)
+
+		DWORD bytesRead;
+		if (!ReadFile(m_FileHandle, outBuffer, (DWORD)count, &bytesRead, NULL))
 		{
-			// Read 1KB at first, unless the remaining buffer section is smaller.
-			ushort bufferSize = (ushort)std::min(1024ull, remainingBufferSize);
-			char* tempBuffer = new char[bufferSize];
-			ZeroMemory(tempBuffer, bufferSize);
+			Windows::PrintLastError(TEXT("Cannot read file '{0}'!"), m_Filename);
+			return false;
+		}
 
-			DWORD bytesRead;
-			if (!ReadFile(m_FileHandle, tempBuffer, (DWORD)bufferSize, &bytesRead, NULL))
-			{
-				Windows::PrintLastError(TEXT("Cannot read file '{0}'!"), m_Filename);
-				return false;
-			}
+		// Retrieves the file pointer
+		m_Offset.QuadPart += bytesRead;
 
-			bool bNewLineFound = false;
-			ulong lastIndex = bytesRead - 1;
-			for (ushort i = 0; i < bytesRead; ++i)
+		bool bNewLineFound = false;
+		ulong zeroIndex = bytesRead - 1;
+		for (ushort i = 0; i < bytesRead; ++i)
+		{
+			if (outBuffer[i] == '\n')
 			{
-				if (tempBuffer[i] == '\n')
-				{
-					// Set new line index to last character to copy
-					lastIndex = i;
-					bNewLineFound = true;
-					break;
-				}
-			}
-			
-			// If there's no new line just retreive the pointer.
-			// If there is, set the offset to the new line, so the next one
-			// can be read in another function call.
-			if (bNewLineFound)
-			{
-				SetOffset(initialOffset + localOffset + lastIndex + 1);
-			}
-			else
-			{
-				// Retrieves the file pointer
-				SetFilePointerEx(m_FileHandle, { 0 }, &m_Offset, FILE_CURRENT);
-			}
+				// Set the last character before new line index
+				// to last character to copy
+				zeroIndex = i;
+				bNewLineFound = true;
 
-			// End of file works like a new line character in this situation
-			memcpy_s(outBuffer + localOffset, remainingBufferSize, tempBuffer, lastIndex + 1);
-			delete[] tempBuffer;
-
-			// Edge case:
-			// Output buffer cannot fit the NULL character at the end.
-			// In this situation we have to treat it
-			// kind of like an overflow.
-			if (remainingBufferSize - (lastIndex + 1) == 0)
-			{
-				outBuffer[count - 1] = '\0';
-				AddOffset(-1);
-				// This localOffset variable is also treated as "all bytes read"
-				// so increment it only so much that the new line
-				// character is not considered.
-				localOffset += lastIndex;
-			}
-			// Otherwise just add the NULL character at the end.
-			else
-			{
-				outBuffer[localOffset + lastIndex + 1] = '\0';
-				localOffset += lastIndex + 1;
-			}
-
-			// If there's no new line and it's not the end of file keep going with a new offset.
-			if (bNewLineFound || m_Offset.QuadPart == fileSize)
-				break;
-
-			remainingBufferSize -= lastIndex + 1;
-
-			// Check so there's no buffer overflow
-			// This is still considered a successful read
-			// but it's not a complete one.
-			if (!remainingBufferSize)
-			{
-				if (bOutOverflow != nullptr)
-					*bOutOverflow = true;
-				//LOG_WARN(TEXT("File read output buffer overflow! {1} byte buffer was to small. ('{0}')"), m_Filename, count);
+				// Set new file offset to the first character
+				// in the next line
+				SetOffset(initialOffset + zeroIndex + 1);
 				break;
 			}
 		}
-		if (outReadCount != nullptr)
-			*outReadCount = localOffset;
+		// Fill zeros from the end of the line to the end of the buffer
+		// If the new line was not found it just sets the last byte to 0
+		ZeroMemory(outBuffer + zeroIndex, count - zeroIndex);
 
-		//LOG_DEBUG("Read {0} bytes.", localOffset);
+		if (outReadCount != nullptr)
+			*outReadCount = zeroIndex;
+
+		// If it's the end of the file treat it as if new line was found.
+		// No overflow in this case.
+		if (!(bNewLineFound || m_Offset.QuadPart == m_FileSize))
+		{
+			// This is still considered a successful read
+			// but it's not a complete one.
+			if (bOutOverflow != nullptr)
+				*bOutOverflow = true;
+#ifdef ION_DEBUG
+			LOG_WARN(TEXT("File read output buffer overflow! {1} byte buffer was to small. ('{0}')"), m_Filename, count);
+#endif
+		}
+#ifdef ION_DEBUG
+		if (m_DebugLog)
+			LOG_TRACE("Read {0} bytes.", zeroIndex);
+#endif
 		return true;
 	}
 
@@ -307,20 +288,25 @@ namespace Ion
 
 		outStr = "";
 		bool bOverflow = false;
-		// Start with 1KB buffer
-		const uint bufferSize = 1024;
-		char* tempBuffer = new char[bufferSize];
+		// Start with 512B buffer
+		const uint bufferSize = 512;
+		ullong readCount = 0;
+		//char* tempBuffer = new char[bufferSize];
+		char tempBuffer[512];
 		// Call the internal ReadLine function until we hit the new line character
+		// Should happen instantly unless the line is huge
 		do
 		{
-			ZeroMemory(tempBuffer, bufferSize);
-			ReadLine_Internal(tempBuffer, bufferSize, nullptr, &bOverflow);
+			ReadLine_Internal(tempBuffer, bufferSize, &readCount, &bOverflow);
 			outStr += tempBuffer;
 		}
 		while (bOverflow);
-		delete[] tempBuffer;
+		//delete[] tempBuffer;
 
-		//LOG_DEBUG("Read {0} bytes.", localOffset);
+#ifdef ION_DEBUG
+		if (m_DebugLog)
+			LOG_TRACE("Read {0} bytes.", readCount);
+#endif
 		return true;
 	}
 
@@ -345,9 +331,17 @@ namespace Ion
 			return false;
 		}
 		// Retrieves the file pointer
-		SetFilePointerEx(m_FileHandle, { 0 }, &m_Offset, FILE_CURRENT);
+		m_Offset.QuadPart += bytesWritten;
 
-		LOG_DEBUG("Written {0} bytes.", bytesWritten);
+		// Compare new offset to current file size cache
+		// and set the new size based on the result.
+		llong sizeDifference = std::max(0ll, m_Offset.QuadPart - m_FileSize);
+		UpdateFileSizeCache(m_FileSize + sizeDifference);
+
+#ifdef ION_DEBUG
+		if (m_DebugLog)
+			LOG_TRACE("Written {0} bytes.", bytesWritten);
+#endif
 		return true;
 	}
 
@@ -365,29 +359,51 @@ namespace Ion
 			return false;
 		}
 
-		// Copy the inBuffer and set the last character to NewLine
-		char* tempBuffer = new char[count + 1];
+		char* tempBuffer;
+		bool bAllocStack = false;
+		// Allocate on stack if the buffer is small
+		if (count <= 128)
+		{
+			bAllocStack = true;
+			tempBuffer = (char*)alloca(count);
+		}
+		else
+		{
+			tempBuffer = new char[count];
+		}
+		// Copy the inBuffer and set the last character to NewLine instead of NULL
 		memcpy_s(tempBuffer, count, inBuffer, count);
-		tempBuffer[count] = '\n';
+		tempBuffer[count - 1] = '\n';
 
 		ulong bytesWritten;
-		if (!WriteFile(m_FileHandle, tempBuffer, (DWORD)(count + 1), &bytesWritten, NULL))
+		if (!WriteFile(m_FileHandle, tempBuffer, (DWORD)count, &bytesWritten, NULL))
 		{
 			Windows::PrintLastError(TEXT("Cannot write file '{0}'!"), m_Filename);
 			return false;
 		}
-		delete[] tempBuffer;
+
+		// Delete the heap allocated buffer
+		if (!bAllocStack)
+			delete[] tempBuffer;
 
 		// Retrieves the file pointer
-		SetFilePointerEx(m_FileHandle, { 0 }, &m_Offset, FILE_CURRENT);
+		m_Offset.QuadPart += bytesWritten;
 
-		LOG_DEBUG("Written {0} bytes.", bytesWritten);
+		// Compare new offset to current file size cache
+		// and set the new size based on the result.
+		llong sizeDifference = std::max(0ll, m_Offset.QuadPart - m_FileSize);
+		UpdateFileSizeCache(m_FileSize + sizeDifference);
+
+#ifdef ION_DEBUG
+		if (m_DebugLog)
+			LOG_TRACE("Written {0} bytes.", bytesWritten);
+#endif
 		return true;
 	}
 
 	bool WindowsFile::WriteLine(const std::string& inStr)
 	{
-		return WriteLine(inStr.c_str(), inStr.size());
+		return WriteLine(inStr.c_str(), inStr.size() + 1);
 	}
 
 	bool WindowsFile::AddOffset(llong count)
@@ -434,8 +450,18 @@ namespace Ion
 			return -1ll;
 		}
 
+		if (m_FileSize != -1)
+		{
+			return m_FileSize;
+		}
+
 		LARGE_INTEGER fileSize;
 		GetFileSizeEx(m_FileHandle, &fileSize);
+		m_FileSize = fileSize.QuadPart;
+#ifdef ION_DEBUG
+		if (m_DebugLog)
+			LOG_TRACE("New file size = {0} bytes.", m_FileSize);
+#endif
 		return fileSize.QuadPart;
 	}
 
