@@ -359,18 +359,8 @@ namespace Ion
 			return false;
 		}
 
-		char* tempBuffer;
-		bool bAllocStack = false;
 		// Allocate on stack if the buffer is small
-		if (count <= 128)
-		{
-			bAllocStack = true;
-			tempBuffer = (char*)alloca(count);
-		}
-		else
-		{
-			tempBuffer = new char[count];
-		}
+		char* tempBuffer = (char*)_malloca(count);
 		// Copy the inBuffer and set the last character to NewLine instead of NULL
 		memcpy_s(tempBuffer, count, inBuffer, count);
 		tempBuffer[count - 1] = '\n';
@@ -382,9 +372,8 @@ namespace Ion
 			return false;
 		}
 
-		// Delete the heap allocated buffer
-		if (!bAllocStack)
-			delete[] tempBuffer;
+		// Free the heap allocated memory
+		_freea(tempBuffer);
 
 		// Retrieves the file pointer
 		m_Offset.QuadPart += bytesWritten;
