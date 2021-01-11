@@ -70,7 +70,7 @@ namespace Ion
 			LOG_ERROR(TEXT("File '{0}' is already open!"), m_Filename);
 			return false;
 		}
-		if ((mode & (IO::FM_Read | IO::FM_Write)) == 0)
+		if (!(mode & (IO::FM_Read | IO::FM_Write)))
 		{
 			LOG_ERROR(TEXT("FileMode has to have either Read or Write flag set!"));
 			return false;
@@ -141,7 +141,7 @@ namespace Ion
 
 		if (!DeleteFile(m_Filename.c_str()))
 		{
-			Windows::PrintLastError(TEXT("Cannot write file! '{0}'"), m_Filename);
+			Windows::PrintLastError(TEXT("Cannot write file '{0}'!"), m_Filename);
 			return false;
 		}
 		LOG_INFO(TEXT("File '{0}' was deleted."), m_Filename);
@@ -165,14 +165,116 @@ namespace Ion
 		ulong bytesRead;
 		if (!ReadFile(m_FileHandle, outBuffer, (DWORD)count, &bytesRead, NULL))
 		{
-			Windows::PrintLastError(TEXT("Cannot read file! '{0}'"), m_Filename);
+			Windows::PrintLastError(TEXT("Cannot read file '{0}'!"), m_Filename);
 			return false;
 		}
+		// Retrieves the file pointer
+		SetFilePointerEx(m_FileHandle, { 0 }, &m_Offset, FILE_CURRENT);
+
 		LOG_DEBUG("Read {0} bytes.", bytesRead);
 		return true;
 	}
 
-	bool WindowsFile::ReadLine(char* outBuffer, ullong size)
+	bool WindowsFile::ReadLine_Internal(char* outBuffer, ullong count, ullong* outReadCount, bool* bOutOverflow)
+	{
+		// @TODO: Optimise the whole thing
+
+		if (bOutOverflow != nullptr)
+			*bOutOverflow = false;
+
+		llong initialOffset = m_Offset.QuadPart;
+		llong fileSize = GetSize();
+		ullong remainingBufferSize = count;
+		ullong localOffset = 0;
+		while (true)
+		{
+			// Read 1KB at first, unless the remaining buffer section is smaller.
+			ushort bufferSize = (ushort)std::min(1024ull, remainingBufferSize);
+			char* tempBuffer = new char[bufferSize];
+			ZeroMemory(tempBuffer, bufferSize);
+
+			DWORD bytesRead;
+			if (!ReadFile(m_FileHandle, tempBuffer, (DWORD)bufferSize, &bytesRead, NULL))
+			{
+				Windows::PrintLastError(TEXT("Cannot read file '{0}'!"), m_Filename);
+				return false;
+			}
+
+			bool bNewLineFound = false;
+			ulong lastIndex = bytesRead - 1;
+			for (ushort i = 0; i < bytesRead; ++i)
+			{
+				if (tempBuffer[i] == '\n')
+				{
+					// Set new line index to last character to copy
+					lastIndex = i;
+					bNewLineFound = true;
+					break;
+				}
+			}
+			
+			// If there's no new line just retreive the pointer.
+			// If there is, set the offset to the new line, so the next one
+			// can be read in another function call.
+			if (bNewLineFound)
+			{
+				SetOffset(initialOffset + localOffset + lastIndex + 1);
+			}
+			else
+			{
+				// Retrieves the file pointer
+				SetFilePointerEx(m_FileHandle, { 0 }, &m_Offset, FILE_CURRENT);
+			}
+
+			// End of file works like a new line character in this situation
+			memcpy_s(outBuffer + localOffset, remainingBufferSize, tempBuffer, lastIndex + 1);
+			delete[] tempBuffer;
+
+			// Edge case:
+			// Output buffer cannot fit the NULL character at the end.
+			// In this situation we have to treat it
+			// kind of like an overflow.
+			if (remainingBufferSize - (lastIndex + 1) == 0)
+			{
+				outBuffer[count - 1] = '\0';
+				AddOffset(-1);
+				// This localOffset variable is also treated as "all bytes read"
+				// so increment it only so much that the new line
+				// character is not considered.
+				localOffset += lastIndex;
+			}
+			// Otherwise just add the NULL character at the end.
+			else
+			{
+				outBuffer[localOffset + lastIndex + 1] = '\0';
+				localOffset += lastIndex + 1;
+			}
+
+			// If there's no new line and it's not the end of file keep going with a new offset.
+			if (bNewLineFound || m_Offset.QuadPart == fileSize)
+				break;
+
+			remainingBufferSize -= lastIndex + 1;
+
+			// Check so there's no buffer overflow
+			// This is still considered a successful read
+			// but it's not a complete one.
+			if (!remainingBufferSize)
+			{
+				if (bOutOverflow != nullptr)
+					*bOutOverflow = true;
+				//LOG_WARN(TEXT("File read output buffer overflow! {1} byte buffer was to small. ('{0}')"), m_Filename, count);
+				break;
+			}
+		}
+		if (outReadCount != nullptr)
+			*outReadCount = localOffset;
+
+		//LOG_DEBUG("Read {0} bytes.", localOffset);
+		return true;
+	}
+
+	bool WindowsFile::ReadLine(char* outBuffer, ullong count)
 	{
 		// Handle internal errors
 		if (m_FileHandle == INVALID_HANDLE_VALUE)
@@ -186,8 +288,7 @@ namespace Ion
 			return false;
 		}
 
-		LOG_DEBUG(TEXT("[Placeholder] ReadLine File '{0}'"), m_Filename);
-		return true;
+		return ReadLine_Internal(outBuffer, count, nullptr, nullptr);
 	}
 
 	bool WindowsFile::ReadLine(std::string& outStr)
@@ -204,7 +305,22 @@ namespace Ion
 			return false;
 		}
 
-		LOG_DEBUG(TEXT("[Placeholder] ReadLine File '{0}'"), m_Filename);
+		outStr = "";
+		bool bOverflow = false;
+		// Start with 1KB buffer
+		const uint bufferSize = 1024;
+		char* tempBuffer = new char[bufferSize];
+		// Call the internal ReadLine function until we hit the new line character
+		do
+		{
+			ZeroMemory(tempBuffer, bufferSize);
+			ReadLine_Internal(tempBuffer, bufferSize, nullptr, &bOverflow);
+			outStr += tempBuffer;
+		}
+		while (bOverflow);
+		delete[] tempBuffer;
+
+		//LOG_DEBUG("Read {0} bytes.", localOffset);
 		return true;
 	}
 
@@ -225,9 +341,12 @@ namespace Ion
 		ulong bytesWritten;
 		if (!WriteFile(m_FileHandle, inBuffer, (DWORD)count, &bytesWritten, NULL))
 		{
-			Windows::PrintLastError(TEXT("Cannot write file! '{0}'"), m_Filename);
+			Windows::PrintLastError(TEXT("Cannot write file '{0}'!"), m_Filename);
 			return false;
 		}
+		// Retrieves the file pointer
+		SetFilePointerEx(m_FileHandle, { 0 }, &m_Offset, FILE_CURRENT);
+
 		LOG_DEBUG("Written {0} bytes.", bytesWritten);
 		return true;
 	}
@@ -254,10 +373,13 @@ namespace Ion
 		ulong bytesWritten;
 		if (!WriteFile(m_FileHandle, tempBuffer, (DWORD)(count + 1), &bytesWritten, NULL))
 		{
-			Windows::PrintLastError(TEXT("Cannot write file! '{0}'"), m_Filename);
+			Windows::PrintLastError(TEXT("Cannot write file '{0}'!"), m_Filename);
 			return false;
 		}
 		delete[] tempBuffer;
+
+		// Retrieves the file pointer
+		SetFilePointerEx(m_FileHandle, { 0 }, &m_Offset, FILE_CURRENT);
 
 		LOG_DEBUG("Written {0} bytes.", bytesWritten);
 		return true;
@@ -280,7 +402,7 @@ namespace Ion
 		_count.QuadPart = count;
 		if (!SetFilePointerEx(m_FileHandle, _count, &m_Offset, FILE_CURRENT))
 		{
-			Windows::PrintLastError(TEXT("Cannot add file offset! '{0}'"), m_Filename);
+			Windows::PrintLastError(TEXT("Cannot add file offset! ('{0}')"), m_Filename);
 			return false;
 		}
 		return true;
@@ -298,7 +420,7 @@ namespace Ion
 		_count.QuadPart = count;
 		if (!SetFilePointerEx(m_FileHandle, _count, &m_Offset, FILE_BEGIN))
 		{
-			Windows::PrintLastError(TEXT("Cannot set file offset! '{0}'"), m_Filename);
+			Windows::PrintLastError(TEXT("Cannot set file offset! ('{0}')"), m_Filename);
 			return false;
 		}
 		return true;

@@ -24,11 +24,19 @@ namespace Ion
 		virtual void Close() override;
 		virtual bool Delete() override;
 
+		/* Reads data from binary file and sets the file offset to the end of the read. */
 		virtual bool Read(byte* outBuffer, ullong count) override;
+		/* Reads a line from a text file and sets the file offset to the beginning of the next line.
+		   If the count parameter, hence the out buffer size, is not big enough it will only write 
+		   to the end of the buffer and will move the offset to the end of the read section. */
 		virtual bool ReadLine(char* outBuffer, ullong count) override;
+		/* Reads a line from a text file and sets the file offset to the beginning of the next line. */
 		virtual bool ReadLine(std::string& outStr) override;
+		/* Writes data to binary file and sets the file offset to the end of the write. */
 		virtual bool Write(const byte* inBuffer, ullong count) override;
+		/* Writes a line to a text file and sets the file offset to the beginning of the next line. */
 		virtual bool WriteLine(const char* inBuffer, ullong count) override;
+		/* Writes a line to a text file and sets the file offset to the beginning of the next line. */
 		virtual bool WriteLine(const std::string& inStr) override;
 
 		virtual bool AddOffset(llong count) override;
@@ -48,6 +56,8 @@ namespace Ion
 		HANDLE m_FileHandle;
 		LARGE_INTEGER m_Offset;
 		byte m_Mode;
+
+		bool ReadLine_Internal(char* outBuffer, ullong count, ullong* outReadCount, bool* bOutOverflow);
 	};
 	
 	using File = WindowsFile;

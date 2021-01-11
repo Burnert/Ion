@@ -21,6 +21,7 @@
 #include <unordered_set>
 
 #ifdef ION_PLATFORM_WINDOWS
+#define NOMINMAX
 #include <Windows.h>
 #include <windowsx.h>
 #endif
