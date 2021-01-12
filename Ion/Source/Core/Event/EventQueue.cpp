@@ -1,9 +1,7 @@
 #include "IonPCH.h"
 
 #include "EventQueue.h"
-
-#include "Log/Logger.h"
-
+#include "Core/Logging/Logger.h"
 #include "Core/CoreUtilities.h"
 
 namespace Ion

@@ -8,8 +8,7 @@
 #include "Core/Event/InputEvent.h"
 #include "Core/Input/Input.h"
 #include "Core/Platform/Windows/WindowsInput.h"
-
-#include "Log/Logger.h"
+#include "Core/Logging/Logger.h"
 
 namespace Ion
 {

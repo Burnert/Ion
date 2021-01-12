@@ -18,5 +18,5 @@
 #include "File/File.h"
 #include "Input/Input.h"
 #include "Layer/Layer.h"
-#include "Log/Logger.h"
+#include "Logging/Logger.h"
 #include "Profiling/DebugProfiler.h"

@@ -2,8 +2,7 @@
 
 #include "GenericWindow.h"
 #include "Core/CoreTypes.h"
-
-#include "Log/Logger.h"
+#include "Core/Logging/Logger.h"
 
 namespace Ion
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Log/Logger.h"
+#include "Core/Logging/Logger.h"
 
 #define FORCEINLINE __forceinline
 #define NODISCARD [[nodiscard]]

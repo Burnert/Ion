@@ -1,12 +1,6 @@
 #pragma once
 
 #include "Core/Core.h"
-
-#ifdef ION_PLATFORM_WINDOWS
-#include "Application/Platform/Windows/WindowsApplication.h"
-#endif
-
-#include "Log/Logger.h"
 #include "Core/Event/Event.h"
 #include "Core/Event/EventDispatcher.h"
 #include "Core/Event/EngineEvent.h"
@@ -15,7 +9,12 @@
 #include "Core/Event/EventQueue.h"
 #include "Core/Layer/Layer.h"
 #include "Core/Layer/LayerStack.h"
+#include "Core/Logging/Logger.h"
 #include "Core/Platform/PlatformCore.h"
+
+#ifdef ION_PLATFORM_WINDOWS
+#include "Application/Platform/Windows/WindowsApplication.h"
+#endif
 
 // Entry point ----------------
 #include "Application/EntryPoint.h"
