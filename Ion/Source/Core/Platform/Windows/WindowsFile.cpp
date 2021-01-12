@@ -2,21 +2,32 @@
 
 #include "WindowsFile.h"
 #include "Core/Platform/Windows/WindowsCore.h"
+#include "Core/CoreMacros.h"
 
 #ifdef ION_LOG_ENABLED
 
-#define PRINT_HANDLE_ERROR() \
+#define _PRINT_HANDLE_ERROR() \
 LOG_ERROR(TEXT("File '{0}' cannot be accessed before it is physically opened!"), m_Filename);
-#define PRINT_READ_ERROR() \
+#define _PRINT_READ_ERROR() \
 LOG_ERROR(TEXT("File '{0}' cannot be read because the Read access mode was not specified when opening the file!"), m_Filename);
-#define PRINT_WRITE_ERROR() \
+#define _PRINT_WRITE_ERROR() \
 LOG_ERROR(TEXT("File '{0}' cannot be written because the Write access mode was not specified when opening the file!"), m_Filename);
 
 #else
 
-#define PRINT_HANDLE_ERROR()
-#define PRINT_READ_ERROR()
-#define PRINT_WRITE_ERROR()
+#define _PRINT_HANDLE_ERROR()
+#define _PRINT_READ_ERROR()
+#define _PRINT_WRITE_ERROR()
+
+#endif
+
+#ifdef ION_DEBUG
+	/* Code inside this macro works only on debug and with DebugLog enabled. */
+	#define _DEBUG_LOG(x)   if (m_DebugLog) { x; }
+
+#else
+	/* Code inside this macro works only on debug and with DebugLog enabled. */
+	#define _DEBUG_LOG(x)
 
 #endif
 
@@ -96,19 +107,13 @@ namespace Ion
 			if (lastError != ERROR_FILE_NOT_FOUND)
 				goto lError;
 
-#ifdef ION_DEBUG
-			if (m_DebugLog)
-				LOG_WARN(TEXT("File '{0}' not found!"), m_Filename);
-#endif
+			_DEBUG_LOG(LOG_WARN(TEXT("File '{0}' not found!"), m_Filename));
 
 			m_FileHandle = CreateFile(m_Filename.c_str(), dwDesiredAccess, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
 			if (m_FileHandle == INVALID_HANDLE_VALUE)
 				goto lError;
 
-#ifdef ION_DEBUG
-			if (m_DebugLog)
-				LOG_DEBUG(TEXT("File '{0}' created."), m_Filename);
-#endif
+			_DEBUG_LOG(LOG_DEBUG(TEXT("File '{0}' created."), m_Filename));
 		}
 
 		UpdateFileSizeCache();
@@ -120,10 +125,7 @@ namespace Ion
 			SetOffset(offset);
 		}
 
-#ifdef ION_DEBUG
-		if (m_DebugLog)
-			LOG_TRACE(TEXT("File '{0}' opened."), m_Filename);
-#endif
+		_DEBUG_LOG(LOG_TRACE(TEXT("File '{0}' opened."), m_Filename));
 		return true;
 
 		// Other error
@@ -136,10 +138,7 @@ namespace Ion
 	{
 		if (m_FileHandle != INVALID_HANDLE_VALUE)
 		{
-#ifdef ION_DEBUG
-			if (m_DebugLog)
-				LOG_TRACE(TEXT("File '{0}' was closed."), m_Filename);
-#endif
+			_DEBUG_LOG(LOG_TRACE(TEXT("File '{0}' was closed."), m_Filename));
 			CloseHandle(m_FileHandle);
 			m_FileHandle = INVALID_HANDLE_VALUE;
 		}
@@ -158,10 +157,8 @@ namespace Ion
 			Windows::PrintLastError(TEXT("Cannot delete file '{0}'!"), m_Filename);
 			return false;
 		}
-#ifdef ION_DEBUG
-		if (m_DebugLog)
-			LOG_DEBUG(TEXT("File '{0}' was deleted."), m_Filename);
-#endif
+
+		_DEBUG_LOG(LOG_DEBUG(TEXT("File '{0}' was deleted."), m_Filename));
 		return true;
 	}
 
@@ -170,12 +167,12 @@ namespace Ion
 		// Handle internal errors
 		if (m_FileHandle == INVALID_HANDLE_VALUE)
 		{
-			PRINT_HANDLE_ERROR();
+			_PRINT_HANDLE_ERROR();
 			return false;
 		}
 		if (!(m_Mode & IO::FM_Read))
 		{
-			PRINT_READ_ERROR();
+			_PRINT_READ_ERROR();
 			return false;
 		}
 
@@ -188,10 +185,7 @@ namespace Ion
 		// Retrieves the file pointer
 		m_Offset.QuadPart += bytesRead;
 
-#ifdef ION_DEBUG
-		if (m_DebugLog)
-			LOG_TRACE("Read {0} bytes.", bytesRead);
-#endif
+		_DEBUG_LOG(LOG_TRACE("Read {0} bytes.", bytesRead));
 		return true;
 	}
 
@@ -244,14 +238,11 @@ namespace Ion
 			// but it's not a complete one.
 			if (bOutOverflow != nullptr)
 				*bOutOverflow = true;
-#ifdef ION_DEBUG
-			LOG_WARN(TEXT("File read output buffer overflow! {1} byte buffer was to small. ('{0}')"), m_Filename, count);
-#endif
+
+			_DEBUG_LOG(LOG_WARN(TEXT("File read output buffer overflow! {1} byte buffer was to small. ('{0}')"), m_Filename, count));
 		}
-#ifdef ION_DEBUG
-		if (m_DebugLog)
-			LOG_TRACE("Read {0} bytes.", zeroIndex);
-#endif
+
+		_DEBUG_LOG(LOG_TRACE("Read {0} bytes.", zeroIndex));
 		return true;
 	}
 
@@ -260,12 +251,12 @@ namespace Ion
 		// Handle internal errors
 		if (m_FileHandle == INVALID_HANDLE_VALUE)
 		{
-			PRINT_HANDLE_ERROR();
+			_PRINT_HANDLE_ERROR();
 			return false;
 		}
 		if (!(m_Mode & IO::FM_Read))
 		{
-			PRINT_READ_ERROR();
+			_PRINT_READ_ERROR();
 			return false;
 		}
 
@@ -277,22 +268,21 @@ namespace Ion
 		// Handle internal errors
 		if (m_FileHandle == INVALID_HANDLE_VALUE)
 		{
-			PRINT_HANDLE_ERROR();
+			_PRINT_HANDLE_ERROR();
 			return false;
 		}
 		if (!(m_Mode & IO::FM_Read))
 		{
-			PRINT_READ_ERROR();
+			_PRINT_READ_ERROR();
 			return false;
 		}
 
 		outStr = "";
 		bool bOverflow = false;
+		ullong readCount = 0;
 		// Start with 512B buffer
 		const uint bufferSize = 512;
-		ullong readCount = 0;
-		//char* tempBuffer = new char[bufferSize];
-		char tempBuffer[512];
+		char tempBuffer[bufferSize];
 		// Call the internal ReadLine function until we hit the new line character
 		// Should happen instantly unless the line is huge
 		do
@@ -301,12 +291,8 @@ namespace Ion
 			outStr += tempBuffer;
 		}
 		while (bOverflow);
-		//delete[] tempBuffer;
 
-#ifdef ION_DEBUG
-		if (m_DebugLog)
-			LOG_TRACE("Read {0} bytes.", readCount);
-#endif
+		_DEBUG_LOG(LOG_TRACE("Read {0} bytes.", readCount));
 		return true;
 	}
 
@@ -315,12 +301,12 @@ namespace Ion
 		// Handle internal errors
 		if (m_FileHandle == INVALID_HANDLE_VALUE)
 		{
-			PRINT_HANDLE_ERROR();
+			_PRINT_HANDLE_ERROR();
 			return false;
 		}
 		if (!(m_Mode & IO::FM_Write))
 		{
-			PRINT_WRITE_ERROR();
+			_PRINT_WRITE_ERROR();
 			return false;
 		}
 
@@ -338,10 +324,7 @@ namespace Ion
 		llong sizeDifference = std::max(0ll, m_Offset.QuadPart - m_FileSize);
 		UpdateFileSizeCache(m_FileSize + sizeDifference);
 
-#ifdef ION_DEBUG
-		if (m_DebugLog)
-			LOG_TRACE("Written {0} bytes.", bytesWritten);
-#endif
+		_DEBUG_LOG(LOG_TRACE("Written {0} bytes.", bytesWritten));
 		return true;
 	}
 
@@ -350,12 +333,12 @@ namespace Ion
 		// Handle internal errors
 		if (m_FileHandle == INVALID_HANDLE_VALUE)
 		{
-			PRINT_HANDLE_ERROR();
+			_PRINT_HANDLE_ERROR();
 			return false;
 		}
 		if (!(m_Mode & IO::FM_Write))
 		{
-			PRINT_WRITE_ERROR();
+			_PRINT_WRITE_ERROR();
 			return false;
 		}
 
@@ -383,10 +366,7 @@ namespace Ion
 		llong sizeDifference = std::max(0ll, m_Offset.QuadPart - m_FileSize);
 		UpdateFileSizeCache(m_FileSize + sizeDifference);
 
-#ifdef ION_DEBUG
-		if (m_DebugLog)
-			LOG_TRACE("Written {0} bytes.", bytesWritten);
-#endif
+		_DEBUG_LOG(LOG_TRACE("Written {0} bytes.", bytesWritten));
 		return true;
 	}
 
@@ -399,7 +379,7 @@ namespace Ion
 	{
 		if (m_FileHandle == INVALID_HANDLE_VALUE)
 		{
-			PRINT_HANDLE_ERROR();
+			_PRINT_HANDLE_ERROR();
 			return false;
 		}
 
@@ -417,7 +397,7 @@ namespace Ion
 	{
 		if (m_FileHandle == INVALID_HANDLE_VALUE)
 		{
-			PRINT_HANDLE_ERROR();
+			_PRINT_HANDLE_ERROR();
 			return false;
 		}
 
@@ -435,7 +415,7 @@ namespace Ion
 	{
 		if (m_FileHandle == INVALID_HANDLE_VALUE)
 		{
-			PRINT_HANDLE_ERROR();
+			_PRINT_HANDLE_ERROR();
 			return -1ll;
 		}
 
@@ -447,10 +427,8 @@ namespace Ion
 		LARGE_INTEGER fileSize;
 		GetFileSizeEx(m_FileHandle, &fileSize);
 		m_FileSize = fileSize.QuadPart;
-#ifdef ION_DEBUG
-		if (m_DebugLog)
-			LOG_TRACE("New file size = {0} bytes.", m_FileSize);
-#endif
+
+		_DEBUG_LOG(LOG_TRACE("New file size cache = {0} bytes.", m_FileSize));
 		return fileSize.QuadPart;
 	}
 

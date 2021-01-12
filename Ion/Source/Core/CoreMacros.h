@@ -28,8 +28,11 @@ if (!(x)) \
 	__debugbreak(); \
 }
 
+#define DEBUG(x) x
+
 #else
 
 #define ASSERT(x)
+#define DEBUG(x)
 
 #endif

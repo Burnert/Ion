@@ -22,9 +22,7 @@ public:
 	virtual void OnInit() override
 	{
 		Ion::File f(TEXT("testfile.txt"));
-#ifdef ION_DEBUG
-		//f.EnableDebugLog();
-#endif
+		//DEBUG(f.EnableDebugLog());
 		std::string line;
 		f.Delete();
 		f.Open(Ion::IO::FM_Read | Ion::IO::FM_Write);

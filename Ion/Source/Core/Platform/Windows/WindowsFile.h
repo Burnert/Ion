@@ -45,6 +45,10 @@ namespace Ion
 
 		virtual bool AddOffset(llong count) override;
 		virtual bool SetOffset(llong count) override;
+		FORCEINLINE virtual llong GetOffset() const override
+		{
+			return m_Offset.QuadPart;
+		}
 
 		virtual llong GetSize() const override;
 
@@ -53,6 +57,11 @@ namespace Ion
 			return m_FileHandle != INVALID_HANDLE_VALUE;
 		}
 		virtual bool Exists() const override;
+		/* Returns true if the offset is greater than the filesize. */
+		FORCEINLINE virtual bool EndOfFile() const override
+		{
+			return m_Offset.QuadPart >= GetSize();
+		}
 
 		// End of IFile interface
 

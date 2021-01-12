@@ -40,11 +40,13 @@ namespace Ion
 
 		virtual bool AddOffset(llong count) = 0;
 		virtual bool SetOffset(llong count) = 0;
+		virtual llong GetOffset() const = 0;
 
 		virtual llong GetSize() const = 0;
 
 		virtual bool IsOpen() const = 0;
 		virtual bool Exists() const = 0;
+		virtual bool EndOfFile() const = 0;
 	};
 
 	/* Generic File abstract base class */
@@ -81,11 +83,13 @@ namespace Ion
 		FORCEINLINE void UpdateFileSizeCache() const { m_FileSize = -1; GetSize(); }
 		/* Sets the file size cache to the size specified. */
 		FORCEINLINE void UpdateFileSizeCache(llong newFileSize) const { m_FileSize = newFileSize; }
-		// Debug
+
+		// Debug only code
 #ifdef ION_DEBUG
 		bool m_DebugLog = false;
 	public:
 		/* Do not call this in any other configuration other than Debug!
+		   You can wrap this call in a DEBUG() macro for automation.
 		   Enables low level logging for operations on this file. */
 		FORCEINLINE void EnableDebugLog() { m_DebugLog = true; }
 #endif
