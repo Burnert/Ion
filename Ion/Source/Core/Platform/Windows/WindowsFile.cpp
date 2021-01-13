@@ -40,8 +40,7 @@ namespace Ion
 	WindowsFile::WindowsFile(const std::wstring& filename) :
 		FileBase(filename),
 		m_FileHandle(INVALID_HANDLE_VALUE),
-		m_Offset({ 0, 0 }),
-		m_Mode((IO::FileMode)0)
+		m_Offset({ 0, 0 })
 	{ }
 
 	WindowsFile::~WindowsFile()
