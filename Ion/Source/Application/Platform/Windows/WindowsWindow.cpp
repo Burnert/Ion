@@ -227,7 +227,7 @@ namespace Ion
 				if (bState)
 				{
 					// If the key is already pressed it means it was repeated
-					bool bRepeated = InputManager::Get()->IsKeyPressed((KeyCode)actualKeyCode);
+					bool bRepeated = InputManager::IsKeyPressed((KeyCode)actualKeyCode);
 
 					auto event = KeyPressedEvent(keyCode, actualKeyCode, bRepeated);
 					windowRef.m_EventCallback(event);

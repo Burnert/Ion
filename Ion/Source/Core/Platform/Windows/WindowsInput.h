@@ -8,8 +8,9 @@ namespace Ion
 	class ION_API WindowsInputManager : public InputManager
 	{
 		friend class WindowsApplication;
+		friend class WindowsWindow;
 
-	public:
+	protected:
 		/* Translates a Windows key code to internal Ion key code.
 		   When the key code is invalid (0) it returns false. */
 		static bool TranslateWindowsKeyCode(uint* keyCodePtr);

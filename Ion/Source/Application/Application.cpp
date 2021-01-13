@@ -32,7 +32,7 @@ namespace Ion
 
 	void Application::Init()
 	{
-		m_InputManager = InputManager::Get();
+		m_InputManager = InputManager::Create();
 
 		// Create a platform specific window.
 		m_Window = GenericWindow::Create();

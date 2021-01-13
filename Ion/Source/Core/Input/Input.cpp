@@ -8,7 +8,7 @@ namespace Ion
 	byte InputManager::InputPressedFlag = Bitflag(0);
 	byte InputManager::InputRepeatedFlag = Bitflag(1);
 
-	KeyCode InputManager::TransformKeyCode(KeyCode actualKeyCode) const
+	KeyCode InputManager::TransformKeyCode(KeyCode actualKeyCode)
 	{
 		switch (actualKeyCode)
 		{
@@ -33,19 +33,19 @@ namespace Ion
 		memset(m_InputStates, 0, sizeof(m_InputStates));
 	}
 
-	bool InputManager::IsKeyPressed(KeyCode keyCode) const
+	bool InputManager::IsKeyPressed(KeyCode keyCode)
 	{
-		return (bool)(m_InputStates[keyCode] & InputPressedFlag);
+		return (bool)(s_Instance->m_InputStates[keyCode] & InputPressedFlag);
 	}
 
-	bool InputManager::IsKeyRepeated(KeyCode keyCode) const
+	bool InputManager::IsKeyRepeated(KeyCode keyCode)
 	{
-		return (bool)(m_InputStates[keyCode] & InputRepeatedFlag);
+		return (bool)(s_Instance->m_InputStates[keyCode] & InputRepeatedFlag);
 	}
 
-	bool InputManager::IsMouseButtonPressed(MouseButton mouseButton) const
+	bool InputManager::IsMouseButtonPressed(MouseButton mouseButton)
 	{
-		return (bool)(m_InputStates[mouseButton] & InputPressedFlag);
+		return (bool)(s_Instance->m_InputStates[mouseButton] & InputPressedFlag);
 	}
 
 	void InputManager::OnEvent(Event& event)

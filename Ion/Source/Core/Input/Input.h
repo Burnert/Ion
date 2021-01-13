@@ -173,17 +173,17 @@ namespace Ion
 		friend class Application;
 
 	public:
-		virtual bool IsKeyPressed(KeyCode keyCode) const;
-		virtual bool IsKeyRepeated(KeyCode keyCode) const;
-		virtual bool IsMouseButtonPressed(MouseButton mouseButton) const;
+		static bool IsKeyPressed(KeyCode keyCode);
+		static bool IsKeyRepeated(KeyCode keyCode);
+		static bool IsMouseButtonPressed(MouseButton mouseButton);
 
-		static std::shared_ptr<InputManager> Get();
+		static std::shared_ptr<InputManager> Create();
 
 		/* Transforms ActualKeyCode to normal KeyCode
 		   for LShift returns Shift, etc. */
-		KeyCode TransformKeyCode(KeyCode actualKeyCode) const;
+		static KeyCode TransformKeyCode(KeyCode actualKeyCode);
 
-		static MouseInputType GetMouseInputType() { return Get()->m_MouseInputType; }
+		FORCEINLINE static MouseInputType GetMouseInputType() { return s_Instance->m_MouseInputType; }
 
 		// @TODO: you know what
 		static bool IsRawInputEnabled() { return true; }
@@ -198,8 +198,8 @@ namespace Ion
 		void OnEvent(Event& event);
 
 	private:
-		byte m_InputStates[256];
 		static std::shared_ptr<InputManager> s_Instance;
+		byte m_InputStates[256];
 
 		bool OnKeyPressedEvent(KeyPressedEvent& event);
 		bool OnKeyReleasedEvent(KeyReleasedEvent& event);
