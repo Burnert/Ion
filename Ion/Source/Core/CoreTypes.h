@@ -1,14 +1,14 @@
 #pragma once
 
-typedef long long            llong;
-typedef unsigned char        byte;
-typedef unsigned char        uchar;
-typedef unsigned short       ushort;
-typedef unsigned int         uint;
-typedef unsigned long        ulong;
-typedef unsigned long long   ullong;
+using llong    = long long;
+using byte     = unsigned char;
+using uchar    = unsigned char;
+using ushort   = unsigned short;
+using uint     = unsigned int;
+using ulong    = unsigned long;
+using ullong   = unsigned long long;
 
-typedef wchar_t              wchar;
+using wchar    = wchar_t;
 
-typedef char*                CStr;
-typedef wchar*               WCStr;
+using CStr     = char*;
+using WCStr    = wchar*;
