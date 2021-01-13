@@ -2,7 +2,7 @@
 
 #include "EventQueue.h"
 #include "Core/Logging/Logger.h"
-#include "Core/CoreUtilities.h"
+#include "Core/CoreUtility.h"
 
 namespace Ion
 {

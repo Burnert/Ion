@@ -1,7 +1,7 @@
 #include "IonPCH.h"
 
 #include "Input.h"
-#include "Core/CoreUtilities.h"
+#include "Core/CoreUtility.h"
 
 namespace Ion
 {

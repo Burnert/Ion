@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core/CoreApi.h"
-#include "Core/CoreUtilities.h"
+#include "Core/CoreUtility.h"
 
 namespace Ion
 {

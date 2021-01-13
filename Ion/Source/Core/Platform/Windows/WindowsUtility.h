@@ -1,6 +1,7 @@
 #pragma once
 
-#include "WindowsCoreMacros.h"
+#include "WindowsMacros.h"
+#include "Core/Logging/Logger.h"
 
 namespace Ion
 {

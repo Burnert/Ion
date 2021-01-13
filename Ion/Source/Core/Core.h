@@ -13,7 +13,7 @@
 #include "CoreApi.h"
 #include "CoreMacros.h"
 #include "CoreTypes.h"
-#include "CoreUtilities.h"
+#include "CoreUtility.h"
 #include "Event/Event.h"
 #include "File/File.h"
 #include "Input/Input.h"
