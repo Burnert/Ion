@@ -76,6 +76,7 @@ namespace Ion
 	protected:
 		std::wstring m_Filename;
 		IO::FileType m_Type;
+		byte m_Mode;
 
 		// Caches ----------------------
 

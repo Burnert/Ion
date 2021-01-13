@@ -68,7 +68,6 @@ namespace Ion
 	private:
 		HANDLE m_FileHandle;
 		LARGE_INTEGER m_Offset;
-		byte m_Mode;
 
 		bool ReadLine_Internal(char* outBuffer, ullong count, ullong* outReadCount, bool* bOutOverflow);
 	};
