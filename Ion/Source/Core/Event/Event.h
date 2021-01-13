@@ -111,7 +111,7 @@ namespace Ion
 		// Utility
 
 		/* Don't ever call this on stack allocated (non-deferred) events! */
-		Shared<Event> MakeShared();
+		Shared<Event> AsShared();
 
 		/* Creates an event that is called after the application loop is completed. */
 		template<typename EventT, typename... Types>

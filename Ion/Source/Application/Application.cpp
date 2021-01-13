@@ -73,7 +73,7 @@ namespace Ion
 	void Application::OnEvent(Event& event)
 	{
 		if (event.IsDeferred())
-			m_EventQueue->PushEvent(event.MakeShared());
+			m_EventQueue->PushEvent(event.AsShared());
 		else
 			DispatchEvent(event);
 	}
