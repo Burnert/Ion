@@ -3,6 +3,8 @@
 #include "Core/CoreMacros.h"
 #include "Core/CoreTypes.h"
 
+// Bitwise :
+
 NODISCARD constexpr uint Bitflag(byte bit) noexcept { return 1u << bit; }
 
 template<typename T, typename U, 
@@ -47,4 +49,18 @@ template<typename T>
 NODISCARD constexpr inline std::enable_if_t<std::is_integral_v<T>, T> BooleanToBitmask(bool boolean) noexcept
 {
 	return (T)-(llong)boolean;
+}
+
+// Memory :
+
+template<typename T, typename... Types>
+NODISCARD constexpr FORCEINLINE Shared<T> MakeShared(Types&&... args)
+{
+	return std::make_shared<T>(std::forward<Types>(args)...);
+}
+
+template<typename T, typename... Types>
+NODISCARD constexpr FORCEINLINE Unique<T> MakeUnique(Types&&... args)
+{
+	return std::make_unique<T>(std::forward<Types>(args)...);
 }

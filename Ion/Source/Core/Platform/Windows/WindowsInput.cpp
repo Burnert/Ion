@@ -4,10 +4,10 @@
 
 namespace Ion
 {
-	std::shared_ptr<InputManager> InputManager::Create()
+	Shared<InputManager> InputManager::Create()
 	{
 		if (s_Instance == nullptr)
-			s_Instance = std::make_shared<WindowsInputManager>();
+			s_Instance = MakeShared<WindowsInputManager>();
 
 		return s_Instance;
 	}

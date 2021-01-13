@@ -8,7 +8,7 @@ namespace Ion
 	{
 		friend class WindowsApplication;
 	public:
-		static std::shared_ptr<WindowsWindow> Create();
+		static Shared<WindowsWindow> Create();
 
 		virtual ~WindowsWindow();
 

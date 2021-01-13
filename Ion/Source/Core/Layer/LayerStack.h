@@ -9,7 +9,7 @@ namespace Ion
 	class ION_API LayerStack
 	{
 	public:
-		using LayerPtr = std::shared_ptr<Layer>;
+		using LayerPtr = Shared<Layer>;
 		using LayerVec = std::vector<LayerPtr>;
 
 		using LayerIterator             = LayerVec::iterator;
@@ -25,7 +25,7 @@ namespace Ion
 		std::enable_if_t<std::is_base_of_v<Layer, LayerT>, LayerPtr>
 			PushLayer(const CStr name, Types&&... args)
 		{
-			LayerPtr layer = std::make_shared<LayerT>(name, args...);
+			LayerPtr layer = MakeShared<LayerT>(name, args...);
 			layer->OnAttach();
 			LayerIterator layerIt = m_Layers.insert(begin() + m_LayerInsertIndex, std::move(layer));
 			m_LayerInsertIndex++;
@@ -38,7 +38,7 @@ namespace Ion
 		std::enable_if_t<std::is_base_of_v<Layer, LayerT>, LayerPtr>
 			PushOverlayLayer(const CStr name, Types&&... args)
 		{
-			LayerPtr overlay = std::make_shared<LayerT>(name, args...);
+			LayerPtr overlay = MakeShared<LayerT>(name, args...);
 			overlay->OnAttach();
 			m_Layers.push_back(std::move(overlay));
 

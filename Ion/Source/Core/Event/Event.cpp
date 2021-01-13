@@ -4,9 +4,9 @@
 
 namespace Ion
 {
-	std::shared_ptr<Event> Event::MakeShared()
+	Shared<Event> Event::MakeShared()
 	{
 		ASSERT(m_bDefer)
-		return std::shared_ptr<Event>(this);
+		return Shared<Event>(this);
 	}
 }

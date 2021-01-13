@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/CoreApi.h"
+#include "Core/CoreTypes.h"
 #define SPDLOG_WCHAR_TO_UTF8_SUPPORT
 #include "spdlog/spdlog.h"
 
@@ -13,19 +14,19 @@ namespace Ion
 
 		// Client Logger
 
-		FORCEINLINE static std::shared_ptr<spdlog::logger>& GetClientLogger() { return s_ClientLogger; }
+		FORCEINLINE static Shared<spdlog::logger>& GetClientLogger() { return s_ClientLogger; }
 
 	private:
-		static std::shared_ptr<spdlog::logger> s_ClientLogger;
+		static Shared<spdlog::logger> s_ClientLogger;
 
 #ifdef ION_ENGINE
 		// Engine Logger
 
 	public:
-		FORCEINLINE static std::shared_ptr<spdlog::logger>& GetEngineLogger() { return s_EngineLogger; }
+		FORCEINLINE static Shared<spdlog::logger>& GetEngineLogger() { return s_EngineLogger; }
 
 	private:
-		static std::shared_ptr<spdlog::logger> s_EngineLogger;
+		static Shared<spdlog::logger> s_EngineLogger;
 #endif
 	};
 }

@@ -6,10 +6,10 @@
 namespace Ion
 {
 #ifdef ION_ENGINE
-	std::shared_ptr<spdlog::logger> Logger::s_EngineLogger;
+	Shared<spdlog::logger> Logger::s_EngineLogger;
 #endif
 
-	std::shared_ptr<spdlog::logger> Logger::s_ClientLogger;
+	Shared<spdlog::logger> Logger::s_ClientLogger;
 
 	void Logger::Init()
 	{

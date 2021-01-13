@@ -18,7 +18,7 @@ Ion::Performance::ScopedCounter id = Ion::Performance::ScopedCounter(DebugPerfor
 /* Creates a manual timer using an already declared performance counter.
    Measures the time starting from where Start() method was called to where Stop() method was. */
 #define MANUAL_PERFORMANCE_COUNTER(id) \
-std::shared_ptr<Ion::Performance::ManualCounter> id = std::make_shared<Ion::Performance::ManualCounter>(DebugPerformance_##id)
+Shared<Ion::Performance::ManualCounter> id = MakeShared<Ion::Performance::ManualCounter>(DebugPerformance_##id)
 
 /* Retrieves PerformanceCounterData struct from a declared timer. */
 #define COUNTER_TIME_DATA(varName, counterId) \

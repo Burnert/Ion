@@ -20,8 +20,8 @@ namespace Ion
 	}
 
 	Application::Application() :
-		m_EventQueue(std::make_unique<EventQueue>()),
-		m_LayerStack(std::make_unique<LayerStack>()),
+		m_EventQueue(MakeUnique<EventQueue>()),
+		m_LayerStack(MakeUnique<LayerStack>()),
 		m_MainThreadId(std::this_thread::get_id())
 	{
 		m_EventQueue->SetEventHandler(BIND_METHOD_1P(Application::DispatchEvent));

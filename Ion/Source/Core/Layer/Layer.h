@@ -8,7 +8,7 @@ namespace Ion
 	{
 		friend class LayerStack;
 	public:
-		using LayerPtr = std::shared_ptr<Layer>;
+		using LayerPtr = Shared<Layer>;
 
 		Layer(const CStr name);
 		virtual ~Layer();

@@ -21,7 +21,7 @@ namespace Ion
 	class ION_API Application
 	{
 	public:
-		using EventPtr = std::shared_ptr<Event>;
+		using EventPtr = Shared<Event>;
 
 		virtual ~Application();
 
@@ -69,7 +69,7 @@ namespace Ion
 
 		// End of overridables
 
-		FORCEINLINE std::shared_ptr<GenericWindow> GetApplicationWindow() const { return m_Window; }
+		FORCEINLINE Shared<GenericWindow> GetApplicationWindow() const { return m_Window; }
 
 		static Application* s_Instance;
 
@@ -79,11 +79,11 @@ namespace Ion
 
 		bool m_bRunning = false;
 
-		std::shared_ptr<GenericWindow> m_Window;
-		std::shared_ptr<InputManager> m_InputManager;
+		Shared<GenericWindow> m_Window;
+		Shared<InputManager> m_InputManager;
 
-		std::unique_ptr<EventQueue> m_EventQueue;
-		std::unique_ptr<LayerStack> m_LayerStack;
+		Unique<EventQueue> m_EventQueue;
+		Unique<LayerStack> m_LayerStack;
 
 		std::thread::id m_MainThreadId;
 	};

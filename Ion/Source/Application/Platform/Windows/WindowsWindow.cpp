@@ -16,17 +16,17 @@ namespace Ion
 
 	// Generic Window
 
-	std::shared_ptr<GenericWindow> GenericWindow::Create()
+	Shared<GenericWindow> GenericWindow::Create()
 	{
 		return Ion::WindowsWindow::Create();
 	}
 
 	// Windows Window
 
-	std::shared_ptr<WindowsWindow> WindowsWindow::Create()
+	Shared<WindowsWindow> WindowsWindow::Create()
 	{
 		ION_LOG_ENGINE_TRACE("Creating Windows window.");
-		return std::shared_ptr<WindowsWindow>(new WindowsWindow);
+		return Shared<WindowsWindow>(new WindowsWindow);
 	}
 
 	WindowsWindow::WindowsWindow() :
