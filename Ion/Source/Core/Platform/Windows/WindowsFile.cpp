@@ -52,7 +52,7 @@ namespace Ion
 	{
 		if (IsOpen())
 		{
-			LOG_WARN(TEXT("Cannot set the file name when the file is open!"));
+			LOG_WARN(TEXT("'{0}': Cannot set the file name when the file is open!"));
 			return false;
 		}
 		return true;
@@ -62,7 +62,7 @@ namespace Ion
 	{
 		if (IsOpen())
 		{
-			LOG_WARN(TEXT("Cannot set the file type when the file is open!"));
+			LOG_WARN(TEXT("'{0}': Cannot set the file type when the file is open!"));
 			return false;
 		}
 		return true;
@@ -82,7 +82,7 @@ namespace Ion
 		}
 		if (!(mode & (IO::FM_Read | IO::FM_Write)))
 		{
-			LOG_ERROR(TEXT("FileMode has to have either Read or Write flag set!"));
+			LOG_ERROR(TEXT("'{0}': FileMode has to have either Read or Write flag set!"));
 			return false;
 		}
 
@@ -184,7 +184,7 @@ namespace Ion
 		// Retrieves the file pointer
 		m_Offset.QuadPart += bytesRead;
 
-		_DEBUG_LOG(LOG_TRACE("Read {0} bytes.", bytesRead));
+		_DEBUG_LOG(LOG_TRACE(TEXT("'{0}': Read {1} bytes."), m_Filename, bytesRead));
 		return true;
 	}
 
@@ -235,7 +235,7 @@ namespace Ion
 				}
 				else
 				{
-					_DEBUG_LOG(LOG_WARN(TEXT("CR was found but the next byte could not be checked! {1} byte buffer was to small. ('{0}')"), m_Filename, count));
+					_DEBUG_LOG(LOG_WARN(TEXT("'{0}': CR was found but the next byte could not be checked! {1} byte buffer was to small."), m_Filename, count));
 					// Set the offset back to the CR character
 					// so it can be interpreted later and then exit.
 					SetOffset(initialOffset + i);
@@ -287,10 +287,9 @@ namespace Ion
 			if (bOutOverflow != nullptr)
 				*bOutOverflow = true;
 
-			_DEBUG_LOG(LOG_WARN(TEXT("File read output buffer overflow! {1} byte buffer was to small. ('{0}')"), m_Filename, count));
+			_DEBUG_LOG(LOG_WARN(TEXT("'{0}': File read output buffer overflow! {1} byte buffer was to small."), m_Filename, count));
 		}
 
-		_DEBUG_LOG(LOG_TRACE("Read {0} bytes.", zeroIndex));
 		return true;
 	}
 
@@ -308,7 +307,11 @@ namespace Ion
 			return false;
 		}
 
-		return ReadLine_Internal(outBuffer, count, nullptr, nullptr);
+		ullong readCount = 0;
+		bool bResult = ReadLine_Internal(outBuffer, count, &readCount, nullptr);
+
+		_DEBUG_LOG(if (bResult) LOG_TRACE(TEXT("'{0}': Read {1} bytes."), m_Filename, readCount));
+		return bResult;
 	}
 
 	bool WindowsFile::ReadLine(std::string& outStr)
@@ -328,6 +331,7 @@ namespace Ion
 		outStr = "";
 		bool bOverflow = false;
 		ullong readCount = 0;
+		bool bResult;
 		// Start with 512B buffer
 		const uint bufferSize = 512;
 		char tempBuffer[bufferSize];
@@ -335,13 +339,16 @@ namespace Ion
 		// Should happen instantly unless the line is huge
 		do
 		{
-			ReadLine_Internal(tempBuffer, bufferSize, &readCount, &bOverflow);
+			bResult = ReadLine_Internal(tempBuffer, bufferSize, &readCount, &bOverflow);
+			if (!bResult)
+				break;
+
 			outStr += tempBuffer;
 		}
 		while (bOverflow);
 
-		_DEBUG_LOG(LOG_TRACE("Read {0} bytes.", readCount));
-		return true;
+		_DEBUG_LOG(if (bResult) LOG_TRACE(TEXT("'{0}': Read {1} bytes."), m_Filename, readCount));
+		return bResult;
 	}
 
 	bool WindowsFile::Write(const byte* inBuffer, ullong count)
@@ -372,7 +379,7 @@ namespace Ion
 		llong sizeDifference = std::max(0ll, m_Offset.QuadPart - m_FileSize);
 		UpdateFileSizeCache(m_FileSize + sizeDifference);
 
-		_DEBUG_LOG(LOG_TRACE("Written {0} bytes.", bytesWritten));
+		_DEBUG_LOG(LOG_TRACE(TEXT("'{0}': Written {1} bytes."), m_Filename, bytesWritten));
 		return true;
 	}
 
@@ -425,7 +432,7 @@ namespace Ion
 		llong sizeDifference = std::max(0ll, m_Offset.QuadPart - m_FileSize);
 		UpdateFileSizeCache(m_FileSize + sizeDifference);
 
-		_DEBUG_LOG(LOG_TRACE("Written {0} bytes.", bytesWritten));
+		_DEBUG_LOG(LOG_TRACE(TEXT("'{0}': Written {1} bytes."), m_Filename, bytesWritten));
 		return true;
 	}
 
@@ -446,7 +453,7 @@ namespace Ion
 		_count.QuadPart = count;
 		if (!SetFilePointerEx(m_FileHandle, _count, &m_Offset, FILE_CURRENT))
 		{
-			Windows::PrintLastError(TEXT("Cannot add file offset! ('{0}')"), m_Filename);
+			Windows::PrintLastError(TEXT("'{0}': Cannot add file offset!"), m_Filename);
 			return false;
 		}
 		return true;
@@ -464,7 +471,7 @@ namespace Ion
 		_count.QuadPart = count;
 		if (!SetFilePointerEx(m_FileHandle, _count, &m_Offset, FILE_BEGIN))
 		{
-			Windows::PrintLastError(TEXT("Cannot set file offset! ('{0}')"), m_Filename);
+			Windows::PrintLastError(TEXT("'{0}': Cannot set file offset!"), m_Filename);
 			return false;
 		}
 		return true;
@@ -487,7 +494,7 @@ namespace Ion
 		GetFileSizeEx(m_FileHandle, &fileSize);
 		m_FileSize = fileSize.QuadPart;
 
-		_DEBUG_LOG(LOG_TRACE("New file size cache = {0} bytes.", m_FileSize));
+		_DEBUG_LOG(LOG_TRACE(TEXT("'{0}': New file size cache = {1} bytes."), m_Filename, m_FileSize));
 		return fileSize.QuadPart;
 	}
 
