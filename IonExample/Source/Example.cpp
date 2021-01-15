@@ -22,7 +22,7 @@ public:
 	virtual void OnInit() override
 	{
 		Ion::File f(TEXT("testfile.txt"));
-		//DEBUG(f.EnableDebugLog());
+		DEBUG(f.EnableDebugLog());
 		std::string line;
 		f.Delete();
 		f.Open(Ion::IO::FM_Read | Ion::IO::FM_Write);
@@ -31,9 +31,9 @@ public:
 		memset(bigBuffer, 'a', 80);
 		bigBuffer[80] = '\0';
 		f.WriteLine(bigBuffer, 81);
-		ASSERT(f.GetSize() == 81)
+		ASSERT(f.GetSize() == 82)
 		f.WriteLine("abcdefgh2___");
-		ASSERT(f.GetSize() == 81 + 13)
+		ASSERT(f.GetSize() == 82 + 14)
 		f.WriteLine("abcdefgh3___");
 
 		f.SetOffset(0);
@@ -74,6 +74,33 @@ public:
 		ASSERT(readStr.length() == 600)
 		LOG_INFO("Line read: {0}", readStr);
 #endif
+		{
+			Ion::File lf(TEXT("linetest.txt"));
+			DEBUG(lf.EnableDebugLog());
+			lf.Open(Ion::IO::FM_Read);
+			std::string lineTest;
+			lf.ReadLine(lineTest);
+			ASSERT(lineTest == "line1");
+			lf.ReadLine(lineTest);
+			ASSERT(lineTest == "line2");
+			lf.ReadLine(lineTest);
+			ASSERT(lineTest == "line3");
+
+			char cstr7[7];
+			lf.SetOffset(0);
+			lf.ReadLine(cstr7, 7);
+			ASSERT(strcmp(cstr7, "line1") == 0);
+			lf.ReadLine(cstr7, 7);
+			ASSERT(strcmp(cstr7, "line2") == 0);
+			lf.ReadLine(cstr7, 7);
+			ASSERT(strcmp(cstr7, "line3") == 0);
+			lf.SetOffset(14);
+			char cstr6[6];
+			lf.ReadLine(cstr6, 6);
+			ASSERT(strcmp(cstr6, "line3") == 0);
+
+			lf.Close();
+		}
 
 		// My version to std::fstream comparison
 

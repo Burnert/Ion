@@ -12,7 +12,8 @@ namespace Ion
 		m_Filename(filename),
 		m_Type(IO::FT_Text),
 		m_Mode((IO::FileMode)0),
-		m_FileSize(-1)
+		m_FileSize(-1),
+		WriteNewLineType(IO::NLT_CRLF)
 	{ }
 
 	bool FileBase::SetFilename(const std::wstring& filename)

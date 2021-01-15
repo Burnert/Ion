@@ -190,6 +190,8 @@ namespace Ion
 
 	bool WindowsFile::ReadLine_Internal(char* outBuffer, ullong count, ullong* outReadCount, bool* bOutOverflow)
 	{
+		// @TODO: Make the CRLF support more correct with a bigger temporary buffer
+
 		if (bOutOverflow != nullptr)
 			*bOutOverflow = false;
 
@@ -206,22 +208,69 @@ namespace Ion
 		m_Offset.QuadPart += bytesRead;
 
 		bool bNewLineFound = false;
+		bool bCRLF = false;
+		bool bCR = false;
+		// This will be the index of the terminating NULL.
 		ulong zeroIndex = bytesRead - 1;
 		for (ushort i = 0; i < bytesRead; ++i)
 		{
-			if (outBuffer[i] == '\n')
+			// Windows NewLine is CRLF - 0D0A, so it has to be handled appropriately.
+			// If this is the last byte it should be treated as an overflow, because
+			// the next byte cannot be checked.
+			if (outBuffer[i] == '\r')
 			{
-				// Set the last character before new line index
-				// to last character to copy
+				if (i < bytesRead - 1)
+				{
+					if (outBuffer[i + 1] == '\n')
+					{
+						bCRLF = true;
+					}
+					else
+					{
+						// If it's just CR at the end of the line
+						// it is still valid, but has to be handled
+						// like an LF type new line
+						bCR = true;
+					}
+				}
+				else
+				{
+					_DEBUG_LOG(LOG_WARN(TEXT("CR was found but the next byte could not be checked! {1} byte buffer was to small. ('{0}')"), m_Filename, count));
+					// Set the offset back to the CR character
+					// so it can be interpreted later and then exit.
+					SetOffset(initialOffset + i);
+					break;
+				}
+			}
+
+			// The next step is almost the same for every new line character
+			if (outBuffer[i] == '\n' || bCRLF || bCR)
+			{
+				// Make the last character before new line index
+				// the last character to copy by inserting zero
+				// at the new line index
 				zeroIndex = i;
 				bNewLineFound = true;
 
 				// Set new file offset to the first character
 				// in the next line
-				SetOffset(initialOffset + zeroIndex + 1);
+				// If the new line is CRLF it will be 2 characters forward.
+				SetOffset(initialOffset + zeroIndex + 1 + bCRLF);
 				break;
 			}
 		}
+
+		// If it is the end of file it has to be treated as a new line
+		// so it doesn't cut the last character
+		if (m_Offset.QuadPart == m_FileSize)
+		{
+			// The last character cannot be written if the buffer is too small to fit the terminating zero.
+			if (zeroIndex + 1 < count)
+			{
+				zeroIndex++;
+			}
+		}
+
 		// Fill zeros from the end of the line to the end of the buffer
 		// If the new line was not found it just sets the last byte to 0
 		ZeroMemory(outBuffer + zeroIndex, count - zeroIndex);
@@ -341,14 +390,24 @@ namespace Ion
 			return false;
 		}
 
+		bool bCRLF = WriteNewLineType == IO::NLT_CRLF;
 		// Allocate on stack if the buffer is small
-		char* tempBuffer = (char*)_malloca(count);
+		char* tempBuffer = (char*)_malloca(count + bCRLF);
 		// Copy the inBuffer and set the last character to NewLine instead of NULL
 		memcpy_s(tempBuffer, count, inBuffer, count);
-		tempBuffer[count - 1] = '\n';
+		if (bCRLF)
+		{
+			char crlf[2] = { '\r', '\n' };
+			memcpy(tempBuffer + count - 1, crlf, 2);
+		}
+		else
+		{
+			char newLineChar = WriteNewLineType == IO::NLT_LF ? '\n' : '\r';
+			tempBuffer[count - 1] = newLineChar;
+		}
 
 		ulong bytesWritten;
-		if (!WriteFile(m_FileHandle, tempBuffer, (DWORD)count, &bytesWritten, NULL))
+		if (!WriteFile(m_FileHandle, tempBuffer, (DWORD)count + bCRLF, &bytesWritten, NULL))
 		{
 			Windows::PrintLastError(TEXT("Cannot write file '{0}'!"), m_Filename);
 			return false;
@@ -362,6 +421,7 @@ namespace Ion
 
 		// Compare new offset to current file size cache
 		// and set the new size based on the result.
+		// (Faster than actually getting the filesize)
 		llong sizeDifference = std::max(0ll, m_Offset.QuadPart - m_FileSize);
 		UpdateFileSizeCache(m_FileSize + sizeDifference);
 

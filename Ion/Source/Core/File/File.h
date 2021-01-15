@@ -21,6 +21,13 @@ namespace Ion
 			FM_Append    = Bitflag(2),
 			FM_Reset     = Bitflag(3),
 		};
+
+		enum NewLineType : byte
+		{
+			NLT_LF      = 1,
+			NLT_CR      = 2,
+			NLT_CRLF    = 3,
+		};
 	}
 
 	/* File interface */
@@ -56,6 +63,9 @@ namespace Ion
 		FileBase();
 		FileBase(const std::wstring& filename);
 		virtual ~FileBase() { }
+
+		/* This is the type of the new line character that will be written in a text file. */
+		IO::NewLineType WriteNewLineType;
 
 		bool SetFilename(const std::wstring& filename);
 	protected:

@@ -24,8 +24,6 @@ namespace Ion
 		virtual void Close() override;
 		virtual bool Delete() override;
 
-		// @TODO: Make this work with CRLF line endings (now it only works with LF)
-
 		/* Reads data from binary file and sets the file offset to the end of the read. */
 		virtual bool Read(byte* outBuffer, ullong count) override;
 		/* Reads a line from a text file and sets the file offset to the beginning of the next line.
