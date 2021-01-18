@@ -21,6 +21,8 @@ public:
 
 	virtual void OnInit() override
 	{
+		Ion::SerialisationTest();
+
 		Ion::File f(TEXT("testfile.txt"));
 		DEBUG(f.EnableDebugLog());
 		std::string line;
