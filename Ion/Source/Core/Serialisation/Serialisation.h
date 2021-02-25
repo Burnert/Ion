@@ -37,7 +37,7 @@ namespace Ion
 			virtual void Deserialise(Serialisation::Serial* serial) = 0;
 		};
 
-		class Serial
+		class ION_API Serial
 		{
 			template<typename SerialisableT, std::enable_if_t<std::is_base_of_v<ISerialisable, SerialisableT>, bool>>
 			friend class Serialiser;
@@ -106,7 +106,7 @@ namespace Ion
 		};
 
 		template<typename SerialisableT, std::enable_if_t<std::is_base_of_v<ISerialisable, SerialisableT>, bool> = true>
-		class Serialiser
+		class ION_API Serialiser
 		{
 		public:
 			Serialiser(SerialisableT* serialisable, EType type) :
