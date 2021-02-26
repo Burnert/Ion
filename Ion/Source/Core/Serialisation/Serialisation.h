@@ -186,70 +186,22 @@ namespace Ion
 				m_State = EState::INIT;
 			}
 
-			template<typename FieldT>
-			void SerialiseField(FieldT SerialisableT::* field)
+			template<typename FieldT, typename... RestT>
+			void Serialise(FieldT SerialisableT::* field, RestT... rest)
 			{
-				if (!CheckSerialise())
-					return;
+				SerialiseField(field);
 
-				m_State = EState::SERIALISING;
-
-				if (std::is_base_of_v<ISerialisable, FieldT>)
-				{
-					FieldT* fieldPtr = &(m_SerialisablePtr->*field);
-					ISerialisable* serialisableField = (ISerialisable*)fieldPtr;
-
-					Serial serial;
-					serialisableField->Serialise(&serial);
-
-					byte* serialBuffer = serial.CreateSignedBuffer();
-					ullong sizeToWrite = serial.GetSize() + sizeof(ullong);
-					memcpy_s(m_Bytes + m_BytesCounter, sizeToWrite, serialBuffer, sizeToWrite);
-					delete serialBuffer;
-
-					m_BytesCounter += sizeToWrite;
-				}
-				else
-				{
-					ullong fieldSize = sizeof(FieldT);
-					FieldT& data = m_SerialisablePtr->*field;
-					memcpy_s(m_Bytes + m_BytesCounter, fieldSize, &data, fieldSize);
-					m_BytesCounter += fieldSize;
-
-				}
+				if constexpr (sizeof...(rest) > 0)
+					Serialise(rest...);
 			}
 
-			template<typename FieldT>
-			void DeserialiseField(FieldT SerialisableT::* field)
+			template<typename FieldT, typename... RestT>
+			void Deserialise(FieldT SerialisableT::* field, RestT... rest)
 			{
-				if (!CheckDeserialise())
-					return;
+				DeserialiseField(field);
 
-				m_State = EState::DESERIALISING;
-
-				if (std::is_base_of_v<ISerialisable, FieldT>)
-				{
-					FieldT* fieldPtr = &(m_SerialisablePtr->*field);
-					ISerialisable* serialisableField = (ISerialisable*)fieldPtr;
-
-					Serial serial;
-					ullong serialSize;
-					memcpy_s(&serialSize, sizeof(ullong), m_Bytes + m_BytesCounter, sizeof(ullong));
-
-					byte* buffer = new byte[serialSize];
-					memcpy_s(buffer, serialSize, m_Bytes + m_BytesCounter + sizeof(ullong), serialSize);
-					serial.PushBytes(buffer, serialSize);
-					serialisableField->Deserialise(&serial);
-
-					m_BytesCounter += serialSize + sizeof(ullong);
-				}
-				else
-				{
-					ullong fieldSize = sizeof(FieldT);
-					FieldT& data = m_SerialisablePtr->*field;
-					memcpy_s(&data, fieldSize, m_Bytes + m_BytesCounter, fieldSize);
-					m_BytesCounter += fieldSize;
-				}
+				if constexpr (sizeof...(rest) > 0)
+					Deserialise(rest...);
 			}
 
 			void WriteToSerial(Serial* serial)
@@ -301,10 +253,79 @@ namespace Ion
 					return;
 				}
 				m_State = EState::FINALISED;
+
 				delete[] m_Bytes;
 				m_Bytes = nullptr;
 				m_BytesCounter = 0;
 				m_Count = 0;
+			}
+
+		protected:
+			template<typename FieldT>
+			void SerialiseField(FieldT SerialisableT::* field)
+			{
+				if (!CheckSerialise())
+					return;
+
+				m_State = EState::SERIALISING;
+
+				if (std::is_base_of_v<ISerialisable, FieldT>)
+				{
+					// @TODO: Make it so this recursive serialisation doesn't actually store the size in the serial
+
+					FieldT* fieldPtr = &(m_SerialisablePtr->*field);
+					ISerialisable* serialisableField = (ISerialisable*)fieldPtr;
+
+					Serial serial;
+					serialisableField->Serialise(&serial);
+
+					byte* serialBuffer = serial.CreateSignedBuffer();
+					ullong sizeToWrite = serial.GetSize() + sizeof(ullong);
+					memcpy_s(m_Bytes + m_BytesCounter, sizeToWrite, serialBuffer, sizeToWrite);
+					delete serialBuffer;
+
+					m_BytesCounter += sizeToWrite;
+				}
+				else
+				{
+					ullong fieldSize = sizeof(FieldT);
+					FieldT& data = m_SerialisablePtr->*field;
+					memcpy_s(m_Bytes + m_BytesCounter, fieldSize, &data, fieldSize);
+					m_BytesCounter += fieldSize;
+				}
+			}
+
+			template<typename FieldT>
+			void DeserialiseField(FieldT SerialisableT::* field)
+			{
+				if (!CheckDeserialise())
+					return;
+
+				m_State = EState::DESERIALISING;
+
+				if (std::is_base_of_v<ISerialisable, FieldT>)
+				{
+					FieldT* fieldPtr = &(m_SerialisablePtr->*field);
+					ISerialisable* serialisableField = (ISerialisable*)fieldPtr;
+
+					Serial serial;
+					ullong serialSize;
+					memcpy_s(&serialSize, sizeof(ullong), m_Bytes + m_BytesCounter, sizeof(ullong));
+
+					byte* buffer = new byte[serialSize];
+					memcpy_s(buffer, serialSize, m_Bytes + m_BytesCounter + sizeof(ullong), serialSize);
+					serial.PushBytes(buffer, serialSize);
+					serialisableField->Deserialise(&serial);
+
+					m_BytesCounter += serialSize + sizeof(ullong);
+				}
+				else
+				{
+					ullong fieldSize = sizeof(FieldT);
+					FieldT& data = m_SerialisablePtr->*field;
+					memcpy_s(&data, fieldSize, m_Bytes + m_BytesCounter, fieldSize);
+					m_BytesCounter += fieldSize;
+				}
 			}
 
 		private:
@@ -387,18 +408,15 @@ namespace Ion
 		long c[128];
 		uint d = 45u;
 
-		SerialClassTest()
-		{
-			ZeroMemory(c, sizeof(c));
-		}
-
 		virtual void Serialise(Serialisation::Serial* serial) override
 		{
 			Serialisation::Serialiser serialiser(this, Serialisation::EType::WRITE);
-			serialiser.SerialiseField(&SerialClassTest::a);
-			serialiser.SerialiseField(&SerialClassTest::b);
-			serialiser.SerialiseField(&SerialClassTest::c);
-			serialiser.SerialiseField(&SerialClassTest::d);
+			serialiser.Serialise(
+				&SerialClassTest::a,
+				&SerialClassTest::b,
+				&SerialClassTest::c,
+				&SerialClassTest::d
+			);
 			serialiser.WriteToSerial(serial);
 			serialiser.Finalise();
 		}
@@ -407,10 +425,12 @@ namespace Ion
 		{
 			Serialisation::Serialiser serialiser(this, Serialisation::EType::READ);
 			serialiser.ReadFromSerial(serial);
-			serialiser.DeserialiseField(&SerialClassTest::a);
-			serialiser.DeserialiseField(&SerialClassTest::b);
-			serialiser.DeserialiseField(&SerialClassTest::c);
-			serialiser.DeserialiseField(&SerialClassTest::d);
+			serialiser.Deserialise(
+				&SerialClassTest::a,
+				&SerialClassTest::b,
+				&SerialClassTest::c,
+				&SerialClassTest::d
+			);
 			serialiser.Finalise();
 		}
 	};
@@ -425,8 +445,10 @@ namespace Ion
 		virtual void Serialise(Serialisation::Serial* serial) override
 		{
 			Serialisation::Serialiser serialiser(this, Serialisation::EType::WRITE);
-			serialiser.SerialiseField(&SerialClass2::primitive);
-			serialiser.SerialiseField(&SerialClass2::serialisable);
+			serialiser.Serialise(
+				&SerialClass2::primitive,
+				&SerialClass2::serialisable
+			);
 			serialiser.WriteToSerial(serial);
 			serialiser.Finalise();
 		}
@@ -435,8 +457,10 @@ namespace Ion
 		{
 			Serialisation::Serialiser serialiser(this, Serialisation::EType::READ);
 			serialiser.ReadFromSerial(serial);
-			serialiser.DeserialiseField(&SerialClass2::primitive);
-			serialiser.DeserialiseField(&SerialClass2::serialisable);
+			serialiser.Deserialise(
+				&SerialClass2::primitive,
+				&SerialClass2::serialisable
+			);
 			serialiser.Finalise();
 		}
 	};
@@ -449,7 +473,7 @@ namespace Ion
 		virtual void Serialise(Serialisation::Serial* serial) override
 		{
 			Serialisation::Serialiser serialiser(this, Serialisation::EType::WRITE);
-			serialiser.SerialiseField(&SerialClass3::serialisableDeep);
+			serialiser.Serialise(&SerialClass3::serialisableDeep);
 			serialiser.WriteToSerial(serial);
 			serialiser.Finalise();
 		}
@@ -458,31 +482,48 @@ namespace Ion
 		{
 			Serialisation::Serialiser serialiser(this, Serialisation::EType::READ);
 			serialiser.ReadFromSerial(serial);
-			serialiser.DeserialiseField(&SerialClass3::serialisableDeep);
+			serialiser.Deserialise(&SerialClass3::serialisableDeep);
 			serialiser.Finalise();
 		}
 	};
 
 	void SerialisationTest()
 	{
+		SerialClassTest t;
+		t.a = 93.2f;
+		t.b = -51;
+		ZeroMemory(t.c, sizeof(t.c));
+		t.d = 666601;
+
+		Serial serial;
+		t.Serialise(&serial);
+
+		SerialClassTest t2;
+		t2.Deserialise(&serial);
+
+		ASSERT(t2.a == t.a);
+		ASSERT(t2.b == t.b);
+		ASSERT(memcmp(t2.c, t.c, 128));
+		ASSERT(t2.d == t.d);
+
 		using namespace std::chrono_literals;
 		// Memory leak test (passed)
 		for (int i = 0; i < 100000; ++i)
 		{
-			SerialClassTest t;
-			t.a = 93.2f;
-			t.b = -51;
-			t.d = 666601;
+			SerialClassTest ct;
+			ct.a = 93.2f;
+			ct.b = -51;
+			ct.d = 666601;
 
-			Serialisation::Serial serial;
-			t.Serialise(&serial);
+			Serialisation::Serial cserial;
+			ct.Serialise(&cserial);
 
-			SerialClassTest t2;
-			t2.Deserialise(&serial);
+			SerialClassTest ct2;
+			ct2.Deserialise(&cserial);
 
-			ASSERT(t2.a == t.a);
-			ASSERT(t2.b == t.b);
-			ASSERT(t2.d == t.d);
+			ASSERT(ct2.a == ct.a);
+			ASSERT(ct2.b == ct.b);
+			ASSERT(ct2.d == ct.d);
 		}
 
 		SerialClass2 tt;
@@ -490,7 +531,6 @@ namespace Ion
 		tt.serialisable.b = -5556;
 		tt.serialisable.d = 66;
 		
-		Serial serial;
 		tt.Serialise(&serial);
 		
 		SerialClass2 tt2;
@@ -509,7 +549,6 @@ namespace Ion
 			SerialClass3 ttt2;
 			ttt2.Deserialise(&serial);
 		}
-		
 
 		// Memory leak test (passed)
 		for (int i = 0; i < 10000000; ++i)
