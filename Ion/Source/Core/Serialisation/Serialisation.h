@@ -42,6 +42,9 @@ namespace Ion
 			template<typename SerialisableT, std::enable_if_t<std::is_base_of_v<ISerialisable, SerialisableT>, bool>>
 			friend class Serialiser;
 
+			template<typename T> friend void SerialiseStruct(T* structPtr, Serial* serial);
+			template<typename T> friend void DeserialiseStruct(T* structPtr, Serial* serial);
+
 		public:
 			Serial() :
 				m_Initialised(false),
@@ -66,7 +69,8 @@ namespace Ion
 			}
 
 		private:
-			/* Sets pointer to bytes of this object to the one specified */
+			/* Sets pointer to bytes of this object to the one specified.
+			   Changes the ownership of the bytes to this Serial. */
 			void PushBytes(byte* bytes, ullong count)
 			{
 				if (!m_Initialised)
@@ -80,7 +84,8 @@ namespace Ion
 				}
 			}
 
-			/* Returns bytes and uninitialises the pointer in this object */
+			/* Returns bytes and uninitialises the pointer in this object.
+			   Removes the ownership of the bytes from this Serial. */
 			byte* PullBytes(ullong* outCount)
 			{
 				if (m_Initialised)
@@ -99,7 +104,8 @@ namespace Ion
 				return nullptr;
 			}
 
-			/* Creates a buffer of this Serial's bytes preceded by the size of it */
+			/* Creates a buffer of this Serial's bytes preceded by the size of it.
+			   The buffer must then be deleted using delete[] as this Serial does not own it. */
 			byte* CreateSignedBuffer()
 			{
 				if (m_Initialised && m_Size > 0)
@@ -368,11 +374,24 @@ namespace Ion
 			byte* m_Bytes;
 		};
 
-		template<typename StructT>
-		bool SerialiseStruct(StructT* structPtr, byte* serial)
+		template<typename T>
+		void SerialiseStruct(T* structPtr, Serial* serial)
 		{
-			ullong size = sizeof(StructT);
-			memcpy_s(serial, size, structPtr, size);
+			ullong size = sizeof(T);
+			byte* bytes = new byte[size];
+			memcpy_s(bytes, size, structPtr, size);
+			serial->PushBytes(bytes, size);
+		}
+
+		template<typename T>
+		void DeserialiseStruct(T* structPtr, Serial* serial)
+		{
+			ullong size = sizeof(T);
+			ullong pulledSize;
+			byte* bytes = serial->PullBytes(&pulledSize);
+			ASSERT(size == pulledSize);
+			memcpy_s(structPtr, size, bytes, pulledSize);
+			delete[] bytes;
 		}
 	}
 
@@ -483,6 +502,17 @@ namespace Ion
 		
 		SerialClass2 tt2;
 		tt2.Deserialise(&serial);
+
+		Serial structSerial;
+		SerialTest st1;
+		st1.a = 646.3423f;
+		st1.b = -2323;
+		st1.c = 10000000;
+		st1.d = 111111;
+		Serialisation::SerialiseStruct(&st1, &structSerial);
+
+		SerialTest st2;
+		Serialisation::DeserialiseStruct(&st2, &structSerial);
 
 		//LOG_INFO("SerialTest: {0}, {1}, {2}, {3}", t2.a, t2.b, t2.c, t2.d);
 	}
