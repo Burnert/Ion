@@ -441,6 +441,28 @@ namespace Ion
 		}
 	};
 
+	class SerialClass3 : public ISerialisable
+	{
+	public:
+		SerialClass2 serialisableDeep;
+
+		virtual void Serialise(Serialisation::Serial* serial) override
+		{
+			Serialisation::Serialiser serialiser(this, Serialisation::EType::WRITE);
+			serialiser.SerialiseField(&SerialClass3::serialisableDeep);
+			serialiser.WriteToSerial(serial);
+			serialiser.Finalise();
+		}
+
+		virtual void Deserialise(Serialisation::Serial* serial) override
+		{
+			Serialisation::Serialiser serialiser(this, Serialisation::EType::READ);
+			serialiser.ReadFromSerial(serial);
+			serialiser.DeserialiseField(&SerialClass3::serialisableDeep);
+			serialiser.Finalise();
+		}
+	};
+
 	void SerialisationTest()
 	{
 		using namespace std::chrono_literals;
@@ -473,6 +495,21 @@ namespace Ion
 		
 		SerialClass2 tt2;
 		tt2.Deserialise(&serial);
+
+		// Memory leak test (passed)
+		for (int i = 0; i < 10000000; ++i)
+		{
+			SerialClass3 ttt;
+			ttt.serialisableDeep.primitive = 888;
+			ttt.serialisableDeep.serialisable.a = 66.82f;
+			ttt.serialisableDeep.serialisable.b = -11111;
+			ttt.serialisableDeep.serialisable.d = 9210;
+			ttt.Serialise(&serial);
+
+			SerialClass3 ttt2;
+			ttt2.Deserialise(&serial);
+		}
+		
 
 		// Memory leak test (passed)
 		for (int i = 0; i < 10000000; ++i)
