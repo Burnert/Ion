@@ -367,3 +367,7 @@ Intermediate/
 
 # Other VS files
 *.hint
+
+# Other files
+IonExample/**/*.txt
+IonExample/**/*.src
