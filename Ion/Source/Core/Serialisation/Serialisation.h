@@ -63,6 +63,7 @@ namespace Ion
 				return m_Size;
 			}
 
+			/* Returns raw serialised bytes (read-only). */
 			const byte* const GetImmutableBytes() const
 			{
 				return m_Bytes;
@@ -216,22 +217,7 @@ namespace Ion
 					m_BytesCounter += fieldSize;
 
 				}
-
-				
 			}
-
-			// @TODO: Add recursive ISerialisable check procedure.
-
-			//template<typename FieldT>
-			//void SerialiseField(FieldT SerialisableT::* field)
-			//{
-			//	if (!CheckSerialise())
-			//		return;
-
-			//	m_State = EState::SERIALISING;
-
-			//	
-			//}
 
 			template<typename FieldT>
 			void DeserialiseField(FieldT SerialisableT::* field)
@@ -264,20 +250,7 @@ namespace Ion
 					memcpy_s(&data, fieldSize, m_Bytes + m_BytesCounter, fieldSize);
 					m_BytesCounter += fieldSize;
 				}
-
-				
 			}
-
-			//template<typename FieldT>
-			//void DeserialiseField(ISerialisable SerialisableT::* field)
-			//{
-			//	if (!CheckDeserialise())
-			//		return;
-
-			//	m_State = EState::DESERIALISING;
-
-			//	
-			//}
 
 			void WriteToSerial(Serial* serial)
 			{
@@ -477,7 +450,6 @@ namespace Ion
 			SerialClassTest t;
 			t.a = 93.2f;
 			t.b = -51;
-			//t.c = -55411;
 			t.d = 666601;
 
 			Serialisation::Serial serial;
@@ -488,7 +460,6 @@ namespace Ion
 
 			ASSERT(t2.a == t.a);
 			ASSERT(t2.b == t.b);
-			//ASSERT(t2.c == t.c);
 			ASSERT(t2.d == t.d);
 		}
 
@@ -503,17 +474,19 @@ namespace Ion
 		SerialClass2 tt2;
 		tt2.Deserialise(&serial);
 
-		Serial structSerial;
-		SerialTest st1;
-		st1.a = 646.3423f;
-		st1.b = -2323;
-		st1.c = 10000000;
-		st1.d = 111111;
-		Serialisation::SerialiseStruct(&st1, &structSerial);
+		// Memory leak test (passed)
+		for (int i = 0; i < 10000000; ++i)
+		{
+			Serial structSerial;
+			SerialTest st1;
+			st1.a = 646.3423f;
+			st1.b = -2323;
+			st1.c = 10000000;
+			st1.d = 111111;
+			Serialisation::SerialiseStruct(&st1, &structSerial);
 
-		SerialTest st2;
-		Serialisation::DeserialiseStruct(&st2, &structSerial);
-
-		//LOG_INFO("SerialTest: {0}, {1}, {2}, {3}", t2.a, t2.b, t2.c, t2.d);
+			SerialTest st2;
+			Serialisation::DeserialiseStruct(&st2, &structSerial);
+		}
 	}
 }
