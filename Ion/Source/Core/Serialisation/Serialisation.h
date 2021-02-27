@@ -44,7 +44,7 @@ namespace Ion
 		class ION_API Serial
 		{
 			template<typename SerialisableT, std::enable_if_t<std::is_base_of_v<ISerialisable, SerialisableT>, bool>>
-			friend class Serialiser;
+			friend class TClassSerialiser;
 
 			template<typename T> friend void SerialiseStruct(T* structPtr, Serial* serial);
 			template<typename T> friend void DeserialiseStruct(T* structPtr, Serial* serial);
@@ -132,10 +132,10 @@ namespace Ion
 		// @TODO: Write docs ASAP...
 
 		template<typename SerialisableT, std::enable_if_t<std::is_base_of_v<ISerialisable, SerialisableT>, bool> = true>
-		class Serialiser
+		class TClassSerialiser
 		{
 		public:
-			Serialiser(SerialisableT* serialisable, EType type) :
+			TClassSerialiser(SerialisableT* serialisable, EType type) :
 				m_Type(type),
 				m_SerialisablePtr(serialisable),
 				m_BytesCounter(0),
@@ -153,7 +153,7 @@ namespace Ion
 				}
 			}
 
-			Serialiser() :
+			TClassSerialiser() :
 				m_Type(EType::UNDEFINED),
 				m_SerialisablePtr(nullptr),
 				m_BytesCounter(0),
@@ -162,7 +162,7 @@ namespace Ion
 				m_State(EState::NULLSTATE)
 			{ }
 			
-			virtual ~Serialiser()
+			virtual ~TClassSerialiser()
 			{
 				if (m_Bytes)
 				{
@@ -414,7 +414,7 @@ namespace Ion
 
 		virtual void Serialise(Serialisation::Serial* serial) override
 		{
-			Serialisation::Serialiser serialiser(this, Serialisation::EType::WRITE);
+			Serialisation::TClassSerialiser serialiser(this, Serialisation::EType::WRITE);
 			serialiser.Serialise(
 				&SerialClassTest::a,
 				&SerialClassTest::b,
@@ -427,7 +427,7 @@ namespace Ion
 
 		virtual void Deserialise(Serialisation::Serial* serial) override
 		{
-			Serialisation::Serialiser serialiser(this, Serialisation::EType::READ);
+			Serialisation::TClassSerialiser serialiser(this, Serialisation::EType::READ);
 			serialiser.ReadFromSerial(serial);
 			serialiser.Deserialise(
 				&SerialClassTest::a,
@@ -448,7 +448,7 @@ namespace Ion
 	public:
 		virtual void Serialise(Serialisation::Serial* serial) override
 		{
-			Serialisation::Serialiser serialiser(this, Serialisation::EType::WRITE);
+			Serialisation::TClassSerialiser serialiser(this, Serialisation::EType::WRITE);
 			serialiser.Serialise(
 				&SerialClass2::primitive,
 				&SerialClass2::serialisable
@@ -459,7 +459,7 @@ namespace Ion
 
 		virtual void Deserialise(Serialisation::Serial* serial) override
 		{
-			Serialisation::Serialiser serialiser(this, Serialisation::EType::READ);
+			Serialisation::TClassSerialiser serialiser(this, Serialisation::EType::READ);
 			serialiser.ReadFromSerial(serial);
 			serialiser.Deserialise(
 				&SerialClass2::primitive,
@@ -476,7 +476,7 @@ namespace Ion
 
 		virtual void Serialise(Serialisation::Serial* serial) override
 		{
-			Serialisation::Serialiser serialiser(this, Serialisation::EType::WRITE);
+			Serialisation::TClassSerialiser serialiser(this, Serialisation::EType::WRITE);
 			serialiser.Serialise(&SerialClass3::serialisableDeep);
 			serialiser.WriteToSerial(serial);
 			serialiser.Finalise();
@@ -484,7 +484,7 @@ namespace Ion
 
 		virtual void Deserialise(Serialisation::Serial* serial) override
 		{
-			Serialisation::Serialiser serialiser(this, Serialisation::EType::READ);
+			Serialisation::TClassSerialiser serialiser(this, Serialisation::EType::READ);
 			serialiser.ReadFromSerial(serial);
 			serialiser.Deserialise(&SerialClass3::serialisableDeep);
 			serialiser.Finalise();
