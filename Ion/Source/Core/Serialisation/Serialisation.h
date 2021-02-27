@@ -187,7 +187,7 @@ namespace Ion
 			}
 
 			template<typename FieldT, typename... RestT>
-			void Serialise(FieldT SerialisableT::* field, RestT... rest)
+			void Serialise(FieldT SerialisableT::* field, RestT SerialisableT::*... rest)
 			{
 				SerialiseField(field);
 
@@ -196,7 +196,7 @@ namespace Ion
 			}
 
 			template<typename FieldT, typename... RestT>
-			void Deserialise(FieldT SerialisableT::* field, RestT... rest)
+			void Deserialise(FieldT SerialisableT::* field, RestT SerialisableT::*... rest)
 			{
 				DeserialiseField(field);
 
