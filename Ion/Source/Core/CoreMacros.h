@@ -28,11 +28,19 @@ if (!(x)) \
 	__debugbreak(); \
 }
 
+#define ASSERT_M(x, message) \
+if (!(x)) \
+{ \
+	LOG_CRITICAL(message"\n {0}\n function: {1}\n in {2}:{3}", #x, __FUNCTION__, __FILE__, __LINE__); \
+	__debugbreak(); \
+}
+
 #define DEBUG(x) x
 
 #else
 
 #define ASSERT(x)
+#define ASSERT_M(x, message)
 #define DEBUG(x)
 
 #endif
