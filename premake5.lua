@@ -2,14 +2,23 @@ workspace "Ion"
 	architecture "x64"
 	startproject "IonExample"
 	
-	configurations
-	{
+	configurations {
 		"Debug",
 		"Release",
 		"Distribution"
 	}
 
 outputdir = "%{cfg.system}-%{cfg.architecture}-%{cfg.buildcfg}"
+
+ThirdParty = {
+	Glad = "Ion/ThirdParty/Glad"
+}
+
+-- for i, dir in ipairs(ThirdParty) do
+-- 	include(dir)
+-- end
+
+include "Ion/ThirdParty/Glad"
 
 project "Ion"
 	location "Ion"
@@ -23,16 +32,20 @@ project "Ion"
 	targetdir ("Build/" .. outputdir .. "/%{prj.name}")
 	objdir ("Intermediate/" .. outputdir .. "/%{prj.name}")
 
-	files
-	{
+	files {
 		"%{prj.name}/Source/**.h",
 		"%{prj.name}/Source/**.cpp",
 	}
 
-	includedirs
-	{
+	includedirs {
+		"Ion/ThirdParty/Glad/include",
 		"%{prj.name}/ThirdParty/SpdLog/include",
 		"%{prj.name}/Source"
+	}
+
+	links {
+		"Glad",
+		"opengl32.lib"
 	}
 
 	filter "system:windows"
@@ -40,14 +53,12 @@ project "Ion"
 		staticruntime "Off"
 		systemversion "latest"
 
-		defines
-		{
+		defines {
 			"ION_PLATFORM_WINDOWS",
 			"ION_ENGINE"
 		}
 
-		postbuildcommands
-		{
+		postbuildcommands {
 			"{MKDIR} ../Build/" .. outputdir .. "/IonExample",
 			"{COPY} %{cfg.buildtarget.relpath} ../Build/" .. outputdir .. "/IonExample"
 		}
@@ -73,21 +84,18 @@ project "IonExample"
 	targetdir ("Build/" .. outputdir .. "/%{prj.name}")
 	objdir ("Intermediate/" .. outputdir .. "/%{prj.name}")
 
-	files
-	{
+	files {
 		"%{prj.name}/Source/**.h",
 		"%{prj.name}/Source/**.cpp",
 	}
 
-	includedirs
-	{
+	includedirs {
 		"Ion/Source",
 		"Ion/ThirdParty/SpdLog/include",
 		"%{prj.name}/Source"
 	}
 
-	links
-	{
+	links {
 		"Ion"
 	}
 
@@ -96,8 +104,7 @@ project "IonExample"
 		staticruntime "Off"
 		systemversion "latest"
 
-		defines
-		{
+		defines {
 			"ION_PLATFORM_WINDOWS"
 		}
 
