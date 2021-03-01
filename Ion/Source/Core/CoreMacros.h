@@ -35,12 +35,19 @@ if (!(x)) \
 	__debugbreak(); \
 }
 
+#define BREAK_M(x) \
+{ \
+	LOG_CRITICAL(x); \
+	__debugbreak(); \
+}
+
 #define DEBUG(x) x
 
 #else
 
 #define ASSERT(x)
 #define ASSERT_M(x, message)
+#define BREAK_M(x)
 #define DEBUG(x)
 
 #endif
