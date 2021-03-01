@@ -22,7 +22,7 @@ namespace Ion
 
 		/* Creates and pushes a layer object with specified name and parameters into the layer stack */
 		template<typename LayerT, typename... Types>
-		std::enable_if_t<std::is_base_of_v<Layer, LayerT>, LayerPtr>
+		TEnableIfT<TIsBaseOfV<Layer, LayerT>, LayerPtr>
 			PushLayer(const CStr name, Types&&... args)
 		{
 			LayerPtr layer = MakeShared<LayerT>(name, args...);
@@ -35,7 +35,7 @@ namespace Ion
 
 		/* Creates and pushes a layer object (overlay) with specified name and parameters on top of other layers */
 		template<typename LayerT, typename... Types>
-		std::enable_if_t<std::is_base_of_v<Layer, LayerT>, LayerPtr>
+		TEnableIfT<TIsBaseOfV<Layer, LayerT>, LayerPtr>
 			PushOverlayLayer(const CStr name, Types&&... args)
 		{
 			LayerPtr overlay = MakeShared<LayerT>(name, args...);

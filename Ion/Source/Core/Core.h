@@ -21,3 +21,4 @@
 #include "Logging/Logger.h"
 #include "Profiling/DebugProfiler.h"
 #include "Serialisation/Serialisation.h"
+#include "Templates/Templates.h"

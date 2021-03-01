@@ -115,7 +115,7 @@ namespace Ion
 
 		/* Creates an event that is called after the application loop is completed. */
 		template<typename EventT, typename... Types>
-		static std::enable_if_t<std::is_base_of_v<Event, EventT>, EventT*> CreateDeferredEvent(Types&&... args)
+		static TEnableIfT<TIsBaseOfV<Event, EventT>, EventT*> CreateDeferredEvent(Types&&... args)
 		{
 			EventT* event = new EventT(args...);
 			event->m_bDefer = true;

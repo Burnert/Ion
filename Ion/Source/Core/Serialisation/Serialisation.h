@@ -3,6 +3,7 @@
 #include "Core/CoreApi.h"
 #include "Core/CoreTypes.h"
 #include "Core/Logging/Logger.h"
+#include "Core/Templates/Templates.h"
 
 namespace Ion
 {
@@ -43,7 +44,7 @@ namespace Ion
 
 		class ION_API Serial
 		{
-			template<typename SerialisableT, std::enable_if_t<std::is_base_of_v<ISerialisable, SerialisableT>, bool>>
+			template<typename SerialisableT, TEnableIfT<TIsBaseOfV<ISerialisable, SerialisableT>, bool>>
 			friend class TClassSerialiser;
 
 			template<typename T> friend void SerialiseStruct(T* structPtr, Serial* serial);
@@ -131,7 +132,7 @@ namespace Ion
 
 		// @TODO: Write docs ASAP...
 
-		template<typename SerialisableT, std::enable_if_t<std::is_base_of_v<ISerialisable, SerialisableT>, bool> = true>
+		template<typename SerialisableT, TEnableIfT<TIsBaseOfV<ISerialisable, SerialisableT>, bool> = true>
 		class TClassSerialiser
 		{
 		public:
@@ -273,7 +274,7 @@ namespace Ion
 
 				m_State = EState::SERIALISING;
 
-				if (std::is_base_of_v<ISerialisable, FieldT>)
+				if constexpr (TIsBaseOfV<ISerialisable, FieldT>)
 				{
 					// @TODO: Make it so this recursive serialisation doesn't actually store the size in the serial
 
@@ -307,7 +308,7 @@ namespace Ion
 
 				m_State = EState::DESERIALISING;
 
-				if (std::is_base_of_v<ISerialisable, FieldT>)
+				if constexpr (TIsBaseOfV<ISerialisable, FieldT>)
 				{
 					FieldT* fieldPtr = &(m_SerialisablePtr->*field);
 					ISerialisable* serialisableField = (ISerialisable*)fieldPtr;

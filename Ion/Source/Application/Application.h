@@ -29,7 +29,7 @@ namespace Ion
 
 		/* Creates an instance of an application singleton */
 		template<typename T>
-		static std::enable_if_t<std::is_base_of_v<Application, T>, T*> Create()
+		static TEnableIfT<TIsBaseOfV<Application, T>, T*> Create()
 		{
 			s_Instance = new T;
 			return (T*)s_Instance;
