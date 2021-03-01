@@ -10,7 +10,6 @@
 #include "Core/Layer/Layer.h"
 #include "Core/Layer/LayerStack.h"
 #include "Core/Logging/Logger.h"
-#include "Core/Platform/PlatformCore.h"
 
 #ifdef ION_PLATFORM_WINDOWS
 #include "Application/Platform/Windows/WindowsApplication.h"

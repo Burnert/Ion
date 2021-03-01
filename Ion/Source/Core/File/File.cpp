@@ -4,19 +4,19 @@
 
 namespace Ion
 {
-	FileBase::FileBase()
-		: FileBase(TEXT(""))
+	File::File()
+		: File(TEXT(""))
 	{ }
 
-	FileBase::FileBase(const std::wstring& filename) :
+	File::File(const std::wstring& filename) :
 		m_Filename(filename),
 		m_Type(IO::FT_Text),
-		m_Mode((IO::FileMode)0),
+		m_Mode((IO::EFileMode)0),
 		m_FileSize(-1),
 		WriteNewLineType(IO::NLT_CRLF)
 	{ }
 
-	bool FileBase::SetFilename(const std::wstring& filename)
+	bool File::SetFilename(const std::wstring& filename)
 	{
 		if (SetFilename_Impl(m_Filename))
 		{
@@ -26,12 +26,12 @@ namespace Ion
 		return false;
 	}
 
-	bool FileBase::SetFilename_Impl(const std::wstring& filename)
+	bool File::SetFilename_Impl(const std::wstring& filename)
 	{
 		return true;
 	}
 
-	bool FileBase::SetType(IO::FileType type)
+	bool File::SetType(IO::EFileType type)
 	{
 		if (SetType_Impl(m_Type))
 		{
@@ -41,7 +41,7 @@ namespace Ion
 		return false;
 	}
 
-	bool FileBase::SetType_Impl(IO::FileType type)
+	bool File::SetType_Impl(IO::EFileType type)
 	{
 		return true;
 	}

@@ -4,19 +4,19 @@
 
 namespace Ion
 {
-	class ION_API WindowsFile : public FileBase
+	class ION_API WindowsFile : public File
 	{
 	public:
 		WindowsFile();
 		WindowsFile(const std::wstring& filename);
 		virtual ~WindowsFile() override;
 
-		// FileBase :
+		// File :
 	protected:
 		virtual bool SetFilename_Impl(const std::wstring& filename) override;
-		virtual bool SetType_Impl(IO::FileType type) override;
+		virtual bool SetType_Impl(IO::EFileType type) override;
 
-		// End of FileBase
+		// End of File
 
 		// IFile interface :
 	public:
@@ -43,23 +43,14 @@ namespace Ion
 
 		virtual bool AddOffset(llong count) override;
 		virtual bool SetOffset(llong count) override;
-		FORCEINLINE virtual llong GetOffset() const override
-		{
-			return m_Offset.QuadPart;
-		}
+		virtual llong GetOffset() const override;
 
 		virtual llong GetSize() const override;
 
-		FORCEINLINE virtual bool IsOpen() const override
-		{
-			return m_FileHandle != INVALID_HANDLE_VALUE;
-		}
+		virtual bool IsOpen() const override;
 		virtual bool Exists() const override;
 		/* Returns true if the offset is greater than the filesize. */
-		FORCEINLINE virtual bool EndOfFile() const override
-		{
-			return m_Offset.QuadPart >= GetSize();
-		}
+		virtual bool EndOfFile() const override;
 
 		// End of IFile interface
 
@@ -69,6 +60,4 @@ namespace Ion
 
 		bool ReadLine_Internal(char* outBuffer, ullong count, ullong* outReadCount, bool* bOutOverflow);
 	};
-	
-	using File = WindowsFile;
 }

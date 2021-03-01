@@ -21,24 +21,28 @@ LOG_ERROR(TEXT("File '{0}' cannot be written because the Write access mode was n
 
 #endif
 
-#ifdef ION_DEBUG
-	/* Code inside this macro works only on debug and with DebugLog enabled. */
-	#define _DEBUG_LOG(x)   if (m_DebugLog) { x; }
+/* Code inside this macro works only on debug and with DebugLog enabled. */
+#define _DEBUG_LOG(x)   DEBUG( if (m_DebugLog) { x; } )
 
-#else
-	/* Code inside this macro works only on debug and with DebugLog enabled. */
-	#define _DEBUG_LOG(x)
-
-#endif
 
 namespace Ion
 {
+	File* File::Create()
+	{
+		return new WindowsFile();
+	}
+
+	File* File::Create(const std::wstring& filename)
+	{
+		return new WindowsFile(filename);
+	}
+
 	WindowsFile::WindowsFile()
 		: WindowsFile(TEXT(""))
 	{ }
 
 	WindowsFile::WindowsFile(const std::wstring& filename) :
-		FileBase(filename),
+		File(filename),
 		m_FileHandle(INVALID_HANDLE_VALUE),
 		m_Offset({ 0, 0 })
 	{ }
@@ -58,7 +62,7 @@ namespace Ion
 		return true;
 	}
 
-	bool WindowsFile::SetType_Impl(IO::FileType type)
+	bool WindowsFile::SetType_Impl(IO::EFileType type)
 	{
 		if (IsOpen())
 		{
@@ -106,13 +110,13 @@ namespace Ion
 			if (lastError != ERROR_FILE_NOT_FOUND)
 				goto lError;
 
-			_DEBUG_LOG(LOG_WARN(TEXT("File '{0}' not found!"), m_Filename));
+			_DEBUG_LOG( LOG_WARN(TEXT("File '{0}' not found!"), m_Filename) );
 
 			m_FileHandle = CreateFile(m_Filename.c_str(), dwDesiredAccess, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
 			if (m_FileHandle == INVALID_HANDLE_VALUE)
 				goto lError;
 
-			_DEBUG_LOG(LOG_DEBUG(TEXT("File '{0}' created."), m_Filename));
+			_DEBUG_LOG( LOG_DEBUG(TEXT("File '{0}' created."), m_Filename) );
 		}
 
 		UpdateFileSizeCache();
@@ -124,7 +128,7 @@ namespace Ion
 			SetOffset(offset);
 		}
 
-		_DEBUG_LOG(LOG_TRACE(TEXT("File '{0}' opened."), m_Filename));
+		_DEBUG_LOG( LOG_TRACE(TEXT("File '{0}' opened."), m_Filename) );
 		return true;
 
 		// Other error
@@ -137,7 +141,7 @@ namespace Ion
 	{
 		if (m_FileHandle != INVALID_HANDLE_VALUE)
 		{
-			_DEBUG_LOG(LOG_TRACE(TEXT("File '{0}' was closed."), m_Filename));
+			_DEBUG_LOG( LOG_TRACE(TEXT("File '{0}' was closed."), m_Filename) );
 			CloseHandle(m_FileHandle);
 			m_FileHandle = INVALID_HANDLE_VALUE;
 		}
@@ -157,7 +161,7 @@ namespace Ion
 			return false;
 		}
 
-		_DEBUG_LOG(LOG_DEBUG(TEXT("File '{0}' was deleted."), m_Filename));
+		_DEBUG_LOG( LOG_DEBUG(TEXT("File '{0}' was deleted."), m_Filename) );
 		return true;
 	}
 
@@ -184,7 +188,7 @@ namespace Ion
 		// Retrieves the file pointer
 		m_Offset.QuadPart += bytesRead;
 
-		_DEBUG_LOG(LOG_TRACE(TEXT("'{0}': Read {1} bytes."), m_Filename, bytesRead));
+		_DEBUG_LOG( LOG_TRACE(TEXT("'{0}': Read {1} bytes."), m_Filename, bytesRead) );
 		return true;
 	}
 
@@ -235,7 +239,7 @@ namespace Ion
 				}
 				else
 				{
-					_DEBUG_LOG(LOG_WARN(TEXT("'{0}': CR was found but the next byte could not be checked! {1} byte buffer was to small."), m_Filename, count));
+					_DEBUG_LOG( LOG_WARN(TEXT("'{0}': CR was found but the next byte could not be checked! {1} byte buffer was to small."), m_Filename, count) );
 					// Set the offset back to the CR character
 					// so it can be interpreted later and then exit.
 					SetOffset(initialOffset + i);
@@ -287,7 +291,7 @@ namespace Ion
 			if (bOutOverflow != nullptr)
 				*bOutOverflow = true;
 
-			_DEBUG_LOG(LOG_WARN(TEXT("'{0}': File read output buffer overflow! {1} byte buffer was to small."), m_Filename, count));
+			_DEBUG_LOG( LOG_WARN(TEXT("'{0}': File read output buffer overflow! {1} byte buffer was to small."), m_Filename, count) );
 		}
 
 		return true;
@@ -310,7 +314,7 @@ namespace Ion
 		ullong readCount = 0;
 		bool bResult = ReadLine_Internal(outBuffer, count, &readCount, nullptr);
 
-		_DEBUG_LOG(if (bResult) LOG_TRACE(TEXT("'{0}': Read {1} bytes."), m_Filename, readCount));
+		_DEBUG_LOG( if (bResult) LOG_TRACE(TEXT("'{0}': Read {1} bytes."), m_Filename, readCount) );
 		return bResult;
 	}
 
@@ -347,7 +351,7 @@ namespace Ion
 		}
 		while (bOverflow);
 
-		_DEBUG_LOG(if (bResult) LOG_TRACE(TEXT("'{0}': Read {1} bytes."), m_Filename, readCount));
+		_DEBUG_LOG( if (bResult) LOG_TRACE(TEXT("'{0}': Read {1} bytes."), m_Filename, readCount) );
 		return bResult;
 	}
 
@@ -379,7 +383,7 @@ namespace Ion
 		llong sizeDifference = std::max(0ll, m_Offset.QuadPart - m_FileSize);
 		UpdateFileSizeCache(m_FileSize + sizeDifference);
 
-		_DEBUG_LOG(LOG_TRACE(TEXT("'{0}': Written {1} bytes."), m_Filename, bytesWritten));
+		_DEBUG_LOG( LOG_TRACE(TEXT("'{0}': Written {1} bytes."), m_Filename, bytesWritten) );
 		return true;
 	}
 
@@ -432,7 +436,7 @@ namespace Ion
 		llong sizeDifference = std::max(0ll, m_Offset.QuadPart - m_FileSize);
 		UpdateFileSizeCache(m_FileSize + sizeDifference);
 
-		_DEBUG_LOG(LOG_TRACE(TEXT("'{0}': Written {1} bytes."), m_Filename, bytesWritten));
+		_DEBUG_LOG( LOG_TRACE(TEXT("'{0}': Written {1} bytes."), m_Filename, bytesWritten) );
 		return true;
 	}
 
@@ -476,6 +480,11 @@ namespace Ion
 		}
 		return true;
 	}
+
+	llong WindowsFile::GetOffset() const
+	{
+		return m_Offset.QuadPart; 
+	}
 	
 	llong WindowsFile::GetSize() const
 	{
@@ -494,8 +503,13 @@ namespace Ion
 		GetFileSizeEx(m_FileHandle, &fileSize);
 		m_FileSize = fileSize.QuadPart;
 
-		_DEBUG_LOG(LOG_TRACE(TEXT("'{0}': New file size cache = {1} bytes."), m_Filename, m_FileSize));
+		_DEBUG_LOG( LOG_TRACE(TEXT("'{0}': New file size cache = {1} bytes."), m_Filename, m_FileSize) );
 		return fileSize.QuadPart;
+	}
+
+	bool WindowsFile::IsOpen() const
+	{ 
+		return m_FileHandle != INVALID_HANDLE_VALUE;
 	}
 
 	bool WindowsFile::Exists() const
@@ -503,5 +517,10 @@ namespace Ion
 		DWORD attributes = GetFileAttributes(m_Filename.c_str());
 		return attributes != INVALID_FILE_ATTRIBUTES &&
 			!(attributes & FILE_ATTRIBUTE_DIRECTORY);
+	}
+
+	bool WindowsFile::EndOfFile() const
+	{
+		return m_Offset.QuadPart >= GetSize();
 	}
 }

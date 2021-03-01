@@ -7,14 +7,14 @@ namespace Ion
 {
 	namespace IO
 	{
-		enum FileType : byte
+		enum EFileType : byte
 		{
 			FT_Text   = 0,
 			FT_Binary = 1,
 			FT_Other  = 0xFF,
 		};
 
-		enum FileMode : byte
+		enum EFileMode : byte
 		{
 			FM_Read      = Bitflag(0),
 			FM_Write     = Bitflag(1),
@@ -22,7 +22,7 @@ namespace Ion
 			FM_Reset     = Bitflag(3),
 		};
 
-		enum NewLineType : byte
+		enum ENewLineType : byte
 		{
 			NLT_LF      = 1,
 			NLT_CR      = 2,
@@ -57,15 +57,18 @@ namespace Ion
 	};
 
 	/* Generic File abstract base class */
-	class ION_API FileBase : public IFile
+	class ION_API File : public IFile
 	{
 	public:
-		FileBase();
-		FileBase(const std::wstring& filename);
-		virtual ~FileBase() { }
+		static File* Create();
+		static File* Create(const std::wstring& filename);
+
+		File();
+		File(const std::wstring& filename);
+		virtual ~File() { }
 
 		/* This is the type of the new line character that will be written in a text file. */
-		IO::NewLineType WriteNewLineType;
+		IO::ENewLineType WriteNewLineType;
 
 		bool SetFilename(const std::wstring& filename);
 	protected:
@@ -74,18 +77,18 @@ namespace Ion
 	public:
 		FORCEINLINE std::wstring GetFilename() const { return m_Filename; }
 
-		bool SetType(IO::FileType type);
+		bool SetType(IO::EFileType type);
 	protected:
 		/* If this function returns false, the type will not be changed. */
-		virtual bool SetType_Impl(IO::FileType type);
+		virtual bool SetType_Impl(IO::EFileType type);
 	public: 
-		FORCEINLINE IO::FileType GetType() const { return m_Type; }
+		FORCEINLINE IO::EFileType GetType() const { return m_Type; }
 
 		FORCEINLINE bool IsFilenameValid() const { return m_Filename != TEXT(""); }
 
 	protected:
 		std::wstring m_Filename;
-		IO::FileType m_Type;
+		IO::EFileType m_Type;
 		byte m_Mode;
 
 		// Caches ----------------------

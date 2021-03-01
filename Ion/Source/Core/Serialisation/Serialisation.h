@@ -36,9 +36,9 @@ namespace Ion
 		{
 		public:
 			/* Transforms an object to a series of bytes */
-			virtual void Serialise(Serialisation::Serial* serial) = 0;
+			virtual void Serialise(Serial* serial) = 0;
 			/* Loads serialised data to the object it is called on */
-			virtual void Deserialise(Serialisation::Serial* serial) = 0;
+			virtual void Deserialise(Serial* serial) = 0;
 		};
 
 		class ION_API Serial
