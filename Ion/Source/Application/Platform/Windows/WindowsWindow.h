@@ -10,9 +10,9 @@ namespace Ion
 	public:
 		static Shared<WindowsWindow> Create();
 
-		virtual ~WindowsWindow();
+		// GenericWindow:
 
-		bool RegisterWindowClass(HINSTANCE hInstance, LPCWSTR className);
+		virtual ~WindowsWindow();
 
 		virtual bool Initialize() override;
 
@@ -24,10 +24,21 @@ namespace Ion
 		virtual void SetEnabled(bool bEnabled);
 
 		virtual void Resize() override;
-		virtual bool GetDimensions(int& width, int& height) const override;
+		virtual WindowDimensions GetDimensions() const override;
 
-		FORCEINLINE HWND GetHWnd() const { return m_HWnd; }
-		HDC GetHDC() const;
+		virtual void MakeRenderingContextCurrent() override;
+
+		// End of GenericWindow
+
+		HDC GetDeviceContext() const;
+		FORCEINLINE HWND GetWindowHandle() const { return m_HWnd; }
+
+		bool RegisterWindowClass(HINSTANCE hInstance, LPCWSTR className);
+
+		FORCEINLINE static HGLRC GetCurrentRenderingContext() { return wglGetCurrentContext(); }
+
+	protected:
+		HGLRC CreateRenderingContext(HDC deviceContext);
 
 	protected:
 		// Protected constructor: Only shared_ptrs of this class can be made.

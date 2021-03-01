@@ -617,15 +617,50 @@ namespace Ion
 
 	void WindowsWindow::Resize()
 	{
+
 	}
 
-	bool WindowsWindow::GetDimensions(int& width, int& height) const
+	WindowDimensions WindowsWindow::GetDimensions() const
 	{
+		if (m_HWnd == NULL)
+		{
+			ION_LOG_ENGINE_ERROR(_windowNoInitMessage, "get window dimensions");
+			return { };
+		}
+		
+		RECT windowRect;
+		GetWindowRect(m_HWnd, &windowRect);
 
-		return false;
+		int width = windowRect.right - windowRect.left;
+		int height = windowRect.bottom - windowRect.top;
+		return { width, height };
 	}
 
-	HDC WindowsWindow::GetHDC() const
+	HGLRC WindowsWindow::CreateRenderingContext(HDC deviceContext)
+	{
+		if (m_HWnd == NULL)
+		{
+			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "create OpenGL rendering context");
+			return NULL;
+		}
+
+		return wglCreateContext(deviceContext);
+	}
+
+	void WindowsWindow::MakeRenderingContextCurrent()
+	{
+		HGLRC previousGlContext = GetCurrentRenderingContext();
+		if (previousGlContext != NULL)
+		{
+			wglDeleteContext(previousGlContext);
+		}
+
+		HDC deviceContext = GetDeviceContext();
+		HGLRC glContext = CreateRenderingContext(deviceContext);
+		wglMakeCurrent(deviceContext, glContext);
+	}
+
+	HDC WindowsWindow::GetDeviceContext() const
 	{
 		if (m_HWnd == NULL)
 		{

@@ -6,45 +6,17 @@
 
 namespace Ion
 {
-	GenericWindow::GenericWindow()
-	{
-	}
-
-	GenericWindow::~GenericWindow()
-	{
-	}
-
 	bool GenericWindow::Initialize()
 	{
 		ION_LOG_ENGINE_CRITICAL("{0} is not implemented!", __FUNCTION__);
 		return false;
 	}
 
-	void GenericWindow::Show()
+	WindowDimensions GenericWindow::GetDimensions() const
 	{
+		return { };
 	}
 
-	void GenericWindow::Hide()
-	{
-	}
-
-	void GenericWindow::SetTitle(const WCStr title)
-	{
-	}
-
-	void GenericWindow::SetEnabled(bool bEnabled)
-	{
-	}
-
-	void GenericWindow::Resize()
-	{
-	}
-
-	bool GenericWindow::GetDimensions(int& width, int& height) const
-	{
-		ION_LOG_ENGINE_BADPLATFORMFUNCTIONCALL();
-		return false;
-	}
 	void GenericWindow::SetEventCallback(EventCallback callback)
 	{
 		m_EventCallback = callback;

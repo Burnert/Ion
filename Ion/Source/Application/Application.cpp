@@ -42,6 +42,9 @@ namespace Ion
 		m_Window->Initialize();
 		m_Window->SetTitle(L"Ion Engine");
 
+		// Current thread will render graphics in this window.
+		m_Window->MakeRenderingContextCurrent();
+
 		m_Window->Show();
 
 		// Call client overriden Init function
