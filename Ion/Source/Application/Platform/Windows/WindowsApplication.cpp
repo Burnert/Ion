@@ -4,6 +4,14 @@
 #include "WindowsWindow.h"
 #include "Core/Platform/Windows/WindowsInput.h"
 
+#ifdef ION_PLATFORM_WINDOWS
+
+#include "OpenGL/Windows/OpenGLWindows.h"
+
+#endif
+
+DECLARE_PERFORMANCE_COUNTER(RendererAPI_InitTime, "RendererAPI Init Time", "Init");
+
 namespace Ion
 {
 	WindowsApplication* WindowsApplication::Get()
@@ -14,17 +22,13 @@ namespace Ion
 	void WindowsApplication::InitWindows(HINSTANCE hInstance)
 	{
 		m_HInstance = hInstance;
-		m_OpenGLModule = LoadLibrary(TEXT("opengl32.dll"));
+
 		Init();
 	}
 
-	void* WindowsApplication::GetProcessAddress(const char* name)
+	HGLRC WindowsApplication::CreateRenderingContext(HDC hdc)
 	{
-		void* address = wglGetProcAddress(name);
-		if (address)
-			return address;
-
-		return GetProcAddress(m_OpenGLModule, name);
+		return OpenGLWindows::CreateGLContext(hdc);
 	}
 
 	void WindowsApplication::PollEvents()
@@ -60,6 +64,13 @@ namespace Ion
 		Application::DispatchEvent(event);
 	}
 
+	void WindowsApplication::InitRendererAPI()
+	{
+		SCOPED_PERFORMANCE_COUNTER(RendererAPI_InitTime);
+
+		// @TODO: Add renderer switch here
+		OpenGLWindows::InitLoader();
+	}
+
 	HINSTANCE WindowsApplication::m_HInstance;
-	HMODULE WindowsApplication::m_OpenGLModule;
 }

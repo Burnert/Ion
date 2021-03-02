@@ -12,6 +12,8 @@
 #include "Core/Platform/PlatformCore.h"
 #include "Application/Platform/Windows/WindowsApplication.h"
 
+#include "OpenGL/Windows/OpenGLWindows.h"
+
 namespace Ion
 {
 	Application* Application::Get()
@@ -37,6 +39,10 @@ namespace Ion
 	{
 		m_InputManager = InputManager::Create();
 
+		InitRendererAPI();
+		COUNTER_TIME_DATA(timeRendererApiInit, "RendererAPI_InitTime");
+		LOG_INFO("{0}: {1}s", timeRendererApiInit.Name, ((float)timeRendererApiInit.GetTimeMs()) * 0.001f);
+
 		// Create a platform specific window.
 		m_Window = GenericWindow::Create();
 
@@ -45,12 +51,10 @@ namespace Ion
 		m_Window->Initialize();
 		m_Window->SetTitle(L"Ion Engine");
 
-		m_Window->Show();
 		// Current thread will render graphics in this window.
 		m_Window->MakeRenderingContextCurrent();
 
-		int status = gladLoadGLLoader((GLADloadproc)WindowsApplication::GetProcessAddress);
-		ASSERT(status);
+		m_Window->Show();
 
 		// Call client overriden Init function
 		OnInit();

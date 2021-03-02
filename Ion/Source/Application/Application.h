@@ -49,6 +49,8 @@ namespace Ion
 		virtual void OnEvent(Event& event);
 		virtual void DispatchEvent(Event& event);
 
+		virtual void InitRendererAPI() { }
+
 		// To be overriden in client:
 
 		/* Override this in the client if you want to use it.

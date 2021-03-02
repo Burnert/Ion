@@ -11,14 +11,12 @@
 #include "Core/Logging/Logger.h"
 
 #include "Core/Platform/PlatformCore.h"
-#include "glad/glad.h"
 
-// Deal with Windows not using namespaces
+#include "OpenGL/Windows/OpenGLWindows.h"
 
-static void WinSwapBuffers(HDC hdc)
-{
-	SwapBuffers(hdc);
-}
+// ------------------------------
+//        Windows Window
+// ------------------------------
 
 namespace Ion
 {
@@ -493,29 +491,24 @@ namespace Ion
 	{
 		WNDCLASS wc = { };
 
-		if (!m_bRegistered)
+		wc.style = CS_DBLCLKS | CS_OWNDC;
+		wc.lpfnWndProc = WindowsWindow::WindowProc;
+		wc.cbClsExtra = 0;
+		wc.cbWndExtra = 0;
+		wc.hInstance = hInstance;
+		wc.hIcon = NULL;
+		wc.hCursor = NULL;
+		wc.hbrBackground = NULL;
+		wc.lpszMenuName = NULL;
+		wc.lpszClassName = className;
+
+		if (!RegisterClass(&wc))
 		{
-			wc.style = CS_DBLCLKS | CS_OWNDC;
-			wc.lpfnWndProc = WindowsWindow::WindowProc;
-			wc.cbClsExtra = 0;
-			wc.cbWndExtra = 0;
-			wc.hInstance = hInstance;
-			wc.hIcon = NULL;
-			wc.hCursor = NULL;
-			wc.hbrBackground = NULL;
-			wc.lpszMenuName = NULL;
-			wc.lpszClassName = className;
-
-			if (!RegisterClass(&wc))
-			{
-				MessageBox(NULL, L"Windows WNDCLASS Registration Failed!\nCannot create a window.", L"Error!", MB_ICONEXCLAMATION | MB_OK);
-				return false;
-			}
-
-			m_bRegistered = true;
-			return true;
+			MessageBox(NULL, L"Windows WNDCLASS Registration Failed!\nCannot create a window.", L"Error!", MB_ICONEXCLAMATION | MB_OK);
+			return false;
 		}
-		return false;
+
+		return true;
 	}
 
 	const wchar* AppClassName = L"IonAppWindow";
@@ -524,7 +517,7 @@ namespace Ion
 	{
 		HINSTANCE hInstance = WindowsApplication::GetHInstance();
 
-		if (!RegisterWindowClass(hInstance, AppClassName)) 
+		if (!RegisterWindowClass(hInstance, AppClassName))
 			return false;
 
 		UINT32 WindowStyleEx = 0;
@@ -672,36 +665,7 @@ namespace Ion
 		}
 
 		// Setup Rendering Context
-
-		PIXELFORMATDESCRIPTOR pfd {
-			sizeof(PIXELFORMATDESCRIPTOR),
-			1,
-			PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER, // Flags
-			PFD_TYPE_RGBA,        // The kind of framebuffer. RGBA or palette.
-			32,                   // Colordepth of the framebuffer.
-			0, 0, 0, 0, 0, 0,
-			0,
-			0,
-			0,
-			0, 0, 0, 0,
-			24,                   // Number of bits for the depthbuffer
-			8,                    // Number of bits for the stencilbuffer
-			0,                    // Number of Aux buffers in the framebuffer.
-			PFD_MAIN_PLANE,
-			0,
-			0, 0, 0
-		};
-
-		int pixelFormat = ChoosePixelFormat(deviceContext, &pfd);
-		int result = SetPixelFormat(deviceContext, pixelFormat, &pfd);
-		ASSERT(result);
-
-		m_RenderingContext = wglCreateContext(deviceContext);
-		ASSERT(m_RenderingContext);
-
-		result = wglMakeCurrent(m_DeviceContext, m_RenderingContext);
-		ASSERT(result);
-
+		m_RenderingContext = WindowsApplication::CreateRenderingContext(deviceContext);
 		return m_RenderingContext;
 	}
 
@@ -716,12 +680,13 @@ namespace Ion
 	void WindowsWindow::MakeRenderingContextCurrent()
 	{
 		int result = wglMakeCurrent(m_DeviceContext, m_RenderingContext);
+		OpenGLWindows::MakeContextCurrent(m_DeviceContext, m_RenderingContext);
 		ASSERT(result);
 	}
 
 	void WindowsWindow::SwapBuffers()
 	{
-		WinSwapBuffers(m_DeviceContext);
+		::SwapBuffers(m_DeviceContext);
 	}
 
 	HDC WindowsWindow::GetDeviceContext() const

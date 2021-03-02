@@ -36,7 +36,7 @@ namespace Ion
 		HGLRC GetRenderingContext() const;
 		FORCEINLINE HWND GetWindowHandle() const { return m_WindowHandle; }
 
-		bool RegisterWindowClass(HINSTANCE hInstance, LPCWSTR className);
+		static bool RegisterWindowClass(HINSTANCE hInstance, LPCWSTR className);
 
 		FORCEINLINE static HGLRC GetCurrentRenderingContext() { return wglGetCurrentContext(); }
 
@@ -50,7 +50,7 @@ namespace Ion
 
 		void PollEvents_Application();
 
-		static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+		static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	private:
 		HWND  m_WindowHandle;

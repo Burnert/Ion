@@ -14,11 +14,12 @@ namespace Ion
 	public:
 		static WindowsApplication* Get();
 
+		/* Called by the Entry Point */
 		void InitWindows(HINSTANCE hInstance);
 
-		FORCEINLINE static HINSTANCE GetHInstance() { return m_HInstance; }
+		static HGLRC CreateRenderingContext(HDC hdc);
 
-		static void* GetProcessAddress(const char* name);
+		FORCEINLINE static HINSTANCE GetHInstance() { return m_HInstance; }
 
 	protected:
 		// Tagged as final so it cannot be overriden in the client
@@ -29,11 +30,12 @@ namespace Ion
 		virtual void OnEvent(Event& event) final override;
 		virtual void DispatchEvent(Event& event) final override;
 
+		virtual void InitRendererAPI() final override;
+
 		// End of final overrides
 
 	private:
 		static HINSTANCE m_HInstance;
-		static HMODULE m_OpenGLModule;
 	};
 }
 
