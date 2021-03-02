@@ -40,6 +40,8 @@ namespace Ion
 
 		virtual void MakeRenderingContextCurrent() { }
 
+		virtual void SwapBuffers() { }
+
 		void SetEventCallback(EventCallback callback);
 
 	public:

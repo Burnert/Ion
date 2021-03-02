@@ -10,6 +10,16 @@
 #include "Core/Platform/Windows/WindowsInput.h"
 #include "Core/Logging/Logger.h"
 
+#include "Core/Platform/PlatformCore.h"
+#include "glad/glad.h"
+
+// Deal with Windows not using namespaces
+
+static void WinSwapBuffers(HDC hdc)
+{
+	SwapBuffers(hdc);
+}
+
 namespace Ion
 {
 	static const CStr _windowNoInitMessage = "Cannot {0} before the window is initialized!";
@@ -30,7 +40,7 @@ namespace Ion
 	}
 
 	WindowsWindow::WindowsWindow() :
-		m_HWnd(NULL)
+		m_WindowHandle(NULL)
 	{ }
 
 	void WindowsWindow::PollEvents_Application()
@@ -80,9 +90,9 @@ namespace Ion
 
 		switch (uMsg)
 		{
-			//                 //
+			// =============== //
 			// Deferred events //
-			//                 //
+			// =============== //
 
 			case WM_SETFOCUS:
 			{
@@ -100,9 +110,9 @@ namespace Ion
 				return 0;
 			}
 
-			//                     //
+			// =================== //
 			// Non-Deferred events //
-			//                     //
+			// =================== //
 
 			case WM_MOVE:
 			{
@@ -444,6 +454,17 @@ namespace Ion
 				delete[] buffer;
 				return 0;
 			}
+
+			// =============== //
+			// Window messages //
+			// =============== //
+
+			case WM_CREATE:
+			{
+				
+
+				return 0;
+			}
 		}
 
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);
@@ -463,7 +484,10 @@ namespace Ion
 			return Mouse::Button5;
 	}
 
-	WindowsWindow::~WindowsWindow() {}
+	WindowsWindow::~WindowsWindow() 
+	{
+		DeleteRenderingContext();
+	}
 
 	bool WindowsWindow::RegisterWindowClass(HINSTANCE hInstance, LPCWSTR className)
 	{
@@ -471,7 +495,7 @@ namespace Ion
 
 		if (!m_bRegistered)
 		{
-			wc.style = CS_DBLCLKS;
+			wc.style = CS_DBLCLKS | CS_OWNDC;
 			wc.lpfnWndProc = WindowsWindow::WindowProc;
 			wc.cbClsExtra = 0;
 			wc.cbWndExtra = 0;
@@ -517,7 +541,7 @@ namespace Ion
 		int desiredWidth = 1280;
 		int desiredHeight = 720;
 
-		m_HWnd = CreateWindowEx(
+		m_WindowHandle = CreateWindowEx(
 			WindowStyleEx,
 			AppClassName,
 			m_Title.c_str(),
@@ -534,13 +558,16 @@ namespace Ion
 			NULL
 		);
 
-		if (m_HWnd == NULL)
+		if (m_WindowHandle == NULL)
 		{
 			MessageBox(NULL, L"Windows Window Creation Failed!\nCannot create a window.", L"Error!", MB_ICONEXCLAMATION | MB_OK);
 			return false;
 		}
 
-		SetProp(m_HWnd, L"WinObj", this);
+		SetProp(m_WindowHandle, L"WinObj", this);
+
+		m_DeviceContext = GetDC(m_WindowHandle);
+		CreateRenderingContext(m_DeviceContext);
 
 		// Raw Input
 
@@ -548,7 +575,7 @@ namespace Ion
 		mouseRid.usUsagePage = 0x01;
 		mouseRid.usUsage = 0x02;
 		mouseRid.dwFlags = 0;
-		mouseRid.hwndTarget = m_HWnd;
+		mouseRid.hwndTarget = m_WindowHandle;
 
 		if (!RegisterRawInputDevices(&mouseRid, 1, sizeof(mouseRid)))
 		{
@@ -560,7 +587,7 @@ namespace Ion
 
 	void WindowsWindow::Show()
 	{
-		if (m_HWnd == NULL)
+		if (m_WindowHandle == NULL)
 		{
 			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "show the window");
 			return;
@@ -571,13 +598,13 @@ namespace Ion
 			m_bVisible = true;
 
 			int showWindowCmd = SW_SHOW;
-			ShowWindow(m_HWnd, showWindowCmd);
+			ShowWindow(m_WindowHandle, showWindowCmd);
 		}
 	}
 
 	void WindowsWindow::Hide()
 	{
-		if (m_HWnd == NULL)
+		if (m_WindowHandle == NULL)
 		{
 			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "hide the window");
 			return;
@@ -587,13 +614,13 @@ namespace Ion
 		{
 			m_bVisible = false;
 
-			ShowWindow(m_HWnd, SW_HIDE);
+			ShowWindow(m_WindowHandle, SW_HIDE);
 		}
 	}
 
 	void WindowsWindow::SetTitle(const WCStr title)
 	{
-		if (m_HWnd == NULL)
+		if (m_WindowHandle == NULL)
 		{
 			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "set the title");
 			return;
@@ -601,18 +628,18 @@ namespace Ion
 
 		m_Title = title;
 
-		SetWindowText(m_HWnd, m_Title.c_str());
+		SetWindowText(m_WindowHandle, m_Title.c_str());
 	}
 
 	void WindowsWindow::SetEnabled(bool bEnabled)
 	{
-		if (m_HWnd == NULL)
+		if (m_WindowHandle == NULL)
 		{
 			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "enable the window");
 			return;
 		}
 
-		EnableWindow(m_HWnd, bEnabled);
+		EnableWindow(m_WindowHandle, bEnabled);
 	}
 
 	void WindowsWindow::Resize()
@@ -622,14 +649,14 @@ namespace Ion
 
 	WindowDimensions WindowsWindow::GetDimensions() const
 	{
-		if (m_HWnd == NULL)
+		if (m_WindowHandle == NULL)
 		{
 			ION_LOG_ENGINE_ERROR(_windowNoInitMessage, "get window dimensions");
 			return { };
 		}
 		
 		RECT windowRect;
-		GetWindowRect(m_HWnd, &windowRect);
+		GetWindowRect(m_WindowHandle, &windowRect);
 
 		int width = windowRect.right - windowRect.left;
 		int height = windowRect.bottom - windowRect.top;
@@ -638,37 +665,85 @@ namespace Ion
 
 	HGLRC WindowsWindow::CreateRenderingContext(HDC deviceContext)
 	{
-		if (m_HWnd == NULL)
+		if (m_WindowHandle == NULL)
 		{
 			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "create OpenGL rendering context");
 			return NULL;
 		}
 
-		return wglCreateContext(deviceContext);
+		// Setup Rendering Context
+
+		PIXELFORMATDESCRIPTOR pfd {
+			sizeof(PIXELFORMATDESCRIPTOR),
+			1,
+			PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER, // Flags
+			PFD_TYPE_RGBA,        // The kind of framebuffer. RGBA or palette.
+			32,                   // Colordepth of the framebuffer.
+			0, 0, 0, 0, 0, 0,
+			0,
+			0,
+			0,
+			0, 0, 0, 0,
+			24,                   // Number of bits for the depthbuffer
+			8,                    // Number of bits for the stencilbuffer
+			0,                    // Number of Aux buffers in the framebuffer.
+			PFD_MAIN_PLANE,
+			0,
+			0, 0, 0
+		};
+
+		int pixelFormat = ChoosePixelFormat(deviceContext, &pfd);
+		int result = SetPixelFormat(deviceContext, pixelFormat, &pfd);
+		ASSERT(result);
+
+		m_RenderingContext = wglCreateContext(deviceContext);
+		ASSERT(m_RenderingContext);
+
+		result = wglMakeCurrent(m_DeviceContext, m_RenderingContext);
+		ASSERT(result);
+
+		return m_RenderingContext;
+	}
+
+	void WindowsWindow::DeleteRenderingContext()
+	{
+		if (m_RenderingContext != NULL)
+		{
+			wglDeleteContext(m_RenderingContext);
+		}
 	}
 
 	void WindowsWindow::MakeRenderingContextCurrent()
 	{
-		HGLRC previousGlContext = GetCurrentRenderingContext();
-		if (previousGlContext != NULL)
-		{
-			wglDeleteContext(previousGlContext);
-		}
+		int result = wglMakeCurrent(m_DeviceContext, m_RenderingContext);
+		ASSERT(result);
+	}
 
-		HDC deviceContext = GetDeviceContext();
-		HGLRC glContext = CreateRenderingContext(deviceContext);
-		wglMakeCurrent(deviceContext, glContext);
+	void WindowsWindow::SwapBuffers()
+	{
+		WinSwapBuffers(m_DeviceContext);
 	}
 
 	HDC WindowsWindow::GetDeviceContext() const
 	{
-		if (m_HWnd == NULL)
+		if (m_WindowHandle == NULL)
 		{
-			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "get the HDC");
+			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "get the Device Context");
 			return NULL;
 		}
 
-		return GetDC(m_HWnd);
+		return m_DeviceContext;
+	}
+
+	HGLRC WindowsWindow::GetRenderingContext() const
+	{
+		if (m_WindowHandle == NULL)
+		{
+			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "get the Rendering Context");
+			return NULL;
+		}
+
+		return m_RenderingContext;
 	}
 
 	bool WindowsWindow::m_bBothShiftsPressed = false;

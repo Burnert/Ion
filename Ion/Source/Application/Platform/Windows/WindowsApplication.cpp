@@ -14,7 +14,17 @@ namespace Ion
 	void WindowsApplication::InitWindows(HINSTANCE hInstance)
 	{
 		m_HInstance = hInstance;
+		m_OpenGLModule = LoadLibrary(TEXT("opengl32.dll"));
 		Init();
+	}
+
+	void* WindowsApplication::GetProcessAddress(const char* name)
+	{
+		void* address = wglGetProcAddress(name);
+		if (address)
+			return address;
+
+		return GetProcAddress(m_OpenGLModule, name);
 	}
 
 	void WindowsApplication::PollEvents()
@@ -51,4 +61,5 @@ namespace Ion
 	}
 
 	HINSTANCE WindowsApplication::m_HInstance;
+	HMODULE WindowsApplication::m_OpenGLModule;
 }

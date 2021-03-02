@@ -13,7 +13,8 @@ namespace Windows
 		DWORD lastError = GetLastError();
 		WINDOWS_FORMAT_ERROR_MESSAGE(errorMsg, lastError);
 #ifdef ION_LOG_ENABLED
-		LOG_ERROR(args...);
+		if constexpr (sizeof...(args) > 0) 
+			LOG_ERROR(args...);
 		LOG_ERROR(std::wstring(errorMsg));
 #else
 		// @TODO: Make this show up only on critical errors

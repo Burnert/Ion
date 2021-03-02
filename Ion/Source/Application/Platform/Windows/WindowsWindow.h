@@ -28,10 +28,13 @@ namespace Ion
 
 		virtual void MakeRenderingContextCurrent() override;
 
+		virtual void SwapBuffers() override;
+
 		// End of GenericWindow
 
 		HDC GetDeviceContext() const;
-		FORCEINLINE HWND GetWindowHandle() const { return m_HWnd; }
+		HGLRC GetRenderingContext() const;
+		FORCEINLINE HWND GetWindowHandle() const { return m_WindowHandle; }
 
 		bool RegisterWindowClass(HINSTANCE hInstance, LPCWSTR className);
 
@@ -39,6 +42,7 @@ namespace Ion
 
 	protected:
 		HGLRC CreateRenderingContext(HDC deviceContext);
+		void DeleteRenderingContext();
 
 	protected:
 		// Protected constructor: Only shared_ptrs of this class can be made.
@@ -49,7 +53,10 @@ namespace Ion
 		static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	private:
-		HWND m_HWnd;
+		HWND  m_WindowHandle;
+		HDC   m_DeviceContext;
+		HGLRC m_RenderingContext;
+
 		std::wstring m_Title;
 		bool m_bVisible = false;
 

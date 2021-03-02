@@ -18,6 +18,8 @@ namespace Ion
 
 		FORCEINLINE static HINSTANCE GetHInstance() { return m_HInstance; }
 
+		static void* GetProcessAddress(const char* name);
+
 	protected:
 		// Tagged as final so it cannot be overriden in the client
 
@@ -31,6 +33,7 @@ namespace Ion
 
 	private:
 		static HINSTANCE m_HInstance;
+		static HMODULE m_OpenGLModule;
 	};
 }
 

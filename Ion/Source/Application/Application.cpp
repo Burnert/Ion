@@ -7,7 +7,10 @@
 #include "Core/Event/EventDispatcher.h"
 #include "Core/Input/Input.h"
 
+#include "glad/glad.h"
+
 #include "Core/Platform/PlatformCore.h"
+#include "Application/Platform/Windows/WindowsApplication.h"
 
 namespace Ion
 {
@@ -42,10 +45,12 @@ namespace Ion
 		m_Window->Initialize();
 		m_Window->SetTitle(L"Ion Engine");
 
+		m_Window->Show();
 		// Current thread will render graphics in this window.
 		m_Window->MakeRenderingContextCurrent();
 
-		m_Window->Show();
+		int status = gladLoadGLLoader((GLADloadproc)WindowsApplication::GetProcessAddress);
+		ASSERT(status);
 
 		// Call client overriden Init function
 		OnInit();
@@ -70,6 +75,31 @@ namespace Ion
 	void Application::Render()
 	{
 		m_LayerStack->OnRender();
+
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		uint vao;
+		glCreateBuffers(1, &vao);
+		glBindVertexArray(vao);
+
+		float vertices[3 * 3] = {
+			-0.5f, -0.5f, 0.0f,
+			 0.5f, -0.5f, 0.0f,
+			 0.0f,  0.5f, 0.0f
+		};
+		uint vbo;
+		glCreateBuffers(1, &vbo);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (const void*)0);
+		glEnableVertexAttribArray(0);
+
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+
+		m_Window->SwapBuffers();
+
 		OnRender();
 	}
 
