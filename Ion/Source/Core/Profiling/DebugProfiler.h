@@ -62,6 +62,8 @@ namespace Performance
 		void Start();
 		void Stop();
 
+		bool m_Log;
+
 		PerformanceCounterData m_CounterData;
 		std::chrono::steady_clock::time_point m_StartTime;
 		std::chrono::steady_clock::time_point m_EndTime;

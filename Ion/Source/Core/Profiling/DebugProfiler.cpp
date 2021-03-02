@@ -10,18 +10,22 @@ namespace Performance
 	// Performance Counter --------
 
 	DebugCounter::DebugCounter(std::string&& name, std::string&& type)
-		: m_CounterData({ name, type })
+		: m_CounterData({ name, type }), m_Log(false)
 	{ }
 
 	void DebugCounter::Start()
 	{
-		LOG_INFO("Started Counter [{0}]", m_CounterData.Name);
+		if (m_Log)
+			LOG_TRACE("Started Counter [{0}]", m_CounterData.Name);
+
 		m_StartTime = std::chrono::steady_clock::now();
 	}
 
 	void DebugCounter::Stop()
 	{
-		LOG_INFO("Stopped Counter [{0}]", m_CounterData.Name);
+		if (m_Log)
+			LOG_TRACE("Stopped Counter [{0}]", m_CounterData.Name);
+
 		m_EndTime = std::chrono::steady_clock::now();
 		m_CounterData.m_Time = (m_EndTime - m_StartTime).count();
 	}
