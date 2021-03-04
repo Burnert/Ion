@@ -37,6 +37,8 @@ namespace Ion
 		InitGLLoader();
 		InitWGLLoader(hdc);
 
+		glDebugMessageCallback(OpenGLWindows::DebugCallback, nullptr);
+
 		const char* vendor     = GetVendor();
 		const char* renderer   = GetRendererName();
 		const char* version    = GetVersion();
@@ -47,10 +49,15 @@ namespace Ion
 		LOG_INFO("OpenGL Version:    {0}", version);
 		LOG_INFO("Language version:  {0}", language);
 
+		glGetIntegerv(GL_MAJOR_VERSION, &s_MajorVersion);
+		glGetIntegerv(GL_MINOR_VERSION, &s_MinorVersion);
+
+		dummyWindow.Destroy();
+
 		FreeLibraries();
 	}
 
-	void OpenGLWindows::InitLoader()
+	void OpenGLWindows::InitOpenGL()
 	{
 		InitWGLExtensions();
 	}
@@ -69,16 +76,23 @@ namespace Ion
 
 	HGLRC OpenGLWindows::CreateGLContext(HDC hdc)
 	{
+		#pragma warning(disable:6011)
+
+		VERIFY(wglChoosePixelFormatARB);
+		VERIFY(wglCreateContextAttribsARB);
+
 		PIXELFORMATDESCRIPTOR pfd { };
 		const int attributes[] = {
 			WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
 			WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
 			WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
 			WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
+			WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
 			WGL_COLOR_BITS_ARB, 32,
+			WGL_ALPHA_BITS_ARB, 8,
 			WGL_DEPTH_BITS_ARB, 24,
 			WGL_STENCIL_BITS_ARB, 8,
-			0, // End
+			0 // End
 		};
 		int pixelFormat;
 		UINT numFormats;
@@ -86,10 +100,21 @@ namespace Ion
 		wglChoosePixelFormatARB(hdc, attributes, NULL, 1, &pixelFormat, &numFormats);
 		ASSERT(pixelFormat != 0);
 
+		LOG_TRACE("Formats: {0}, Format1: {1}", numFormats, pixelFormat);
+
+		DescribePixelFormat(hdc, pixelFormat, sizeof(pfd), &pfd);
 		int status = SetPixelFormat(hdc, pixelFormat, &pfd);
 		ASSERT(status != 0);
 
-		HGLRC renderingContext = wglCreateContext(hdc);
+		const int wglAttributes[] = {
+			WGL_CONTEXT_MAJOR_VERSION_ARB, s_MajorVersion,
+			WGL_CONTEXT_MINOR_VERSION_ARB, s_MinorVersion,
+			WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+			WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+			0 // End
+		};
+
+		HGLRC renderingContext = wglCreateContextAttribsARB(hdc, NULL, wglAttributes);
 		ASSERT(renderingContext != NULL);
 
 		return renderingContext;
@@ -97,7 +122,8 @@ namespace Ion
 
 	void OpenGLWindows::MakeContextCurrent(HDC hdc, HGLRC hglrc)
 	{
-		wglMakeCurrent(hdc, hglrc);
+		int status = wglMakeCurrent(hdc, hglrc);
+		ASSERT(status);
 	}
 
 	void* OpenGLWindows::GetProcAddress(const char* name)
@@ -109,17 +135,21 @@ namespace Ion
 		return ::GetProcAddress(s_OpenGLModule, name);
 	}
 
+	void OpenGLWindows::DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
+	{
+		LOG_ERROR("OpenGL Error: {0}", message);
+	}
+
 	HMODULE OpenGLWindows::s_OpenGLModule;
 	bool OpenGLWindows::s_GLInitialized;
+
+	int OpenGLWindows::s_MajorVersion = 4;
+	int OpenGLWindows::s_MinorVersion = 3;
 
 
 	// -----------------------------
 	//         Dummy Window
 	// -----------------------------
-
-#ifdef UNICODE
-	static inline const wchar* AppClassName = L"WinWGL";
-#endif
 
 	DummyWindow::~DummyWindow()
 	{
@@ -128,19 +158,19 @@ namespace Ion
 
 	HGLRC DummyWindow::CreateFakeGLContext()
 	{
-		HINSTANCE hInstance = WindowsApplication::GetHInstance();
+		const TCHAR* windowClassName = TEXT("DummyGLWindow");
 
 		WNDCLASS wc = { };
 		wc.style = CS_OWNDC;
 		wc.lpfnWndProc = DefWindowProc;
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
-		wc.hInstance = hInstance;
+		wc.hInstance = NULL;
 		wc.hIcon = NULL;
 		wc.hCursor = NULL;
 		wc.hbrBackground = NULL;
 		wc.lpszMenuName = NULL;
-		wc.lpszClassName = AppClassName;
+		wc.lpszClassName = windowClassName;
 
 		if (!RegisterClass(&wc))
 		{
@@ -148,23 +178,14 @@ namespace Ion
 			return false;
 		}
 
-		UINT32 WindowStyle = 0;
-
 		m_WindowHandle = CreateWindowEx(
-			0, // WindowStyleEx = None
-			AppClassName,
-			TEXT("WinWGLWindow"),
-			0, // WindowStyle = None
-
-			CW_USEDEFAULT,
-			CW_USEDEFAULT,
-			0, 0, // Dimensions don't matter in this case.
-
+			NULL, // WindowStyleEx = None
+			windowClassName,
 			NULL,
-			NULL,
-			hInstance,
-			NULL
-		);
+			NULL, // WindowStyle = None
+			0, 0, // Window position
+			1, 1, // Dimensions don't matter in this case.
+			NULL, NULL, NULL, NULL);
 
 		if (m_WindowHandle == NULL)
 		{
@@ -173,42 +194,37 @@ namespace Ion
 		}
 
 		m_DeviceContext = GetDC(m_WindowHandle);
+		VERIFY(m_DeviceContext);
 
-		PIXELFORMATDESCRIPTOR pfd {
-			sizeof(PIXELFORMATDESCRIPTOR),
-			1,
-			PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER, // Flags
-			PFD_TYPE_RGBA,        // The kind of framebuffer. RGBA or palette.
-			32,                   // Colordepth of the framebuffer.
-			0, 0, 0, 0, 0, 0,
-			0,
-			0,
-			0,
-			0, 0, 0, 0,
-			24,                   // Number of bits for the depthbuffer
-			8,                    // Number of bits for the stencilbuffer
-			0,                    // Number of Aux buffers in the framebuffer.
-			PFD_MAIN_PLANE,
-			0,
-			0, 0, 0
-		};
+		PIXELFORMATDESCRIPTOR pfd;
+		ZeroMemory(&pfd, sizeof(PIXELFORMATDESCRIPTOR));
+		pfd.nSize      = sizeof(PIXELFORMATDESCRIPTOR);
+		pfd.nVersion   = 1;
+		pfd.dwFlags    = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+		pfd.iPixelType = PFD_TYPE_RGBA;
+		pfd.cColorBits = 32;
+		pfd.iLayerType = PFD_MAIN_PLANE;
 
 		int pixelFormat = ChoosePixelFormat(m_DeviceContext, &pfd);
-		int result = SetPixelFormat(m_DeviceContext, 1, &pfd);
-		ASSERT(result);
+		VERIFY(pixelFormat);
+
+		int result = SetPixelFormat(m_DeviceContext, pixelFormat, &pfd);
+		VERIFY(result);
 
 		m_RenderingContext = wglCreateContext(m_DeviceContext);
-		ASSERT(m_RenderingContext);
+		VERIFY(m_RenderingContext);
 
 		result = wglMakeCurrent(m_DeviceContext, m_RenderingContext);
-		ASSERT(result);
+		VERIFY(result);
 
 		return m_RenderingContext;
 	}
 
 	void DummyWindow::Destroy()
 	{
+		wglMakeCurrent(NULL, NULL);
 		wglDeleteContext(m_RenderingContext);
+		ReleaseDC(m_WindowHandle, m_DeviceContext);
 		DestroyWindow(m_WindowHandle);
 	}
 }

@@ -17,8 +17,6 @@ namespace Ion
 		/* Called by the Entry Point */
 		void InitWindows(HINSTANCE hInstance);
 
-		static HGLRC CreateRenderingContext(HDC hdc);
-
 		FORCEINLINE static HINSTANCE GetHInstance() { return m_HInstance; }
 
 	protected:

@@ -665,7 +665,7 @@ namespace Ion
 		}
 
 		// Setup Rendering Context
-		m_RenderingContext = WindowsApplication::CreateRenderingContext(deviceContext);
+		m_RenderingContext = OpenGLWindows::CreateGLContext(deviceContext);
 		return m_RenderingContext;
 	}
 
@@ -679,9 +679,8 @@ namespace Ion
 
 	void WindowsWindow::MakeRenderingContextCurrent()
 	{
-		int result = wglMakeCurrent(m_DeviceContext, m_RenderingContext);
+		// int result = wglMakeCurrent(m_DeviceContext, m_RenderingContext);
 		OpenGLWindows::MakeContextCurrent(m_DeviceContext, m_RenderingContext);
-		ASSERT(result);
 	}
 
 	void WindowsWindow::SwapBuffers()

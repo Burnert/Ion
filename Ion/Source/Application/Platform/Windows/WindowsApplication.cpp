@@ -26,11 +26,6 @@ namespace Ion
 		Init();
 	}
 
-	HGLRC WindowsApplication::CreateRenderingContext(HDC hdc)
-	{
-		return OpenGLWindows::CreateGLContext(hdc);
-	}
-
 	void WindowsApplication::PollEvents()
 	{
 		MSG message;
@@ -69,7 +64,7 @@ namespace Ion
 		SCOPED_PERFORMANCE_COUNTER(RendererAPI_InitTime);
 
 		// @TODO: Add renderer switch here
-		OpenGLWindows::InitLoader();
+		OpenGLWindows::InitOpenGL();
 	}
 
 	HINSTANCE WindowsApplication::m_HInstance;

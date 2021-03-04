@@ -12,16 +12,13 @@ namespace Ion
 		friend class WindowsWindow;
 
 	public:
-		static FORCEINLINE const char* GetVendor()           { return (const char*) glGetString(GL_VENDOR); }
-		static FORCEINLINE const char* GetRendererName()     { return (const char*) glGetString(GL_RENDERER); }
-		static FORCEINLINE const char* GetVersion()          { return (const char*) glGetString(GL_VERSION); }
-		static FORCEINLINE const char* GetLanguageVersion()  { return (const char*) glGetString(GL_SHADING_LANGUAGE_VERSION); }
-		static FORCEINLINE const char* GetExtensions()       { return (const char*) glGetString(GL_EXTENSIONS); }
+		/* Called by the Application class */
+		static void InitOpenGL();
+
+		static HGLRC CreateGLContext(HDC hdc);
+		static void MakeContextCurrent(HDC hdc, HGLRC hglrc);
 
 	protected:
-		/* Called by the Application class */
-		static void InitLoader();
-
 		static void InitGLLoader();
 		static void InitWGLLoader(HDC hdc);
 		static void InitWGLExtensions();
@@ -29,15 +26,23 @@ namespace Ion
 		static void InitLibraries();
 		static void FreeLibraries();
 
-		static HGLRC CreateGLContext(HDC hdc);
-
-		static void MakeContextCurrent(HDC hdc, HGLRC hglrc);
-
 		static void* GetProcAddress(const char* name);
+
+		static void DebugCallback(
+			GLenum source,
+			GLenum type,
+			GLuint id,
+			GLenum severity,
+			GLsizei length,
+			const GLchar* message,
+			const void* userParam);
 
 	private:
 		static bool s_GLInitialized;
 		static HMODULE s_OpenGLModule;
+
+		static int s_MajorVersion;
+		static int s_MinorVersion;
 	};
 
 	/* Dummy window used for creation of an OpenGL context and extensions. */
