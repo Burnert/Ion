@@ -17,6 +17,22 @@
 #define TEXT(x) x
 #endif
 
+// @TODO: Handle the verify failure with some debug code instead of break in the future
+
+#define VERIFY(x) \
+if (!(x)) \
+{ \
+	LOG_CRITICAL("Verification failed!:\n {0}\n function: {1}\n in {2}:{3}", #x, __FUNCTION__, __FILE__, __LINE__); \
+	__debugbreak(); \
+}
+
+#define VERIFY_M(x, message) \
+if (!(x)) \
+{ \
+	LOG_CRITICAL(message##"\n {0}\n function: {1}\n in {2}:{3}", #x, __FUNCTION__, __FILE__, __LINE__); \
+	__debugbreak(); \
+}
+
 // Debug macros
 
 #ifdef ION_DEBUG
@@ -31,7 +47,7 @@ if (!(x)) \
 #define ASSERT_M(x, message) \
 if (!(x)) \
 { \
-	LOG_CRITICAL(message"\n {0}\n function: {1}\n in {2}:{3}", #x, __FUNCTION__, __FILE__, __LINE__); \
+	LOG_CRITICAL(message##"\n {0}\n function: {1}\n in {2}:{3}", #x, __FUNCTION__, __FILE__, __LINE__); \
 	__debugbreak(); \
 }
 
