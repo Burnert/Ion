@@ -3,7 +3,7 @@
 #include "OpenGl.h"
 
 #ifdef ION_PLATFORM_WINDOWS
-#include "OpenGL/Windows/OpenGLWindows.h"
+#include "RenderAPI/OpenGL/Windows/OpenGLWindows.h"
 #endif
 
 namespace Ion

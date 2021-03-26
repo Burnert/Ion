@@ -1,6 +1,6 @@
 #pragma once
 
-#include "OpenGL/OpenGL.h"
+#include "RenderAPI/OpenGL/OpenGL.h"
 
 #include "glad/glad.h"
 

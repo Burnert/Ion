@@ -12,7 +12,7 @@
 #include "Core/Platform/PlatformCore.h"
 #include "Application/Platform/Windows/WindowsApplication.h"
 
-#include "OpenGL/Windows/OpenGLWindows.h"
+#include "RenderAPI/OpenGL/Windows/OpenGLWindows.h"
 
 namespace Ion
 {
