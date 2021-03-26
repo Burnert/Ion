@@ -27,7 +27,8 @@ namespace Ion
 	Application::Application() :
 		m_EventQueue(MakeUnique<EventQueue>()),
 		m_LayerStack(MakeUnique<LayerStack>()),
-		m_MainThreadId(std::this_thread::get_id())
+		m_MainThreadId(std::this_thread::get_id()),
+		m_bRunning(true)
 	{
 		m_EventQueue->SetEventHandler(BIND_METHOD_1P(Application::DispatchEvent));
 		Logger::Init();
@@ -40,13 +41,13 @@ namespace Ion
 		m_InputManager = InputManager::Create();
 
 		InitRendererAPI();
-		COUNTER_TIME_DATA(timeRendererApiInit, "RendererAPI_InitTime");
-		LOG_INFO("{0}: {1}s", timeRendererApiInit.Name, ((float)timeRendererApiInit.GetTimeMs()) * 0.001f);
+		COUNTER_TIME_DATA(timeRenderApiInit, "RenderAPI_InitTime");
+		LOG_INFO("{0}: {1}s", timeRenderApiInit.Name, ((float)timeRenderApiInit.GetTimeMs()) * 0.001f);
 
 		// Create a platform specific window.
 		m_Window = GenericWindow::Create();
 
-		m_Window->SetEventCallback(BIND_METHOD_1P(Application::OnEvent));
+		m_Window->SetEventCallback(BIND_METHOD_1P(Application::HandleEvent));
 
 		
 
@@ -110,20 +111,20 @@ void main()
 		glCompileShader(vertShader);
 		glCompileShader(fragShader);
 
-		int success = 0;
-		glGetShaderiv(vertShader, GL_COMPILE_STATUS, &success);
-		ASSERT(success);
-		glGetShaderiv(fragShader, GL_COMPILE_STATUS, &success);
-		ASSERT(success);
+		int bSuccess = 0;
+		glGetShaderiv(vertShader, GL_COMPILE_STATUS, &bSuccess);
+		ASSERT(bSuccess);
+		glGetShaderiv(fragShader, GL_COMPILE_STATUS, &bSuccess);
+		ASSERT(bSuccess);
 
 		uint program = glCreateProgram();
 		glAttachShader(program, vertShader);
 		glAttachShader(program, fragShader);
 
 		glLinkProgram(program);
-		int isLinked = 0;
-		glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
-		ASSERT(isLinked);
+		int bLinked = 0;
+		glGetProgramiv(program, GL_LINK_STATUS, &bLinked);
+		ASSERT(bLinked);
 
 		glDetachShader(program, vertShader);
 		glDetachShader(program, fragShader);
@@ -151,17 +152,17 @@ void main()
 	{
 		m_LayerStack->OnRender();
 
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
-		m_Window->SwapBuffers();
-
 		OnRender();
+
+		m_Window->SwapBuffers();
 	}
 
-	void Application::OnEvent(Event& event)
+	void Application::HandleEvent(Event& event)
 	{
 		if (event.IsDeferred())
 			m_EventQueue->PushEvent(event.AsShared());
@@ -185,21 +186,19 @@ void main()
 
 		m_InputManager->OnEvent(event);
 		m_LayerStack->OnEvent(event);
-		OnClientEvent(event);
+		OnEvent(event);
 	}
 
 	void Application::RunMainLoop()
 	{
-		m_bRunning = true;
+		// Application loop
 		while (m_bRunning)
 		{
-			// Application loop
+			m_EventQueue->ProcessEvents();
 			PollEvents();
 
 			Update(0.0f);
 			Render();
-
-			m_EventQueue->ProcessEvents();
 		}
 	}
 

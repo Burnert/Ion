@@ -13,65 +13,52 @@ namespace Ion
 
 	void OpenGLWindows::InitGLLoader()
 	{
-		int status = gladLoadGLLoader((GLADloadproc)GetProcAddress);
-		ASSERT(status);
+		VERIFY(gladLoadGLLoader((GLADloadproc)GetProcAddress));
 	}
 
 	void OpenGLWindows::InitWGLLoader(HDC hdc)
 	{
 		ASSERT(hdc);
-
-		int status = gladLoadWGLLoader((GLADloadproc)GetProcAddress, hdc);
-		ASSERT(status);
+		VERIFY(gladLoadWGLLoader((GLADloadproc)GetProcAddress, hdc));
 	}
 
-	void OpenGLWindows::InitWGLExtensions()
+	void OpenGLWindows::InitOpenGL()
 	{
 		InitLibraries();
 
 		DummyWindow dummyWindow;
-
 		HGLRC fakeContext = dummyWindow.CreateFakeGLContext();
-		HDC hdc = dummyWindow.GetDeviceContext();
+		HDC hdc = dummyWindow.m_DeviceContext;
 
 		InitGLLoader();
 		InitWGLLoader(hdc);
 
 		glDebugMessageCallback(OpenGLWindows::DebugCallback, nullptr);
 
-		const char* vendor     = GetVendor();
-		const char* renderer   = GetRendererName();
-		const char* version    = GetVersion();
-		const char* language   = GetLanguageVersion();
-		LOG_INFO("       OpenGL Info:");
-		LOG_INFO("Vendor:            {0}", vendor);
-		LOG_INFO("Renderer:          {0}", renderer);
-		LOG_INFO("OpenGL Version:    {0}", version);
-		LOG_INFO("Language version:  {0}", language);
+		LOG_INFO("  OpenGL Info:");
+		LOG_INFO("Vendor:            {0}", GetVendor());
+		LOG_INFO("Renderer:          {0}", GetRendererName());
+		LOG_INFO("OpenGL Version:    {0}", GetVersion());
+		LOG_INFO("Language version:  {0}", GetLanguageVersion());
 
 		glGetIntegerv(GL_MAJOR_VERSION, &s_MajorVersion);
 		glGetIntegerv(GL_MINOR_VERSION, &s_MinorVersion);
 
 		dummyWindow.Destroy();
-
 		FreeLibraries();
-	}
 
-	void OpenGLWindows::InitOpenGL()
-	{
-		InitWGLExtensions();
+		s_GLInitialized = true;
 	}
 
 	void OpenGLWindows::InitLibraries()
 	{
 		s_OpenGLModule = LoadLibrary(TEXT("opengl32.dll"));
-		ASSERT(s_OpenGLModule);
+		VERIFY_M(s_OpenGLModule, "Cannot load OpenGL!");
 	}
 
 	void OpenGLWindows::FreeLibraries()
 	{
-		int status = FreeLibrary(s_OpenGLModule);
-		ASSERT(status);
+		VERIFY(FreeLibrary(s_OpenGLModule));
 	}
 
 	HGLRC OpenGLWindows::CreateGLContext(HDC hdc)
@@ -100,11 +87,8 @@ namespace Ion
 		wglChoosePixelFormatARB(hdc, attributes, NULL, 1, &pixelFormat, &numFormats);
 		ASSERT(pixelFormat != 0);
 
-		LOG_TRACE("Formats: {0}, Format1: {1}", numFormats, pixelFormat);
-
 		DescribePixelFormat(hdc, pixelFormat, sizeof(pfd), &pfd);
-		int status = SetPixelFormat(hdc, pixelFormat, &pfd);
-		ASSERT(status != 0);
+		ASSERT(SetPixelFormat(hdc, pixelFormat, &pfd));
 
 		const int wglAttributes[] = {
 			WGL_CONTEXT_MAJOR_VERSION_ARB, s_MajorVersion,
@@ -115,15 +99,14 @@ namespace Ion
 		};
 
 		HGLRC renderingContext = wglCreateContextAttribsARB(hdc, NULL, wglAttributes);
-		ASSERT(renderingContext != NULL);
+		VERIFY(renderingContext != NULL);
 
 		return renderingContext;
 	}
 
 	void OpenGLWindows::MakeContextCurrent(HDC hdc, HGLRC hglrc)
 	{
-		int status = wglMakeCurrent(hdc, hglrc);
-		ASSERT(status);
+		ASSERT(wglMakeCurrent(hdc, hglrc));
 	}
 
 	void* OpenGLWindows::GetProcAddress(const char* name)
@@ -140,8 +123,8 @@ namespace Ion
 		LOG_ERROR("OpenGL Error: {0}", message);
 	}
 
-	HMODULE OpenGLWindows::s_OpenGLModule;
-	bool OpenGLWindows::s_GLInitialized;
+	HMODULE OpenGLWindows::s_OpenGLModule = NULL;
+	bool OpenGLWindows::s_GLInitialized = false;
 
 	int OpenGLWindows::s_MajorVersion = 4;
 	int OpenGLWindows::s_MinorVersion = 3;
@@ -208,14 +191,12 @@ namespace Ion
 		int pixelFormat = ChoosePixelFormat(m_DeviceContext, &pfd);
 		VERIFY(pixelFormat);
 
-		int result = SetPixelFormat(m_DeviceContext, pixelFormat, &pfd);
-		VERIFY(result);
+		VERIFY(SetPixelFormat(m_DeviceContext, pixelFormat, &pfd));
 
 		m_RenderingContext = wglCreateContext(m_DeviceContext);
 		VERIFY(m_RenderingContext);
 
-		result = wglMakeCurrent(m_DeviceContext, m_RenderingContext);
-		VERIFY(result);
+		VERIFY(wglMakeCurrent(m_DeviceContext, m_RenderingContext));
 
 		return m_RenderingContext;
 	}

@@ -46,7 +46,7 @@ namespace Ion
 		virtual void Update(float DeltaTime);
 		virtual void Render();
 
-		virtual void OnEvent(Event& event);
+		virtual void HandleEvent(Event& event);
 		virtual void DispatchEvent(Event& event);
 
 		virtual void InitRendererAPI() { }
@@ -67,7 +67,7 @@ namespace Ion
 		virtual void OnShutdown() { }
 		/* Override this in the client if you want to use it.
 		   Called when the application receives an event. */
-		virtual void OnClientEvent(Event& event) { }
+		virtual void OnEvent(Event& event) { }
 
 		// End of overridables
 
@@ -79,7 +79,7 @@ namespace Ion
 		/* Main engine loop function */
 		void RunMainLoop();
 
-		bool m_bRunning = false;
+		bool m_bRunning;
 
 		Shared<GenericWindow> m_Window;
 		Shared<InputManager> m_InputManager;

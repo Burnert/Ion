@@ -21,7 +21,6 @@ namespace Ion
 	protected:
 		static void InitGLLoader();
 		static void InitWGLLoader(HDC hdc);
-		static void InitWGLExtensions();
 
 		static void InitLibraries();
 		static void FreeLibraries();
@@ -48,14 +47,13 @@ namespace Ion
 	/* Dummy window used for creation of an OpenGL context and extensions. */
 	class DummyWindow
 	{
+		friend class OpenGLWindows;
 	public:
 		~DummyWindow();
 
 		HGLRC CreateFakeGLContext();
 
 		void Destroy();
-
-		FORCEINLINE HDC GetDeviceContext() const { return m_DeviceContext; }
 
 	private:
 		HWND m_WindowHandle;

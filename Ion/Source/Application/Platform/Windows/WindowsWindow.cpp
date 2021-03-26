@@ -14,6 +14,8 @@
 
 #include "RenderAPI/OpenGL/Windows/OpenGLWindows.h"
 
+#pragma warning(disable:26812)
+
 // ------------------------------
 //        Windows Window
 // ------------------------------
@@ -38,7 +40,9 @@ namespace Ion
 	}
 
 	WindowsWindow::WindowsWindow() :
-		m_WindowHandle(NULL)
+		m_WindowHandle(NULL),
+		m_DeviceContext(NULL),
+		m_RenderingContext(NULL)
 	{ }
 
 	void WindowsWindow::PollEvents_Application()

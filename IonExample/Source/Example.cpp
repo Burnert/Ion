@@ -66,7 +66,7 @@ public:
 	{
 	}
 
-	virtual void OnClientEvent(Ion::Event& event) override
+	virtual void OnEvent(Ion::Event& event) override
 	{
 	}
 };
