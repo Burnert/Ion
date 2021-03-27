@@ -9,10 +9,8 @@
 
 #include "glad/glad.h"
 
-#include "Core/Platform/PlatformCore.h"
-#include "Application/Platform/Windows/WindowsApplication.h"
-
-#include "RenderAPI/OpenGL/Windows/OpenGLWindows.h"
+#include "RenderAPI/RenderAPI.h"
+#include "Renderer/VertexBuffer.h"
 
 namespace Ion
 {
@@ -40,22 +38,27 @@ namespace Ion
 	{
 		m_InputManager = InputManager::Create();
 
-		InitRendererAPI();
+		InitRenderAPI();
 		COUNTER_TIME_DATA(timeRenderApiInit, "RenderAPI_InitTime");
 		LOG_INFO("{0}: {1}s", timeRenderApiInit.Name, ((float)timeRenderApiInit.GetTimeMs()) * 0.001f);
 
 		// Create a platform specific window.
 		m_Window = GenericWindow::Create();
 
-		m_Window->SetEventCallback(BIND_METHOD_1P(Application::HandleEvent));
-
-		
-
 		m_Window->Initialize();
-		m_Window->SetTitle(L"Ion Engine");
+
+		m_Window->SetEventCallback(BIND_METHOD_1P(Application::HandleEvent));
 
 		// Current thread will render graphics in this window.
 		m_Window->MakeRenderingContextCurrent();
+
+		const char* renderAPILabel = RenderAPI::GetCurrentDisplayName();
+
+		std::wstring windowTitle = TEXT("Ion - ");
+		wchar renderAPILabelW[120];
+		MultiByteToWideChar(CP_UTF8, 0, renderAPILabel, -1, renderAPILabelW, 120);
+		windowTitle += renderAPILabelW;
+		m_Window->SetTitle((wchar*)windowTitle.c_str());
 
 		m_Window->Show();
 
@@ -71,10 +74,7 @@ namespace Ion
 			 0.5f, -0.5f, 0.0f,
 			 0.0f,  0.5f, 0.0f
 		};
-		uint vbo;
-		glCreateBuffers(1, &vbo);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+		Shared<VertexBuffer> vbo = VertexBuffer::Create(vertices, 9);
 
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (const void*)0);
 		glEnableVertexAttribArray(0);
@@ -187,6 +187,11 @@ void main()
 		m_InputManager->OnEvent(event);
 		m_LayerStack->OnEvent(event);
 		OnEvent(event);
+	}
+
+	void Application::InitRenderAPI()
+	{
+		RenderAPI::Init(ERenderAPI::OpenGL);
 	}
 
 	void Application::RunMainLoop()

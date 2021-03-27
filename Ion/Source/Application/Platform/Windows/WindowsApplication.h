@@ -28,8 +28,6 @@ namespace Ion
 		virtual void HandleEvent(Event& event) final override;
 		virtual void DispatchEvent(Event& event) final override;
 
-		virtual void InitRendererAPI() final override;
-
 		// End of final overrides
 
 	private:

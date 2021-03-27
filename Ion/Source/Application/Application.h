@@ -4,6 +4,7 @@
 #include "Core/Event/InputEvent.h"
 #include "Core/Event/WindowEvent.h"
 #include "Core/Layer/LayerStack.h"
+
 #include "Application/Window/GenericWindow.h"
 
 /* Specifies the main class of the application (can be used only once) */
@@ -49,8 +50,6 @@ namespace Ion
 		virtual void HandleEvent(Event& event);
 		virtual void DispatchEvent(Event& event);
 
-		virtual void InitRendererAPI() { }
-
 		// To be overriden in client:
 
 		/* Override this in the client if you want to use it.
@@ -76,6 +75,8 @@ namespace Ion
 		static Application* s_Instance;
 
 	private:
+		void InitRenderAPI();
+
 		/* Main engine loop function */
 		void RunMainLoop();
 

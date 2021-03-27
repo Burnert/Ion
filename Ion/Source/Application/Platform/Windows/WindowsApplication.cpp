@@ -4,13 +4,9 @@
 #include "WindowsWindow.h"
 #include "Core/Platform/Windows/WindowsInput.h"
 
-#ifdef ION_PLATFORM_WINDOWS
+#include "RenderAPI/RenderAPI.h"
 
 #include "RenderAPI/OpenGL/Windows/OpenGLWindows.h"
-
-#endif
-
-DECLARE_PERFORMANCE_COUNTER(RenderAPI_InitTime, "RenderAPI Init Time", "Init");
 
 namespace Ion
 {
@@ -57,14 +53,6 @@ namespace Ion
 	void WindowsApplication::DispatchEvent(Event& event)
 	{
 		Application::DispatchEvent(event);
-	}
-
-	void WindowsApplication::InitRendererAPI()
-	{
-		SCOPED_PERFORMANCE_COUNTER(RenderAPI_InitTime);
-
-		// @TODO: Add renderer switch here
-		OpenGLWindows::InitOpenGL();
 	}
 
 	HINSTANCE WindowsApplication::m_HInstance;

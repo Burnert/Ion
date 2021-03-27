@@ -15,5 +15,13 @@ namespace Ion
 		static FORCEINLINE const char* GetVersion()          { return (const char*)glGetString(GL_VERSION); }
 		static FORCEINLINE const char* GetLanguageVersion()  { return (const char*)glGetString(GL_SHADING_LANGUAGE_VERSION); }
 		static FORCEINLINE const char* GetExtensions()       { return (const char*)glGetString(GL_EXTENSIONS); }
+
+		static const char* GetDisplayName();
+
+	protected:
+		static void SetDisplayVersion(const char* version);
+
+	private:
+		static char s_DisplayName[120];
 	};
 }

@@ -44,6 +44,8 @@ namespace Ion
 		glGetIntegerv(GL_MAJOR_VERSION, &s_MajorVersion);
 		glGetIntegerv(GL_MINOR_VERSION, &s_MinorVersion);
 
+		OpenGL::SetDisplayVersion(GetVersion());
+
 		dummyWindow.Destroy();
 		FreeLibraries();
 
