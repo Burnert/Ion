@@ -682,7 +682,6 @@ namespace Ion
 
 	void WindowsWindow::MakeRenderingContextCurrent()
 	{
-		// int result = wglMakeCurrent(m_DeviceContext, m_RenderingContext);
 		OpenGLWindows::MakeContextCurrent(m_DeviceContext, m_RenderingContext);
 	}
 

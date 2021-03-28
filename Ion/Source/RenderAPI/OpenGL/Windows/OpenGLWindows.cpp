@@ -67,6 +67,8 @@ namespace Ion
 	{
 		#pragma warning(disable:6011)
 
+		ASSERT(hdc);
+
 		VERIFY(wglChoosePixelFormatARB);
 		VERIFY(wglCreateContextAttribsARB);
 
@@ -83,14 +85,13 @@ namespace Ion
 			WGL_STENCIL_BITS_ARB, 8,
 			0 // End
 		};
-		int pixelFormat;
+		int pixelFormat = 0;
 		UINT numFormats;
 
 		wglChoosePixelFormatARB(hdc, attributes, NULL, 1, &pixelFormat, &numFormats);
-		ASSERT(pixelFormat != 0);
+		VERIFY(pixelFormat != 0);
 
-		DescribePixelFormat(hdc, pixelFormat, sizeof(pfd), &pfd);
-		ASSERT(SetPixelFormat(hdc, pixelFormat, &pfd));
+		VERIFY(SetPixelFormat(hdc, pixelFormat, &pfd));
 
 		const int wglAttributes[] = {
 			WGL_CONTEXT_MAJOR_VERSION_ARB, s_MajorVersion,
@@ -108,7 +109,7 @@ namespace Ion
 
 	void OpenGLWindows::MakeContextCurrent(HDC hdc, HGLRC hglrc)
 	{
-		ASSERT(wglMakeCurrent(hdc, hglrc));
+		VERIFY(wglMakeCurrent(hdc, hglrc));
 	}
 
 	void* OpenGLWindows::GetProcAddress(const char* name)
@@ -181,8 +182,7 @@ namespace Ion
 		m_DeviceContext = GetDC(m_WindowHandle);
 		VERIFY(m_DeviceContext);
 
-		PIXELFORMATDESCRIPTOR pfd;
-		ZeroMemory(&pfd, sizeof(PIXELFORMATDESCRIPTOR));
+		PIXELFORMATDESCRIPTOR pfd { };
 		pfd.nSize      = sizeof(PIXELFORMATDESCRIPTOR);
 		pfd.nVersion   = 1;
 		pfd.dwFlags    = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
