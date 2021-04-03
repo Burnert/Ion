@@ -5,15 +5,26 @@
 #include "RenderAPI/RenderAPI.h"
 #include "RenderAPI/OpenGL/OpenGLVertexBuffer.h"
 
-
 namespace Ion
 {
-	Shared<VertexBuffer> VertexBuffer::Create(float* vertices, uint count)
+	VertexLayout::VertexLayout(uint initialAttributeCount)
+		: m_Offset(0)
+	{
+		m_Attributes.reserve(initialAttributeCount * sizeof(VertexAttribute));
+	}
+
+	void VertexLayout::AddAttribute(VertexAttributeType attributeType, ubyte elementCount, bool normalized)
+	{
+		m_Attributes.push_back({ attributeType, elementCount, m_Offset, normalized });
+		m_Offset += elementCount * GetSizeOfAttributeType(attributeType);
+	}
+
+	Shared<VertexBuffer> VertexBuffer::Create(void* vertices, uint size)
 	{
 		switch (RenderAPI::GetCurrent())
 		{
 		case ERenderAPI::OpenGL:
-			return MakeShared<OpenGLVertexBuffer>(vertices, count);
+			return MakeShared<OpenGLVertexBuffer>(vertices, size);
 		}
 		return Shared<VertexBuffer>(nullptr);
 	}

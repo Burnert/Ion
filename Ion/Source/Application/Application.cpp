@@ -69,15 +69,18 @@ namespace Ion
 		glCreateVertexArrays(1, &vao);
 		glBindVertexArray(vao);
 
-		float vertices[3 * 3] = {
-			-0.5f, -0.5f, 0.0f,
-			 0.5f, -0.5f, 0.0f,
-			 0.0f,  0.5f, 0.0f
+		float vertices[3 * 7] = {
+			-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+			 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+			 0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
 		};
-		Shared<VertexBuffer> vbo = VertexBuffer::Create(vertices, 9);
+		Shared<VertexBuffer> vbo = VertexBuffer::Create(vertices, sizeof(vertices));
 
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (const void*)0);
-		glEnableVertexAttribArray(0);
+		VertexLayout layout(2);
+		layout.AddAttribute(VertexAttributeType::Float, 3); // Position
+		layout.AddAttribute(VertexAttributeType::Float, 4); // Vertex Color
+
+		vbo->SetLayout(layout);
 
 		uint vertShader = glCreateShader(GL_VERTEX_SHADER);
 		uint fragShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -86,9 +89,13 @@ namespace Ion
 #version 430 core
 
 layout(location = 0) in vec3 position;
+layout(location = 1) in vec4 color;
+
+out vec4 v_Color;
 
 void main()
 {
+	v_Color = color;
 	gl_Position = vec4(position, 1.0f);
 }
 
@@ -98,11 +105,13 @@ void main()
 		const char* fragSrc = R"(
 #version 430 core
 
+in vec4 v_Color;
+
 out vec4 color;
 
 void main()
 {
-	color = vec4(0.0f, 1.0f, 0.0f, 1.0f);
+	color = v_Color;
 }
 
 )";

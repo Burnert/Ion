@@ -31,6 +31,8 @@ namespace Ion
 			return "Currently not using any Render API.";
 		case ERenderAPI::OpenGL: 
 			return OpenGL::GetDisplayName();
+		default:
+			return "";
 		}
 	}
 
