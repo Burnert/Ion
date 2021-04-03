@@ -49,7 +49,7 @@ namespace Ion
 		// Shift hack:
 		if (m_bBothShiftsPressed)
 		{
-			byte keyState = 0;
+			ubyte keyState = 0;
 			keyState |= (GetAsyncKeyState(VK_LSHIFT) & 0x8000) >> 14;
 			keyState |= (GetAsyncKeyState(VK_RSHIFT) & 0x8000) >> 15;
 			if (keyState != 0x3)
@@ -204,7 +204,7 @@ namespace Ion
 					// Note:
 					// Distinguishing between left and right Shift keys
 					// is a bit diffrent from the other keys.
-					byte scanCode = LOBYTE(HIWORD(lParam));
+					ubyte scanCode = LOBYTE(HIWORD(lParam));
 
 					if (scanCode == 0x36)
 						actualKeyCode = VK_RSHIFT;
@@ -358,7 +358,7 @@ namespace Ion
 
 				uint size;
 				GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &size, sizeof(RAWINPUTHEADER));
-				byte* buffer = new byte[size];
+				ubyte* buffer = new ubyte[size];
 				if (buffer == NULL)
 					return 0;
 

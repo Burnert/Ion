@@ -1,7 +1,7 @@
 #pragma once
 
 using llong        = long long;
-using byte         = unsigned char;
+using ubyte        = unsigned char;
 using uchar        = unsigned char;
 using ushort       = unsigned short;
 using uint         = unsigned int;

@@ -30,7 +30,7 @@ namespace Ion
 			return 0;
 		}
 
-		static constexpr byte s_InputKeyCodeLookup[256] = {
+		static constexpr ubyte s_InputKeyCodeLookup[256] = {
 			// 0x00 ---------------------------
 			0x00, // 0x00 : Invalid keycode
 			Mouse::Left,

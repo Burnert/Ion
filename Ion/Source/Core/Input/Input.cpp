@@ -5,8 +5,8 @@
 
 namespace Ion
 {
-	byte InputManager::InputPressedFlag = Bitflag(0);
-	byte InputManager::InputRepeatedFlag = Bitflag(1);
+	ubyte InputManager::InputPressedFlag = Bitflag(0);
+	ubyte InputManager::InputRepeatedFlag = Bitflag(1);
 
 	KeyCode InputManager::TransformKeyCode(KeyCode actualKeyCode)
 	{
@@ -59,9 +59,9 @@ namespace Ion
 	{
 		KeyCode actualKeyCode = (KeyCode)event.GetActualKeyCode();
 		// Set states on receiving event
-		byte* keyPtr = &m_InputStates[actualKeyCode];
+		ubyte* keyPtr = &m_InputStates[actualKeyCode];
 		SetBitflags(*keyPtr, InputPressedFlag);
-		SetBitflags(*keyPtr, InputRepeatedFlag & BooleanToBitmask<byte>(event.IsRepeated()));
+		SetBitflags(*keyPtr, InputRepeatedFlag & BooleanToBitmask<ubyte>(event.IsRepeated()));
 
 		// If the normal key code is different than actual
 		// (Shift, Alt, etc.), update it too.
@@ -70,7 +70,7 @@ namespace Ion
 		{
 			keyPtr = &m_InputStates[keyCode];
 			SetBitflags(*keyPtr, InputPressedFlag);
-			SetBitflags(*keyPtr, InputRepeatedFlag & BooleanToBitmask<byte>(event.IsRepeated()));
+			SetBitflags(*keyPtr, InputRepeatedFlag & BooleanToBitmask<ubyte>(event.IsRepeated()));
 		}
 
 		return false;
@@ -80,7 +80,7 @@ namespace Ion
 	{
 		KeyCode actualKeyCode = (KeyCode)event.GetActualKeyCode();
 		// Unset states on receiving event
-		byte* keyPtr = &m_InputStates[actualKeyCode];
+		ubyte* keyPtr = &m_InputStates[actualKeyCode];
 		UnsetBitflags(*keyPtr, InputPressedFlag);
 		UnsetBitflags(*keyPtr, InputRepeatedFlag);
 

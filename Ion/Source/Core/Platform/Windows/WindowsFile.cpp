@@ -72,7 +72,7 @@ namespace Ion
 		return true;
 	}
 
-	bool WindowsFile::Open(byte mode)
+	bool WindowsFile::Open(ubyte mode)
 	{
 		// This makes sure the filename is not blank before opening the file.
 		// If it is, then clearly something went wrong.
@@ -165,7 +165,7 @@ namespace Ion
 		return true;
 	}
 
-	bool WindowsFile::Read(byte* outBuffer, ullong count)
+	bool WindowsFile::Read(ubyte* outBuffer, ullong count)
 	{
 		// Handle internal errors
 		if (m_FileHandle == INVALID_HANDLE_VALUE)
@@ -355,7 +355,7 @@ namespace Ion
 		return bResult;
 	}
 
-	bool WindowsFile::Write(const byte* inBuffer, ullong count)
+	bool WindowsFile::Write(const ubyte* inBuffer, ullong count)
 	{
 		// Handle internal errors
 		if (m_FileHandle == INVALID_HANDLE_VALUE)

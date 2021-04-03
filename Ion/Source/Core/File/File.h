@@ -7,14 +7,14 @@ namespace Ion
 {
 	namespace IO
 	{
-		enum EFileType : byte
+		enum EFileType : ubyte
 		{
 			FT_Text   = 0,
 			FT_Binary = 1,
 			FT_Other  = 0xFF,
 		};
 
-		enum EFileMode : byte
+		enum EFileMode : ubyte
 		{
 			FM_Read      = Bitflag(0),
 			FM_Write     = Bitflag(1),
@@ -22,7 +22,7 @@ namespace Ion
 			FM_Reset     = Bitflag(3),
 		};
 
-		enum ENewLineType : byte
+		enum ENewLineType : ubyte
 		{
 			NLT_LF      = 1,
 			NLT_CR      = 2,
@@ -34,14 +34,14 @@ namespace Ion
 	class ION_API IFile
 	{
 	public:
-		virtual bool Open(byte mode) = 0;
+		virtual bool Open(ubyte mode) = 0;
 		virtual void Close() = 0;
 		virtual bool Delete() = 0;
 
-		virtual bool Read(byte* outBuffer, ullong count) = 0;
+		virtual bool Read(ubyte* outBuffer, ullong count) = 0;
 		virtual bool ReadLine(char* outBuffer, ullong count) = 0;
 		virtual bool ReadLine(std::string& outStr) = 0;
-		virtual bool Write(const byte* inBuffer, ullong count) = 0;
+		virtual bool Write(const ubyte* inBuffer, ullong count) = 0;
 		virtual bool WriteLine(const char* inBuffer, ullong count) = 0;
 		virtual bool WriteLine(const std::string& inStr) = 0;
 
@@ -89,7 +89,7 @@ namespace Ion
 	protected:
 		std::wstring m_Filename;
 		IO::EFileType m_Type;
-		byte m_Mode;
+		ubyte m_Mode;
 
 		// Caches ----------------------
 

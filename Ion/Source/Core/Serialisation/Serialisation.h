@@ -10,7 +10,7 @@ namespace Ion
 	namespace Serialisation
 	{
 		/* Size of the length value for serialisation (8 bytes) */
-		constexpr byte LengthSize = sizeof(ullong);
+		constexpr ubyte LengthSize = sizeof(ullong);
 		constexpr ullong MaxFieldSize = ULLONG_MAX;
 
 		enum class EState
@@ -69,7 +69,7 @@ namespace Ion
 			}
 
 			/* Returns raw serialised bytes (read-only). */
-			const byte* const GetImmutableBytes() const
+			const ubyte* const GetImmutableBytes() const
 			{
 				return m_Bytes;
 			}
@@ -77,7 +77,7 @@ namespace Ion
 		private:
 			/* Sets pointer to bytes of this object to the one specified.
 			   Changes the ownership of the bytes to this Serial. */
-			void PushBytes(byte* bytes, ullong count)
+			void PushBytes(ubyte* bytes, ullong count)
 			{
 				if (!m_Initialised)
 				{
@@ -92,7 +92,7 @@ namespace Ion
 
 			/* Returns bytes and uninitialises the pointer in this object.
 			   Removes the ownership of the bytes from this Serial. */
-			byte* PullBytes(ullong* outCount)
+			ubyte* PullBytes(ullong* outCount)
 			{
 				if (m_Initialised)
 				{
@@ -100,7 +100,7 @@ namespace Ion
 						return nullptr;
 
 					*outCount = m_Size;
-					byte* temp = m_Bytes;
+					ubyte* temp = m_Bytes;
 					m_Bytes = nullptr;
 					m_Size = 0;
 					m_Initialised = false;
@@ -112,11 +112,11 @@ namespace Ion
 
 			/* Creates a buffer of this Serial's bytes preceded by the size of it.
 			   The buffer must then be deleted using delete[] as this Serial does not own it. */
-			byte* CreateSignedBuffer()
+			ubyte* CreateSignedBuffer()
 			{
 				if (m_Initialised && m_Size > 0)
 				{
-					byte* buffer = new byte[m_Size + LengthSize];
+					ubyte* buffer = new ubyte[m_Size + LengthSize];
 					memcpy_s(buffer, LengthSize, &m_Size, LengthSize);
 					memcpy_s(buffer + LengthSize, m_Size, m_Bytes, m_Size);
 					return buffer;
@@ -127,7 +127,7 @@ namespace Ion
 		private:
 			bool m_Initialised;
 			ullong m_Size;
-			byte* m_Bytes;
+			ubyte* m_Bytes;
 		};
 
 		// @TODO: Write docs ASAP...
@@ -146,7 +146,7 @@ namespace Ion
 				if (type == EType::WRITE)
 				{
 					// @TODO: Make the buffer resizable instead of this nonsense 64 here.
-					m_Bytes = new byte[sizeof(SerialisableT) * 64];
+					m_Bytes = new ubyte[sizeof(SerialisableT) * 64];
 				}
 				else
 				{
@@ -187,7 +187,7 @@ namespace Ion
 				m_SerialisablePtr = serialisable;
 				m_BytesCounter = 0;
 				m_MaxCount = 0;
-				m_Bytes = new byte[sizeof(SerialisableT)];
+				m_Bytes = new ubyte[sizeof(SerialisableT)];
 				m_State = EState::INIT;
 			}
 
@@ -224,7 +224,7 @@ namespace Ion
 
 				ASSERT(m_Bytes)
 
-				byte* shrunkBuffer = new byte[m_BytesCounter];
+				ubyte* shrunkBuffer = new ubyte[m_BytesCounter];
 				memcpy_s(shrunkBuffer, m_BytesCounter, m_Bytes, m_BytesCounter);
 				serial->PushBytes(shrunkBuffer, m_BytesCounter);
 			}
@@ -284,7 +284,7 @@ namespace Ion
 					Serial serial;
 					serialisableField->Serialise(&serial);
 
-					byte* serialBuffer = serial.CreateSignedBuffer();
+					ubyte* serialBuffer = serial.CreateSignedBuffer();
 					ullong sizeToWrite = serial.GetSize() + LengthSize;
 					memcpy_s(m_Bytes + m_BytesCounter, sizeToWrite, serialBuffer, sizeToWrite);
 					delete[] serialBuffer;
@@ -317,7 +317,7 @@ namespace Ion
 					ullong serialSize;
 					memcpy_s(&serialSize, LengthSize, m_Bytes + m_BytesCounter, LengthSize);
 
-					byte* buffer = new byte[serialSize];
+					ubyte* buffer = new ubyte[serialSize];
 					memcpy_s(buffer, serialSize, m_Bytes + m_BytesCounter + LengthSize, serialSize);
 					serial.PushBytes(buffer, serialSize);
 					serialisableField->Deserialise(&serial);
@@ -370,14 +370,14 @@ namespace Ion
 			SerialisableT* m_SerialisablePtr;
 			ullong m_BytesCounter;
 			ullong m_MaxCount;
-			byte* m_Bytes;
+			ubyte* m_Bytes;
 		};
 
 		template<typename T>
 		void SerialiseStruct(T* structPtr, Serial* serial)
 		{
 			ullong size = sizeof(T);
-			byte* bytes = new byte[size];
+			ubyte* bytes = new ubyte[size];
 			memcpy_s(bytes, size, structPtr, size);
 			serial->PushBytes(bytes, size);
 		}
@@ -387,7 +387,7 @@ namespace Ion
 		{
 			ullong size = sizeof(T);
 			ullong pulledSize;
-			byte* bytes = serial->PullBytes(&pulledSize);
+			ubyte* bytes = serial->PullBytes(&pulledSize);
 			ASSERT(size == pulledSize);
 			memcpy_s(structPtr, size, bytes, pulledSize);
 			delete[] bytes;
