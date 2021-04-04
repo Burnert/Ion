@@ -11,6 +11,7 @@
 
 #include "RenderAPI/RenderAPI.h"
 #include "Renderer/VertexBuffer.h"
+#include "Renderer/Shader.h"
 
 namespace Ion
 {
@@ -82,9 +83,6 @@ namespace Ion
 
 		vbo->SetLayout(layout);
 
-		uint vertShader = glCreateShader(GL_VERTEX_SHADER);
-		uint fragShader = glCreateShader(GL_FRAGMENT_SHADER);
-
 		const char* vertSrc = R"(
 #version 430 core
 
@@ -100,7 +98,7 @@ void main()
 }
 
 )";
-		glShaderSource(vertShader, 1, &vertSrc, 0);
+		Shared<Shader> vertShader = Shader::Create(EShaderType::Vertex, vertSrc);
 
 		const char* fragSrc = R"(
 #version 430 core
@@ -115,30 +113,24 @@ void main()
 }
 
 )";
-		glShaderSource(fragShader, 1, &fragSrc, 0);
+		Shared<Shader> fragShader = Shader::Create(EShaderType::Fragment, fragSrc);
 
-		glCompileShader(vertShader);
-		glCompileShader(fragShader);
+		bool bResult;
 
-		int bSuccess = 0;
-		glGetShaderiv(vertShader, GL_COMPILE_STATUS, &bSuccess);
-		ASSERT(bSuccess);
-		glGetShaderiv(fragShader, GL_COMPILE_STATUS, &bSuccess);
-		ASSERT(bSuccess);
+		bResult = vertShader->Compile();
+		ASSERT(bResult);
+		bResult = fragShader->Compile();
+		ASSERT(bResult);
 
-		uint program = glCreateProgram();
-		glAttachShader(program, vertShader);
-		glAttachShader(program, fragShader);
+		Shared<Program> program = Program::Create();
+		
+		program->AttachShader(vertShader);
+		program->AttachShader(fragShader);
 
-		glLinkProgram(program);
-		int bLinked = 0;
-		glGetProgramiv(program, GL_LINK_STATUS, &bLinked);
-		ASSERT(bLinked);
+		bResult = program->Link();
+		ASSERT(bResult);
 
-		glDetachShader(program, vertShader);
-		glDetachShader(program, fragShader);
-
-		glUseProgram(program);
+		program->Bind();
 
 		RunMainLoop();
 
