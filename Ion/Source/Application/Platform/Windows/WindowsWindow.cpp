@@ -25,17 +25,17 @@ namespace Ion
 
 	// Generic Window
 
-	Shared<GenericWindow> GenericWindow::Create()
+	TShared<GenericWindow> GenericWindow::Create()
 	{
 		return Ion::WindowsWindow::Create();
 	}
 
 	// Windows Window
 
-	Shared<WindowsWindow> WindowsWindow::Create()
+	TShared<WindowsWindow> WindowsWindow::Create()
 	{
 		ION_LOG_ENGINE_TRACE("Creating Windows window.");
-		return Shared<WindowsWindow>(new WindowsWindow);
+		return TShared<WindowsWindow>(new WindowsWindow);
 	}
 
 	WindowsWindow::WindowsWindow() :

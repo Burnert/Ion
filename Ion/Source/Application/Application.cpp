@@ -75,7 +75,7 @@ namespace Ion
 			 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
 			 0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
 		};
-		Shared<VertexBuffer> vbo = VertexBuffer::Create(vertices, sizeof(vertices));
+		TShared<VertexBuffer> vbo = VertexBuffer::Create(vertices, sizeof(vertices));
 
 		VertexLayout layout(2);
 		layout.AddAttribute(EVertexAttributeType::Float, 3); // Position
@@ -98,7 +98,7 @@ void main()
 }
 
 )";
-		Shared<Shader> vertShader = Shader::Create(EShaderType::Vertex, vertSrc);
+		TShared<Shader> vertShader = Shader::Create(EShaderType::Vertex, vertSrc);
 
 		const char* fragSrc = R"(
 #version 430 core
@@ -113,7 +113,7 @@ void main()
 }
 
 )";
-		Shared<Shader> fragShader = Shader::Create(EShaderType::Fragment, fragSrc);
+		TShared<Shader> fragShader = Shader::Create(EShaderType::Fragment, fragSrc);
 
 		bool bResult;
 
@@ -122,7 +122,7 @@ void main()
 		bResult = fragShader->Compile();
 		ASSERT(bResult);
 
-		Shared<Program> program = Program::Create();
+		TShared<Program> program = Program::Create();
 		
 		program->AttachShader(vertShader);
 		program->AttachShader(fragShader);

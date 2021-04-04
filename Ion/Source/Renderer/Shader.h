@@ -11,7 +11,7 @@ namespace Ion
 	class ION_API Shader
 	{
 	public:
-		static Shared<Shader> Create(EShaderType shaderType, std::string shaderSource);
+		static TShared<Shader> Create(EShaderType shaderType, std::string shaderSource);
 
 		virtual ~Shader() { };
 
@@ -28,11 +28,11 @@ namespace Ion
 	class ION_API Program
 	{
 	public:
-		static Shared<Program> Create();
+		static TShared<Program> Create();
 
 		virtual ~Program() { };
 
-		virtual void AttachShader(Shared<Shader> shader) = 0;
+		virtual void AttachShader(TShared<Shader> shader) = 0;
 
 		virtual bool Link() = 0;
 
@@ -40,6 +40,6 @@ namespace Ion
 		virtual void Unbind() = 0;
 
 	protected:
-		std::vector<Shared<Shader>> m_AttachedShaders;
+		std::vector<TShared<Shader>> m_AttachedShaders;
 	};
 }

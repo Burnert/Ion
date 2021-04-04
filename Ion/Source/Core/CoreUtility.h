@@ -55,19 +55,19 @@ NODISCARD constexpr inline TEnableIfT<TIsIntegralV<T>, T> BooleanToBitmask(bool 
 // Memory :
 
 template<typename T, typename... Types>
-NODISCARD constexpr FORCEINLINE Shared<T> MakeShared(Types&&... args)
+NODISCARD constexpr FORCEINLINE TShared<T> MakeShared(Types&&... args)
 {
 	return std::make_shared<T>(std::forward<Types>(args)...);
 }
 
 template<typename T>
-NODISCARD constexpr FORCEINLINE Shared<T> MakeShareable(T* ptr)
+NODISCARD constexpr FORCEINLINE TShared<T> MakeShareable(T* ptr)
 {
-	return Shared<T>(ptr);
+	return TShared<T>(ptr);
 }
 
 template<typename T, typename... Types>
-NODISCARD constexpr FORCEINLINE Unique<T> MakeUnique(Types&&... args)
+NODISCARD constexpr FORCEINLINE TUnique<T> MakeUnique(Types&&... args)
 {
 	return std::make_unique<T>(std::forward<Types>(args)...);
 }

@@ -44,7 +44,7 @@ namespace Ion
 		glDeleteProgram(m_ID);
 	}
 
-	void OpenGLProgram::AttachShader(Shared<Shader> shader)
+	void OpenGLProgram::AttachShader(TShared<Shader> shader)
 	{
 		uint shaderId = std::static_pointer_cast<OpenGLShader>(shader)->m_ID;
 		glAttachShader(m_ID, shaderId);
@@ -61,7 +61,7 @@ namespace Ion
 		if (bLinked)
 		{
 			// Shaders need to be detached after a successful link
-			for (Shared<Shader> shader : m_AttachedShaders)
+			for (TShared<Shader> shader : m_AttachedShaders)
 			{
 				uint shaderId = std::static_pointer_cast<OpenGLShader>(shader)->m_ID;
 				glDetachShader(m_ID, shaderId);

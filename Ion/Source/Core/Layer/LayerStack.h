@@ -9,7 +9,7 @@ namespace Ion
 	class ION_API LayerStack
 	{
 	public:
-		using LayerPtr = Shared<Layer>;
+		using LayerPtr = TShared<Layer>;
 		using LayerVec = std::vector<LayerPtr>;
 
 		using LayerIterator             = LayerVec::iterator;

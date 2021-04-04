@@ -8,7 +8,7 @@ namespace Ion
 	{
 		friend class WindowsApplication;
 	public:
-		static Shared<WindowsWindow> Create();
+		static TShared<WindowsWindow> Create();
 
 		// GenericWindow:
 

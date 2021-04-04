@@ -34,7 +34,7 @@ namespace Ion
 		OpenGLProgram();
 		virtual ~OpenGLProgram() override;
 
-		virtual void AttachShader(Shared<Shader> shader) override;
+		virtual void AttachShader(TShared<Shader> shader) override;
 
 		virtual bool Link() override;
 

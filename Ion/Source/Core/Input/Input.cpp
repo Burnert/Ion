@@ -106,5 +106,5 @@ namespace Ion
 		return false;
 	}
 
-	Shared<InputManager> InputManager::s_Instance = nullptr;
+	TShared<InputManager> InputManager::s_Instance = nullptr;
 }

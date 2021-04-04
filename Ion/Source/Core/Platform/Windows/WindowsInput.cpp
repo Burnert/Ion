@@ -4,7 +4,7 @@
 
 namespace Ion
 {
-	Shared<InputManager> InputManager::Create()
+	TShared<InputManager> InputManager::Create()
 	{
 		if (s_Instance == nullptr)
 			s_Instance = MakeShared<WindowsInputManager>();

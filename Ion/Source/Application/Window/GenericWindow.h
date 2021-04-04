@@ -21,7 +21,7 @@ namespace Ion
 	class ION_API GenericWindow
 	{
 	public:
-		using EventPtr = Shared<Event>;
+		using EventPtr = TShared<Event>;
 		using EventCallback = std::function<void(Event&)>;
 
 		virtual ~GenericWindow() { }
@@ -46,7 +46,7 @@ namespace Ion
 
 	public:
 		// Implemented per platform.
-		static Shared<GenericWindow> Create();
+		static TShared<GenericWindow> Create();
 
 	protected:
 		// Protected constructor: Only shared_ptrs of this class can be made.

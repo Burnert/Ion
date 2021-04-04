@@ -37,7 +37,7 @@ namespace Ion
 		if (layerIt != end())
 			return *layerIt;
 		else
-			return Shared<Layer>(nullptr);
+			return TShared<Layer>(nullptr);
 	}
 
 	void LayerStack::SetEnabled(const CStr name, bool bEnabled)

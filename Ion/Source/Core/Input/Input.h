@@ -177,7 +177,7 @@ namespace Ion
 		static bool IsKeyRepeated(KeyCode keyCode);
 		static bool IsMouseButtonPressed(MouseButton mouseButton);
 
-		static Shared<InputManager> Create();
+		static TShared<InputManager> Create();
 
 		/* Transforms ActualKeyCode to normal KeyCode
 		   for LShift returns Shift, etc. */
@@ -198,7 +198,7 @@ namespace Ion
 		void OnEvent(Event& event);
 
 	private:
-		static Shared<InputManager> s_Instance;
+		static TShared<InputManager> s_Instance;
 		ubyte m_InputStates[256];
 
 		bool OnKeyPressedEvent(KeyPressedEvent& event);

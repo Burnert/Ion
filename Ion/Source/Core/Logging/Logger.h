@@ -14,19 +14,19 @@ namespace Ion
 
 		// Client Logger
 
-		FORCEINLINE static Shared<spdlog::logger>& GetClientLogger() { return s_ClientLogger; }
+		FORCEINLINE static TShared<spdlog::logger>& GetClientLogger() { return s_ClientLogger; }
 
 	private:
-		static Shared<spdlog::logger> s_ClientLogger;
+		static TShared<spdlog::logger> s_ClientLogger;
 
 #ifdef ION_ENGINE
 		// Engine Logger
 
 	public:
-		FORCEINLINE static Shared<spdlog::logger>& GetEngineLogger() { return s_EngineLogger; }
+		FORCEINLINE static TShared<spdlog::logger>& GetEngineLogger() { return s_EngineLogger; }
 
 	private:
-		static Shared<spdlog::logger> s_EngineLogger;
+		static TShared<spdlog::logger> s_EngineLogger;
 #endif
 	};
 }

@@ -14,7 +14,7 @@ using CStr         = char*;
 using WCStr        = wchar*;
 
 template<typename T>
-using Shared       = std::shared_ptr<T>;
+using TShared      = std::shared_ptr<T>;
 
 template<typename T>
-using Unique       = std::unique_ptr<T>;
+using TUnique      = std::unique_ptr<T>;

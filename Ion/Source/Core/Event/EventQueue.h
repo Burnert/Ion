@@ -7,7 +7,7 @@ namespace Ion
 	class ION_API EventQueue
 	{
 		using EventHandler = std::function<void(Event&)>;
-		using EventPtr = Shared<Event>;
+		using EventPtr = TShared<Event>;
 
 	public:
 		void PushEvent(EventPtr event);
