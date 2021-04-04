@@ -15,7 +15,7 @@ namespace Ion
 	{
 		if (!m_Events.empty())
 		{
-			ION_LOG_ENGINE_TRACE("Processing events in queue.");
+			//ION_LOG_ENGINE_TRACE("Processing events in queue.");
 
 			for (auto it = m_Events.begin(); it != m_Events.end(); ++it)
 			{

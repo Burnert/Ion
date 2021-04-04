@@ -173,7 +173,7 @@ void main()
 
 	void Application::DispatchEvent(Event& event)
 	{
-		ION_LOG_ENGINE_DEBUG("Event: {0}", event.Debug_ToString());
+		//ION_LOG_ENGINE_DEBUG("Event: {0}", event.Debug_ToString());
 
 		EventDispatcher dispatcher(event);
 
