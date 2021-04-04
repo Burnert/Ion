@@ -21,7 +21,7 @@
 
 namespace Ion
 {
-	static const CStr _windowNoInitMessage = "Cannot {0} before the window is initialized!";
+	static const char* _windowNoInitMessage = "Cannot {0} before the window is initialized!";
 
 	// Generic Window
 
@@ -614,7 +614,7 @@ namespace Ion
 		}
 	}
 
-	void WindowsWindow::SetTitle(const WCStr title)
+	void WindowsWindow::SetTitle(const wchar* title)
 	{
 		if (m_WindowHandle == NULL)
 		{

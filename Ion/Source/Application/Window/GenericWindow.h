@@ -31,7 +31,7 @@ namespace Ion
 		virtual void Show() { }
 		virtual void Hide() { }
 
-		virtual void SetTitle(const WCStr title) { }
+		virtual void SetTitle(const wchar* title) { }
 
 		virtual void SetEnabled(bool bEnabled) { }
 

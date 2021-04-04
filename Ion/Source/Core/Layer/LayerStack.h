@@ -23,7 +23,7 @@ namespace Ion
 		/* Creates and pushes a layer object with specified name and parameters into the layer stack */
 		template<typename LayerT, typename... Types>
 		TEnableIfT<TIsBaseOfV<Layer, LayerT>, LayerPtr>
-			PushLayer(const CStr name, Types&&... args)
+			PushLayer(const char* name, Types&&... args)
 		{
 			LayerPtr layer = MakeShared<LayerT>(name, args...);
 			layer->OnAttach();
@@ -36,7 +36,7 @@ namespace Ion
 		/* Creates and pushes a layer object (overlay) with specified name and parameters on top of other layers */
 		template<typename LayerT, typename... Types>
 		TEnableIfT<TIsBaseOfV<Layer, LayerT>, LayerPtr>
-			PushOverlayLayer(const CStr name, Types&&... args)
+			PushOverlayLayer(const char* name, Types&&... args)
 		{
 			LayerPtr overlay = MakeShared<LayerT>(name, args...);
 			overlay->OnAttach();
@@ -46,17 +46,17 @@ namespace Ion
 		}
 
 		/* Removes a layer based on its name */
-		void RemoveLayer(const CStr name);
+		void RemoveLayer(const char* name);
 
 		/* Finds a layer and returns a shared pointer to it.
 		   Don't call this every frame. */
-		LayerPtr GetLayer(const CStr name);
+		LayerPtr GetLayer(const char* name);
 
 		/* Finds and sets layer enabled state.
 		   A disabled layer will not get updated and rendered.
 		   Also it will not receive any events.
 		   Don't call this every frame. */
-		void SetEnabled(const CStr name, bool bEnabled);
+		void SetEnabled(const char* name, bool bEnabled);
 
 		void OnUpdate(float DeltaTime);
 		void OnRender();
@@ -78,6 +78,6 @@ namespace Ion
 		LayerVec m_Layers;
 		uint m_LayerInsertIndex;
 
-		LayerIterator FindLayer(const CStr name);
+		LayerIterator FindLayer(const char* name);
 	};
 }

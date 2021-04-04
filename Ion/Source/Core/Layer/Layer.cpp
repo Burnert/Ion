@@ -4,7 +4,7 @@
 
 namespace Ion
 {
-	Layer::Layer(const CStr name) :
+	Layer::Layer(const char* name) :
 		m_ID(s_LayerCount++),
 		m_Name(name)
 	{ }

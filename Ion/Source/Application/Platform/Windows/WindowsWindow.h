@@ -19,7 +19,7 @@ namespace Ion
 		virtual void Show() override;
 		virtual void Hide() override;
 
-		virtual void SetTitle(const WCStr title) override;
+		virtual void SetTitle(const wchar* title) override;
 
 		virtual void SetEnabled(bool bEnabled);
 

@@ -14,7 +14,7 @@ namespace Ion
 			(*(it++))->OnDetach();
 	}
 
-	void LayerStack::RemoveLayer(const CStr name)
+	void LayerStack::RemoveLayer(const char* name)
 	{
 		auto layerIt = FindLayer(name);
 		ptrdiff_t layerIndex = layerIt - begin();
@@ -31,7 +31,7 @@ namespace Ion
 		}
 	}
 
-	LayerStack::LayerPtr LayerStack::GetLayer(const CStr name)
+	LayerStack::LayerPtr LayerStack::GetLayer(const char* name)
 	{
 		auto layerIt = FindLayer(name);
 		if (layerIt != end())
@@ -40,7 +40,7 @@ namespace Ion
 			return TShared<Layer>(nullptr);
 	}
 
-	void LayerStack::SetEnabled(const CStr name, bool bEnabled)
+	void LayerStack::SetEnabled(const char* name, bool bEnabled)
 	{
 		if (LayerPtr layer = GetLayer(name))
 		{
@@ -89,7 +89,7 @@ namespace Ion
 		}
 	}
 
-	LayerStack::LayerIterator LayerStack::FindLayer(const CStr name)
+	LayerStack::LayerIterator LayerStack::FindLayer(const char* name)
 	{
 		return std::find_if(begin(), end(), [name](LayerPtr& layer)
 		{

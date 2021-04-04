@@ -10,14 +10,14 @@ namespace Ion
 	public:
 		using LayerPtr = TShared<Layer>;
 
-		Layer(const CStr name);
+		Layer(const char* name);
 		virtual ~Layer();
 
 		/* A disabled layer will not get updated and rendered.
 		   Also it will not receive any events. */
 		void SetEnabled(bool bEnabled);
 
-		FORCEINLINE const CStr GetName() const { return m_Name; }
+		FORCEINLINE const char* GetName() const { return m_Name; }
 
 	protected:
 		virtual void OnAttach();
@@ -40,7 +40,7 @@ namespace Ion
 		static uint s_LayerCount;
 
 		uint m_ID;
-		const CStr m_Name;
+		const char* m_Name;
 		bool m_bEnabled = true;
 		bool m_bPropagateCurrentEvent = false;
 	};
