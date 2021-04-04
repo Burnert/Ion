@@ -77,8 +77,8 @@ namespace Ion
 		Shared<VertexBuffer> vbo = VertexBuffer::Create(vertices, sizeof(vertices));
 
 		VertexLayout layout(2);
-		layout.AddAttribute(VertexAttributeType::Float, 3); // Position
-		layout.AddAttribute(VertexAttributeType::Float, 4); // Vertex Color
+		layout.AddAttribute(EVertexAttributeType::Float, 3); // Position
+		layout.AddAttribute(EVertexAttributeType::Float, 4); // Vertex Color
 
 		vbo->SetLayout(layout);
 
