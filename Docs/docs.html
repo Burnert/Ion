@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ion Documentation</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&display=swap">
+  <style>
+body {
+  margin: 0;
+  background-color: rgb(21, 22, 22);
+  font-family: 'Source Sans Pro', sans-serif;
+  color: #fffd;
+}
+h1 {
+  text-align: center;
+}
+.wrapper {
+  display: flex;
+}
+.sidenav {
+  display: block;
+  position: sticky;
+  top: 0; left: 0;
+  border-right: 2px solid #fffa;
+  padding: 10px;
+  flex-shrink: 0;
+  height: 100vh;
+  overflow-y: scroll;
+  box-sizing: border-box;
+}
+.sidenav::-webkit-scrollbar { width: 10px; }
+.sidenav::-webkit-scrollbar-thumb { background-color: #fff3; }
+.sidenav::-webkit-scrollbar-thumb:hover { background-color: #fffa; }
+.sidenav h3 { text-align: center; }
+.sidenav ol {
+  padding-left: 20px;
+  color: #fffa;
+}
+.sidenav li {
+  line-height: 24px;
+}
+.sidenav a {
+  text-decoration: none;
+  color: inherit;
+}
+.sidenav a:hover {
+  color: #fffd;
+}
+.mainpanel {
+  font-size: 20px;
+  width: 100%;
+}
+.content {
+  padding: 0 30px;
+  overflow: hidden;
+}
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="sidenav">
+      <h3>Table of Contents</h3>
+      <ol>
+        <li><a href="#getting-started">Getting Started</a>
+          <ol>
+            <li><a href="#installation">Installation</a></li>
+            <li><a href="#first-application">First Application</a></li>
+          </ol>
+        </li>
+        <li><a href="#programming-guide">Programming Guide</a>
+          <ol>
+            <li><a href="#programming-introduction">Introduction</a></li>
+            <li><a href="#cpp-programming">C++ Programming</a>
+              <ol>
+                <li><a href="#cpp-code-conventions">Code Conventions</a></li>
+                <li><a href="#cpp-creating-an-application">Creating an Application</a></li>
+                <li><a href="#cpp-engine-build">Engine Build Instructions</a></li>
+                <li><a href="#cpp-reference">C++ API Reference</a></li>
+              </ol>
+            </li>
+          </ol>
+        </li>
+      </ol>
+    </div>
+    <div class="mainpanel">
+      <h1>Ion Documentation</h1>
+      <hr>
+      <div class="content">
+        <h2 id="getting-started">1. Getting Started</h2>
+        <h3 id="installation">1.1. Installation</h3>
+        <h3 id="first-application">1.2. First Application</h3>
+        <hr>
+        <h2 id="programming-guide">2. Programming Guide</h2>
+        <h3 id="programming-introduction">2.1. Introduction</h3>
+        <h3 id="cpp-programming">2.2. C++ Programming</h3>
+        <h4 id="cpp-code-conventions">2.2.1. Code Conventions</h4>
+        <h4 id="cpp-creating-an-application">2.2.2. Creating an Application</h4>
+        <h4 id="cpp-engine-build">2.2.3. Engine Build Instructions</h4>
+        <h4 id="cpp-reference">2.2.4. C++ API Reference</h4>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
