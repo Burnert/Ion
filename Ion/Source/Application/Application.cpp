@@ -157,14 +157,13 @@ void main()
 
 	void Application::Render()
 	{
-		m_LayerStack->OnRender();
-
 		glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//glDrawArrays(GL_TRIANGLES, 0, 3);
 		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, nullptr);
 
+		m_LayerStack->OnRender();
 		OnRender();
 
 		m_Window->SwapBuffers();
