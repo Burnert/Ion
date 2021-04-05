@@ -11,6 +11,7 @@
 
 #include "RenderAPI/RenderAPI.h"
 #include "Renderer/VertexBuffer.h"
+#include "Renderer/IndexBuffer.h"
 #include "Renderer/Shader.h"
 
 namespace Ion
@@ -82,6 +83,11 @@ namespace Ion
 		layout.AddAttribute(EVertexAttributeType::Float, 4); // Vertex Color
 
 		vbo->SetLayout(layout);
+
+		uint indices[1 * 3] = {
+			0, 1, 2,
+		};
+		TShared<IndexBuffer> ibo = IndexBuffer::Create(indices, 3);
 
 		const char* vertSrc = R"(
 #version 430 core
@@ -156,7 +162,8 @@ void main()
 		glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		//glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, nullptr);
 
 		OnRender();
 
