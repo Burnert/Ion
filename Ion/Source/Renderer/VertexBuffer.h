@@ -40,16 +40,16 @@ namespace Ion
 		{
 			switch (type)
 			{
-			case EVertexAttributeType::Byte:			  return 1;
-			case EVertexAttributeType::UnsignedByte:	  return 1;
-			case EVertexAttributeType::Short:		  return 2;
+			case EVertexAttributeType::Byte:           return 1;
+			case EVertexAttributeType::UnsignedByte:   return 1;
+			case EVertexAttributeType::Short:          return 2;
 			case EVertexAttributeType::UnsignedShort:  return 2;
-			case EVertexAttributeType::Int:			  return 4;
-			case EVertexAttributeType::UnsignedInt:	  return 4;
-			case EVertexAttributeType::Float16:		  return 2;
-			case EVertexAttributeType::Float:		  return 4;
-			case EVertexAttributeType::Double:		  return 8;
-			default:                                  return 0;
+			case EVertexAttributeType::Int:            return 4;
+			case EVertexAttributeType::UnsignedInt:    return 4;
+			case EVertexAttributeType::Float16:        return 2;
+			case EVertexAttributeType::Float:          return 4;
+			case EVertexAttributeType::Double:         return 8;
+			default:                                   return 0;
 			}
 		}
 
