@@ -11,10 +11,10 @@ namespace Ion
 		OpenGLVertexBuffer(void* vertices, ulong size);
 		virtual ~OpenGLVertexBuffer() override;
 
-		virtual void Bind() override;
-		virtual void Unbind() override;
+		virtual void Bind() const override;
+		virtual void Unbind() const override;
 
-		virtual void SetLayout(const VertexLayout& layout) override;
+		virtual void SetLayout(const VertexLayout& layout) const override;
 
 		static constexpr FORCEINLINE uint VertexAttributeTypeToGLType(EVertexAttributeType type)
 		{

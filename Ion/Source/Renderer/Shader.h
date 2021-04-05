@@ -13,9 +13,9 @@ namespace Ion
 	public:
 		static TShared<Shader> Create(EShaderType shaderType, std::string shaderSource);
 
-		virtual ~Shader() { };
+		virtual ~Shader() { }
 
-		virtual bool Compile() = 0;
+		virtual bool Compile() const = 0;
 
 	protected:
 		Shader(EShaderType shaderType, std::string shaderSource);
@@ -30,14 +30,14 @@ namespace Ion
 	public:
 		static TShared<Program> Create();
 
-		virtual ~Program() { };
+		virtual ~Program() { }
 
 		virtual void AttachShader(TShared<Shader> shader) = 0;
 
 		virtual bool Link() = 0;
 
-		virtual void Bind() = 0;
-		virtual void Unbind() = 0;
+		virtual void Bind() const = 0;
+		virtual void Unbind() const = 0;
 
 	protected:
 		std::vector<TShared<Shader>> m_AttachedShaders;

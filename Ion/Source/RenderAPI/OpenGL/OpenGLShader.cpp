@@ -21,7 +21,7 @@ namespace Ion
 		glDeleteShader(m_ID);
 	}
 
-	bool OpenGLShader::Compile()
+	bool OpenGLShader::Compile() const
 	{
 		glCompileShader(m_ID);
 
@@ -72,12 +72,12 @@ namespace Ion
 		return bLinked;
 	}
 
-	void OpenGLProgram::Bind()
+	void OpenGLProgram::Bind() const
 	{
 		glUseProgram(m_ID);
 	}
 
-	void OpenGLProgram::Unbind()
+	void OpenGLProgram::Unbind() const
 	{
 		glUseProgram(0);
 	}

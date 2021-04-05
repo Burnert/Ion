@@ -12,7 +12,7 @@ namespace Ion
 		OpenGLShader(EShaderType shaderType, std::string shaderSource);
 		virtual ~OpenGLShader() override;
 
-		virtual bool Compile() override;
+		virtual bool Compile() const override;
 
 		static constexpr FORCEINLINE uint ShaderTypeToGLShaderType(EShaderType type)
 		{
@@ -38,8 +38,8 @@ namespace Ion
 
 		virtual bool Link() override;
 
-		virtual void Bind() override;
-		virtual void Unbind() override;
+		virtual void Bind() const override;
+		virtual void Unbind() const override;
 
 	private:
 		uint m_ID;

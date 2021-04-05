@@ -16,17 +16,17 @@ namespace Ion
 		glDeleteBuffers(1, &m_ID);
 	}
 
-	void OpenGLVertexBuffer::Bind()
+	void OpenGLVertexBuffer::Bind() const
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, m_ID);
 	}
 
-	void OpenGLVertexBuffer::Unbind()
+	void OpenGLVertexBuffer::Unbind() const
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
-	void OpenGLVertexBuffer::SetLayout(const VertexLayout& layout)
+	void OpenGLVertexBuffer::SetLayout(const VertexLayout& layout) const
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, m_ID);
 

@@ -63,12 +63,12 @@ namespace Ion
 	public:
 		static TShared<VertexBuffer> Create(void* vertices, uint size);
 
-		virtual ~VertexBuffer() { };
+		virtual ~VertexBuffer() { }
 
-		virtual void Bind() = 0;
-		virtual void Unbind() = 0;
+		virtual void Bind() const = 0;
+		virtual void Unbind() const = 0;
 
-		virtual void SetLayout(const VertexLayout& layout) = 0;
+		virtual void SetLayout(const VertexLayout& layout) const = 0;
 
 	protected:
 		VertexBuffer() { }
