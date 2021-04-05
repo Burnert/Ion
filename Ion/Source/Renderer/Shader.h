@@ -2,44 +2,45 @@
 
 namespace Ion
 {
-	enum class EShaderType
+	enum class EShaderType : ubyte
 	{
+		Unknown,
 		Vertex,
 		Pixel,
+	};
+
+	struct SShaderInfo
+	{
+		uint ID;
+		EShaderType Type;
+		std::string Source;
 	};
 
 	class ION_API Shader
 	{
 	public:
-		static TShared<Shader> Create(EShaderType shaderType, std::string shaderSource);
+		static TShared<Shader> Create();
 
 		virtual ~Shader() { }
 
-		virtual bool Compile() const = 0;
+		virtual void AddShaderSource(EShaderType type, std::string source) = 0;
 
-	protected:
-		Shader(EShaderType shaderType, std::string shaderSource);
-
-	private:
-		EShaderType m_Type;
-		std::string m_ShaderSource;
-	};
-
-	class ION_API Program
-	{
-	public:
-		static TShared<Program> Create();
-
-		virtual ~Program() { }
-
-		virtual void AttachShader(TShared<Shader> shader) = 0;
-
-		virtual bool Link() = 0;
+		virtual bool Compile() = 0;
 
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 
+		FORCEINLINE static constexpr const char* ShaderTypeToString(EShaderType type)
+		{
+			switch (type)
+			{
+			case EShaderType::Vertex:  return "Vertex Shader";
+			case EShaderType::Pixel:   return "Pixel Shader";
+			default:                   return "Unknown Shader";
+			}
+		}
+
 	protected:
-		std::vector<TShared<Shader>> m_AttachedShaders;
+		Shader() { }
 	};
 }

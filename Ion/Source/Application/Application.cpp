@@ -104,7 +104,6 @@ void main()
 }
 
 )";
-		TShared<Shader> vertShader = Shader::Create(EShaderType::Vertex, vertSrc);
 
 		const char* fragSrc = R"(
 #version 430 core
@@ -119,24 +118,17 @@ void main()
 }
 
 )";
-		TShared<Shader> fragShader = Shader::Create(EShaderType::Pixel, fragSrc);
 
 		bool bResult;
 
-		bResult = vertShader->Compile();
-		ASSERT(bResult);
-		bResult = fragShader->Compile();
-		ASSERT(bResult);
+		TShared<Shader> shader = Shader::Create();
+		shader->AddShaderSource(EShaderType::Vertex, vertSrc);
+		shader->AddShaderSource(EShaderType::Pixel, fragSrc);
 
-		TShared<Program> program = Program::Create();
-		
-		program->AttachShader(vertShader);
-		program->AttachShader(fragShader);
+		bResult = shader->Compile();
+		VERIFY(bResult);
 
-		bResult = program->Link();
-		ASSERT(bResult);
-
-		program->Bind();
+		shader->Bind();
 
 		RunMainLoop();
 

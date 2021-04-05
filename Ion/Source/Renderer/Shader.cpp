@@ -7,35 +7,14 @@
 
 namespace Ion
 {
-	// ------------------------------------------
-	// Shader 
-
-	TShared<Shader> Shader::Create(EShaderType shaderType, std::string shaderSource)
+	TShared<Shader> Shader::Create()
 	{
 		switch (RenderAPI::GetCurrent())
 		{
 		case ERenderAPI::OpenGL:
-			return MakeShared<OpenGLShader>(shaderType, shaderSource);
+			return MakeShared<OpenGLShader>();
 		default:
 			return TShared<Shader>(nullptr);
-		}
-	}
-
-	Shader::Shader(EShaderType shaderType, std::string shaderSource)
-		: m_Type(shaderType), m_ShaderSource(shaderSource)
-	{ }
-
-	// ------------------------------------------
-	// Program
-
-	TShared<Program> Program::Create()
-	{
-		switch (RenderAPI::GetCurrent())
-		{
-		case ERenderAPI::OpenGL:
-			return MakeShared<OpenGLProgram>();
-		default:
-			return TShared<Program>(nullptr);
 		}
 	}
 }

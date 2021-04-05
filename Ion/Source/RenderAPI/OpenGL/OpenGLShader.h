@@ -7,14 +7,18 @@ namespace Ion
 {
 	class ION_API OpenGLShader : public Shader
 	{
-		friend class OpenGLProgram;
 	public:
-		OpenGLShader(EShaderType shaderType, std::string shaderSource);
+		OpenGLShader();
 		virtual ~OpenGLShader() override;
 
-		virtual bool Compile() const override;
+		virtual void AddShaderSource(EShaderType type, std::string source) override;
 
-		static constexpr FORCEINLINE uint ShaderTypeToGLShaderType(EShaderType type)
+		virtual bool Compile() override;
+
+		virtual void Bind() const override;
+		virtual void Unbind() const override;
+
+		FORCEINLINE static constexpr uint ShaderTypeToGLShaderType(EShaderType type)
 		{
 			switch (type)
 			{
@@ -25,23 +29,11 @@ namespace Ion
 		}
 
 	private:
-		uint m_ID;
-	};
-
-	class ION_API OpenGLProgram : public Program
-	{
-	public:
-		OpenGLProgram();
-		virtual ~OpenGLProgram() override;
-
-		virtual void AttachShader(TShared<Shader> shader) override;
-
-		virtual bool Link() override;
-
-		virtual void Bind() const override;
-		virtual void Unbind() const override;
+		void CleanupDeleteShaders();
 
 	private:
-		uint m_ID;
+		uint m_ProgramID;
+		bool m_bCompiled;
+		std::unordered_map<EShaderType, SShaderInfo> m_Shaders;
 	};
 }

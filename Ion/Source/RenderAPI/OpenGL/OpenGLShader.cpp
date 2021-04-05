@@ -4,81 +4,119 @@
 
 namespace Ion
 {
-	// ------------------------------------------
-	// Shader 
-
-	OpenGLShader::OpenGLShader(EShaderType shaderType, std::string shaderSource)
-		: Shader(shaderType, shaderSource)
-	{
-		m_ID = glCreateShader(ShaderTypeToGLShaderType(shaderType));
-
-		const char* source = shaderSource.c_str();
-		glShaderSource(m_ID, 1, &source, 0);
-	}
+	OpenGLShader::OpenGLShader() :
+		m_ProgramID(0), 
+		m_bCompiled(false)
+	{ }
 
 	OpenGLShader::~OpenGLShader()
 	{
-		glDeleteShader(m_ID);
+		glDeleteProgram(m_ProgramID);
+		m_ProgramID = 0;
+		CleanupDeleteShaders();
 	}
 
-	bool OpenGLShader::Compile() const
+	void OpenGLShader::AddShaderSource(EShaderType type, std::string source)
 	{
-		glCompileShader(m_ID);
+		if (!m_bCompiled)
+		{
+			uint id;
 
-		int bSuccess = 0;
-		glGetShaderiv(m_ID, GL_COMPILE_STATUS, &bSuccess);
+			auto& it = m_Shaders.find(type);
+			if (it == m_Shaders.end())
+			{
+				id = glCreateShader(ShaderTypeToGLShaderType(type));
+			}
+			else
+			{
+				id = (*it).second.ID;
+			}
 
-		return bSuccess;
+			const char* src = source.c_str();
+			glShaderSource(id, 1, &src, 0);
+
+			m_Shaders[type] = { id, type, source };
+		}
 	}
 
-	// ------------------------------------------
-	// Program
-
-	OpenGLProgram::OpenGLProgram()
+	bool OpenGLShader::Compile()
 	{
-		m_ID = glCreateProgram();
-	}
+		m_ProgramID = glCreateProgram();
 
-	OpenGLProgram::~OpenGLProgram()
-	{
-		glDeleteProgram(m_ID);
-	}
+		for (auto& entry : m_Shaders)
+		{
+			const SShaderInfo& shader = entry.second;
 
-	void OpenGLProgram::AttachShader(TShared<Shader> shader)
-	{
-		uint shaderId = std::static_pointer_cast<OpenGLShader>(shader)->m_ID;
-		glAttachShader(m_ID, shaderId);
-		m_AttachedShaders.push_back(shader);
-	}
+			glCompileShader(shader.ID);
 
-	bool OpenGLProgram::Link()
-	{
-		glLinkProgram(m_ID);
+			int bSuccess = 0;
+			glGetShaderiv(shader.ID, GL_COMPILE_STATUS, &bSuccess);
+
+			if (!bSuccess)
+			{
+				LOG_ERROR("Could not compile shader! ({0})", ShaderTypeToString(shader.Type));
+				ASSERT(bSuccess);
+
+				CleanupDeleteShaders();
+				return false;
+			}
+		}
+
+		m_bCompiled = true;
+
+		for (auto& entry : m_Shaders)
+		{
+			const SShaderInfo& shader = entry.second;
+
+			glAttachShader(m_ProgramID, shader.ID);
+		}
+
+		glLinkProgram(m_ProgramID);
 
 		int bLinked = 0;
-		glGetProgramiv(m_ID, GL_LINK_STATUS, &bLinked);
+		glGetProgramiv(m_ProgramID, GL_LINK_STATUS, &bLinked);
 
 		if (bLinked)
 		{
 			// Shaders need to be detached after a successful link
-			for (TShared<Shader> shader : m_AttachedShaders)
+			for (auto& entry : m_Shaders)
 			{
-				uint shaderId = std::static_pointer_cast<OpenGLShader>(shader)->m_ID;
-				glDetachShader(m_ID, shaderId);
+				const SShaderInfo& shader = entry.second;
+
+				glDetachShader(m_ProgramID, shader.ID);
 			}
-			m_AttachedShaders.clear();
+		}
+		else
+		{
+			LOG_ERROR("Could not link shader program!");
+			ASSERT(bLinked);
+
+			glDeleteProgram(m_ProgramID);
+			m_ProgramID = 0;
 		}
 
 		return bLinked;
 	}
 
-	void OpenGLProgram::Bind() const
+	void OpenGLShader::Bind() const
 	{
-		glUseProgram(m_ID);
+		glUseProgram(m_ProgramID);
 	}
 
-	void OpenGLProgram::Unbind() const
+	void OpenGLShader::Unbind() const
 	{
 		glUseProgram(0);
+	}
+
+	void OpenGLShader::CleanupDeleteShaders()
+	{
+		for (auto& entry : m_Shaders)
+		{
+			const SShaderInfo& shader = entry.second;
+
+			glDeleteShader(shader.ID);
+		}
+
+		m_Shaders.clear();
 	}
 }
