@@ -19,7 +19,7 @@ namespace Ion
 			switch (type)
 			{
 			case EShaderType::Vertex:    return GL_VERTEX_SHADER;
-			case EShaderType::Fragment:  return GL_FRAGMENT_SHADER;
+			case EShaderType::Pixel:     return GL_FRAGMENT_SHADER;
 			default:                     return 0;
 			}
 		}

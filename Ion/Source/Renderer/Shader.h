@@ -5,7 +5,7 @@ namespace Ion
 	enum class EShaderType
 	{
 		Vertex,
-		Fragment,
+		Pixel,
 	};
 
 	class ION_API Shader

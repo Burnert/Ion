@@ -113,7 +113,7 @@ void main()
 }
 
 )";
-		TShared<Shader> fragShader = Shader::Create(EShaderType::Fragment, fragSrc);
+		TShared<Shader> fragShader = Shader::Create(EShaderType::Pixel, fragSrc);
 
 		bool bResult;
 
