@@ -20,16 +20,16 @@ namespace Ion
 		{
 			switch (type)
 			{
-			case EVertexAttributeType::Byte:			  return GL_BYTE;
-			case EVertexAttributeType::UnsignedByte:	  return GL_UNSIGNED_BYTE;
-			case EVertexAttributeType::Short:		  return GL_SHORT;
+			case EVertexAttributeType::Byte:           return GL_BYTE;
+			case EVertexAttributeType::UnsignedByte:   return GL_UNSIGNED_BYTE;
+			case EVertexAttributeType::Short:          return GL_SHORT;
 			case EVertexAttributeType::UnsignedShort:  return GL_UNSIGNED_SHORT;
-			case EVertexAttributeType::Int:			  return GL_INT;
-			case EVertexAttributeType::UnsignedInt:	  return GL_UNSIGNED_INT;
-			case EVertexAttributeType::Float16:		  return GL_HALF_FLOAT;
-			case EVertexAttributeType::Float:		  return GL_FLOAT;
-			case EVertexAttributeType::Double:		  return GL_DOUBLE;
-			default:                                  return 0;
+			case EVertexAttributeType::Int:            return GL_INT;
+			case EVertexAttributeType::UnsignedInt:    return GL_UNSIGNED_INT;
+			case EVertexAttributeType::Float16:        return GL_HALF_FLOAT;
+			case EVertexAttributeType::Float:          return GL_FLOAT;
+			case EVertexAttributeType::Double:         return GL_DOUBLE;
+			default:                                   return 0;
 			}
 		}
 
