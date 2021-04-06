@@ -67,6 +67,9 @@ namespace Ion
 		// Call client overriden Init function
 		OnInit();
 
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+
 		uint vao;
 		glCreateVertexArrays(1, &vao);
 		glBindVertexArray(vao);
@@ -90,6 +93,46 @@ namespace Ion
 			2, 3, 0,
 		};
 		TShared<IndexBuffer> ibo = IndexBuffer::Create(indices, 2 * 3);
+
+		float cubeVerts[8 * 7] = {
+			-0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f,
+			 0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f,
+			 0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f,
+			-0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 1.0f,
+			 0.5f, -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 1.0f,
+			-0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 1.0f, 1.0f,
+			-0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
+			 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f,
+		};
+		TShared<VertexBuffer> vboCube = VertexBuffer::Create(cubeVerts, sizeof(cubeVerts));
+		vboCube->SetLayout(layout);
+
+		uint cubeIndices[12 * 3] = {
+			// Front
+			0, 1, 2,
+			2, 3, 0,
+
+			// Back
+			4, 5, 6,
+			6, 7, 4,
+
+			// Right
+			1, 4, 7,
+			7, 2, 1,
+
+			// Left
+			5, 0, 3,
+			3, 6, 5,
+
+			// Top
+			3, 2, 7,
+			7, 6, 3,
+
+			// Bottom
+			5, 4, 1,
+			5, 1, 0,
+		};
+		TShared<IndexBuffer> iboCube = IndexBuffer::Create(cubeIndices, 12 * 3);
 
 		const char* vertSrc = R"(
 #version 430 core
@@ -168,8 +211,8 @@ void main()
 
 		// Model transform
 		FMatrix4 modelMatrix(1.0f);
-		modelMatrix *= glm::translate(FVector3(0.3f, 0.5f, 0.0f));
-		modelMatrix *= glm::rotate(c_Angle, FVector3(0.0f, 0.0f, 1.0f));
+		//modelMatrix *= glm::translate(FVector3(0.3f, 0.5f, 0.0f));
+		modelMatrix *= glm::rotate(c_Angle, glm::normalize(FVector3(1.0f, 0.0f, 1.0f)));
 
 		// Multiply in this order because OpenGL
 		FMatrix4 modelViewProjectionMatrix = projectionMatrix * viewMatrix * modelMatrix;
@@ -188,7 +231,7 @@ void main()
 		glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glDrawElements(GL_TRIANGLES, 2 * 3, GL_UNSIGNED_INT, nullptr);
+		glDrawElements(GL_TRIANGLES, 12 * 3, GL_UNSIGNED_INT, nullptr);
 
 		m_LayerStack->OnRender();
 		OnRender();
