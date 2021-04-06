@@ -38,7 +38,8 @@ project "Ion"
 	}
 
 	includedirs {
-		"Ion/ThirdParty/Glad/include",
+		"%{prj.name}/ThirdParty/Glad/include",
+		"%{prj.name}/ThirdParty/glm",
 		"%{prj.name}/ThirdParty/SpdLog/include",
 		"%{prj.name}/Source"
 	}
@@ -91,6 +92,7 @@ project "IonExample"
 
 	includedirs {
 		"Ion/Source",
+		"Ion/ThirdParty/glm",
 		"Ion/ThirdParty/SpdLog/include",
 		"%{prj.name}/Source"
 	}
