@@ -19,6 +19,7 @@
 #include "Input/Input.h"
 #include "Layer/Layer.h"
 #include "Logging/Logger.h"
+#include "Math/Math.h"
 #include "Profiling/DebugProfiler.h"
 #include "Serialisation/Serialisation.h"
 #include "Templates/Templates.h"
