@@ -534,8 +534,17 @@ namespace Ion
 		WindowStyleEx |= WS_EX_APPWINDOW;
 		WindowStyleEx |= WS_EX_WINDOWEDGE;
 
-		int desiredWidth = 1280;
-		int desiredHeight = 720;
+		int windowWidth = 1280;
+		int windowHeight = 720;
+
+		RECT windowRect { };
+		if (!AdjustWindowRectEx(&windowRect, WindowStyle, false, WindowStyleEx))
+		{
+			return false;
+		}
+
+		windowWidth += windowRect.right - windowRect.left;
+		windowHeight += windowRect.bottom - windowRect.top;
 
 		m_WindowHandle = CreateWindowEx(
 			WindowStyleEx,
@@ -545,8 +554,8 @@ namespace Ion
 
 			CW_USEDEFAULT,
 			CW_USEDEFAULT,
-			desiredWidth,
-			desiredHeight,
+			windowWidth,
+			windowHeight,
 
 			NULL,
 			NULL,
