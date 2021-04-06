@@ -500,7 +500,7 @@ namespace Ion
 		wc.cbWndExtra = 0;
 		wc.hInstance = hInstance;
 		wc.hIcon = NULL;
-		wc.hCursor = NULL;
+		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 		wc.hbrBackground = NULL;
 		wc.lpszMenuName = NULL;
 		wc.lpszClassName = className;
