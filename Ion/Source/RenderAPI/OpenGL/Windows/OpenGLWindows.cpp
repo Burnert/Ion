@@ -96,13 +96,17 @@ namespace Ion
 		const int wglAttributes[] = {
 			WGL_CONTEXT_MAJOR_VERSION_ARB, s_MajorVersion,
 			WGL_CONTEXT_MINOR_VERSION_ARB, s_MinorVersion,
-			WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+			WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB | WGL_CONTEXT_DEBUG_BIT_ARB,
 			WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
 			0 // End
 		};
 
 		HGLRC renderingContext = wglCreateContextAttribsARB(hdc, NULL, wglAttributes);
 		VERIFY(renderingContext != NULL);
+
+		VERIFY(wglMakeCurrent(hdc, renderingContext));
+
+		glDebugMessageCallback(OpenGLWindows::DebugCallback, nullptr);
 
 		return renderingContext;
 	}
@@ -123,7 +127,21 @@ namespace Ion
 
 	void OpenGLWindows::DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
 	{
-		LOG_ERROR("OpenGL Error: {0}", message);
+		switch (severity)
+		{
+		case GL_DEBUG_SEVERITY_HIGH:
+			LOG_CRITICAL("OpenGL Critical Error: \n{0}", message);
+			break;
+		case GL_DEBUG_SEVERITY_MEDIUM:
+			LOG_ERROR("OpenGL Error: \n{0}", message);
+			break;
+		case GL_DEBUG_SEVERITY_LOW:
+			LOG_WARN("OpenGL Warning: \n{0}", message);
+			break;
+		case GL_DEBUG_SEVERITY_NOTIFICATION:
+			LOG_TRACE("OpenGL Notification: \n{0}", message);
+			break;
+		}
 	}
 
 	HMODULE OpenGLWindows::s_OpenGLModule = NULL;
@@ -209,5 +227,14 @@ namespace Ion
 		wglDeleteContext(m_RenderingContext);
 		ReleaseDC(m_WindowHandle, m_DeviceContext);
 		DestroyWindow(m_WindowHandle);
+	}
+
+	// -----------------------------------
+	// OpenGL implementation
+	// -----------------------------------
+
+	void OpenGL::SetVSyncEnabled(bool bEnabled)
+	{
+		wglSwapIntervalEXT(bEnabled);
 	}
 }

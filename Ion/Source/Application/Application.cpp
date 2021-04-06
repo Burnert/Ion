@@ -10,9 +10,7 @@
 #include "glad/glad.h"
 
 #include "RenderAPI/RenderAPI.h"
-#include "Renderer/VertexBuffer.h"
-#include "Renderer/IndexBuffer.h"
-#include "Renderer/Shader.h"
+#include "Renderer/Renderer.h"
 
 namespace Ion
 {
@@ -47,17 +45,21 @@ namespace Ion
 		// Create a platform specific window.
 		m_Window = GenericWindow::Create();
 
+		// Current thread will render graphics in this window.
 		m_Window->Initialize();
 
 		m_Window->SetEventCallback(BIND_METHOD_1P(Application::HandleEvent));
 
-		// Current thread will render graphics in this window.
-		m_Window->MakeRenderingContextCurrent();
+		m_Renderer = Renderer::Create();
+		m_Renderer->Init();
+
+		m_Renderer->SetVSyncEnabled(true);
 
 		const char* renderAPILabel = RenderAPI::GetCurrentDisplayName();
 
 		std::wstring windowTitle = TEXT("Ion - ");
 		wchar renderAPILabelW[120];
+		// @TODO: This is from Windows, change that:
 		MultiByteToWideChar(CP_UTF8, 0, renderAPILabel, -1, renderAPILabelW, 120);
 		windowTitle += renderAPILabelW;
 		m_Window->SetTitle((wchar*)windowTitle.c_str());
@@ -66,13 +68,6 @@ namespace Ion
 
 		// Call client overriden Init function
 		OnInit();
-
-		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LESS);
-
-		uint vao;
-		glCreateVertexArrays(1, &vao);
-		glBindVertexArray(vao);
 
 		float vertices[4 * 7] = {
 			-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
@@ -228,8 +223,7 @@ void main()
 
 	void Application::Render()
 	{
-		glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		m_Renderer->Clear(FVector4(0.1f, 0.1f, 0.1f, 1.0f));
 
 		glDrawElements(GL_TRIANGLES, 12 * 3, GL_UNSIGNED_INT, nullptr);
 
@@ -267,8 +261,34 @@ void main()
 				uint width = event.GetWidth();
 				uint height = event.GetHeight();
 
+				// @TODO: Move this to the Renderer impl? RenderAPI impl? Wherever.
 				glViewport(0, 0, width, height);
 
+				return true;
+			});
+
+		dispatcher.Dispatch<KeyPressedEvent>(
+			[this](KeyPressedEvent& event)
+			{
+				if (!event.IsRepeated())
+				{
+					// Toggle wireframe display with W key
+					if (event.GetKeyCode() == Key::W)
+					{
+						uint mode;
+						glGetIntegerv(GL_POLYGON_MODE, (int*)&mode);
+						if (mode == GL_FILL)
+							glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+						else
+							glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+					}
+					else if (event.GetKeyCode() == Key::V)
+					{
+						static bool c_VSync = true;
+						c_VSync = !c_VSync;
+						m_Renderer->SetVSyncEnabled(c_VSync);
+					}
+				}
 				return true;
 			});
 

@@ -18,6 +18,12 @@ namespace Ion
 
 		static const char* GetDisplayName();
 
+		// Implemented per platform:
+	public:
+		static void SetVSyncEnabled(bool bEnabled);
+
+		// End Implemented per platform
+
 	protected:
 		static void SetDisplayVersion(const char* version);
 

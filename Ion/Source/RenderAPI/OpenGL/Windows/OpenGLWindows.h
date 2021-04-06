@@ -27,7 +27,7 @@ namespace Ion
 
 		static void* GetProcAddress(const char* name);
 
-		static void DebugCallback(
+		static void APIENTRY DebugCallback(
 			GLenum source,
 			GLenum type,
 			GLuint id,

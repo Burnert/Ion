@@ -19,6 +19,8 @@ namespace Ion
 	class EventQueue;
 	class InputManager;
 
+	class Renderer;
+
 	class Shader;
 
 	class ION_API Application
@@ -86,6 +88,8 @@ namespace Ion
 
 		TShared<GenericWindow> m_Window;
 		TShared<InputManager> m_InputManager;
+
+		TShared<Renderer> m_Renderer;
 
 		TUnique<EventQueue> m_EventQueue;
 		TUnique<LayerStack> m_LayerStack;
