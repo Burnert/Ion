@@ -41,14 +41,8 @@ namespace Ion
 			m_Width(width),
 			m_Height(height) { }
 
-		FORCEINLINE uint GetWidth() const
-		{
-			return m_Width;
-		}
-		FORCEINLINE uint GetHeight() const
-		{
-			return m_Height;
-		}
+		FORCEINLINE uint GetWidth() const { return m_Width; }
+		FORCEINLINE uint GetHeight() const { return m_Height; }
 
 		SET_EVENT_TYPE(WindowResize)
 		SET_EVENT_TOSTRING_FORMAT("{ window: " << GetWindowHandle() << ", width: " << m_Width << ", height: " << m_Height << " }")
@@ -65,6 +59,9 @@ namespace Ion
 			WindowEvent(windowHandle),
 			m_X(x),
 			m_Y(y) { }
+
+		FORCEINLINE uint GetX() const { return m_X; }
+		FORCEINLINE uint GetY() const { return m_Y; }
 
 		SET_EVENT_TYPE(WindowMoved)
 		SET_EVENT_TOSTRING_FORMAT("{ window: " << GetWindowHandle() << ", x: " << m_X << ", y: " << m_Y << " }")
