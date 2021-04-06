@@ -261,6 +261,17 @@ void main()
 				return false;
 			});
 
+		dispatcher.Dispatch<WindowResizeEvent>(
+			[this](WindowResizeEvent& event)
+			{
+				uint width = event.GetWidth();
+				uint height = event.GetHeight();
+
+				glViewport(0, 0, width, height);
+
+				return true;
+			});
+
 		m_InputManager->OnEvent(event);
 		m_LayerStack->OnEvent(event);
 		OnEvent(event);

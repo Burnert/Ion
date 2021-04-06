@@ -41,6 +41,15 @@ namespace Ion
 			m_Width(width),
 			m_Height(height) { }
 
+		FORCEINLINE uint GetWidth() const
+		{
+			return m_Width;
+		}
+		FORCEINLINE uint GetHeight() const
+		{
+			return m_Height;
+		}
+
 		SET_EVENT_TYPE(WindowResize)
 		SET_EVENT_TOSTRING_FORMAT("{ window: " << GetWindowHandle() << ", width: " << m_Width << ", height: " << m_Height << " }")
 
