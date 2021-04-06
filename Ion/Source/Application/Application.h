@@ -19,6 +19,8 @@ namespace Ion
 	class EventQueue;
 	class InputManager;
 
+	class Shader;
+
 	class ION_API Application
 	{
 	public:
@@ -89,6 +91,8 @@ namespace Ion
 		TUnique<LayerStack> m_LayerStack;
 
 		std::thread::id m_MainThreadId;
+
+		TShared<Shader> m_Shader;
 	};
 
 	Application* CreateApplication();

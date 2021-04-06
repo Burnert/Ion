@@ -71,10 +71,11 @@ namespace Ion
 		glCreateVertexArrays(1, &vao);
 		glBindVertexArray(vao);
 
-		float vertices[3 * 7] = {
+		float vertices[4 * 7] = {
 			-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
 			 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-			 0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+			 0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+			-0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 		};
 		TShared<VertexBuffer> vbo = VertexBuffer::Create(vertices, sizeof(vertices));
 
@@ -84,23 +85,27 @@ namespace Ion
 
 		vbo->SetLayout(layout);
 
-		uint indices[1 * 3] = {
+		uint indices[2 * 3] = {
 			0, 1, 2,
+			2, 3, 0,
 		};
-		TShared<IndexBuffer> ibo = IndexBuffer::Create(indices, 3);
+		TShared<IndexBuffer> ibo = IndexBuffer::Create(indices, 2 * 3);
 
 		const char* vertSrc = R"(
 #version 430 core
 
-layout(location = 0) in vec3 position;
-layout(location = 1) in vec4 color;
+layout(location = 0) in vec3 a_Position;
+layout(location = 1) in vec4 a_Color;
+
+uniform mat4 u_MVP;
+uniform vec4 u_Color;
 
 out vec4 v_Color;
 
 void main()
 {
-	v_Color = color;
-	gl_Position = vec4(position, 1.0f);
+	v_Color = a_Color * u_Color;
+	gl_Position = u_MVP * vec4(a_Position, 1.0f);
 }
 
 )";
@@ -130,6 +135,8 @@ void main()
 
 		shader->Bind();
 
+		m_Shader = shader;
+
 		RunMainLoop();
 
 		// Call client overriden Shutdown function
@@ -143,8 +150,37 @@ void main()
 
 	void Application::Update(float DeltaTime)
 	{
+		static float c_Angle = 0.0f;
+		static FVector4 c_Tint(1.0f, 0.0f, 1.0f, 1.0f);
+
+		FVector4 tint = c_Tint;
+		tint.y = glm::abs(tint.y - 1.0f);
+		m_Shader->SetUniform4f("u_Color", tint);
+
+		// Perspective projection
+		float fov = glm::radians(90.0f);
+		WindowDimensions dimensions = m_Window->GetDimensions();
+		float aspectRatio = (float)dimensions.Width / (float)dimensions.Height;
+		FMatrix4 projectionMatrix = glm::perspective(fov, aspectRatio, 0.1f, 100.0f);
+
+		// Inverted camera
+		FMatrix4 viewMatrix = glm::translate(FVector3(0.0f, 0.0f, -2.0f));
+
+		// Model transform
+		FMatrix4 modelMatrix(1.0f);
+		modelMatrix *= glm::translate(FVector3(0.3f, 0.5f, 0.0f));
+		modelMatrix *= glm::rotate(c_Angle, FVector3(0.0f, 0.0f, 1.0f));
+
+		// Multiply in this order because OpenGL
+		FMatrix4 modelViewProjectionMatrix = projectionMatrix * viewMatrix * modelMatrix;
+
+		m_Shader->SetUniformMatrix4f("u_MVP", modelViewProjectionMatrix);
+
 		m_LayerStack->OnUpdate(DeltaTime);
 		OnUpdate(DeltaTime);
+
+		c_Angle += 0.01f;
+		c_Tint.y = (((c_Tint.y + 0.01f) >= 2.0f) ? 0.0f : (c_Tint.y + 0.01f));
 	}
 
 	void Application::Render()
@@ -152,8 +188,7 @@ void main()
 		glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		//glDrawArrays(GL_TRIANGLES, 0, 3);
-		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, nullptr);
+		glDrawElements(GL_TRIANGLES, 2 * 3, GL_UNSIGNED_INT, nullptr);
 
 		m_LayerStack->OnRender();
 		OnRender();
