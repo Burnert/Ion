@@ -8,7 +8,7 @@ namespace Ion
 	class ION_API OpenGLVertexBuffer : public VertexBuffer
 	{
 	public:
-		OpenGLVertexBuffer(void* vertices, ulong size);
+		OpenGLVertexBuffer(void* vertices, ullong size);
 		virtual ~OpenGLVertexBuffer() override;
 
 		virtual void Bind() const override;

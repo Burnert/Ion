@@ -61,7 +61,7 @@ namespace Ion
 	class ION_API VertexBuffer
 	{
 	public:
-		static TShared<VertexBuffer> Create(void* vertices, uint size);
+		static TShared<VertexBuffer> Create(void* vertices, ullong size);
 
 		virtual ~VertexBuffer() { }
 

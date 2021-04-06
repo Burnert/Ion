@@ -4,7 +4,7 @@
 
 namespace Ion
 {
-	OpenGLVertexBuffer::OpenGLVertexBuffer(void* vertices, ulong size)
+	OpenGLVertexBuffer::OpenGLVertexBuffer(void* vertices, ullong size)
 	{
 		glGenBuffers(1, &m_ID);
 		glBindBuffer(GL_ARRAY_BUFFER, m_ID);

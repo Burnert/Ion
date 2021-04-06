@@ -19,7 +19,7 @@ namespace Ion
 		m_Offset += elementCount * GetSizeOfAttributeType(attributeType);
 	}
 
-	TShared<VertexBuffer> VertexBuffer::Create(void* vertices, uint size)
+	TShared<VertexBuffer> VertexBuffer::Create(void* vertices, ullong size)
 	{
 		switch (RenderAPI::GetCurrent())
 		{
