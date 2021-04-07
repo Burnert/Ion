@@ -19,6 +19,10 @@ namespace Ion
 	{
 		m_HInstance = hInstance;
 
+		LARGE_INTEGER largeInteger { 0 };
+		VERIFY(QueryPerformanceFrequency(&largeInteger));
+		s_PerformanceFrequency = (float)largeInteger.QuadPart;
+
 		Init();
 	}
 
@@ -65,5 +69,28 @@ namespace Ion
 		Application::DispatchEvent(event);
 	}
 
+	float WindowsApplication::CalculateFrameTime()
+	{
+		// @TODO: Would be nice if it were pausable
+
+		LARGE_INTEGER time;
+		QueryPerformanceCounter(&time);
+
+		if (s_LastFrameTime == 0.0f)
+		{
+			s_LastFrameTime = (float)time.QuadPart;
+		}
+
+		float difference;
+		difference = time.QuadPart - s_LastFrameTime;
+
+		s_LastFrameTime = (float)time.QuadPart;
+
+		return difference / s_PerformanceFrequency;
+	}
+
 	HINSTANCE WindowsApplication::m_HInstance;
+
+	float WindowsApplication::s_PerformanceFrequency;
+	float WindowsApplication::s_LastFrameTime { 0 };
 }

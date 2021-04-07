@@ -31,7 +31,13 @@ namespace Ion
 		// End of final overrides
 
 	private:
+		virtual float CalculateFrameTime() override;
+
+	private:
 		static HINSTANCE m_HInstance;
+
+		static float s_PerformanceFrequency;
+		static float s_LastFrameTime;
 	};
 }
 

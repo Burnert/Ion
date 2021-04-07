@@ -186,7 +186,7 @@ void main()
 		// Platform specific
 	}
 
-	void Application::Update(float DeltaTime)
+	void Application::Update(float deltaTime)
 	{
 		static float c_Angle = 0.0f;
 		static FVector4 c_Tint(1.0f, 0.0f, 1.0f, 1.0f);
@@ -214,11 +214,11 @@ void main()
 
 		m_Shader->SetUniformMatrix4f("u_MVP", modelViewProjectionMatrix);
 
-		m_LayerStack->OnUpdate(DeltaTime);
-		OnUpdate(DeltaTime);
+		m_LayerStack->OnUpdate(deltaTime);
+		OnUpdate(deltaTime);
 
-		c_Angle += 0.01f;
-		c_Tint.y = (((c_Tint.y + 0.01f) >= 2.0f) ? 0.0f : (c_Tint.y + 0.01f));
+		c_Angle += deltaTime;
+		c_Tint.y = (((c_Tint.y + deltaTime) >= 2.0f) ? 0.0f : (c_Tint.y + deltaTime));
 	}
 
 	void Application::Render()
@@ -305,11 +305,18 @@ void main()
 		{
 			PollEvents();
 
-			Update(0.0f);
+			float deltaTime = CalculateFrameTime();
+			Update(deltaTime);
 			Render();
 
 			m_EventQueue->ProcessEvents();
 		}
+	}
+
+	float Application::CalculateFrameTime()
+	{
+		LOG_WARN("Cannot calculate frame time on this platform!");
+		return 0.0f;
 	}
 
 	Application* Application::s_Instance = nullptr;

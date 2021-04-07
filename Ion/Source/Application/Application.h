@@ -61,7 +61,7 @@ namespace Ion
 		virtual void OnInit() { }
 		/* Override this in the client if you want to use it.
 		   Runs every frame. */
-		virtual void OnUpdate(float DeltaTime) { }
+		virtual void OnUpdate(float deltaTime) { }
 		/* Override this in the client if you want to use it.
 		   Runs every frame after the Update function. */
 		virtual void OnRender() { }
@@ -83,6 +83,8 @@ namespace Ion
 
 		/* Main engine loop function */
 		void Run();
+
+		virtual float CalculateFrameTime();
 
 		bool m_bRunning;
 
