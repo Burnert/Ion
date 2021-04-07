@@ -52,6 +52,16 @@ namespace Ion
 
 	void WindowsApplication::DispatchEvent(Event& event)
 	{
+		EventDispatcher dispatcher(event);
+
+		// Handle close event in application
+		dispatcher.Dispatch<WindowCloseEvent>(
+			[this](WindowCloseEvent& event)
+			{
+				DestroyWindow((HWND)event.GetWindowHandle());
+				return false;
+			});
+
 		Application::DispatchEvent(event);
 	}
 

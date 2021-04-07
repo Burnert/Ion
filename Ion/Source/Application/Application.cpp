@@ -175,7 +175,7 @@ void main()
 
 		m_Shader = shader;
 
-		RunMainLoop();
+		Run();
 
 		// Call client overriden Shutdown function
 		OnShutdown();
@@ -298,16 +298,17 @@ void main()
 		RenderAPI::Init(ERenderAPI::OpenGL);
 	}
 
-	void Application::RunMainLoop()
+	void Application::Run()
 	{
 		// Application loop
 		while (m_bRunning)
 		{
-			m_EventQueue->ProcessEvents();
 			PollEvents();
 
 			Update(0.0f);
 			Render();
+
+			m_EventQueue->ProcessEvents();
 		}
 	}
 

@@ -82,7 +82,7 @@ namespace Ion
 		void InitRenderAPI();
 
 		/* Main engine loop function */
-		void RunMainLoop();
+		void Run();
 
 		bool m_bRunning;
 

@@ -29,7 +29,7 @@ namespace Ion
 			WindowEvent(windowHandle) { }
 
 		SET_EVENT_TYPE(WindowClose)
-		SET_EVENT_TOSTRING_FORMAT("{window: " << GetWindowHandle() << "}")
+		SET_EVENT_TOSTRING_FORMAT("{ window: " << GetWindowHandle() << " }")
 	};
 
 

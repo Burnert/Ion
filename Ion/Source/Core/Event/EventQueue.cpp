@@ -17,9 +17,9 @@ namespace Ion
 		{
 			//ION_LOG_ENGINE_TRACE("Processing events in queue.");
 
-			for (auto it = m_Events.begin(); it != m_Events.end(); ++it)
+			for (EventPtr eventPtr : m_Events)
 			{
-				Event& event = **it;
+				Event& event = *eventPtr;
 				m_Handler(event);
 			}
 

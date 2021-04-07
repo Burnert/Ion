@@ -86,6 +86,8 @@ namespace Ion
 	#define SET_EVENT_TOSTRING_FORMAT(format)
 #endif
 
+	// @TODO: This whole event system will need some kind of rework in the future. Especially the clunky deferred events.
+
 	// Classes
 
 	class ION_API Event

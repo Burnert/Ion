@@ -76,19 +76,6 @@ namespace Ion
 		// Convert Windows messages to Ion Events
 		// --------------------------------------
 
-		// --------------------------
-		// Handle destroy event first
-
-		if (uMsg == WM_DESTROY)
-		{
-			PostQuitMessage(0);
-
-			DeferredEventPtr event = Event::CreateDeferredEvent<WindowCloseEvent>((ullong)hWnd);
-			windowRef.m_EventCallback(*event);
-
-			return 0;
-		}
-
 		switch (uMsg)
 		{
 			// =============== //
@@ -459,6 +446,20 @@ namespace Ion
 			// =============== //
 			// Window messages //
 			// =============== //
+
+			case WM_CLOSE:
+			{
+				DeferredEventPtr event = Event::CreateDeferredEvent<WindowCloseEvent>((ullong)hWnd);
+				windowRef.m_EventCallback(*event);
+
+				return 0;
+			}
+
+			case WM_DESTROY:
+			{
+				PostQuitMessage(0);
+				return 0;
+			}
 
 			case WM_CREATE:
 			{
