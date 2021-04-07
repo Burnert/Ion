@@ -233,8 +233,13 @@ namespace Ion
 	// OpenGL implementation
 	// -----------------------------------
 
-	void OpenGL::SetVSyncEnabled(bool bEnabled)
+	void OpenGL::SetSwapInterval(int interval)
 	{
-		wglSwapIntervalEXT(bEnabled);
+		VERIFY(wglSwapIntervalEXT(interval));
+	}
+
+	int OpenGL::GetSwapInterval()
+	{
+		return wglGetSwapIntervalEXT();
 	}
 }

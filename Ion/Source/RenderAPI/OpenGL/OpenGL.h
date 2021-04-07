@@ -20,7 +20,8 @@ namespace Ion
 
 		// Implemented per platform:
 	public:
-		static void SetVSyncEnabled(bool bEnabled);
+		static void SetSwapInterval(int interval);
+		static int GetSwapInterval();
 
 		// End Implemented per platform
 

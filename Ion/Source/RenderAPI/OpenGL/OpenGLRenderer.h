@@ -17,5 +17,33 @@ namespace Ion
 		virtual void Clear(const FVector4& color) const override;
 
 		virtual void SetVSyncEnabled(bool bEnabled) const override;
+		virtual bool GetVSyncEnabled() const override;
+
+		virtual void SetViewportDimensions(const SViewportDimensions& dimensions) const override;
+		virtual SViewportDimensions GetViewportDimensions() const override;
+
+		virtual void SetPolygonDrawMode(EPolygonDrawMode drawMode) const override;
+		virtual EPolygonDrawMode GetPolygonDrawMode() const override;
+
+		FORCEINLINE static uint PolygonDrawModeToGLPolygonMode(EPolygonDrawMode drawMode)
+		{
+			switch (drawMode)
+			{
+			case EPolygonDrawMode::Fill:    return GL_FILL;
+			case EPolygonDrawMode::Lines:   return GL_LINE;
+			case EPolygonDrawMode::Points:  return GL_POINT;
+			default:                        return 0;
+			}
+		}
+		FORCEINLINE static EPolygonDrawMode GLPolygonModeToPolygonDrawMode(int polygonMode)
+		{
+			switch (polygonMode)
+			{
+			case GL_FILL:   return EPolygonDrawMode::Fill;
+			case GL_LINE:   return EPolygonDrawMode::Lines;
+			case GL_POINT:  return EPolygonDrawMode::Points;
+			default:        return (EPolygonDrawMode)-1;
+			}
+		}
 	};
 }

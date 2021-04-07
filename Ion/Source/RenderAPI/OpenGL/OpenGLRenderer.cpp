@@ -38,6 +38,35 @@ namespace Ion
 
 	void OpenGLRenderer::SetVSyncEnabled(bool bEnabled) const
 	{
-		OpenGL::SetVSyncEnabled(bEnabled);
+		OpenGL::SetSwapInterval((int)bEnabled);
+	}
+
+	bool OpenGLRenderer::GetVSyncEnabled() const
+	{
+		return (bool)OpenGL::GetSwapInterval();
+	}
+
+	void OpenGLRenderer::SetViewportDimensions(const SViewportDimensions& dimensions) const
+	{
+		glViewport(dimensions.X, dimensions.Y, dimensions.Width, dimensions.Height);
+	}
+
+	SViewportDimensions OpenGLRenderer::GetViewportDimensions() const
+	{
+		SViewportDimensions dimensions;
+		glGetIntegerv(GL_VIEWPORT, (int*)&dimensions);
+		return dimensions;
+	}
+
+	void OpenGLRenderer::SetPolygonDrawMode(EPolygonDrawMode drawMode) const
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, PolygonDrawModeToGLPolygonMode(drawMode));
+	}
+
+	EPolygonDrawMode OpenGLRenderer::GetPolygonDrawMode() const
+	{
+		int polygonMode;
+		glGetIntegerv(GL_POLYGON_MODE, &polygonMode);
+		return GLPolygonModeToPolygonDrawMode(polygonMode);
 	}
 }

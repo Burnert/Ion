@@ -258,11 +258,10 @@ void main()
 		dispatcher.Dispatch<WindowResizeEvent>(
 			[this](WindowResizeEvent& event)
 			{
-				uint width = event.GetWidth();
-				uint height = event.GetHeight();
+				int width = (int)event.GetWidth();
+				int height = (int)event.GetHeight();
 
-				// @TODO: Move this to the Renderer impl? RenderAPI impl? Wherever.
-				glViewport(0, 0, width, height);
+				m_Renderer->SetViewportDimensions(SViewportDimensions { 0, 0, width, height });
 
 				return true;
 			});
@@ -275,18 +274,15 @@ void main()
 					// Toggle wireframe display with W key
 					if (event.GetKeyCode() == Key::W)
 					{
-						uint mode;
-						glGetIntegerv(GL_POLYGON_MODE, (int*)&mode);
-						if (mode == GL_FILL)
-							glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-						else
-							glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+						EPolygonDrawMode drawMode = (m_Renderer->GetPolygonDrawMode() == EPolygonDrawMode::Fill) ?
+							EPolygonDrawMode::Lines : EPolygonDrawMode::Fill;
+						m_Renderer->SetPolygonDrawMode(drawMode);
 					}
+					// Toggle VSync with V key
 					else if (event.GetKeyCode() == Key::V)
 					{
-						static bool c_VSync = true;
-						c_VSync = !c_VSync;
-						m_Renderer->SetVSyncEnabled(c_VSync);
+						bool vsync = m_Renderer->GetVSyncEnabled();
+						m_Renderer->SetVSyncEnabled(!vsync);
 					}
 				}
 				return true;
