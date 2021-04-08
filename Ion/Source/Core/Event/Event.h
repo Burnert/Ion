@@ -19,6 +19,7 @@ namespace Ion
 		WindowFocus,
 		WindowLostFocus,
 		WindowMoved,
+		WindowChangeDisplayMode,
 
 		// Engine
 

@@ -18,6 +18,13 @@ namespace Ion
 		}
 	};
 
+	enum class EDisplayMode : ubyte
+	{
+		Windowed,
+		BorderlessWindow,
+		FullScreen,
+	};
+
 	class ION_API GenericWindow
 	{
 	public:
