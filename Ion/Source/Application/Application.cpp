@@ -38,7 +38,7 @@ namespace Ion
 	{
 		m_InputManager = InputManager::Create();
 
-		InitRenderAPI();
+		RenderAPI::Init(ERenderAPI::OpenGL);
 		COUNTER_TIME_DATA(timeRenderApiInit, "RenderAPI_InitTime");
 		LOG_INFO("{0}: {1}s", timeRenderApiInit.Name, ((float)timeRenderApiInit.GetTimeMs()) * 0.001f);
 
@@ -48,7 +48,8 @@ namespace Ion
 		// Current thread will render graphics in this window.
 		m_Window->Initialize();
 
-		m_Window->SetEventCallback(BIND_METHOD_1P(Application::HandleEvent));
+		m_Window->SetEventCallback(BIND_METHOD_1P(Application::PostEvent));
+		m_Window->SetDeferredEventCallback(BIND_METHOD_1P(Application::PostDeferredEvent));
 
 		m_Renderer = Renderer::Create();
 		m_Renderer->Init();
@@ -94,12 +95,14 @@ namespace Ion
 		m_Window->SwapBuffers();
 	}
 
-	void Application::HandleEvent(Event& event)
+	void Application::PostEvent(Event& event)
 	{
-		if (event.IsDeferred())
-			m_EventQueue->PushEvent(event.AsShared());
-		else
-			DispatchEvent(event);
+		DispatchEvent(event);
+	}
+
+	void Application::PostDeferredEvent(DeferredEvent& event)
+	{
+		m_EventQueue->PushEvent(std::move(event));
 	}
 
 	void Application::DispatchEvent(Event& event)
@@ -130,11 +133,6 @@ namespace Ion
 		m_InputManager->OnEvent(event);
 		m_LayerStack->OnEvent(event);
 		OnEvent(event);
-	}
-
-	void Application::InitRenderAPI()
-	{
-		RenderAPI::Init(ERenderAPI::OpenGL);
 	}
 
 	void Application::Run()

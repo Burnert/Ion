@@ -25,7 +25,6 @@ namespace Ion
 		virtual void PollEvents() final override;
 		virtual void Update(float DeltaTime) final override;
 		virtual void Render() final override;
-		virtual void HandleEvent(Event& event) final override;
 		virtual void DispatchEvent(Event& event) final override;
 
 		// End of final overrides

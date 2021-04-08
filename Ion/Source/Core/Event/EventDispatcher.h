@@ -4,6 +4,8 @@
 
 namespace Ion
 {
+	// @TODO: EventDispatcher needs some work
+
 	class ION_API EventDispatcher
 	{
 		template<typename T, typename TEnableIfT<TIsBaseOfV<Event, T>>* = nullptr>

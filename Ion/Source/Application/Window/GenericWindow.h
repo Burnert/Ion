@@ -23,6 +23,7 @@ namespace Ion
 	public:
 		using EventPtr = TShared<Event>;
 		using EventCallback = std::function<void(Event&)>;
+		using DeferredEventCallback = std::function<void(DeferredEvent&)>;
 
 		virtual ~GenericWindow() { }
 
@@ -43,6 +44,7 @@ namespace Ion
 		virtual void SwapBuffers() { }
 
 		void SetEventCallback(EventCallback callback);
+		void SetDeferredEventCallback(DeferredEventCallback callback);
 
 	public:
 		// Implemented per platform.
@@ -54,6 +56,7 @@ namespace Ion
 
 		// Function that gets called every time an event occurs.
 		EventCallback m_EventCallback;
+		DeferredEventCallback m_DeferredEventCallback;
 	};
 
 	

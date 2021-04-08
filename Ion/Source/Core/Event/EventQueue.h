@@ -7,16 +7,14 @@ namespace Ion
 	class ION_API EventQueue
 	{
 		using EventHandler = std::function<void(Event&)>;
-		using EventPtr = TShared<Event>;
-
 	public:
-		void PushEvent(EventPtr event);
+		void PushEvent(DeferredEvent&& event);
 		bool ProcessEvents();
 
 		void SetEventHandler(EventHandler handler);
 
 	private:
-		std::vector<EventPtr> m_Events;
+		std::deque<DeferredEvent> m_DeferredEvents;
 
 		EventHandler m_Handler;
 	};

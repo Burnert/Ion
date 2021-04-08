@@ -21,4 +21,9 @@ namespace Ion
 	{
 		m_EventCallback = callback;
 	}
+
+	void GenericWindow::SetDeferredEventCallback(DeferredEventCallback callback)
+	{
+		m_DeferredEventCallback = callback;
+	}
 }

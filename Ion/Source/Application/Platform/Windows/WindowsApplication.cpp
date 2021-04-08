@@ -49,11 +49,6 @@ namespace Ion
 		Application::Render();
 	}
 
-	void WindowsApplication::HandleEvent(Event& event)
-	{
-		Application::HandleEvent(event);
-	}
-
 	void WindowsApplication::DispatchEvent(Event& event)
 	{
 		EventDispatcher dispatcher(event);

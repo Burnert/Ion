@@ -67,7 +67,9 @@ namespace Ion
 		virtual void Update(float DeltaTime);
 		virtual void Render();
 
-		virtual void HandleEvent(Event& event);
+		void PostEvent(Event& event);
+		void PostDeferredEvent(DeferredEvent& event);
+
 		virtual void DispatchEvent(Event& event);
 
 		// To be overriden in client:
@@ -95,8 +97,6 @@ namespace Ion
 		static Application* s_Instance;
 
 	private:
-		void InitRenderAPI();
-
 		/* Main engine loop function */
 		void Run();
 

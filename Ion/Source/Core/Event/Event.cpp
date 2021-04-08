@@ -4,9 +4,9 @@
 
 namespace Ion
 {
-	TShared<Event> Event::AsShared()
-	{
-		ASSERT(m_bDefer)
-		return TShared<Event>(this);
-	}
+	//TShared<Event> Event::AsShared()
+	//{
+	//	ASSERT(m_bDefer)
+	//	return TShared<Event>(this);
+	//}
 }

@@ -78,29 +78,43 @@ namespace Ion
 
 		switch (uMsg)
 		{
-			// =============== //
-			// Deferred events //
-			// =============== //
+			// -----------------------------------------
+			//  Deferred events 
+			// -----------------------------------------
 
 			case WM_SETFOCUS:
 			{
-				DeferredEventPtr event = Event::CreateDeferredEvent<WindowFocusEvent>((ullong)hWnd);
-				windowRef.m_EventCallback(*event);
+				auto event = DeferredEvent::Create<WindowFocusEvent>((ullong)hWnd);
+				windowRef.m_DeferredEventCallback(event);
 
 				return 0;
 			}
 
 			case WM_KILLFOCUS:
 			{
-				DeferredEventPtr event = Event::CreateDeferredEvent<WindowLostFocusEvent>((ullong)hWnd);
-				windowRef.m_EventCallback(*event);
+				auto event = DeferredEvent::Create<WindowLostFocusEvent>((ullong)hWnd);
+				windowRef.m_DeferredEventCallback(event);
 
 				return 0;
 			}
 
-			// =================== //
-			// Non-Deferred events //
-			// =================== //
+			case WM_CLOSE:
+			{
+				auto event = DeferredEvent::Create<WindowCloseEvent>((ullong)hWnd);
+				windowRef.m_DeferredEventCallback(event);
+
+				return 0;
+			}
+
+			case WM_DESTROY:
+			{
+				PostQuitMessage(0);
+				return 0;
+			}
+
+			// -----------------------------------------
+			//  Non-Deferred events
+			// -----------------------------------------
 
 			case WM_MOVE:
 			{
@@ -448,31 +462,6 @@ namespace Ion
 				}
 
 				delete[] buffer;
-				return 0;
-			}
-
-			// =============== //
-			// Window messages //
-			// =============== //
-
-			case WM_CLOSE:
-			{
-				DeferredEventPtr event = Event::CreateDeferredEvent<WindowCloseEvent>((ullong)hWnd);
-				windowRef.m_EventCallback(*event);
-
-				return 0;
-			}
-
-			case WM_DESTROY:
-			{
-				PostQuitMessage(0);
-				return 0;
-			}
-
-			case WM_CREATE:
-			{
-				
-
 				return 0;
 			}
 		}
