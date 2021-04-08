@@ -69,114 +69,6 @@ namespace Ion
 		// Call client overriden Init function
 		OnInit();
 
-		float vertices[4 * 7] = {
-			-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-			 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-			 0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-			-0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-		};
-		TShared<VertexBuffer> vbo = VertexBuffer::Create(vertices, sizeof(vertices));
-
-		VertexLayout layout(2);
-		layout.AddAttribute(EVertexAttributeType::Float, 3); // Position
-		layout.AddAttribute(EVertexAttributeType::Float, 4); // Vertex Color
-
-		vbo->SetLayout(layout);
-
-		uint indices[2 * 3] = {
-			0, 1, 2,
-			2, 3, 0,
-		};
-		TShared<IndexBuffer> ibo = IndexBuffer::Create(indices, 2 * 3);
-
-		float cubeVerts[8 * 7] = {
-			-0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f,
-			 0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f,
-			 0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f,
-			-0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 1.0f,
-			 0.5f, -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 1.0f,
-			-0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 1.0f, 1.0f,
-			-0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
-			 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f,
-		};
-		TShared<VertexBuffer> vboCube = VertexBuffer::Create(cubeVerts, sizeof(cubeVerts));
-		vboCube->SetLayout(layout);
-
-		uint cubeIndices[12 * 3] = {
-			// Front
-			0, 1, 2,
-			2, 3, 0,
-
-			// Back
-			4, 5, 6,
-			6, 7, 4,
-
-			// Right
-			1, 4, 7,
-			7, 2, 1,
-
-			// Left
-			5, 0, 3,
-			3, 6, 5,
-
-			// Top
-			3, 2, 7,
-			7, 6, 3,
-
-			// Bottom
-			5, 4, 1,
-			5, 1, 0,
-		};
-		TShared<IndexBuffer> iboCube = IndexBuffer::Create(cubeIndices, 12 * 3);
-
-		m_CubeBuffer = iboCube;
-
-		const char* vertSrc = R"(
-#version 430 core
-
-layout(location = 0) in vec3 a_Position;
-layout(location = 1) in vec4 a_Color;
-
-uniform mat4 u_MVP;
-uniform vec4 u_Color;
-
-out vec4 v_Color;
-
-void main()
-{
-	v_Color = a_Color * u_Color;
-	gl_Position = u_MVP * vec4(a_Position, 1.0f);
-}
-
-)";
-
-		const char* fragSrc = R"(
-#version 430 core
-
-in vec4 v_Color;
-
-out vec4 color;
-
-void main()
-{
-	color = v_Color;
-}
-
-)";
-
-		bool bResult;
-
-		TShared<Shader> shader = Shader::Create();
-		shader->AddShaderSource(EShaderType::Vertex, vertSrc);
-		shader->AddShaderSource(EShaderType::Pixel, fragSrc);
-
-		bResult = shader->Compile();
-		VERIFY(bResult);
-
-		shader->Bind();
-
-		m_Shader = shader;
-
 		Run();
 
 		// Call client overriden Shutdown function
@@ -190,45 +82,12 @@ void main()
 
 	void Application::Update(float deltaTime)
 	{
-		static float c_Angle = 0.0f;
-		static FVector4 c_Tint(1.0f, 0.0f, 1.0f, 1.0f);
-
-		FVector4 tint = c_Tint;
-		tint.y = glm::abs(tint.y - 1.0f);
-		m_Shader->SetUniform4f("u_Color", tint);
-
-		// Perspective projection
-		float fov = glm::radians(90.0f);
-		WindowDimensions dimensions = m_Window->GetDimensions();
-		float aspectRatio = (float)dimensions.Width / (float)dimensions.Height;
-		FMatrix4 projectionMatrix = glm::perspective(fov, aspectRatio, 0.1f, 100.0f);
-
-		// Inverted camera
-		FMatrix4 viewMatrix = glm::translate(FVector3(0.0f, 0.0f, -2.0f));
-
-		// Model transform
-		FMatrix4 modelMatrix(1.0f);
-		//modelMatrix *= glm::translate(FVector3(0.3f, 0.5f, 0.0f));
-		modelMatrix *= glm::rotate(c_Angle, glm::normalize(FVector3(1.0f, 0.0f, 1.0f)));
-
-		// Multiply in this order because OpenGL
-		FMatrix4 modelViewProjectionMatrix = projectionMatrix * viewMatrix * modelMatrix;
-
-		m_Shader->SetUniformMatrix4f("u_MVP", modelViewProjectionMatrix);
-
 		m_LayerStack->OnUpdate(deltaTime);
 		OnUpdate(deltaTime);
-
-		c_Angle += deltaTime;
-		c_Tint.y = (((c_Tint.y + deltaTime) >= 2.0f) ? 0.0f : (c_Tint.y + deltaTime));
 	}
 
 	void Application::Render()
 	{
-		m_Renderer->Clear(FVector4(0.1f, 0.1f, 0.1f, 1.0f));
-
-		m_Renderer->Draw(m_CubeBuffer);
-
 		m_LayerStack->OnRender();
 		OnRender();
 
@@ -265,28 +124,6 @@ void main()
 
 				m_Renderer->SetViewportDimensions(SViewportDimensions { 0, 0, width, height });
 
-				return true;
-			});
-
-		dispatcher.Dispatch<KeyPressedEvent>(
-			[this](KeyPressedEvent& event)
-			{
-				if (!event.IsRepeated())
-				{
-					// Toggle wireframe display with W key
-					if (event.GetKeyCode() == Key::W)
-					{
-						EPolygonDrawMode drawMode = (m_Renderer->GetPolygonDrawMode() == EPolygonDrawMode::Fill) ?
-							EPolygonDrawMode::Lines : EPolygonDrawMode::Fill;
-						m_Renderer->SetPolygonDrawMode(drawMode);
-					}
-					// Toggle VSync with V key
-					else if (event.GetKeyCode() == Key::V)
-					{
-						bool vsync = m_Renderer->GetVSyncEnabled();
-						m_Renderer->SetVSyncEnabled(!vsync);
-					}
-				}
 				return true;
 			});
 

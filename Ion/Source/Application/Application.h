@@ -43,6 +43,21 @@ namespace Ion
 
 		static Application* Get();
 
+		FORCEINLINE static const TShared<Renderer>& GetRenderer()
+		{
+			return Get()->m_Renderer;
+		}
+
+		FORCEINLINE static const TShared<GenericWindow>& GetWindow()
+		{
+			return Get()->m_Window;
+		}
+
+		FORCEINLINE static const TShared<InputManager>& GetInputManager()
+		{
+			return Get()->m_InputManager;
+		}
+
 	protected:
 		Application();
 
@@ -98,10 +113,6 @@ namespace Ion
 		TUnique<LayerStack> m_LayerStack;
 
 		std::thread::id m_MainThreadId;
-
-		TShared<Shader> m_Shader;
-
-		TShared<IndexBuffer> m_CubeBuffer;
 	};
 
 	Application* CreateApplication();

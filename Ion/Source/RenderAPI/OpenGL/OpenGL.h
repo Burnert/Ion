@@ -4,7 +4,7 @@
 
 namespace Ion
 {
-	class OpenGL
+	class ION_API OpenGL
 	{
 	public:
 		/* Called by the Application class */

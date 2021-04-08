@@ -6,7 +6,7 @@
 
 namespace Ion
 {
-	class OpenGLWindows : public OpenGL
+	class ION_API OpenGLWindows : public OpenGL
 	{
 		friend class WindowsApplication;
 		friend class WindowsWindow;
