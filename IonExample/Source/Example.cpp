@@ -183,6 +183,10 @@ void main()
 	virtual void OnRender() override
 	{
 		GetRenderer()->Clear(FVector4(0.1f, 0.1f, 0.1f, 1.0f));
+		// @TODO: Now an IndexBuffer is completely independent of a VertexBuffer,
+		// so when this gets called it won't bind the VBO before drawing.
+		// Hence this is a bug.
+		// > Think of a better system.
 		GetRenderer()->Draw(m_CubeIndexBuffer);
 	}
 
@@ -197,21 +201,18 @@ void main()
 		dispatcher.Dispatch<KeyPressedEvent>(
 			[this](KeyPressedEvent& event)
 			{
-				if (!event.IsRepeated())
+				// Toggle wireframe display with W key
+				if (event.GetKeyCode() == Key::W)
 				{
-					// Toggle wireframe display with W key
-					if (event.GetKeyCode() == Key::W)
-					{
-						EPolygonDrawMode drawMode = (GetRenderer()->GetPolygonDrawMode() == EPolygonDrawMode::Fill) ?
-							EPolygonDrawMode::Lines : EPolygonDrawMode::Fill;
-						GetRenderer()->SetPolygonDrawMode(drawMode);
-					}
-					// Toggle VSync with V key
-					else if (event.GetKeyCode() == Key::V)
-					{
-						bool vsync = GetRenderer()->GetVSyncEnabled();
-						GetRenderer()->SetVSyncEnabled(!vsync);
-					}
+					EPolygonDrawMode drawMode = (GetRenderer()->GetPolygonDrawMode() == EPolygonDrawMode::Fill) ?
+						EPolygonDrawMode::Lines : EPolygonDrawMode::Fill;
+					GetRenderer()->SetPolygonDrawMode(drawMode);
+				}
+				// Toggle VSync with V key
+				else if (event.GetKeyCode() == Key::V)
+				{
+					bool vsync = GetRenderer()->GetVSyncEnabled();
+					GetRenderer()->SetVSyncEnabled(!vsync);
 				}
 				return true;
 			});

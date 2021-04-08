@@ -53,6 +53,7 @@ namespace Ion
 		EventDispatcher dispatcher(event);
 		dispatcher.Dispatch<KeyPressedEvent>(BIND_METHOD_1P(InputManager::OnKeyPressedEvent));
 		dispatcher.Dispatch<KeyReleasedEvent>(BIND_METHOD_1P(InputManager::OnKeyReleasedEvent));
+		dispatcher.Dispatch<KeyRepeatedEvent>(BIND_METHOD_1P(InputManager::OnKeyRepeatedEvent));
 	}
 
 	bool InputManager::OnKeyPressedEvent(KeyPressedEvent& event)
@@ -61,7 +62,6 @@ namespace Ion
 		// Set states on receiving event
 		ubyte* keyPtr = &m_InputStates[actualKeyCode];
 		SetBitflags(*keyPtr, InputPressedFlag);
-		SetBitflags(*keyPtr, InputRepeatedFlag & BooleanToBitmask<ubyte>(event.IsRepeated()));
 
 		// If the normal key code is different than actual
 		// (Shift, Alt, etc.), update it too.
@@ -70,7 +70,6 @@ namespace Ion
 		{
 			keyPtr = &m_InputStates[keyCode];
 			SetBitflags(*keyPtr, InputPressedFlag);
-			SetBitflags(*keyPtr, InputRepeatedFlag & BooleanToBitmask<ubyte>(event.IsRepeated()));
 		}
 
 		return false;
@@ -101,6 +100,25 @@ namespace Ion
 				UnsetBitflags(*keyPtr, InputPressedFlag);
 				UnsetBitflags(*keyPtr, InputRepeatedFlag);
 			}
+		}
+
+		return false;
+	}
+
+	bool InputManager::OnKeyRepeatedEvent(KeyRepeatedEvent& event)
+	{
+		KeyCode actualKeyCode = (KeyCode)event.GetActualKeyCode();
+		// Set states on receiving event
+		ubyte* keyPtr = &m_InputStates[actualKeyCode];
+		SetBitflags(*keyPtr, InputRepeatedFlag);
+
+		// If the normal key code is different than actual
+		// (Shift, Alt, etc.), update it too.
+		KeyCode keyCode = (KeyCode)event.GetKeyCode();
+		if (keyCode != actualKeyCode)
+		{
+			keyPtr = &m_InputStates[keyCode];
+			SetBitflags(*keyPtr, InputRepeatedFlag);
 		}
 
 		return false;

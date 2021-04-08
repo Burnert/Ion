@@ -227,8 +227,16 @@ namespace Ion
 					// If the key is already pressed it means it was repeated
 					bool bRepeated = InputManager::IsKeyPressed((KeyCode)actualKeyCode);
 
-					auto event = KeyPressedEvent(keyCode, actualKeyCode, bRepeated);
-					windowRef.m_EventCallback(event);
+					if (bRepeated)
+					{
+						auto event = KeyRepeatedEvent(keyCode, actualKeyCode);
+						windowRef.m_EventCallback(event);
+					}
+					else
+					{
+						auto event = KeyPressedEvent(keyCode, actualKeyCode);
+						windowRef.m_EventCallback(event);
+					}
 				}
 				else
 				{
@@ -238,7 +246,7 @@ namespace Ion
 					// At this point keycode variables are already translated.
 					if (keyCode == Key::PrintScr)
 					{
-						auto printScreenPressed = KeyPressedEvent(keyCode, actualKeyCode, false);
+						auto printScreenPressed = KeyPressedEvent(keyCode, actualKeyCode);
 						windowRef.m_EventCallback(printScreenPressed);
 					}
 

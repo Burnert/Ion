@@ -28,17 +28,12 @@ namespace Ion
 	class ION_API KeyPressedEvent : public KeyboardEvent
 	{
 	public:
-		KeyPressedEvent(uint keyCode, uint actualKeyCode, bool bRepeated) :
-			KeyboardEvent(keyCode, actualKeyCode),
-			m_bRepeated(bRepeated) {}
-
-		FORCEINLINE bool IsRepeated() const { return m_bRepeated; }
+		KeyPressedEvent(uint keyCode, uint actualKeyCode) :
+			KeyboardEvent(keyCode, actualKeyCode)
+		{ }
 
 		SET_EVENT_TYPE(KeyPressed)
-		SET_EVENT_TOSTRING_FORMAT("{ keyCode: " << std::hex << GetKeyCode() << ", actualKeyCode: " << GetActualKeyCode() << " }" << (m_bRepeated ? " (repeated)" : ""))
-
-	private:
-		bool m_bRepeated;
+		SET_EVENT_TOSTRING_FORMAT("{ keyCode: " << std::hex << GetKeyCode() << ", actualKeyCode: " << GetActualKeyCode() << " }")
 	};
 
 
@@ -46,9 +41,21 @@ namespace Ion
 	{
 	public:
 		KeyReleasedEvent(uint keyCode, uint actualKeyCode) :
-			KeyboardEvent(keyCode, actualKeyCode) {}
+			KeyboardEvent(keyCode, actualKeyCode) 
+		{ }
 
 		SET_EVENT_TYPE(KeyReleased)
+		SET_EVENT_TOSTRING_FORMAT("{ keyCode: " << std::hex << GetKeyCode() << ", actualKeyCode: " << GetActualKeyCode() << " }")
+	};
+
+	class ION_API KeyRepeatedEvent : public KeyboardEvent
+	{
+	public:
+		KeyRepeatedEvent(uint keyCode, uint actualKeyCode) :
+			KeyboardEvent(keyCode, actualKeyCode)
+		{ }
+
+		SET_EVENT_TYPE(KeyRepeated)
 		SET_EVENT_TOSTRING_FORMAT("{ keyCode: " << std::hex << GetKeyCode() << ", actualKeyCode: " << GetActualKeyCode() << " }")
 	};
 
