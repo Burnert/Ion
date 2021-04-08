@@ -21,10 +21,18 @@ namespace Ion
 
 		virtual void SetTitle(const wchar* title) override;
 
-		virtual void SetEnabled(bool bEnabled);
+		virtual void SetEnabled(bool bEnabled) override;
 
 		virtual void Resize() override;
 		virtual WindowDimensions GetDimensions() const override;
+
+		virtual void ClipCursor(bool bClip) const override;
+		virtual void LockCursor(IVector2 position) const override;
+		virtual void UnlockCursor() const override;
+
+		virtual void ShowCursor(bool bShow) const override;
+
+		virtual void* GetNativeHandle() const override;
 
 		virtual void MakeRenderingContextCurrent() override;
 

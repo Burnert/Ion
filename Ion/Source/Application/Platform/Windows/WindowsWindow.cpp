@@ -526,6 +526,7 @@ namespace Ion
 
 		WindowStyle |= WS_CAPTION;
 		WindowStyle |= WS_MINIMIZEBOX;
+		WindowStyle |= WS_MAXIMIZEBOX;
 		WindowStyle |= WS_SYSMENU;
 		WindowStyle |= WS_SIZEBOX;
 
@@ -666,6 +667,47 @@ namespace Ion
 		return { width, height };
 	}
 
+	void WindowsWindow::ClipCursor(bool bClip) const
+	{
+		if (bClip)
+		{
+			RECT clientRect { };
+			GetClientRect(m_WindowHandle, &clientRect);
+			ClientToScreen(m_WindowHandle, (POINT*)&clientRect.left);
+			ClientToScreen(m_WindowHandle, (POINT*)&clientRect.right);
+			::ClipCursor(&clientRect);
+		}
+		else
+		{
+			::ClipCursor(nullptr);
+		}
+	}
+
+	void WindowsWindow::LockCursor(IVector2 position) const
+	{
+		ClientToScreen(m_WindowHandle, (POINT*)&position);
+		RECT rect = { position.x, position.y, position.x, position.y };
+		::ClipCursor(&rect);
+	}
+
+	void WindowsWindow::UnlockCursor() const
+	{
+		::ClipCursor(nullptr);
+	}
+
+	void WindowsWindow::ShowCursor(bool bShow) const
+	{
+		CURSORINFO info { };
+		info.cbSize = sizeof(CURSORINFO);
+		GetCursorInfo(&info);
+
+		// This is to avoid incrementing / decrementing the display count too much
+		if ((info.flags & CURSOR_SHOWING) != bShow)
+		{
+			::ShowCursor(bShow);
+		}
+	}
+
 	HGLRC WindowsWindow::CreateRenderingContext(HDC deviceContext)
 	{
 		if (m_WindowHandle == NULL)
@@ -695,6 +737,11 @@ namespace Ion
 	void WindowsWindow::SwapBuffers()
 	{
 		::SwapBuffers(m_DeviceContext);
+	}
+
+	void* WindowsWindow::GetNativeHandle() const
+	{
+		return (void*)m_WindowHandle;
 	}
 
 	HDC WindowsWindow::GetDeviceContext() const

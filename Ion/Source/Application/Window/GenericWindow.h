@@ -39,9 +39,19 @@ namespace Ion
 		virtual void Resize() { }
 		virtual WindowDimensions GetDimensions() const;
 
+		virtual void ClipCursor(bool bClip) const { }
+		virtual void LockCursor(IVector2 position) const { }
+		virtual void UnlockCursor() const { }
+
+		virtual void ShowCursor(bool bShow) const { }
+
+		virtual void* GetNativeHandle() const;
+
 		virtual void MakeRenderingContextCurrent() { }
 
 		virtual void SwapBuffers() { }
+
+		FVector2 GetCenterPosition() const;
 
 		void SetEventCallback(EventCallback callback);
 		void SetDeferredEventCallback(DeferredEventCallback callback);

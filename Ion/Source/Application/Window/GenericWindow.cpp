@@ -14,7 +14,18 @@ namespace Ion
 
 	WindowDimensions GenericWindow::GetDimensions() const
 	{
-		return { };
+		return { 0, 0 };
+	}
+
+	FVector2 GenericWindow::GetCenterPosition() const
+	{
+		WindowDimensions dimensions = GetDimensions();
+		return FVector2 { dimensions.Width * 0.5f, dimensions.Height * 0.5f };
+	}
+
+	void* GenericWindow::GetNativeHandle() const
+	{
+		return nullptr;
 	}
 
 	void GenericWindow::SetEventCallback(EventCallback callback)
