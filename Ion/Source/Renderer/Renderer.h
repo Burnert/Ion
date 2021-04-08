@@ -3,6 +3,8 @@
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "Shader.h"
+#include "Camera.h"
+
 #include "Drawable.h"
 
 namespace Ion

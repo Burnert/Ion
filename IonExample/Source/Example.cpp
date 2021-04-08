@@ -126,6 +126,14 @@ void main()
 		shader->Bind();
 
 		m_Shader = shader;
+
+		m_Camera = Camera::Create();
+		m_Camera->SetTransform(glm::translate(FVector3(0.0f, 0.0f, 2.0f)));
+
+		float fov = glm::radians(90.0f);
+		m_Camera->SetFOV(fov);
+		m_Camera->SetNearClip(0.1f);
+		m_Camera->SetFarClip(100.0f);
 	}
 
 	virtual void OnUpdate(float deltaTime) override
@@ -158,21 +166,66 @@ void main()
 		m_Shader->SetUniform4f("u_Color", tint);
 
 		// Perspective projection
-		float fov = glm::radians(90.0f);
 		WindowDimensions dimensions = GetWindow()->GetDimensions();
 		float aspectRatio = (float)dimensions.Width / (float)dimensions.Height;
-		FMatrix4 projectionMatrix = glm::perspective(fov, aspectRatio, 0.1f, 100.0f);
+		m_Camera->SetAspectRatio(aspectRatio);
 
-		// Inverted camera
-		FMatrix4 viewMatrix = glm::translate(FVector3(0.0f, 0.0f, -2.0f));
+		float cameraMoveSpeed = 5.0f;
+
+		FVector4 cameraForwardVector = 
+			glm::rotate(m_CameraRotation.y, FVector3(0.0f, -1.0f, 0.0f)) 
+			* glm::rotate(m_CameraRotation.x, FVector3(-1.0f, 0.0f, 0.0f))
+			* FVector4(0.0f, 0.0f, -1.0f, 0.0f);
+
+		FVector4 cameraRightVector =
+			glm::rotate(m_CameraRotation.y, FVector3(0.0f, -1.0f, 0.0f))
+			* glm::rotate(m_CameraRotation.x, FVector3(-1.0f, 0.0f, 0.0f))
+			* FVector4(-1.0f, 0.0f, 0.0f, 0.0f);
+
+		FVector4 cameraUpVector =
+			glm::rotate(m_CameraRotation.y, FVector3(0.0f, -1.0f, 0.0f))
+			* glm::rotate(m_CameraRotation.x, FVector3(-1.0f, 0.0f, 0.0f))
+			* FVector4(0.0f, -1.0f, 0.0f, 0.0f);
+
+		if (GetInputManager()->IsKeyPressed(Key::W))
+		{
+			m_CameraLocation = glm::translate(FVector3(cameraForwardVector) * deltaTime * cameraMoveSpeed) * m_CameraLocation;
+		}
+		if (GetInputManager()->IsKeyPressed(Key::S))
+		{
+			m_CameraLocation = glm::translate(FVector3(cameraForwardVector) * -deltaTime * cameraMoveSpeed) * m_CameraLocation;
+		}
+		if (GetInputManager()->IsKeyPressed(Key::A))
+		{
+			m_CameraLocation = glm::translate(FVector3(cameraRightVector) * deltaTime * cameraMoveSpeed) * m_CameraLocation;
+		}
+		if (GetInputManager()->IsKeyPressed(Key::D))
+		{
+			m_CameraLocation = glm::translate(FVector3(cameraRightVector) * -deltaTime * cameraMoveSpeed) * m_CameraLocation;
+		}
+		if (GetInputManager()->IsKeyPressed(Key::Q))
+		{
+			m_CameraLocation = glm::translate(FVector3(cameraUpVector) * deltaTime * cameraMoveSpeed) * m_CameraLocation;
+		}
+		if (GetInputManager()->IsKeyPressed(Key::E))
+		{
+			m_CameraLocation = glm::translate(FVector3(cameraUpVector) * -deltaTime * cameraMoveSpeed) * m_CameraLocation;
+		}
+
+		FMatrix4 transform(1.0f);
+		transform *= glm::translate(FVector3(m_CameraLocation));
+		transform *= glm::rotate(m_CameraRotation.y, FVector3(0.0f, -1.0f, 0.0f));
+		transform *= glm::rotate(m_CameraRotation.x, FVector3(-1.0f, 0.0f, 0.0f));
+		m_Camera->SetTransform(transform);
+
+		const FMatrix4& viewProjectionMatrix = m_Camera->UpdateViewProjectionMatrix();
 
 		// Model transform
 		FMatrix4 modelMatrix(1.0f);
-		//modelMatrix *= glm::translate(FVector3(0.3f, 0.5f, 0.0f));
 		modelMatrix *= glm::rotate(c_Angle, glm::normalize(FVector3(1.0f, 0.0f, 1.0f)));
 
 		// Multiply in this order because OpenGL
-		FMatrix4 modelViewProjectionMatrix = projectionMatrix * viewMatrix * modelMatrix;
+		FMatrix4 modelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
 
 		m_Shader->SetUniformMatrix4f("u_MVP", modelViewProjectionMatrix);
 
@@ -201,19 +254,31 @@ void main()
 		dispatcher.Dispatch<KeyPressedEvent>(
 			[this](KeyPressedEvent& event)
 			{
-				// Toggle wireframe display with W key
-				if (event.GetKeyCode() == Key::W)
+				// Toggle wireframe display with 1 key
+				if (event.GetKeyCode() == Key::One)
 				{
 					EPolygonDrawMode drawMode = (GetRenderer()->GetPolygonDrawMode() == EPolygonDrawMode::Fill) ?
 						EPolygonDrawMode::Lines : EPolygonDrawMode::Fill;
 					GetRenderer()->SetPolygonDrawMode(drawMode);
 				}
-				// Toggle VSync with V key
-				else if (event.GetKeyCode() == Key::V)
+				// Toggle VSync with 2 key
+				else if (event.GetKeyCode() == Key::Two)
 				{
 					bool vsync = GetRenderer()->GetVSyncEnabled();
 					GetRenderer()->SetVSyncEnabled(!vsync);
 				}
+				return true;
+			});
+
+		dispatcher.Dispatch<RawInputMouseMovedEvent>(
+			[this](RawInputMouseMovedEvent& event)
+			{
+				float yawDelta = event.GetX() * 0.003f;
+				float pitchDelta = event.GetY() * 0.003f;
+
+				m_CameraRotation.x += pitchDelta;
+				m_CameraRotation.y += yawDelta;
+
 				return true;
 			});
 	}
@@ -222,6 +287,9 @@ private:
 	TShared<VertexBuffer> m_CubeVertexBuffer;
 	TShared<IndexBuffer> m_CubeIndexBuffer;
 	TShared<Shader> m_Shader;
+	TShared<Camera> m_Camera;
+	FVector4 m_CameraLocation = { 0.0f, 0.0f, 2.0f, 1.0f };
+	FVector3 m_CameraRotation = { 0.0f, 0.0f, 0.0f };
 };
 
 USE_APPLICATION_CLASS(IonExample)
