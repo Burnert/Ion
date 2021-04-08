@@ -10,6 +10,15 @@ using ullong       = unsigned long long;
 			       
 using wchar        = wchar_t;
 
+using String       = std::string;
+using WString      = std::wstring;
+
+#ifdef UNICODE
+using TString      = WString;
+#else
+using TString      = String;
+#endif
+
 template<typename T>
 using TShared      = std::shared_ptr<T>;
 
