@@ -26,7 +26,7 @@ namespace Ion
 		virtual void Show() override;
 		virtual void Hide() override;
 
-		virtual void SetTitle(const wchar* title) override;
+		virtual void SetTitle(const std::wstring& title) override;
 
 		virtual void SetEnabled(bool bEnabled) override;
 
@@ -38,11 +38,11 @@ namespace Ion
 
 		virtual bool IsInFocus() const;
 
-		virtual void ClipCursor(bool bClip) const override;
-		virtual void LockCursor(IVector2 position) const override;
-		virtual void UnlockCursor() const override;
+		virtual void ClipCursor() override;
+		virtual void LockCursor(IVector2 position) override;
+		virtual void UnlockCursor() override;
 
-		virtual void ShowCursor(bool bShow) const override;
+		virtual void ShowCursor(bool bShow) override;
 
 		virtual void* GetNativeHandle() const override;
 

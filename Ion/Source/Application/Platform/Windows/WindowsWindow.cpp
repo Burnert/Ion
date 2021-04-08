@@ -627,7 +627,7 @@ namespace Ion
 		}
 	}
 
-	void WindowsWindow::SetTitle(const wchar* title)
+	void WindowsWindow::SetTitle(const std::wstring& title)
 	{
 		if (m_WindowHandle == NULL)
 		{
@@ -741,35 +741,31 @@ namespace Ion
 		return GetFocus() == m_WindowHandle;
 	}
 
-	void WindowsWindow::ClipCursor(bool bClip) const
+	void WindowsWindow::ClipCursor()
 	{
-		if (bClip)
-		{
-			RECT clientRect { };
-			GetClientRect(m_WindowHandle, &clientRect);
-			ClientToScreen(m_WindowHandle, (POINT*)&clientRect.left);
-			ClientToScreen(m_WindowHandle, (POINT*)&clientRect.right);
-			::ClipCursor(&clientRect);
-		}
-		else
-		{
-			::ClipCursor(nullptr);
-		}
+		RECT clientRect { };
+		GetClientRect(m_WindowHandle, &clientRect);
+		ClientToScreen(m_WindowHandle, (POINT*)&clientRect.left);
+		ClientToScreen(m_WindowHandle, (POINT*)&clientRect.right);
+		::ClipCursor(&clientRect);
+		m_bCursorLocked = true;
 	}
 
-	void WindowsWindow::LockCursor(IVector2 position) const
+	void WindowsWindow::LockCursor(IVector2 position)
 	{
 		ClientToScreen(m_WindowHandle, (POINT*)&position);
 		RECT rect = { position.x, position.y, position.x, position.y };
 		::ClipCursor(&rect);
+		m_bCursorLocked = true;
 	}
 
-	void WindowsWindow::UnlockCursor() const
+	void WindowsWindow::UnlockCursor()
 	{
 		::ClipCursor(nullptr);
+		m_bCursorLocked = false;
 	}
 
-	void WindowsWindow::ShowCursor(bool bShow) const
+	void WindowsWindow::ShowCursor(bool bShow)
 	{
 		CURSORINFO info { };
 		info.cbSize = sizeof(CURSORINFO);
@@ -779,6 +775,7 @@ namespace Ion
 		if ((info.flags & CURSOR_SHOWING) != bShow)
 		{
 			::ShowCursor(bShow);
+			m_bCursorShown = bShow;
 		}
 	}
 

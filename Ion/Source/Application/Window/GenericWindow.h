@@ -32,7 +32,7 @@ namespace Ion
 		virtual void Show() { }
 		virtual void Hide() { }
 
-		virtual void SetTitle(const wchar* title) { }
+		virtual void SetTitle(const std::wstring& title) { }
 
 		virtual void SetEnabled(bool bEnabled) { }
 
@@ -44,11 +44,16 @@ namespace Ion
 
 		virtual bool IsInFocus() const;
 
-		virtual void ClipCursor(bool bClip) const { }
-		virtual void LockCursor(IVector2 position) const { }
-		virtual void UnlockCursor() const { }
+		/* Clips the cursor to the client area.
+		   The cursor will not move outside the window. */
+		virtual void ClipCursor() { }
+		/* Locks the cursor in the specified point (relative to window client area).
+		   The cursor will not move at all. */
+		virtual void LockCursor(IVector2 position) { }
+		virtual void UnlockCursor() { }
+		FORCEINLINE bool IsCursorLocked() const { return m_bCursorLocked; }
 
-		virtual void ShowCursor(bool bShow) const { }
+		virtual void ShowCursor(bool bShow) { }
 
 		virtual void* GetNativeHandle() const;
 
@@ -67,11 +72,14 @@ namespace Ion
 
 	protected:
 		// Protected constructor: Only shared_ptrs of this class can be made.
-		GenericWindow() { }
+		GenericWindow();
 
 		// Function that gets called every time an event occurs.
 		EventCallback m_EventCallback;
 		DeferredEventCallback m_DeferredEventCallback;
+
+		bool m_bCursorLocked;
+		bool m_bCursorShown;
 	};
 
 	

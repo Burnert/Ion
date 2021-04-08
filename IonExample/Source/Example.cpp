@@ -276,6 +276,14 @@ void main()
 						GetWindow()->EnableFullScreen(!bFullScreen);
 					}
 				}
+				else if (event.GetKeyCode() == Key::F1)
+				{
+					if (GetInputManager()->IsKeyPressed(Key::LShift))
+					{
+						GetWindow()->UnlockCursor();
+						GetWindow()->ShowCursor(true);
+					}
+				}
 				return true;
 			});
 
@@ -290,25 +298,6 @@ void main()
 
 				return true;
 			});
-
-		// Lock cursor on focus
-		dispatcher.Dispatch<WindowFocusEvent>(
-			[this](WindowFocusEvent& event)
-			{
-				m_bMouseLocked = true;
-				GetWindow()->ClipCursor(true);
-				GetWindow()->ShowCursor(false);
-				return false;
-			});
-
-		dispatcher.Dispatch<WindowLostFocusEvent>(
-			[this](WindowLostFocusEvent& event)
-			{
-				m_bMouseLocked = false;
-				GetWindow()->ClipCursor(false);
-				GetWindow()->ShowCursor(true);
-				return false;
-			});
 	}
 
 private:
@@ -318,7 +307,6 @@ private:
 	TShared<Camera> m_Camera;
 	FVector4 m_CameraLocation = { 0.0f, 0.0f, 2.0f, 1.0f };
 	FVector3 m_CameraRotation = { 0.0f, 0.0f, 0.0f };
-	bool m_bMouseLocked = false;
 };
 
 USE_APPLICATION_CLASS(IonExample)

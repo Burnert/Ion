@@ -72,6 +72,8 @@ namespace Ion
 		VERIFY(wglChoosePixelFormatARB);
 		VERIFY(wglCreateContextAttribsARB);
 
+		VERIFY_M(wglSwapIntervalEXT, "WGL_GLX_swap_control not found!");
+
 		PIXELFORMATDESCRIPTOR pfd { };
 		const int attributes[] = {
 			WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,

@@ -6,6 +6,10 @@
 
 namespace Ion
 {
+	GenericWindow::GenericWindow() :
+		m_bCursorLocked(false)
+	{ }
+
 	bool GenericWindow::Initialize()
 	{
 		ION_LOG_ENGINE_CRITICAL("{0} is not implemented!", __FUNCTION__);

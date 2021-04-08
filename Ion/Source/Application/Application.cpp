@@ -63,7 +63,7 @@ namespace Ion
 		// @TODO: This is from Windows, change that:
 		MultiByteToWideChar(CP_UTF8, 0, renderAPILabel, -1, renderAPILabelW, 120);
 		windowTitle += renderAPILabelW;
-		m_Window->SetTitle((wchar*)windowTitle.c_str());
+		m_Window->SetTitle(windowTitle);
 
 		m_Window->Show();
 
@@ -128,6 +128,32 @@ namespace Ion
 				m_Renderer->SetViewportDimensions(SViewportDimensions { 0, 0, width, height });
 
 				return true;
+			});
+
+		// Lock cursor on client area click
+		dispatcher.Dispatch<MouseButtonPressedEvent>(
+			[this](MouseButtonPressedEvent& event)
+			{
+				if (!GetWindow()->IsCursorLocked())
+				{
+					GetWindow()->ClipCursor();
+					GetWindow()->ShowCursor(false);
+				}
+				return false;
+			});
+
+		dispatcher.Dispatch<WindowFocusEvent>(
+			[this](WindowFocusEvent& event)
+			{
+				return false;
+			});
+
+		dispatcher.Dispatch<WindowLostFocusEvent>(
+			[this](WindowLostFocusEvent& event)
+			{
+				GetWindow()->UnlockCursor();
+				GetWindow()->ShowCursor(true);
+				return false;
 			});
 
 		m_InputManager->OnEvent(event);
