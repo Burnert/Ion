@@ -698,7 +698,12 @@ namespace Ion
 				bMaximized,
 			};
 
-			VERIFY(SetWindowLong(m_WindowHandle, GWL_STYLE, style & ~WS_OVERLAPPEDWINDOW));
+			// This here changes to "real" fullscreen without any input lag.
+			DEVMODE devMode { };
+			VERIFY(EnumDisplaySettings(nullptr, ENUM_CURRENT_SETTINGS, &devMode));
+			VERIFY(ChangeDisplaySettings(&devMode, CDS_FULLSCREEN) == DISP_CHANGE_SUCCESSFUL);
+
+			VERIFY(SetWindowLong(m_WindowHandle, GWL_STYLE, (style & ~WS_OVERLAPPEDWINDOW) | WS_POPUP));
 
 			int x = monitorInfo.rcMonitor.left;
 			int y = monitorInfo.rcMonitor.top;
