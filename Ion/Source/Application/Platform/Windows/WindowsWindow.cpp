@@ -518,8 +518,13 @@ namespace Ion
 	{
 		HINSTANCE hInstance = WindowsApplication::GetHInstance();
 
-		if (!RegisterWindowClass(hInstance, AppClassName))
-			return false;
+		if (!m_bRegistered)
+		{
+			if (!RegisterWindowClass(hInstance, AppClassName))
+				return false;
+
+			m_bRegistered = true;
+		}
 
 		UINT32 WindowStyleEx = 0;
 		UINT32 WindowStyle = 0;
