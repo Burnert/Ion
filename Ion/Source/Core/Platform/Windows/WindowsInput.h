@@ -76,16 +76,16 @@ namespace Ion
 			Key::Help,
 			// 0x30 ---------------------------
 			// 0x30 - 0x39 : Numbers - same as ASCII
-			Key::D0,
-			Key::D1,
-			Key::D2,
-			Key::D3,
-			Key::D4,
-			Key::D5,
-			Key::D6,
-			Key::D7,
-			Key::D8,
-			Key::D9,
+			Key::Zero,
+			Key::One,
+			Key::Two,
+			Key::Three,
+			Key::Four,
+			Key::Five,
+			Key::Six,
+			Key::Seven,
+			Key::Eight,
+			Key::Nine,
 			// 0x3A = 0x40 : unassigned
 			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 			// 0x41 - 0x5A : Letters - same as ASCII
