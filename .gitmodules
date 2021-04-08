@@ -4,3 +4,7 @@
 [submodule "Ion/ThirdParty/glm"]
 	path = Ion/ThirdParty/glm
 	url = https://github.com/g-truc/glm
+[submodule "Ion/ThirdParty/ImGui/imgui"]
+	path = Ion/ThirdParty/ImGui/imgui
+	url = https://github.com/ocornut/imgui
+	branch = docking

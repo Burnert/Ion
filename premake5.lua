@@ -11,7 +11,8 @@ workspace "Ion"
 outputdir = "%{cfg.system}-%{cfg.architecture}-%{cfg.buildcfg}"
 
 ThirdParty = {
-	Glad = "Ion/ThirdParty/Glad"
+	Glad = "Ion/ThirdParty/Glad",
+	ImGui = "Ion/ThirdParty/ImGui"
 }
 
 -- for i, dir in ipairs(ThirdParty) do
@@ -19,6 +20,7 @@ ThirdParty = {
 -- end
 
 include "Ion/ThirdParty/Glad"
+include "Ion/ThirdParty/ImGui"
 
 project "Ion"
 	location "Ion"
@@ -39,6 +41,7 @@ project "Ion"
 
 	includedirs {
 		"%{prj.name}/ThirdParty/Glad/include",
+		"%{prj.name}/ThirdParty/ImGui",
 		"%{prj.name}/ThirdParty/glm",
 		"%{prj.name}/ThirdParty/SpdLog/include",
 		"%{prj.name}/Source"
@@ -46,6 +49,7 @@ project "Ion"
 
 	links {
 		"Glad",
+		"ImGui",
 		"opengl32.lib"
 	}
 
@@ -92,6 +96,7 @@ project "IonExample"
 
 	includedirs {
 		"Ion/Source",
+		"%{prj.name}/ThirdParty/ImGui",
 		"Ion/ThirdParty/glm",
 		"Ion/ThirdParty/SpdLog/include",
 		"%{prj.name}/Source"
