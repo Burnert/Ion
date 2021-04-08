@@ -91,4 +91,22 @@ namespace Ion
 		SET_EVENT_TYPE(WindowLostFocus)
 		SET_EVENT_TOSTRING_FORMAT("{ window: " << GetWindowHandle() << " }")
 	};
+
+	enum class EDisplayMode : ubyte;
+
+	class ION_API WindowChangeDisplayModeEvent : public WindowEvent
+	{
+	public:
+		WindowChangeDisplayModeEvent(ullong windowHandle, EDisplayMode displayMode) :
+			WindowEvent(windowHandle),
+			m_DisplayMode(displayMode) { }
+
+		FORCEINLINE EDisplayMode GetDisplayMode() { return m_DisplayMode; }
+
+		SET_EVENT_TYPE(WindowChangeDisplayMode);
+		SET_EVENT_TOSTRING_FORMAT("{ window: " << GetWindowHandle() << ", mode: " << (ubyte)m_DisplayMode << " }");
+
+	private:
+		EDisplayMode m_DisplayMode;
+	};
 }

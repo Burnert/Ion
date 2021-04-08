@@ -712,6 +712,9 @@ namespace Ion
 			VERIFY(SetWindowPos(m_WindowHandle, HWND_TOP, x, y, width, height, SWP_NOOWNERZORDER | SWP_FRAMECHANGED));
 
 			m_bFullScreenMode = true;
+
+			auto event = DeferredEvent::Create<WindowChangeDisplayModeEvent>((ullong)m_WindowHandle, EDisplayMode::FullScreen);
+			m_DeferredEventCallback(event);
 		}
 		// Disable
 		else if (m_bFullScreenMode && !bFullscreen)
@@ -733,6 +736,9 @@ namespace Ion
 			}
 
 			m_bFullScreenMode = false;
+
+			auto event = DeferredEvent::Create<WindowChangeDisplayModeEvent>((ullong)m_WindowHandle, EDisplayMode::Windowed);
+			m_DeferredEventCallback(event);
 		}
 	}
 

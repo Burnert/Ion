@@ -130,10 +130,18 @@ namespace Ion
 				return true;
 			});
 
+		dispatcher.Dispatch<WindowChangeDisplayModeEvent>(
+			[this](WindowChangeDisplayModeEvent& event)
+			{
+				GetWindow()->ClipCursor();
+				return false;
+			});
+
 		// Lock cursor on client area click
 		dispatcher.Dispatch<MouseButtonPressedEvent>(
 			[this](MouseButtonPressedEvent& event)
 			{
+				// Lock when clicking on client area
 				if (!GetWindow()->IsCursorLocked())
 				{
 					GetWindow()->ClipCursor();
@@ -145,8 +153,18 @@ namespace Ion
 		dispatcher.Dispatch<WindowFocusEvent>(
 			[this](WindowFocusEvent& event)
 			{
+				// Lock the cursor only if a fullscreen window has been focused
+				// If we lock on a non-fullscreen one, it'll hide the cursor immediately
+				// instead of doing it after clicking the client area
+				if (GetWindow()->IsFullScreenEnabled())
+				{
+					GetWindow()->ClipCursor();
+					GetWindow()->ShowCursor(false);
+				}
 				return false;
 			});
+
+		// @TODO: Input is still captured even when clicking on a non-client area.
 
 		dispatcher.Dispatch<WindowLostFocusEvent>(
 			[this](WindowLostFocusEvent& event)
