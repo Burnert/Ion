@@ -14,7 +14,7 @@ namespace Ion
 		case ERenderAPI::OpenGL:
 			return MakeShared<OpenGLIndexBuffer>(indices, count);
 		default:
-			return TShared<OpenGLIndexBuffer>(nullptr);
+			return TShared<IndexBuffer>(nullptr);
 		}
 	}
 }
