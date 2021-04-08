@@ -662,7 +662,7 @@ namespace Ion
 		}
 		
 		RECT windowRect;
-		GetWindowRect(m_WindowHandle, &windowRect);
+		GetClientRect(m_WindowHandle, &windowRect);
 
 		int width = windowRect.right - windowRect.left;
 		int height = windowRect.bottom - windowRect.top;
