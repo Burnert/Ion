@@ -3,6 +3,7 @@
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "Shader.h"
+#include "Drawable.h"
 
 namespace Ion
 {
@@ -32,6 +33,8 @@ namespace Ion
 
 		virtual void Clear() const = 0;
 		virtual void Clear(const FVector4& color) const = 0;
+
+		virtual void Draw(const TShared<IDrawable>& drawable) const = 0;
 
 		virtual void SetVSyncEnabled(bool bEnabled) const = 0;
 		virtual bool GetVSyncEnabled() const = 0;

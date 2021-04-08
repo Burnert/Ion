@@ -129,6 +129,8 @@ namespace Ion
 		};
 		TShared<IndexBuffer> iboCube = IndexBuffer::Create(cubeIndices, 12 * 3);
 
+		m_CubeBuffer = iboCube;
+
 		const char* vertSrc = R"(
 #version 430 core
 
@@ -225,7 +227,7 @@ void main()
 	{
 		m_Renderer->Clear(FVector4(0.1f, 0.1f, 0.1f, 1.0f));
 
-		glDrawElements(GL_TRIANGLES, 12 * 3, GL_UNSIGNED_INT, nullptr);
+		m_Renderer->Draw(m_CubeBuffer);
 
 		m_LayerStack->OnRender();
 		OnRender();

@@ -16,6 +16,8 @@ namespace Ion
 		virtual void Clear() const override;
 		virtual void Clear(const FVector4& color) const override;
 
+		virtual void Draw(const TShared<IDrawable>& drawable) const override;
+
 		virtual void SetVSyncEnabled(bool bEnabled) const override;
 		virtual bool GetVSyncEnabled() const override;
 

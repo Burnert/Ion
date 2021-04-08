@@ -22,6 +22,7 @@ namespace Ion
 	class Renderer;
 
 	class Shader;
+	class IndexBuffer;
 
 	class ION_API Application
 	{
@@ -99,6 +100,8 @@ namespace Ion
 		std::thread::id m_MainThreadId;
 
 		TShared<Shader> m_Shader;
+
+		TShared<IndexBuffer> m_CubeBuffer;
 	};
 
 	Application* CreateApplication();

@@ -36,6 +36,12 @@ namespace Ion
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
+	void OpenGLRenderer::Draw(const TShared<IDrawable>& drawable) const
+	{
+		drawable->PrepareForDraw();
+		glDrawElements(GL_TRIANGLES, drawable->GetIndexCount(), GL_UNSIGNED_INT, nullptr);
+	}
+
 	void OpenGLRenderer::SetVSyncEnabled(bool bEnabled) const
 	{
 		OpenGL::SetSwapInterval((int)bEnabled);
