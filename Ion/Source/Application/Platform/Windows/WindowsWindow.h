@@ -4,6 +4,13 @@
 
 namespace Ion
 {
+	struct SWindowDataBeforeFullScreen
+	{
+		WINDOWPLACEMENT WindowPlacement;
+		DWORD Style;
+		bool bMaximized;
+	};
+
 	class ION_API WindowsWindow : public GenericWindow
 	{
 		friend class WindowsApplication;
@@ -25,6 +32,11 @@ namespace Ion
 
 		virtual void Resize() override;
 		virtual WindowDimensions GetDimensions() const override;
+
+		virtual void EnableFullScreen(bool bFullscreen) override;
+		virtual bool IsFullScreenEnabled() const override;
+
+		virtual bool IsInFocus() const;
 
 		virtual void ClipCursor(bool bClip) const override;
 		virtual void LockCursor(IVector2 position) const override;
@@ -72,6 +84,9 @@ namespace Ion
 		bool m_bRegistered = false;
 
 		static bool m_bBothShiftsPressed;
+
+		bool m_bFullScreenMode = false;
+		SWindowDataBeforeFullScreen m_WindowBeforeFullScreen { };
 
 		static MouseButton MouseButtonFromMessage(UINT uMsg, WPARAM wParam);
 	};

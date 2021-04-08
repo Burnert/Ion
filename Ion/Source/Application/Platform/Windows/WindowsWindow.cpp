@@ -667,6 +667,75 @@ namespace Ion
 		return { width, height };
 	}
 
+	void WindowsWindow::EnableFullScreen(bool bFullscreen)
+	{
+		// Enable
+		if (!m_bFullScreenMode && bFullscreen)
+		{
+			WINDOWPLACEMENT windowPlacement { };
+			windowPlacement.length = sizeof(WINDOWPLACEMENT);
+
+			VERIFY(GetWindowPlacement(m_WindowHandle, &windowPlacement));
+
+			bool bMaximized = windowPlacement.showCmd == SW_MAXIMIZE;
+
+			MONITORINFO monitorInfo { };
+			monitorInfo.cbSize = sizeof(MONITORINFO);
+
+			HMONITOR hMonitor = MonitorFromWindow(m_WindowHandle, MONITOR_DEFAULTTOPRIMARY);
+			VERIFY(GetMonitorInfo(hMonitor, &monitorInfo));
+
+			DWORD style = GetWindowLong(m_WindowHandle, GWL_STYLE);
+
+			m_WindowBeforeFullScreen = SWindowDataBeforeFullScreen {
+				windowPlacement,
+				style,
+				bMaximized,
+			};
+
+			VERIFY(SetWindowLong(m_WindowHandle, GWL_STYLE, style & ~WS_OVERLAPPEDWINDOW));
+
+			int x = monitorInfo.rcMonitor.left;
+			int y = monitorInfo.rcMonitor.top;
+			int width = monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left;
+			int height = monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top;
+			VERIFY(SetWindowPos(m_WindowHandle, HWND_TOP, x, y, width, height, SWP_NOOWNERZORDER | SWP_FRAMECHANGED));
+
+			m_bFullScreenMode = true;
+		}
+		// Disable
+		else if (m_bFullScreenMode && !bFullscreen)
+		{
+			VERIFY(SetWindowLong(m_WindowHandle, GWL_STYLE, m_WindowBeforeFullScreen.Style));
+
+			if (m_WindowBeforeFullScreen.bMaximized)
+			{
+				VERIFY(ShowWindow(m_WindowHandle, SW_MAXIMIZE));
+			}
+			else
+			{
+				RECT& windowRect = m_WindowBeforeFullScreen.WindowPlacement.rcNormalPosition;
+				int x = windowRect.left;
+				int y = windowRect.top;
+				int width = windowRect.right - windowRect.left;
+				int height = windowRect.bottom - windowRect.top;
+				VERIFY(SetWindowPos(m_WindowHandle, HWND_NOTOPMOST, x, y, width, height, SWP_NOOWNERZORDER | SWP_FRAMECHANGED));
+			}
+
+			m_bFullScreenMode = false;
+		}
+	}
+
+	bool WindowsWindow::IsFullScreenEnabled() const
+	{
+		return m_bFullScreenMode;
+	}
+
+	bool WindowsWindow::IsInFocus() const
+	{
+		return GetFocus() == m_WindowHandle;
+	}
+
 	void WindowsWindow::ClipCursor(bool bClip) const
 	{
 		if (bClip)

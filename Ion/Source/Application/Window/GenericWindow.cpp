@@ -17,6 +17,16 @@ namespace Ion
 		return { 0, 0 };
 	}
 
+	bool GenericWindow::IsFullScreenEnabled() const
+	{
+		return false;
+	}
+
+	bool GenericWindow::IsInFocus() const
+	{
+		return false;
+	}
+
 	FVector2 GenericWindow::GetCenterPosition() const
 	{
 		WindowDimensions dimensions = GetDimensions();

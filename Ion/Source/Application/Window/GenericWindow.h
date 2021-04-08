@@ -7,7 +7,7 @@
 
 namespace Ion
 {
-	struct ION_API WindowDimensions
+	struct WindowDimensions
 	{
 		int Width;
 		int Height;
@@ -38,6 +38,11 @@ namespace Ion
 
 		virtual void Resize() { }
 		virtual WindowDimensions GetDimensions() const;
+
+		virtual void EnableFullScreen(bool bFullscreen) { }
+		virtual bool IsFullScreenEnabled() const;
+
+		virtual bool IsInFocus() const;
 
 		virtual void ClipCursor(bool bClip) const { }
 		virtual void LockCursor(IVector2 position) const { }

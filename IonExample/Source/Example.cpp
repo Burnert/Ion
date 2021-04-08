@@ -267,6 +267,15 @@ void main()
 					bool vsync = GetRenderer()->GetVSyncEnabled();
 					GetRenderer()->SetVSyncEnabled(!vsync);
 				}
+				// Toggle fullscreen with Alt + Enter
+				else if (event.GetKeyCode() == Key::Enter)
+				{
+					if (GetInputManager()->IsKeyPressed(Key::LAlt))
+					{
+						bool bFullScreen = GetWindow()->IsFullScreenEnabled();
+						GetWindow()->EnableFullScreen(!bFullScreen);
+					}
+				}
 				return true;
 			});
 
