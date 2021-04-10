@@ -7,6 +7,8 @@
 
 #include "Application/Window/GenericWindow.h"
 
+struct ImDrawData;
+
 /* Specifies the main class of the application (can be used only once) */
 #define USE_APPLICATION_CLASS(className) \
 Ion::Application* Ion::CreateApplication() \
@@ -101,6 +103,14 @@ namespace Ion
 		void Run();
 
 		virtual float CalculateFrameTime();
+
+		// @TODO: Move ImGui stuff to some generic Platform class
+
+		void InitImGui() const;
+		virtual void InitImGuiBackend(const TShared<GenericWindow>& window) const { }
+		virtual void ImGuiNewFramePlatform() const { }
+		virtual void ImGuiRenderPlatform(ImDrawData* drawData) const { }
+		virtual void ImGuiShutdownPlatform() const { }
 
 		bool m_bRunning;
 

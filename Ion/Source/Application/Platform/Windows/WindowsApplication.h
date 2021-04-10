@@ -7,6 +7,9 @@
 class WindowsInputManager;
 class WindowsWindow;
 
+struct ImDrawData;
+struct ImGuiViewport;
+
 namespace Ion
 {
 	class ION_API WindowsApplication : public Application
@@ -31,6 +34,11 @@ namespace Ion
 
 	private:
 		virtual float CalculateFrameTime() override;
+
+		virtual void InitImGuiBackend(const TShared<GenericWindow>& window) const override;
+		virtual void ImGuiNewFramePlatform() const override;
+		virtual void ImGuiRenderPlatform(ImDrawData* drawData) const override;
+		virtual void ImGuiShutdownPlatform() const override;
 
 	private:
 		static HINSTANCE m_HInstance;

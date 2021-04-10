@@ -13,11 +13,15 @@
 
 #include "RenderAPI/OpenGL/Windows/OpenGLWindows.h"
 
+#include "UserInterface/ImGui.h"
+
 #pragma warning(disable:26812)
 
 // ------------------------------
 //        Windows Window
 // ------------------------------
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 namespace Ion
 {
@@ -70,6 +74,11 @@ namespace Ion
 
 	LRESULT WindowsWindow::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
+		// @TODO: Interpret the ImGui flags for better integration
+
+		if (ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam))
+			return 1;
+
 		WindowsWindow& windowRef = *(WindowsWindow*)GetProp(hWnd, L"WinObj");
 
 		// --------------------------------------
@@ -512,18 +521,23 @@ namespace Ion
 		return true;
 	}
 
-	const wchar* AppClassName = L"IonAppWindow";
+	static const wchar* AppClassName = L"IonAppWindow";
 
 	bool WindowsWindow::Initialize()
 	{
+		return Initialize(TShared<GenericWindow>(nullptr));
+	}
+
+	bool WindowsWindow::Initialize(const TShared<GenericWindow>& parentWindow)
+	{
 		HINSTANCE hInstance = WindowsApplication::GetHInstance();
 
-		if (!m_bRegistered)
+		if (!s_bRegistered)
 		{
 			if (!RegisterWindowClass(hInstance, AppClassName))
 				return false;
 
-			m_bRegistered = true;
+			s_bRegistered = true;
 		}
 
 		UINT32 WindowStyleEx = 0;
@@ -790,7 +804,7 @@ namespace Ion
 		}
 	}
 
-	HGLRC WindowsWindow::CreateRenderingContext(HDC deviceContext)
+	HGLRC WindowsWindow::CreateRenderingContext(HDC deviceContext, HGLRC parentContext)
 	{
 		if (m_WindowHandle == NULL)
 		{
@@ -799,7 +813,7 @@ namespace Ion
 		}
 
 		// Setup Rendering Context
-		m_RenderingContext = OpenGLWindows::CreateGLContext(deviceContext);
+		m_RenderingContext = OpenGLWindows::CreateGLContext(deviceContext, parentContext);
 		return m_RenderingContext;
 	}
 
@@ -813,11 +827,15 @@ namespace Ion
 
 	void WindowsWindow::MakeRenderingContextCurrent()
 	{
+		// @TODO: Move this whole "MakeContextCurrent" thing into RenderAPI specific files
+		// It shouldn't be tied to the window at all
+
 		OpenGLWindows::MakeContextCurrent(m_DeviceContext, m_RenderingContext);
 	}
 
 	void WindowsWindow::SwapBuffers()
 	{
+		MakeRenderingContextCurrent();
 		::SwapBuffers(m_DeviceContext);
 	}
 
@@ -848,6 +866,7 @@ namespace Ion
 		return m_RenderingContext;
 	}
 
+	bool WindowsWindow::s_bRegistered = false;
 	bool WindowsWindow::m_bBothShiftsPressed = false;
 }
 

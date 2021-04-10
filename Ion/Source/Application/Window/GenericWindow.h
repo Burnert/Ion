@@ -35,6 +35,7 @@ namespace Ion
 		virtual ~GenericWindow() { }
 
 		virtual bool Initialize();
+		virtual bool Initialize(const TShared<GenericWindow>& parentWindow);
 
 		virtual void Show() { }
 		virtual void Hide() { }

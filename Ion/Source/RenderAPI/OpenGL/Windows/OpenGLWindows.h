@@ -6,6 +6,12 @@
 
 namespace Ion
 {
+	struct ImGuiViewportDataOpenGLWin32
+	{
+		HDC DeviceContext;
+		HGLRC RenderingContext;
+	};
+
 	class ION_API OpenGLWindows : public OpenGL
 	{
 		friend class WindowsApplication;
@@ -15,17 +21,10 @@ namespace Ion
 		/* Called by the Application class */
 		static void InitOpenGL();
 
-		static HGLRC CreateGLContext(HDC hdc);
+		static HGLRC CreateGLContext(HDC hdc, HGLRC shareContext = nullptr);
 		static void MakeContextCurrent(HDC hdc, HGLRC hglrc);
 
-	protected:
-		static void InitGLLoader();
-		static void InitWGLLoader(HDC hdc);
-
-		static void InitLibraries();
-		static void FreeLibraries();
-
-		static void* GetProcAddress(const char* name);
+		FORCEINLINE static HGLRC GetShareContext() { return s_hShareContext; }
 
 		static void APIENTRY DebugCallback(
 			GLenum source,
@@ -36,12 +35,18 @@ namespace Ion
 			const GLchar* message,
 			const void* userParam);
 
-	private:
-		static bool s_GLInitialized;
-		static HMODULE s_OpenGLModule;
+	protected:
+		static void InitGLLoader();
+		static void InitWGLLoader(HDC hdc);
 
-		static int s_MajorVersion;
-		static int s_MinorVersion;
+		static void InitLibraries();
+		static void FreeLibraries();
+
+		static void* GetProcAddress(const char* name);
+
+	private:
+		static HMODULE s_OpenGLModule;
+		static HGLRC s_hShareContext;
 	};
 
 	/* Dummy window used for creation of an OpenGL context and extensions. */

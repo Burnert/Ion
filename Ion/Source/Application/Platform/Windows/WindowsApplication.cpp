@@ -8,6 +8,8 @@
 
 #include "RenderAPI/OpenGL/Windows/OpenGLWindows.h"
 
+#include "UserInterface/ImGui.h"
+
 namespace Ion
 {
 	WindowsApplication* WindowsApplication::Get()
@@ -86,6 +88,39 @@ namespace Ion
 
 	HINSTANCE WindowsApplication::m_HInstance;
 
-	float WindowsApplication::s_PerformanceFrequency;
-	float WindowsApplication::s_LastFrameTime { 0 };
+	float WindowsApplication::s_PerformanceFrequency = 0;
+	float WindowsApplication::s_LastFrameTime = 0;
+
+	// -------------------------------------------------------------
+	//  ImGui related  ---------------------------------------------
+	// -------------------------------------------------------------
+
+	void WindowsApplication::InitImGuiBackend(const TShared<GenericWindow>& window) const
+	{
+		TShared<WindowsWindow> windowsWindow = std::static_pointer_cast<WindowsWindow>(window);
+		ImGui_ImplWin32_Init((HWND)windowsWindow->GetNativeHandle());
+		RenderAPI::InitImGuiBackend();
+	}
+
+	void WindowsApplication::ImGuiNewFramePlatform() const
+	{
+		RenderAPI::ImGuiNewFrame();
+		ImGui_ImplWin32_NewFrame();
+	}
+
+	void WindowsApplication::ImGuiRenderPlatform(ImDrawData* drawData) const
+	{
+		TShared<WindowsWindow> window = std::static_pointer_cast<WindowsWindow>(GetWindow());
+
+		RenderAPI::ImGuiRender(drawData);
+
+		ImGui::UpdatePlatformWindows();
+		ImGui::RenderPlatformWindowsDefault();
+	}
+
+	void WindowsApplication::ImGuiShutdownPlatform() const
+	{
+		RenderAPI::ImGuiShutdown();
+		ImGui_ImplWin32_Shutdown();
+	}
 }

@@ -1,6 +1,6 @@
 project "ImGui"
     kind "StaticLib"
-    language "C"
+    language "C++"
 
     targetdir ("Build/" .. outputdir .. "/%{prj.name}")
 	objdir ("Intermediate/" .. outputdir .. "/%{prj.name}")

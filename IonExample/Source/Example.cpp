@@ -251,42 +251,6 @@ void main()
 	{
 		EventDispatcher dispatcher(event);
 
-		dispatcher.Dispatch<KeyPressedEvent>(
-			[this](KeyPressedEvent& event)
-			{
-				// Toggle wireframe display with 1 key
-				if (event.GetKeyCode() == Key::One)
-				{
-					EPolygonDrawMode drawMode = (GetRenderer()->GetPolygonDrawMode() == EPolygonDrawMode::Fill) ?
-						EPolygonDrawMode::Lines : EPolygonDrawMode::Fill;
-					GetRenderer()->SetPolygonDrawMode(drawMode);
-				}
-				// Toggle VSync with 2 key
-				else if (event.GetKeyCode() == Key::Two)
-				{
-					bool vsync = GetRenderer()->GetVSyncEnabled();
-					GetRenderer()->SetVSyncEnabled(!vsync);
-				}
-				// Toggle fullscreen with Alt + Enter
-				else if (event.GetKeyCode() == Key::Enter)
-				{
-					if (GetInputManager()->IsKeyPressed(Key::LAlt))
-					{
-						bool bFullScreen = GetWindow()->IsFullScreenEnabled();
-						GetWindow()->EnableFullScreen(!bFullScreen);
-					}
-				}
-				else if (event.GetKeyCode() == Key::F1)
-				{
-					if (GetInputManager()->IsKeyPressed(Key::LShift))
-					{
-						GetWindow()->UnlockCursor();
-						GetWindow()->ShowCursor(true);
-					}
-				}
-				return true;
-			});
-
 		dispatcher.Dispatch<RawInputMouseMovedEvent>(
 			[this](RawInputMouseMovedEvent& event)
 			{

@@ -22,6 +22,7 @@ namespace Ion
 		virtual ~WindowsWindow();
 
 		virtual bool Initialize() override;
+		virtual bool Initialize(const TShared<GenericWindow>& parentWindow) override;
 
 		virtual void Show() override;
 		virtual void Hide() override;
@@ -61,7 +62,7 @@ namespace Ion
 		FORCEINLINE static HGLRC GetCurrentRenderingContext() { return wglGetCurrentContext(); }
 
 	protected:
-		HGLRC CreateRenderingContext(HDC deviceContext);
+		HGLRC CreateRenderingContext(HDC deviceContext, HGLRC parentContext = nullptr);
 		void DeleteRenderingContext();
 
 	protected:
@@ -80,8 +81,8 @@ namespace Ion
 		std::wstring m_Title;
 		bool m_bVisible = false;
 
-		// Should be true after Initialize() has been called.
-		bool m_bRegistered = false;
+		// Should be true after Initialize() has been called one time.
+		static bool s_bRegistered;
 
 		static bool m_bBothShiftsPressed;
 

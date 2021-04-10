@@ -16,6 +16,12 @@ namespace Ion
 		return false;
 	}
 
+	bool GenericWindow::Initialize(const TShared<GenericWindow>& parentWindow)
+	{
+		ION_LOG_ENGINE_CRITICAL("{0} is not implemented!", __FUNCTION__);
+		return false;
+	}
+
 	WindowDimensions GenericWindow::GetDimensions() const
 	{
 		return { 0, 0 };

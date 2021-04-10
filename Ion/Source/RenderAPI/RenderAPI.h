@@ -1,12 +1,17 @@
 #pragma once
 
+struct ImDrawData;
+
 namespace Ion
 {
 	// @TODO: Implement other Render APIs in the future
 	enum class ERenderAPI
 	{
 		None,
-		OpenGL
+		OpenGL,
+		DirectX,
+		DX12,
+		Vulkan,
 	};
 
 	class ION_API RenderAPI
@@ -17,6 +22,11 @@ namespace Ion
 		static FORCEINLINE ERenderAPI GetCurrent() { return m_CurrentRenderAPI; }
 
 		static const char* GetCurrentDisplayName();
+
+		static void InitImGuiBackend();
+		static void ImGuiNewFrame();
+		static void ImGuiRender(ImDrawData* drawData);
+		static void ImGuiShutdown();
 
 	protected:
 		static void SetCurrent(ERenderAPI api);

@@ -12,6 +12,8 @@
 #include "RenderAPI/RenderAPI.h"
 #include "Renderer/Renderer.h"
 
+#include "UserInterface/ImGui.h"
+
 namespace Ion
 {
 	Application* Application::Get()
@@ -54,7 +56,9 @@ namespace Ion
 		m_Renderer = Renderer::Create();
 		m_Renderer->Init();
 
-		m_Renderer->SetVSyncEnabled(true);
+		m_Renderer->SetVSyncEnabled(false);
+
+		InitImGui();
 
 		const char* renderAPILabel = RenderAPI::GetCurrentDisplayName();
 
@@ -72,6 +76,9 @@ namespace Ion
 
 		Run();
 
+		ImGuiShutdownPlatform();
+		ImGui::DestroyContext();
+
 		// Call client overriden Shutdown function
 		OnShutdown();
 	}
@@ -83,14 +90,23 @@ namespace Ion
 
 	void Application::Update(float deltaTime)
 	{
+		ImGuiNewFramePlatform();
+		ImGui::NewFrame();
+
+		ImGui::ShowDemoWindow();
+
 		m_LayerStack->OnUpdate(deltaTime);
 		OnUpdate(deltaTime);
 	}
 
 	void Application::Render()
 	{
+		ImGui::Render();
+
 		m_LayerStack->OnRender();
 		OnRender();
+
+		ImGuiRenderPlatform(ImGui::GetDrawData());
 
 		m_Window->SwapBuffers();
 	}
@@ -134,8 +150,44 @@ namespace Ion
 			[this](WindowChangeDisplayModeEvent& event)
 			{
 				GetWindow()->ClipCursor();
-				GetWindow()->ShowCursor(false);
+				//GetWindow()->ShowCursor(false);
 				return false;
+			});
+
+		dispatcher.Dispatch<KeyPressedEvent>(
+			[this](KeyPressedEvent& event)
+			{
+				// Toggle wireframe display with 1 key
+				if (event.GetKeyCode() == Key::One)
+				{
+					EPolygonDrawMode drawMode = (GetRenderer()->GetPolygonDrawMode() == EPolygonDrawMode::Fill) ?
+						EPolygonDrawMode::Lines : EPolygonDrawMode::Fill;
+					GetRenderer()->SetPolygonDrawMode(drawMode);
+				}
+				// Toggle VSync with 2 key
+				else if (event.GetKeyCode() == Key::Two)
+				{
+					bool vsync = GetRenderer()->GetVSyncEnabled();
+					GetRenderer()->SetVSyncEnabled(!vsync);
+				}
+				// Toggle fullscreen with Alt + Enter
+				else if (event.GetKeyCode() == Key::Enter)
+				{
+					if (GetInputManager()->IsKeyPressed(Key::LAlt))
+					{
+						bool bFullScreen = GetWindow()->IsFullScreenEnabled();
+						GetWindow()->EnableFullScreen(!bFullScreen);
+					}
+				}
+				else if (event.GetKeyCode() == Key::F1)
+				{
+					if (GetInputManager()->IsKeyPressed(Key::LShift))
+					{
+						GetWindow()->UnlockCursor();
+						GetWindow()->ShowCursor(true);
+					}
+				}
+				return true;
 			});
 
 		// Lock cursor on client area click
@@ -146,7 +198,7 @@ namespace Ion
 				if (!GetWindow()->IsCursorLocked())
 				{
 					GetWindow()->ClipCursor();
-					GetWindow()->ShowCursor(false);
+					//GetWindow()->ShowCursor(false);
 				}
 				return false;
 			});
@@ -160,7 +212,7 @@ namespace Ion
 				if (GetWindow()->IsFullScreenEnabled())
 				{
 					GetWindow()->ClipCursor();
-					GetWindow()->ShowCursor(false);
+					//GetWindow()->ShowCursor(false);
 				}
 				return false;
 			});
@@ -199,6 +251,34 @@ namespace Ion
 	{
 		LOG_WARN("Cannot calculate frame time on this platform!");
 		return 0.0f;
+	}
+
+	void Application::InitImGui() const
+	{
+		// Setup Dear ImGui context
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		ImGuiIO& imGuiIO = ImGui::GetIO();
+		imGuiIO.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+		imGuiIO.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+#if defined PLATFORM_SUPPORTS_DIRECTX
+		if (RenderAPI::GetCurrent() == ERenderAPI::DirectX)
+#elif defined PLATFORM_SUPPORTS_OPENGL && PLATFORM_ENABLE_IMGUI_VIEWPORTS_OPENGL
+		if (RenderAPI::GetCurrent() == ERenderAPI::OpenGL)
+#endif
+		{
+			imGuiIO.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+		}
+
+		ImGui::StyleColorsDark();
+
+		// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+		ImGuiStyle& imGuiStyle = ImGui::GetStyle();
+		imGuiStyle.WindowRounding = 0.0f;
+		imGuiStyle.Colors[ImGuiCol_WindowBg].w = 1.0f;
+
+		// Setup Platform/Renderer backends
+		InitImGuiBackend(m_Window);
 	}
 
 	Application* Application::s_Instance = nullptr;

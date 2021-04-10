@@ -371,3 +371,4 @@ Intermediate/
 # Other files
 IonExample/**/*.txt
 IonExample/**/*.src
+IonExample/*.ini

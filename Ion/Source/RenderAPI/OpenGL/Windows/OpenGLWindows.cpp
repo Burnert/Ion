@@ -2,8 +2,11 @@
 
 #include "OpenGLWindows.h"
 #include "Application/Platform/Windows/WindowsApplication.h"
+#include "Application/Platform/Windows/WindowsWindow.h"
 
 #include "glad/glad_wgl.h"
+
+#include "UserInterface/ImGui.h"
 
 namespace Ion
 {
@@ -24,6 +27,8 @@ namespace Ion
 
 	void OpenGLWindows::InitOpenGL()
 	{
+		ASSERT(!s_GLInitialized);
+
 		InitLibraries();
 
 		DummyWindow dummyWindow;
@@ -63,9 +68,11 @@ namespace Ion
 		VERIFY(FreeLibrary(s_OpenGLModule));
 	}
 
-	HGLRC OpenGLWindows::CreateGLContext(HDC hdc)
+	HGLRC OpenGLWindows::CreateGLContext(HDC hdc, HGLRC shareContext)
 	{
 		#pragma warning(disable:6011)
+
+		ASSERT(s_GLInitialized)
 
 		ASSERT(hdc);
 
@@ -107,8 +114,15 @@ namespace Ion
 			0 // End
 		};
 
-		HGLRC renderingContext = wglCreateContextAttribsARB(hdc, NULL, wglAttributes);
+		HGLRC renderingContext = wglCreateContextAttribsARB(hdc, shareContext, wglAttributes);
 		VERIFY(renderingContext != NULL);
+
+		// Share the first context created
+		// This will be needed when creating additional context, like ImGui windows
+		if (!s_hShareContext)
+		{
+			s_hShareContext = renderingContext;
+		}
 
 		VERIFY(wglMakeCurrent(hdc, renderingContext));
 
@@ -150,12 +164,8 @@ namespace Ion
 		}
 	}
 
-	HMODULE OpenGLWindows::s_OpenGLModule = NULL;
-	bool OpenGLWindows::s_GLInitialized = false;
-
-	int OpenGLWindows::s_MajorVersion = 4;
-	int OpenGLWindows::s_MinorVersion = 3;
-
+	HMODULE OpenGLWindows::s_OpenGLModule = nullptr;
+	HGLRC OpenGLWindows::s_hShareContext = nullptr;
 
 	// -----------------------------
 	//         Dummy Window
@@ -247,5 +257,85 @@ namespace Ion
 	int OpenGL::GetSwapInterval()
 	{
 		return wglGetSwapIntervalEXT();
+	}
+
+	// ----------------------------------------------
+	//    OpenGL ImGui Implementation
+	// ----------------------------------------------
+
+	void OpenGL::ImGuiImplRendererCreateWindowPlatform(ImGuiViewport* viewport)
+	{
+		ImGuiViewportDataOpenGLWin32* data = new ImGuiViewportDataOpenGLWin32;
+		viewport->RendererUserData = data;
+
+		HWND hWnd = (HWND)viewport->PlatformHandleRaw;
+
+		data->DeviceContext = GetDC(hWnd);
+		VERIFY(data->DeviceContext);
+
+		PIXELFORMATDESCRIPTOR pfd { };
+		pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
+		pfd.nVersion     = 1;
+		pfd.dwFlags      = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+		pfd.iPixelType   = PFD_TYPE_RGBA;
+		pfd.cColorBits   = 32;
+		pfd.cStencilBits = 8;
+		pfd.cAlphaBits   = 8;
+		pfd.cDepthBits   = 24;
+		pfd.iLayerType   = PFD_MAIN_PLANE;
+
+		int pixelFormat = ChoosePixelFormat(data->DeviceContext, &pfd);
+		VERIFY(pixelFormat);
+
+		VERIFY(SetPixelFormat(data->DeviceContext, pixelFormat, &pfd));
+
+		const int wglAttributes[] = {
+			WGL_CONTEXT_MAJOR_VERSION_ARB, s_MajorVersion,
+			WGL_CONTEXT_MINOR_VERSION_ARB, s_MinorVersion,
+			WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB
+#ifdef ION_DEBUG
+			| WGL_CONTEXT_DEBUG_BIT_ARB
+#endif
+			,
+			WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+			0 // End
+		};
+
+		data->RenderingContext = wglCreateContextAttribsARB(data->DeviceContext, OpenGLWindows::GetShareContext(), wglAttributes);
+		VERIFY(data->RenderingContext);
+
+		VERIFY(wglMakeCurrent(data->DeviceContext, data->RenderingContext));
+
+		glEnable(GL_DEBUG_OUTPUT);
+		glDebugMessageCallback(OpenGLWindows::DebugCallback, nullptr);
+
+		VERIFY(wglSwapIntervalEXT(0));
+	}
+
+	void OpenGL::ImGuiImplRendererRenderWindow(ImGuiViewport* viewport, void*)
+	{
+		ImGuiViewportDataOpenGLWin32* data = (ImGuiViewportDataOpenGLWin32*)viewport->RendererUserData;
+
+		VERIFY(wglMakeCurrent(data->DeviceContext, data->RenderingContext));
+	}
+
+	void OpenGL::ImGuiImplRendererSwapBuffers(ImGuiViewport* viewport, void*)
+	{
+		ImGuiViewportDataOpenGLWin32* data = (ImGuiViewportDataOpenGLWin32*)viewport->RendererUserData;
+
+		VERIFY(SwapBuffers(data->DeviceContext));
+	}
+
+	void OpenGL::ImGuiImplRendererDestroyWindow(ImGuiViewport* viewport)
+	{
+		if (ImGuiViewportDataOpenGLWin32* data = (ImGuiViewportDataOpenGLWin32*)viewport->RendererUserData)
+		{
+			VERIFY(wglDeleteContext(data->RenderingContext));
+
+			ReleaseDC((HWND)viewport->PlatformHandleRaw, data->DeviceContext);
+
+			delete data;
+			viewport->RendererUserData = nullptr;
+		}
 	}
 }
