@@ -28,6 +28,10 @@ project "ImGui"
     filter "system:windows"
         systemversion "latest"
         staticruntime "Off"
+		
+		defines {
+			"IMGUI_API=__declspec(dllexport)"
+		}
 
     filter "configurations:Debug"
 		symbols "On"
