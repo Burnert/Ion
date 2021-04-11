@@ -96,7 +96,7 @@ project "IonExample"
 
 	includedirs {
 		"Ion/Source",
-		"%{prj.name}/ThirdParty/ImGui",
+		"Ion/ThirdParty/ImGui",
 		"Ion/ThirdParty/glm",
 		"Ion/ThirdParty/SpdLog/include",
 		"%{prj.name}/Source"
