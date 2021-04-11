@@ -16,6 +16,8 @@ namespace Ion
 
 		virtual void SetLayout(const VertexLayout& layout) const override;
 
+		virtual uint GetVertexCount() const override;
+
 		static constexpr FORCEINLINE uint VertexAttributeTypeToGLType(EVertexAttributeType type)
 		{
 			switch (type)
@@ -35,5 +37,6 @@ namespace Ion
 
 	private:
 		uint m_ID;
+		uint m_VertexCount;
 	};
 }

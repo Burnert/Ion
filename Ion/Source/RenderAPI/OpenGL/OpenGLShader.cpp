@@ -110,126 +110,147 @@ namespace Ion
 
 	void OpenGLShader::SetUniform1f(const std::string& name, float value) const
 	{
+		glUseProgram(m_ProgramID);
 		int location = GetUniformLocation(name);
 		glUniform1fv(location, 1, &value);
 	}
 
 	void OpenGLShader::SetUniform2f(const std::string& name, const FVector2& value) const
 	{
+		glUseProgram(m_ProgramID);
 		int location = GetUniformLocation(name);
 		glUniform2fv(location, 1, (float*)&value);
 	}
 
 	void OpenGLShader::SetUniform3f(const std::string& name, const FVector3& value) const
 	{
+		glUseProgram(m_ProgramID);
 		int location = GetUniformLocation(name);
 		glUniform3fv(location, 1, (float*)&value);
 	}
 
 	void OpenGLShader::SetUniform4f(const std::string& name, const FVector4& value) const
 	{
+		glUseProgram(m_ProgramID);
 		int location = GetUniformLocation(name);
 		glUniform4fv(location, 1, (float*)&value);
 	}
 
 	void OpenGLShader::SetUniform1i(const std::string& name, int value) const
 	{
+		glUseProgram(m_ProgramID);
 		int location = GetUniformLocation(name);
 		glUniform1iv(location, 1, &value);
 	}
 
 	void OpenGLShader::SetUniform2i(const std::string& name, const IVector2& value) const
 	{
+		glUseProgram(m_ProgramID);
 		int location = GetUniformLocation(name);
 		glUniform2iv(location, 1, (int*)&value);
 	}
 
 	void OpenGLShader::SetUniform3i(const std::string& name, const IVector3& value) const
 	{
+		glUseProgram(m_ProgramID);
 		int location = GetUniformLocation(name);
 		glUniform3iv(location, 1, (int*)&value);
 	}
 
 	void OpenGLShader::SetUniform4i(const std::string& name, const IVector4& value) const
 	{
+		glUseProgram(m_ProgramID);
 		int location = GetUniformLocation(name);
 		glUniform4iv(location, 1, (int*)&value);
 	}
 
 	void OpenGLShader::SetUniform1ui(const std::string& name, uint value) const
 	{
+		glUseProgram(m_ProgramID);
 		int location = GetUniformLocation(name);
 		glUniform1uiv(location, 1, &value);
 	}
 
 	void OpenGLShader::SetUniform2ui(const std::string& name, const UVector2& value) const
 	{
+		glUseProgram(m_ProgramID);
 		int location = GetUniformLocation(name);
 		glUniform2uiv(location, 1, (uint*)&value);
 	}
 
 	void OpenGLShader::SetUniform3ui(const std::string& name, const UVector3& value) const
 	{
+		glUseProgram(m_ProgramID);
 		int location = GetUniformLocation(name);
 		glUniform3uiv(location, 1, (uint*)&value);
 	}
 
 	void OpenGLShader::SetUniform4ui(const std::string& name, const UVector4& value) const
 	{
+		glUseProgram(m_ProgramID);
 		int location = GetUniformLocation(name);
 		glUniform4uiv(location, 1, (uint*)&value);
 	}
 
 	void OpenGLShader::SetUniformMatrix2f(const std::string& name, const FMatrix2& value) const
 	{
+		glUseProgram(m_ProgramID);
 		int location = GetUniformLocation(name);
 		glUniformMatrix2fv(location, 1, false, (float*)&value);
 	}
 
 	void OpenGLShader::SetUniformMatrix2x3f(const std::string& name, const FMatrix2x3& value) const
 	{
+		glUseProgram(m_ProgramID);
 		int location = GetUniformLocation(name);
 		glUniformMatrix2x3fv(location, 1, false, (float*)&value);
 	}
 
 	void OpenGLShader::SetUniformMatrix2x4f(const std::string& name, const FMatrix2x4& value) const
 	{
+		glUseProgram(m_ProgramID);
 		int location = GetUniformLocation(name);
 		glUniformMatrix2x4fv(location, 1, false, (float*)&value);
 	}
 
 	void OpenGLShader::SetUniformMatrix3f(const std::string& name, const FMatrix3& value) const
 	{
+		glUseProgram(m_ProgramID);
 		int location = GetUniformLocation(name);
 		glUniformMatrix3fv(location, 1, false, (float*)&value);
 	}
 
 	void OpenGLShader::SetUniformMatrix3x2f(const std::string& name, const FMatrix3x2& value) const
 	{
+		glUseProgram(m_ProgramID);
 		int location = GetUniformLocation(name);
 		glUniformMatrix3x2fv(location, 1, false, (float*)&value);
 	}
 
 	void OpenGLShader::SetUniformMatrix3x4f(const std::string& name, const FMatrix3x4& value) const
 	{
+		glUseProgram(m_ProgramID);
 		int location = GetUniformLocation(name);
 		glUniformMatrix3x4fv(location, 1, false, (float*)&value);
 	}
 
 	void OpenGLShader::SetUniformMatrix4f(const std::string& name, const FMatrix4& value) const
 	{
+		glUseProgram(m_ProgramID);
 		int location = GetUniformLocation(name);
 		glUniformMatrix4fv(location, 1, false, (float*)&value);
 	}
 
 	void OpenGLShader::SetUniformMatrix4x2f(const std::string& name, const FMatrix4x2& value) const
 	{
+		glUseProgram(m_ProgramID);
 		int location = GetUniformLocation(name);
 		glUniformMatrix4x2fv(location, 1, false, (float*)&value);
 	}
 
 	void OpenGLShader::SetUniformMatrix4x3f(const std::string& name, const FMatrix4x3& value) const
 	{
+		glUseProgram(m_ProgramID);
 		int location = GetUniformLocation(name);
 		glUniformMatrix4x3fv(location, 1, false, (float*)&value);
 	}

@@ -38,8 +38,16 @@ namespace Ion
 
 	void OpenGLRenderer::Draw(const TShared<IDrawable>& drawable) const
 	{
-		drawable->PrepareForDraw();
-		glDrawElements(GL_TRIANGLES, drawable->GetIndexCount(), GL_UNSIGNED_INT, nullptr);
+		TShared<VertexBuffer> vertexBuffer = drawable->GetVertexBuffer();
+		TShared<IndexBuffer> indexBuffer = drawable->GetIndexBuffer();
+		TShared<Shader> shader = drawable->GetShader();
+
+		vertexBuffer->Bind();
+		indexBuffer->Bind();
+		shader->Bind();
+
+		uint indexCount = indexBuffer->GetIndexCount();
+		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
 	}
 
 	void OpenGLRenderer::SetVSyncEnabled(bool bEnabled) const

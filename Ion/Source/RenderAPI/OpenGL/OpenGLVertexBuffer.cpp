@@ -43,4 +43,9 @@ namespace Ion
 			attributeIndex++;
 		}
 	}
+
+	uint OpenGLVertexBuffer::GetVertexCount() const
+	{
+		return m_VertexCount;
+	}
 }

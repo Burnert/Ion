@@ -25,15 +25,15 @@ public:
 	{
 		//Ion::SerialisationTest();
 
-		Ion::File* file = Ion::File::Create(TEXT("linetest.txt"));
-		file->Open(Ion::IO::FM_Read);
+		//Ion::File* file = Ion::File::Create(TEXT("linetest.txt"));
+		//file->Open(Ion::IO::FM_Read);
 
-		std::string line;
-		while (!file->EndOfFile())
-		{
-			file->ReadLine(line);
-			LOG_INFO("Read Line: {0}", line);
-		}
+		//std::string line;
+		//while (!file->EndOfFile())
+		//{
+		//	file->ReadLine(line);
+		//	LOG_INFO("Read Line: {0}", line);
+		//}
 
 // #include "FileTest"
 
@@ -51,8 +51,8 @@ public:
 			-0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
 			 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f,
 		};
-		m_CubeVertexBuffer = VertexBuffer::Create(cubeVerts, sizeof(cubeVerts));
-		m_CubeVertexBuffer->SetLayout(layout);
+		TShared<VertexBuffer> vertexBuffer = VertexBuffer::Create(cubeVerts, sizeof(cubeVerts));
+		vertexBuffer->SetLayout(layout);
 
 		uint cubeIndices[12 * 3] = {
 			// Front
@@ -79,7 +79,7 @@ public:
 			5, 4, 1,
 			5, 1, 0,
 		};
-		m_CubeIndexBuffer = IndexBuffer::Create(cubeIndices, 12 * 3);
+		TShared<IndexBuffer> indexBuffer = IndexBuffer::Create(cubeIndices, 12 * 3);
 
 		const char* vertSrc = R"(
 #version 430 core
@@ -123,9 +123,10 @@ void main()
 		bResult = shader->Compile();
 		VERIFY(bResult);
 
-		shader->Bind();
-
-		m_Shader = shader;
+		m_MeshCube = Mesh::Create();
+		m_MeshCube->SetVertexBuffer(vertexBuffer);
+		m_MeshCube->SetIndexBuffer(indexBuffer);
+		m_MeshCube->SetShader(shader);
 
 		m_Camera = Camera::Create();
 		m_Camera->SetTransform(glm::translate(FVector3(0.0f, 0.0f, 2.0f)));
@@ -158,12 +159,14 @@ void main()
 		//LOG_WARN("{0} Data: {1}", dataMainLoop.Name, dataMainLoop.GetTimeMs());
 		//LOG_WARN("{0} Data: {1}", dataMainLoopSection.Name, dataMainLoopSection.GetTimeMs());
 
+		TShared<Shader> cubeShader = m_MeshCube->GetShader();
+
 		static float c_Angle = 0.0f;
 		static FVector4 c_Tint(1.0f, 0.0f, 1.0f, 1.0f);
 
 		FVector4 tint = c_Tint;
 		tint.y = glm::abs(tint.y - 1.0f);
-		m_Shader->SetUniform4f("u_Color", tint);
+		cubeShader->SetUniform4f("u_Color", tint);
 
 		// Perspective projection
 		WindowDimensions dimensions = GetWindow()->GetDimensions();
@@ -223,11 +226,12 @@ void main()
 		// Model transform
 		FMatrix4 modelMatrix(1.0f);
 		modelMatrix *= glm::rotate(c_Angle, glm::normalize(FVector3(1.0f, 0.0f, 1.0f)));
+		m_MeshCube->SetTransform(modelMatrix);
 
 		// Multiply in this order because OpenGL
-		FMatrix4 modelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
+		FMatrix4 modelViewProjectionMatrix = viewProjectionMatrix * m_MeshCube->GetTransform();
 
-		m_Shader->SetUniformMatrix4f("u_MVP", modelViewProjectionMatrix);
+		cubeShader->SetUniformMatrix4f("u_MVP", modelViewProjectionMatrix);
 
 		c_Angle += deltaTime;
 		c_Tint.y = (((c_Tint.y + deltaTime) >= 2.0f) ? 0.0f : (c_Tint.y + deltaTime));
@@ -240,7 +244,7 @@ void main()
 		// so when this gets called it won't bind the VBO before drawing.
 		// Hence this is a bug.
 		// > Think of a better system.
-		GetRenderer()->Draw(m_CubeIndexBuffer);
+		GetRenderer()->Draw(m_MeshCube);
 	}
 
 	virtual void OnShutdown() override
@@ -265,9 +269,7 @@ void main()
 	}
 
 private:
-	TShared<VertexBuffer> m_CubeVertexBuffer;
-	TShared<IndexBuffer> m_CubeIndexBuffer;
-	TShared<Shader> m_Shader;
+	TShared<Mesh> m_MeshCube;
 	TShared<Camera> m_Camera;
 	FVector4 m_CameraLocation = { 0.0f, 0.0f, 2.0f, 1.0f };
 	FVector3 m_CameraRotation = { 0.0f, 0.0f, 0.0f };

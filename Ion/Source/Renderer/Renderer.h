@@ -3,6 +3,7 @@
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "Shader.h"
+#include "Mesh.h"
 #include "Camera.h"
 
 #include "Drawable.h"

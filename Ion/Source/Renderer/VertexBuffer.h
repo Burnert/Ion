@@ -70,6 +70,8 @@ namespace Ion
 
 		virtual void SetLayout(const VertexLayout& layout) const = 0;
 
+		virtual uint GetVertexCount() const = 0;
+
 	protected:
 		VertexBuffer() { }
 	};
