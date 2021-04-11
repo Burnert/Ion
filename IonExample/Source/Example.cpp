@@ -190,29 +190,32 @@ void main()
 			* glm::rotate(m_CameraRotation.x, FVector3(-1.0f, 0.0f, 0.0f))
 			* FVector4(0.0f, -1.0f, 0.0f, 0.0f);
 
-		if (GetInputManager()->IsKeyPressed(Key::W))
+		if (GetInputManager()->IsMouseButtonPressed(Mouse::Right))
 		{
-			m_CameraLocation = glm::translate(FVector3(cameraForwardVector) * deltaTime * cameraMoveSpeed) * m_CameraLocation;
-		}
-		if (GetInputManager()->IsKeyPressed(Key::S))
-		{
-			m_CameraLocation = glm::translate(FVector3(cameraForwardVector) * -deltaTime * cameraMoveSpeed) * m_CameraLocation;
-		}
-		if (GetInputManager()->IsKeyPressed(Key::A))
-		{
-			m_CameraLocation = glm::translate(FVector3(cameraRightVector) * deltaTime * cameraMoveSpeed) * m_CameraLocation;
-		}
-		if (GetInputManager()->IsKeyPressed(Key::D))
-		{
-			m_CameraLocation = glm::translate(FVector3(cameraRightVector) * -deltaTime * cameraMoveSpeed) * m_CameraLocation;
-		}
-		if (GetInputManager()->IsKeyPressed(Key::Q))
-		{
-			m_CameraLocation = glm::translate(FVector3(cameraUpVector) * deltaTime * cameraMoveSpeed) * m_CameraLocation;
-		}
-		if (GetInputManager()->IsKeyPressed(Key::E))
-		{
-			m_CameraLocation = glm::translate(FVector3(cameraUpVector) * -deltaTime * cameraMoveSpeed) * m_CameraLocation;
+			if (GetInputManager()->IsKeyPressed(Key::W))
+			{
+				m_CameraLocation = glm::translate(FVector3(cameraForwardVector) * deltaTime * cameraMoveSpeed) * m_CameraLocation;
+			}
+			if (GetInputManager()->IsKeyPressed(Key::S))
+			{
+				m_CameraLocation = glm::translate(FVector3(cameraForwardVector) * -deltaTime * cameraMoveSpeed) * m_CameraLocation;
+			}
+			if (GetInputManager()->IsKeyPressed(Key::A))
+			{
+				m_CameraLocation = glm::translate(FVector3(cameraRightVector) * deltaTime * cameraMoveSpeed) * m_CameraLocation;
+			}
+			if (GetInputManager()->IsKeyPressed(Key::D))
+			{
+				m_CameraLocation = glm::translate(FVector3(cameraRightVector) * -deltaTime * cameraMoveSpeed) * m_CameraLocation;
+			}
+			if (GetInputManager()->IsKeyPressed(Key::Q))
+			{
+				m_CameraLocation = glm::translate(FVector3(cameraUpVector) * deltaTime * cameraMoveSpeed) * m_CameraLocation;
+			}
+			if (GetInputManager()->IsKeyPressed(Key::E))
+			{
+				m_CameraLocation = glm::translate(FVector3(cameraUpVector) * -deltaTime * cameraMoveSpeed) * m_CameraLocation;
+			}
 		}
 
 		FMatrix4 transform(1.0f);
@@ -258,13 +261,17 @@ void main()
 		dispatcher.Dispatch<RawInputMouseMovedEvent>(
 			[this](RawInputMouseMovedEvent& event)
 			{
-				float yawDelta = event.GetX() * 0.003f;
-				float pitchDelta = event.GetY() * 0.003f;
+				if (GetInputManager()->IsMouseButtonPressed(Mouse::Right))
+				{
+					float yawDelta = event.GetX() * 0.003f;
+					float pitchDelta = event.GetY() * 0.003f;
 
-				m_CameraRotation.x += pitchDelta;
-				m_CameraRotation.y += yawDelta;
+					m_CameraRotation.x += pitchDelta;
+					m_CameraRotation.y += yawDelta;
 
-				return true;
+					return true;
+				}
+				return false;
 			});
 	}
 
