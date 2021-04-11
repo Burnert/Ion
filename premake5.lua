@@ -44,6 +44,7 @@ project "Ion"
 		"%{prj.name}/ThirdParty/ImGui",
 		"%{prj.name}/ThirdParty/glm",
 		"%{prj.name}/ThirdParty/SpdLog/include",
+		"%{prj.name}/ThirdParty/stb",
 		"%{prj.name}/Source"
 	}
 
