@@ -46,6 +46,7 @@ namespace Ion
 		virtual llong GetOffset() const override;
 
 		virtual llong GetSize() const override;
+		virtual WString GetExtension() const override;
 
 		virtual bool IsOpen() const override;
 		virtual bool Exists() const override;

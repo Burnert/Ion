@@ -50,6 +50,7 @@ namespace Ion
 		virtual llong GetOffset() const = 0;
 
 		virtual llong GetSize() const = 0;
+		virtual WString GetExtension() const = 0;
 
 		virtual bool IsOpen() const = 0;
 		virtual bool Exists() const = 0;
@@ -66,6 +67,8 @@ namespace Ion
 		File();
 		File(const std::wstring& filename);
 		virtual ~File() { }
+		
+		// @TODO: Add copy and move constructors
 
 		/* This is the type of the new line character that will be written in a text file. */
 		IO::ENewLineType WriteNewLineType;

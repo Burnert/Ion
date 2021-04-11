@@ -507,6 +507,12 @@ namespace Ion
 		return fileSize.QuadPart;
 	}
 
+	WString WindowsFile::GetExtension() const
+	{
+		ullong dotIndex = m_Filename.find_last_of(L'.');
+		return m_Filename.substr(dotIndex + 1, (size_t)-1);
+	}
+
 	bool WindowsFile::IsOpen() const
 	{ 
 		return m_FileHandle != INVALID_HANDLE_VALUE;
