@@ -169,6 +169,9 @@ namespace Ion
 	class KeyReleasedEvent;
 	class KeyRepeatedEvent;
 
+	class MouseButtonPressedEvent;
+	class MouseButtonReleasedEvent;
+
 	class ION_API InputManager
 	{
 		friend class Application;
@@ -205,6 +208,9 @@ namespace Ion
 		bool OnKeyPressedEvent(KeyPressedEvent& event);
 		bool OnKeyReleasedEvent(KeyReleasedEvent& event);
 		bool OnKeyRepeatedEvent(KeyRepeatedEvent& event);
+
+		bool OnMouseButtonPressedEvent(MouseButtonPressedEvent& event);
+		bool OnMouseButtonReleasedEvent(MouseButtonReleasedEvent& event);
 
 		MouseInputType m_MouseInputType;
 	};

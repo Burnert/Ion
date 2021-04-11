@@ -51,9 +51,13 @@ namespace Ion
 	void InputManager::OnEvent(Event& event)
 	{
 		EventDispatcher dispatcher(event);
+
 		dispatcher.Dispatch<KeyPressedEvent>(BIND_METHOD_1P(InputManager::OnKeyPressedEvent));
 		dispatcher.Dispatch<KeyReleasedEvent>(BIND_METHOD_1P(InputManager::OnKeyReleasedEvent));
 		dispatcher.Dispatch<KeyRepeatedEvent>(BIND_METHOD_1P(InputManager::OnKeyRepeatedEvent));
+
+		dispatcher.Dispatch<MouseButtonPressedEvent>(BIND_METHOD_1P(InputManager::OnMouseButtonPressedEvent));
+		dispatcher.Dispatch<MouseButtonReleasedEvent>(BIND_METHOD_1P(InputManager::OnMouseButtonReleasedEvent));
 	}
 
 	bool InputManager::OnKeyPressedEvent(KeyPressedEvent& event)
@@ -120,6 +124,26 @@ namespace Ion
 			keyPtr = &m_InputStates[keyCode];
 			SetBitflags(*keyPtr, InputRepeatedFlag);
 		}
+
+		return false;
+	}
+
+	bool InputManager::OnMouseButtonPressedEvent(MouseButtonPressedEvent& event)
+	{
+		MouseButton buttonCode = (MouseButton)event.GetMouseButton();
+		// Mouse states are stored in the same array as key states
+		ubyte* statePtr = &m_InputStates[buttonCode];
+		SetBitflags(*statePtr, InputPressedFlag);
+
+		return false;
+	}
+
+	bool InputManager::OnMouseButtonReleasedEvent(MouseButtonReleasedEvent& event)
+	{
+		MouseButton buttonCode = (MouseButton)event.GetMouseButton();
+		// Mouse states are stored in the same array as key states
+		ubyte* statePtr = &m_InputStates[buttonCode];
+		UnsetBitflags(*statePtr, InputPressedFlag);
 
 		return false;
 	}
