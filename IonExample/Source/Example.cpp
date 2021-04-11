@@ -2,6 +2,7 @@
 
 #include "Ion.h"
 #include "Renderer/Renderer.h"
+#include "UserInterface/ImGui.h"
 
 //DECLARE_PERFORMANCE_COUNTER(Counter_MainLoop, "Main Loop", "Client");
 //DECLARE_PERFORMANCE_COUNTER(Counter_MainLoop_Section, "Main Loop Section", "Client");
@@ -39,17 +40,18 @@ public:
 
 		VertexLayout layout(2);
 		layout.AddAttribute(EVertexAttributeType::Float, 3); // Position
+		layout.AddAttribute(EVertexAttributeType::Float, 2); // Texture Coordinate
 		layout.AddAttribute(EVertexAttributeType::Float, 4); // Vertex Color
 
-		float cubeVerts[8 * 7] = {
-			-0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f,
-			 0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f,
-			 0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f,
-			-0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 1.0f,
-			 0.5f, -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 1.0f,
-			-0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 1.0f, 1.0f,
-			-0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
-			 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f,
+		float cubeVerts[8 * 9] = {
+			-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+			 0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+			 0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+			-0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+			 0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+			-0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+			-0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+			 0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 		};
 		TShared<VertexBuffer> vertexBuffer = VertexBuffer::Create(cubeVerts, sizeof(cubeVerts));
 		vertexBuffer->SetLayout(layout);
@@ -85,16 +87,19 @@ public:
 #version 430 core
 
 layout(location = 0) in vec3 a_Position;
-layout(location = 1) in vec4 a_Color;
+layout(location = 1) in vec2 a_TexCoord;
+layout(location = 2) in vec4 a_Color;
 
 uniform mat4 u_MVP;
 uniform vec4 u_Color;
 
 out vec4 v_Color;
+out vec2 v_TexCoord;
 
 void main()
 {
 	v_Color = a_Color * u_Color;
+	v_TexCoord = a_TexCoord;
 	gl_Position = u_MVP * vec4(a_Position, 1.0f);
 }
 
@@ -103,13 +108,16 @@ void main()
 		const char* fragSrc = R"(
 #version 430 core
 
-in vec4 v_Color;
+uniform sampler2D u_TextureSampler;
 
-out vec4 color;
+in vec4 v_Color;
+in vec2 v_TexCoord;
+
+out vec4 Color;
 
 void main()
 {
-	color = v_Color;
+	Color = texture(u_TextureSampler, v_TexCoord).rgba * v_Color;
 }
 
 )";
@@ -122,6 +130,24 @@ void main()
 
 		bResult = shader->Compile();
 		VERIFY(bResult);
+
+		// @TODO: Make some kind of converter from String to WString and vice-versa because this is painful to write:
+
+		memset(m_TextureFileNameBuffer, 0, sizeof(m_TextureFileNameBuffer));
+		WString textureFileName = L"test.png";
+		char* textureFileNameA = new char[textureFileName.size() + 1];
+		WideCharToMultiByte(CP_UTF8, 0, textureFileName.c_str(), -1, textureFileNameA, textureFileName.size() + 1, nullptr, nullptr);
+		strcpy_s(m_TextureFileNameBuffer, textureFileNameA);
+		delete[] textureFileNameA;
+
+		File* textureFile = File::Create(textureFileName);
+		Image* textureImage = new Image;
+		VERIFY(textureImage->Load(textureFile));
+		delete textureFile;
+		TShared<Texture> texture = Texture::Create(textureImage);
+		texture->Bind(0);
+
+		shader->SetUniform1i("u_TextureSampler", 0);
 
 		m_MeshCube = Mesh::Create();
 		m_MeshCube->SetVertexBuffer(vertexBuffer);
@@ -248,6 +274,27 @@ void main()
 		// Hence this is a bug.
 		// > Think of a better system.
 		GetRenderer()->Draw(m_MeshCube);
+
+		ImGui::Begin("Texture settings");
+		ImGui::InputText("Texture file", m_TextureFileNameBuffer, sizeof(m_TextureFileNameBuffer));
+		if (ImGui::Button("Set Texture"))
+		{
+			int bufferSize = MultiByteToWideChar(CP_UTF8, 0, m_TextureFileNameBuffer, -1, 0, 0);
+			wchar* textureFileNameBufferW = new wchar[bufferSize];
+			MultiByteToWideChar(CP_UTF8, 0, m_TextureFileNameBuffer, -1, textureFileNameBufferW, bufferSize);
+
+			File* textureFile = File::Create(textureFileNameBufferW);
+			delete[] textureFileNameBufferW;
+			if (textureFile->Exists())
+			{
+				Image* textureImage = new Image;
+				VERIFY(textureImage->Load(textureFile));
+				TShared<Texture> texture = Texture::Create(textureImage);
+				texture->Bind(0);
+			}
+			delete textureFile;
+		}
+		ImGui::End();
 	}
 
 	virtual void OnShutdown() override
@@ -273,6 +320,30 @@ void main()
 				}
 				return false;
 			});
+
+		dispatcher.Dispatch<MouseButtonPressedEvent>(
+			[this](MouseButtonPressedEvent& event)
+			{
+				if (event.GetMouseButton() == Mouse::Right)
+				{
+					GetWindow()->LockCursor();
+					GetWindow()->ShowCursor(false);
+					return true;
+				}
+				return false;
+			});
+
+		dispatcher.Dispatch<MouseButtonReleasedEvent>(
+			[this](MouseButtonReleasedEvent& event)
+			{
+				if (event.GetMouseButton() == Mouse::Right)
+				{
+					GetWindow()->UnlockCursor();
+					GetWindow()->ShowCursor(true);
+					return true;
+				}
+				return false;
+			});
 	}
 
 private:
@@ -280,6 +351,8 @@ private:
 	TShared<Camera> m_Camera;
 	FVector4 m_CameraLocation = { 0.0f, 0.0f, 2.0f, 1.0f };
 	FVector3 m_CameraRotation = { 0.0f, 0.0f, 0.0f };
+
+	char m_TextureFileNameBuffer[MAX_PATH + 1];
 };
 
 USE_APPLICATION_CLASS(IonExample)

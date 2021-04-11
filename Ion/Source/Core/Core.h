@@ -16,6 +16,7 @@
 #include "CoreUtility.h"
 #include "Event/Event.h"
 #include "File/File.h"
+#include "File/Image.h"
 #include "Input/Input.h"
 #include "Layer/Layer.h"
 #include "Logging/Logger.h"
