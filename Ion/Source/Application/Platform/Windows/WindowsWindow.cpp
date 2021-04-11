@@ -784,6 +784,15 @@ namespace Ion
 		m_bCursorLocked = true;
 	}
 
+	void WindowsWindow::LockCursor()
+	{
+		POINT cursorPos { };
+		GetCursorPos(&cursorPos);
+		RECT rect = { cursorPos.x, cursorPos.y, cursorPos.x, cursorPos.y };
+		::ClipCursor(&rect);
+		m_bCursorLocked = true;
+	}
+
 	void WindowsWindow::UnlockCursor()
 	{
 		::ClipCursor(nullptr);

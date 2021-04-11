@@ -41,6 +41,7 @@ namespace Ion
 
 		virtual void ClipCursor() override;
 		virtual void LockCursor(IVector2 position) override;
+		virtual void LockCursor() override;
 		virtual void UnlockCursor() override;
 
 		virtual void ShowCursor(bool bShow) override;

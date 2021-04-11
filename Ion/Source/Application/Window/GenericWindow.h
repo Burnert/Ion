@@ -58,6 +58,9 @@ namespace Ion
 		/* Locks the cursor in the specified point (relative to window client area).
 		   The cursor will not move at all. */
 		virtual void LockCursor(IVector2 position) { }
+		/* Locks the cursor in the current position.
+		   The cursor will not move at all. */
+		virtual void LockCursor() { }
 		virtual void UnlockCursor() { }
 		FORCEINLINE bool IsCursorLocked() const { return m_bCursorLocked; }
 
