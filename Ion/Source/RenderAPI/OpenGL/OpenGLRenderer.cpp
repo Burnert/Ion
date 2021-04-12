@@ -40,11 +40,15 @@ namespace Ion
 	{
 		TShared<VertexBuffer> vertexBuffer = drawable->GetVertexBuffer();
 		TShared<IndexBuffer> indexBuffer = drawable->GetIndexBuffer();
-		TShared<Shader> shader = drawable->GetShader();
+		TShared<Material> material = drawable->GetMaterial();
 
 		vertexBuffer->Bind();
 		indexBuffer->Bind();
+
+		TShared<Shader> shader = material->GetShader();
 		shader->Bind();
+
+		material->UpdateShaderUniforms();
 
 		uint indexCount = indexBuffer->GetIndexCount();
 		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);

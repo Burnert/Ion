@@ -136,7 +136,7 @@ void main()
 		memset(m_TextureFileNameBuffer, 0, sizeof(m_TextureFileNameBuffer));
 		WString textureFileName = L"test.png";
 		char* textureFileNameA = new char[textureFileName.size() + 1];
-		WideCharToMultiByte(CP_UTF8, 0, textureFileName.c_str(), -1, textureFileNameA, textureFileName.size() + 1, nullptr, nullptr);
+		WideCharToMultiByte(CP_UTF8, 0, textureFileName.c_str(), -1, textureFileNameA, (int)textureFileName.size() + 1, nullptr, nullptr);
 		strcpy_s(m_TextureFileNameBuffer, textureFileNameA);
 		delete[] textureFileNameA;
 
@@ -144,15 +144,21 @@ void main()
 		Image* textureImage = new Image;
 		VERIFY(textureImage->Load(textureFile));
 		delete textureFile;
-		TShared<Texture> texture = Texture::Create(textureImage);
-		texture->Bind(0);
+		m_Texture = Texture::Create(textureImage);
+		m_Texture->Bind(0);
 
 		shader->SetUniform1i("u_TextureSampler", 0);
+
+		TShared<Material> material = Material::Create();
+		material->SetShader(shader);
+		material->CreateMaterialProperty("Color", EMaterialPropertyType::Float4);
+		material->LinkPropertyToUniform("Color", "u_Color");
+		material->SetMaterialProperty("Color", FVector4(1.0f, 1.0f, 1.0f, 1.0f));
 
 		m_MeshCube = Mesh::Create();
 		m_MeshCube->SetVertexBuffer(vertexBuffer);
 		m_MeshCube->SetIndexBuffer(indexBuffer);
-		m_MeshCube->SetShader(shader);
+		m_MeshCube->SetMaterial(material);
 
 		m_Camera = Camera::Create();
 		m_Camera->SetTransform(glm::translate(FVector3(0.0f, 0.0f, 2.0f)));
@@ -185,14 +191,15 @@ void main()
 		//LOG_WARN("{0} Data: {1}", dataMainLoop.Name, dataMainLoop.GetTimeMs());
 		//LOG_WARN("{0} Data: {1}", dataMainLoopSection.Name, dataMainLoopSection.GetTimeMs());
 
-		TShared<Shader> cubeShader = m_MeshCube->GetShader();
+		TShared<Shader> cubeShader = m_MeshCube->GetMaterial()->GetShader();
+		TShared<Material> cubeMaterial = m_MeshCube->GetMaterial();
 
 		static float c_Angle = 0.0f;
 		static FVector4 c_Tint(1.0f, 0.0f, 1.0f, 1.0f);
 
 		FVector4 tint = c_Tint;
 		tint.y = glm::abs(tint.y - 1.0f);
-		cubeShader->SetUniform4f("u_Color", tint);
+		cubeMaterial->SetMaterialProperty("Color", tint);
 
 		// Perspective projection
 		WindowDimensions dimensions = GetWindow()->GetDimensions();
@@ -264,16 +271,6 @@ void main()
 
 		c_Angle += deltaTime;
 		c_Tint.y = (((c_Tint.y + deltaTime) >= 2.0f) ? 0.0f : (c_Tint.y + deltaTime));
-	}
-
-	virtual void OnRender() override
-	{
-		GetRenderer()->Clear(FVector4(0.1f, 0.1f, 0.1f, 1.0f));
-		// @TODO: Now an IndexBuffer is completely independent of a VertexBuffer,
-		// so when this gets called it won't bind the VBO before drawing.
-		// Hence this is a bug.
-		// > Think of a better system.
-		GetRenderer()->Draw(m_MeshCube);
 
 		ImGui::Begin("Texture settings");
 		ImGui::InputText("Texture file", m_TextureFileNameBuffer, sizeof(m_TextureFileNameBuffer));
@@ -289,12 +286,18 @@ void main()
 			{
 				Image* textureImage = new Image;
 				VERIFY(textureImage->Load(textureFile));
-				TShared<Texture> texture = Texture::Create(textureImage);
-				texture->Bind(0);
+				m_Texture = Texture::Create(textureImage);
+				m_Texture->Bind(0);
 			}
 			delete textureFile;
 		}
 		ImGui::End();
+	}
+
+	virtual void OnRender() override
+	{
+		GetRenderer()->Clear(FVector4(0.1f, 0.1f, 0.1f, 1.0f));
+		GetRenderer()->Draw(m_MeshCube);
 	}
 
 	virtual void OnShutdown() override
@@ -349,6 +352,7 @@ void main()
 private:
 	TShared<Mesh> m_MeshCube;
 	TShared<Camera> m_Camera;
+	TShared<Texture> m_Texture;
 	FVector4 m_CameraLocation = { 0.0f, 0.0f, 2.0f, 1.0f };
 	FVector3 m_CameraRotation = { 0.0f, 0.0f, 0.0f };
 

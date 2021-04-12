@@ -30,6 +30,8 @@ namespace Ion
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 
+		virtual bool HasUniform(const std::string& name) const = 0;
+
 		virtual void SetUniform1f(const std::string& name, float value) const = 0;
 		virtual void SetUniform2f(const std::string& name, const FVector2& value) const = 0;
 		virtual void SetUniform3f(const std::string& name, const FVector3& value) const = 0;

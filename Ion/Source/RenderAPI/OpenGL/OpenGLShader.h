@@ -18,6 +18,8 @@ namespace Ion
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
 
+		virtual bool HasUniform(const std::string& name) const override;
+
 		virtual void SetUniform1f(const std::string& name, float value) const override;
 		virtual void SetUniform2f(const std::string& name, const FVector2& value) const override;
 		virtual void SetUniform3f(const std::string& name, const FVector3& value) const override;

@@ -32,9 +32,9 @@ namespace Ion
 		m_TriangleCount = indexBuffer->GetTriangleCount();
 	}
 
-	void Mesh::SetShader(const TShared<Shader>& shader)
+	void Mesh::SetMaterial(const TShared<Material>& material)
 	{
-		m_Shader = shader;
+		m_Material = material;
 	}
 
 	const TShared<VertexBuffer>& Mesh::GetVertexBuffer() const
@@ -47,8 +47,8 @@ namespace Ion
 		return m_IndexBuffer;
 	}
 
-	const TShared<Shader>& Mesh::GetShader() const
+	const TShared<Material>& Mesh::GetMaterial() const
 	{
-		return m_Shader;
+		return m_Material;
 	}
 }

@@ -108,6 +108,13 @@ namespace Ion
 		glUseProgram(0);
 	}
 
+	bool OpenGLShader::HasUniform(const std::string& name) const
+	{
+		glUseProgram(m_ProgramID);
+		int location = GetUniformLocation(name);
+		return location != -1;
+	}
+
 	void OpenGLShader::SetUniform1f(const std::string& name, float value) const
 	{
 		glUseProgram(m_ProgramID);

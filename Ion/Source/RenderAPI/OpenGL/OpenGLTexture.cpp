@@ -6,6 +6,8 @@ namespace Ion
 {
 	OpenGLTexture::~OpenGLTexture()
 	{
+		glDeleteTextures(1, &m_ID);
+		m_ID = 0;
 	}
 
 	void OpenGLTexture::Bind(uint slot) const

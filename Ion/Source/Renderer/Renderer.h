@@ -4,6 +4,7 @@
 #include "IndexBuffer.h"
 #include "Shader.h"
 #include "Texture.h"
+#include "Material.h"
 #include "Mesh.h"
 #include "Camera.h"
 
