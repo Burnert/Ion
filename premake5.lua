@@ -53,6 +53,10 @@ project "Ion"
 		"ImGui",
 		"opengl32.lib"
 	}
+	
+	flags {
+		"MultiProcessorCompile"
+	}
 
 	filter "system:windows"
 		cppdialect "C++17"

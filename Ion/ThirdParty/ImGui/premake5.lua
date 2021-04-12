@@ -25,6 +25,10 @@ project "ImGui"
         "Glad"
     }
 
+	flags {
+		"MultiProcessorCompile"
+	}
+
     filter "system:windows"
         systemversion "latest"
         staticruntime "Off"
