@@ -37,6 +37,8 @@ if (!(x)) \
 
 #ifdef ION_DEBUG
 
+// @TODO: Implement a nice error reporting system instead of this spaghetti
+
 #define ASSERT(x) \
 if (!(x)) \
 { \
