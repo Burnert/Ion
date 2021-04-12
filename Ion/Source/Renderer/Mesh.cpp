@@ -37,17 +37,17 @@ namespace Ion
 		m_Shader = shader;
 	}
 
-	TShared<VertexBuffer> Mesh::GetVertexBuffer() const
+	const TShared<VertexBuffer>& Mesh::GetVertexBuffer() const
 	{
 		return m_VertexBuffer;
 	}
 
-	TShared<IndexBuffer> Mesh::GetIndexBuffer() const
+	const TShared<IndexBuffer>& Mesh::GetIndexBuffer() const
 	{
 		return m_IndexBuffer;
 	}
 
-	TShared<Shader> Mesh::GetShader() const
+	const TShared<Shader>& Mesh::GetShader() const
 	{
 		return m_Shader;
 	}

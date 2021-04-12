@@ -12,8 +12,8 @@ namespace Ion
 	class IDrawable
 	{
 	public:
-		virtual TShared<VertexBuffer> GetVertexBuffer() const = 0;
-		virtual TShared<IndexBuffer> GetIndexBuffer() const = 0;
-		virtual TShared<Shader> GetShader() const = 0;
+		virtual const TShared<VertexBuffer>& GetVertexBuffer() const = 0;
+		virtual const TShared<IndexBuffer>& GetIndexBuffer() const = 0;
+		virtual const TShared<Shader>& GetShader() const = 0;
 	};
 }

@@ -22,9 +22,9 @@ namespace Ion
 
 		// IDrawable:
 
-		virtual TShared<VertexBuffer> GetVertexBuffer() const override;
-		virtual TShared<IndexBuffer> GetIndexBuffer() const override;
-		virtual TShared<Shader> GetShader() const override;
+		virtual const TShared<VertexBuffer>& GetVertexBuffer() const override;
+		virtual const TShared<IndexBuffer>& GetIndexBuffer() const override;
+		virtual const TShared<Shader>& GetShader() const override;
 
 		// End of IDrawable
 
