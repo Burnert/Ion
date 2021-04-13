@@ -11,7 +11,7 @@ namespace Ion
 	public:
 		static TShared<Mesh> Create();
 
-		virtual ~Mesh() { };
+		virtual ~Mesh() { }
 
 		void SetTransform(const FMatrix4& transform);
 		FORCEINLINE const FMatrix4& GetTransform() const { return m_TransformMatrix; }
@@ -25,6 +25,7 @@ namespace Ion
 		virtual const TShared<VertexBuffer>& GetVertexBuffer() const override;
 		virtual const TShared<IndexBuffer>& GetIndexBuffer() const override;
 		virtual const TShared<Material>& GetMaterial() const override;
+		virtual const FMatrix4& GetTransformMatrix() const override;
 
 		// End of IDrawable
 

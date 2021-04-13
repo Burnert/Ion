@@ -5,8 +5,8 @@
 namespace Ion
 {
 	OpenGLRenderer::OpenGLRenderer()
-	{
-	}
+		: m_CurrentScene({ })
+	{ }
 
 	OpenGLRenderer::~OpenGLRenderer()
 	{
@@ -36,8 +36,19 @@ namespace Ion
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
-	void OpenGLRenderer::Draw(const TShared<IDrawable>& drawable) const
+	void OpenGLRenderer::Draw(const TShared<IDrawable>& drawable, const TShared<Scene>& targetScene) const
 	{
+		TShared<Scene> scene;
+		if (targetScene)
+		{
+			scene = targetScene;
+		}
+		else
+		{
+			ASSERT_M(m_CurrentScene, "Cannot render before setting the current scene if the target scene is not specified.");
+			scene = m_CurrentScene;
+		}
+
 		TShared<VertexBuffer> vertexBuffer = drawable->GetVertexBuffer();
 		TShared<IndexBuffer> indexBuffer = drawable->GetIndexBuffer();
 		TShared<Material> material = drawable->GetMaterial();
@@ -50,8 +61,36 @@ namespace Ion
 
 		material->UpdateShaderUniforms();
 
+		// Calculate the Model View Projection Matrix based on the current scene camera
+		const TShared<Camera>& activeCamera = m_CurrentScene->GetActiveCamera();
+		ASSERT(activeCamera);
+		activeCamera->UpdateViewProjectionMatrix();
+		const FMatrix4& viewProjectionMatrix = activeCamera->GetViewProjectionMatrix();
+		const FMatrix4& modelMatrix = drawable->GetTransformMatrix();
+		FMatrix4 modelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
+		shader->SetUniformMatrix4f("u_MVP", modelViewProjectionMatrix);
+
 		uint indexCount = indexBuffer->GetIndexCount();
 		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
+	}
+
+	void OpenGLRenderer::RenderScene(const TShared<Scene>& scene)
+	{
+		m_CurrentScene = scene;
+		for (TShared<IDrawable> drawable : scene->GetDrawableObjects())
+		{
+			Draw(drawable, scene);
+		}
+	}
+
+	void OpenGLRenderer::SetCurrentScene(const TShared<Scene>& scene)
+	{
+		m_CurrentScene = scene;
+	}
+
+	const TShared<Scene>& OpenGLRenderer::GetCurrentScene() const
+	{
+		return m_CurrentScene;
 	}
 
 	void OpenGLRenderer::SetVSyncEnabled(bool bEnabled) const

@@ -15,5 +15,6 @@ namespace Ion
 		virtual const TShared<VertexBuffer>& GetVertexBuffer() const = 0;
 		virtual const TShared<IndexBuffer>& GetIndexBuffer() const = 0;
 		virtual const TShared<Material>& GetMaterial() const = 0;
+		virtual const FMatrix4& GetTransformMatrix() const = 0;
 	};
 }

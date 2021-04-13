@@ -7,6 +7,7 @@
 #include "Material.h"
 #include "Mesh.h"
 #include "Camera.h"
+#include "Scene.h"
 
 #include "Drawable.h"
 
@@ -39,7 +40,12 @@ namespace Ion
 		virtual void Clear() const = 0;
 		virtual void Clear(const FVector4& color) const = 0;
 
-		virtual void Draw(const TShared<IDrawable>& drawable) const = 0;
+		virtual void Draw(const TShared<IDrawable>& drawable, const TShared<Scene>& targetScene = nullptr) const = 0;
+
+		virtual void SetCurrentScene(const TShared<Scene>& scene) = 0;
+		virtual const TShared<Scene>& GetCurrentScene() const = 0;
+
+		virtual void RenderScene(const TShared<Scene>& scene) = 0;
 
 		virtual void SetVSyncEnabled(bool bEnabled) const = 0;
 		virtual bool GetVSyncEnabled() const = 0;

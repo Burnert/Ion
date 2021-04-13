@@ -47,15 +47,15 @@ namespace Ion
 		m_bDirty = true;
 	}
 
-	const FMatrix4& Camera::UpdateViewProjectionMatrix()
+	void Camera::UpdateViewProjectionMatrix()
 	{
 		if (m_bDirty)
 		{
+			// @TODO: Cache these intermediate matrices (view, projection)
 			m_ViewProjectionMatrix = FMatrix4(1.0f)
 				* glm::perspective(m_FOV, m_AspectRatio, m_NearClip, m_FarClip)
 				* glm::affineInverse(m_CameraTransform);
 		}
-		return m_ViewProjectionMatrix;
 	}
 
 	Camera::Camera() :

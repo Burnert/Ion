@@ -51,4 +51,9 @@ namespace Ion
 	{
 		return m_Material;
 	}
+
+	const FMatrix4& Mesh::GetTransformMatrix() const
+	{
+		return m_TransformMatrix;
+	}
 }

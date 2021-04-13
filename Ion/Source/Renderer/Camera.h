@@ -28,7 +28,7 @@ namespace Ion
 		void SetFarClip(float farClip);
 		FORCEINLINE float GetFarClip() const { return m_FarClip; }
 
-		const FMatrix4& UpdateViewProjectionMatrix();
+		void UpdateViewProjectionMatrix();
 
 	protected:
 		Camera();

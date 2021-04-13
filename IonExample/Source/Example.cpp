@@ -4,13 +4,6 @@
 #include "Renderer/Renderer.h"
 #include "UserInterface/ImGui.h"
 
-//DECLARE_PERFORMANCE_COUNTER(Counter_MainLoop, "Main Loop", "Client");
-//DECLARE_PERFORMANCE_COUNTER(Counter_MainLoop_Section, "Main Loop Section", "Client");
-
-//DECLARE_PERFORMANCE_COUNTER_GENERIC(Counter_FileI, "FileI");
-//DECLARE_PERFORMANCE_COUNTER_GENERIC(Counter_FileIC, "FileIC");
-//DECLARE_PERFORMANCE_COUNTER_GENERIC(Counter_FileCpp, "Fcpp");
-
 // I'll think about this...
 using namespace Ion;
 
@@ -18,6 +11,7 @@ class IonExample : public IonApplication
 {
 public:
 	IonExample()
+		: m_TextureFileNameBuffer("")
 	{
 		ION_LOG_DEBUG("IonExample constructed.");
 	}
@@ -162,35 +156,23 @@ void main()
 
 		m_Camera = Camera::Create();
 		m_Camera->SetTransform(glm::translate(FVector3(0.0f, 0.0f, 2.0f)));
-
-		float fov = glm::radians(90.0f);
-		m_Camera->SetFOV(fov);
+		m_Camera->SetFOV(glm::radians(90.0f));
 		m_Camera->SetNearClip(0.1f);
 		m_Camera->SetFarClip(100.0f);
+
+		m_Scene = Scene::Create();
+		m_Scene->SetActiveCamera(m_Camera);
+		m_Scene->AddDrawableObject(m_MeshCube);
+
+		m_AuxCamera = Camera::Create();
+		m_AuxCamera->SetTransform(glm::translate(FVector3(0.0f, 0.0f, 4.0f)));
+		m_AuxCamera->SetFOV(glm::radians(76.0f));
+		m_AuxCamera->SetNearClip(0.1f);
+		m_AuxCamera->SetFarClip(10.0f);
 	}
 
 	virtual void OnUpdate(float deltaTime) override
 	{
-		//{
-		//	SCOPED_PERFORMANCE_COUNTER(Counter_MainLoop);
-
-		//	using namespace std::chrono_literals;
-		//	std::this_thread::sleep_for(0.2s);
-
-		//	MANUAL_PERFORMANCE_COUNTER(Counter_MainLoop_Section);
-		//	Counter_MainLoop_Section->Start();
-
-		//	std::this_thread::sleep_for(0.2s);
-
-		//	Counter_MainLoop_Section->Stop();
-		//}
-
-		//COUNTER_TIME_DATA(dataMainLoop, "Counter_MainLoop");
-		//COUNTER_TIME_DATA(dataMainLoopSection, "Counter_MainLoop_Section");
-
-		//LOG_WARN("{0} Data: {1}", dataMainLoop.Name, dataMainLoop.GetTimeMs());
-		//LOG_WARN("{0} Data: {1}", dataMainLoopSection.Name, dataMainLoopSection.GetTimeMs());
-
 		TShared<Shader> cubeShader = m_MeshCube->GetMaterial()->GetShader();
 		TShared<Material> cubeMaterial = m_MeshCube->GetMaterial();
 
@@ -205,6 +187,7 @@ void main()
 		WindowDimensions dimensions = GetWindow()->GetDimensions();
 		float aspectRatio = dimensions.GetAspectRatio();
 		m_Camera->SetAspectRatio(aspectRatio);
+		m_AuxCamera->SetAspectRatio(aspectRatio);
 
 		float cameraMoveSpeed = 5.0f;
 
@@ -257,17 +240,10 @@ void main()
 		transform *= glm::rotate(m_CameraRotation.x, FVector3(-1.0f, 0.0f, 0.0f));
 		m_Camera->SetTransform(transform);
 
-		const FMatrix4& viewProjectionMatrix = m_Camera->UpdateViewProjectionMatrix();
-
 		// Model transform
 		FMatrix4 modelMatrix(1.0f);
-		modelMatrix *= glm::rotate(c_Angle, glm::normalize(FVector3(1.0f, 0.0f, 1.0f)));
+		modelMatrix *= glm::rotate(c_Angle, glm::normalize(FVector3(0.0f, 1.0f, 0.0f)));
 		m_MeshCube->SetTransform(modelMatrix);
-
-		// Multiply in this order because OpenGL
-		FMatrix4 modelViewProjectionMatrix = viewProjectionMatrix * m_MeshCube->GetTransform();
-
-		cubeShader->SetUniformMatrix4f("u_MVP", modelViewProjectionMatrix);
 
 		c_Angle += deltaTime;
 		c_Tint.y = (((c_Tint.y + deltaTime) >= 2.0f) ? 0.0f : (c_Tint.y + deltaTime));
@@ -291,13 +267,17 @@ void main()
 			}
 			delete textureFile;
 		}
+		if (ImGui::Button("Change Camera"))
+		{
+			m_Scene->SetActiveCamera(m_Scene->GetActiveCamera() == m_Camera ? m_AuxCamera : m_Camera);
+		}
 		ImGui::End();
 	}
 
 	virtual void OnRender() override
 	{
 		GetRenderer()->Clear(FVector4(0.1f, 0.1f, 0.1f, 1.0f));
-		GetRenderer()->Draw(m_MeshCube);
+		GetRenderer()->RenderScene(m_Scene);
 	}
 
 	virtual void OnShutdown() override
@@ -352,7 +332,9 @@ void main()
 private:
 	TShared<Mesh> m_MeshCube;
 	TShared<Camera> m_Camera;
+	TShared<Camera> m_AuxCamera;
 	TShared<Texture> m_Texture;
+	TShared<Scene> m_Scene;
 	FVector4 m_CameraLocation = { 0.0f, 0.0f, 2.0f, 1.0f };
 	FVector3 m_CameraRotation = { 0.0f, 0.0f, 0.0f };
 

@@ -16,7 +16,12 @@ namespace Ion
 		virtual void Clear() const override;
 		virtual void Clear(const FVector4& color) const override;
 
-		virtual void Draw(const TShared<IDrawable>& drawable) const override;
+		virtual void Draw(const TShared<IDrawable>& drawable, const TShared<Scene>& targetScene = nullptr) const override;
+
+		virtual void RenderScene(const TShared<Scene>& scene) override;
+
+		virtual void SetCurrentScene(const TShared<Scene>& scene) override;
+		virtual const TShared<Scene>& GetCurrentScene() const override;
 
 		virtual void SetVSyncEnabled(bool bEnabled) const override;
 		virtual bool GetVSyncEnabled() const override;
@@ -47,5 +52,8 @@ namespace Ion
 			default:        return (EPolygonDrawMode)-1;
 			}
 		}
+
+	private:
+		TShared<Scene> m_CurrentScene;
 	};
 }
