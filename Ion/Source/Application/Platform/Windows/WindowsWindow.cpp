@@ -74,10 +74,49 @@ namespace Ion
 
 	LRESULT WindowsWindow::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
-		// @TODO: Interpret the ImGui flags for better integration
-
 		if (ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam))
 			return 1;
+
+		// Read ImGui input first and decide what to do
+		// @TODO: This is a quick fix so do something better in the future
+		if (ImGui::GetCurrentContext())
+		{
+			ImGuiIO& imGuiIO = ImGui::GetIO();
+			if (imGuiIO.WantCaptureKeyboard)
+			{
+				if (IsAnyOf(uMsg,
+					WM_KEYDOWN,
+					WM_SYSKEYDOWN,
+					WM_KEYUP,
+					WM_KEYUP,
+					WM_SYSKEYUP))
+				{
+					return 0;
+				}
+			}
+			if (imGuiIO.WantCaptureMouse)
+			{
+				if (IsAnyOf(uMsg, 
+					WM_LBUTTONUP,
+					WM_RBUTTONUP,
+					WM_MBUTTONUP,
+					WM_XBUTTONUP,
+					WM_LBUTTONDOWN,
+					WM_RBUTTONDOWN,
+					WM_MBUTTONDOWN,
+					WM_XBUTTONDOWN,
+					WM_LBUTTONDBLCLK,
+					WM_RBUTTONDBLCLK,
+					WM_MBUTTONDBLCLK,
+					WM_XBUTTONDBLCLK,
+					WM_MOUSEWHEEL,
+					WM_MOUSEMOVE,
+					WM_INPUT))
+				{
+					return 0;
+				}
+			}
+		}
 
 		WindowsWindow& windowRef = *(WindowsWindow*)GetProp(hWnd, L"WinObj");
 

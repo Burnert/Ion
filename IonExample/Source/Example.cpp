@@ -309,6 +309,8 @@ void main()
 			{
 				if (event.GetMouseButton() == Mouse::Right)
 				{
+					ImGui::SetWindowFocus();
+
 					GetWindow()->LockCursor();
 					GetWindow()->ShowCursor(false);
 					return true;

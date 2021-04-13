@@ -71,3 +71,11 @@ NODISCARD constexpr FORCEINLINE TUnique<T> MakeUnique(Types&&... args)
 {
 	return std::make_unique<T>(std::forward<Types>(args)...);
 }
+
+// Common:
+
+template<typename T, typename... Elements>
+NODISCARD inline constexpr bool IsAnyOf(T&& item, Elements&&... elements)
+{
+	return ((item == elements) || ...);
+}
