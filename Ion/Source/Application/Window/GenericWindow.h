@@ -14,7 +14,7 @@ namespace Ion
 
 		inline float GetAspectRatio()
 		{
-			return (float)Width / (float)Height;
+			return (Height != 0.0f) ? ((float)Width / (float)Height) : 1.0f;
 		}
 	};
 

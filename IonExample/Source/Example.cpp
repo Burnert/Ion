@@ -203,7 +203,7 @@ void main()
 
 		// Perspective projection
 		WindowDimensions dimensions = GetWindow()->GetDimensions();
-		float aspectRatio = (float)dimensions.Width / (float)dimensions.Height;
+		float aspectRatio = dimensions.GetAspectRatio();
 		m_Camera->SetAspectRatio(aspectRatio);
 
 		float cameraMoveSpeed = 5.0f;

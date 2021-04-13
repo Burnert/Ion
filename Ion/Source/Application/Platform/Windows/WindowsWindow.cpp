@@ -675,7 +675,7 @@ namespace Ion
 		if (m_WindowHandle == NULL)
 		{
 			ION_LOG_ENGINE_ERROR(_windowNoInitMessage, "get window dimensions");
-			return { };
+			return { 0, 0 };
 		}
 		
 		RECT windowRect;
