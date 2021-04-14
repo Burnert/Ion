@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Core/CoreApi.h"
-#include "Core/CoreMacros.h"
-
-#define IMGUI_API ION_API
+#ifndef IMGUI_VERSION
+#error Must include imgui.h before imgui_internal.h
+#endif
 #include "imgui/imgui_internal.h"

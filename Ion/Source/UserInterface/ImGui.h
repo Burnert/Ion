@@ -4,6 +4,7 @@
 #include "Core/CoreMacros.h"
 
 #define IMGUI_API ION_API
+#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 #include "imgui/imgui.h"
 
 #ifdef ION_ENGINE
