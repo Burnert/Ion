@@ -242,34 +242,45 @@ void main()
 
 		// Model transform
 		FMatrix4 modelMatrix(1.0f);
+		modelMatrix *= glm::translate(m_MeshLocation);
 		modelMatrix *= glm::rotate(c_Angle, glm::normalize(FVector3(0.0f, 1.0f, 0.0f)));
 		m_MeshCube->SetTransform(modelMatrix);
 
 		c_Angle += deltaTime;
 		c_Tint.y = (((c_Tint.y + deltaTime) >= 2.0f) ? 0.0f : (c_Tint.y + deltaTime));
 
-		ImGui::Begin("Texture settings");
-		ImGui::InputText("Texture file", m_TextureFileNameBuffer, sizeof(m_TextureFileNameBuffer));
-		if (ImGui::Button("Set Texture"))
-		{
-			int bufferSize = MultiByteToWideChar(CP_UTF8, 0, m_TextureFileNameBuffer, -1, 0, 0);
-			wchar* textureFileNameBufferW = new wchar[bufferSize];
-			MultiByteToWideChar(CP_UTF8, 0, m_TextureFileNameBuffer, -1, textureFileNameBufferW, bufferSize);
+		// ImGui:
 
-			File* textureFile = File::Create(textureFileNameBufferW);
-			delete[] textureFileNameBufferW;
-			if (textureFile->Exists())
-			{
-				Image* textureImage = new Image;
-				VERIFY(textureImage->Load(textureFile));
-				m_Texture = Texture::Create(textureImage);
-				m_Texture->Bind(0);
-			}
-			delete textureFile;
-		}
-		if (ImGui::Button("Change Camera"))
+		ImGui::Begin("Texture settings");
 		{
-			m_Scene->SetActiveCamera(m_Scene->GetActiveCamera() == m_Camera ? m_AuxCamera : m_Camera);
+			ImGui::InputText("Texture file", m_TextureFileNameBuffer, sizeof(m_TextureFileNameBuffer));
+			if (ImGui::Button("Set Texture"))
+			{
+				int bufferSize = MultiByteToWideChar(CP_UTF8, 0, m_TextureFileNameBuffer, -1, 0, 0);
+				wchar* textureFileNameBufferW = new wchar[bufferSize];
+				MultiByteToWideChar(CP_UTF8, 0, m_TextureFileNameBuffer, -1, textureFileNameBufferW, bufferSize);
+
+				File* textureFile = File::Create(textureFileNameBufferW);
+				delete[] textureFileNameBufferW;
+				if (textureFile->Exists())
+				{
+					Image* textureImage = new Image;
+					VERIFY(textureImage->Load(textureFile));
+					m_Texture = Texture::Create(textureImage);
+					m_Texture->Bind(0);
+				}
+				delete textureFile;
+			}
+			if (ImGui::Button("Change Camera"))
+			{
+				m_Scene->SetActiveCamera(m_Scene->GetActiveCamera() == m_Camera ? m_AuxCamera : m_Camera);
+			}
+		}
+		ImGui::End();
+
+		ImGui::Begin("Mesh settings");
+		{
+			ImGui::DragFloat3("Location", &m_MeshLocation.x, 0.01f, -FLT_MAX, FLT_MAX);
 		}
 		ImGui::End();
 	}
@@ -339,6 +350,7 @@ private:
 	TShared<Scene> m_Scene;
 	FVector4 m_CameraLocation = { 0.0f, 0.0f, 2.0f, 1.0f };
 	FVector3 m_CameraRotation = { 0.0f, 0.0f, 0.0f };
+	FVector3 m_MeshLocation = { 0.0f, 0.0f, 0.0f };
 
 	char m_TextureFileNameBuffer[MAX_PATH + 1];
 };
