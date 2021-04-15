@@ -25,7 +25,7 @@ namespace Ion
 			char buffer[550];
 			sprintf_s(buffer, AssertFailedPrintf, expression, message, function, file, line);
 			wchar bufferW[550];
-			MultiByteToWideChar(CP_UTF8, 0, buffer, -1, bufferW, 550);
+			StringConverter::CharToWChar(buffer, bufferW);
 			return MessageBox(nullptr, bufferW, TEXT("Ion Assertion Failure!"), MB_RETRYCANCEL | MB_ICONERROR);
 #else
 			return MBRESULTCANCEL;

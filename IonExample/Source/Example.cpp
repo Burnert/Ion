@@ -111,14 +111,9 @@ void main()
 		bResult = shader->Compile();
 		ionassertnd(bResult);
 
-		// @TODO: Make some kind of converter from String to WString and vice-versa because this is painful to write:
-
-		memset(m_TextureFileNameBuffer, 0, sizeof(m_TextureFileNameBuffer));
 		WString textureFileName = L"test.png";
-		char* textureFileNameA = new char[textureFileName.size() + 1];
-		WideCharToMultiByte(CP_UTF8, 0, textureFileName.c_str(), -1, textureFileNameA, (int)textureFileName.size() + 1, nullptr, nullptr);
-		strcpy_s(m_TextureFileNameBuffer, textureFileNameA);
-		delete[] textureFileNameA;
+		memset(m_TextureFileNameBuffer, 0, sizeof(m_TextureFileNameBuffer));
+		StringConverter::WCharToChar(textureFileName.c_str(), m_TextureFileNameBuffer);
 
 		File* textureFile = File::Create(textureFileName);
 		Image* textureImage = new Image;
@@ -152,7 +147,7 @@ void main()
 
 		m_AuxCamera = Camera::Create();
 		m_AuxCamera->SetTransform(glm::translate(FVector3(0.0f, 0.0f, 4.0f)));
-		m_AuxCamera->SetFOV(glm::radians(76.0f));
+		m_AuxCamera->SetFOV(glm::radians(66.0f));
 		m_AuxCamera->SetNearClip(0.1f);
 		m_AuxCamera->SetFarClip(10.0f);
 	}
@@ -242,12 +237,13 @@ void main()
 			ImGui::InputText("Texture file", m_TextureFileNameBuffer, sizeof(m_TextureFileNameBuffer));
 			if (ImGui::Button("Set Texture"))
 			{
-				int bufferSize = MultiByteToWideChar(CP_UTF8, 0, m_TextureFileNameBuffer, -1, 0, 0);
-				wchar* textureFileNameBufferW = new wchar[bufferSize];
-				MultiByteToWideChar(CP_UTF8, 0, m_TextureFileNameBuffer, -1, textureFileNameBufferW, bufferSize);
+				//int bufferSize = MultiByteToWideChar(CP_UTF8, 0, m_TextureFileNameBuffer, -1, 0, 0);
+				//wchar* textureFileNameBufferW = new wchar[bufferSize];
+				//MultiByteToWideChar(CP_UTF8, 0, m_TextureFileNameBuffer, -1, textureFileNameBufferW, bufferSize);
 
-				File* textureFile = File::Create(textureFileNameBufferW);
-				delete[] textureFileNameBufferW;
+				//StringConverter::StringToWString(m_TextureFileNameBuffer);
+				File* textureFile = File::Create(StringConverter::StringToWString(m_TextureFileNameBuffer));
+				//delete[] textureFileNameBufferW;
 				if (textureFile->Exists())
 				{
 					Image* textureImage = new Image;

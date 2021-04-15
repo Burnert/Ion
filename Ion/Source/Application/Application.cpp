@@ -63,10 +63,7 @@ namespace Ion
 		const char* renderAPILabel = RenderAPI::GetCurrentDisplayName();
 
 		std::wstring windowTitle = TEXT("Ion - ");
-		wchar renderAPILabelW[120];
-		// @TODO: This is from Windows, change that:
-		MultiByteToWideChar(CP_UTF8, 0, renderAPILabel, -1, renderAPILabelW, 120);
-		windowTitle += renderAPILabelW;
+		windowTitle += StringConverter::StringToWString(renderAPILabel);
 		m_Window->SetTitle(windowTitle);
 
 		m_Window->Show();
