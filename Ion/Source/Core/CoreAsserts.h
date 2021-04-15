@@ -2,6 +2,7 @@
 
 #include "CoreMacros.h"
 #include "Logging/Logger.h"
+#include "Core/StringConverter.h"
 
 #if ION_PLATFORM_WINDOWS
 #define MBRESULTCANCEL 2 // IDCANCEL

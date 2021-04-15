@@ -1,6 +1,7 @@
 #include "IonPCH.h"
 
 #include "Core/StringConverter.h"
+#include "Core/CoreAsserts.h"
 
 #pragma warning(disable:6386)
 
