@@ -76,7 +76,7 @@ namespace Ion
 	{
 		// This makes sure the filename is not blank before opening the file.
 		// If it is, then clearly something went wrong.
-		ASSERT(IsFilenameValid())
+		ionassert(IsFilenameValid());
 
 		// Handle errors first
 		if (m_FileHandle != INVALID_HANDLE_VALUE)

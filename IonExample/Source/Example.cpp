@@ -18,20 +18,6 @@ public:
 
 	virtual void OnInit() override
 	{
-		//Ion::SerialisationTest();
-
-		//Ion::File* file = Ion::File::Create(TEXT("linetest.txt"));
-		//file->Open(Ion::IO::FM_Read);
-
-		//std::string line;
-		//while (!file->EndOfFile())
-		//{
-		//	file->ReadLine(line);
-		//	LOG_INFO("Read Line: {0}", line);
-		//}
-
-// #include "FileTest"
-
 		VertexLayout layout(2);
 		layout.AddAttribute(EVertexAttributeType::Float, 3); // Position
 		layout.AddAttribute(EVertexAttributeType::Float, 2); // Texture Coordinate
@@ -123,7 +109,7 @@ void main()
 		shader->AddShaderSource(EShaderType::Pixel, fragSrc);
 
 		bResult = shader->Compile();
-		VERIFY(bResult);
+		ionassertnd(bResult);
 
 		// @TODO: Make some kind of converter from String to WString and vice-versa because this is painful to write:
 
@@ -136,7 +122,7 @@ void main()
 
 		File* textureFile = File::Create(textureFileName);
 		Image* textureImage = new Image;
-		VERIFY(textureImage->Load(textureFile));
+		ionassertnd(textureImage->Load(textureFile));
 		delete textureFile;
 		m_Texture = Texture::Create(textureImage);
 		m_Texture->Bind(0);
@@ -265,7 +251,7 @@ void main()
 				if (textureFile->Exists())
 				{
 					Image* textureImage = new Image;
-					VERIFY(textureImage->Load(textureFile));
+					ionassertnd(textureImage->Load(textureFile));
 					m_Texture = Texture::Create(textureImage);
 					m_Texture->Bind(0);
 				}

@@ -49,14 +49,12 @@ namespace Ion
 
 			glCompileShader(shader.ID);
 
-			int bSuccess = 0;
-			glGetShaderiv(shader.ID, GL_COMPILE_STATUS, &bSuccess);
+			int bCompiled = 0;
+			glGetShaderiv(shader.ID, GL_COMPILE_STATUS, &bCompiled);
 
-			if (!bSuccess)
+			ionexcept(bCompiled, "Shader compilation failure! (%s)", ShaderTypeToString(shader.Type))
 			{
 				LOG_ERROR("Could not compile shader! ({0})", ShaderTypeToString(shader.Type));
-				ASSERT(bSuccess);
-
 				CleanupDeleteShaders();
 				return false;
 			}
@@ -76,26 +74,24 @@ namespace Ion
 		int bLinked = 0;
 		glGetProgramiv(m_ProgramID, GL_LINK_STATUS, &bLinked);
 
-		if (bLinked)
-		{
-			// Shaders need to be detached after a successful link
-			for (auto& entry : m_Shaders)
-			{
-				const SShaderInfo& shader = entry.second;
-
-				glDetachShader(m_ProgramID, shader.ID);
-			}
-		}
-		else
+		ionexcept(bLinked, "Shader linkage failure!")
 		{
 			LOG_ERROR("Could not link shader program!");
-			ASSERT(bLinked);
-
 			glDeleteProgram(m_ProgramID);
 			m_ProgramID = 0;
+
+			return false;
 		}
 
-		return bLinked;
+		// Shaders need to be detached after a successful link
+		for (auto& entry : m_Shaders)
+		{
+			const SShaderInfo& shader = entry.second;
+
+			glDetachShader(m_ProgramID, shader.ID);
+		}
+
+		return true;
 	}
 
 	void OpenGLShader::Bind() const

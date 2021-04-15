@@ -11,5 +11,5 @@
 #endif
 
 #if defined ION_DEBUG || ION_RELEASE
-	#define ION_LOG_ENABLED
+	#define ION_LOG_ENABLED 1
 #endif

@@ -21,7 +21,7 @@ namespace Ion
 
 		FORCEINLINE STextureDimensions GetTextureDimensions() const
 		{
-			ASSERT(m_TextureImage);
+			ionassert(m_TextureImage, "Texture image is not set!");
 			return STextureDimensions {
 				m_TextureImage->GetWidth(),
 				m_TextureImage->GetHeight(),
@@ -30,13 +30,12 @@ namespace Ion
 
 		FORCEINLINE const ubyte* GetPixelData() const
 		{
-			ASSERT(m_TextureImage);
+			ionassert(m_TextureImage, "Texture image is not set!");
 			return m_TextureImage->GetPixelData();
 		}
 
 		FORCEINLINE const Image* GetImage() const
 		{
-			ASSERT(m_TextureImage);
 			return m_TextureImage;
 		}
 

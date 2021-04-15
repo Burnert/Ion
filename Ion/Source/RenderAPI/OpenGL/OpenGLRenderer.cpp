@@ -45,7 +45,7 @@ namespace Ion
 		}
 		else
 		{
-			ASSERT_M(m_CurrentScene, "Cannot render before setting the current scene if the target scene is not specified.");
+			ionassert(m_CurrentScene, "Cannot render before setting the current scene if the target scene is not specified.");
 			scene = m_CurrentScene;
 		}
 
@@ -63,7 +63,7 @@ namespace Ion
 
 		// Calculate the Model View Projection Matrix based on the current scene camera
 		const TShared<Camera>& activeCamera = m_CurrentScene->GetActiveCamera();
-		ASSERT(activeCamera);
+		ionassert(activeCamera, "Cannot render without an active camera.");
 		activeCamera->UpdateViewProjectionMatrix();
 		const FMatrix4& viewProjectionMatrix = activeCamera->GetViewProjectionMatrix();
 		const FMatrix4& modelMatrix = drawable->GetTransformMatrix();

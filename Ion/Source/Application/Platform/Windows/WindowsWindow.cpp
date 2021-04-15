@@ -733,7 +733,7 @@ namespace Ion
 			WINDOWPLACEMENT windowPlacement { };
 			windowPlacement.length = sizeof(WINDOWPLACEMENT);
 
-			VERIFY(GetWindowPlacement(m_WindowHandle, &windowPlacement));
+			ionassertnd(GetWindowPlacement(m_WindowHandle, &windowPlacement));
 
 			bool bMaximized = windowPlacement.showCmd == SW_MAXIMIZE;
 
@@ -741,7 +741,7 @@ namespace Ion
 			monitorInfo.cbSize = sizeof(MONITORINFO);
 
 			HMONITOR hMonitor = MonitorFromWindow(m_WindowHandle, MONITOR_DEFAULTTOPRIMARY);
-			VERIFY(GetMonitorInfo(hMonitor, &monitorInfo));
+			ionassertnd(GetMonitorInfo(hMonitor, &monitorInfo));
 
 			DWORD style = GetWindowLong(m_WindowHandle, GWL_STYLE);
 
@@ -753,16 +753,16 @@ namespace Ion
 
 			// This here changes to "real" fullscreen without any input lag.
 			DEVMODE devMode { };
-			VERIFY(EnumDisplaySettings(nullptr, ENUM_CURRENT_SETTINGS, &devMode));
-			VERIFY(ChangeDisplaySettings(&devMode, CDS_FULLSCREEN) == DISP_CHANGE_SUCCESSFUL);
+			ionassertnd(EnumDisplaySettings(nullptr, ENUM_CURRENT_SETTINGS, &devMode));
+			ionassertnd(ChangeDisplaySettings(&devMode, CDS_FULLSCREEN) == DISP_CHANGE_SUCCESSFUL);
 
-			VERIFY(SetWindowLong(m_WindowHandle, GWL_STYLE, (style & ~WS_OVERLAPPEDWINDOW) | WS_POPUP));
+			ionassertnd(SetWindowLong(m_WindowHandle, GWL_STYLE, (style & ~WS_OVERLAPPEDWINDOW) | WS_POPUP));
 
 			int x = monitorInfo.rcMonitor.left;
 			int y = monitorInfo.rcMonitor.top;
 			int width = monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left;
 			int height = monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top;
-			VERIFY(SetWindowPos(m_WindowHandle, HWND_TOP, x, y, width, height, SWP_NOOWNERZORDER | SWP_FRAMECHANGED));
+			ionassertnd(SetWindowPos(m_WindowHandle, HWND_TOP, x, y, width, height, SWP_NOOWNERZORDER | SWP_FRAMECHANGED));
 
 			m_bFullScreenMode = true;
 
@@ -772,11 +772,11 @@ namespace Ion
 		// Disable
 		else if (m_bFullScreenMode && !bFullscreen)
 		{
-			VERIFY(SetWindowLong(m_WindowHandle, GWL_STYLE, m_WindowBeforeFullScreen.Style));
+			ionassertnd(SetWindowLong(m_WindowHandle, GWL_STYLE, m_WindowBeforeFullScreen.Style));
 
 			if (m_WindowBeforeFullScreen.bMaximized)
 			{
-				VERIFY(ShowWindow(m_WindowHandle, SW_MAXIMIZE));
+				ionassertnd(ShowWindow(m_WindowHandle, SW_MAXIMIZE));
 			}
 			else
 			{
@@ -785,7 +785,7 @@ namespace Ion
 				int y = windowRect.top;
 				int width = windowRect.right - windowRect.left;
 				int height = windowRect.bottom - windowRect.top;
-				VERIFY(SetWindowPos(m_WindowHandle, HWND_NOTOPMOST, x, y, width, height, SWP_NOOWNERZORDER | SWP_FRAMECHANGED));
+				ionassertnd(SetWindowPos(m_WindowHandle, HWND_NOTOPMOST, x, y, width, height, SWP_NOOWNERZORDER | SWP_FRAMECHANGED));
 			}
 
 			m_bFullScreenMode = false;

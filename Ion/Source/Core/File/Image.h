@@ -15,6 +15,7 @@ namespace Ion
 
 		/* Loads an image from the specified file. */
 		const ubyte* Load(File* file);
+		FORCEINLINE bool IsLoaded() const { return m_Width && m_Height && m_Channels && m_PixelData; }
 
 		FORCEINLINE const ubyte* GetPixelData() const { return m_PixelData; }
 		FORCEINLINE int GetWidth() const { return m_Width; }

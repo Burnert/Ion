@@ -20,7 +20,7 @@ namespace Ion
 	{
 		// This goes off when Application was not yet created.
 		// (shouldn't ever happen, unless you're doing something weird)
-		ASSERT(s_Instance);
+		ionassert(s_Instance);
 		return s_Instance;
 	}
 

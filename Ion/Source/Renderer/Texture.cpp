@@ -29,7 +29,7 @@ namespace Ion
 	{
 		m_TextureImage = new Image();
 		bool bLoaded = (bool)m_TextureImage->Load(file);
-		ASSERT(bLoaded);
+		ionassert(bLoaded, "The specified file could not be loaded!");
 	}
 
 	Texture::Texture(Image* image)

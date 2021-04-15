@@ -206,6 +206,12 @@ namespace Ion
 
 		inline static EMaterialPropertyType ExtractPropertyType(void* propertyPtr)
 		{
+			ionassert(IsAnyOf(*(EMaterialPropertyType*)propertyPtr,
+				EMaterialPropertyType::Bool,
+				EMaterialPropertyType::Float,
+				EMaterialPropertyType::Float2,
+				EMaterialPropertyType::Float3,
+				EMaterialPropertyType::Float4), "Used ExtractPropertyType on a pointer of incorrect type! This will lead to unexpected behavior.");
 			// The first field of the object is always the type, so if the pointer points
 			// to a valid MaterialProperty object this cast must yield a correct value.
 			return *(EMaterialPropertyType*)propertyPtr;

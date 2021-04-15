@@ -66,6 +66,7 @@ namespace Ion
 		bResult = file->Read(data, fileSize);
 		_FAIL(bResult);
 
+		// OpenGL expects the image to be written in memory from bottom to top
 		if (RenderAPI::GetCurrent() == ERenderAPI::OpenGL)
 		{
 			stbi_set_flip_vertically_on_load(1);

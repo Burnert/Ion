@@ -22,7 +22,7 @@ namespace Ion
 	void Material::CreateMaterialProperty(const String& name, EMaterialPropertyType type)
 	{
 		// You cannot add the same property twice!
-		ASSERT(!HasMaterialProperty(name));
+		ionassert(!HasMaterialProperty(name));
 
 		switch (type)
 		{
@@ -70,8 +70,9 @@ namespace Ion
 	{
 		if (!HasMaterialProperty(name))
 		{
+			// This is probably due to a user error
 			LOG_WARN("Property '{0}' does not exist!", name);
-			ASSERT(0);
+			debugbreakd(); 
 			return;
 		}
 
@@ -96,41 +97,36 @@ namespace Ion
 			EMaterialPropertyType type = ExtractPropertyType(propPtr);
 			switch (type)
 			{
-				case Ion::EMaterialPropertyType::Float:
+				case EMaterialPropertyType::Float:
 				{
 					MaterialProperty<float>* property = reinterpret_cast<MaterialProperty<float>*>(propPtr);
 					m_Shader->SetUniform1f(uniformName, property->GetValue());
 				}
 				break;
-				case Ion::EMaterialPropertyType::Float2:
+				case EMaterialPropertyType::Float2:
 				{
 					MaterialProperty<FVector2>* property = reinterpret_cast<MaterialProperty<FVector2>*>(propPtr);
 					m_Shader->SetUniform2f(uniformName, property->GetValue());
 				}
 				break;
-				case Ion::EMaterialPropertyType::Float3:
+				case EMaterialPropertyType::Float3:
 				{
 					MaterialProperty<FVector3>* property = reinterpret_cast<MaterialProperty<FVector3>*>(propPtr);
 					m_Shader->SetUniform3f(uniformName, property->GetValue());
 				}
 				break;
-				case Ion::EMaterialPropertyType::Float4:
+				case EMaterialPropertyType::Float4:
 				{
 					MaterialProperty<FVector4>* property = reinterpret_cast<MaterialProperty<FVector4>*>(propPtr);
 					m_Shader->SetUniform4f(uniformName, property->GetValue());
 				}
 				break;
-				case Ion::EMaterialPropertyType::Bool:
+				case EMaterialPropertyType::Bool:
 				{
 					MaterialProperty<bool>* property = reinterpret_cast<MaterialProperty<bool>*>(propPtr);
 					m_Shader->SetUniform1ui(uniformName, property->GetValue());
 				}
 				break;
-				default:
-				{
-					ASSERT_M(0, "Unknown material property type!");
-					return;
-				}
 			}
 		}
 	}

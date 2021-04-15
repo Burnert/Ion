@@ -180,7 +180,7 @@ namespace Ion
 				if (!(m_State == EState::NULLSTATE || m_State == EState::FINALISED))
 				{
 					LOG_CRITICAL("Cannot initialise serialiser in this state! {0}", m_State);
-					ASSERT(false);
+					ionassert(false);
 					return;
 				}
 				m_Type = type;
@@ -211,18 +211,18 @@ namespace Ion
 
 			void WriteToSerial(Serial* serial)
 			{
-				ASSERT(m_Type == EType::WRITE);
-				ASSERT(m_BytesCounter <= sizeof(SerialisableT));
+				ionassert(m_Type == EType::WRITE);
+				ionassert(m_BytesCounter <= sizeof(SerialisableT));
 
 				if (m_State != EState::SERIALISING)
 				{
 					LOG_CRITICAL("Cannot write to serial in this state! {0}", m_State);
-					ASSERT(false);
+					ionassert(false);
 					return;
 				}
 				m_State = EState::WRITING;
 
-				ASSERT(m_Bytes)
+				ionassert(m_Bytes);
 
 				ubyte* shrunkBuffer = new ubyte[m_BytesCounter];
 				memcpy_s(shrunkBuffer, m_BytesCounter, m_Bytes, m_BytesCounter);
@@ -231,18 +231,18 @@ namespace Ion
 
 			void ReadFromSerial(Serial* serial)
 			{
-				ASSERT(m_Type == EType::READ);
-				ASSERT(m_BytesCounter <= sizeof(SerialisableT));
+				ionassert(m_Type == EType::READ);
+				ionassert(m_BytesCounter <= sizeof(SerialisableT));
 
 				if (!(m_State == EState::INIT))
 				{
 					LOG_CRITICAL("Cannot read from serial in this state! {0}", m_State);
-					ASSERT(false);
+					ionassert(false);
 					return;
 				}
 				m_State = EState::READING;
 
-				ASSERT(!m_Bytes)
+				ionassert(!m_Bytes);
 
 				ullong pulledBytes;
 				m_Bytes = serial->PullBytes(&pulledBytes);
@@ -254,7 +254,7 @@ namespace Ion
 				if (!(m_State == EState::WRITING || m_State == EState::DESERIALISING))
 				{
 					LOG_CRITICAL("Cannot finalise serialisation in this state! {0}", m_State);
-					ASSERT(false);
+					ionassert(false);
 					return;
 				}
 				m_State = EState::FINALISED;
@@ -336,31 +336,31 @@ namespace Ion
 		private:
 			bool CheckSerialise()
 			{
-				ASSERT(m_Type == EType::WRITE);
+				ionassert(m_Type == EType::WRITE);
 
 				if (!(m_State == EState::INIT || m_State == EState::SERIALISING))
 				{
 					LOG_CRITICAL("Cannot serialise field in this state! {0}", m_State);
-					ASSERT(false);
+					ionassert(false);
 					return false;
 				}
 				
-				ASSERT(m_Bytes)
+				ionassert(m_Bytes);
 				return true;
 			}
 
 			bool CheckDeserialise()
 			{
-				ASSERT(m_Type == EType::READ);
+				ionassert(m_Type == EType::READ);
 
 				if (!(m_State == EState::READING || m_State == EState::DESERIALISING))
 				{
 					LOG_CRITICAL("Cannot deserialise field in this state! {0}", m_State);
-					ASSERT(false);
+					ionassert(false);
 					return false;
 				}
 
-				ASSERT(m_Bytes)
+				ionassert(m_Bytes);
 				return true;
 			}
 
@@ -388,7 +388,7 @@ namespace Ion
 			ullong size = sizeof(T);
 			ullong pulledSize;
 			ubyte* bytes = serial->PullBytes(&pulledSize);
-			ASSERT(size == pulledSize);
+			ionassert(size == pulledSize);
 			memcpy_s(structPtr, size, bytes, pulledSize);
 			delete[] bytes;
 		}
@@ -506,10 +506,10 @@ namespace Ion
 		SerialClassTest t2;
 		t2.Deserialise(&serial);
 
-		ASSERT(t2.a == t.a);
-		ASSERT(t2.b == t.b);
-		ASSERT(memcmp(t2.c, t.c, 128) == 0);
-		ASSERT(t2.d == t.d);
+		ionassert(t2.a == t.a);
+		ionassert(t2.b == t.b);
+		ionassert(memcmp(t2.c, t.c, 128) == 0);
+		ionassert(t2.d == t.d);
 
 		using namespace std::chrono_literals;
 		// Memory leak test (passed)
@@ -526,9 +526,9 @@ namespace Ion
 			SerialClassTest ct2;
 			ct2.Deserialise(&cserial);
 
-			ASSERT(ct2.a == ct.a);
-			ASSERT(ct2.b == ct.b);
-			ASSERT(ct2.d == ct.d);
+			ionassert(ct2.a == ct.a);
+			ionassert(ct2.b == ct.b);
+			ionassert(ct2.d == ct.d);
 		}
 
 		SerialClass2 tt;

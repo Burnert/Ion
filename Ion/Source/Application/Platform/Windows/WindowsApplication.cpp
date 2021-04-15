@@ -22,7 +22,7 @@ namespace Ion
 		m_HInstance = hInstance;
 
 		LARGE_INTEGER largeInteger { 0 };
-		VERIFY(QueryPerformanceFrequency(&largeInteger));
+		ionassertnd(QueryPerformanceFrequency(&largeInteger));
 		s_PerformanceFrequency = (float)largeInteger.QuadPart;
 
 		Init();

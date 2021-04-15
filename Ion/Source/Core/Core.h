@@ -11,6 +11,7 @@
 #endif
 
 #include "Core/CoreApi.h"
+#include "Core/CoreAsserts.h"
 #include "Core/CoreMacros.h"
 #include "Core/CoreTypes.h"
 #include "Core/CoreUtility.h"

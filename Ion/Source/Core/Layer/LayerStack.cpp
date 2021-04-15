@@ -78,7 +78,7 @@ namespace Ion
 			if (layer->m_bEnabled)
 			{
 				// Layer::PropagateEvent() cannot be called from outside of the OnEvent method's scope.
-				ASSERT(!layer->m_bPropagateCurrentEvent)
+				ionassert(!layer->m_bPropagateCurrentEvent);
 
 				// Don't propagate if handled, unless specifically told to.
 				if (layer->OnEvent(event) && !layer->m_bPropagateCurrentEvent)

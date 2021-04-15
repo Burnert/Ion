@@ -35,6 +35,8 @@ namespace Ion
 
 	void OpenGLTexture::CreateTexture()
 	{
+		ionassert(m_TextureImage->IsLoaded(), "Image has not been initialized yet.");
+
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_ID);
 
 		int width = m_TextureImage->GetWidth();
