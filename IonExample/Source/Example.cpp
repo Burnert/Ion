@@ -230,6 +230,9 @@ void main()
 		c_Angle += deltaTime;
 		c_Tint.y = (((c_Tint.y + deltaTime) >= 2.0f) ? 0.0f : (c_Tint.y + deltaTime));
 
+
+		m_AuxCamera->SetTransform(glm::translate(m_AuxCameraLocation));
+
 		// ImGui:
 
 		ImGui::Begin("Texture settings");
@@ -237,13 +240,7 @@ void main()
 			ImGui::InputText("Texture file", m_TextureFileNameBuffer, sizeof(m_TextureFileNameBuffer));
 			if (ImGui::Button("Set Texture"))
 			{
-				//int bufferSize = MultiByteToWideChar(CP_UTF8, 0, m_TextureFileNameBuffer, -1, 0, 0);
-				//wchar* textureFileNameBufferW = new wchar[bufferSize];
-				//MultiByteToWideChar(CP_UTF8, 0, m_TextureFileNameBuffer, -1, textureFileNameBufferW, bufferSize);
-
-				//StringConverter::StringToWString(m_TextureFileNameBuffer);
 				File* textureFile = File::Create(StringConverter::StringToWString(m_TextureFileNameBuffer));
-				//delete[] textureFileNameBufferW;
 				if (textureFile->Exists())
 				{
 					Image* textureImage = new Image;
@@ -253,6 +250,7 @@ void main()
 				}
 				delete textureFile;
 			}
+			ImGui::DragFloat3("Aux Camera Location", &m_AuxCameraLocation.x, 0.01f, -FLT_MAX, FLT_MAX);
 			if (ImGui::Button("Change Camera"))
 			{
 				m_Scene->SetActiveCamera(m_Scene->GetActiveCamera() == m_Camera ? m_AuxCamera : m_Camera);
@@ -297,8 +295,8 @@ void main()
 				return false;
 			});
 
-		dispatcher.Dispatch<MouseButtonPressedEvent>(
-			[this](MouseButtonPressedEvent& event)
+		dispatcher.Dispatch<RawInputMouseButtonPressedEvent>(
+			[this](RawInputMouseButtonPressedEvent& event)
 			{
 				if (event.GetMouseButton() == Mouse::Right)
 				{
@@ -311,8 +309,8 @@ void main()
 				return false;
 			});
 
-		dispatcher.Dispatch<MouseButtonReleasedEvent>(
-			[this](MouseButtonReleasedEvent& event)
+		dispatcher.Dispatch<RawInputMouseButtonReleasedEvent>(
+			[this](RawInputMouseButtonReleasedEvent& event)
 			{
 				if (event.GetMouseButton() == Mouse::Right)
 				{
@@ -333,6 +331,7 @@ private:
 	FVector4 m_CameraLocation = { 0.0f, 0.0f, 2.0f, 1.0f };
 	FVector3 m_CameraRotation = { 0.0f, 0.0f, 0.0f };
 	FVector3 m_MeshLocation = { 0.0f, 0.0f, 0.0f };
+	FVector3 m_AuxCameraLocation = { 0.0f, 0.0f, 4.0f };
 
 	char m_TextureFileNameBuffer[MAX_PATH + 1];
 };

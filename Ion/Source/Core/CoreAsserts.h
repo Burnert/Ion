@@ -25,7 +25,7 @@ namespace Ion
 #if ION_PLATFORM_WINDOWS
 			char buffer[550];
 			sprintf_s(buffer, AssertFailedPrintf, expression, message, function, file, line);
-			wchar bufferW[550];
+			wchar bufferW[550] { };
 			StringConverter::CharToWChar(buffer, bufferW);
 			return MessageBox(nullptr, bufferW, TEXT("Ion Assertion Failure!"), MB_RETRYCANCEL | MB_ICONERROR);
 #else

@@ -32,7 +32,7 @@ namespace Ion
 
 		static int WCharToChar(const wchar* wcstr, char* outCstr, int cstrLength);
 		static int CharToWChar(const char* cstr, wchar* outWcstr, int wcstrLength);
-		
+
 		template<size_t Size>
 		inline static int WCharToChar(const wchar* wcstr, char (&outCstr)[Size])
 		{
@@ -43,6 +43,18 @@ namespace Ion
 		inline static int CharToWChar(const char* cstr, wchar(&outWcstr)[Size])
 		{
 			return CharToWChar(cstr, outWcstr, (Size / sizeof(wchar)) - 1);
+		}
+
+		template<typename T>
+		NODISCARD inline static String ToString(T value)
+		{
+			return std::to_string(value);
+		}
+
+		template<typename T>
+		NODISCARD inline static WString ToWString(T value)
+		{
+			return std::to_wstring(value);
 		}
 	};
 }
