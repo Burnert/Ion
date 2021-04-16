@@ -27,6 +27,8 @@ namespace Ion
 
 	Texture::Texture(File* file)
 	{
+		TRACE_FUNCTION();
+
 		m_TextureImage = new Image();
 		bool bLoaded = (bool)m_TextureImage->Load(file);
 		ionassert(bLoaded, "The specified file could not be loaded!");

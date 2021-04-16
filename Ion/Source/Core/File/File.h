@@ -33,6 +33,7 @@ namespace Ion
 	/* File interface */
 	class ION_API IFile
 	{
+		// @TODO: Add an option to create directories (also recursively)
 	public:
 		virtual bool Open(ubyte mode) = 0;
 		virtual void Close() = 0;
@@ -44,6 +45,12 @@ namespace Ion
 		virtual bool Write(const ubyte* inBuffer, ullong count) = 0;
 		virtual bool WriteLine(const char* inBuffer, ullong count) = 0;
 		virtual bool WriteLine(const std::string& inStr) = 0;
+
+		template<ullong Size>
+		inline bool Write(const char (&inBuffer)[Size])
+		{
+			return Write((const ubyte*)inBuffer, Size - 1);
+		}
 
 		virtual bool AddOffset(llong count) = 0;
 		virtual bool SetOffset(llong count) = 0;

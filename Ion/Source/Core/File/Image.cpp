@@ -53,6 +53,8 @@ namespace Ion
 
 	const ubyte* Image::Load(File* file)
 	{
+		TRACE_FUNCTION();
+
 		_FAIL_M(file->Exists(), L"Cannot load image from '{0}'.\nThe file does not exist.", file->GetFilename());
 
 		bool bResult;

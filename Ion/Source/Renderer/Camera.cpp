@@ -49,6 +49,8 @@ namespace Ion
 
 	void Camera::UpdateViewProjectionMatrix()
 	{
+		TRACE_FUNCTION();
+
 		if (m_bDirty)
 		{
 			// @TODO: Cache these intermediate matrices (view, projection)

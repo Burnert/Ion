@@ -87,6 +87,8 @@ namespace Ion
 
 	void Material::UpdateShaderUniforms()
 	{
+		TRACE_FUNCTION();
+
 		for (const auto& link : m_UniformLinks)
 		{
 			const String& propertyName = link.first;

@@ -17,6 +17,9 @@
 #define TEXT(x) x
 #endif
 
+#define _CAT(a, b) a ## b
+#define CAT(a, b) _CAT(a, b)
+
 #ifdef ION_DEBUG
 #define DEBUG(x) x
 #else

@@ -5,7 +5,6 @@
 #include "Core/Platform/Windows/WindowsInput.h"
 
 #include "RenderAPI/RenderAPI.h"
-
 #include "RenderAPI/OpenGL/Windows/OpenGLWindows.h"
 
 #include "UserInterface/ImGui.h"
@@ -17,12 +16,38 @@ namespace Ion
 		return static_cast<WindowsApplication*>(Application::Get());
 	}
 
+	WindowsApplication::~WindowsApplication()
+	{
+		// Shutdown
+		Shutdown();
+	}
+
+	void WindowsApplication::Start()
+	{
+#if ION_ENABLE_TRACING
+		DebugTracing::Init();
+#endif
+
+		// Init
+		TRACE_SESSION_BEGIN("Init");
+		HINSTANCE hInstance = GetModuleHandle(nullptr);
+		InitWindows(hInstance);
+		TRACE_SESSION_END();
+
+		// Run
+		TRACE_SESSION_BEGIN("Run");
+		Run();
+		TRACE_SESSION_END();
+	}
+
 	void WindowsApplication::InitWindows(HINSTANCE hInstance)
 	{
+		TRACE_FUNCTION();
+
 		m_HInstance = hInstance;
 
 		LARGE_INTEGER largeInteger { 0 };
-		ionassertnd(QueryPerformanceFrequency(&largeInteger));
+		QueryPerformanceFrequency(&largeInteger);
 		s_PerformanceFrequency = (float)largeInteger.QuadPart;
 
 		Init();
@@ -30,6 +55,8 @@ namespace Ion
 
 	void WindowsApplication::PollEvents()
 	{
+		TRACE_FUNCTION();
+
 		MSG message;
 
 		while (PeekMessage(&message, NULL, 0, 0, PM_REMOVE))
@@ -43,16 +70,22 @@ namespace Ion
 
 	void WindowsApplication::Update(float DeltaTime)
 	{
+		TRACE_FUNCTION();
+
 		Application::Update(DeltaTime);
 	}
 
 	void WindowsApplication::Render()
 	{
+		TRACE_FUNCTION();
+
 		Application::Render();
 	}
 
 	void WindowsApplication::DispatchEvent(Event& event)
 	{
+		TRACE_FUNCTION();
+
 		EventDispatcher dispatcher(event);
 
 		// Handle close event in application
@@ -97,6 +130,8 @@ namespace Ion
 
 	void WindowsApplication::InitImGuiBackend(const TShared<GenericWindow>& window) const
 	{
+		TRACE_FUNCTION();
+
 		TShared<WindowsWindow> windowsWindow = std::static_pointer_cast<WindowsWindow>(window);
 		ImGui_ImplWin32_Init((HWND)windowsWindow->GetNativeHandle());
 		RenderAPI::InitImGuiBackend();
@@ -104,12 +139,16 @@ namespace Ion
 
 	void WindowsApplication::ImGuiNewFramePlatform() const
 	{
+		TRACE_FUNCTION();
+
 		RenderAPI::ImGuiNewFrame();
 		ImGui_ImplWin32_NewFrame();
 	}
 
 	void WindowsApplication::ImGuiRenderPlatform(ImDrawData* drawData) const
 	{
+		TRACE_FUNCTION();
+
 		TShared<WindowsWindow> window = std::static_pointer_cast<WindowsWindow>(GetWindow());
 
 		RenderAPI::ImGuiRender(drawData);
@@ -120,6 +159,8 @@ namespace Ion
 
 	void WindowsApplication::ImGuiShutdownPlatform() const
 	{
+		TRACE_FUNCTION();
+
 		RenderAPI::ImGuiShutdown();
 		ImGui_ImplWin32_Shutdown();
 	}

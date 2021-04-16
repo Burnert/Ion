@@ -16,17 +16,23 @@ namespace Ion
 
 	void OpenGLWindows::InitGLLoader()
 	{
+		TRACE_FUNCTION();
+
 		ionassertnd(gladLoadGLLoader((GLADloadproc)GetProcAddress), "Could not load OpenGL!");
 	}
 
 	void OpenGLWindows::InitWGLLoader(HDC hdc)
 	{
+		TRACE_FUNCTION();
+
 		ionassert(hdc);
 		ionassertnd(gladLoadWGLLoader((GLADloadproc)GetProcAddress, hdc), "Could not load WGL extensions!");
 	}
 
 	void OpenGLWindows::InitOpenGL()
 	{
+		TRACE_FUNCTION();
+
 		ionassert(!s_GLInitialized);
 
 		InitLibraries();
@@ -51,7 +57,6 @@ namespace Ion
 
 		OpenGL::SetDisplayVersion(GetVersion());
 
-		dummyWindow.Destroy();
 		FreeLibraries();
 
 		s_GLInitialized = true;
@@ -59,6 +64,8 @@ namespace Ion
 
 	void OpenGLWindows::InitLibraries()
 	{
+		TRACE_FUNCTION();
+
 		s_OpenGLModule = LoadLibrary(TEXT("opengl32.dll"));
 		ionassertnd(s_OpenGLModule, "Could not load opengl32.dll!");
 	}
@@ -71,6 +78,9 @@ namespace Ion
 	HGLRC OpenGLWindows::CreateGLContext(HDC hdc, HGLRC shareContext)
 	{
 		#pragma warning(disable:6011)
+		#pragma warning(disable:6387)
+
+		TRACE_FUNCTION();
 
 		ionassert(s_GLInitialized);
 
@@ -96,10 +106,14 @@ namespace Ion
 		int pixelFormat = 0;
 		UINT numFormats;
 
+		TRACE_BEGIN(0, "OpenGLWindows - wglChoosePixelFormatARB");
 		wglChoosePixelFormatARB(hdc, attributes, NULL, 1, &pixelFormat, &numFormats);
 		ionassertnd(pixelFormat != 0, "No compatible pixel format exists!");
+		TRACE_END(0);
 
+		TRACE_BEGIN(1, "OpenGLWindows - Win32::SetPixelFormat");
 		ionassertnd(SetPixelFormat(hdc, pixelFormat, &pfd), "Cannot set the pixel format!");
+		TRACE_END(1);
 
 		const int wglAttributes[] = {
 			WGL_CONTEXT_MAJOR_VERSION_ARB, s_MajorVersion,
@@ -113,8 +127,10 @@ namespace Ion
 			0 // End
 		};
 
+		TRACE_BEGIN(2, "OpenGLWindows - wglCreateContextAttribsARB");
 		HGLRC renderingContext = wglCreateContextAttribsARB(hdc, shareContext, wglAttributes);
 		ionassertnd(renderingContext != NULL, "Cannot create an OpenGL rendering context!");
+		TRACE_END(2);
 
 		// Share the first context created
 		// This will be needed when creating additional context, like ImGui windows
@@ -123,7 +139,9 @@ namespace Ion
 			s_hShareContext = renderingContext;
 		}
 
+		TRACE_BEGIN(3, "OpenGLWindows - wglMakeCurrent");
 		ionassertnd(wglMakeCurrent(hdc, renderingContext));
+		TRACE_END(3);
 
 		glDebugMessageCallback(OpenGLWindows::DebugCallback, nullptr);
 
@@ -132,6 +150,8 @@ namespace Ion
 
 	void OpenGLWindows::MakeContextCurrent(HDC hdc, HGLRC hglrc)
 	{
+		TRACE_FUNCTION();
+
 		ionassertnd(wglMakeCurrent(hdc, hglrc));
 	}
 
@@ -177,6 +197,10 @@ namespace Ion
 
 	HGLRC DummyWindow::CreateFakeGLContext()
 	{
+		#pragma warning(disable:6387)
+
+		TRACE_FUNCTION();
+
 		const TCHAR* windowClassName = TEXT("DummyGLWindow");
 
 		WNDCLASS wc = { };
@@ -191,12 +215,15 @@ namespace Ion
 		wc.lpszMenuName = NULL;
 		wc.lpszClassName = windowClassName;
 
+		TRACE_BEGIN(0, "DummyWindow - Win32::RegisterClass");
 		if (!RegisterClass(&wc))
 		{
 			MessageBox(NULL, L"Cannot initialize OpenGL!\nWindows WNDCLASS Registration Failed!", L"Error!", MB_ICONEXCLAMATION | MB_OK);
 			return false;
 		}
+		TRACE_END(0);
 
+		TRACE_BEGIN(1, "DummyWindow - Win32::CreateWindowEx");
 		m_WindowHandle = CreateWindowEx(
 			NULL, // WindowStyleEx = None
 			windowClassName,
@@ -205,6 +232,7 @@ namespace Ion
 			0, 0, // Window position
 			1, 1, // Dimensions don't matter in this case.
 			NULL, NULL, NULL, NULL);
+		TRACE_END(1);
 
 		if (m_WindowHandle == NULL)
 		{
@@ -223,21 +251,31 @@ namespace Ion
 		pfd.cColorBits = 32;
 		pfd.iLayerType = PFD_MAIN_PLANE;
 
+		TRACE_BEGIN(2, "DummyWindow - Win32::ChoosePixelFormat");
 		int pixelFormat = ChoosePixelFormat(m_DeviceContext, &pfd);
 		ionassertnd(pixelFormat);
+		TRACE_END(2);
 
+		TRACE_BEGIN(3, "DummyWindow - Win32::SetPixelFormat");
 		ionassertnd(SetPixelFormat(m_DeviceContext, pixelFormat, &pfd));
+		TRACE_END(3);
 
+		TRACE_BEGIN(4, "DummyWindow - Win32::wglCreateContext");
 		m_RenderingContext = wglCreateContext(m_DeviceContext);
 		ionassertnd(m_RenderingContext);
+		TRACE_END(4);
 
+		TRACE_BEGIN(5, "DummyWindow - Win32::wglMakeCurrent");
 		ionassertnd(wglMakeCurrent(m_DeviceContext, m_RenderingContext));
+		TRACE_END(5);
 
 		return m_RenderingContext;
 	}
 
 	void DummyWindow::Destroy()
 	{
+		TRACE_FUNCTION();
+
 		wglMakeCurrent(NULL, NULL);
 		wglDeleteContext(m_RenderingContext);
 		ReleaseDC(m_WindowHandle, m_DeviceContext);

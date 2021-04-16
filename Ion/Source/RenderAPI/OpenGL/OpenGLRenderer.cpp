@@ -14,6 +14,8 @@ namespace Ion
 
 	void OpenGLRenderer::Init()
 	{
+		TRACE_FUNCTION();
+
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 
@@ -32,12 +34,16 @@ namespace Ion
 
 	void OpenGLRenderer::Clear(const FVector4& color) const
 	{
+		TRACE_FUNCTION();
+
 		glClearColor(color.x, color.y, color.z, color.w);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
 	void OpenGLRenderer::Draw(const TShared<IDrawable>& drawable, const TShared<Scene>& targetScene) const
 	{
+		TRACE_FUNCTION();
+
 		TShared<Scene> scene;
 		if (targetScene)
 		{
@@ -76,6 +82,8 @@ namespace Ion
 
 	void OpenGLRenderer::RenderScene(const TShared<Scene>& scene)
 	{
+		TRACE_FUNCTION();
+
 		m_CurrentScene = scene;
 		for (TShared<IDrawable> drawable : scene->GetDrawableObjects())
 		{
@@ -105,11 +113,15 @@ namespace Ion
 
 	void OpenGLRenderer::SetViewportDimensions(const SViewportDimensions& dimensions) const
 	{
+		TRACE_FUNCTION();
+
 		glViewport(dimensions.X, dimensions.Y, dimensions.Width, dimensions.Height);
 	}
 
 	SViewportDimensions OpenGLRenderer::GetViewportDimensions() const
 	{
+		TRACE_FUNCTION();
+
 		SViewportDimensions dimensions;
 		glGetIntegerv(GL_VIEWPORT, (int*)&dimensions);
 		return dimensions;
@@ -117,11 +129,15 @@ namespace Ion
 
 	void OpenGLRenderer::SetPolygonDrawMode(EPolygonDrawMode drawMode) const
 	{
+		TRACE_FUNCTION();
+
 		glPolygonMode(GL_FRONT_AND_BACK, PolygonDrawModeToGLPolygonMode(drawMode));
 	}
 
 	EPolygonDrawMode OpenGLRenderer::GetPolygonDrawMode() const
 	{
+		TRACE_FUNCTION();
+
 		int polygonMode;
 		glGetIntegerv(GL_POLYGON_MODE, &polygonMode);
 		return GLPolygonModeToPolygonDrawMode(polygonMode);

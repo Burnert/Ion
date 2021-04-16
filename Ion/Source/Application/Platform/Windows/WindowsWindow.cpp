@@ -50,6 +50,8 @@ namespace Ion
 
 	void WindowsWindow::PollEvents_Application()
 	{
+		TRACE_FUNCTION();
+
 		// Shift hack:
 		if (m_bBothShiftsPressed)
 		{
@@ -538,6 +540,8 @@ namespace Ion
 
 	bool WindowsWindow::RegisterWindowClass(HINSTANCE hInstance, LPCWSTR className)
 	{
+		TRACE_FUNCTION();
+
 		WNDCLASS wc = { };
 
 		wc.style = CS_DBLCLKS | CS_OWNDC;
@@ -569,6 +573,8 @@ namespace Ion
 
 	bool WindowsWindow::Initialize(const TShared<GenericWindow>& parentWindow)
 	{
+		TRACE_FUNCTION();
+
 		HINSTANCE hInstance = WindowsApplication::GetHInstance();
 
 		if (!s_bRegistered)
@@ -603,6 +609,8 @@ namespace Ion
 		windowWidth += windowRect.right - windowRect.left;
 		windowHeight += windowRect.bottom - windowRect.top;
 
+		TRACE_BEGIN(0, "Win32::CreateWindowEx");
+
 		m_WindowHandle = CreateWindowEx(
 			WindowStyleEx,
 			AppClassName,
@@ -619,6 +627,8 @@ namespace Ion
 			hInstance,
 			NULL
 		);
+
+		TRACE_END(0);
 
 		if (m_WindowHandle == NULL)
 		{
@@ -649,6 +659,8 @@ namespace Ion
 
 	void WindowsWindow::Show()
 	{
+		TRACE_FUNCTION();
+
 		if (m_WindowHandle == NULL)
 		{
 			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "show the window");
@@ -666,6 +678,8 @@ namespace Ion
 
 	void WindowsWindow::Hide()
 	{
+		TRACE_FUNCTION();
+
 		if (m_WindowHandle == NULL)
 		{
 			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "hide the window");
@@ -682,6 +696,8 @@ namespace Ion
 
 	void WindowsWindow::SetTitle(const std::wstring& title)
 	{
+		TRACE_FUNCTION();
+
 		if (m_WindowHandle == NULL)
 		{
 			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "set the title");
@@ -695,6 +711,8 @@ namespace Ion
 
 	void WindowsWindow::SetEnabled(bool bEnabled)
 	{
+		TRACE_FUNCTION();
+
 		if (m_WindowHandle == NULL)
 		{
 			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "enable the window");
@@ -727,6 +745,8 @@ namespace Ion
 
 	void WindowsWindow::EnableFullScreen(bool bFullscreen)
 	{
+		TRACE_FUNCTION();
+
 		// Enable
 		if (!m_bFullScreenMode && bFullscreen)
 		{
@@ -854,6 +874,8 @@ namespace Ion
 
 	HGLRC WindowsWindow::CreateRenderingContext(HDC deviceContext, HGLRC parentContext)
 	{
+		TRACE_FUNCTION();
+
 		if (m_WindowHandle == NULL)
 		{
 			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "create OpenGL rendering context");
@@ -883,7 +905,10 @@ namespace Ion
 
 	void WindowsWindow::SwapBuffers()
 	{
-		MakeRenderingContextCurrent();
+		TRACE_FUNCTION();
+
+		// @TODO: Create some sort of OpenGL State manager, so useless calls are not made.
+		//MakeRenderingContextCurrent();
 		::SwapBuffers(m_DeviceContext);
 	}
 
@@ -917,4 +942,3 @@ namespace Ion
 	bool WindowsWindow::s_bRegistered = false;
 	bool WindowsWindow::m_bBothShiftsPressed = false;
 }
-

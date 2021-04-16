@@ -50,6 +50,8 @@ namespace Ion
 
 	void InputManager::OnEvent(Event& event)
 	{
+		TRACE_FUNCTION();
+
 		EventDispatcher dispatcher(event);
 
 		dispatcher.Dispatch<KeyPressedEvent>(BIND_METHOD_1P(InputManager::OnKeyPressedEvent));

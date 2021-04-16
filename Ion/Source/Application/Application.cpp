@@ -34,15 +34,18 @@ namespace Ion
 		Logger::Init();
 	}
 
-	Application::~Application() {}
+	void Application::Start()
+	{
+		ionassert(0, "Start function not implemented!");
+	}
 
 	void Application::Init()
 	{
+		TRACE_FUNCTION();
+
 		m_InputManager = InputManager::Create();
 
 		RenderAPI::Init(ERenderAPI::OpenGL);
-		COUNTER_TIME_DATA(timeRenderApiInit, "RenderAPI_InitTime");
-		LOG_INFO("{0}: {1}s", timeRenderApiInit.Name, ((float)timeRenderApiInit.GetTimeMs()) * 0.001f);
 
 		// Create a platform specific window.
 		m_Window = GenericWindow::Create();
@@ -68,16 +71,22 @@ namespace Ion
 
 		m_Window->Show();
 
+		TRACE_BEGIN(0, "Application - Client::OnInit");
 		// Call client overriden Init function
 		OnInit();
+		TRACE_END(0);
+	}
 
-		Run();
+	void Application::Shutdown()
+	{
+		TRACE_FUNCTION();
 
-		ImGuiShutdownPlatform();
-		ImGui::DestroyContext();
+		ShutdownImGui();
 
+		TRACE_BEGIN(0, "Application - Client::OnShutdown");
 		// Call client overriden Shutdown function
 		OnShutdown();
+		TRACE_END(0);
 	}
 
 	void Application::PollEvents()
@@ -87,22 +96,31 @@ namespace Ion
 
 	void Application::Update(float deltaTime)
 	{
+		TRACE_FUNCTION();
+
 		ImGuiNewFramePlatform();
 		ImGui::NewFrame();
 
 		ImGui::ShowDemoWindow();
 
 		m_LayerStack->OnUpdate(deltaTime);
+
+		TRACE_BEGIN(0, "Application - Client::OnUpdate");
 		OnUpdate(deltaTime);
+		TRACE_END(0);
 	}
 
 	void Application::Render()
 	{
+		TRACE_FUNCTION();
+
 		m_LayerStack->OnRender();
+
+		TRACE_BEGIN(0, "Application - Client::OnRender");
 		OnRender();
+		TRACE_END(0);
 
 		ImGui::Render();
-
 		ImGuiRenderPlatform(ImGui::GetDrawData());
 
 		m_Window->SwapBuffers();
@@ -120,6 +138,8 @@ namespace Ion
 
 	void Application::DispatchEvent(Event& event)
 	{
+		TRACE_FUNCTION();
+
 		//ION_LOG_ENGINE_DEBUG("Event: {0}", event.Debug_ToString());
 
 		EventDispatcher dispatcher(event);
@@ -181,11 +201,16 @@ namespace Ion
 
 		m_InputManager->OnEvent(event);
 		m_LayerStack->OnEvent(event);
+
+		TRACE_BEGIN(0, "Application - Client::OnEvent");
 		OnEvent(event);
+		TRACE_END(0);
 	}
 
 	void Application::Run()
 	{
+		TRACE_FUNCTION();
+
 		// Application loop
 		while (m_bRunning)
 		{
@@ -207,6 +232,8 @@ namespace Ion
 
 	void Application::InitImGui() const
 	{
+		TRACE_FUNCTION();
+
 		// Setup Dear ImGui context
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
@@ -231,6 +258,14 @@ namespace Ion
 
 		// Setup Platform/Renderer backends
 		InitImGuiBackend(m_Window);
+	}
+
+	void Application::ShutdownImGui() const
+	{
+		TRACE_FUNCTION();
+
+		ImGuiShutdownPlatform();
+		ImGui::DestroyContext();
 	}
 
 	Application* Application::s_Instance = nullptr;

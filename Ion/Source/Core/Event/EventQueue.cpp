@@ -13,6 +13,8 @@ namespace Ion
 
 	bool EventQueue::ProcessEvents()
 	{
+		TRACE_FUNCTION();
+
 		if (!m_DeferredEvents.empty())
 		{
 			//ION_LOG_ENGINE_TRACE("Processing events in queue.");

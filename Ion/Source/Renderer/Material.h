@@ -44,6 +44,7 @@ namespace Ion
 		friend class Material;
 	public:
 		MaterialProperty() :
+			m_Type(EMaterialPropertyType::Float),
 			m_Value(0.0f),
 			m_Min(-1.0f),
 			m_Max(1.0f)

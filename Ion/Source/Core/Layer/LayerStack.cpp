@@ -50,6 +50,8 @@ namespace Ion
 
 	void LayerStack::OnUpdate(float DeltaTime)
 	{
+		TRACE_FUNCTION();
+
 		for (LayerPtr layer : m_Layers)
 		{
 			if (layer->m_bEnabled)
@@ -61,6 +63,8 @@ namespace Ion
 
 	void LayerStack::OnRender()
 	{
+		TRACE_FUNCTION();
+
 		for (LayerPtr layer : m_Layers)
 		{
 			if (layer->m_bEnabled)
@@ -72,6 +76,8 @@ namespace Ion
 
 	void LayerStack::OnEvent(Event& event)
 	{
+		TRACE_FUNCTION();
+
 		for (auto it = rbegin(); it != rend();)
 		{
 			LayerPtr layer = (*(it++));

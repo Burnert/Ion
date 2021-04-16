@@ -17,7 +17,11 @@ namespace Ion
 	public:
 		static WindowsApplication* Get();
 
+		virtual ~WindowsApplication() override;
+
 		/* Called by the Entry Point */
+		virtual void Start();
+
 		void InitWindows(HINSTANCE hInstance);
 
 		FORCEINLINE static HINSTANCE GetHInstance() { return m_HInstance; }

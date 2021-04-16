@@ -4,11 +4,12 @@
 
 int main(int argc, char** argv)
 {
-	HINSTANCE hInstance = GetModuleHandle(NULL);
+	Ion::Application* application = Ion::CreateApplication();
+	application->Start();
 
-	Ion::WindowsApplication* application = dynamic_cast<Ion::WindowsApplication*>(Ion::CreateApplication());
-	application->InitWindows(hInstance);
+	TRACE_SESSION_BEGIN("Shutdown");
 	delete application;
+	TRACE_SESSION_END();
 
 #ifdef ION_DEBUG
 	ION_LOG_DEBUG("Press Enter to close.");

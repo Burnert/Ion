@@ -31,9 +31,10 @@ namespace Ion
 	public:
 		using EventPtr = TShared<Event>;
 
-		virtual ~Application();
+		virtual ~Application() { }
 
-		void Init();
+		/* Called by the Entry Point */
+		virtual void Start();
 
 		/* Creates an instance of an application singleton */
 		template<typename T>
@@ -63,14 +64,18 @@ namespace Ion
 	protected:
 		Application();
 
+		void Init();
+		void Run();
+		void Shutdown();
+
+		void PostEvent(Event& event);
+		void PostDeferredEvent(DeferredEvent& event);
+
 		/* Platform specific method for polling application events / messages. */
 		virtual void PollEvents();
 
 		virtual void Update(float DeltaTime);
 		virtual void Render();
-
-		void PostEvent(Event& event);
-		void PostDeferredEvent(DeferredEvent& event);
 
 		virtual void DispatchEvent(Event& event);
 
@@ -99,14 +104,12 @@ namespace Ion
 		static Application* s_Instance;
 
 	private:
-		/* Main engine loop function */
-		void Run();
-
 		virtual float CalculateFrameTime();
 
 		// @TODO: Move ImGui stuff to some generic Platform class
 
 		void InitImGui() const;
+		void ShutdownImGui() const;
 		virtual void InitImGuiBackend(const TShared<GenericWindow>& window) const { }
 		virtual void ImGuiNewFramePlatform() const { }
 		virtual void ImGuiRenderPlatform(ImDrawData* drawData) const { }

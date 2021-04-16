@@ -18,7 +18,7 @@ public:
 
 	virtual void OnInit() override
 	{
-		VertexLayout layout(2);
+		VertexLayout layout(3);
 		layout.AddAttribute(EVertexAttributeType::Float, 3); // Position
 		layout.AddAttribute(EVertexAttributeType::Float, 2); // Texture Coordinate
 		layout.AddAttribute(EVertexAttributeType::Float, 4); // Vertex Color
@@ -109,7 +109,7 @@ void main()
 		shader->AddShaderSource(EShaderType::Pixel, fragSrc);
 
 		bResult = shader->Compile();
-		ionassertnd(bResult);
+		ionassert(bResult);
 
 		WString textureFileName = L"test.png";
 		memset(m_TextureFileNameBuffer, 0, sizeof(m_TextureFileNameBuffer));
@@ -336,4 +336,4 @@ private:
 	char m_TextureFileNameBuffer[MAX_PATH + 1];
 };
 
-USE_APPLICATION_CLASS(IonExample)
+USE_APPLICATION_CLASS(IonExample);

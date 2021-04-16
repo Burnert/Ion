@@ -10,6 +10,8 @@
 #error Ion can only be compiled with Unicode enabled.
 #endif
 
+#include "Config.h"
+
 #include "Core/CoreApi.h"
 #include "Core/CoreAsserts.h"
 #include "Core/CoreMacros.h"
@@ -27,3 +29,4 @@
 #include "Core/Profiling/DebugProfiler.h"
 #include "Core/Serialisation/Serialisation.h"
 #include "Core/Templates/Templates.h"
+#include "Core/Diagnostics/Tracing.h"

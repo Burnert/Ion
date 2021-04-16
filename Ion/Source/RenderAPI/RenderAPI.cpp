@@ -3,13 +3,14 @@
 #include "RenderAPI.h"
 #include "OpenGL/OpenGL.h"
 
-DECLARE_PERFORMANCE_COUNTER(RenderAPI_InitTime, "RenderAPI Init Time", "Init");
+//DECLARE_PERFORMANCE_COUNTER(RenderAPI_InitTime, "RenderAPI Init Time", "Init");
 
 namespace Ion
 {
 	bool RenderAPI::Init(ERenderAPI api)
 	{
-		SCOPED_PERFORMANCE_COUNTER(RenderAPI_InitTime);
+		//SCOPED_PERFORMANCE_COUNTER(RenderAPI_InitTime);
+		TRACE_FUNCTION();
 
 		switch (api)
 		{
