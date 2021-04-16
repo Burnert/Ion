@@ -76,8 +76,12 @@ namespace Ion
 
 	LRESULT WindowsWindow::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
+		TRACE_FUNCTION();
+
+		TRACE_BEGIN(0, "WindowsWindow - ImGui_ImplWin32_WndProcHandler");
 		if (ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam))
 			return 1;
+		TRACE_END(0);
 
 		// Read ImGui input first and decide what to do
 		// @TODO: This is a quick fix so do something better in the future

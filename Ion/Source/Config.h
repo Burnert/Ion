@@ -13,6 +13,12 @@
 /* Disables tracing on all configurations
  * Default: 0 */
 #define ION_NO_TRACING 0
+/* Specifies a maximum number of cached results.
+ * Once this number is reached the tracer dumps the cached results
+ * to file and clears the cache.
+ * One result size is sizeof(DebugTracing::TraceResult)
+ * Default: 10000 */
+#define ION_TRACE_DUMP_THRESHOLD 10000
 
 // --------------------------------------------------------------------------------------------------------
 // Assertion

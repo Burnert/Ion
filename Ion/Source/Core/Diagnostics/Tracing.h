@@ -47,12 +47,17 @@ namespace Ion
 		inline static bool HasSessionStarted() { return (bool)s_CurrentSessionName; }
 		inline static const char* GetCurrentSessionName() { return s_CurrentSessionName; }
 
+		static void StartSessionRecording();
+		static void StopSessionRecording();
+		inline static bool IsSessionRecording() { return s_bSessionRecording; }
+
 		static void DumpResults();
 
 		static llong TimestampToMicroseconds(llong timestamp);
 
 	private:
 		static const char* s_CurrentSessionName;
+		static bool s_bSessionRecording;
 		static std::vector<TraceResult> s_TraceResults;
 		static std::unordered_map<String, TraceResult*> s_NamedTraceResults;
 		static File* s_SessionDumpFile;
@@ -67,6 +72,9 @@ namespace Ion
 #define TRACE_SESSION_BEGIN(name)   Ion::DebugTracing::BeginSession(name)
 #define TRACE_SESSION_END()         Ion::DebugTracing::EndSession()
 
+#define TRACE_RECORD_START()        Ion::DebugTracing::StartSessionRecording()
+#define TRACE_RECORD_STOP()         Ion::DebugTracing::StopSessionRecording()
+
 #else
 
 #define TRACE_FUNCTION()
@@ -76,5 +84,8 @@ namespace Ion
 
 #define TRACE_SESSION_BEGIN(name)
 #define TRACE_SESSION_END()
+
+#define TRACE_RECORD_START()
+#define TRACE_RECORD_STOP()
 
 #endif

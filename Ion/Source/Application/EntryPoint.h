@@ -8,7 +8,9 @@ int main(int argc, char** argv)
 	application->Start();
 
 	TRACE_SESSION_BEGIN("Shutdown");
+	TRACE_RECORD_START();
 	delete application;
+	TRACE_RECORD_STOP();
 	TRACE_SESSION_END();
 
 #ifdef ION_DEBUG

@@ -30,18 +30,23 @@ namespace Ion
 
 	DebugTracing::ScopedTracer::ScopedTracer(const char* name) :
 		m_Name(name),
-		m_bRunning(true)
+		m_bRunning(IsSessionRecording()),
+		m_StartTime(-1)
 	{
 		ionassert(HasSessionStarted());
-		llong startTime;
-		QueryPerformanceCounter((LARGE_INTEGER*)&startTime);
-		m_StartTime = startTime - g_InitTime;
+		if (m_bRunning)
+		{
+			llong startTime;
+			QueryPerformanceCounter((LARGE_INTEGER*)&startTime);
+			m_StartTime = startTime - g_InitTime;
+		}
 	}
 
 	DebugTracing::ScopedTracer::~ScopedTracer()
 	{
 		ionassert(HasSessionStarted());
-		if (!m_bRunning)
+		// If m_StartTime is -1 it means that recording was started after the ScopedTracer was created
+		if (!m_bRunning || m_StartTime == -1)
 		{
 			return;
 		}

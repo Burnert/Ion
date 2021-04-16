@@ -8,14 +8,14 @@ namespace Ion
 {
 	void DebugTracing::BeginSession(const char* name)
 	{
+		#pragma warning(disable:26451)
+		#pragma warning(disable:6387)
+		#pragma warning(disable:6255)
+
 		int nameLength = (int)strlen(name);
 		ionassert(nameLength < 50);
 
 		bool bResult;
-
-		#pragma warning(disable:26451)
-		#pragma warning(disable:6387)
-		#pragma warning(disable:6255)
 
 		ionassert(!HasSessionStarted());
 		s_CurrentSessionName = name;
@@ -40,18 +40,31 @@ namespace Ion
 	void DebugTracing::EndSession()
 	{
 		ionassert(HasSessionStarted());
-		DumpResults();
 		// Go back one character, discarding the comma from the last event
 		s_SessionDumpFile->AddOffset(-1);
 		s_SessionDumpFile->Write("]}"); // Footer
 		s_SessionDumpFile->Close();
+
 		s_CurrentSessionName = nullptr;
+	}
+
+	void DebugTracing::StartSessionRecording()
+	{
+		ionassert(HasSessionStarted());
+		ionassert(!IsSessionRecording());
+		s_bSessionRecording = true;
+	}
+
+	void DebugTracing::StopSessionRecording()
+	{
+		ionassert(HasSessionStarted());
+		ionassert(IsSessionRecording());
+		s_bSessionRecording = false;
+		DumpResults();
 	}
 
 	void DebugTracing::DumpResults()
 	{
-		// @TODO: Dump results when a certain threshold is hit so it doesn't eat up the whole memory
-
 		ionassert(HasSessionStarted());
 
 		for (const TraceResult& result : s_TraceResults)
@@ -80,9 +93,15 @@ namespace Ion
 		float durationMs = duration * 0.001f;
 		TraceResult& traceResult = s_TraceResults.emplace_back<TraceResult>({ m_Name, m_StartTime, endTime, duration });
 		s_NamedTraceResults[m_Name] = &traceResult;
+
+		if (s_TraceResults.size() >= ION_TRACE_DUMP_THRESHOLD)
+		{
+			DumpResults();
+		}
 	}
 
 	const char* DebugTracing::s_CurrentSessionName = nullptr;
+	bool DebugTracing::s_bSessionRecording = false;
 	std::vector<DebugTracing::TraceResult> DebugTracing::s_TraceResults;
 	std::unordered_map<String, DebugTracing::TraceResult*> DebugTracing::s_NamedTraceResults;
 	File* DebugTracing::s_SessionDumpFile = nullptr;

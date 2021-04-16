@@ -235,6 +235,19 @@ void main()
 
 		// ImGui:
 
+		ImGui::Begin("Diagnostics");
+		{
+			if (ImGui::Button("Start profiling"))
+			{
+				TRACE_RECORD_START();
+			}
+			if (ImGui::Button("Stop profiling"))
+			{
+				TRACE_RECORD_STOP();
+			}
+		}
+		ImGui::End();
+
 		ImGui::Begin("Texture settings");
 		{
 			ImGui::InputText("Texture file", m_TextureFileNameBuffer, sizeof(m_TextureFileNameBuffer));

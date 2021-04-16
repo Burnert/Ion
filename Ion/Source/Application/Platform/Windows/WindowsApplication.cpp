@@ -30,8 +30,10 @@ namespace Ion
 
 		// Init
 		TRACE_SESSION_BEGIN("Init");
+		TRACE_RECORD_START();
 		HINSTANCE hInstance = GetModuleHandle(nullptr);
 		InitWindows(hInstance);
+		TRACE_RECORD_STOP();
 		TRACE_SESSION_END();
 
 		// Run
