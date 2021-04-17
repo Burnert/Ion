@@ -45,6 +45,7 @@ project "Ion"
 		"%{prj.name}/ThirdParty/glm",
 		"%{prj.name}/ThirdParty/SpdLog/include",
 		"%{prj.name}/ThirdParty/stb",
+		"%{prj.name}/ThirdParty/rapidxml",
 		"%{prj.name}/Source"
 	}
 
@@ -104,6 +105,7 @@ project "IonExample"
 		"Ion/ThirdParty/ImGui",
 		"Ion/ThirdParty/glm",
 		"Ion/ThirdParty/SpdLog/include",
+		"Ion/ThirdParty/rapidxml",
 		"%{prj.name}/Source"
 	}
 
