@@ -240,11 +240,11 @@ namespace Ion
 		ImGuiIO& imGuiIO = ImGui::GetIO();
 		imGuiIO.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 		imGuiIO.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-#if defined PLATFORM_SUPPORTS_DIRECTX
-		if (RenderAPI::GetCurrent() == ERenderAPI::DirectX)
-#elif defined PLATFORM_SUPPORTS_OPENGL && PLATFORM_ENABLE_IMGUI_VIEWPORTS_OPENGL
-		if (RenderAPI::GetCurrent() == ERenderAPI::OpenGL)
+		if (RenderAPI::GetCurrent() == ERenderAPI::DirectX
+#if defined PLATFORM_SUPPORTS_OPENGL && PLATFORM_ENABLE_IMGUI_VIEWPORTS_OPENGL
+			|| RenderAPI::GetCurrent() == ERenderAPI::OpenGL
 #endif
+			)
 		{
 			imGuiIO.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 		}

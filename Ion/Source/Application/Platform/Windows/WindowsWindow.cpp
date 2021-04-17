@@ -912,7 +912,7 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		// @TODO: Create some sort of OpenGL State manager, so useless calls are not made.
-		//MakeRenderingContextCurrent();
+		MakeRenderingContextCurrent();
 		::SwapBuffers(m_DeviceContext);
 	}
 
