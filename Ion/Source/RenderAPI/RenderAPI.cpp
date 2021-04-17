@@ -39,6 +39,8 @@ namespace Ion
 
 	void RenderAPI::InitImGuiBackend()
 	{
+		TRACE_FUNCTION();
+
 		switch (m_CurrentRenderAPI)
 		{
 		case ERenderAPI::OpenGL: 
@@ -48,6 +50,8 @@ namespace Ion
 
 	void RenderAPI::ImGuiNewFrame()
 	{
+		TRACE_FUNCTION();
+
 		switch (m_CurrentRenderAPI)
 		{
 		case ERenderAPI::OpenGL:
@@ -57,6 +61,8 @@ namespace Ion
 
 	void RenderAPI::ImGuiRender(ImDrawData* drawData)
 	{
+		TRACE_FUNCTION();
+
 		switch (m_CurrentRenderAPI)
 		{
 		case ERenderAPI::OpenGL:
@@ -66,6 +72,8 @@ namespace Ion
 
 	void RenderAPI::ImGuiShutdown()
 	{
+		TRACE_FUNCTION();
+
 		switch (m_CurrentRenderAPI)
 		{
 		case ERenderAPI::OpenGL:

@@ -303,6 +303,8 @@ namespace Ion
 
 	void OpenGL::ImGuiImplRendererCreateWindowPlatform(ImGuiViewport* viewport)
 	{
+		TRACE_FUNCTION();
+
 		ImGuiViewportDataOpenGLWin32* data = new ImGuiViewportDataOpenGLWin32;
 		viewport->RendererUserData = data;
 
@@ -352,6 +354,8 @@ namespace Ion
 
 	void OpenGL::ImGuiImplRendererRenderWindow(ImGuiViewport* viewport, void*)
 	{
+		TRACE_FUNCTION();
+
 		ImGuiViewportDataOpenGLWin32* data = (ImGuiViewportDataOpenGLWin32*)viewport->RendererUserData;
 
 		ionassertnd(wglMakeCurrent(data->DeviceContext, data->RenderingContext));
@@ -359,6 +363,8 @@ namespace Ion
 
 	void OpenGL::ImGuiImplRendererSwapBuffers(ImGuiViewport* viewport, void*)
 	{
+		TRACE_FUNCTION();
+
 		ImGuiViewportDataOpenGLWin32* data = (ImGuiViewportDataOpenGLWin32*)viewport->RendererUserData;
 
 		ionassertnd(SwapBuffers(data->DeviceContext));
@@ -366,6 +372,8 @@ namespace Ion
 
 	void OpenGL::ImGuiImplRendererDestroyWindow(ImGuiViewport* viewport)
 	{
+		TRACE_FUNCTION();
+
 		if (ImGuiViewportDataOpenGLWin32* data = (ImGuiViewportDataOpenGLWin32*)viewport->RendererUserData)
 		{
 			ionassertnd(wglDeleteContext(data->RenderingContext));
