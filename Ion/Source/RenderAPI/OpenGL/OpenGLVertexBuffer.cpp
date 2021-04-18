@@ -34,31 +34,32 @@ namespace Ion
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
-	void OpenGLVertexBuffer::SetLayout(const VertexLayout& layout) const
+	void OpenGLVertexBuffer::SetLayout(const VertexLayout& layout)
 	{
-		TRACE_FUNCTION();
-
-		glBindBuffer(GL_ARRAY_BUFFER, m_ID);
-
-		uint attributeIndex = 0;
-		for (const VertexAttribute& attribute : layout.GetAttributes())
-		{
-			TRACE_SCOPE("OpenGLVertexBuffer - Setup layout");
-
-			glVertexAttribPointer(attributeIndex, 
-				attribute.ElementCount, 
-				VertexAttributeTypeToGLType(attribute.Type), 
-				attribute.bNormalized,
-				layout.GetStride(), 
-				(const void*)attribute.Offset);
-			glEnableVertexAttribArray(attributeIndex);
-			attributeIndex++;
-		}
+		m_VertexLayout = MakeShareable(new VertexLayout(layout));
 	}
 
 	uint OpenGLVertexBuffer::GetVertexCount() const
 	{
 		// @TODO: Vertex count is not set anywhere
 		return m_VertexCount;
+	}
+
+	void OpenGLVertexBuffer::BindLayout() const
+	{
+		TRACE_FUNCTION();
+
+		uint attributeIndex = 0;
+		for (const VertexAttribute& attribute : m_VertexLayout->GetAttributes())
+		{
+			glVertexAttribPointer(attributeIndex,
+				attribute.ElementCount,
+				VertexAttributeTypeToGLType(attribute.Type),
+				attribute.bNormalized,
+				m_VertexLayout->GetStride(),
+				(const void*)attribute.Offset);
+			glEnableVertexAttribArray(attributeIndex);
+			attributeIndex++;
+		}
 	}
 }

@@ -1,6 +1,7 @@
 #include "IonPCH.h"
 
 #include "OpenGLRenderer.h"
+#include "OpenGLVertexBuffer.h"
 
 namespace Ion
 {
@@ -60,6 +61,8 @@ namespace Ion
 		TShared<Material> material = drawable->GetMaterial();
 
 		vertexBuffer->Bind();
+		std::static_pointer_cast<OpenGLVertexBuffer>(vertexBuffer)->BindLayout();
+
 		indexBuffer->Bind();
 
 		TShared<Shader> shader = material->GetShader();

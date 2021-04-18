@@ -4,6 +4,8 @@
 #include "Renderer/Renderer.h"
 #include "UserInterface/ImGui.h"
 
+#include "Core/File/Collada.h"
+
 // I'll think about this...
 using namespace Ion;
 
@@ -102,6 +104,32 @@ void main()
 
 )";
 
+		const char* vertSrc2 = R"(
+#version 430 core
+
+layout(location = 0) in vec3 a_Position;
+
+uniform mat4 u_MVP;
+
+void main()
+{
+	gl_Position = u_MVP * vec4(a_Position, 1.0f);
+}
+
+)";
+
+		const char* fragSrc2 = R"(
+#version 430 core
+
+out vec4 Color;
+
+void main()
+{
+	Color = vec4(0.8f);
+}
+
+)";
+
 		bool bResult;
 
 		TShared<Shader> shader = Shader::Create();
@@ -109,6 +137,13 @@ void main()
 		shader->AddShaderSource(EShaderType::Pixel, fragSrc);
 
 		bResult = shader->Compile();
+		ionassert(bResult);
+
+		TShared<Shader> shader2 = Shader::Create();
+		shader2->AddShaderSource(EShaderType::Vertex, vertSrc2);
+		shader2->AddShaderSource(EShaderType::Pixel, fragSrc2);
+
+		bResult = shader2->Compile();
 		ionassert(bResult);
 
 		WString textureFileName = L"test.png";
@@ -130,10 +165,19 @@ void main()
 		material->LinkPropertyToUniform("Color", "u_Color");
 		material->SetMaterialProperty("Color", FVector4(1.0f, 1.0f, 1.0f, 1.0f));
 
+		TShared<Material> material2 = Material::Create();
+		material2->SetShader(shader2);
+
 		m_MeshCube = Mesh::Create();
 		m_MeshCube->SetVertexBuffer(vertexBuffer);
 		m_MeshCube->SetIndexBuffer(indexBuffer);
 		m_MeshCube->SetMaterial(material);
+
+		m_MeshCube2 = Mesh::Create();
+		m_MeshCube2->SetVertexBuffer(vertexBuffer);
+		m_MeshCube2->SetIndexBuffer(indexBuffer);
+		m_MeshCube2->SetMaterial(material);
+		m_MeshCube2->SetTransform(glm::translate(FMatrix4(1.0f), FVector3(2.0f, 0.0f, 0.0f)));
 
 		m_Camera = Camera::Create();
 		m_Camera->SetTransform(glm::translate(FVector3(0.0f, 0.0f, 2.0f)));
@@ -143,13 +187,34 @@ void main()
 
 		m_Scene = Scene::Create();
 		m_Scene->SetActiveCamera(m_Camera);
+
 		m_Scene->AddDrawableObject(m_MeshCube);
+		m_Scene->AddDrawableObject(m_MeshCube2);
 
 		m_AuxCamera = Camera::Create();
 		m_AuxCamera->SetTransform(glm::translate(FVector3(0.0f, 0.0f, 4.0f)));
 		m_AuxCamera->SetFOV(glm::radians(66.0f));
 		m_AuxCamera->SetNearClip(0.1f);
 		m_AuxCamera->SetFarClip(10.0f);
+
+		TUnique<File> colladaFile = TUnique<File>(File::Create(L"pedestal.dae"));
+		ColladaDocument colladaDoc(colladaFile.get());
+
+		const ColladaData& colladaData = colladaDoc.GetData();
+
+		TShared<VertexBuffer> colladaVertexBuffer = VertexBuffer::Create(colladaData.Vertices, colladaData.VertexCount * sizeof(float));
+		TShared<IndexBuffer> colladaIndexBuffer = IndexBuffer::Create(colladaData.Indices, colladaData.IndexCount);
+
+		VertexLayout colladaLayout(1);
+		colladaLayout.AddAttribute(EVertexAttributeType::Float, 3, false);
+		colladaVertexBuffer->SetLayout(colladaLayout);
+
+		m_MeshCollada = Mesh::Create();
+		m_MeshCollada->SetVertexBuffer(colladaVertexBuffer);
+		m_MeshCollada->SetIndexBuffer(colladaIndexBuffer);
+		m_MeshCollada->SetMaterial(material2);
+
+		m_Scene->AddDrawableObject(m_MeshCollada);
 	}
 
 	virtual void OnUpdate(float deltaTime) override
@@ -337,6 +402,8 @@ void main()
 
 private:
 	TShared<Mesh> m_MeshCube;
+	TShared<Mesh> m_MeshCube2;
+	TShared<Mesh> m_MeshCollada;
 	TShared<Camera> m_Camera;
 	TShared<Camera> m_AuxCamera;
 	TShared<Texture> m_Texture;

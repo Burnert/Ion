@@ -68,7 +68,7 @@ namespace Ion
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 
-		virtual void SetLayout(const VertexLayout& layout) const = 0;
+		virtual void SetLayout(const VertexLayout& layout) = 0;
 
 		virtual uint GetVertexCount() const = 0;
 

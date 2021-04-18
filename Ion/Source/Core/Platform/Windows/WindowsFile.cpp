@@ -488,6 +488,8 @@ namespace Ion
 	
 	llong WindowsFile::GetSize() const
 	{
+		// @TODO: Make this function work even without a need to open the file
+
 		if (m_FileHandle == INVALID_HANDLE_VALUE)
 		{
 			_PRINT_HANDLE_ERROR();
@@ -510,7 +512,9 @@ namespace Ion
 	WString WindowsFile::GetExtension() const
 	{
 		ullong dotIndex = m_Filename.find_last_of(L'.');
-		return m_Filename.substr(dotIndex + 1, (size_t)-1);
+		WString filename = m_Filename.substr(dotIndex + 1, (size_t)-1);
+		std::transform(filename.begin(), filename.end(), filename.begin(), [](wchar ch) { return std::tolower(ch); });
+		return filename;
 	}
 
 	bool WindowsFile::IsOpen() const

@@ -7,6 +7,7 @@ namespace Ion
 {
 	class ION_API OpenGLVertexBuffer : public VertexBuffer
 	{
+		friend class OpenGLRenderer;
 	public:
 		OpenGLVertexBuffer(void* vertices, ullong size);
 		virtual ~OpenGLVertexBuffer() override;
@@ -14,7 +15,7 @@ namespace Ion
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
 
-		virtual void SetLayout(const VertexLayout& layout) const override;
+		virtual void SetLayout(const VertexLayout& layout) override;
 
 		virtual uint GetVertexCount() const override;
 
@@ -35,8 +36,12 @@ namespace Ion
 			}
 		}
 
+	protected:
+		void BindLayout() const;
+
 	private:
 		uint m_ID;
 		uint m_VertexCount;
+		TShared<VertexLayout> m_VertexLayout;
 	};
 }

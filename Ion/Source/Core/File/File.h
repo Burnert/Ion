@@ -46,6 +46,20 @@ namespace Ion
 		virtual bool WriteLine(const char* inBuffer, ullong count) = 0;
 		virtual bool WriteLine(const std::string& inStr) = 0;
 
+		inline bool Read(char* outBuffer, ullong count)
+		{
+			return Read((ubyte*)outBuffer, count);
+		}
+		template<ullong Size>
+		inline bool Read(const char(&inBuffer)[Size])
+		{
+			return Read((const ubyte*)inBuffer, Size - 1);
+		}
+
+		inline bool Write(char* outBuffer, ullong count)
+		{
+			return Write((ubyte*)outBuffer, count);
+		}
 		template<ullong Size>
 		inline bool Write(const char (&inBuffer)[Size])
 		{
