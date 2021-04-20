@@ -298,8 +298,8 @@ void main()
 				return false;
 			});
 
-		dispatcher.Dispatch<RawInputMouseButtonPressedEvent>(
-			[this](RawInputMouseButtonPressedEvent& event)
+		dispatcher.Dispatch<MouseButtonPressedEvent>(
+			[this](MouseButtonPressedEvent& event)
 			{
 				if (event.GetMouseButton() == Mouse::Right)
 				{
@@ -312,8 +312,8 @@ void main()
 				return false;
 			});
 
-		dispatcher.Dispatch<RawInputMouseButtonReleasedEvent>(
-			[this](RawInputMouseButtonReleasedEvent& event)
+		dispatcher.Dispatch<MouseButtonReleasedEvent>(
+			[this](MouseButtonReleasedEvent& event)
 			{
 				if (event.GetMouseButton() == Mouse::Right)
 				{
