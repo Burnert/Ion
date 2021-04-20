@@ -56,6 +56,29 @@ namespace Ion
 		virtual bool IsOpen() const = 0;
 		virtual bool Exists() const = 0;
 		virtual bool EndOfFile() const = 0;
+	};
+
+	/* Generic File abstract base class */
+	class ION_API File : public IFile
+	{
+	public:
+		static File* Create();
+		static File* Create(const std::wstring& filename);
+
+		File();
+		File(const std::wstring& filename);
+		virtual ~File() { }
+		
+		// @TODO: Add copy and move constructors
+
+		// IFile:
+
+		virtual bool Read(ubyte* outBuffer, ullong count) = 0;
+		virtual bool Write(const ubyte* inBuffer, ullong count) = 0;
+
+		// End of IFile:
+
+		// IFile wrappers:
 
 		inline bool Read(char* outBuffer, ullong count)
 		{
@@ -76,20 +99,8 @@ namespace Ion
 		{
 			return Write((const ubyte*)inBuffer, Size - 1);
 		}
-	};
 
-	/* Generic File abstract base class */
-	class ION_API File : public IFile
-	{
-	public:
-		static File* Create();
-		static File* Create(const std::wstring& filename);
-
-		File();
-		File(const std::wstring& filename);
-		virtual ~File() { }
-		
-		// @TODO: Add copy and move constructors
+		// End of IFile wrappers
 
 		/* This is the type of the new line character that will be written in a text file. */
 		IO::ENewLineType WriteNewLineType;
