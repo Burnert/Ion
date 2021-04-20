@@ -20,69 +20,29 @@ public:
 
 	virtual void OnInit() override
 	{
-		TShared<VertexLayout> layout = MakeShared<VertexLayout>(3);
-		layout->AddAttribute(EVertexAttributeType::Float, 3); // Position
-		layout->AddAttribute(EVertexAttributeType::Float, 2); // Texture Coordinate
-		layout->AddAttribute(EVertexAttributeType::Float, 4); // Vertex Color
-
-		float cubeVerts[8 * 9] = {
-			-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-			 0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-			 0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-			-0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-			 0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-			-0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,
-			-0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-			 0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-		};
-		TShared<VertexBuffer> vertexBuffer = VertexBuffer::Create(cubeVerts, 8 * 9);
-		vertexBuffer->SetLayout(layout);
-
-		uint cubeIndices[12 * 3] = {
-			// Front
-			0, 1, 2,
-			2, 3, 0,
-
-			// Back
-			4, 5, 6,
-			6, 7, 4,
-
-			// Right
-			1, 4, 7,
-			7, 2, 1,
-
-			// Left
-			5, 0, 3,
-			3, 6, 5,
-
-			// Top
-			3, 2, 7,
-			7, 6, 3,
-
-			// Bottom
-			5, 4, 1,
-			5, 1, 0,
-		};
-		TShared<IndexBuffer> indexBuffer = IndexBuffer::Create(cubeIndices, 12 * 3);
-
 		const char* vertSrc = R"(
 #version 430 core
 
 layout(location = 0) in vec3 a_Position;
-layout(location = 1) in vec2 a_TexCoord;
-layout(location = 2) in vec4 a_Color;
+layout(location = 1) in vec3 a_Normal;
+layout(location = 2) in vec2 a_TexCoord0;
 
 uniform mat4 u_MVP;
-uniform vec4 u_Color;
+uniform mat4 u_Transform;
+uniform mat4 u_InverseTranspose;
+uniform vec3 u_CameraLocation;
 
-out vec4 v_Color;
 out vec2 v_TexCoord;
+out vec3 v_Normal;
+out vec3 v_WorldNormal;
 
 void main()
 {
-	v_Color = a_Color * u_Color;
-	v_TexCoord = a_TexCoord;
-	gl_Position = u_MVP * vec4(a_Position, 1.0f);
+	gl_Position = u_MVP * vec4(a_Position, 1.0);
+	v_TexCoord = a_TexCoord0;
+
+	v_Normal = a_Normal;
+	v_WorldNormal = normalize(vec3(u_InverseTranspose * vec4(v_Normal, 0.0)));
 }
 
 )";
@@ -91,50 +51,21 @@ void main()
 #version 430 core
 
 uniform sampler2D u_TextureSampler;
+uniform vec3 u_LightDirection;
 
-in vec4 v_Color;
 in vec2 v_TexCoord;
+in vec3 v_Normal;
+in vec3 v_WorldNormal;
 
 out vec4 Color;
 
 void main()
 {
-	Color = texture(u_TextureSampler, v_TexCoord).rgba * v_Color;
-}
+	float surfaceLight = dot(v_WorldNormal, -u_LightDirection);
 
-)";
+	Color = texture(u_TextureSampler, v_TexCoord).rgba * surfaceLight;
 
-		const char* vertSrc2 = R"(
-#version 430 core
-
-layout(location = 0) in vec3 a_Position;
-layout(location = 1) in vec3 a_Normal;
-layout(location = 2) in vec2 a_TexCoord0;
-
-uniform mat4 u_MVP;
-
-out vec2 v_TexCoord;
-
-void main()
-{
-	gl_Position = u_MVP * vec4(a_Position, 1.0f);
-	v_TexCoord = a_TexCoord0;
-}
-
-)";
-
-		const char* fragSrc2 = R"(
-#version 430 core
-
-uniform sampler2D u_TextureSampler;
-
-in vec2 v_TexCoord;
-
-out vec4 Color;
-
-void main()
-{
-	Color = texture(u_TextureSampler, v_TexCoord).rgba;
+	//Color = vec4((v_WorldNormal + 1.0) * 0.5, 1.0);
 }
 
 )";
@@ -148,43 +79,6 @@ void main()
 		bResult = shader->Compile();
 		ionassert(bResult);
 
-		TShared<Shader> shader2 = Shader::Create();
-		shader2->AddShaderSource(EShaderType::Vertex, vertSrc2);
-		shader2->AddShaderSource(EShaderType::Pixel, fragSrc2);
-
-		bResult = shader2->Compile();
-		ionassert(bResult);
-
-		WString textureFileName = L"test.png";
-		memset(m_TextureFileNameBuffer, 0, sizeof(m_TextureFileNameBuffer));
-		StringConverter::WCharToChar(textureFileName.c_str(), m_TextureFileNameBuffer);
-
-		File* textureFile = File::Create(textureFileName);
-		Image* textureImage = new Image;
-		ionassertnd(textureImage->Load(textureFile));
-		delete textureFile;
-		m_Texture = Texture::Create(textureImage);
-		m_Texture->Bind(0);
-
-		shader->SetUniform1i("u_TextureSampler", 0);
-
-		TShared<Material> material = Material::Create();
-		material->SetShader(shader);
-		material->CreateMaterialProperty("Color", EMaterialPropertyType::Float4);
-		material->LinkPropertyToUniform("Color", "u_Color");
-		material->SetMaterialProperty("Color", FVector4(1.0f, 1.0f, 1.0f, 1.0f));
-
-		m_MeshCube = Mesh::Create();
-		m_MeshCube->SetVertexBuffer(vertexBuffer);
-		m_MeshCube->SetIndexBuffer(indexBuffer);
-		m_MeshCube->SetMaterial(material);
-
-		m_MeshCube2 = Mesh::Create();
-		m_MeshCube2->SetVertexBuffer(vertexBuffer);
-		m_MeshCube2->SetIndexBuffer(indexBuffer);
-		m_MeshCube2->SetMaterial(material);
-		m_MeshCube2->SetTransform(glm::translate(FMatrix4(1.0f), FVector3(2.0f, 0.0f, 0.0f)));
-
 		m_Camera = Camera::Create();
 		m_Camera->SetTransform(glm::translate(FVector3(0.0f, 0.0f, 2.0f)));
 		m_Camera->SetFOV(glm::radians(90.0f));
@@ -194,9 +88,6 @@ void main()
 		m_Scene = Scene::Create();
 		m_Scene->SetActiveCamera(m_Camera);
 
-		m_Scene->AddDrawableObject(m_MeshCube);
-		m_Scene->AddDrawableObject(m_MeshCube2);
-
 		m_AuxCamera = Camera::Create();
 		m_AuxCamera->SetTransform(glm::translate(FVector3(0.0f, 0.0f, 4.0f)));
 		m_AuxCamera->SetFOV(glm::radians(66.0f));
@@ -205,7 +96,7 @@ void main()
 
 		// @TODO: Create an asset manager for textures, meshes and other files that can be imported
 
-		TUnique<File> colladaFile = TUnique<File>(File::Create(L"cubetest.dae"));
+		TUnique<File> colladaFile = TUnique<File>(File::Create(L"char.dae"));
 		ColladaDocument colladaDoc(colladaFile.get());
 
 		//TUnique<File> colladaStressTestFile = TUnique<File>(File::Create(L"spherestresstest.dae"));
@@ -218,22 +109,26 @@ void main()
 
 		TShared<IndexBuffer> colladaIndexBuffer = IndexBuffer::Create(colladaData.Indices, (uint)colladaData.IndexCount);
 
-		File* textureFile2 = File::Create(L"test.png");
-		Image* textureImage2 = new Image;
-		ionassertnd(textureImage2->Load(textureFile2));
-		delete textureFile2;
-		m_TextureCollada = Texture::Create(textureImage2);
+		WString textureFileName = L"char.png";
+		memset(m_TextureFileNameBuffer, 0, sizeof(m_TextureFileNameBuffer));
+		StringConverter::WCharToChar(textureFileName.c_str(), m_TextureFileNameBuffer);
+
+		File* textureFile = File::Create(textureFileName);
+		Image* textureImage = new Image;
+		ionassertnd(textureImage->Load(textureFile));
+		delete textureFile;
+		m_TextureCollada = Texture::Create(textureImage);
 		m_TextureCollada->Bind(1);
 
-		TShared<Material> material2 = Material::Create();
-		material2->SetShader(shader2);
+		TShared<Material> material = Material::Create();
+		material->SetShader(shader);
 
-		shader2->SetUniform1i("u_TextureSampler", 1);
+		shader->SetUniform1i("u_TextureSampler", 1);
 
 		m_MeshCollada = Mesh::Create();
 		m_MeshCollada->SetVertexBuffer(colladaVertexBuffer);
 		m_MeshCollada->SetIndexBuffer(colladaIndexBuffer);
-		m_MeshCollada->SetMaterial(material2);
+		m_MeshCollada->SetMaterial(material);
 		m_MeshCollada->SetTransform(glm::rotate(glm::radians(-90.0f), FVector3(1.0f, 0.0f, 0.0f)));
 
 		m_Scene->AddDrawableObject(m_MeshCollada);
@@ -241,15 +136,11 @@ void main()
 
 	virtual void OnUpdate(float deltaTime) override
 	{
-		TShared<Shader> cubeShader = m_MeshCube->GetMaterial()->GetShader();
-		TShared<Material> cubeMaterial = m_MeshCube->GetMaterial();
+		TShared<Material> meshMaterial = m_MeshCollada->GetMaterial();
+		TShared<Shader> meshShader = meshMaterial->GetShader();
 
 		static float c_Angle = 0.0f;
 		static FVector4 c_Tint(1.0f, 0.0f, 1.0f, 1.0f);
-
-		FVector4 tint = c_Tint;
-		tint.y = glm::abs(tint.y - 1.0f);
-		cubeMaterial->SetMaterialProperty("Color", tint);
 
 		// Perspective projection
 		WindowDimensions dimensions = GetWindow()->GetDimensions();
@@ -257,21 +148,27 @@ void main()
 		m_Camera->SetAspectRatio(aspectRatio);
 		m_AuxCamera->SetAspectRatio(aspectRatio);
 
+		m_LightDirection = glm::normalize(m_LightDirection);
+		meshShader->SetUniform3f("u_LightDirection", m_LightDirection);
+
 		float cameraMoveSpeed = 5.0f;
 
+		float cameraPitch = glm::radians(m_CameraRotation.x);
+		float cameraYaw = glm::radians(m_CameraRotation.y);
+
 		FVector4 cameraForwardVector = 
-			glm::rotate(m_CameraRotation.y, FVector3(0.0f, -1.0f, 0.0f)) 
-			* glm::rotate(m_CameraRotation.x, FVector3(-1.0f, 0.0f, 0.0f))
+			glm::rotate(cameraYaw, FVector3(0.0f, -1.0f, 0.0f))
+			* glm::rotate(cameraPitch, FVector3(-1.0f, 0.0f, 0.0f))
 			* FVector4(0.0f, 0.0f, -1.0f, 0.0f);
 
 		FVector4 cameraRightVector =
-			glm::rotate(m_CameraRotation.y, FVector3(0.0f, -1.0f, 0.0f))
-			* glm::rotate(m_CameraRotation.x, FVector3(-1.0f, 0.0f, 0.0f))
+			glm::rotate(cameraYaw, FVector3(0.0f, -1.0f, 0.0f))
+			* glm::rotate(cameraPitch, FVector3(-1.0f, 0.0f, 0.0f))
 			* FVector4(-1.0f, 0.0f, 0.0f, 0.0f);
 
 		FVector4 cameraUpVector =
-			glm::rotate(m_CameraRotation.y, FVector3(0.0f, -1.0f, 0.0f))
-			* glm::rotate(m_CameraRotation.x, FVector3(-1.0f, 0.0f, 0.0f))
+			glm::rotate(cameraYaw, FVector3(0.0f, -1.0f, 0.0f))
+			* glm::rotate(cameraPitch, FVector3(-1.0f, 0.0f, 0.0f))
 			* FVector4(0.0f, -1.0f, 0.0f, 0.0f);
 
 		if (GetInputManager()->IsMouseButtonPressed(Mouse::Right))
@@ -294,25 +191,27 @@ void main()
 			}
 			if (GetInputManager()->IsKeyPressed(Key::Q))
 			{
-				m_CameraLocation = glm::translate(FVector3(cameraUpVector) * deltaTime * cameraMoveSpeed) * m_CameraLocation;
+				m_CameraLocation = glm::translate(FVector3(0.0f, 1.0f, 0.0f) * -deltaTime * cameraMoveSpeed) * m_CameraLocation;
 			}
 			if (GetInputManager()->IsKeyPressed(Key::E))
 			{
-				m_CameraLocation = glm::translate(FVector3(cameraUpVector) * -deltaTime * cameraMoveSpeed) * m_CameraLocation;
+				m_CameraLocation = glm::translate(FVector3(0.0f, 1.0f, 0.0f) * deltaTime * cameraMoveSpeed) * m_CameraLocation;
 			}
 		}
 
 		FMatrix4 transform(1.0f);
 		transform *= glm::translate(FVector3(m_CameraLocation));
-		transform *= glm::rotate(m_CameraRotation.y, FVector3(0.0f, -1.0f, 0.0f));
-		transform *= glm::rotate(m_CameraRotation.x, FVector3(-1.0f, 0.0f, 0.0f));
+		transform *= glm::rotate(cameraYaw, FVector3(0.0f, -1.0f, 0.0f));
+		transform *= glm::rotate(cameraPitch, FVector3(-1.0f, 0.0f, 0.0f));
 		m_Camera->SetTransform(transform);
 
 		// Model transform
 		FMatrix4 modelMatrix(1.0f);
 		modelMatrix *= glm::translate(m_MeshLocation);
-		modelMatrix *= glm::rotate(c_Angle, glm::normalize(FVector3(0.0f, 1.0f, 0.0f)));
-		m_MeshCube->SetTransform(modelMatrix);
+		modelMatrix *= glm::toMat4(FQuaternion(glm::radians(m_MeshRotation)));
+		modelMatrix *= glm::scale(m_MeshScale);
+
+		m_MeshCollada->SetTransform(modelMatrix);
 
 		c_Angle += deltaTime;
 		c_Tint.y = (((c_Tint.y + deltaTime) >= 2.0f) ? 0.0f : (c_Tint.y + deltaTime));
@@ -345,8 +244,8 @@ void main()
 				{
 					Image* textureImage = new Image;
 					ionassertnd(textureImage->Load(textureFile));
-					m_Texture = Texture::Create(textureImage);
-					m_Texture->Bind(0);
+					m_TextureCollada = Texture::Create(textureImage);
+					m_TextureCollada->Bind(1);
 				}
 				delete textureFile;
 			}
@@ -361,6 +260,10 @@ void main()
 		ImGui::Begin("Mesh settings");
 		{
 			ImGui::DragFloat3("Location", &m_MeshLocation.x, 0.01f, -FLT_MAX, FLT_MAX);
+			ImGui::DragFloat3("Rotation", &m_MeshRotation.x, 1.0f, -FLT_MAX, FLT_MAX);
+			ImGui::DragFloat3("Scale", &m_MeshScale.x, 0.01f, -FLT_MAX, FLT_MAX);
+
+			ImGui::DragFloat3("Light Direction Vector", &m_LightDirection.x, 0.01f, -1.0f, 1.0f);
 		}
 		ImGui::End();
 	}
@@ -384,10 +287,10 @@ void main()
 			{
 				if (GetInputManager()->IsMouseButtonPressed(Mouse::Right))
 				{
-					float yawDelta = event.GetX() * 0.003f;
-					float pitchDelta = event.GetY() * 0.003f;
+					float yawDelta = event.GetX() * 0.2f;
+					float pitchDelta = event.GetY() * 0.2f;
 
-					m_CameraRotation.x += pitchDelta;
+					m_CameraRotation.x = glm::clamp(m_CameraRotation.x + pitchDelta, -89.99f, 89.99f);
 					m_CameraRotation.y += yawDelta;
 
 					return true;
@@ -423,18 +326,18 @@ void main()
 	}
 
 private:
-	TShared<Mesh> m_MeshCube;
-	TShared<Mesh> m_MeshCube2;
 	TShared<Mesh> m_MeshCollada;
 	TShared<Camera> m_Camera;
 	TShared<Camera> m_AuxCamera;
-	TShared<Texture> m_Texture;
 	TShared<Texture> m_TextureCollada;
 	TShared<Scene> m_Scene;
 	FVector4 m_CameraLocation = { 0.0f, 0.0f, 2.0f, 1.0f };
 	FVector3 m_CameraRotation = { 0.0f, 0.0f, 0.0f };
-	FVector3 m_MeshLocation = { -2.0f, 0.0f, 0.0f };
+	FVector3 m_MeshLocation = { 0.0f, 0.0f, 0.0f };
+	FVector3 m_MeshRotation = { -90.0f, 0.0f, 0.0f };
+	FVector3 m_MeshScale = FVector3(1.0f);
 	FVector3 m_AuxCameraLocation = { 0.0f, 0.0f, 4.0f };
+	FVector3 m_LightDirection = glm::normalize(FVector3 { -0.2f, -0.4f, -0.8f });
 
 	char m_TextureFileNameBuffer[MAX_PATH + 1];
 };

@@ -11,6 +11,11 @@ namespace Ion
 
 		void Activate();
 
+		// @TODO: Setting the location here is a temporary solution
+
+		void SetLocation(const FVector3& location);
+		FORCEINLINE const FVector3& GetLocation() const { return m_CameraLocation; }
+
 		void SetTransform(const FMatrix4& transformMatrix);
 		FORCEINLINE const FMatrix4& GetTransform() const { return m_CameraTransform; }
 
@@ -34,6 +39,7 @@ namespace Ion
 		Camera();
 
 	private:
+		FVector3 m_CameraLocation;
 		FMatrix4 m_CameraTransform;
 		FMatrix4 m_ViewProjectionMatrix;
 

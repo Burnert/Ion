@@ -17,6 +17,11 @@ namespace Ion
 		// Make the renderer use this camera's view projection matrix
 	}
 
+	void Camera::SetLocation(const FVector3& location)
+	{
+		m_CameraLocation = location;
+	}
+
 	void Camera::SetTransform(const FMatrix4& transformMatrix)
 	{
 		m_CameraTransform = transformMatrix;
@@ -61,6 +66,7 @@ namespace Ion
 	}
 
 	Camera::Camera() :
+		m_CameraLocation(FVector3(0.0f)),
 		m_CameraTransform(FMatrix4(1.0f)),
 		m_ViewProjectionMatrix(FMatrix4(1.0f)),
 		m_FOV(90.0f),

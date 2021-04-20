@@ -1,7 +1,9 @@
 #include "IonPCH.h"
 
 #include "OpenGLRenderer.h"
+
 #include "OpenGLVertexBuffer.h"
+#include "OpenGLIndexBuffer.h"
 
 namespace Ion
 {
@@ -19,6 +21,10 @@ namespace Ion
 
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
+
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+		glFrontFace(GL_CCW);
 
 		// Bind the default VAO and forget about it for the rest of the world.
 		// Maybe I'll implement it in some way in the future but I don't think it's necessary.
@@ -56,12 +62,12 @@ namespace Ion
 			scene = m_CurrentScene;
 		}
 
-		TShared<VertexBuffer> vertexBuffer = drawable->GetVertexBuffer();
-		TShared<IndexBuffer> indexBuffer = drawable->GetIndexBuffer();
+		TShared<OpenGLVertexBuffer> vertexBuffer = std::static_pointer_cast<OpenGLVertexBuffer>(drawable->GetVertexBuffer());
+		TShared<OpenGLIndexBuffer> indexBuffer = std::static_pointer_cast<OpenGLIndexBuffer>(drawable->GetIndexBuffer());
 		TShared<Material> material = drawable->GetMaterial();
 
 		vertexBuffer->Bind();
-		std::static_pointer_cast<OpenGLVertexBuffer>(vertexBuffer)->BindLayout();
+		vertexBuffer->BindLayout();
 
 		indexBuffer->Bind();
 
@@ -74,8 +80,18 @@ namespace Ion
 		const TShared<Camera>& activeCamera = m_CurrentScene->GetActiveCamera();
 		ionassert(activeCamera, "Cannot render without an active camera.");
 		activeCamera->UpdateViewProjectionMatrix();
-		const FMatrix4& viewProjectionMatrix = activeCamera->GetViewProjectionMatrix();
+
+		shader->SetUniform3f("u_CameraLocation", activeCamera->GetLocation());
+
+		// Set matrices
+
 		const FMatrix4& modelMatrix = drawable->GetTransformMatrix();
+		shader->SetUniformMatrix4f("u_Transform", modelMatrix);
+
+		FMatrix4 inverseTranspose = glm::inverseTranspose(modelMatrix);
+		shader->SetUniformMatrix4f("u_InverseTranspose", inverseTranspose);
+
+		const FMatrix4& viewProjectionMatrix = activeCamera->GetViewProjectionMatrix();
 		FMatrix4 modelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
 		shader->SetUniformMatrix4f("u_MVP", modelViewProjectionMatrix);
 
@@ -135,6 +151,17 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		glPolygonMode(GL_FRONT_AND_BACK, PolygonDrawModeToGLPolygonMode(drawMode));
+
+		switch (drawMode)
+		{
+		case Ion::EPolygonDrawMode::Fill:
+			glEnable(GL_CULL_FACE);
+			break;
+		case Ion::EPolygonDrawMode::Lines:
+		case Ion::EPolygonDrawMode::Points:
+			glDisable(GL_CULL_FACE);
+			break;
+		}
 	}
 
 	EPolygonDrawMode OpenGLRenderer::GetPolygonDrawMode() const
