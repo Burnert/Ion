@@ -9,8 +9,8 @@ namespace Ion
 	{
 		enum EFileType : ubyte
 		{
-			FT_Text   = 0,
-			FT_Binary = 1,
+			FT_Text   = 1,
+			FT_Binary = 2,
 			FT_Other  = 0xFF,
 		};
 
@@ -46,26 +46,6 @@ namespace Ion
 		virtual bool WriteLine(const char* inBuffer, ullong count) = 0;
 		virtual bool WriteLine(const std::string& inStr) = 0;
 
-		inline bool Read(char* outBuffer, ullong count)
-		{
-			return Read((ubyte*)outBuffer, count);
-		}
-		template<ullong Size>
-		inline bool Read(const char(&inBuffer)[Size])
-		{
-			return Read((const ubyte*)inBuffer, Size - 1);
-		}
-
-		inline bool Write(char* outBuffer, ullong count)
-		{
-			return Write((ubyte*)outBuffer, count);
-		}
-		template<ullong Size>
-		inline bool Write(const char (&inBuffer)[Size])
-		{
-			return Write((const ubyte*)inBuffer, Size - 1);
-		}
-
 		virtual bool AddOffset(llong count) = 0;
 		virtual bool SetOffset(llong count) = 0;
 		virtual llong GetOffset() const = 0;
@@ -76,6 +56,26 @@ namespace Ion
 		virtual bool IsOpen() const = 0;
 		virtual bool Exists() const = 0;
 		virtual bool EndOfFile() const = 0;
+
+		inline bool Read(char* outBuffer, ullong count)
+		{
+			return Read((ubyte*)outBuffer, count);
+		}
+		template<ullong Size>
+		inline bool Read(char(&outBuffer)[Size])
+		{
+			return Read((ubyte*)outBuffer, Size - 1);
+		}
+
+		inline bool Write(const char* inBuffer, ullong count)
+		{
+			return Write((const ubyte*)inBuffer, count);
+		}
+		template<ullong Size>
+		inline bool Write(const char(&inBuffer)[Size])
+		{
+			return Write((const ubyte*)inBuffer, Size - 1);
+		}
 	};
 
 	/* Generic File abstract base class */
@@ -133,4 +133,6 @@ namespace Ion
 		FORCEINLINE void EnableDebugLog() { m_DebugLog = true; }
 #endif
 	};
+
+	using Directory = File;
 }
