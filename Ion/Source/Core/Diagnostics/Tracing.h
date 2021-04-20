@@ -3,7 +3,7 @@
 #include "Core/CoreApi.h"
 #include "Core/CoreMacros.h"
 
-#if ION_DEBUG && !ION_NO_TRACING || ION_FORCE_TRACING
+#if (ION_DEBUG || ION_RELEASE && ION_RELEASE_TRACING) && !ION_NO_TRACING || ION_FORCE_TRACING
 #define ION_ENABLE_TRACING 1
 #else
 #define ION_ENABLE_TRACING 0
@@ -27,6 +27,7 @@ namespace Ion
 		class ION_API ScopedTracer
 		{
 		public:
+			// @TODO: Make the name formattable
 			ScopedTracer(const char* name);
 			~ScopedTracer();
 

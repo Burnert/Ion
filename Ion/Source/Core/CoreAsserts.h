@@ -91,6 +91,9 @@ namespace Ion
 #define ionexcept(x, ...) \
 if (!!(x) || Ion::AssertionHelper::HandleFailEx(#x, __FUNCSIG__, __FILE__, __LINE__, __VA_ARGS__) || (_exceptbreak(), 0)); else
 
+/* A special type of ionexcept that returns 0 on failure. */
+#define _ionexcept_r(x, ...) ionexcept(x, __VA_ARGS__) return 0
+
 /* Stops the execution if the expression evaluates to false (terminates the program in distribution builds!)
  * Never deletes the expression in non-debug builds. */
 #define ionassertnd(x, ...) \

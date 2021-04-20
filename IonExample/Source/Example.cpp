@@ -20,10 +20,10 @@ public:
 
 	virtual void OnInit() override
 	{
-		VertexLayout layout(3);
-		layout.AddAttribute(EVertexAttributeType::Float, 3); // Position
-		layout.AddAttribute(EVertexAttributeType::Float, 2); // Texture Coordinate
-		layout.AddAttribute(EVertexAttributeType::Float, 4); // Vertex Color
+		TShared<VertexLayout> layout = MakeShared<VertexLayout>(3);
+		layout->AddAttribute(EVertexAttributeType::Float, 3); // Position
+		layout->AddAttribute(EVertexAttributeType::Float, 2); // Texture Coordinate
+		layout->AddAttribute(EVertexAttributeType::Float, 4); // Vertex Color
 
 		float cubeVerts[8 * 9] = {
 			-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
@@ -35,7 +35,7 @@ public:
 			-0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
 			 0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 		};
-		TShared<VertexBuffer> vertexBuffer = VertexBuffer::Create(cubeVerts, sizeof(cubeVerts));
+		TShared<VertexBuffer> vertexBuffer = VertexBuffer::Create(cubeVerts, 8 * 9);
 		vertexBuffer->SetLayout(layout);
 
 		uint cubeIndices[12 * 3] = {
@@ -108,12 +108,17 @@ void main()
 #version 430 core
 
 layout(location = 0) in vec3 a_Position;
+layout(location = 1) in vec3 a_Normal;
+layout(location = 2) in vec2 a_TexCoord0;
 
 uniform mat4 u_MVP;
+
+out vec2 v_TexCoord;
 
 void main()
 {
 	gl_Position = u_MVP * vec4(a_Position, 1.0f);
+	v_TexCoord = a_TexCoord0;
 }
 
 )";
@@ -121,11 +126,15 @@ void main()
 		const char* fragSrc2 = R"(
 #version 430 core
 
+uniform sampler2D u_TextureSampler;
+
+in vec2 v_TexCoord;
+
 out vec4 Color;
 
 void main()
 {
-	Color = vec4(0.8f);
+	Color = texture(u_TextureSampler, v_TexCoord).rgba;
 }
 
 )";
@@ -165,9 +174,6 @@ void main()
 		material->LinkPropertyToUniform("Color", "u_Color");
 		material->SetMaterialProperty("Color", FVector4(1.0f, 1.0f, 1.0f, 1.0f));
 
-		TShared<Material> material2 = Material::Create();
-		material2->SetShader(shader2);
-
 		m_MeshCube = Mesh::Create();
 		m_MeshCube->SetVertexBuffer(vertexBuffer);
 		m_MeshCube->SetIndexBuffer(indexBuffer);
@@ -197,22 +203,38 @@ void main()
 		m_AuxCamera->SetNearClip(0.1f);
 		m_AuxCamera->SetFarClip(10.0f);
 
-		TUnique<File> colladaFile = TUnique<File>(File::Create(L"pedestal.dae"));
+		// @TODO: Create an asset manager for textures, meshes and other files that can be imported
+
+		TUnique<File> colladaFile = TUnique<File>(File::Create(L"cubetest.dae"));
 		ColladaDocument colladaDoc(colladaFile.get());
+
+		//TUnique<File> colladaStressTestFile = TUnique<File>(File::Create(L"spherestresstest.dae"));
+		//ColladaDocument colladaStressTest(colladaStressTestFile.get());
 
 		const ColladaData& colladaData = colladaDoc.GetData();
 
-		TShared<VertexBuffer> colladaVertexBuffer = VertexBuffer::Create(colladaData.Vertices, colladaData.VertexCount * sizeof(float));
-		TShared<IndexBuffer> colladaIndexBuffer = IndexBuffer::Create(colladaData.Indices, colladaData.IndexCount);
+		TShared<VertexBuffer> colladaVertexBuffer = VertexBuffer::Create(colladaData.VertexAttributes, colladaData.VertexAttributeCount);
+		colladaVertexBuffer->SetLayout(colladaData.Layout);
 
-		VertexLayout colladaLayout(1);
-		colladaLayout.AddAttribute(EVertexAttributeType::Float, 3, false);
-		colladaVertexBuffer->SetLayout(colladaLayout);
+		TShared<IndexBuffer> colladaIndexBuffer = IndexBuffer::Create(colladaData.Indices, (uint)colladaData.IndexCount);
+
+		File* textureFile2 = File::Create(L"test.png");
+		Image* textureImage2 = new Image;
+		ionassertnd(textureImage2->Load(textureFile2));
+		delete textureFile2;
+		m_TextureCollada = Texture::Create(textureImage2);
+		m_TextureCollada->Bind(1);
+
+		TShared<Material> material2 = Material::Create();
+		material2->SetShader(shader2);
+
+		shader2->SetUniform1i("u_TextureSampler", 1);
 
 		m_MeshCollada = Mesh::Create();
 		m_MeshCollada->SetVertexBuffer(colladaVertexBuffer);
 		m_MeshCollada->SetIndexBuffer(colladaIndexBuffer);
 		m_MeshCollada->SetMaterial(material2);
+		m_MeshCollada->SetTransform(glm::rotate(glm::radians(-90.0f), FVector3(1.0f, 0.0f, 0.0f)));
 
 		m_Scene->AddDrawableObject(m_MeshCollada);
 	}
@@ -407,10 +429,11 @@ private:
 	TShared<Camera> m_Camera;
 	TShared<Camera> m_AuxCamera;
 	TShared<Texture> m_Texture;
+	TShared<Texture> m_TextureCollada;
 	TShared<Scene> m_Scene;
 	FVector4 m_CameraLocation = { 0.0f, 0.0f, 2.0f, 1.0f };
 	FVector3 m_CameraRotation = { 0.0f, 0.0f, 0.0f };
-	FVector3 m_MeshLocation = { 0.0f, 0.0f, 0.0f };
+	FVector3 m_MeshLocation = { -2.0f, 0.0f, 0.0f };
 	FVector3 m_AuxCameraLocation = { 0.0f, 0.0f, 4.0f };
 
 	char m_TextureFileNameBuffer[MAX_PATH + 1];

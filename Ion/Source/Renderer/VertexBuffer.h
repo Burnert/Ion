@@ -61,14 +61,14 @@ namespace Ion
 	class ION_API VertexBuffer
 	{
 	public:
-		static TShared<VertexBuffer> Create(void* vertices, ullong size);
+		static TShared<VertexBuffer> Create(float* vertexAttributes, ullong count);
 
 		virtual ~VertexBuffer() { }
 
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 
-		virtual void SetLayout(const VertexLayout& layout) = 0;
+		virtual void SetLayout(const TShared<VertexLayout>& layout) = 0;
 
 		virtual uint GetVertexCount() const = 0;
 

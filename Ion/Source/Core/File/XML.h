@@ -8,12 +8,12 @@
 
 namespace Ion
 {
+	using XMLNode      = rapidxml::xml_node<char>;
+	using XMLAttribute = rapidxml::xml_attribute<char>;
+
 	class ION_API XMLDocument
 	{
 	public:
-		using XMLNode      = rapidxml::xml_node<char>;
-		using XMLAttribute = rapidxml::xml_attribute<char>;
-
 		XMLDocument(const String& xml);
 		/* Takes the ownership of the xml character buffer */
 		XMLDocument(char* xml);
@@ -21,9 +21,15 @@ namespace Ion
 		~XMLDocument();
 
 		template<typename Pred>
-		inline XMLNode* FindNode(XMLNode* parentNode, const char* name, Pred predicate) const
+		inline static XMLNode* FindNode(XMLNode* parentNode, const char* name, Pred predicate)
 		{
-			XMLNode* nextNode = parentNode ? parentNode->first_node(name) : m_XML.first_node();
+			TRACE_FUNCTION();
+
+			if (parentNode == nullptr || parentNode->first_node() == nullptr)
+			{
+				return nullptr;
+			}
+			XMLNode* nextNode = parentNode->first_node(name);
 			ionassert(nextNode);
 			do
 			{
@@ -37,13 +43,15 @@ namespace Ion
 		}
 
 		template<typename Pred>
-		inline XMLAttribute* FindAttribute(XMLNode* parentNode, const char* name, Pred predicate) const
+		inline static XMLAttribute* FindAttribute(XMLNode* parentNode, const char* name, Pred predicate)
 		{
-			if (parentNode == nullptr)
+			TRACE_FUNCTION();
+
+			if (parentNode == nullptr || parentNode->first_attribute() == nullptr)
 			{
 				return nullptr;
 			}
-			XMLAttribute* nextAttribute = parentNode ? parentNode->first_attribute(name) : m_XML.first_attribute();
+			XMLAttribute* nextAttribute = parentNode->first_attribute(name);
 			ionassert(nextAttribute);
 			do
 			{
@@ -57,7 +65,7 @@ namespace Ion
 		}
 
 		/* Returns a predicate that can be used in FindNode function */
-		inline auto WithAttributeValuePredicate(const char* name, const char* value)
+		inline static auto WithAttributeValuePredicate(const char* name, const char* value)
 		{
 			return [=](XMLNode* node) {
 				ionassert(node);

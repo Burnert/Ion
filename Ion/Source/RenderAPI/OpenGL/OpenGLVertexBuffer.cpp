@@ -4,13 +4,14 @@
 
 namespace Ion
 {
-	OpenGLVertexBuffer::OpenGLVertexBuffer(void* vertices, ullong size)
+	OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertexAttributes, ullong count)
+		: m_VertexCount(0)
 	{
 		TRACE_FUNCTION();
 
 		glGenBuffers(1, &m_ID);
 		glBindBuffer(GL_ARRAY_BUFFER, m_ID);
-		glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, count * sizeof(float), vertexAttributes, GL_STATIC_DRAW);
 	}
 
 	OpenGLVertexBuffer::~OpenGLVertexBuffer()
@@ -34,14 +35,13 @@ namespace Ion
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
-	void OpenGLVertexBuffer::SetLayout(const VertexLayout& layout)
+	void OpenGLVertexBuffer::SetLayout(const TShared<VertexLayout>& layout)
 	{
-		m_VertexLayout = MakeShareable(new VertexLayout(layout));
+		m_VertexLayout = layout;
 	}
 
 	uint OpenGLVertexBuffer::GetVertexCount() const
 	{
-		// @TODO: Vertex count is not set anywhere
 		return m_VertexCount;
 	}
 
