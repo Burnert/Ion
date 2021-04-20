@@ -30,6 +30,14 @@ namespace Ion
 		};
 	}
 
+	struct FileInfo
+	{
+		WString Filename;
+		WString FullPath;
+		llong Size;
+		bool bDirectory;
+	};
+
 	/* File interface */
 	class ION_API IFile
 	{
@@ -52,6 +60,10 @@ namespace Ion
 
 		virtual llong GetSize() const = 0;
 		virtual WString GetExtension() const = 0;
+
+		virtual bool IsDirectory() const = 0;
+		virtual std::vector<FileInfo> GetFilesInDirectory() const = 0;
+		virtual WString FindInDirectoryRecursive(const WString& filename) const = 0;
 
 		virtual bool IsOpen() const = 0;
 		virtual bool Exists() const = 0;
@@ -144,6 +156,4 @@ namespace Ion
 		FORCEINLINE void EnableDebugLog() { m_DebugLog = true; }
 #endif
 	};
-
-	using Directory = File;
 }

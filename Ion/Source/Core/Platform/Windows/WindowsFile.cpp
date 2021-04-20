@@ -517,6 +517,53 @@ namespace Ion
 		return filename;
 	}
 
+	bool WindowsFile::IsDirectory() const
+	{
+		DWORD attributes = GetFileAttributes(m_Filename.c_str());
+		return attributes & FILE_ATTRIBUTE_DIRECTORY;
+	}
+
+	std::vector<FileInfo> WindowsFile::GetFilesInDirectory() const
+	{
+		ionassert(m_Filename != L"");
+		ionassert(IsDirectory());
+
+		std::vector<FileInfo> files;
+		WIN32_FIND_DATA ffd;
+
+		WString directory = m_Filename + L"\\*";
+
+		HANDLE hFound = FindFirstFile(directory.c_str(), &ffd);
+		if (hFound == INVALID_HANDLE_VALUE)
+		{
+			return files;
+		}
+
+		do
+		{
+			wchar fullPath[MAX_PATH + 1];
+			GetFullPathName(ffd.cFileName, MAX_PATH + 1, fullPath, nullptr);
+
+			LARGE_INTEGER fileSize;
+			fileSize.LowPart = ffd.nFileSizeLow;
+			fileSize.HighPart = ffd.nFileSizeHigh;
+
+			bool bDirectory = ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+
+			files.emplace_back(FileInfo { ffd.cFileName, fullPath, fileSize.QuadPart, bDirectory });
+		}
+		while (FindNextFile(hFound, &ffd));
+
+		return files;
+	}
+
+	WString WindowsFile::FindInDirectoryRecursive(const WString& filename) const
+	{
+		// @TODO: Implement this
+
+		return WString();
+	}
+
 	bool WindowsFile::IsOpen() const
 	{ 
 		return m_FileHandle != INVALID_HANDLE_VALUE;
@@ -525,8 +572,7 @@ namespace Ion
 	bool WindowsFile::Exists() const
 	{
 		DWORD attributes = GetFileAttributes(m_Filename.c_str());
-		return attributes != INVALID_FILE_ATTRIBUTES &&
-			!(attributes & FILE_ATTRIBUTE_DIRECTORY);
+		return attributes != INVALID_FILE_ATTRIBUTES;
 	}
 
 	bool WindowsFile::EndOfFile() const

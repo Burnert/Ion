@@ -132,6 +132,16 @@ void main()
 		m_MeshCollada->SetTransform(glm::rotate(glm::radians(-90.0f), FVector3(1.0f, 0.0f, 0.0f)));
 
 		m_Scene->AddDrawableObject(m_MeshCollada);
+
+		File* dirTest = File::Create();
+		dirTest->SetFilename(L"Assets");
+		ionassert(dirTest->IsDirectory());
+		std::vector<FileInfo> files = dirTest->GetFilesInDirectory();
+		for (FileInfo& info : files)
+		{
+			LOG_INFO(L"{0}, {1}, {2}, {3}", info.Filename, info.FullPath, info.Size, info.bDirectory);
+		}
+		debugbreak();
 	}
 
 	virtual void OnUpdate(float deltaTime) override

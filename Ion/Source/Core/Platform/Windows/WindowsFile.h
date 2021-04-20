@@ -48,6 +48,10 @@ namespace Ion
 		virtual llong GetSize() const override;
 		virtual WString GetExtension() const override;
 
+		virtual bool IsDirectory() const override;
+		virtual std::vector<FileInfo> GetFilesInDirectory() const override;
+		virtual WString FindInDirectoryRecursive(const WString& filename) const override;
+
 		virtual bool IsOpen() const override;
 		virtual bool Exists() const override;
 		/* Returns true if the offset is greater than the filesize. */
