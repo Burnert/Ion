@@ -1,12 +1,12 @@
 #pragma once
 
-using llong        = long long;
-using ubyte        = unsigned char;
-using uchar        = unsigned char;
-using ushort       = unsigned short;
-using uint         = unsigned int;
+using llong        = int64_t;
+using ubyte        = uint8_t;
+using uchar        = uint8_t;
+using ushort       = uint16_t;
+using uint         = uint32_t;
 using ulong        = unsigned long;
-using ullong       = unsigned long long;
+using ullong       = uint64_t;
 			       
 using wchar        = wchar_t;
 
