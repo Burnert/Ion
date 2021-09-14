@@ -139,9 +139,8 @@ void main()
 		std::vector<FileInfo> files = dirTest->GetFilesInDirectory();
 		for (FileInfo& info : files)
 		{
-			LOG_INFO(L"{0}, {1}, {2}, {3}", info.Filename, info.FullPath, info.Size, info.bDirectory);
+			LOG_INFO(L"{0}, {1}, {2}, {3}", info.Filename, info.FullPath, info.Size, info.bDirectory ? L"Dir" : L"File");
 		}
-		debugbreak();
 	}
 
 	virtual void OnUpdate(float deltaTime) override
