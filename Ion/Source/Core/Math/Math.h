@@ -13,6 +13,10 @@ namespace Ion
 	// Vector Types 
 	// ----------------------------------
 
+	using Vector2 = glm::fvec2;
+	using Vector3 = glm::fvec3;
+	using Vector4 = glm::fvec4;
+
 	using FVector2 = glm::fvec2;
 	using FVector3 = glm::fvec3;
 	using FVector4 = glm::fvec4;
@@ -37,6 +41,16 @@ namespace Ion
 	// Matrix Types 
 	// ----------------------------------
 
+	using Matrix2 = glm::fmat2;
+	using Matrix2x3 = glm::fmat2x3;
+	using Matrix2x4 = glm::fmat2x4;
+	using Matrix3 = glm::fmat3;
+	using Matrix3x2 = glm::fmat3x2;
+	using Matrix3x4 = glm::fmat3x4;
+	using Matrix4 = glm::fmat4;
+	using Matrix4x2 = glm::fmat4x2;
+	using Matrix4x3 = glm::fmat4x3;
+
 	using FMatrix2   = glm::fmat2;
 	using FMatrix2x3 = glm::fmat2x3;
 	using FMatrix2x4 = glm::fmat2x4;
@@ -60,6 +74,8 @@ namespace Ion
 	// ----------------------------------
 	// Quaternion Types 
 	// ----------------------------------
+
+	using Quaternion = glm::fquat;
 
 	using FQuaternion = glm::fquat;
 	using DQuaternion = glm::dquat;
