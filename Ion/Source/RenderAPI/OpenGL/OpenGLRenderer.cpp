@@ -125,7 +125,7 @@ namespace Ion
 		OpenGL::SetSwapInterval((int)bEnabled);
 	}
 
-	bool OpenGLRenderer::GetVSyncEnabled() const
+	bool OpenGLRenderer::IsVSyncEnabled() const
 	{
 		return (bool)OpenGL::GetSwapInterval();
 	}

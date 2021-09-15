@@ -24,7 +24,7 @@ namespace Ion
 		virtual const TShared<Scene>& GetCurrentScene() const override;
 
 		virtual void SetVSyncEnabled(bool bEnabled) const override;
-		virtual bool GetVSyncEnabled() const override;
+		virtual bool IsVSyncEnabled() const override;
 
 		virtual void SetViewportDimensions(const SViewportDimensions& dimensions) const override;
 		virtual SViewportDimensions GetViewportDimensions() const override;

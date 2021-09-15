@@ -48,7 +48,7 @@ namespace Ion
 		virtual void RenderScene(const TShared<Scene>& scene) = 0;
 
 		virtual void SetVSyncEnabled(bool bEnabled) const = 0;
-		virtual bool GetVSyncEnabled() const = 0;
+		virtual bool IsVSyncEnabled() const = 0;
 
 		virtual void SetViewportDimensions(const SViewportDimensions& dimensions) const = 0;
 		virtual SViewportDimensions GetViewportDimensions() const = 0;

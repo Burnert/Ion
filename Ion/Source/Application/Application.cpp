@@ -176,7 +176,7 @@ namespace Ion
 				// Toggle VSync with 2 key
 				else if (event.GetKeyCode() == Key::Two)
 				{
-					bool vsync = GetRenderer()->GetVSyncEnabled();
+					bool vsync = GetRenderer()->IsVSyncEnabled();
 					GetRenderer()->SetVSyncEnabled(!vsync);
 				}
 				// Toggle fullscreen with Alt + Enter
