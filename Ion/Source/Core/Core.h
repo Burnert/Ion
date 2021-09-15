@@ -18,6 +18,8 @@
 #include "Core/CoreTypes.h"
 #include "Core/CoreUtility.h"
 #include "Core/Math/Math.h"
+#include "Core/Math/Transform.h"
+#include "Core/Math/Rotator.h"
 #include "Core/Event/Event.h"
 #include "Core/StringUtils.h"
 #include "Core/StringConverter.h"

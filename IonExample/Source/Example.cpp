@@ -162,65 +162,38 @@ void main()
 
 		float cameraMoveSpeed = 5.0f;
 
-		float cameraPitch = glm::radians(m_CameraRotation.x);
-		float cameraYaw = glm::radians(m_CameraRotation.y);
-
-		FVector4 cameraForwardVector = 
-			glm::rotate(cameraYaw, FVector3(0.0f, -1.0f, 0.0f))
-			* glm::rotate(cameraPitch, FVector3(-1.0f, 0.0f, 0.0f))
-			* FVector4(0.0f, 0.0f, -1.0f, 0.0f);
-
-		FVector4 cameraRightVector =
-			glm::rotate(cameraYaw, FVector3(0.0f, -1.0f, 0.0f))
-			* glm::rotate(cameraPitch, FVector3(-1.0f, 0.0f, 0.0f))
-			* FVector4(-1.0f, 0.0f, 0.0f, 0.0f);
-
-		FVector4 cameraUpVector =
-			glm::rotate(cameraYaw, FVector3(0.0f, -1.0f, 0.0f))
-			* glm::rotate(cameraPitch, FVector3(-1.0f, 0.0f, 0.0f))
-			* FVector4(0.0f, -1.0f, 0.0f, 0.0f);
-
 		if (GetInputManager()->IsMouseButtonPressed(Mouse::Right))
 		{
 			if (GetInputManager()->IsKeyPressed(Key::W))
 			{
-				m_CameraLocation = glm::translate(FVector3(cameraForwardVector) * deltaTime * cameraMoveSpeed) * m_CameraLocation;
+				m_CameraTransform += m_CameraTransform.GetForwardVector() * deltaTime * cameraMoveSpeed;
 			}
 			if (GetInputManager()->IsKeyPressed(Key::S))
 			{
-				m_CameraLocation = glm::translate(FVector3(cameraForwardVector) * -deltaTime * cameraMoveSpeed) * m_CameraLocation;
+				m_CameraTransform += -m_CameraTransform.GetForwardVector() * deltaTime * cameraMoveSpeed;
 			}
 			if (GetInputManager()->IsKeyPressed(Key::A))
 			{
-				m_CameraLocation = glm::translate(FVector3(cameraRightVector) * deltaTime * cameraMoveSpeed) * m_CameraLocation;
+				m_CameraTransform += -m_CameraTransform.GetRightVector() * deltaTime * cameraMoveSpeed;
 			}
 			if (GetInputManager()->IsKeyPressed(Key::D))
 			{
-				m_CameraLocation = glm::translate(FVector3(cameraRightVector) * -deltaTime * cameraMoveSpeed) * m_CameraLocation;
+				m_CameraTransform += m_CameraTransform.GetRightVector() * deltaTime * cameraMoveSpeed;
 			}
 			if (GetInputManager()->IsKeyPressed(Key::Q))
 			{
-				m_CameraLocation = glm::translate(FVector3(0.0f, 1.0f, 0.0f) * -deltaTime * cameraMoveSpeed) * m_CameraLocation;
+				m_CameraTransform += Vector3(0.0f, -1.0f, 0.0f) * deltaTime * cameraMoveSpeed;
 			}
 			if (GetInputManager()->IsKeyPressed(Key::E))
 			{
-				m_CameraLocation = glm::translate(FVector3(0.0f, 1.0f, 0.0f) * deltaTime * cameraMoveSpeed) * m_CameraLocation;
+				m_CameraTransform += Vector3(0.0f, 1.0f, 0.0f) * deltaTime * cameraMoveSpeed;
 			}
 		}
 
-		FMatrix4 transform(1.0f);
-		transform *= glm::translate(FVector3(m_CameraLocation));
-		transform *= glm::rotate(cameraYaw, FVector3(0.0f, -1.0f, 0.0f));
-		transform *= glm::rotate(cameraPitch, FVector3(-1.0f, 0.0f, 0.0f));
-		m_Camera->SetTransform(transform);
+		m_Camera->SetTransform(m_CameraTransform.GetMatrix());
 
-		// Model transform
-		FMatrix4 modelMatrix(1.0f);
-		modelMatrix *= glm::translate(m_MeshLocation);
-		modelMatrix *= glm::toMat4(FQuaternion(glm::radians(m_MeshRotation)));
-		modelMatrix *= glm::scale(m_MeshScale);
-
-		m_MeshCollada->SetTransform(modelMatrix);
+		m_MeshTransform = { m_MeshLocation, m_MeshRotation, m_MeshScale };
+		m_MeshCollada->SetTransform(m_MeshTransform.GetMatrix());
 
 		c_Angle += deltaTime;
 		c_Tint.y = (((c_Tint.y + deltaTime) >= 2.0f) ? 0.0f : (c_Tint.y + deltaTime));
@@ -299,8 +272,10 @@ void main()
 					float yawDelta = event.GetX() * 0.2f;
 					float pitchDelta = event.GetY() * 0.2f;
 
-					m_CameraRotation.x = glm::clamp(m_CameraRotation.x + pitchDelta, -89.99f, 89.99f);
-					m_CameraRotation.y += yawDelta;
+					Rotator cameraRotation = m_CameraTransform.GetRotation();
+					cameraRotation.SetPitch(glm::clamp(cameraRotation.Pitch() - pitchDelta, -89.99f, 89.99f));
+					cameraRotation.SetYaw(cameraRotation.Yaw() - yawDelta);
+					m_CameraTransform.SetRotation(cameraRotation);
 
 					return true;
 				}
@@ -340,12 +315,18 @@ private:
 	TShared<Camera> m_AuxCamera;
 	TShared<Texture> m_TextureCollada;
 	TShared<Scene> m_Scene;
+
 	FVector4 m_CameraLocation = { 0.0f, 0.0f, 2.0f, 1.0f };
 	FVector3 m_CameraRotation = { 0.0f, 0.0f, 0.0f };
+	Transform m_CameraTransform = { m_CameraLocation, m_CameraRotation, Vector3(1.0f) };
+
 	FVector3 m_MeshLocation = { 0.0f, 0.0f, 0.0f };
 	FVector3 m_MeshRotation = { -90.0f, 0.0f, 0.0f };
 	FVector3 m_MeshScale = FVector3(1.0f);
+	Transform m_MeshTransform = { m_MeshLocation, m_MeshRotation, m_MeshScale };
+
 	FVector3 m_AuxCameraLocation = { 0.0f, 0.0f, 4.0f };
+
 	FVector3 m_LightDirection = glm::normalize(FVector3 { -0.2f, -0.4f, -0.8f });
 
 	char m_TextureFileNameBuffer[MAX_PATH + 1];
