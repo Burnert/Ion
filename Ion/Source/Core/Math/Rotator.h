@@ -92,6 +92,19 @@ namespace Ion
 			return *this;
 		}
 
+		Rotator operator-(const Rotator& other) const
+		{
+			Rotator rot = *this;
+			rot.Rotate(-other);
+			return rot;
+		}
+
+		Rotator& operator-=(const Rotator& other)
+		{
+			Rotate(-other);
+			return *this;
+		}
+
 		Rotator operator-() const
 		{
 			return Inverse();
