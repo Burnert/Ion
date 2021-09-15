@@ -16,7 +16,7 @@ namespace Ion
 		{
 		case Ion::ERenderAPI::OpenGL:
 			SetCurrent(ERenderAPI::OpenGL);
-			OpenGL::InitOpenGL();
+			OpenGL::Init();
 			break;
 		default:
 			return false;

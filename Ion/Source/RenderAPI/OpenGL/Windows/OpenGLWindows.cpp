@@ -29,7 +29,7 @@ namespace Ion
 		ionassertnd(gladLoadWGLLoader((GLADloadproc)GetProcAddress, hdc), "Could not load WGL extensions!");
 	}
 
-	void OpenGLWindows::InitOpenGL()
+	void OpenGLWindows::Init()
 	{
 		TRACE_FUNCTION();
 

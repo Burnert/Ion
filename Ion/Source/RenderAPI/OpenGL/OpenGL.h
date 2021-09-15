@@ -12,7 +12,7 @@ namespace Ion
 		friend class RenderAPI;
 	public:
 		/* Called by the Application class */
-		static void InitOpenGL();
+		static void Init();
 
 		static FORCEINLINE const char* GetVendor()           { return (const char*)glGetString(GL_VENDOR); }
 		static FORCEINLINE const char* GetRendererName()     { return (const char*)glGetString(GL_RENDERER); }

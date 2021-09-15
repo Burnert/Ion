@@ -10,10 +10,10 @@
 
 namespace Ion
 {
-	void OpenGL::InitOpenGL()
+	void OpenGL::Init()
 	{
 #ifdef ION_PLATFORM_WINDOWS
-		OpenGLWindows::InitOpenGL();
+		OpenGLWindows::Init();
 #else
 		LOG_CRITICAL("OpenGL implementation is not defined on this platform!");
 #endif
