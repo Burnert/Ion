@@ -166,15 +166,8 @@ namespace Ion
 		dispatcher.Dispatch<KeyPressedEvent>(
 			[this](KeyPressedEvent& event)
 			{
-				// Toggle wireframe display with 1 key
-				if (event.GetKeyCode() == Key::One)
-				{
-					EPolygonDrawMode drawMode = (GetRenderer()->GetPolygonDrawMode() == EPolygonDrawMode::Fill) ?
-						EPolygonDrawMode::Lines : EPolygonDrawMode::Fill;
-					GetRenderer()->SetPolygonDrawMode(drawMode);
-				}
 				// Toggle VSync with 2 key
-				else if (event.GetKeyCode() == Key::Two)
+				if (event.GetKeyCode() == Key::Two)
 				{
 					bool vsync = GetRenderer()->IsVSyncEnabled();
 					GetRenderer()->SetVSyncEnabled(!vsync);

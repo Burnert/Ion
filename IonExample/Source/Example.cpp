@@ -248,6 +248,40 @@ void main()
 			ImGui::DragFloat3("Light Direction Vector", &m_LightDirection.x, 0.01f, -1.0f, 1.0f);
 		}
 		ImGui::End();
+
+		ImGui::Begin("Renderer Settings");
+		{
+			static const char* currentDrawMode = m_DrawModes[0];
+			if (ImGui::BeginCombo("Draw Mode", currentDrawMode))
+			{
+				for (int i = 0; i < 3; ++i)
+				{
+					bool selected = currentDrawMode == m_DrawModes[i];
+					if (ImGui::Selectable(m_DrawModes[i], selected))
+					{
+						currentDrawMode = m_DrawModes[i];
+						if (currentDrawMode == m_DrawModes[0])
+						{
+							GetRenderer()->SetPolygonDrawMode(EPolygonDrawMode::Fill);
+						}
+						else if (currentDrawMode == m_DrawModes[1])
+						{
+							GetRenderer()->SetPolygonDrawMode(EPolygonDrawMode::Lines);
+						}
+						else if (currentDrawMode == m_DrawModes[2])
+						{
+							GetRenderer()->SetPolygonDrawMode(EPolygonDrawMode::Points);
+						}
+					}
+					if (selected)
+					{
+						ImGui::SetItemDefaultFocus();
+					}
+				}
+				ImGui::EndCombo();
+			}
+		}
+		ImGui::End();
 	}
 
 	virtual void OnRender() override
@@ -328,6 +362,8 @@ private:
 	FVector3 m_AuxCameraLocation = { 0.0f, 0.0f, 4.0f };
 
 	FVector3 m_LightDirection = glm::normalize(FVector3 { -0.2f, -0.4f, -0.8f });
+
+	const char* m_DrawModes[3] = { "Triangles", "Lines", "Points" };
 
 	char m_TextureFileNameBuffer[MAX_PATH + 1];
 };
