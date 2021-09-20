@@ -24,6 +24,14 @@ using TIsIntegral = std::is_integral<T>;
 template<typename T>
 inline constexpr bool TIsIntegralV = std::is_integral_v<T>;
 
+// IsFloating
+
+template<typename T>
+using TIsFloating = std::is_floating_point<T>;
+
+template<typename T>
+inline constexpr bool TIsFloatingV = std::is_floating_point_v<T>;
+
 // IsSame
 
 template<typename T, typename U>
