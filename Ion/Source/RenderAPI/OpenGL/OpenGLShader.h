@@ -7,6 +7,7 @@ namespace Ion
 {
 	class ION_API OpenGLShader : public Shader
 	{
+		friend class OpenGLRenderer;
 	public:
 		OpenGLShader();
 		virtual ~OpenGLShader() override;
@@ -14,9 +15,6 @@ namespace Ion
 		virtual void AddShaderSource(EShaderType type, std::string source) override;
 
 		virtual bool Compile() override;
-
-		virtual void Bind() const override;
-		virtual void Unbind() const override;
 
 		virtual bool HasUniform(const std::string& name) const override;
 
@@ -53,6 +51,10 @@ namespace Ion
 			default:                     return 0;
 			}
 		}
+
+	protected:
+		virtual void Bind() const override;
+		virtual void Unbind() const override;
 
 	private:
 		void CleanupDeleteShaders();

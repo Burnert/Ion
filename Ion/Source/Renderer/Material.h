@@ -172,7 +172,7 @@ namespace Ion
 
 		void LinkParameterToUniform(const String& name, const String& uniformName);
 
-		void UpdateShaderUniforms();
+		void UpdateShaderUniforms() const;
 
 		template<typename Type>
 		inline static constexpr bool IsStaticTypeSame(EMaterialParameterType type)
@@ -221,6 +221,8 @@ namespace Ion
 			// to a valid TMaterialParameter object this cast must yield a correct value.
 			return *(EMaterialParameterType*)paramPtr;
 		}
+
+		FORCEINLINE const Shader* GetShaderRaw() const { return m_Shader.get(); }
 
 	private:
 		TShared<Shader> m_Shader;

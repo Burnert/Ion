@@ -131,7 +131,7 @@ void main()
 		m_MeshCollada->SetMaterial(material);
 		m_MeshCollada->SetTransform(Math::Rotate(Math::Radians(-90.0f), FVector3(1.0f, 0.0f, 0.0f)));
 
-		m_Scene->AddDrawableObject(m_MeshCollada);
+		m_Scene->AddDrawableObject(m_MeshCollada.get());
 
 		File* dirTest = File::Create();
 		dirTest->SetFilename(L"Assets");

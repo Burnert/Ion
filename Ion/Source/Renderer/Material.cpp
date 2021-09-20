@@ -85,7 +85,7 @@ namespace Ion
 		m_UniformLinks[name] = uniformName;
 	}
 
-	void Material::UpdateShaderUniforms()
+	void Material::UpdateShaderUniforms() const
 	{
 		TRACE_FUNCTION();
 

@@ -14,12 +14,12 @@ namespace Ion
 		m_ActiveCamera = camera;
 	}
 
-	void Scene::AddDrawableObject(const TShared<IDrawable>& drawable)
+	void Scene::AddDrawableObject(IDrawable* drawable)
 	{
 		m_DrawableObjects.insert(drawable);
 	}
 
-	bool Scene::RemoveDrawableObject(const TShared<IDrawable>& drawable)
+	bool Scene::RemoveDrawableObject(IDrawable* drawable)
 	{
 		return (bool)m_DrawableObjects.erase(drawable);
 	}

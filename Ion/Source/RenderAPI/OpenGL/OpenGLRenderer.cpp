@@ -4,6 +4,7 @@
 
 #include "OpenGLVertexBuffer.h"
 #include "OpenGLIndexBuffer.h"
+#include "OpenGLShader.h"
 
 namespace Ion
 {
@@ -47,7 +48,7 @@ namespace Ion
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
-	void OpenGLRenderer::Draw(const TShared<IDrawable>& drawable, const TShared<Scene>& targetScene) const
+	void OpenGLRenderer::Draw(const IDrawable* drawable, const TShared<Scene>& targetScene) const
 	{
 		TRACE_FUNCTION();
 
@@ -62,39 +63,36 @@ namespace Ion
 			scene = m_CurrentScene;
 		}
 
-		TShared<OpenGLVertexBuffer> vertexBuffer = std::static_pointer_cast<OpenGLVertexBuffer>(drawable->GetVertexBuffer());
-		TShared<OpenGLIndexBuffer> indexBuffer = std::static_pointer_cast<OpenGLIndexBuffer>(drawable->GetIndexBuffer());
-		TShared<Material> material = drawable->GetMaterial();
+		const Material* material = drawable->GetMaterialRaw();
+		const OpenGLVertexBuffer* vertexBuffer = (OpenGLVertexBuffer*)drawable->GetVertexBufferRaw();
+		const OpenGLIndexBuffer* indexBuffer = (OpenGLIndexBuffer*)drawable->GetIndexBufferRaw();
+		const OpenGLShader* shader = (OpenGLShader*)material->GetShaderRaw();
 
 		vertexBuffer->Bind();
 		vertexBuffer->BindLayout();
-
 		indexBuffer->Bind();
-
-		TShared<Shader> shader = material->GetShader();
 		shader->Bind();
-
 		material->UpdateShaderUniforms();
 
 		// Calculate the Model View Projection Matrix based on the current scene camera
 		TShared<Camera> activeCamera = m_CurrentScene->GetActiveCamera();
 		ionassert(activeCamera, "Cannot render without an active camera.");
 
-		shader->SetUniform3f("u_CameraLocation", activeCamera->GetLocation());
-
-		// Set matrices
+		// Setup matrices
 
 		const FMatrix4& modelMatrix = drawable->GetTransformMatrix();
-		shader->SetUniformMatrix4f("u_Transform", modelMatrix);
-
 		const FMatrix4 inverseTranspose = Math::InverseTranspose(modelMatrix);
-		shader->SetUniformMatrix4f("u_InverseTranspose", inverseTranspose);
-
 		const FMatrix4& viewProjectionMatrix = activeCamera->GetViewProjectionMatrix();
 		const FMatrix4 modelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
+
+		// Set global uniforms
+
+		shader->SetUniform3f("u_CameraLocation", activeCamera->GetLocation());
+		shader->SetUniformMatrix4f("u_Transform", modelMatrix);
+		shader->SetUniformMatrix4f("u_InverseTranspose", inverseTranspose);
 		shader->SetUniformMatrix4f("u_MVP", modelViewProjectionMatrix);
 
-		uint indexCount = indexBuffer->GetIndexCount();
+		uint32 indexCount = indexBuffer->GetIndexCount();
 		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
 	}
 
@@ -103,7 +101,7 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		m_CurrentScene = scene;
-		for (TShared<IDrawable> drawable : scene->GetDrawableObjects())
+		for (IDrawable* drawable : scene->GetDrawableObjects())
 		{
 			Draw(drawable, scene);
 		}

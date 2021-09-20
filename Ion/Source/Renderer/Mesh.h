@@ -20,11 +20,15 @@ namespace Ion
 		void SetIndexBuffer(const TShared<IndexBuffer>& indexBuffer);
 		void SetMaterial(const TShared<Material>& material);
 
+		const TShared<VertexBuffer>& GetVertexBuffer() const;
+		const TShared<IndexBuffer>& GetIndexBuffer() const;
+		const TShared<Material>& GetMaterial() const;
+
 		// IDrawable:
 
-		virtual const TShared<VertexBuffer>& GetVertexBuffer() const override;
-		virtual const TShared<IndexBuffer>& GetIndexBuffer() const override;
-		virtual const TShared<Material>& GetMaterial() const override;
+		virtual const VertexBuffer* GetVertexBufferRaw() const override;
+		virtual const IndexBuffer* GetIndexBufferRaw() const override;
+		virtual const Material* GetMaterialRaw() const override;
 		virtual const FMatrix4& GetTransformMatrix() const override;
 
 		// End of IDrawable

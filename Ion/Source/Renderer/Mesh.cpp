@@ -52,8 +52,27 @@ namespace Ion
 		return m_Material;
 	}
 
+	// IDrawable:
+
+	const VertexBuffer* Mesh::GetVertexBufferRaw() const
+	{
+		return m_VertexBuffer.get();
+	}
+
+	const IndexBuffer* Mesh::GetIndexBufferRaw() const
+	{
+		return m_IndexBuffer.get();
+	}
+
+	const Material* Mesh::GetMaterialRaw() const
+	{
+		return m_Material.get();
+	}
+
 	const FMatrix4& Mesh::GetTransformMatrix() const
 	{
 		return m_TransformMatrix;
 	}
+
+	// End of IDrawable
 }

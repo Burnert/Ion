@@ -12,9 +12,9 @@ namespace Ion
 	class IDrawable
 	{
 	public:
-		virtual const TShared<VertexBuffer>& GetVertexBuffer() const = 0;
-		virtual const TShared<IndexBuffer>& GetIndexBuffer() const = 0;
-		virtual const TShared<Material>& GetMaterial() const = 0;
+		virtual const VertexBuffer* GetVertexBufferRaw() const = 0;
+		virtual const IndexBuffer* GetIndexBufferRaw() const = 0;
+		virtual const Material* GetMaterialRaw() const = 0;
 		virtual const FMatrix4& GetTransformMatrix() const = 0;
 	};
 }

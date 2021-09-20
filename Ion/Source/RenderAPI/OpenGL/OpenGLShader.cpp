@@ -108,20 +108,6 @@ namespace Ion
 		return true;
 	}
 
-	void OpenGLShader::Bind() const
-	{
-		TRACE_FUNCTION();
-
-		glUseProgram(m_ProgramID);
-	}
-
-	void OpenGLShader::Unbind() const
-	{
-		TRACE_FUNCTION();
-
-		glUseProgram(0);
-	}
-
 	bool OpenGLShader::HasUniform(const std::string& name) const
 	{
 		TRACE_FUNCTION();
@@ -339,6 +325,20 @@ namespace Ion
 			location = m_UniformCache.at(name);
 		}
 		return location;
+	}
+
+	void OpenGLShader::Bind() const
+	{
+		TRACE_FUNCTION();
+
+		glUseProgram(m_ProgramID);
+	}
+
+	void OpenGLShader::Unbind() const
+	{
+		TRACE_FUNCTION();
+
+		glUseProgram(0);
 	}
 
 	void OpenGLShader::CleanupDeleteShaders()

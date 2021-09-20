@@ -27,9 +27,6 @@ namespace Ion
 
 		virtual bool Compile() = 0;
 
-		virtual void Bind() const = 0;
-		virtual void Unbind() const = 0;
-
 		virtual bool HasUniform(const std::string& name) const = 0;
 
 		virtual void SetUniform1f(const std::string& name, float value) const = 0;
@@ -66,5 +63,8 @@ namespace Ion
 
 	protected:
 		Shader() { }
+
+		virtual void Bind() const = 0;
+		virtual void Unbind() const = 0;
 	};
 }
