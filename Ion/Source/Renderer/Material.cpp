@@ -19,40 +19,40 @@ namespace Ion
 		m_Shader = shader;
 	}
 
-	void Material::CreateMaterialProperty(const String& name, EMaterialPropertyType type)
+	void Material::CreateParameter(const String& name, EMaterialParameterType type)
 	{
-		// You cannot add the same property twice!
-		ionassert(!HasMaterialProperty(name));
+		// You cannot add the same parameter twice!
+		ionassert(!HasParameter(name));
 
 		switch (type)
 		{
-		case Ion::EMaterialPropertyType::Float:
-			m_Properties.insert({ name, new MaterialProperty<float> });
+		case Ion::EMaterialParameterType::Float:
+			m_Parameters.insert({ name, new MaterialParameter<float> });
 			break;
-		case Ion::EMaterialPropertyType::Float2:
-			m_Properties.insert({ name, new MaterialProperty<FVector2> });
+		case Ion::EMaterialParameterType::Float2:
+			m_Parameters.insert({ name, new MaterialParameter<FVector2> });
 			break;
-		case Ion::EMaterialPropertyType::Float3:
-			m_Properties.insert({ name, new MaterialProperty<FVector3> });
+		case Ion::EMaterialParameterType::Float3:
+			m_Parameters.insert({ name, new MaterialParameter<FVector3> });
 			break;
-		case Ion::EMaterialPropertyType::Float4:
-			m_Properties.insert({ name, new MaterialProperty<FVector4> });
+		case Ion::EMaterialParameterType::Float4:
+			m_Parameters.insert({ name, new MaterialParameter<FVector4> });
 			break;
-		case Ion::EMaterialPropertyType::Bool:
-			m_Properties.insert({ name, new MaterialProperty<bool> });
+		case Ion::EMaterialParameterType::Bool:
+			m_Parameters.insert({ name, new MaterialParameter<bool> });
 			break;
 		default:
-			LOG_WARN("Unknown property type for material property '{0}'!", name);
+			LOG_WARN("Unknown parameter type for parameter named '{0}'!", name);
 			break;
 		}
 	}
 
-	void Material::RemoveMaterialProperty(const String& name)
+	void Material::RemoveParameter(const String& name)
 	{
-		const auto itProps = m_Properties.find(name);
-		if (itProps != m_Properties.end())
+		const auto itParams = m_Parameters.find(name);
+		if (itParams != m_Parameters.end())
 		{
-			m_Properties.erase(itProps);
+			m_Parameters.erase(itParams);
 			// Remove the uniform link too if it exists
 			const auto itLinks = m_UniformLinks.find(name);
 			if (itLinks != m_UniformLinks.end())
@@ -62,16 +62,16 @@ namespace Ion
 		}
 		else
 		{
-			LOG_WARN("Property '{0}' does not exist!", name);
+			LOG_WARN("Parameter '{0}' does not exist!", name);
 		}
 	}
 
-	void Material::LinkPropertyToUniform(const String& name, const String& uniformName)
+	void Material::LinkParameterToUniform(const String& name, const String& uniformName)
 	{
-		if (!HasMaterialProperty(name))
+		if (!HasParameter(name))
 		{
 			// This is probably due to a user error
-			LOG_WARN("Property '{0}' does not exist!", name);
+			LOG_WARN("Parameter '{0}' does not exist!", name);
 			debugbreakd(); 
 			return;
 		}
@@ -91,42 +91,42 @@ namespace Ion
 
 		for (const auto& link : m_UniformLinks)
 		{
-			const String& propertyName = link.first;
+			const String& parameterName = link.first;
 			const String& uniformName = link.second;
 
-			// Uniform link cannot be created if a property doesn't exist, so find() is not needed here.
-			const auto& propPtr = m_Properties.at(propertyName);
-			EMaterialPropertyType type = ExtractPropertyType(propPtr);
+			// Uniform link cannot be created if a parameter doesn't exist, so find() is not needed here.
+			const auto& paramPtr = m_Parameters.at(parameterName);
+			EMaterialParameterType type = ExtractParameterType(paramPtr);
 			switch (type)
 			{
-				case EMaterialPropertyType::Float:
+				case EMaterialParameterType::Float:
 				{
-					MaterialProperty<float>* property = reinterpret_cast<MaterialProperty<float>*>(propPtr);
-					m_Shader->SetUniform1f(uniformName, property->GetValue());
+					MaterialParameter<float>* parameter = reinterpret_cast<MaterialParameter<float>*>(paramPtr);
+					m_Shader->SetUniform1f(uniformName, parameter->GetValue());
 				}
 				break;
-				case EMaterialPropertyType::Float2:
+				case EMaterialParameterType::Float2:
 				{
-					MaterialProperty<FVector2>* property = reinterpret_cast<MaterialProperty<FVector2>*>(propPtr);
-					m_Shader->SetUniform2f(uniformName, property->GetValue());
+					MaterialParameter<FVector2>* parameter = reinterpret_cast<MaterialParameter<FVector2>*>(paramPtr);
+					m_Shader->SetUniform2f(uniformName, parameter->GetValue());
 				}
 				break;
-				case EMaterialPropertyType::Float3:
+				case EMaterialParameterType::Float3:
 				{
-					MaterialProperty<FVector3>* property = reinterpret_cast<MaterialProperty<FVector3>*>(propPtr);
-					m_Shader->SetUniform3f(uniformName, property->GetValue());
+					MaterialParameter<FVector3>* parameter = reinterpret_cast<MaterialParameter<FVector3>*>(paramPtr);
+					m_Shader->SetUniform3f(uniformName, parameter->GetValue());
 				}
 				break;
-				case EMaterialPropertyType::Float4:
+				case EMaterialParameterType::Float4:
 				{
-					MaterialProperty<FVector4>* property = reinterpret_cast<MaterialProperty<FVector4>*>(propPtr);
-					m_Shader->SetUniform4f(uniformName, property->GetValue());
+					MaterialParameter<FVector4>* parameter = reinterpret_cast<MaterialParameter<FVector4>*>(paramPtr);
+					m_Shader->SetUniform4f(uniformName, parameter->GetValue());
 				}
 				break;
-				case EMaterialPropertyType::Bool:
+				case EMaterialParameterType::Bool:
 				{
-					MaterialProperty<bool>* property = reinterpret_cast<MaterialProperty<bool>*>(propPtr);
-					m_Shader->SetUniform1ui(uniformName, property->GetValue());
+					MaterialParameter<bool>* parameter = reinterpret_cast<MaterialParameter<bool>*>(paramPtr);
+					m_Shader->SetUniform1ui(uniformName, parameter->GetValue());
 				}
 				break;
 			}
