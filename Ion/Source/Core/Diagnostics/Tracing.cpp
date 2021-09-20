@@ -23,10 +23,12 @@ namespace Ion
 		wchar* nameW = (wchar*)_alloca((nameLength + 1) * sizeof(wchar));
 		StringConverter::CharToWChar(name, nameW, nameLength);
 
+		std::filesystem::create_directory("Debug");
+
 		// @TODO: Make a date reading utility and fill the Xs in the filename
 		wchar filename[100];
 		memset(filename, 0, sizeof(filename));
-		swprintf_s(filename, L"Trace_XX-XX-XX_XX-XX-XXXX_%s.json", nameW);
+		swprintf_s(filename, L"Debug/Trace_XX-XX-XX_XX-XX-XXXX_%s.json", nameW);
 
 		s_SessionDumpFile->SetFilename(filename);
 

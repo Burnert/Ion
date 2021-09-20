@@ -356,6 +356,9 @@ healthchecksdb
 Build/
 Intermediate/
 
+# Debug files
+IonExample/Debug/**
+
 # VS Code files
 .vscode/
 

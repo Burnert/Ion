@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <optional>
 #include <type_traits>
+#include <filesystem>
 
 #include <string>
 #include <sstream>
