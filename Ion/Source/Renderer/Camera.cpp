@@ -11,12 +11,6 @@ namespace Ion
 		return MakeShareable(new Camera);
 	}
 
-	void Camera::Activate()
-	{
-		// @TODO: Make the camera active when calling the function
-		// Make the renderer use this camera's view projection matrix
-	}
-
 	void Camera::SetLocation(const FVector3& location)
 	{
 		m_CameraLocation = location;
@@ -52,10 +46,8 @@ namespace Ion
 		m_bDirty = true;
 	}
 
-	void Camera::UpdateViewProjectionMatrix()
+	void Camera::UpdateViewProjectionMatrix() const
 	{
-		TRACE_FUNCTION();
-
 		if (m_bDirty)
 		{
 			// @TODO: Cache these intermediate matrices (view, projection)

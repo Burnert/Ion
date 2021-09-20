@@ -9,8 +9,6 @@ namespace Ion
 
 		~Camera() { };
 
-		void Activate();
-
 		// @TODO: Setting the location here is a temporary solution
 
 		void SetLocation(const FVector3& location);
@@ -19,7 +17,11 @@ namespace Ion
 		void SetTransform(const FMatrix4& transformMatrix);
 		FORCEINLINE const FMatrix4& GetTransform() const { return m_CameraTransform; }
 
-		FORCEINLINE const FMatrix4& GetViewProjectionMatrix() const { return m_ViewProjectionMatrix; }
+		FORCEINLINE const FMatrix4& GetViewProjectionMatrix() const
+		{
+			UpdateViewProjectionMatrix();
+			return m_ViewProjectionMatrix;
+		}
 
 		void SetFOV(float fov);
 		FORCEINLINE float GetFOV() const { return m_FOV; }
@@ -33,7 +35,7 @@ namespace Ion
 		void SetFarClip(float farClip);
 		FORCEINLINE float GetFarClip() const { return m_FarClip; }
 
-		void UpdateViewProjectionMatrix();
+		void UpdateViewProjectionMatrix() const;
 
 	protected:
 		Camera();
@@ -41,7 +43,8 @@ namespace Ion
 	private:
 		FVector3 m_CameraLocation;
 		FMatrix4 m_CameraTransform;
-		FMatrix4 m_ViewProjectionMatrix;
+
+		mutable FMatrix4 m_ViewProjectionMatrix;
 
 		float m_FOV;
 		float m_AspectRatio;

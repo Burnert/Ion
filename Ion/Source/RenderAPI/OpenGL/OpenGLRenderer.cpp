@@ -79,7 +79,6 @@ namespace Ion
 		// Calculate the Model View Projection Matrix based on the current scene camera
 		TShared<Camera> activeCamera = m_CurrentScene->GetActiveCamera();
 		ionassert(activeCamera, "Cannot render without an active camera.");
-		activeCamera->UpdateViewProjectionMatrix();
 
 		shader->SetUniform3f("u_CameraLocation", activeCamera->GetLocation());
 
