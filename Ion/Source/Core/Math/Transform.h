@@ -127,9 +127,9 @@ namespace Ion
 		void RebuildMatrix()
 		{
 			m_Matrix = Matrix4(1.0f);
-			m_Matrix *= glm::translate(m_Location);
-			m_Matrix *= glm::toMat4(m_Rotation.Quat());
-			m_Matrix *= glm::scale(m_Scale);
+			m_Matrix *= Math::Translate(m_Location);
+			m_Matrix *= Math::ToMat4(m_Rotation.Quat());
+			m_Matrix *= Math::Scale(m_Scale);
 		}
 
 	private:

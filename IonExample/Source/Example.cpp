@@ -80,8 +80,8 @@ void main()
 		ionassert(bResult);
 
 		m_Camera = Camera::Create();
-		m_Camera->SetTransform(glm::translate(FVector3(0.0f, 0.0f, 2.0f)));
-		m_Camera->SetFOV(glm::radians(90.0f));
+		m_Camera->SetTransform(Math::Translate(FVector3(0.0f, 0.0f, 2.0f)));
+		m_Camera->SetFOV(Math::Radians(90.0f));
 		m_Camera->SetNearClip(0.1f);
 		m_Camera->SetFarClip(100.0f);
 
@@ -89,8 +89,8 @@ void main()
 		m_Scene->SetActiveCamera(m_Camera);
 
 		m_AuxCamera = Camera::Create();
-		m_AuxCamera->SetTransform(glm::translate(FVector3(0.0f, 0.0f, 4.0f)));
-		m_AuxCamera->SetFOV(glm::radians(66.0f));
+		m_AuxCamera->SetTransform(Math::Translate(FVector3(0.0f, 0.0f, 4.0f)));
+		m_AuxCamera->SetFOV(Math::Radians(66.0f));
 		m_AuxCamera->SetNearClip(0.1f);
 		m_AuxCamera->SetFarClip(10.0f);
 
@@ -129,7 +129,7 @@ void main()
 		m_MeshCollada->SetVertexBuffer(colladaVertexBuffer);
 		m_MeshCollada->SetIndexBuffer(colladaIndexBuffer);
 		m_MeshCollada->SetMaterial(material);
-		m_MeshCollada->SetTransform(glm::rotate(glm::radians(-90.0f), FVector3(1.0f, 0.0f, 0.0f)));
+		m_MeshCollada->SetTransform(Math::Rotate(Math::Radians(-90.0f), FVector3(1.0f, 0.0f, 0.0f)));
 
 		m_Scene->AddDrawableObject(m_MeshCollada);
 
@@ -157,7 +157,7 @@ void main()
 		m_Camera->SetAspectRatio(aspectRatio);
 		m_AuxCamera->SetAspectRatio(aspectRatio);
 
-		m_LightDirection = glm::normalize(m_LightDirection);
+		m_LightDirection = Math::Normalize(m_LightDirection);
 		meshShader->SetUniform3f("u_LightDirection", m_LightDirection);
 
 		float cameraMoveSpeed = 5.0f;
@@ -199,7 +199,7 @@ void main()
 		c_Tint.y = (((c_Tint.y + deltaTime) >= 2.0f) ? 0.0f : (c_Tint.y + deltaTime));
 
 
-		m_AuxCamera->SetTransform(glm::translate(m_AuxCameraLocation));
+		m_AuxCamera->SetTransform(Math::Translate(m_AuxCameraLocation));
 
 		// ImGui:
 
@@ -307,7 +307,7 @@ void main()
 					float pitchDelta = event.GetY() * 0.2f;
 
 					Rotator cameraRotation = m_CameraTransform.GetRotation();
-					cameraRotation.SetPitch(glm::clamp(cameraRotation.Pitch() - pitchDelta, -89.99f, 89.99f));
+					cameraRotation.SetPitch(Math::Clamp(cameraRotation.Pitch() - pitchDelta, -89.99f, 89.99f));
 					cameraRotation.SetYaw(cameraRotation.Yaw() - yawDelta);
 					m_CameraTransform.SetRotation(cameraRotation);
 
@@ -361,7 +361,7 @@ private:
 
 	FVector3 m_AuxCameraLocation = { 0.0f, 0.0f, 4.0f };
 
-	FVector3 m_LightDirection = glm::normalize(FVector3 { -0.2f, -0.4f, -0.8f });
+	FVector3 m_LightDirection = Math::Normalize(FVector3 { -0.2f, -0.4f, -0.8f });
 
 	const char* m_DrawModes[3] = { "Triangles", "Lines", "Points" };
 

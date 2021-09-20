@@ -57,7 +57,7 @@ namespace Ion
 
 		FORCEINLINE void SetValue(T value)
 		{
-			m_Value = glm::clamp(value, m_Min, m_Max);
+			m_Value = Math::Clamp(value, m_Min, m_Max);
 		}
 
 		FORCEINLINE const T& GetValue() const
@@ -68,7 +68,7 @@ namespace Ion
 		FORCEINLINE void SetMax(T max)
 		{
 			m_Max = max;
-			m_Value = glm::min(m_Value, m_Max);
+			m_Value = Math::Min(m_Value, m_Max);
 		}
 
 		FORCEINLINE const T& GetMax() const
@@ -79,7 +79,7 @@ namespace Ion
 		FORCEINLINE void SetMin(T min)
 		{
 			m_Min = min;
-			m_Value = glm::max(m_Value, m_Min);
+			m_Value = Math::Max(m_Value, m_Min);
 		}
 
 		FORCEINLINE const T& GetMin() const

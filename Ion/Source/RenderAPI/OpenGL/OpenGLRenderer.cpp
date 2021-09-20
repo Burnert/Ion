@@ -88,7 +88,7 @@ namespace Ion
 		const FMatrix4& modelMatrix = drawable->GetTransformMatrix();
 		shader->SetUniformMatrix4f("u_Transform", modelMatrix);
 
-		const FMatrix4 inverseTranspose = glm::inverseTranspose(modelMatrix);
+		const FMatrix4 inverseTranspose = Math::InverseTranspose(modelMatrix);
 		shader->SetUniformMatrix4f("u_InverseTranspose", inverseTranspose);
 
 		const FMatrix4& viewProjectionMatrix = activeCamera->GetViewProjectionMatrix();

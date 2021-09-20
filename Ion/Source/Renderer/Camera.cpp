@@ -60,8 +60,8 @@ namespace Ion
 		{
 			// @TODO: Cache these intermediate matrices (view, projection)
 			m_ViewProjectionMatrix = FMatrix4(1.0f)
-				* glm::perspective(m_FOV, m_AspectRatio, m_NearClip, m_FarClip)
-				* glm::affineInverse(m_CameraTransform);
+				* Math::Perspective(m_FOV, m_AspectRatio, m_NearClip, m_FarClip)
+				* Math::AffineInverse(m_CameraTransform);
 		}
 	}
 

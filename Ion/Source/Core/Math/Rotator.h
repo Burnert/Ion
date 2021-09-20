@@ -14,23 +14,23 @@ namespace Ion
 
 		Rotator(const Vector3& angles) :
 			m_Angles(angles),
-			m_Quaternion(Quaternion(glm::radians(angles)))
+			m_Quaternion(Quaternion(Math::Radians(angles)))
 		{ }
 
 		Rotator(const Quaternion& quaternion) :
 			m_Quaternion(quaternion),
-			m_Angles(glm::degrees(glm::eulerAngles(quaternion)))
+			m_Angles(Math::Degrees(Math::Euler(quaternion)))
 		{ }
 
 		void Rotate(const Quaternion& quaternion)
 		{
 			m_Quaternion += quaternion;
-			m_Angles = glm::degrees(glm::eulerAngles(m_Quaternion));
+			m_Angles = Math::Degrees(Math::Euler(m_Quaternion));
 		}
 
 		inline void Rotate(const Vector3& angles)
 		{
-			Rotate(Quaternion(glm::radians(angles)));
+			Rotate(Quaternion(Math::Radians(angles)));
 		}
 
 		inline void Rotate(const Rotator& rotator)
@@ -41,15 +41,15 @@ namespace Ion
 
 		inline Vector3 Forward() const
 		{
-			return glm::rotate(m_Quaternion, Vector3(0.0f, 0.0f, -1.0f));
+			return Math::Rotate(m_Quaternion, Vector3(0.0f, 0.0f, -1.0f));
 		}
 		inline Vector3 Right() const
 		{
-			return glm::rotate(m_Quaternion, Vector3(1.0f, 0.0f, 0.0f));
+			return Math::Rotate(m_Quaternion, Vector3(1.0f, 0.0f, 0.0f));
 		}
 		inline Vector3 Up() const
 		{
-			return glm::rotate(m_Quaternion, Vector3(0.0f, 1.0f, 0.0f));
+			return Math::Rotate(m_Quaternion, Vector3(0.0f, 1.0f, 0.0f));
 		}
 
 		void SetPitch(float pitch)
@@ -76,7 +76,7 @@ namespace Ion
 
 		inline Rotator Inverse() const
 		{
-			return Rotator(glm::inverse(m_Quaternion));
+			return Rotator(Math::Inverse(m_Quaternion));
 		}
 
 		Rotator operator+(const Rotator& other) const
@@ -125,7 +125,7 @@ namespace Ion
 	private:
 		void RecalcQuaternion()
 		{
-			m_Quaternion = Quaternion(glm::radians(m_Angles));
+			m_Quaternion = Quaternion(Math::Radians(m_Angles));
 		}
 
 	private:

@@ -2,6 +2,7 @@
 
 #define GLM_FORCE_INLINE
 #define GLM_FORCE_INTRINSICS
+
 #include "glm/glm.hpp"
 #include "glm/gtx/transform.hpp"
 #include "glm/gtx/quaternion.hpp"
@@ -41,13 +42,13 @@ namespace Ion
 	// Matrix Types 
 	// ----------------------------------
 
-	using Matrix2 = glm::fmat2;
+	using Matrix2   = glm::fmat2;
 	using Matrix2x3 = glm::fmat2x3;
 	using Matrix2x4 = glm::fmat2x4;
-	using Matrix3 = glm::fmat3;
+	using Matrix3   = glm::fmat3;
 	using Matrix3x2 = glm::fmat3x2;
 	using Matrix3x4 = glm::fmat3x4;
-	using Matrix4 = glm::fmat4;
+	using Matrix4   = glm::fmat4;
 	using Matrix4x2 = glm::fmat4x2;
 	using Matrix4x3 = glm::fmat4x3;
 
@@ -79,4 +80,129 @@ namespace Ion
 
 	using FQuaternion = glm::fquat;
 	using DQuaternion = glm::dquat;
+
+	//-----------------------------
+	// Functions ------------------
+	//-----------------------------
+
+	namespace Math
+	{
+		// Matrix
+
+		FORCEINLINE Matrix4 Translate(const Vector3& v)
+		{
+			return glm::translate(v);
+		}
+
+		FORCEINLINE Matrix4 Rotate(float angle, const Vector3& axis)
+		{
+			return glm::rotate(angle, axis);
+		}
+
+		FORCEINLINE Matrix4 Scale(const Vector3& v)
+		{
+			return glm::scale(v);
+		}
+
+		template<typename T>
+		FORCEINLINE T InverseTranspose(const T& matrix)
+		{
+			return glm::inverseTranspose(matrix);
+		}
+
+		template<typename T>
+		FORCEINLINE T AffineInverse(const T& matrix)
+		{
+			return glm::affineInverse(matrix);
+		}
+
+		// Vector
+
+		
+
+		// Quaternion
+
+		FORCEINLINE Vector3 Euler(const Quaternion& q)
+		{
+			return glm::eulerAngles(q);
+		}
+
+		FORCEINLINE Vector3 Rotate(const Quaternion& q, const Vector3& v)
+		{
+			return glm::rotate(q, v);
+		}
+
+		FORCEINLINE Vector4 Rotate(const Quaternion& q, const Vector4& v)
+		{
+			return glm::rotate(q, v);
+		}
+
+		FORCEINLINE Quaternion Inverse(const Quaternion& q)
+		{
+			return glm::inverse(q);
+		}
+
+		FORCEINLINE Matrix4 ToMat4(const Quaternion& q)
+		{
+			return glm::toMat4(q);
+		}
+
+		// Projection
+
+		template<typename T>
+		FORCEINLINE Matrix4 Perspective(T fovy, T aspect, T zNear, T zFar)
+		{
+			return glm::perspective(fovy, aspect, zNear, zFar);
+		}
+
+		// Common
+
+		template<typename T>
+		FORCEINLINE GLM_CONSTEXPR T Min(T x, T minVal)
+		{
+			return glm::min(x, minVal);
+		}
+
+		template<typename T>
+		FORCEINLINE GLM_CONSTEXPR T Max(T x, T maxVal)
+		{
+			return glm::max(x, maxVal);
+		}
+
+		template<typename T>
+		FORCEINLINE GLM_CONSTEXPR T Clamp(T x, T minVal, T maxVal)
+		{
+			return glm::clamp(x, minVal, maxVal);
+		}
+
+		template<typename T, TEnableIfT<TNotV<TIsFloating<T>>, bool> = true>
+		FORCEINLINE GLM_CONSTEXPR T Radians(T degrees)
+		{
+			return glm::radians(degrees);
+		}
+
+		template<typename T, TEnableIfT<TIsFloatingV<T>, bool> = true>
+		FORCEINLINE constexpr T Radians(T degrees)
+		{
+			return degrees * static_cast<T>(0.01745329251994329576923690768489);
+		}
+
+		template<typename T, TEnableIfT<TNotV<TIsFloating<T>>, bool> = true>
+		FORCEINLINE GLM_CONSTEXPR T Degrees(T radians)
+		{
+			return glm::degrees(radians);
+		}
+
+		template<typename T, TEnableIfT<TIsFloatingV<T>, bool> = true>
+		FORCEINLINE GLM_CONSTEXPR T Degrees(T radians)
+		{
+			return radians * static_cast<T>(57.295779513082320876798154814105);
+		}
+
+		template<typename T>
+		FORCEINLINE T Normalize(const T& x)
+		{
+			return glm::normalize(x);
+		}
+	}
 }
