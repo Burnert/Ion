@@ -21,6 +21,16 @@ namespace Ion
 		glDeleteBuffers(1, &m_ID);
 	}
 
+	void OpenGLVertexBuffer::SetLayout(const TShared<VertexLayout>& layout)
+	{
+		m_VertexLayout = layout;
+	}
+
+	uint OpenGLVertexBuffer::GetVertexCount() const
+	{
+		return m_VertexCount;
+	}
+
 	void OpenGLVertexBuffer::Bind() const
 	{
 		TRACE_FUNCTION();
@@ -33,16 +43,6 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
-	}
-
-	void OpenGLVertexBuffer::SetLayout(const TShared<VertexLayout>& layout)
-	{
-		m_VertexLayout = layout;
-	}
-
-	uint OpenGLVertexBuffer::GetVertexCount() const
-	{
-		return m_VertexCount;
 	}
 
 	void OpenGLVertexBuffer::BindLayout() const

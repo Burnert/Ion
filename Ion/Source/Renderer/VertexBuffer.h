@@ -65,14 +65,14 @@ namespace Ion
 
 		virtual ~VertexBuffer() { }
 
-		virtual void Bind() const = 0;
-		virtual void Unbind() const = 0;
-
 		virtual void SetLayout(const TShared<VertexLayout>& layout) = 0;
 
 		virtual uint GetVertexCount() const = 0;
 
 	protected:
 		VertexBuffer() { }
+
+		virtual void Bind() const = 0;
+		virtual void Unbind() const = 0;
 	};
 }

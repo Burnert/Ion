@@ -11,13 +11,13 @@ namespace Ion
 
 		virtual ~IndexBuffer() { }
 
-		virtual void Bind() const = 0;
-		virtual void Unbind() const = 0;
-
 		virtual uint GetIndexCount() const = 0;
 		virtual uint GetTriangleCount() const = 0;
 
 	protected:
 		IndexBuffer() { }
+
+		virtual void Bind() const = 0;
+		virtual void Unbind() const = 0;
 	};
 }

@@ -22,6 +22,16 @@ namespace Ion
 		glDeleteBuffers(1, &m_ID);
 	}
 
+	uint OpenGLIndexBuffer::GetIndexCount() const
+	{
+		return m_Count;
+	}
+
+	uint OpenGLIndexBuffer::GetTriangleCount() const
+	{
+		return m_TriangleCount;
+	}
+
 	void OpenGLIndexBuffer::Bind() const
 	{
 		TRACE_FUNCTION();
@@ -34,15 +44,5 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	}
-
-	uint OpenGLIndexBuffer::GetIndexCount() const
-	{
-		return m_Count;
-	}
-
-	uint OpenGLIndexBuffer::GetTriangleCount() const
-	{
-		return m_TriangleCount;
 	}
 }

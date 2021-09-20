@@ -12,9 +12,6 @@ namespace Ion
 		OpenGLVertexBuffer(float* vertexAttributes, ullong count);
 		virtual ~OpenGLVertexBuffer() override;
 
-		virtual void Bind() const override;
-		virtual void Unbind() const override;
-
 		virtual void SetLayout(const TShared<VertexLayout>& layout) override;
 
 		virtual uint GetVertexCount() const override;
@@ -37,6 +34,9 @@ namespace Ion
 		}
 
 	protected:
+		virtual void Bind() const override;
+		virtual void Unbind() const override;
+
 		void BindLayout() const;
 
 	private:

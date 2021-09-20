@@ -77,7 +77,7 @@ namespace Ion
 		material->UpdateShaderUniforms();
 
 		// Calculate the Model View Projection Matrix based on the current scene camera
-		const TShared<Camera>& activeCamera = m_CurrentScene->GetActiveCamera();
+		TShared<Camera> activeCamera = m_CurrentScene->GetActiveCamera();
 		ionassert(activeCamera, "Cannot render without an active camera.");
 		activeCamera->UpdateViewProjectionMatrix();
 
@@ -88,11 +88,11 @@ namespace Ion
 		const FMatrix4& modelMatrix = drawable->GetTransformMatrix();
 		shader->SetUniformMatrix4f("u_Transform", modelMatrix);
 
-		FMatrix4 inverseTranspose = glm::inverseTranspose(modelMatrix);
+		const FMatrix4 inverseTranspose = glm::inverseTranspose(modelMatrix);
 		shader->SetUniformMatrix4f("u_InverseTranspose", inverseTranspose);
 
 		const FMatrix4& viewProjectionMatrix = activeCamera->GetViewProjectionMatrix();
-		FMatrix4 modelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
+		const FMatrix4 modelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
 		shader->SetUniformMatrix4f("u_MVP", modelViewProjectionMatrix);
 
 		uint indexCount = indexBuffer->GetIndexCount();

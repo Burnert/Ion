@@ -7,15 +7,17 @@ namespace Ion
 {
 	class ION_API OpenGLIndexBuffer : public IndexBuffer
 	{
+		friend class OpenGLRenderer;
 	public:
 		OpenGLIndexBuffer(uint* indices, uint count);
 		virtual ~OpenGLIndexBuffer() override;
 
-		virtual void Bind() const override;
-		virtual void Unbind() const override;
-
 		virtual uint GetIndexCount() const override;
 		virtual uint GetTriangleCount() const override;
+
+	protected:
+		virtual void Bind() const override;
+		virtual void Unbind() const override;
 
 	private:
 		uint m_ID;
