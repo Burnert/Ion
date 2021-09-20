@@ -28,11 +28,11 @@ namespace Ion
 
 	// Base Material Parameter class
 	template<typename T, typename EnableT = void>
-	class MaterialParameter { };
+	class TMaterialParameter { };
 
 	// Partial Material Parameter specialization for float types
 	template<typename T>
-	class MaterialParameter<T,
+	class TMaterialParameter<T,
 		typename TEnableIfT<TOrV<
 			TIsSame<T, float>,
 			TIsSame<T, FVector2>,
@@ -43,7 +43,7 @@ namespace Ion
 	{
 		friend class Material;
 	public:
-		MaterialParameter() :
+		TMaterialParameter() :
 			m_Type(EMaterialParameterType::Float),
 			m_Value(0.0f),
 			m_Min(-1.0f),
@@ -96,13 +96,13 @@ namespace Ion
 
 	// Bool Material Parameter specialization
 	template<typename T>
-	class MaterialParameter<T,
+	class TMaterialParameter<T,
 		typename TEnableIfT<TIsSameV<T, bool>>
 	>
 	{
 		friend class Material;
 	public:
-		MaterialParameter() :
+		TMaterialParameter() :
 			m_Value(false),
 			m_Type(EMaterialParameterType::Bool)
 		{ }
@@ -148,7 +148,7 @@ namespace Ion
 		template<typename T>
 		void SetParameter(const String& name, const T& value)
 		{
-			MaterialParameter<T>* param = FindParameter<T>(name);
+			TMaterialParameter<T>* param = FindParameter<T>(name);
 			if (!param)
 			{
 				LOG_WARN("Cannot set parameter '{0}<{1}>' because it does not exist!", name, TypeToString<T>());
@@ -158,9 +158,9 @@ namespace Ion
 		}
 
 		template<typename T>
-		MaterialParameter<T>* GetParameter(const String& name)
+		TMaterialParameter<T>* GetParameter(const String& name)
 		{
-			MaterialParameter<T>* param = FindParameter<T>(name);
+			TMaterialParameter<T>* param = FindParameter<T>(name);
 			if (!param)
 			{
 				LOG_WARN("Parameter '{0}<{1}>' does not exist!", name, TypeToString<T>());
@@ -189,7 +189,7 @@ namespace Ion
 		Material();
 
 		template<typename T>
-		MaterialParameter<T>* FindParameter(const String& name) const
+		TMaterialParameter<T>* FindParameter(const String& name) const
 		{
 			const auto& it = m_Parameters.find(name);
 			if (it == m_Parameters.end())
@@ -205,7 +205,7 @@ namespace Ion
 					name, TypeToString<T>(), MaterialParameterTypeToString(type));
 				return nullptr;
 			}
-			MaterialParameter<T>* param = reinterpret_cast<MaterialParameter<T>*>(it->second);
+			TMaterialParameter<T>* param = reinterpret_cast<TMaterialParameter<T>*>(it->second);
 			return param;
 		}
 
@@ -218,7 +218,7 @@ namespace Ion
 				EMaterialParameterType::Float3,
 				EMaterialParameterType::Float4), "Used ExtractParameterType on a pointer of incorrect type! This will lead to unexpected behavior.");
 			// The first field of the object is always the type, so if the pointer points
-			// to a valid MaterialParameter object this cast must yield a correct value.
+			// to a valid TMaterialParameter object this cast must yield a correct value.
 			return *(EMaterialParameterType*)paramPtr;
 		}
 
