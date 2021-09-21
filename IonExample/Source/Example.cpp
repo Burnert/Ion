@@ -30,21 +30,25 @@ layout(location = 1) in vec3 a_Normal;
 layout(location = 2) in vec2 a_TexCoord0;
 
 uniform mat4 u_MVP;
-uniform mat4 u_Transform;
+uniform mat4 u_ModelMatrix;
+uniform mat4 u_ViewMatrix;
+uniform mat4 u_ProjectionMatrix;
+uniform mat4 u_ViewProjectionMatrix;
 uniform mat4 u_InverseTranspose;
 uniform vec3 u_CameraLocation;
 
 out vec2 v_TexCoord;
 out vec3 v_Normal;
 out vec3 v_WorldNormal;
+out vec3 v_PixelLocationWS;
 
 void main()
 {
 	gl_Position = u_MVP * vec4(a_Position, 1.0);
 	v_TexCoord = a_TexCoord0;
-
 	v_Normal = a_Normal;
 	v_WorldNormal = normalize(vec3(u_InverseTranspose * vec4(v_Normal, 0.0)));
+	v_PixelLocationWS = vec3(u_ModelMatrix * vec4(a_Position, 1.0));
 }
 
 )";
@@ -61,13 +65,27 @@ struct DirectionalLight
 	float Intensity;
 };
 
+struct Light
+{
+	vec3 Location;
+	vec3 Color;
+	float Intensity;
+	float Falloff;
+};
+
+#define MAX_LIGHTS 100
+
 uniform sampler2D u_TextureSampler;
+uniform vec3 u_CameraLocation;
 uniform vec4 u_AmbientLightColor;
 uniform DirectionalLight u_DirectionalLight;
+uniform uint u_LightNum;
+uniform Light u_Lights[MAX_LIGHTS];
 
 in vec2 v_TexCoord;
 in vec3 v_Normal;
 in vec3 v_WorldNormal;
+in vec3 v_PixelLocationWS;
 
 out vec4 Color;
 
@@ -76,8 +94,22 @@ void main()
 	vec3 dirLightColor = max(dot(v_WorldNormal, -u_DirectionalLight.Direction), 0.0) * u_DirectionalLight.Color * u_DirectionalLight.Intensity;
 	vec3 ambientLightColor = u_AmbientLightColor.xyz * u_AmbientLightColor.w;
 
+	vec3 lightsColor = vec3(0.0);
+	for (uint n = 0; n < u_LightNum; ++n)
+	{
+		Light light = u_Lights[n];
+
+		vec3 inverseLightDir = normalize(light.Location - v_PixelLocationWS);
+		float lightDistance = distance(light.Location, v_PixelLocationWS);
+		float falloff = max((light.Falloff - lightDistance) / light.Falloff, 0.0);
+		float lightIntensity = max(dot(inverseLightDir, v_WorldNormal), 0.0) * light.Intensity * falloff;
+		
+		vec3 lightColor = light.Color * lightIntensity;
+		lightsColor += lightColor;
+	}
+
 	// Adding lights together seems like a really weird thing to do here
-	vec3 finalLightColor = ambientLightColor + dirLightColor;
+	vec3 finalLightColor = ambientLightColor + dirLightColor + lightsColor;
 
 	Color = texture(u_TextureSampler, v_TexCoord).rgba * vec4(finalLightColor, 1.0);
 
@@ -112,6 +144,25 @@ void main()
 
 		m_DirectionalLight = MakeShared<DirectionalLight>();
 		m_Scene->SetActiveDirectionalLight(m_DirectionalLight.get());
+
+		m_Light0->m_Location = Vector3(2.0f, 3.0f, -1.0f);
+		m_Light0->m_Color = Vector3(1.0f, 1.0f, 1.0f);
+		m_Light0->m_Intensity = 4.0f;
+		m_Light0->m_Falloff = 5.0f;
+
+		m_Light1->m_Location = Vector3(-1.0f, 1.0f, 2.0f);
+		m_Light1->m_Color = Vector3(0.3f, 0.6f, 1.0f);
+		m_Light1->m_Intensity = 3.0f;
+		m_Light1->m_Falloff = 4.0f;
+
+		m_Light2->m_Location = Vector3(2.0f, 1.0f, 4.0f);
+		m_Light2->m_Color = Vector3(1.0f, 0.1f, 0.0f);
+		m_Light2->m_Intensity = 2.0f;
+		m_Light2->m_Falloff = 7.0f;
+
+		m_Scene->AddLight(m_Light0.get());
+		m_Scene->AddLight(m_Light1.get());
+		m_Scene->AddLight(m_Light2.get());
 
 		// @TODO: Create an asset manager for textures, meshes and other files that can be imported
 
@@ -270,11 +321,19 @@ void main()
 			ImGui::DragFloat3("Location", &m_MeshLocation.x, 0.01f, -FLT_MAX, FLT_MAX);
 			ImGui::DragFloat3("Rotation", &m_MeshRotation.x, 1.0f, -FLT_MAX, FLT_MAX);
 			ImGui::DragFloat3("Scale", &m_MeshScale.x, 0.01f, -FLT_MAX, FLT_MAX);
+		}
+		ImGui::End();
 
+		ImGui::Begin("Scene settings");
+		{
 			ImGui::DragFloat3("Directional Light Rotation", &m_DirectionalLightAngles.x, 1.0f, -180.0f, 180.0f);
 			ImGui::DragFloat3("Directional Light Color", &m_DirectionalLightColor.x, 0.01f, 0.0f, 1.0f);
 			ImGui::DragFloat("Directional Light Intensity", &m_DirectionalLightIntensity, 0.01f, 0.0f, 10.0f);
 			ImGui::DragFloat4("Ambient Light Color", &m_AmbientLightColor.x, 0.01f, 0.0f, 1.0f);
+
+			ImGui::DragFloat3("Light0 Location", &m_Light0->m_Location.x, 0.01f, -FLT_MAX, FLT_MAX);
+			ImGui::DragFloat3("Light1 Location", &m_Light1->m_Location.x, 0.01f, -FLT_MAX, FLT_MAX);
+			ImGui::DragFloat3("Light2 Location", &m_Light2->m_Location.x, 0.01f, -FLT_MAX, FLT_MAX);
 		}
 		ImGui::End();
 
@@ -397,8 +456,12 @@ private:
 
 	Vector3 m_DirectionalLightAngles = Vector3(-30.0f, 30.0f, 0.0f);
 	Vector3 m_DirectionalLightColor = Vector3(1.0f, 1.0f, 1.0f);
-	float m_DirectionalLightIntensity = 1.0f;
+	float m_DirectionalLightIntensity = 0.0f;
 	Quaternion m_DirectionalLightRotation = Quaternion(Math::Radians(m_DirectionalLightAngles));
+
+	TShared<Light> m_Light0 = MakeShared<Light>();
+	TShared<Light> m_Light1 = MakeShared<Light>();
+	TShared<Light> m_Light2 = MakeShared<Light>();
 
 	const char* m_DrawModes[3] = { "Triangles", "Lines", "Points" };
 

@@ -12,6 +12,8 @@ namespace Ion
 	class ION_API Scene
 	{
 	public:
+		const static uint32 MaxLights = 100;
+
 		static TShared<Scene> Create();
 
 		void SetActiveCamera(const TShared<Camera>& camera);
@@ -26,6 +28,7 @@ namespace Ion
 		void AddLight(Light* light);
 		bool RemoveLight(Light* light);
 		inline const std::unordered_set<Light*>& GetLights() const { return m_Lights; }
+		inline uint32 GetLightNumber() const { return (uint32)m_Lights.size(); }
 
 		// @TODO: For now, adding object to scene is going to be done this way.
 		// Later, the World is going to pass renderable objects to the scene automatically.
@@ -37,6 +40,7 @@ namespace Ion
 
 	protected:
 		Scene() :
+			m_AmbientLightColor(0.0f),
 			m_ActiveDirectionalLight(nullptr)
 		{ }
 

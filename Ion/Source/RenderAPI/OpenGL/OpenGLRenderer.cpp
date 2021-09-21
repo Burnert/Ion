@@ -69,6 +69,8 @@ namespace Ion
 		const OpenGLShader* shader = (OpenGLShader*)material->GetShaderRaw();
 
 		const DirectionalLight* dirLight = scene->GetActiveDirectionalLight();
+		const std::unordered_set<Light*> lights = scene->GetLights();
+		uint32 lightNum = scene->GetLightNumber();
 
 		vertexBuffer->Bind();
 		vertexBuffer->BindLayout();
@@ -83,20 +85,49 @@ namespace Ion
 		// Setup matrices
 
 		const FMatrix4& modelMatrix = drawable->GetTransformMatrix();
-		const FMatrix4 inverseTranspose = Math::InverseTranspose(modelMatrix);
 		const FMatrix4& viewProjectionMatrix = activeCamera->GetViewProjectionMatrix();
 		const FMatrix4 modelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
+		const FMatrix4 viewMatrix = activeCamera->GetViewMatrix();
+		const FMatrix4 projectionMatrix = activeCamera->GetProjectionMatrix();
+		const FMatrix4 inverseTranspose = Math::InverseTranspose(modelMatrix);
 
 		// Set global uniforms
 
-		shader->SetUniform3f("u_CameraLocation", activeCamera->GetLocation());
-		shader->SetUniformMatrix4f("u_Transform", modelMatrix);
-		shader->SetUniformMatrix4f("u_InverseTranspose", inverseTranspose);
 		shader->SetUniformMatrix4f("u_MVP", modelViewProjectionMatrix);
-		shader->SetUniform3f("u_DirectionalLight.Direction", dirLight->m_LightDirection);
-		shader->SetUniform3f("u_DirectionalLight.Color", dirLight->m_Color);
-		shader->SetUniform1f("u_DirectionalLight.Intensity", dirLight->m_Intensity);
+		shader->SetUniformMatrix4f("u_ModelMatrix", modelMatrix);
+		shader->SetUniformMatrix4f("u_ViewMatrix", viewMatrix);
+		shader->SetUniformMatrix4f("u_ProjectionMatrix", projectionMatrix);
+		shader->SetUniformMatrix4f("u_ViewProjectionMatrix", viewProjectionMatrix);
+		shader->SetUniformMatrix4f("u_InverseTranspose", inverseTranspose);
+		shader->SetUniform3f("u_CameraLocation", Vector3(activeCamera->GetTransform()[3]));
+		if (dirLight)
+		{
+			shader->SetUniform3f("u_DirectionalLight.Direction", dirLight->m_LightDirection);
+			shader->SetUniform3f("u_DirectionalLight.Color", dirLight->m_Color);
+			shader->SetUniform1f("u_DirectionalLight.Intensity", dirLight->m_Intensity);
+		}
+		else
+		{
+			shader->SetUniform1f("u_DirectionalLight.Intensity", 0.0f);
+		}
 		shader->SetUniform4f("u_AmbientLightColor", scene->GetAmbientLightColor());
+		shader->SetUniform1ui("u_LightNum", lightNum);
+		uint32 lightIndex = 0;
+		for (Light* light : lights)
+		{
+			char uniformName[100];
+
+			sprintf_s(uniformName, "u_Lights[%u].%s", lightIndex, "Location");
+			shader->SetUniform3f(uniformName, light->m_Location);
+			sprintf_s(uniformName, "u_Lights[%u].%s", lightIndex, "Color");
+			shader->SetUniform3f(uniformName, light->m_Color);
+			sprintf_s(uniformName, "u_Lights[%u].%s", lightIndex, "Intensity");
+			shader->SetUniform1f(uniformName, light->m_Intensity);
+			sprintf_s(uniformName, "u_Lights[%u].%s", lightIndex, "Falloff");
+			shader->SetUniform1f(uniformName, light->m_Falloff);
+			
+			lightIndex++;
+		}
 
 		uint32 indexCount = indexBuffer->GetIndexCount();
 		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);

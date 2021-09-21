@@ -46,14 +46,14 @@ namespace Ion
 		m_bDirty = true;
 	}
 
-	void Camera::UpdateViewProjectionMatrix() const
+	void Camera::UpdateMatrixCache() const
 	{
 		if (m_bDirty)
 		{
-			// @TODO: Cache these intermediate matrices (view, projection)
-			m_ViewProjectionMatrix = FMatrix4(1.0f)
-				* Math::Perspective(m_FOV, m_AspectRatio, m_NearClip, m_FarClip)
-				* Math::AffineInverse(m_CameraTransform);
+			m_ViewMatrix = Math::AffineInverse(m_CameraTransform);
+			m_ProjectionMatrix = Math::Perspective(m_FOV, m_AspectRatio, m_NearClip, m_FarClip);
+
+			m_ViewProjectionMatrix = FMatrix4(1.0f) * m_ProjectionMatrix * m_ViewMatrix;
 		}
 	}
 

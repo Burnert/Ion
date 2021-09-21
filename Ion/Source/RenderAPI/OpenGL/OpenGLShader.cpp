@@ -327,7 +327,14 @@ namespace Ion
 		{
 			TRACE_BEGIN(0, "OpenGLShader - Uniform cache miss - glGetUniformLocation");
 			location = glGetUniformLocation(m_ProgramID, name.c_str());
-			m_UniformCache[name] = location;
+			if (location != -1) // -1 means the uniform hasn't been found
+			{
+				m_UniformCache[name] = location;
+			}
+			else
+			{
+				LOG_WARN("Cannot find uniform named '{0}'!", name.c_str());
+			}
 			TRACE_END(0);
 		}
 		else

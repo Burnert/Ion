@@ -19,8 +19,20 @@ namespace Ion
 
 		FORCEINLINE const FMatrix4& GetViewProjectionMatrix() const
 		{
-			UpdateViewProjectionMatrix();
+			UpdateMatrixCache();
 			return m_ViewProjectionMatrix;
+		}
+
+		FORCEINLINE const FMatrix4& GetViewMatrix() const
+		{
+			UpdateMatrixCache();
+			return m_ViewMatrix;
+		}
+
+		FORCEINLINE const FMatrix4& GetProjectionMatrix() const
+		{
+			UpdateMatrixCache();
+			return m_ProjectionMatrix;
 		}
 
 		void SetFOV(float fov);
@@ -35,16 +47,18 @@ namespace Ion
 		void SetFarClip(float farClip);
 		FORCEINLINE float GetFarClip() const { return m_FarClip; }
 
-		void UpdateViewProjectionMatrix() const;
-
 	protected:
 		Camera();
+
+		void UpdateMatrixCache() const;
 
 	private:
 		FVector3 m_CameraLocation;
 		FMatrix4 m_CameraTransform;
 
 		mutable FMatrix4 m_ViewProjectionMatrix;
+		mutable FMatrix4 m_ViewMatrix;
+		mutable FMatrix4 m_ProjectionMatrix;
 
 		float m_FOV;
 		float m_AspectRatio;

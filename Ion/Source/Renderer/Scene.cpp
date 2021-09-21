@@ -26,6 +26,7 @@ namespace Ion
 
 	void Scene::AddLight(Light* light)
 	{
+		ionassert(m_Lights.size() < MaxLights, "There cannot be more than %d lights in a scene!", MaxLights);
 		m_Lights.insert(light);
 	}
 
