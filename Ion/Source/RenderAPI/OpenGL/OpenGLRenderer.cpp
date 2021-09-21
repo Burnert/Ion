@@ -68,6 +68,8 @@ namespace Ion
 		const OpenGLIndexBuffer* indexBuffer = (OpenGLIndexBuffer*)drawable->GetIndexBufferRaw();
 		const OpenGLShader* shader = (OpenGLShader*)material->GetShaderRaw();
 
+		const DirectionalLight* dirLight = scene->GetActiveDirectionalLight();
+
 		vertexBuffer->Bind();
 		vertexBuffer->BindLayout();
 		indexBuffer->Bind();
@@ -91,6 +93,10 @@ namespace Ion
 		shader->SetUniformMatrix4f("u_Transform", modelMatrix);
 		shader->SetUniformMatrix4f("u_InverseTranspose", inverseTranspose);
 		shader->SetUniformMatrix4f("u_MVP", modelViewProjectionMatrix);
+		shader->SetUniform3f("u_DirectionalLight.Direction", dirLight->m_LightDirection);
+		shader->SetUniform3f("u_DirectionalLight.Color", dirLight->m_Color);
+		shader->SetUniform1f("u_DirectionalLight.Intensity", dirLight->m_Intensity);
+		shader->SetUniform4f("u_AmbientLightColor", scene->GetAmbientLightColor());
 
 		uint32 indexCount = indexBuffer->GetIndexCount();
 		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);

@@ -6,6 +6,7 @@
 #include "Texture.h"
 #include "Material.h"
 #include "Mesh.h"
+#include "Light.h"
 #include "Camera.h"
 #include "Scene.h"
 

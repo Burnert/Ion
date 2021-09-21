@@ -20,6 +20,8 @@ public:
 
 	virtual void OnInit() override
 	{
+		// @TODO: Move shader code to engine
+
 		const char* vertSrc = R"(
 #version 430 core
 
@@ -47,11 +49,21 @@ void main()
 
 )";
 
+		// @TODO: Figure out how the hell to calculate light blending and all that
+
 		const char* fragSrc = R"(
 #version 430 core
 
+struct DirectionalLight
+{
+	vec3 Direction;
+	vec3 Color;
+	float Intensity;
+};
+
 uniform sampler2D u_TextureSampler;
-uniform vec3 u_LightDirection;
+uniform vec4 u_AmbientLightColor;
+uniform DirectionalLight u_DirectionalLight;
 
 in vec2 v_TexCoord;
 in vec3 v_Normal;
@@ -61,9 +73,13 @@ out vec4 Color;
 
 void main()
 {
-	float surfaceLight = dot(v_WorldNormal, -u_LightDirection);
+	vec3 dirLightColor = max(dot(v_WorldNormal, -u_DirectionalLight.Direction), 0.0) * u_DirectionalLight.Color * u_DirectionalLight.Intensity;
+	vec3 ambientLightColor = u_AmbientLightColor.xyz * u_AmbientLightColor.w;
 
-	Color = texture(u_TextureSampler, v_TexCoord).rgba * surfaceLight;
+	// Adding lights together seems like a really weird thing to do here
+	vec3 finalLightColor = ambientLightColor + dirLightColor;
+
+	Color = texture(u_TextureSampler, v_TexCoord).rgba * vec4(finalLightColor, 1.0);
 
 	//Color = vec4((v_WorldNormal + 1.0) * 0.5, 1.0);
 }
@@ -93,6 +109,9 @@ void main()
 		m_AuxCamera->SetFOV(Math::Radians(66.0f));
 		m_AuxCamera->SetNearClip(0.1f);
 		m_AuxCamera->SetFarClip(10.0f);
+
+		m_DirectionalLight = MakeShared<DirectionalLight>();
+		m_Scene->SetActiveDirectionalLight(m_DirectionalLight.get());
 
 		// @TODO: Create an asset manager for textures, meshes and other files that can be imported
 
@@ -157,8 +176,15 @@ void main()
 		m_Camera->SetAspectRatio(aspectRatio);
 		m_AuxCamera->SetAspectRatio(aspectRatio);
 
-		m_LightDirection = Math::Normalize(m_LightDirection);
-		meshShader->SetUniform3f("u_LightDirection", m_LightDirection);
+		//m_LightDirection = Math::Normalize(m_LightDirection);
+		//meshShader->SetUniform3f("u_LightDirection", m_LightDirection);
+
+		m_Scene->SetAmbientLightColor(m_AmbientLightColor);
+
+		m_DirectionalLightRotation = Quaternion(Math::Radians(m_DirectionalLightAngles));
+		m_DirectionalLight->m_LightDirection = Math::Rotate(m_DirectionalLightRotation, Vector3(0.0f, 0.0f, -1.0f));
+		m_DirectionalLight->m_Color = m_DirectionalLightColor;
+		m_DirectionalLight->m_Intensity = m_DirectionalLightIntensity;
 
 		float cameraMoveSpeed = 5.0f;
 
@@ -245,7 +271,10 @@ void main()
 			ImGui::DragFloat3("Rotation", &m_MeshRotation.x, 1.0f, -FLT_MAX, FLT_MAX);
 			ImGui::DragFloat3("Scale", &m_MeshScale.x, 0.01f, -FLT_MAX, FLT_MAX);
 
-			ImGui::DragFloat3("Light Direction Vector", &m_LightDirection.x, 0.01f, -1.0f, 1.0f);
+			ImGui::DragFloat3("Directional Light Rotation", &m_DirectionalLightAngles.x, 1.0f, -180.0f, 180.0f);
+			ImGui::DragFloat3("Directional Light Color", &m_DirectionalLightColor.x, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Directional Light Intensity", &m_DirectionalLightIntensity, 0.01f, 0.0f, 10.0f);
+			ImGui::DragFloat4("Ambient Light Color", &m_AmbientLightColor.x, 0.01f, 0.0f, 1.0f);
 		}
 		ImGui::End();
 
@@ -348,6 +377,7 @@ private:
 	TShared<Camera> m_Camera;
 	TShared<Camera> m_AuxCamera;
 	TShared<Texture> m_TextureCollada;
+	TShared<DirectionalLight> m_DirectionalLight;
 	TShared<Scene> m_Scene;
 
 	FVector4 m_CameraLocation = { 0.0f, 0.0f, 2.0f, 1.0f };
@@ -361,7 +391,14 @@ private:
 
 	FVector3 m_AuxCameraLocation = { 0.0f, 0.0f, 4.0f };
 
-	FVector3 m_LightDirection = Math::Normalize(FVector3 { -0.2f, -0.4f, -0.8f });
+	//FVector3 m_LightDirection = Math::Normalize(FVector3 { -0.2f, -0.4f, -0.8f });
+
+	Vector4 m_AmbientLightColor = Vector4(0.1f, 0.11f, 0.14f, 1.0f);
+
+	Vector3 m_DirectionalLightAngles = Vector3(-30.0f, 30.0f, 0.0f);
+	Vector3 m_DirectionalLightColor = Vector3(1.0f, 1.0f, 1.0f);
+	float m_DirectionalLightIntensity = 1.0f;
+	Quaternion m_DirectionalLightRotation = Quaternion(Math::Radians(m_DirectionalLightAngles));
 
 	const char* m_DrawModes[3] = { "Triangles", "Lines", "Points" };
 
