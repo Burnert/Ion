@@ -62,6 +62,16 @@ namespace Ion
 			ionexcept(bCompiled, "Shader compilation failure! (%s)", ShaderTypeToString(shader.Type))
 			{
 				LOG_ERROR("Could not compile shader! ({0})", ShaderTypeToString(shader.Type));
+
+				int32 logLength = 0;
+				glGetShaderiv(shader.ID, GL_INFO_LOG_LENGTH, &logLength);
+
+				// The maxLength includes the NULL character
+				char* message = (char*)_malloca(logLength);
+				glGetShaderInfoLog(shader.ID, logLength, &logLength, message);
+
+				LOG_TRACE("Shader compilation log: \n{0}", message);
+
 				CleanupDeleteShaders();
 				return false;
 			}
