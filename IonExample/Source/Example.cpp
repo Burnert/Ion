@@ -280,96 +280,101 @@ void main()
 
 		// ImGui:
 
-		ImGui::Begin("Diagnostics");
+		if (m_bDrawImGui)
 		{
-			if (ImGui::Button("Start profiling"))
-			{
-				TRACE_RECORD_START();
-			}
-			if (ImGui::Button("Stop profiling"))
-			{
-				TRACE_RECORD_STOP();
-			}
-		}
-		ImGui::End();
+			ImGui::ShowDemoWindow();
 
-		ImGui::Begin("Texture settings");
-		{
-			ImGui::InputText("Texture file", m_TextureFileNameBuffer, sizeof(m_TextureFileNameBuffer));
-			if (ImGui::Button("Set Texture"))
+			ImGui::Begin("Diagnostics");
 			{
-				File* textureFile = File::Create(StringConverter::StringToWString(m_TextureFileNameBuffer));
-				if (textureFile->Exists())
+				if (ImGui::Button("Start profiling"))
 				{
-					Image* textureImage = new Image;
-					ionassertnd(textureImage->Load(textureFile));
-					m_TextureCollada = Texture::Create(textureImage);
-					m_TextureCollada->Bind(1);
+					TRACE_RECORD_START();
 				}
-				delete textureFile;
-			}
-			ImGui::DragFloat3("Aux Camera Location", &m_AuxCameraLocation.x, 0.01f, -FLT_MAX, FLT_MAX);
-			if (ImGui::Button("Change Camera"))
-			{
-				m_Scene->SetActiveCamera(m_Scene->GetActiveCamera() == m_Camera ? m_AuxCamera : m_Camera);
-			}
-		}
-		ImGui::End();
-
-		ImGui::Begin("Mesh settings");
-		{
-			ImGui::DragFloat3("Location", &m_MeshLocation.x, 0.01f, -FLT_MAX, FLT_MAX);
-			ImGui::DragFloat3("Rotation", &m_MeshRotation.x, 1.0f, -FLT_MAX, FLT_MAX);
-			ImGui::DragFloat3("Scale", &m_MeshScale.x, 0.01f, -FLT_MAX, FLT_MAX);
-		}
-		ImGui::End();
-
-		ImGui::Begin("Scene settings");
-		{
-			ImGui::DragFloat3("Directional Light Rotation", &m_DirectionalLightAngles.x, 1.0f, -180.0f, 180.0f);
-			ImGui::DragFloat3("Directional Light Color", &m_DirectionalLightColor.x, 0.01f, 0.0f, 1.0f);
-			ImGui::DragFloat("Directional Light Intensity", &m_DirectionalLightIntensity, 0.01f, 0.0f, 10.0f);
-			ImGui::DragFloat4("Ambient Light Color", &m_AmbientLightColor.x, 0.01f, 0.0f, 1.0f);
-
-			ImGui::DragFloat3("Light0 Location", &m_Light0->m_Location.x, 0.01f, -FLT_MAX, FLT_MAX);
-			ImGui::DragFloat3("Light1 Location", &m_Light1->m_Location.x, 0.01f, -FLT_MAX, FLT_MAX);
-			ImGui::DragFloat3("Light2 Location", &m_Light2->m_Location.x, 0.01f, -FLT_MAX, FLT_MAX);
-		}
-		ImGui::End();
-
-		ImGui::Begin("Renderer Settings");
-		{
-			static const char* currentDrawMode = m_DrawModes[0];
-			if (ImGui::BeginCombo("Draw Mode", currentDrawMode))
-			{
-				for (int i = 0; i < 3; ++i)
+				if (ImGui::Button("Stop profiling"))
 				{
-					bool selected = currentDrawMode == m_DrawModes[i];
-					if (ImGui::Selectable(m_DrawModes[i], selected))
+					TRACE_RECORD_STOP();
+				}
+			}
+			ImGui::End();
+
+			ImGui::Begin("Texture settings");
+			{
+				ImGui::InputText("Texture file", m_TextureFileNameBuffer, sizeof(m_TextureFileNameBuffer));
+				if (ImGui::Button("Set Texture"))
+				{
+					File* textureFile = File::Create(StringConverter::StringToWString(m_TextureFileNameBuffer));
+					if (textureFile->Exists())
 					{
-						currentDrawMode = m_DrawModes[i];
-						if (currentDrawMode == m_DrawModes[0])
+						Image* textureImage = new Image;
+						ionassertnd(textureImage->Load(textureFile));
+						m_TextureCollada = Texture::Create(textureImage);
+						m_TextureCollada->Bind(1);
+					}
+					delete textureFile;
+				}
+				ImGui::DragFloat3("Aux Camera Location", &m_AuxCameraLocation.x, 0.01f, -FLT_MAX, FLT_MAX);
+				if (ImGui::Button("Change Camera"))
+				{
+					m_Scene->SetActiveCamera(m_Scene->GetActiveCamera() == m_Camera ? m_AuxCamera : m_Camera);
+				}
+			}
+			ImGui::End();
+
+			ImGui::Begin("Mesh settings");
+			{
+				ImGui::DragFloat3("Location", &m_MeshLocation.x, 0.01f, -FLT_MAX, FLT_MAX);
+				ImGui::DragFloat3("Rotation", &m_MeshRotation.x, 1.0f, -FLT_MAX, FLT_MAX);
+				ImGui::DragFloat3("Scale", &m_MeshScale.x, 0.01f, -FLT_MAX, FLT_MAX);
+			}
+			ImGui::End();
+
+			ImGui::Begin("Scene settings");
+			{
+				ImGui::DragFloat3("Directional Light Rotation", &m_DirectionalLightAngles.x, 1.0f, -180.0f, 180.0f);
+				ImGui::DragFloat3("Directional Light Color", &m_DirectionalLightColor.x, 0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("Directional Light Intensity", &m_DirectionalLightIntensity, 0.01f, 0.0f, 10.0f);
+				ImGui::DragFloat4("Ambient Light Color", &m_AmbientLightColor.x, 0.01f, 0.0f, 1.0f);
+
+				ImGui::DragFloat3("Light0 Location", &m_Light0->m_Location.x, 0.01f, -FLT_MAX, FLT_MAX);
+				ImGui::DragFloat3("Light1 Location", &m_Light1->m_Location.x, 0.01f, -FLT_MAX, FLT_MAX);
+				ImGui::DragFloat3("Light2 Location", &m_Light2->m_Location.x, 0.01f, -FLT_MAX, FLT_MAX);
+			}
+			ImGui::End();
+
+			ImGui::Begin("Renderer Settings");
+			{
+				static const char* currentDrawMode = m_DrawModes[0];
+				if (ImGui::BeginCombo("Draw Mode", currentDrawMode))
+				{
+					for (int i = 0; i < 3; ++i)
+					{
+						bool selected = currentDrawMode == m_DrawModes[i];
+						if (ImGui::Selectable(m_DrawModes[i], selected))
 						{
-							GetRenderer()->SetPolygonDrawMode(EPolygonDrawMode::Fill);
+							currentDrawMode = m_DrawModes[i];
+							if (currentDrawMode == m_DrawModes[0])
+							{
+								GetRenderer()->SetPolygonDrawMode(EPolygonDrawMode::Fill);
+							}
+							else if (currentDrawMode == m_DrawModes[1])
+							{
+								GetRenderer()->SetPolygonDrawMode(EPolygonDrawMode::Lines);
+							}
+							else if (currentDrawMode == m_DrawModes[2])
+							{
+								GetRenderer()->SetPolygonDrawMode(EPolygonDrawMode::Points);
+							}
 						}
-						else if (currentDrawMode == m_DrawModes[1])
+						if (selected)
 						{
-							GetRenderer()->SetPolygonDrawMode(EPolygonDrawMode::Lines);
-						}
-						else if (currentDrawMode == m_DrawModes[2])
-						{
-							GetRenderer()->SetPolygonDrawMode(EPolygonDrawMode::Points);
+							ImGui::SetItemDefaultFocus();
 						}
 					}
-					if (selected)
-					{
-						ImGui::SetItemDefaultFocus();
-					}
+					ImGui::EndCombo();
 				}
-				ImGui::EndCombo();
 			}
+			ImGui::End();
 		}
-		ImGui::End();
 	}
 
 	virtual void OnRender() override
@@ -385,6 +390,17 @@ void main()
 	virtual void OnEvent(Ion::Event& event) override
 	{
 		EventDispatcher dispatcher(event);
+
+		dispatcher.Dispatch<KeyPressedEvent>(
+			[this](KeyPressedEvent& event)
+			{
+				if (event.GetKeyCode() == Key::F4)
+				{
+					m_bDrawImGui = !m_bDrawImGui;
+					return true;
+				}
+				return false;
+			});
 
 		dispatcher.Dispatch<RawInputMouseMovedEvent>(
 			[this](RawInputMouseMovedEvent& event)
@@ -466,6 +482,8 @@ private:
 	const char* m_DrawModes[3] = { "Triangles", "Lines", "Points" };
 
 	char m_TextureFileNameBuffer[MAX_PATH + 1];
+
+	bool m_bDrawImGui = true;
 };
 
 USE_APPLICATION_CLASS(IonExample);

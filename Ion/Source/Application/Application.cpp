@@ -101,8 +101,6 @@ namespace Ion
 		ImGuiNewFramePlatform();
 		ImGui::NewFrame();
 
-		ImGui::ShowDemoWindow();
-
 		m_LayerStack->OnUpdate(deltaTime);
 
 		TRACE_BEGIN(0, "Application - Client::OnUpdate");
