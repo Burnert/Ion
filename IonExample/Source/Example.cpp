@@ -284,6 +284,12 @@ void main()
 		{
 			ImGui::ShowDemoWindow();
 
+			ImGui::Begin("Guide");
+			{
+				ImGui::ShowUserGuide();
+			}
+			ImGui::End();
+
 			ImGui::Begin("Diagnostics");
 			{
 				if (ImGui::Button("Start profiling"))

@@ -9,6 +9,9 @@
 
 #ifdef ION_ENGINE
 
+#pragma comment(linker, "/export:?ShowDemoWindow@ImGui@@YAXPEA_N@Z")
+#pragma comment(linker, "/export:?ShowUserGuide@ImGui@@YAXXZ")
+
 #ifdef ION_PLATFORM_WINDOWS
 #include "imgui/backends/imgui_impl_win32.h"
 #include "imgui/backends/imgui_impl_dx11.h"
