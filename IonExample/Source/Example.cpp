@@ -283,6 +283,9 @@ void main()
 		if (m_bDrawImGui)
 		{
 			ImGui::ShowDemoWindow();
+			ImGui::ShowAboutWindow();
+			ImGui::ShowFontSelector("Fonts");
+			ImGui::ShowStyleEditor();
 
 			ImGui::Begin("Guide");
 			{
