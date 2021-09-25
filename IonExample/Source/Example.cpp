@@ -1,3 +1,14 @@
+/* 
+* PBR Resources:
+* https://learnopengl.com/PBR/Theory
+* https://blog.selfshadow.com/publications/s2013-shading-course/hoffman/s2013_pbs_physics_math_notes.pdf
+* https://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf
+* https://www.shadertoy.com/view/4sSfzK
+* http://www.codinglabs.net/article_physically_based_rendering.aspx
+* http://www.codinglabs.net/article_physically_based_rendering_cook_torrance.aspx
+* http://blog.wolfire.com/2015/10/Physically-based-rendering
+*/
+
 #include "IonPCH.h"
 
 #include "Ion.h"
@@ -20,103 +31,32 @@ public:
 
 	virtual void OnInit() override
 	{
-		// @TODO: Move shader code to engine
-
-		const char* vertSrc = R"(
-#version 430 core
-
-layout(location = 0) in vec3 a_Position;
-layout(location = 1) in vec3 a_Normal;
-layout(location = 2) in vec2 a_TexCoord0;
-
-uniform mat4 u_MVP;
-uniform mat4 u_ModelMatrix;
-uniform mat4 u_ViewMatrix;
-uniform mat4 u_ProjectionMatrix;
-uniform mat4 u_ViewProjectionMatrix;
-uniform mat4 u_InverseTranspose;
-uniform vec3 u_CameraLocation;
-
-out vec2 v_TexCoord;
-out vec3 v_Normal;
-out vec3 v_WorldNormal;
-out vec3 v_PixelLocationWS;
-
-void main()
-{
-	gl_Position = u_MVP * vec4(a_Position, 1.0);
-	v_TexCoord = a_TexCoord0;
-	v_Normal = a_Normal;
-	v_WorldNormal = normalize(vec3(u_InverseTranspose * vec4(v_Normal, 0.0)));
-	v_PixelLocationWS = vec3(u_ModelMatrix * vec4(a_Position, 1.0));
-}
-
-)";
-
 		// @TODO: Figure out how the hell to calculate light blending and all that
 
-		const char* fragSrc = R"(
-#version 430 core
+#pragma warning(disable:6001)
 
-struct DirectionalLight
-{
-	vec3 Direction;
-	vec3 Color;
-	float Intensity;
-};
+		int64 size;
 
-struct Light
-{
-	vec3 Location;
-	vec3 Color;
-	float Intensity;
-	float Falloff;
-};
+		// @TODO: Figure out a nice way to load all of these shaders
+		// That's a lot of lines to just read one file
 
-#define MAX_LIGHTS 100
+		File* vertSrcFile = File::Create(L"../Ion/Shaders/Basic.vert");
+		vertSrcFile->Open(IO::FM_Read);
+		size = vertSrcFile->GetSize();
+		char* vertSrc = new char[size + 1];
+		memset(vertSrc, 0, size + 1);
+		vertSrcFile->Read(vertSrc, size);
+		vertSrcFile->Close();
+		delete vertSrcFile;
 
-uniform sampler2D u_TextureSampler;
-uniform vec3 u_CameraLocation;
-uniform vec4 u_AmbientLightColor;
-uniform DirectionalLight u_DirectionalLight;
-uniform uint u_LightNum;
-uniform Light u_Lights[MAX_LIGHTS];
-
-in vec2 v_TexCoord;
-in vec3 v_Normal;
-in vec3 v_WorldNormal;
-in vec3 v_PixelLocationWS;
-
-out vec4 Color;
-
-void main()
-{
-	vec3 dirLightColor = max(dot(v_WorldNormal, -u_DirectionalLight.Direction), 0.0) * u_DirectionalLight.Color * u_DirectionalLight.Intensity;
-	vec3 ambientLightColor = u_AmbientLightColor.xyz * u_AmbientLightColor.w;
-
-	vec3 lightsColor = vec3(0.0);
-	for (uint n = 0; n < u_LightNum; ++n)
-	{
-		Light light = u_Lights[n];
-
-		vec3 inverseLightDir = normalize(light.Location - v_PixelLocationWS);
-		float lightDistance = distance(light.Location, v_PixelLocationWS);
-		float falloff = max((light.Falloff - lightDistance) / light.Falloff, 0.0);
-		float lightIntensity = max(dot(inverseLightDir, v_WorldNormal), 0.0) * light.Intensity * falloff;
-		
-		vec3 lightColor = light.Color * lightIntensity;
-		lightsColor += lightColor;
-	}
-
-	// Adding lights together seems like a really weird thing to do here
-	vec3 finalLightColor = ambientLightColor + dirLightColor + lightsColor;
-
-	Color = texture(u_TextureSampler, v_TexCoord).rgba * vec4(finalLightColor, 1.0);
-
-	//Color = vec4((v_WorldNormal + 1.0) * 0.5, 1.0);
-}
-
-)";
+		File* fragSrcFile = File::Create(L"../Ion/Shaders/Basic.frag");
+		fragSrcFile->Open(IO::FM_Read);
+		size = fragSrcFile->GetSize();
+		char* fragSrc = new char[size + 1];
+		memset(fragSrc, 0, size + 1);
+		fragSrcFile->Read(fragSrc, size);
+		fragSrcFile->Close();
+		delete fragSrcFile;
 
 		bool bResult;
 
@@ -126,6 +66,9 @@ void main()
 
 		bResult = shader->Compile();
 		ionassert(bResult);
+
+		delete[] vertSrc;
+		delete[] fragSrc;
 
 		m_Camera = Camera::Create();
 		m_Camera->SetTransform(Math::Translate(FVector3(0.0f, 0.0f, 2.0f)));
@@ -282,16 +225,13 @@ void main()
 
 		if (m_bDrawImGui)
 		{
-			ImGui::ShowDemoWindow();
-			ImGui::ShowAboutWindow();
-			ImGui::ShowFontSelector("Fonts");
-			ImGui::ShowStyleEditor();
-
-			ImGui::Begin("Guide");
-			{
-				ImGui::ShowUserGuide();
-			}
-			ImGui::End();
+			//ImGui::ShowDemoWindow();
+			//ImGui::ShowAboutWindow();
+			//ImGui::ShowFontSelector("Fonts");
+			//ImGui::ShowStyleEditor();
+			//ImGui::Begin("Guide");
+			//ImGui::ShowUserGuide();
+			//ImGui::End();
 
 			ImGui::Begin("Diagnostics");
 			{
