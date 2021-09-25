@@ -2,7 +2,7 @@
 
 #ifdef ION_PLATFORM_WINDOWS
 
-int main(int argc, char** argv)
+static int MainShared()
 {
 	Ion::Application* application = Ion::CreateApplication();
 	application->Start();
@@ -20,6 +20,24 @@ int main(int argc, char** argv)
 
 	return 0;
 }
+
+#ifndef UNICODE
+
+int main(int argc, char* argv[])
+{
+	Ion::ParseCommandLineArgs(argc, argv);
+	MainShared();
+}
+
+#else
+
+int wmain(int argc, wchar* argv[])
+{
+	Ion::ParseCommandLineArgs(argc, argv);
+	MainShared();
+}
+
+#endif
 
 #else
 

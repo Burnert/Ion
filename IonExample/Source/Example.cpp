@@ -40,7 +40,7 @@ public:
 		// @TODO: Figure out a nice way to load all of these shaders
 		// That's a lot of lines to just read one file
 
-		File* vertSrcFile = File::Create(L"../Ion/Shaders/Basic.vert");
+		File* vertSrcFile = File::Create(GetEnginePath() + L"/Shaders/Basic.vert");
 		vertSrcFile->Open(IO::FM_Read);
 		size = vertSrcFile->GetSize();
 		char* vertSrc = new char[size + 1];
@@ -49,7 +49,7 @@ public:
 		vertSrcFile->Close();
 		delete vertSrcFile;
 
-		File* fragSrcFile = File::Create(L"../Ion/Shaders/Basic.frag");
+		File* fragSrcFile = File::Create(GetEnginePath() + L"/Shaders/Basic.frag");
 		fragSrcFile->Open(IO::FM_Read);
 		size = fragSrcFile->GetSize();
 		char* fragSrc = new char[size + 1];

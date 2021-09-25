@@ -31,6 +31,8 @@ namespace Ion
 	public:
 		using EventPtr = TShared<Event>;
 
+		static WString GetEnginePath() { return s_EnginePath; }
+
 		virtual ~Application() { }
 
 		/* Called by the Entry Point */
@@ -126,7 +128,38 @@ namespace Ion
 		TUnique<LayerStack> m_LayerStack;
 
 		std::thread::id m_MainThreadId;
+
+		template<typename T>
+		friend void ParseCommandLineArgs(int argc, T* argv[]);
+		static wchar* s_EnginePath;
 	};
 
 	Application* CreateApplication();
+
+	template<typename T>
+	void ParseCommandLineArgs(int argc, T* argv[])
+	{
+		// @TODO: Save engine path in system environment variables or something
+
+		for (int i = 0; i < argc; ++i)
+		{
+			bool bHasNextArg = i + 1 < argc;
+			T* arg = argv[i];
+			T* nextArg = bHasNextArg ? argv[i + 1] : nullptr;
+			if (!tstrcmp(arg, STR_LITERAL_AS("--enginePath", T)) && bHasNextArg)
+			{
+				if constexpr (TIsSameV<T, char>)
+				{
+					int enginePathLength = (int)strlen(nextArg);
+					Application::s_EnginePath = new wchar[enginePathLength + 1];
+					StringConverter::CharToWChar(nextArg, Application::s_EnginePath, enginePathLength + 1);
+				}
+				else
+				{
+					Application::s_EnginePath = nextArg;
+				}
+				i++;
+			}
+		}
+	}
 }

@@ -4,6 +4,31 @@
 #include "Core/CoreMacros.h"
 #include "Core/Math/Math.h"
 
+// Convert c-string literal to a specified type
+
+template<typename T>
+constexpr const T* StringLiteralAs(char* str, wchar* wstr);
+template<>
+constexpr const char* StringLiteralAs(char* str, wchar* wstr) { return str; }
+template<>
+constexpr const wchar* StringLiteralAs(char* str, wchar* wstr) { return wstr; }
+
+#define STR_LITERAL_AS(str, type) StringLiteralAs<type>(str, L ## str)
+
+
+// Templated c-string functions
+
+template<typename T>
+inline static int tstrcmp(const T* s1, const T* s2) { return 0; }
+template<> inline static int tstrcmp(const char* s1, const char* s2)   { return strcmp(s1, s2); }
+template<> inline static int tstrcmp(const wchar* s1, const wchar* s2) { return wcscmp(s1, s2); }
+
+template<typename T>
+inline static uint64 tstrlen(const T* s) { return 0; }
+template<> inline static uint64 tstrlen(const char* s)  { return strlen(s); }
+template<> inline static uint64 tstrlen(const wchar* s) { return wcslen(s); }
+
+
 // Type definition to String converter functions
 
 template<typename Type>

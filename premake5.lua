@@ -117,6 +117,8 @@ project "IonExample"
 		cppdialect "C++17"
 		staticruntime "Off"
 		systemversion "latest"
+		
+		debugargs { "--enginePath", "%{wks.location}Ion" }
 
 		defines {
 			"ION_PLATFORM_WINDOWS"
