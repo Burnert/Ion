@@ -122,7 +122,7 @@ public:
 
 		TShared<IndexBuffer> colladaIndexBuffer = IndexBuffer::Create(colladaData.Indices, (uint)colladaData.IndexCount);
 
-		WString textureFileName = L"char.png";
+		WString textureFileName = L"black.png";
 		memset(m_TextureFileNameBuffer, 0, sizeof(m_TextureFileNameBuffer));
 		StringConverter::WCharToChar(textureFileName.c_str(), m_TextureFileNameBuffer);
 
@@ -421,7 +421,7 @@ private:
 
 	Vector3 m_DirectionalLightAngles = Vector3(-30.0f, 30.0f, 0.0f);
 	Vector3 m_DirectionalLightColor = Vector3(1.0f, 1.0f, 1.0f);
-	float m_DirectionalLightIntensity = 0.0f;
+	float m_DirectionalLightIntensity = 1.0f;
 	Quaternion m_DirectionalLightRotation = Quaternion(Math::Radians(m_DirectionalLightAngles));
 
 	TShared<Light> m_Light0 = MakeShared<Light>();

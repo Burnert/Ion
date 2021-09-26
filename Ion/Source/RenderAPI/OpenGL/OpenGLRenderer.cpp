@@ -80,6 +80,8 @@ namespace Ion
 
 		// Calculate the Model View Projection Matrix based on the current scene camera
 		TShared<Camera> activeCamera = m_CurrentScene->GetActiveCamera();
+		Vector3 cameraLocation = Vector3(activeCamera->GetTransform()[3]);
+		Vector3 cameraDirection = Vector3(activeCamera->GetTransform() * Vector4(0.0f, 0.0f, -1.0f, 0.0f));
 		ionassert(activeCamera, "Cannot render without an active camera.");
 
 		// Setup matrices
@@ -99,7 +101,8 @@ namespace Ion
 		shader->SetUniformMatrix4f("u_ProjectionMatrix", projectionMatrix);
 		shader->SetUniformMatrix4f("u_ViewProjectionMatrix", viewProjectionMatrix);
 		shader->SetUniformMatrix4f("u_InverseTranspose", inverseTranspose);
-		shader->SetUniform3f("u_CameraLocation", Vector3(activeCamera->GetTransform()[3]));
+		shader->SetUniform3f("u_CameraLocation", cameraLocation);
+		shader->SetUniform3f("u_CameraDirection", cameraDirection);
 		if (dirLight)
 		{
 			shader->SetUniform3f("u_DirectionalLight.Direction", dirLight->m_LightDirection);
