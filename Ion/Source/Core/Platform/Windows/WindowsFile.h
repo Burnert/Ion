@@ -24,8 +24,10 @@ namespace Ion
 		virtual void Close() override;
 		virtual bool Delete() override;
 
-		/* Reads data from binary file and sets the file offset to the end of the read. */
+		/* Reads data from a binary file and sets the file offset to the end of the read. */
 		virtual bool Read(uint8* outBuffer, uint64 count) override;
+		/* Reads data from a text file to string and sets the file offset to the end of the read. */
+		virtual bool Read(String& outStr) override;
 		/* Reads a line from a text file and sets the file offset to the beginning of the next line.
 		   If the count parameter, hence the out buffer size, is not big enough it will only write 
 		   to the end of the buffer and will move the offset to the end of the read section. */
@@ -33,8 +35,10 @@ namespace Ion
 		/* Reads a line from a text file and sets the file offset to the beginning of the next line.
 		   Will replace the specified string with the read content. */
 		virtual bool ReadLine(String& outStr) override;
-		/* Writes data to binary file and sets the file offset to the end of the write. */
+		/* Writes data to a binary file and sets the file offset to the end of the write. */
 		virtual bool Write(const uint8* inBuffer, uint64 count) override;
+		/* Writes string to a text file and sets the file offset to the end of the write. */
+		virtual bool Write(const String& inStr) override;
 		/* Writes a line to a text file and sets the file offset to the beginning of the next line. 
 		   Parameter count is not a C string length, it is the buffer length (with the NULL character) */
 		virtual bool WriteLine(const char* inBuffer, uint64 count) override;

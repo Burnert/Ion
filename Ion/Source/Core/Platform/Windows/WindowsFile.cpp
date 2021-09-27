@@ -192,6 +192,23 @@ namespace Ion
 		return true;
 	}
 
+	bool WindowsFile::Read(String& outStr)
+	{
+		int64 count = GetSize();
+		char* buffer = new char[count + 1];
+		buffer[count] = (char)0;
+
+		bool bResult = Read((uint8*)buffer, count);
+		if (bResult)
+		{
+			// @TODO: Why would I want to copy this whole buffer instead of just moving the pointer into the string?
+			outStr.assign(buffer);
+		}
+		delete[] buffer;
+
+		return bResult;
+	}
+
 	bool WindowsFile::ReadLine_Internal(char* outBuffer, uint64 count, uint64* outReadCount, bool* bOutOverflow)
 	{
 		// @TODO: Make the CRLF support more correct with a bigger temporary buffer
@@ -385,6 +402,11 @@ namespace Ion
 
 		_DEBUG_LOG( LOG_TRACE(TEXT("'{0}': Written {1} bytes."), m_Filename, bytesWritten) );
 		return true;
+	}
+
+	bool WindowsFile::Write(const String& inStr)
+	{
+		return Write((const uint8*)inStr.c_str(), inStr.size());
 	}
 
 	bool WindowsFile::WriteLine(const char* inBuffer, uint64 count)

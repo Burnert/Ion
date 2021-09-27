@@ -48,9 +48,11 @@ namespace Ion
 		virtual bool Delete() = 0;
 
 		virtual bool Read(uint8* outBuffer, uint64 count) = 0;
+		virtual bool Read(String& outStr) = 0;
 		virtual bool ReadLine(char* outBuffer, uint64 count) = 0;
 		virtual bool ReadLine(String& outStr) = 0;
 		virtual bool Write(const uint8* inBuffer, uint64 count) = 0;
+		virtual bool Write(const String& inStr) = 0;
 		virtual bool WriteLine(const char* inBuffer, uint64 count) = 0;
 		virtual bool WriteLine(const String& inStr) = 0;
 
@@ -86,7 +88,9 @@ namespace Ion
 		// IFile:
 
 		virtual bool Read(uint8* outBuffer, uint64 count) = 0;
+		virtual bool Read(String& outStr) = 0;
 		virtual bool Write(const uint8* inBuffer, uint64 count) = 0;
+		virtual bool Write(const String& inStr) = 0;
 
 		// End of IFile:
 

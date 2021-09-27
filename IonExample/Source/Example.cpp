@@ -42,19 +42,15 @@ public:
 
 		File* vertSrcFile = File::Create(GetEnginePath() + L"/Shaders/Basic.vert");
 		vertSrcFile->Open(IO::FM_Read);
-		size = vertSrcFile->GetSize();
-		char* vertSrc = new char[size + 1];
-		memset(vertSrc, 0, size + 1);
-		vertSrcFile->Read(vertSrc, size);
+		String vertSrc;
+		vertSrcFile->Read(vertSrc);
 		vertSrcFile->Close();
 		delete vertSrcFile;
 
 		File* fragSrcFile = File::Create(GetEnginePath() + L"/Shaders/Basic.frag");
 		fragSrcFile->Open(IO::FM_Read);
-		size = fragSrcFile->GetSize();
-		char* fragSrc = new char[size + 1];
-		memset(fragSrc, 0, size + 1);
-		fragSrcFile->Read(fragSrc, size);
+		String fragSrc;
+		fragSrcFile->Read(fragSrc);
 		fragSrcFile->Close();
 		delete fragSrcFile;
 
@@ -66,9 +62,6 @@ public:
 
 		bResult = shader->Compile();
 		ionassert(bResult);
-
-		delete[] vertSrc;
-		delete[] fragSrc;
 
 		m_Camera = Camera::Create();
 		m_Camera->SetTransform(Math::Translate(Vector3(0.0f, 0.0f, 2.0f)));
