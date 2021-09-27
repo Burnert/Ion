@@ -71,7 +71,7 @@ public:
 		delete[] fragSrc;
 
 		m_Camera = Camera::Create();
-		m_Camera->SetTransform(Math::Translate(FVector3(0.0f, 0.0f, 2.0f)));
+		m_Camera->SetTransform(Math::Translate(Vector3(0.0f, 0.0f, 2.0f)));
 		m_Camera->SetFOV(Math::Radians(90.0f));
 		m_Camera->SetNearClip(0.1f);
 		m_Camera->SetFarClip(100.0f);
@@ -80,7 +80,7 @@ public:
 		m_Scene->SetActiveCamera(m_Camera);
 
 		m_AuxCamera = Camera::Create();
-		m_AuxCamera->SetTransform(Math::Translate(FVector3(0.0f, 0.0f, 4.0f)));
+		m_AuxCamera->SetTransform(Math::Translate(Vector3(0.0f, 0.0f, 4.0f)));
 		m_AuxCamera->SetFOV(Math::Radians(66.0f));
 		m_AuxCamera->SetNearClip(0.1f);
 		m_AuxCamera->SetFarClip(10.0f);
@@ -142,7 +142,7 @@ public:
 		m_MeshCollada->SetVertexBuffer(colladaVertexBuffer);
 		m_MeshCollada->SetIndexBuffer(colladaIndexBuffer);
 		m_MeshCollada->SetMaterial(material);
-		m_MeshCollada->SetTransform(Math::Rotate(Math::Radians(-90.0f), FVector3(1.0f, 0.0f, 0.0f)));
+		m_MeshCollada->SetTransform(Math::Rotate(Math::Radians(-90.0f), Vector3(1.0f, 0.0f, 0.0f)));
 
 		m_Scene->AddDrawableObject(m_MeshCollada.get());
 
@@ -162,7 +162,7 @@ public:
 		TShared<Shader> meshShader = meshMaterial->GetShader();
 
 		static float c_Angle = 0.0f;
-		static FVector4 c_Tint(1.0f, 0.0f, 1.0f, 1.0f);
+		static Vector4 c_Tint(1.0f, 0.0f, 1.0f, 1.0f);
 
 		// Perspective projection
 		WindowDimensions dimensions = GetWindow()->GetDimensions();
@@ -328,7 +328,7 @@ public:
 
 	virtual void OnRender() override
 	{
-		GetRenderer()->Clear(FVector4(0.1f, 0.1f, 0.1f, 1.0f));
+		GetRenderer()->Clear(Vector4(0.1f, 0.1f, 0.1f, 1.0f));
 		GetRenderer()->RenderScene(m_Scene);
 	}
 
@@ -404,18 +404,18 @@ private:
 	TShared<DirectionalLight> m_DirectionalLight;
 	TShared<Scene> m_Scene;
 
-	FVector4 m_CameraLocation = { 0.0f, 0.0f, 2.0f, 1.0f };
-	FVector3 m_CameraRotation = { 0.0f, 0.0f, 0.0f };
+	Vector4 m_CameraLocation = { 0.0f, 0.0f, 2.0f, 1.0f };
+	Vector3 m_CameraRotation = { 0.0f, 0.0f, 0.0f };
 	Transform m_CameraTransform = { m_CameraLocation, m_CameraRotation, Vector3(1.0f) };
 
-	FVector3 m_MeshLocation = { 0.0f, 0.0f, 0.0f };
-	FVector3 m_MeshRotation = { -90.0f, 0.0f, 0.0f };
-	FVector3 m_MeshScale = FVector3(1.0f);
+	Vector3 m_MeshLocation = { 0.0f, 0.0f, 0.0f };
+	Vector3 m_MeshRotation = { -90.0f, 0.0f, 0.0f };
+	Vector3 m_MeshScale = Vector3(1.0f);
 	Transform m_MeshTransform = { m_MeshLocation, m_MeshRotation, m_MeshScale };
 
-	FVector3 m_AuxCameraLocation = { 0.0f, 0.0f, 4.0f };
+	Vector3 m_AuxCameraLocation = { 0.0f, 0.0f, 4.0f };
 
-	//FVector3 m_LightDirection = Math::Normalize(FVector3 { -0.2f, -0.4f, -0.8f });
+	//Vector3 m_LightDirection = Math::Normalize(Vector3 { -0.2f, -0.4f, -0.8f });
 
 	Vector4 m_AmbientLightColor = Vector4(0.1f, 0.11f, 0.14f, 1.0f);
 

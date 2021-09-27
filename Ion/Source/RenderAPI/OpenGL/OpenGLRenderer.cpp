@@ -37,10 +37,10 @@ namespace Ion
 
 	void OpenGLRenderer::Clear() const
 	{
-		Clear(FVector4(0.0f, 0.0f, 0.0f, 1.0f));
+		Clear(Vector4(0.0f, 0.0f, 0.0f, 1.0f));
 	}
 
-	void OpenGLRenderer::Clear(const FVector4& color) const
+	void OpenGLRenderer::Clear(const Vector4& color) const
 	{
 		TRACE_FUNCTION();
 
@@ -86,12 +86,12 @@ namespace Ion
 
 		// Setup matrices
 
-		const FMatrix4& modelMatrix = drawable->GetTransformMatrix();
-		const FMatrix4& viewProjectionMatrix = activeCamera->GetViewProjectionMatrix();
-		const FMatrix4 modelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
-		const FMatrix4 viewMatrix = activeCamera->GetViewMatrix();
-		const FMatrix4 projectionMatrix = activeCamera->GetProjectionMatrix();
-		const FMatrix4 inverseTranspose = Math::InverseTranspose(modelMatrix);
+		const Matrix4& modelMatrix = drawable->GetTransformMatrix();
+		const Matrix4& viewProjectionMatrix = activeCamera->GetViewProjectionMatrix();
+		const Matrix4 modelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
+		const Matrix4 viewMatrix = activeCamera->GetViewMatrix();
+		const Matrix4 projectionMatrix = activeCamera->GetProjectionMatrix();
+		const Matrix4 inverseTranspose = Math::InverseTranspose(modelMatrix);
 
 		// Set global uniforms
 

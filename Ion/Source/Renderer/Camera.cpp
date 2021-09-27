@@ -11,12 +11,12 @@ namespace Ion
 		return MakeShareable(new Camera);
 	}
 
-	void Camera::SetLocation(const FVector3& location)
+	void Camera::SetLocation(const Vector3& location)
 	{
 		m_CameraLocation = location;
 	}
 
-	void Camera::SetTransform(const FMatrix4& transformMatrix)
+	void Camera::SetTransform(const Matrix4& transformMatrix)
 	{
 		m_CameraTransform = transformMatrix;
 		m_bDirty = true;
@@ -53,14 +53,14 @@ namespace Ion
 			m_ViewMatrix = Math::AffineInverse(m_CameraTransform);
 			m_ProjectionMatrix = Math::Perspective(m_FOV, m_AspectRatio, m_NearClip, m_FarClip);
 
-			m_ViewProjectionMatrix = FMatrix4(1.0f) * m_ProjectionMatrix * m_ViewMatrix;
+			m_ViewProjectionMatrix = Matrix4(1.0f) * m_ProjectionMatrix * m_ViewMatrix;
 		}
 	}
 
 	Camera::Camera() :
-		m_CameraLocation(FVector3(0.0f)),
-		m_CameraTransform(FMatrix4(1.0f)),
-		m_ViewProjectionMatrix(FMatrix4(1.0f)),
+		m_CameraLocation(Vector3(0.0f)),
+		m_CameraTransform(Matrix4(1.0f)),
+		m_ViewProjectionMatrix(Matrix4(1.0f)),
 		m_FOV(90.0f),
 		m_AspectRatio(16.0f / 9.0f),
 		m_NearClip(0.1f),

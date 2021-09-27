@@ -18,9 +18,9 @@ namespace Ion
 		switch (type)
 		{
 		case EMaterialParameterType::Float:  return TypeToString<float>();
-		case EMaterialParameterType::Float2: return TypeToString<FVector2>();
-		case EMaterialParameterType::Float3: return TypeToString<FVector3>();
-		case EMaterialParameterType::Float4: return TypeToString<FVector4>();
+		case EMaterialParameterType::Float2: return TypeToString<Vector2>();
+		case EMaterialParameterType::Float3: return TypeToString<Vector3>();
+		case EMaterialParameterType::Float4: return TypeToString<Vector4>();
 		case EMaterialParameterType::Bool:   return TypeToString<bool>();
 		default:                             return TypeToString<void>();
 		}
@@ -35,9 +35,9 @@ namespace Ion
 	class TMaterialParameter<T,
 		typename TEnableIfT<TOrV<
 			TIsSame<T, float>,
-			TIsSame<T, FVector2>,
-			TIsSame<T, FVector3>,
-			TIsSame<T, FVector4>
+			TIsSame<T, Vector2>,
+			TIsSame<T, Vector3>,
+			TIsSame<T, Vector4>
 		>>
 	>
 	{
@@ -50,9 +50,9 @@ namespace Ion
 			m_Max(1.0f)
 		{
 			if constexpr      (TIsSameV<T, float>)    m_Type = EMaterialParameterType::Float;
-			else if constexpr (TIsSameV<T, FVector2>) m_Type = EMaterialParameterType::Float2;
-			else if constexpr (TIsSameV<T, FVector3>) m_Type = EMaterialParameterType::Float3;
-			else if constexpr (TIsSameV<T, FVector4>) m_Type = EMaterialParameterType::Float4;
+			else if constexpr (TIsSameV<T, Vector2>) m_Type = EMaterialParameterType::Float2;
+			else if constexpr (TIsSameV<T, Vector3>) m_Type = EMaterialParameterType::Float3;
+			else if constexpr (TIsSameV<T, Vector4>) m_Type = EMaterialParameterType::Float4;
 		}
 
 		FORCEINLINE void SetValue(T value)
@@ -179,9 +179,9 @@ namespace Ion
 		{
 			return
 				TIsSameV<Type, float>    && type == EMaterialParameterType::Float  ||
-				TIsSameV<Type, FVector2> && type == EMaterialParameterType::Float2 ||
-				TIsSameV<Type, FVector3> && type == EMaterialParameterType::Float3 ||
-				TIsSameV<Type, FVector4> && type == EMaterialParameterType::Float4 ||
+				TIsSameV<Type, Vector2> && type == EMaterialParameterType::Float2 ||
+				TIsSameV<Type, Vector3> && type == EMaterialParameterType::Float3 ||
+				TIsSameV<Type, Vector4> && type == EMaterialParameterType::Float4 ||
 				TIsSameV<Type, bool>     && type == EMaterialParameterType::Bool;
 		}
 

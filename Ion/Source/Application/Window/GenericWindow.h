@@ -72,7 +72,7 @@ namespace Ion
 
 		virtual void SwapBuffers() { }
 
-		FVector2 GetCenterPosition() const;
+		Vector2 GetCenterPosition() const;
 
 		void SetEventCallback(EventCallback callback);
 		void SetDeferredEventCallback(DeferredEventCallback callback);

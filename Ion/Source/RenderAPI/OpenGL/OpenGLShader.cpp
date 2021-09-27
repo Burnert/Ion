@@ -136,7 +136,7 @@ namespace Ion
 		glUniform1fv(location, 1, &value);
 	}
 
-	void OpenGLShader::SetUniform2f(const std::string& name, const FVector2& value) const
+	void OpenGLShader::SetUniform2f(const std::string& name, const Vector2& value) const
 	{
 		TRACE_FUNCTION();
 
@@ -145,7 +145,7 @@ namespace Ion
 		glUniform2fv(location, 1, (float*)&value);
 	}
 
-	void OpenGLShader::SetUniform3f(const std::string& name, const FVector3& value) const
+	void OpenGLShader::SetUniform3f(const std::string& name, const Vector3& value) const
 	{
 		TRACE_FUNCTION();
 
@@ -154,7 +154,7 @@ namespace Ion
 		glUniform3fv(location, 1, (float*)&value);
 	}
 
-	void OpenGLShader::SetUniform4f(const std::string& name, const FVector4& value) const
+	void OpenGLShader::SetUniform4f(const std::string& name, const Vector4& value) const
 	{
 		TRACE_FUNCTION();
 
@@ -235,7 +235,7 @@ namespace Ion
 		glUniform4uiv(location, 1, (uint*)&value);
 	}
 
-	void OpenGLShader::SetUniformMatrix2f(const std::string& name, const FMatrix2& value) const
+	void OpenGLShader::SetUniformMatrix2f(const std::string& name, const Matrix2& value) const
 	{
 		TRACE_FUNCTION();
 
@@ -244,7 +244,7 @@ namespace Ion
 		glUniformMatrix2fv(location, 1, false, (float*)&value);
 	}
 
-	void OpenGLShader::SetUniformMatrix2x3f(const std::string& name, const FMatrix2x3& value) const
+	void OpenGLShader::SetUniformMatrix2x3f(const std::string& name, const Matrix2x3& value) const
 	{
 		TRACE_FUNCTION();
 
@@ -253,7 +253,7 @@ namespace Ion
 		glUniformMatrix2x3fv(location, 1, false, (float*)&value);
 	}
 
-	void OpenGLShader::SetUniformMatrix2x4f(const std::string& name, const FMatrix2x4& value) const
+	void OpenGLShader::SetUniformMatrix2x4f(const std::string& name, const Matrix2x4& value) const
 	{
 		TRACE_FUNCTION();
 
@@ -262,7 +262,7 @@ namespace Ion
 		glUniformMatrix2x4fv(location, 1, false, (float*)&value);
 	}
 
-	void OpenGLShader::SetUniformMatrix3f(const std::string& name, const FMatrix3& value) const
+	void OpenGLShader::SetUniformMatrix3f(const std::string& name, const Matrix3& value) const
 	{
 		TRACE_FUNCTION();
 
@@ -271,7 +271,7 @@ namespace Ion
 		glUniformMatrix3fv(location, 1, false, (float*)&value);
 	}
 
-	void OpenGLShader::SetUniformMatrix3x2f(const std::string& name, const FMatrix3x2& value) const
+	void OpenGLShader::SetUniformMatrix3x2f(const std::string& name, const Matrix3x2& value) const
 	{
 		TRACE_FUNCTION();
 
@@ -280,7 +280,7 @@ namespace Ion
 		glUniformMatrix3x2fv(location, 1, false, (float*)&value);
 	}
 
-	void OpenGLShader::SetUniformMatrix3x4f(const std::string& name, const FMatrix3x4& value) const
+	void OpenGLShader::SetUniformMatrix3x4f(const std::string& name, const Matrix3x4& value) const
 	{
 		TRACE_FUNCTION();
 
@@ -289,7 +289,7 @@ namespace Ion
 		glUniformMatrix3x4fv(location, 1, false, (float*)&value);
 	}
 
-	void OpenGLShader::SetUniformMatrix4f(const std::string& name, const FMatrix4& value) const
+	void OpenGLShader::SetUniformMatrix4f(const std::string& name, const Matrix4& value) const
 	{
 		TRACE_FUNCTION();
 
@@ -298,7 +298,7 @@ namespace Ion
 		glUniformMatrix4fv(location, 1, false, (float*)&value);
 	}
 
-	void OpenGLShader::SetUniformMatrix4x2f(const std::string& name, const FMatrix4x2& value) const
+	void OpenGLShader::SetUniformMatrix4x2f(const std::string& name, const Matrix4x2& value) const
 	{
 		TRACE_FUNCTION();
 
@@ -307,7 +307,7 @@ namespace Ion
 		glUniformMatrix4x2fv(location, 1, false, (float*)&value);
 	}
 
-	void OpenGLShader::SetUniformMatrix4x3f(const std::string& name, const FMatrix4x3& value) const
+	void OpenGLShader::SetUniformMatrix4x3f(const std::string& name, const Matrix4x3& value) const
 	{
 		TRACE_FUNCTION();
 

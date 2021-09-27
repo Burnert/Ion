@@ -14,7 +14,7 @@ namespace Ion
 		virtual void Init() override;
 
 		virtual void Clear() const override;
-		virtual void Clear(const FVector4& color) const override;
+		virtual void Clear(const Vector4& color) const override;
 
 		virtual void Draw(const IDrawable* drawable, const TShared<Scene>& targetScene = nullptr) const override;
 

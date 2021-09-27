@@ -12,10 +12,10 @@ namespace Ion
 	Mesh::Mesh() :
 		m_VertexCount(0),
 		m_TriangleCount(0),
-		m_TransformMatrix(FMatrix4(1.0f))
+		m_TransformMatrix(Matrix4(1.0f))
 	{ }
 
-	void Mesh::SetTransform(const FMatrix4& transform)
+	void Mesh::SetTransform(const Matrix4& transform)
 	{
 		m_TransformMatrix = transform;
 	}
@@ -69,7 +69,7 @@ namespace Ion
 		return m_Material.get();
 	}
 
-	const FMatrix4& Mesh::GetTransformMatrix() const
+	const Matrix4& Mesh::GetTransformMatrix() const
 	{
 		return m_TransformMatrix;
 	}

@@ -15,6 +15,6 @@ namespace Ion
 		virtual const VertexBuffer* GetVertexBufferRaw() const = 0;
 		virtual const IndexBuffer* GetIndexBufferRaw() const = 0;
 		virtual const Material* GetMaterialRaw() const = 0;
-		virtual const FMatrix4& GetTransformMatrix() const = 0;
+		virtual const Matrix4& GetTransformMatrix() const = 0;
 	};
 }

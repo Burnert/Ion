@@ -11,25 +11,25 @@ namespace Ion
 
 		// @TODO: Setting the location here is a temporary solution
 
-		void SetLocation(const FVector3& location);
-		FORCEINLINE const FVector3& GetLocation() const { return m_CameraLocation; }
+		void SetLocation(const Vector3& location);
+		FORCEINLINE const Vector3& GetLocation() const { return m_CameraLocation; }
 
-		void SetTransform(const FMatrix4& transformMatrix);
-		FORCEINLINE const FMatrix4& GetTransform() const { return m_CameraTransform; }
+		void SetTransform(const Matrix4& transformMatrix);
+		FORCEINLINE const Matrix4& GetTransform() const { return m_CameraTransform; }
 
-		FORCEINLINE const FMatrix4& GetViewProjectionMatrix() const
+		FORCEINLINE const Matrix4& GetViewProjectionMatrix() const
 		{
 			UpdateMatrixCache();
 			return m_ViewProjectionMatrix;
 		}
 
-		FORCEINLINE const FMatrix4& GetViewMatrix() const
+		FORCEINLINE const Matrix4& GetViewMatrix() const
 		{
 			UpdateMatrixCache();
 			return m_ViewMatrix;
 		}
 
-		FORCEINLINE const FMatrix4& GetProjectionMatrix() const
+		FORCEINLINE const Matrix4& GetProjectionMatrix() const
 		{
 			UpdateMatrixCache();
 			return m_ProjectionMatrix;
@@ -53,12 +53,12 @@ namespace Ion
 		void UpdateMatrixCache() const;
 
 	private:
-		FVector3 m_CameraLocation;
-		FMatrix4 m_CameraTransform;
+		Vector3 m_CameraLocation;
+		Matrix4 m_CameraTransform;
 
-		mutable FMatrix4 m_ViewProjectionMatrix;
-		mutable FMatrix4 m_ViewMatrix;
-		mutable FMatrix4 m_ProjectionMatrix;
+		mutable Matrix4 m_ViewProjectionMatrix;
+		mutable Matrix4 m_ViewMatrix;
+		mutable Matrix4 m_ProjectionMatrix;
 
 		float m_FOV;
 		float m_AspectRatio;

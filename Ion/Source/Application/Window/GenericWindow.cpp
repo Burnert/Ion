@@ -37,10 +37,10 @@ namespace Ion
 		return false;
 	}
 
-	FVector2 GenericWindow::GetCenterPosition() const
+	Vector2 GenericWindow::GetCenterPosition() const
 	{
 		WindowDimensions dimensions = GetDimensions();
-		return FVector2 { dimensions.Width * 0.5f, dimensions.Height * 0.5f };
+		return Vector2 { dimensions.Width * 0.5f, dimensions.Height * 0.5f };
 	}
 
 	void* GenericWindow::GetNativeHandle() const

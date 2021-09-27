@@ -30,13 +30,13 @@ namespace Ion
 			m_Parameters.insert({ name, new TMaterialParameter<float> });
 			break;
 		case Ion::EMaterialParameterType::Float2:
-			m_Parameters.insert({ name, new TMaterialParameter<FVector2> });
+			m_Parameters.insert({ name, new TMaterialParameter<Vector2> });
 			break;
 		case Ion::EMaterialParameterType::Float3:
-			m_Parameters.insert({ name, new TMaterialParameter<FVector3> });
+			m_Parameters.insert({ name, new TMaterialParameter<Vector3> });
 			break;
 		case Ion::EMaterialParameterType::Float4:
-			m_Parameters.insert({ name, new TMaterialParameter<FVector4> });
+			m_Parameters.insert({ name, new TMaterialParameter<Vector4> });
 			break;
 		case Ion::EMaterialParameterType::Bool:
 			m_Parameters.insert({ name, new TMaterialParameter<bool> });
@@ -107,19 +107,19 @@ namespace Ion
 				break;
 				case EMaterialParameterType::Float2:
 				{
-					TMaterialParameter<FVector2>* parameter = reinterpret_cast<TMaterialParameter<FVector2>*>(paramPtr);
+					TMaterialParameter<Vector2>* parameter = reinterpret_cast<TMaterialParameter<Vector2>*>(paramPtr);
 					m_Shader->SetUniform2f(uniformName, parameter->GetValue());
 				}
 				break;
 				case EMaterialParameterType::Float3:
 				{
-					TMaterialParameter<FVector3>* parameter = reinterpret_cast<TMaterialParameter<FVector3>*>(paramPtr);
+					TMaterialParameter<Vector3>* parameter = reinterpret_cast<TMaterialParameter<Vector3>*>(paramPtr);
 					m_Shader->SetUniform3f(uniformName, parameter->GetValue());
 				}
 				break;
 				case EMaterialParameterType::Float4:
 				{
-					TMaterialParameter<FVector4>* parameter = reinterpret_cast<TMaterialParameter<FVector4>*>(paramPtr);
+					TMaterialParameter<Vector4>* parameter = reinterpret_cast<TMaterialParameter<Vector4>*>(paramPtr);
 					m_Shader->SetUniform4f(uniformName, parameter->GetValue());
 				}
 				break;
