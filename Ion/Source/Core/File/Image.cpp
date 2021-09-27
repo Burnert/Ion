@@ -32,8 +32,8 @@ namespace Ion
 		m_Channels = other.m_Channels;
 
 		// Copy the pixel data
-		ullong pixelDataSize = (ullong)m_Width * (ullong)m_Height * (ullong)m_Channels;
-		m_PixelData = (ubyte*)malloc(pixelDataSize);
+		uint64 pixelDataSize = (uint64)m_Width * (uint64)m_Height * (uint64)m_Channels;
+		m_PixelData = (uint8*)malloc(pixelDataSize);
 		memcpy_s(m_PixelData, pixelDataSize, other.m_PixelData, pixelDataSize);
 	}
 
@@ -51,7 +51,7 @@ namespace Ion
 		other.m_PixelData = nullptr;
 	}
 
-	const ubyte* Image::Load(File* file)
+	const uint8* Image::Load(File* file)
 	{
 		TRACE_FUNCTION();
 
@@ -61,10 +61,10 @@ namespace Ion
 		bResult = file->Open(IO::EFileMode::FM_Read);
 		_FAIL(bResult);
 
-		llong fileSize = file->GetSize();
+		int64 fileSize = file->GetSize();
 		_FAIL_M(fileSize, L"Cannot load image from '{0}'.\nThe file is empty.", file->GetFilename());
 
-		ubyte* data = new ubyte[fileSize];
+		uint8* data = new uint8[fileSize];
 		bResult = file->Read(data, fileSize);
 		_FAIL(bResult);
 
@@ -75,7 +75,7 @@ namespace Ion
 		}
 
 		// Load pixel data with no desired channel number
-		m_PixelData = stbi_load_from_memory(data, (int)fileSize, &m_Width, &m_Height, &m_Channels, 4);
+		m_PixelData = stbi_load_from_memory(data, (int32)fileSize, &m_Width, &m_Height, &m_Channels, 4);
 		_FAIL_M(m_PixelData, L"Cannot load pixel data from '{0}'.", file->GetFilename());
 
 		delete[] data;

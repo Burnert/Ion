@@ -7,14 +7,14 @@ namespace Ion
 {
 	namespace IO
 	{
-		enum EFileType : ubyte
+		enum EFileType : uint8
 		{
 			FT_Text   = 1,
 			FT_Binary = 2,
 			FT_Other  = 0xFF,
 		};
 
-		enum EFileMode : ubyte
+		enum EFileMode : uint8
 		{
 			FM_Read      = Bitflag(0),
 			FM_Write     = Bitflag(1),
@@ -22,7 +22,7 @@ namespace Ion
 			FM_Reset     = Bitflag(3),
 		};
 
-		enum ENewLineType : ubyte
+		enum ENewLineType : uint8
 		{
 			NLT_LF      = 1,
 			NLT_CR      = 2,
@@ -34,7 +34,7 @@ namespace Ion
 	{
 		WString Filename;
 		WString FullPath;
-		llong Size;
+		int64 Size;
 		bool bDirectory;
 	};
 
@@ -43,22 +43,22 @@ namespace Ion
 	{
 		// @TODO: Add an option to create directories (also recursively)
 	public:
-		virtual bool Open(ubyte mode) = 0;
+		virtual bool Open(uint8 mode) = 0;
 		virtual void Close() = 0;
 		virtual bool Delete() = 0;
 
-		virtual bool Read(ubyte* outBuffer, ullong count) = 0;
-		virtual bool ReadLine(char* outBuffer, ullong count) = 0;
-		virtual bool ReadLine(std::string& outStr) = 0;
-		virtual bool Write(const ubyte* inBuffer, ullong count) = 0;
-		virtual bool WriteLine(const char* inBuffer, ullong count) = 0;
-		virtual bool WriteLine(const std::string& inStr) = 0;
+		virtual bool Read(uint8* outBuffer, uint64 count) = 0;
+		virtual bool ReadLine(char* outBuffer, uint64 count) = 0;
+		virtual bool ReadLine(String& outStr) = 0;
+		virtual bool Write(const uint8* inBuffer, uint64 count) = 0;
+		virtual bool WriteLine(const char* inBuffer, uint64 count) = 0;
+		virtual bool WriteLine(const String& inStr) = 0;
 
-		virtual bool AddOffset(llong count) = 0;
-		virtual bool SetOffset(llong count) = 0;
-		virtual llong GetOffset() const = 0;
+		virtual bool AddOffset(int64 count) = 0;
+		virtual bool SetOffset(int64 count) = 0;
+		virtual int64 GetOffset() const = 0;
 
-		virtual llong GetSize() const = 0;
+		virtual int64 GetSize() const = 0;
 		virtual WString GetExtension() const = 0;
 
 		virtual bool IsDirectory() const = 0;
@@ -75,41 +75,41 @@ namespace Ion
 	{
 	public:
 		static File* Create();
-		static File* Create(const std::wstring& filename);
+		static File* Create(const WString& filename);
 
 		File();
-		File(const std::wstring& filename);
+		File(const WString& filename);
 		virtual ~File() { }
 		
 		// @TODO: Add copy and move constructors
 
 		// IFile:
 
-		virtual bool Read(ubyte* outBuffer, ullong count) = 0;
-		virtual bool Write(const ubyte* inBuffer, ullong count) = 0;
+		virtual bool Read(uint8* outBuffer, uint64 count) = 0;
+		virtual bool Write(const uint8* inBuffer, uint64 count) = 0;
 
 		// End of IFile:
 
 		// IFile wrappers:
 
-		inline bool Read(char* outBuffer, ullong count)
+		inline bool Read(char* outBuffer, uint64 count)
 		{
-			return Read((ubyte*)outBuffer, count);
+			return Read((uint8*)outBuffer, count);
 		}
-		template<ullong Size>
+		template<uint64 Size>
 		inline bool Read(char(&outBuffer)[Size])
 		{
-			return Read((ubyte*)outBuffer, Size - 1);
+			return Read((uint8*)outBuffer, Size - 1);
 		}
 
-		inline bool Write(const char* inBuffer, ullong count)
+		inline bool Write(const char* inBuffer, uint64 count)
 		{
-			return Write((const ubyte*)inBuffer, count);
+			return Write((const uint8*)inBuffer, count);
 		}
-		template<ullong Size>
+		template<uint64 Size>
 		inline bool Write(const char(&inBuffer)[Size])
 		{
-			return Write((const ubyte*)inBuffer, Size - 1);
+			return Write((const uint8*)inBuffer, Size - 1);
 		}
 
 		// End of IFile wrappers
@@ -117,12 +117,12 @@ namespace Ion
 		/* This is the type of the new line character that will be written in a text file. */
 		IO::ENewLineType WriteNewLineType;
 
-		bool SetFilename(const std::wstring& filename);
+		bool SetFilename(const WString& filename);
 	protected:
 		/* If this function returns false, the filename will not be changed. */
-		virtual bool SetFilename_Impl(const std::wstring& filename);
+		virtual bool SetFilename_Impl(const WString& filename);
 	public:
-		FORCEINLINE std::wstring GetFilename() const { return m_Filename; }
+		FORCEINLINE WString GetFilename() const { return m_Filename; }
 
 		bool SetType(IO::EFileType type);
 	protected:
@@ -134,17 +134,17 @@ namespace Ion
 		FORCEINLINE bool IsFilenameValid() const { return m_Filename != TEXT(""); }
 
 	protected:
-		std::wstring m_Filename;
+		WString m_Filename;
 		IO::EFileType m_Type;
-		ubyte m_Mode;
+		uint8 m_Mode;
 
 		// Caches ----------------------
 
-		mutable llong m_FileSize;
+		mutable int64 m_FileSize;
 		/* Invalidates file size cache and retrieves the new size. */
 		FORCEINLINE void UpdateFileSizeCache() const { m_FileSize = -1; GetSize(); }
 		/* Sets the file size cache to the size specified. */
-		FORCEINLINE void UpdateFileSizeCache(llong newFileSize) const { m_FileSize = newFileSize; }
+		FORCEINLINE void UpdateFileSizeCache(int64 newFileSize) const { m_FileSize = newFileSize; }
 
 		// Debug only code -------------
 #ifdef ION_DEBUG

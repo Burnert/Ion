@@ -5,4 +5,4 @@ WCHAR _##msgVarName[512]; \
 FormatMessage( \
 	FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, \
 	NULL, error, 0, _##msgVarName, 512, NULL); \
-std::wstring msgVarName = _##msgVarName
+WString msgVarName = _##msgVarName

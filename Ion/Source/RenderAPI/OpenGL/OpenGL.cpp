@@ -22,8 +22,8 @@ namespace Ion
 	char OpenGL::s_DisplayName[120] = "OpenGL ";
 
 	bool OpenGL::s_GLInitialized = false;
-	int OpenGL::s_MajorVersion = 4;
-	int OpenGL::s_MinorVersion = 3;
+	int32 OpenGL::s_MajorVersion = 4;
+	int32 OpenGL::s_MinorVersion = 3;
 
 	const char* OpenGL::GetDisplayName()
 	{

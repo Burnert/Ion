@@ -19,8 +19,8 @@ namespace Ion
 		struct TraceResult
 		{
 			const char* Name;
-			llong Timestamp;
-			llong EndTimestamp;
+			int64 Timestamp;
+			int64 EndTimestamp;
 			float Duration;
 		};
 
@@ -32,11 +32,11 @@ namespace Ion
 			~ScopedTracer();
 
 		protected:
-			void CacheResult(llong endTime, float duration);
+			void CacheResult(int64 endTime, float duration);
 
 		private:
 			const char* m_Name;
-			llong m_StartTime;
+			int64 m_StartTime;
 			bool m_bRunning;
 		};
 
@@ -54,7 +54,7 @@ namespace Ion
 
 		static void DumpResults();
 
-		static llong TimestampToMicroseconds(llong timestamp);
+		static int64 TimestampToMicroseconds(int64 timestamp);
 
 	private:
 		static const char* s_CurrentSessionName;

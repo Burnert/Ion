@@ -27,7 +27,7 @@ namespace Ion
 
 		xmlFile->Open(IO::FM_Read);
 
-		llong size = xmlFile->GetSize();
+		int64 size = xmlFile->GetSize();
 		ionassert(size > 0, "XML file cannot be empty!");
 
 		char* xmlBuffer = new char[size + 1];

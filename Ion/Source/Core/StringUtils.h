@@ -19,9 +19,9 @@ constexpr const wchar* StringLiteralAs(char* str, wchar* wstr) { return wstr; }
 // Templated c-string functions
 
 template<typename T>
-inline static int tstrcmp(const T* s1, const T* s2) { return 0; }
-template<> inline static int tstrcmp(const char* s1, const char* s2)   { return strcmp(s1, s2); }
-template<> inline static int tstrcmp(const wchar* s1, const wchar* s2) { return wcscmp(s1, s2); }
+inline static int32 tstrcmp(const T* s1, const T* s2) { return 0; }
+template<> inline static int32 tstrcmp(const char* s1, const char* s2)   { return strcmp(s1, s2); }
+template<> inline static int32 tstrcmp(const wchar* s1, const wchar* s2) { return wcscmp(s1, s2); }
 
 template<typename T>
 inline static uint64 tstrlen(const T* s) { return 0; }
@@ -34,26 +34,27 @@ template<> inline static uint64 tstrlen(const wchar* s) { return wcslen(s); }
 template<typename Type>
 NODISCARD FORCEINLINE static constexpr const char* TypeToString()                             { return "Undefined"; }
 template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<bool>()            { return "Boolean"; }
-template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<char>()            { return "Char"; }
-template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<ubyte>()           { return "UnsignedChar"; }
-template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<short>()           { return "Short"; }
-template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<ushort>()          { return "UnsignedShort"; }
-template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<int>()             { return "Integer"; }
-template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<uint>()            { return "UnsignedInteger"; }
+template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<int8>()            { return "Integer8"; }
+template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<uint8>()           { return "UnsignedInteger8"; }
+template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<int16>()           { return "Integer16"; }
+template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<uint16>()          { return "UnsignedInteger16"; }
+template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<int32>()           { return "Integer32"; }
+template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<uint32>()          { return "UnsignedInteger32"; }
+template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<int64>()           { return "Integer64"; }
+template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<uint64>()          { return "UnsignedInteger64"; }
 template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<long>()            { return "Long"; }
 template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<ulong>()           { return "UnsignedLong"; }
-template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<llong>()           { return "LongLong"; }
-template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<ullong>()          { return "UnsignedLongLong"; }
 template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<float>()           { return "Float"; }
 template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<double>()          { return "Double"; }
+template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<wchar>()           { return "WideChar"; }
 template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<String>()          { return "String"; }
 template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<WString>()         { return "WideString"; }
 template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<Ion::Vector2>()   { return "FloatVector2"; }
 template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<Ion::Vector3>()   { return "FloatVector3"; }
 template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<Ion::Vector4>()   { return "FloatVector4"; }
-template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<Ion::IVector2>()   { return "IntegerVector2"; }
-template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<Ion::IVector3>()   { return "IntegerVector3"; }
-template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<Ion::IVector4>()   { return "IntegerVector4"; }
+template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<Ion::IVector2>()  { return "IntegerVector2"; }
+template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<Ion::IVector3>()  { return "IntegerVector3"; }
+template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<Ion::IVector4>()  { return "IntegerVector4"; }
 template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<Ion::Matrix2>()   { return "FloatMatrix2"; }
 template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<Ion::Matrix2x3>() { return "FloatMatrix2x3"; }
 template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<Ion::Matrix2x4>() { return "FloatMatrix2x4"; }

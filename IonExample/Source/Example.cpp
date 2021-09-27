@@ -295,7 +295,7 @@ public:
 				static const char* currentDrawMode = m_DrawModes[0];
 				if (ImGui::BeginCombo("Draw Mode", currentDrawMode))
 				{
-					for (int i = 0; i < 3; ++i)
+					for (int32 i = 0; i < 3; ++i)
 					{
 						bool selected = currentDrawMode == m_DrawModes[i];
 						if (ImGui::Selectable(m_DrawModes[i], selected))

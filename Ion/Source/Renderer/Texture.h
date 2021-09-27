@@ -4,8 +4,8 @@ namespace Ion
 {
 	struct STextureDimensions
 	{
-		int Width;
-		int Height;
+		int32 Width;
+		int32 Height;
 	};
 
 	class ION_API Texture
@@ -16,7 +16,7 @@ namespace Ion
 
 		virtual ~Texture();
 
-		virtual void Bind(uint slot = 0) const = 0;
+		virtual void Bind(uint32 slot = 0) const = 0;
 		virtual void Unbind() const = 0;
 
 		FORCEINLINE STextureDimensions GetTextureDimensions() const
@@ -28,7 +28,7 @@ namespace Ion
 			};
 		}
 
-		FORCEINLINE const ubyte* GetPixelData() const
+		FORCEINLINE const uint8* GetPixelData() const
 		{
 			ionassert(m_TextureImage, "Texture image is not set!");
 			return m_TextureImage->GetPixelData();

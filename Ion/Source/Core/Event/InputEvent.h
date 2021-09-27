@@ -9,26 +9,26 @@ namespace Ion
 	class ION_API KeyboardEvent : public Event
 	{
 	public:
-		FORCEINLINE uint GetKeyCode() const { return m_KeyCode; }
-		FORCEINLINE uint GetActualKeyCode() const { return m_ActualKeyCode; }
+		FORCEINLINE uint32 GetKeyCode() const { return m_KeyCode; }
+		FORCEINLINE uint32 GetActualKeyCode() const { return m_ActualKeyCode; }
 
 		SET_EVENT_CATEGORY(EC_Input | EC_Keyboard)
 
 	protected:
-		KeyboardEvent(uint keyCode, uint actualKeyCode) :
+		KeyboardEvent(uint32 keyCode, uint32 actualKeyCode) :
 			m_KeyCode(keyCode),
 			m_ActualKeyCode(actualKeyCode) {}
 
 	private:
-		uint m_KeyCode;
-		uint m_ActualKeyCode;
+		uint32 m_KeyCode;
+		uint32 m_ActualKeyCode;
 	};
 
 
 	class ION_API KeyPressedEvent : public KeyboardEvent
 	{
 	public:
-		KeyPressedEvent(uint keyCode, uint actualKeyCode) :
+		KeyPressedEvent(uint32 keyCode, uint32 actualKeyCode) :
 			KeyboardEvent(keyCode, actualKeyCode)
 		{ }
 
@@ -40,7 +40,7 @@ namespace Ion
 	class ION_API KeyReleasedEvent : public KeyboardEvent
 	{
 	public:
-		KeyReleasedEvent(uint keyCode, uint actualKeyCode) :
+		KeyReleasedEvent(uint32 keyCode, uint32 actualKeyCode) :
 			KeyboardEvent(keyCode, actualKeyCode) 
 		{ }
 
@@ -51,7 +51,7 @@ namespace Ion
 	class ION_API KeyRepeatedEvent : public KeyboardEvent
 	{
 	public:
-		KeyRepeatedEvent(uint keyCode, uint actualKeyCode) :
+		KeyRepeatedEvent(uint32 keyCode, uint32 actualKeyCode) :
 			KeyboardEvent(keyCode, actualKeyCode)
 		{ }
 
@@ -100,23 +100,23 @@ namespace Ion
 	class ION_API MouseButtonEvent : public Event
 	{
 	public:
-		FORCEINLINE uint GetMouseButton() const { return m_Button; }
+		FORCEINLINE uint32 GetMouseButton() const { return m_Button; }
 
 		SET_EVENT_CATEGORY(EC_Input | EC_Mouse | EC_MouseButton)
 
 	protected:
-		MouseButtonEvent(uint button) :
+		MouseButtonEvent(uint32 button) :
 			m_Button(button) {}
 		
 	private:
-		uint m_Button;
+		uint32 m_Button;
 	};
 
 
 	class ION_API MouseButtonPressedEvent : public MouseButtonEvent
 	{
 	public:
-		MouseButtonPressedEvent(uint button) :
+		MouseButtonPressedEvent(uint32 button) :
 			MouseButtonEvent(button) {}
 
 		SET_EVENT_TYPE(MouseButtonPressed)
@@ -127,7 +127,7 @@ namespace Ion
 	class ION_API MouseDoubleClickEvent : public MouseButtonEvent
 	{
 	public:
-		MouseDoubleClickEvent(uint button) :
+		MouseDoubleClickEvent(uint32 button) :
 			MouseButtonEvent(button) {}
 
 		SET_EVENT_TYPE(MouseDoubleClick)
@@ -138,7 +138,7 @@ namespace Ion
 	class ION_API MouseButtonReleasedEvent : public MouseButtonEvent
 	{
 	public:
-		MouseButtonReleasedEvent(uint button) :
+		MouseButtonReleasedEvent(uint32 button) :
 			MouseButtonEvent(button) {}
 
 		SET_EVENT_TYPE(MouseButtonReleased)
@@ -177,7 +177,7 @@ namespace Ion
 	class ION_API RawInputMouseButtonPressedEvent : public MouseButtonPressedEvent
 	{
 	public:
-		RawInputMouseButtonPressedEvent(uint button) :
+		RawInputMouseButtonPressedEvent(uint32 button) :
 			MouseButtonPressedEvent(button) { }
 
 		SET_EVENT_TYPE(RawInputMouseButtonPressed)
@@ -188,7 +188,7 @@ namespace Ion
 	class ION_API RawInputMouseButtonReleasedEvent : public MouseButtonReleasedEvent
 	{
 	public:
-		RawInputMouseButtonReleasedEvent(uint button) :
+		RawInputMouseButtonReleasedEvent(uint32 button) :
 			MouseButtonReleasedEvent(button) { }
 
 		SET_EVENT_TYPE(RawInputMouseButtonReleased)

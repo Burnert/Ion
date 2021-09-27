@@ -6,7 +6,7 @@
 
 // Bitwise :
 
-NODISCARD constexpr uint Bitflag(ubyte bit) noexcept { return 1u << bit; }
+NODISCARD constexpr uint32 Bitflag(uint8 bit) noexcept { return 1u << bit; }
 
 template<typename T, typename U, 
 	TEnableIfT<TIsIntegralV<T>>* = nullptr,
@@ -41,7 +41,7 @@ NODISCARD constexpr inline U GetBitflags(const T& bitmask, const U& bits) noexce
 }
 
 template<typename T>
-NODISCARD constexpr inline TEnableIfT<TIsIntegralV<T>, bool> GetBitflag(const T& bitmask, ubyte bit) noexcept
+NODISCARD constexpr inline TEnableIfT<TIsIntegralV<T>, bool> GetBitflag(const T& bitmask, uint8 bit) noexcept
 {
 	return (bitmask >> bit) & 0x01u;
 }
@@ -49,7 +49,7 @@ NODISCARD constexpr inline TEnableIfT<TIsIntegralV<T>, bool> GetBitflag(const T&
 template<typename T>
 NODISCARD constexpr inline TEnableIfT<TIsIntegralV<T>, T> BooleanToBitmask(bool boolean) noexcept
 {
-	return (T)-(llong)boolean;
+	return (T)-(int64)boolean;
 }
 
 // Memory :

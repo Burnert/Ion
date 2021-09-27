@@ -27,7 +27,7 @@ namespace Ion
 		virtual void Show() override;
 		virtual void Hide() override;
 
-		virtual void SetTitle(const std::wstring& title) override;
+		virtual void SetTitle(const WString& title) override;
 
 		virtual void SetEnabled(bool bEnabled) override;
 
@@ -79,7 +79,7 @@ namespace Ion
 		HDC   m_DeviceContext;
 		HGLRC m_RenderingContext;
 
-		std::wstring m_Title;
+		WString m_Title;
 		bool m_bVisible = false;
 
 		// Should be true after Initialize() has been called one time.

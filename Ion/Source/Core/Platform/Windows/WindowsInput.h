@@ -13,16 +13,16 @@ namespace Ion
 	protected:
 		/* Translates a Windows key code to internal Ion key code.
 		   When the key code is invalid (0) it returns false. */
-		static bool TranslateWindowsKeyCode(uint* keyCodePtr);
+		static bool TranslateWindowsKeyCode(uint32* keyCodePtr);
 
 		/* Translates an internal Ion key code back to a Windows virtual key */
-		static inline uint TranslateWindowsKeyCodeReverse(ushort internalKeyCode)
+		static inline uint32 TranslateWindowsKeyCodeReverse(uint16 internalKeyCode)
 		{
 			// This is too slow
 			// Should be another LUT
 			// but I don't have time for it now.
 			// @TODO: Make a LUT in the future.
-			for (int i = 0; i < 256; ++i)
+			for (int32 i = 0; i < 256; ++i)
 			{
 				if (s_InputKeyCodeLookup[i] == internalKeyCode)
 					return s_InputKeyCodeLookup[i];
@@ -30,7 +30,7 @@ namespace Ion
 			return 0;
 		}
 
-		static constexpr ubyte s_InputKeyCodeLookup[256] = {
+		static constexpr uint8 s_InputKeyCodeLookup[256] = {
 			// 0x00 ---------------------------
 			0x00, // 0x00 : Invalid keycode
 			Mouse::Left,

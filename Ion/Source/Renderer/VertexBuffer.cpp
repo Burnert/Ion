@@ -7,19 +7,19 @@
 
 namespace Ion
 {
-	VertexLayout::VertexLayout(uint initialAttributeCount)
+	VertexLayout::VertexLayout(uint32 initialAttributeCount)
 		: m_Offset(0)
 	{
 		m_Attributes.reserve(initialAttributeCount * sizeof(VertexAttribute));
 	}
 
-	void VertexLayout::AddAttribute(EVertexAttributeType attributeType, ubyte elementCount, bool normalized)
+	void VertexLayout::AddAttribute(EVertexAttributeType attributeType, uint8 elementCount, bool normalized)
 	{
 		m_Attributes.push_back({ attributeType, elementCount, m_Offset, normalized });
 		m_Offset += elementCount * GetSizeOfAttributeType(attributeType);
 	}
 
-	TShared<VertexBuffer> VertexBuffer::Create(float* vertexAttributes, ullong count)
+	TShared<VertexBuffer> VertexBuffer::Create(float* vertexAttributes, uint64 count)
 	{
 		switch (RenderAPI::GetCurrent())
 		{

@@ -12,7 +12,7 @@ namespace Ion
 		#pragma warning(disable:6387)
 		#pragma warning(disable:6255)
 
-		int nameLength = (int)strlen(name);
+		int32 nameLength = (int32)strlen(name);
 		ionassert(nameLength < 50);
 
 		bool bResult;
@@ -71,25 +71,25 @@ namespace Ion
 
 		for (const TraceResult& result : s_TraceResults)
 		{
-			int charsWritten;
+			int32 charsWritten;
 			char eventBuffer[1000];
 			memset(eventBuffer, 0, 1000);
 			// Begin event
 			charsWritten = sprintf_s(eventBuffer, "{\"name\":\"%s\",\"cat\":\"%s\",\"ph\":\"B\",\"ts\":%lld,\"pid\":%d,\"tid\":%d},",
 				result.Name, "cat", TimestampToMicroseconds(result.Timestamp), 0, 0);
-			s_SessionDumpFile->Write((ubyte*)eventBuffer, charsWritten);
+			s_SessionDumpFile->Write((uint8*)eventBuffer, charsWritten);
 			memset(eventBuffer, 0, 1000);
 			// End event
 			charsWritten = sprintf_s(eventBuffer, "{\"ph\":\"E\",\"ts\":%lld,\"pid\":%d,\"tid\":%d},",
 				TimestampToMicroseconds(result.EndTimestamp), 0, 0);
-			s_SessionDumpFile->Write((ubyte*)eventBuffer, charsWritten);
+			s_SessionDumpFile->Write((uint8*)eventBuffer, charsWritten);
 		}
 
 		s_TraceResults.clear();
 		s_NamedTraceResults.clear();
 	}
 
-	void DebugTracing::ScopedTracer::CacheResult(llong endTime, float duration)
+	void DebugTracing::ScopedTracer::CacheResult(int64 endTime, float duration)
 	{
 		ionassert(HasSessionStarted());
 		float durationMs = duration * 0.001f;

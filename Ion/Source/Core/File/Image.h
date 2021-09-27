@@ -14,18 +14,18 @@ namespace Ion
 		Image(Image&& other) noexcept;
 
 		/* Loads an image from the specified file. */
-		const ubyte* Load(File* file);
+		const uint8* Load(File* file);
 		FORCEINLINE bool IsLoaded() const { return m_Width && m_Height && m_Channels && m_PixelData; }
 
-		FORCEINLINE const ubyte* GetPixelData() const { return m_PixelData; }
-		FORCEINLINE int GetWidth() const { return m_Width; }
-		FORCEINLINE int GetHeight() const { return m_Height; }
-		FORCEINLINE int GetChannelNum() const { return m_Channels; }
+		FORCEINLINE const uint8* GetPixelData() const { return m_PixelData; }
+		FORCEINLINE int32 GetWidth() const { return m_Width; }
+		FORCEINLINE int32 GetHeight() const { return m_Height; }
+		FORCEINLINE int32 GetChannelNum() const { return m_Channels; }
 
 	private:
-		ubyte* m_PixelData;
-		int m_Width;
-		int m_Height;
-		int m_Channels;
+		uint8* m_PixelData;
+		int32 m_Width;
+		int32 m_Height;
+		int32 m_Channels;
 	};
 }

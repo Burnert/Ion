@@ -37,9 +37,9 @@ namespace Ion
 		void PropagateEvent();
 
 	private:
-		static uint s_LayerCount;
+		static uint32 s_LayerCount;
 
-		uint m_ID;
+		uint32 m_ID;
 		const char* m_Name;
 		bool m_bEnabled = true;
 		bool m_bPropagateCurrentEvent = false;

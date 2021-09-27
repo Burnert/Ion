@@ -9,7 +9,7 @@ namespace Performance
 	// ----------------------------
 	// Performance Counter --------
 
-	DebugCounter::DebugCounter(std::string&& name, std::string&& type)
+	DebugCounter::DebugCounter(String&& name, String&& type)
 		: m_CounterData({ name, type }), m_Log(false)
 	{ }
 
@@ -43,7 +43,7 @@ namespace Performance
 		return s_Instance;
 	}
 
-	DebugCounter* DebugProfiler::RegisterCounter(std::string&& id, std::string&& name, std::string&& type)
+	DebugCounter* DebugProfiler::RegisterCounter(String&& id, String&& name, String&& type)
 	{
 		DebugProfiler* instance = Get();
 		if (!IsCounterRegistered(id))
@@ -54,7 +54,7 @@ namespace Performance
 		return instance->m_RegisteredCounters[id];
 	}
 
-	DebugCounter* DebugProfiler::FindCounter(const std::string& id)
+	DebugCounter* DebugProfiler::FindCounter(const String& id)
 	{
 		DebugProfiler* instance = Get();
 		auto info = instance->m_RegisteredCounters.find(id);
@@ -64,7 +64,7 @@ namespace Performance
 		return nullptr;
 	}
 
-	bool DebugProfiler::IsCounterRegistered(const std::string& id)
+	bool DebugProfiler::IsCounterRegistered(const String& id)
 	{
 		DebugProfiler* instance = Get();
 		return instance->m_RegisteredCounters.find(id) != instance->m_RegisteredCounters.end();

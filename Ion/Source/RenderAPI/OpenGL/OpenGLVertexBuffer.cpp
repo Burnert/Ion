@@ -4,7 +4,7 @@
 
 namespace Ion
 {
-	OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertexAttributes, ullong count)
+	OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertexAttributes, uint64 count)
 		: m_VertexCount(0)
 	{
 		TRACE_FUNCTION();
@@ -26,7 +26,7 @@ namespace Ion
 		m_VertexLayout = layout;
 	}
 
-	uint OpenGLVertexBuffer::GetVertexCount() const
+	uint32 OpenGLVertexBuffer::GetVertexCount() const
 	{
 		return m_VertexCount;
 	}
@@ -49,7 +49,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		uint attributeIndex = 0;
+		uint32 attributeIndex = 0;
 		for (const VertexAttribute& attribute : m_VertexLayout->GetAttributes())
 		{
 			glVertexAttribPointer(attributeIndex,

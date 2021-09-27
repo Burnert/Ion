@@ -32,18 +32,18 @@ namespace Performance
 	{
 		friend class DebugCounter;
 
-		std::string Name;
-		std::string Type;
+		String Name;
+		String Type;
 
-		PerformanceCounterData(const std::string& name, const std::string& type)
+		PerformanceCounterData(const String& name, const String& type)
 			: Name(name), Type(type), m_Time(0) { }
 
-		FORCEINLINE uint   GetTimeMs() const { return (uint)(m_Time / 1000000u); }
-		FORCEINLINE ullong GetTimeUs() const { return (uint)(m_Time / 1000u); }
-		FORCEINLINE ullong GetTimeNs() const { return m_Time; }
+		FORCEINLINE uint32 GetTimeMs() const { return (uint32)(m_Time / 1000000u); }
+		FORCEINLINE uint64 GetTimeUs() const { return (uint32)(m_Time / 1000u); }
+		FORCEINLINE uint64 GetTimeNs() const { return m_Time; }
 
 	private:
-		ullong m_Time = 0;
+		uint64 m_Time = 0;
 	};
 
 	/* Counter initialisation and maintenance should be performed by a helper class. */
@@ -57,7 +57,7 @@ namespace Performance
 		FORCEINLINE PerformanceCounterData GetData() const { return m_CounterData; }
 
 	private:
-		DebugCounter(std::string&& name, std::string&& type);
+		DebugCounter(String&& name, String&& type);
 
 		void Start();
 		void Stop();
@@ -72,15 +72,15 @@ namespace Performance
 	class ION_API DebugProfiler
 	{
 	public:
-		static DebugCounter* RegisterCounter(std::string&& id, std::string&& name, std::string&& type = "Generic");
-		static DebugCounter* FindCounter(const std::string& id);
-		static bool IsCounterRegistered(const std::string& id);
+		static DebugCounter* RegisterCounter(String&& id, String&& name, String&& type = "Generic");
+		static DebugCounter* FindCounter(const String& id);
+		static bool IsCounterRegistered(const String& id);
 
 		static DebugProfiler* Get();
 
 	private:
 		static DebugProfiler* s_Instance;
-		THashMap<std::string, DebugCounter*> m_RegisteredCounters;
+		THashMap<String, DebugCounter*> m_RegisteredCounters;
 	};
 
 	/* Use the SCOPED_PERFORMANCE_COUNTER macro to use this counter */

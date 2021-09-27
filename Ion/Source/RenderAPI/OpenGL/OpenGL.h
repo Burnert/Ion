@@ -20,15 +20,15 @@ namespace Ion
 		static FORCEINLINE const char* GetLanguageVersion()  { return (const char*)glGetString(GL_SHADING_LANGUAGE_VERSION); }
 		static FORCEINLINE const char* GetExtensions()       { return (const char*)glGetString(GL_EXTENSIONS); }
 
-		static FORCEINLINE int GetMajorVersion() { return s_MajorVersion; }
-		static FORCEINLINE int GetMinorVersion() { return s_MinorVersion; }
+		static FORCEINLINE int32 GetMajorVersion() { return s_MajorVersion; }
+		static FORCEINLINE int32 GetMinorVersion() { return s_MinorVersion; }
 
 		static const char* GetDisplayName();
 
 		// Implemented per platform:
 	public:
-		static void SetSwapInterval(int interval);
-		static int GetSwapInterval();
+		static void SetSwapInterval(int32 interval);
+		static int32 GetSwapInterval();
 
 		// End Implemented per platform
 
@@ -48,8 +48,8 @@ namespace Ion
 
 	protected:
 		static bool s_GLInitialized;
-		static int s_MajorVersion;
-		static int s_MinorVersion;
+		static int32 s_MajorVersion;
+		static int32 s_MinorVersion;
 
 	private:
 		static char s_DisplayName[120];

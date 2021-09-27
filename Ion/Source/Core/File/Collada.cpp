@@ -90,8 +90,8 @@ namespace Ion
 			return false;
 		}
 
-		ullong indexCount;
-		uint* indices = ExtractTriangles(trianglesNode, indexCount);
+		uint64 indexCount;
+		uint32* indices = ExtractTriangles(trianglesNode, indexCount);
 
 		ParseTriangles(indices, indexCount, trianglesData, m_Data);
 
@@ -102,7 +102,7 @@ namespace Ion
 		return true;
 	}
 
-	uint* ColladaDocument::ExtractTriangles(XMLNode* trianglesNode, ullong& outIndexCount)
+	uint32* ColladaDocument::ExtractTriangles(XMLNode* trianglesNode, uint64& outIndexCount)
 	{
 		#pragma warning(disable:26451)
 
@@ -111,7 +111,7 @@ namespace Ion
 		// Node structure
 		// <triangles material="material" count="724">0 22 41</triangles>
 
-		int maxOffset = -1;
+		int32 maxOffset = -1;
 		XMLNode* inputNode = trianglesNode->first_node("input");
 		_ionexcept_r(inputNode, "The <triangles> node does not have an <input> node.");
 		do
@@ -120,30 +120,30 @@ namespace Ion
 			_ionexcept_r(offsetAttribute, "The <input> node does not have an offset attribute.");
 
 			char* offsetStr = offsetAttribute->value();
-			maxOffset = glm::max((int)strtol(offsetStr, nullptr, 10), maxOffset);
+			maxOffset = glm::max((int32)strtol(offsetStr, nullptr, 10), maxOffset);
 		}
 		while (inputNode = inputNode->next_sibling("input"));
 
 		XMLNode* primitiveNode = trianglesNode->first_node("p");
 		_ionexcept_r(primitiveNode, "The <triangles> node does not have a <p> node.");
 
-		ullong primitiveSize = primitiveNode->value_size();
+		uint64 primitiveSize = primitiveNode->value_size();
 
 		XMLAttribute* triangleCountAttribute = trianglesNode->first_attribute("count");
 		_ionexcept_r(triangleCountAttribute, "The <triangles> node does not have a count attribute.");
 		char* triangleCountStr = triangleCountAttribute->value();
-		uint triangleCount = strtol(triangleCountStr, nullptr, 10);
+		uint32 triangleCount = strtol(triangleCountStr, nullptr, 10);
 		_ionexcept_r(triangleCount != 0);
 
-		outIndexCount = (ullong)triangleCount * 3 * (maxOffset + 1);
+		outIndexCount = (uint64)triangleCount * 3 * (maxOffset + 1);
 
-		uint* indices = new uint[outIndexCount];
-		uint* currentIndexPtr = indices;
+		uint32* indices = new uint32[outIndexCount];
+		uint32* currentIndexPtr = indices;
 		
 		char* indexCharPtr = primitiveNode->value();
 		_ionexcept_r(*indexCharPtr);
 		char* indexStartPtr = indexCharPtr;
-		DEBUG(ullong debugIndexCount = 0);
+		DEBUG(uint64 debugIndexCount = 0);
 		do
 		{
 			// Integer values are separated by space
@@ -252,9 +252,9 @@ namespace Ion
 			XMLNode* accessorNode = techniqueNode->first_node("accessor");
 			XMLAttribute* strideAttribute = accessorNode->first_attribute("stride");
 			char* strideStr = strideAttribute->value();
-			uint stride = (uint)strtoul(strideStr, nullptr, 10);
+			uint32 stride = (uint32)strtoul(strideStr, nullptr, 10);
 
-			ullong dataSize;
+			uint64 dataSize;
 			float* floatArray;
 
 			if (bVertexInput)
@@ -274,26 +274,26 @@ namespace Ion
 		return true;
 	}
 
-	bool ColladaDocument::ParseTriangles(uint* indices, ullong indexCount, const TShared<TrianglesNodeData>& data, ColladaData& outMeshData)
+	bool ColladaDocument::ParseTriangles(uint32* indices, uint64 indexCount, const TShared<TrianglesNodeData>& data, ColladaData& outMeshData)
 	{
 		TRACE_FUNCTION();
 
 		using TriangleInput = TrianglesNodeData::TriangleInput;
 
-		uint* endIndex = indices + indexCount;
-		uint* indexPtr = indices;
+		uint32* endIndex = indices + indexCount;
+		uint32* indexPtr = indices;
 
 		TArray<ColladaDocument::Vertex> finalVertices;
 		THashSet<ColladaDocument::Vertex, ColladaDocument::Vertex::Hash> finalVerticesSet;
-		TArray<uint> finalIndices;
+		TArray<uint32> finalIndices;
 
 #if ION_ENABLE_TRACING
-		uint debugCurrentIndex = 0;
+		uint32 debugCurrentIndex = 0;
 #endif
-		uint fullStride = data->GetFullStride();
+		uint32 fullStride = data->GetFullStride();
 		float* currentVertex = new float[fullStride];
 		float* currentVertexPtr = currentVertex;
-		uint currentAttribute = 0;
+		uint32 currentAttribute = 0;
 		do
 		{
 			TRACE_SCOPE("ColladaDocument::ParseTriangles - Parse index");
@@ -302,7 +302,7 @@ namespace Ion
 			// One index is split into AttributeCount indices that point to the corresponding source
 			// based on offset % stride, where stride is the attribute count
 			// Then each attribute has *Stride* elements
-			for (uint i = 0; i < currentInput.Stride; ++i)
+			for (uint32 i = 0; i < currentInput.Stride; ++i)
 			{
 				float value = currentInput.Data[(*indexPtr) * currentInput.Stride + i];
 				*currentVertexPtr = value;
@@ -323,20 +323,20 @@ namespace Ion
 				auto [iter, bUnique] = finalVerticesSet.insert(vertex);
 				TRACE_END(0);
 				
-				uint index;
+				uint32 index;
 				if (bUnique)
 				{
 					TRACE_BEGIN(1, "ColladaDocument::ParseTriangles - Vertex push");
 					finalVertices.push_back(vertex);
 					TRACE_END(1);
-					index = (uint)(finalVertices.size() - 1);
+					index = (uint32)(finalVertices.size() - 1);
 				}
 				else
 				{
 					TRACE_BEGIN(1, "ColladaDocument::ParseTriangles - Find identical vertex (Vector)");
 					auto foundIter = std::find_if(finalVertices.begin(), finalVertices.end(), [&](const Vertex& vert) { return vert == vertex; });
 					TRACE_END(1);
-					index = (uint)(foundIter - finalVertices.begin());
+					index = (uint32)(foundIter - finalVertices.begin());
 				}
 				TRACE_BEGIN(2, "ColladaDocument::ParseTriangles - Index push");
 				finalIndices.push_back(index);
@@ -354,7 +354,7 @@ namespace Ion
 
 		// Write final vertex data
 
-		ullong finalVertexAttributeCount = finalVertices.size() * fullStride;
+		uint64 finalVertexAttributeCount = finalVertices.size() * fullStride;
 		outMeshData.VertexAttributeCount = finalVertexAttributeCount;
 		outMeshData.VertexAttributes = new float[finalVertexAttributeCount];
 
@@ -367,11 +367,11 @@ namespace Ion
 
 		// Write final index data
 
-		ullong finalIndexCount = finalIndices.size();
+		uint64 finalIndexCount = finalIndices.size();
 		outMeshData.IndexCount = finalIndexCount;
-		outMeshData.Indices = new uint[finalIndexCount];
+		outMeshData.Indices = new uint32[finalIndexCount];
 
-		memcpy(outMeshData.Indices, &finalIndices[0], finalIndexCount * sizeof(uint));
+		memcpy(outMeshData.Indices, &finalIndices[0], finalIndexCount * sizeof(uint32));
 
 		return true;
 	}
@@ -391,14 +391,14 @@ namespace Ion
 		XMLAttribute* offsetAttribute = inputNode->first_attribute("offset");
 		_ionexcept_r(offsetAttribute, "The <input> node does not have an offset attribute.");
 		char* offsetStr = offsetAttribute->value();
-		uint offset = (uint)strtoul(offsetStr, nullptr, 10);
+		uint32 offset = (uint32)strtoul(offsetStr, nullptr, 10);
 
 		XMLAttribute* setAttribute = inputNode->first_attribute("set");
-		int set = -1;
+		int32 set = -1;
 		if (setAttribute)
 		{
 			char* setStr = setAttribute->value();
-			set = (int)strtol(setStr, nullptr, 10);
+			set = (int32)strtol(setStr, nullptr, 10);
 		}
 
 		XMLNode* sourceNode = ExtractSourceNode(meshNode, inputNode);
@@ -407,11 +407,11 @@ namespace Ion
 		return triangleInput;
 	}
 
-	uint ColladaDocument::TrianglesNodeData::GetFullStride() const
+	uint32 ColladaDocument::TrianglesNodeData::GetFullStride() const
 	{
 		TRACE_FUNCTION();
 
-		uint stride = 0;
+		uint32 stride = 0;
 		for (const TriangleInput& input : m_TriangleInputs)
 		{
 			stride += input.Stride;
@@ -423,10 +423,10 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		TShared<VertexLayout> layout = MakeShareable(new VertexLayout((uint)m_TriangleInputs.size()));
+		TShared<VertexLayout> layout = MakeShareable(new VertexLayout((uint32)m_TriangleInputs.size()));
 		for (const TriangleInput& input : m_TriangleInputs)
 		{
-			uint elementCount = input.Stride;
+			uint32 elementCount = input.Stride;
 			bool bNormalized = strcmp(input.Semantic, "NORMAL") == 0;
 			layout->AddAttribute(EVertexAttributeType::Float, elementCount, bNormalized);
 		}

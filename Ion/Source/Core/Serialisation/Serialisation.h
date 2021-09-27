@@ -10,8 +10,8 @@ namespace Ion
 	namespace Serialisation
 	{
 		/* Size of the length value for serialisation (8 bytes) */
-		constexpr ubyte LengthSize = sizeof(ullong);
-		constexpr ullong MaxFieldSize = ULLONG_MAX;
+		constexpr uint8 LengthSize = sizeof(uint64);
+		constexpr uint64 MaxFieldSize = ULLONG_MAX;
 
 		enum class EState
 		{
@@ -63,13 +63,13 @@ namespace Ion
 					delete[] m_Bytes;
 			}
 
-			ullong GetSize() const
+			uint64 GetSize() const
 			{
 				return m_Size;
 			}
 
 			/* Returns raw serialised bytes (read-only). */
-			const ubyte* const GetImmutableBytes() const
+			const uint8* const GetImmutableBytes() const
 			{
 				return m_Bytes;
 			}
@@ -77,7 +77,7 @@ namespace Ion
 		private:
 			/* Sets pointer to bytes of this object to the one specified.
 			   Changes the ownership of the bytes to this Serial. */
-			void PushBytes(ubyte* bytes, ullong count)
+			void PushBytes(uint8* bytes, uint64 count)
 			{
 				if (!m_Initialised)
 				{
@@ -92,7 +92,7 @@ namespace Ion
 
 			/* Returns bytes and uninitialises the pointer in this object.
 			   Removes the ownership of the bytes from this Serial. */
-			ubyte* PullBytes(ullong* outCount)
+			uint8* PullBytes(uint64* outCount)
 			{
 				if (m_Initialised)
 				{
@@ -100,7 +100,7 @@ namespace Ion
 						return nullptr;
 
 					*outCount = m_Size;
-					ubyte* temp = m_Bytes;
+					uint8* temp = m_Bytes;
 					m_Bytes = nullptr;
 					m_Size = 0;
 					m_Initialised = false;
@@ -112,11 +112,11 @@ namespace Ion
 
 			/* Creates a buffer of this Serial's bytes preceded by the size of it.
 			   The buffer must then be deleted using delete[] as this Serial does not own it. */
-			ubyte* CreateSignedBuffer()
+			uint8* CreateSignedBuffer()
 			{
 				if (m_Initialised && m_Size > 0)
 				{
-					ubyte* buffer = new ubyte[m_Size + LengthSize];
+					uint8* buffer = new uint8[m_Size + LengthSize];
 					memcpy_s(buffer, LengthSize, &m_Size, LengthSize);
 					memcpy_s(buffer + LengthSize, m_Size, m_Bytes, m_Size);
 					return buffer;
@@ -126,8 +126,8 @@ namespace Ion
 
 		private:
 			bool m_Initialised;
-			ullong m_Size;
-			ubyte* m_Bytes;
+			uint64 m_Size;
+			uint8* m_Bytes;
 		};
 
 		// @TODO: Write docs ASAP...
@@ -146,7 +146,7 @@ namespace Ion
 				if (type == EType::WRITE)
 				{
 					// @TODO: Make the buffer resizable instead of this nonsense 64 here.
-					m_Bytes = new ubyte[sizeof(SerialisableT) * 64];
+					m_Bytes = new uint8[sizeof(SerialisableT) * 64];
 				}
 				else
 				{
@@ -187,7 +187,7 @@ namespace Ion
 				m_SerialisablePtr = serialisable;
 				m_BytesCounter = 0;
 				m_MaxCount = 0;
-				m_Bytes = new ubyte[sizeof(SerialisableT)];
+				m_Bytes = new uint8[sizeof(SerialisableT)];
 				m_State = EState::INIT;
 			}
 
@@ -224,7 +224,7 @@ namespace Ion
 
 				ionassert(m_Bytes);
 
-				ubyte* shrunkBuffer = new ubyte[m_BytesCounter];
+				uint8* shrunkBuffer = new uint8[m_BytesCounter];
 				memcpy_s(shrunkBuffer, m_BytesCounter, m_Bytes, m_BytesCounter);
 				serial->PushBytes(shrunkBuffer, m_BytesCounter);
 			}
@@ -244,7 +244,7 @@ namespace Ion
 
 				ionassert(!m_Bytes);
 
-				ullong pulledBytes;
+				uint64 pulledBytes;
 				m_Bytes = serial->PullBytes(&pulledBytes);
 				m_MaxCount = pulledBytes;
 			}
@@ -284,8 +284,8 @@ namespace Ion
 					Serial serial;
 					serialisableField->Serialise(&serial);
 
-					ubyte* serialBuffer = serial.CreateSignedBuffer();
-					ullong sizeToWrite = serial.GetSize() + LengthSize;
+					uint8* serialBuffer = serial.CreateSignedBuffer();
+					uint64 sizeToWrite = serial.GetSize() + LengthSize;
 					memcpy_s(m_Bytes + m_BytesCounter, sizeToWrite, serialBuffer, sizeToWrite);
 					delete[] serialBuffer;
 
@@ -293,7 +293,7 @@ namespace Ion
 				}
 				else
 				{
-					ullong fieldSize = sizeof(FieldT);
+					uint64 fieldSize = sizeof(FieldT);
 					FieldT& data = m_SerialisablePtr->*field;
 					memcpy_s(m_Bytes + m_BytesCounter, fieldSize, &data, fieldSize);
 					m_BytesCounter += fieldSize;
@@ -314,10 +314,10 @@ namespace Ion
 					ISerialisable* serialisableField = (ISerialisable*)fieldPtr;
 
 					Serial serial;
-					ullong serialSize;
+					uint64 serialSize;
 					memcpy_s(&serialSize, LengthSize, m_Bytes + m_BytesCounter, LengthSize);
 
-					ubyte* buffer = new ubyte[serialSize];
+					uint8* buffer = new uint8[serialSize];
 					memcpy_s(buffer, serialSize, m_Bytes + m_BytesCounter + LengthSize, serialSize);
 					serial.PushBytes(buffer, serialSize);
 					serialisableField->Deserialise(&serial);
@@ -326,7 +326,7 @@ namespace Ion
 				}
 				else
 				{
-					ullong fieldSize = sizeof(FieldT);
+					uint64 fieldSize = sizeof(FieldT);
 					FieldT& data = m_SerialisablePtr->*field;
 					memcpy_s(&data, fieldSize, m_Bytes + m_BytesCounter, fieldSize);
 					m_BytesCounter += fieldSize;
@@ -368,16 +368,16 @@ namespace Ion
 			EType m_Type;
 			EState m_State;
 			SerialisableT* m_SerialisablePtr;
-			ullong m_BytesCounter;
-			ullong m_MaxCount;
-			ubyte* m_Bytes;
+			uint64 m_BytesCounter;
+			uint64 m_MaxCount;
+			uint8* m_Bytes;
 		};
 
 		template<typename T>
 		void SerialiseStruct(T* structPtr, Serial* serial)
 		{
-			ullong size = sizeof(T);
-			ubyte* bytes = new ubyte[size];
+			uint64 size = sizeof(T);
+			uint8* bytes = new uint8[size];
 			memcpy_s(bytes, size, structPtr, size);
 			serial->PushBytes(bytes, size);
 		}
@@ -385,9 +385,9 @@ namespace Ion
 		template<typename T>
 		void DeserialiseStruct(T* structPtr, Serial* serial)
 		{
-			ullong size = sizeof(T);
-			ullong pulledSize;
-			ubyte* bytes = serial->PullBytes(&pulledSize);
+			uint64 size = sizeof(T);
+			uint64 pulledSize;
+			uint8* bytes = serial->PullBytes(&pulledSize);
 			ionassert(size == pulledSize);
 			memcpy_s(structPtr, size, bytes, pulledSize);
 			delete[] bytes;
@@ -400,18 +400,18 @@ namespace Ion
 	struct SerialTest
 	{
 		float a = 0.0f;
-		int b = 0;
+		int32 b = 0;
 		long c = 0l;
-		uint d = 0u;
+		uint32 d = 0u;
 	};
 
 	class SerialClassTest : public ISerialisable
 	{
 	public:
 		float a = 1.0f;
-		int b = -2;
+		int32 b = -2;
 		long c[128];
-		uint d = 45u;
+		uint32 d = 45u;
 
 		virtual void Serialise(Serialisation::Serial* serial) override
 		{
@@ -443,7 +443,7 @@ namespace Ion
 	class SerialClass2 : public ISerialisable
 	{
 	public:
-		int primitive = 2;
+		int32 primitive = 2;
 		SerialClassTest serialisable;
 
 	public:
@@ -513,7 +513,7 @@ namespace Ion
 
 		using namespace std::chrono_literals;
 		// Memory leak test (passed)
-		for (int i = 0; i < 100000; ++i)
+		for (int32 i = 0; i < 100000; ++i)
 		{
 			SerialClassTest ct;
 			ct.a = 93.2f;
@@ -542,7 +542,7 @@ namespace Ion
 		tt2.Deserialise(&serial);
 
 		// Memory leak test (passed)
-		for (int i = 0; i < 100000; ++i)
+		for (int32 i = 0; i < 100000; ++i)
 		{
 			SerialClass3 ttt;
 			ttt.serialisableDeep.primitive = 888;
@@ -556,7 +556,7 @@ namespace Ion
 		}
 
 		// Memory leak test (passed)
-		for (int i = 0; i < 100000; ++i)
+		for (int32 i = 0; i < 100000; ++i)
 		{
 			Serial structSerial;
 			SerialTest st1;

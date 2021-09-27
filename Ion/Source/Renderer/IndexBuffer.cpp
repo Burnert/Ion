@@ -7,7 +7,7 @@
 
 namespace Ion
 {
-	TShared<IndexBuffer> IndexBuffer::Create(uint* indices, uint count)
+	TShared<IndexBuffer> IndexBuffer::Create(uint32* indices, uint32 count)
 	{
 		switch (RenderAPI::GetCurrent())
 		{

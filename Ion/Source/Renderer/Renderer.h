@@ -16,13 +16,13 @@ namespace Ion
 {
 	struct SViewportDimensions
 	{
-		int X;
-		int Y;
-		int Width;
-		int Height;
+		int32 X;
+		int32 Y;
+		int32 Width;
+		int32 Height;
 	};
 
-	enum class EPolygonDrawMode : ubyte
+	enum class EPolygonDrawMode : uint8
 	{
 		Fill,
 		Lines,

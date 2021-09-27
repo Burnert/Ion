@@ -19,8 +19,8 @@ namespace Ion
 	struct VertexAttribute
 	{
 		EVertexAttributeType Type;
-		ubyte ElementCount;
-		ullong Offset;
+		uint8 ElementCount;
+		uint64 Offset;
 		bool bNormalized = false;
 	};
 
@@ -28,15 +28,15 @@ namespace Ion
 	{
 		friend class VertexBuffer;
 	public:
-		VertexLayout(uint initialAttributeCount);
+		VertexLayout(uint32 initialAttributeCount);
 
-		void AddAttribute(EVertexAttributeType attributeType, ubyte elementCount, bool normalized = false);
+		void AddAttribute(EVertexAttributeType attributeType, uint8 elementCount, bool normalized = false);
 
-		FORCEINLINE uint GetStride() const { return (uint)m_Offset; }
+		FORCEINLINE uint32 GetStride() const { return (uint32)m_Offset; }
 
 		FORCEINLINE const TArray<VertexAttribute>& GetAttributes() const { return m_Attributes; }
 
-		static constexpr FORCEINLINE ullong GetSizeOfAttributeType(const EVertexAttributeType type)
+		static constexpr FORCEINLINE uint64 GetSizeOfAttributeType(const EVertexAttributeType type)
 		{
 			switch (type)
 			{
@@ -54,20 +54,20 @@ namespace Ion
 		}
 
 	private:
-		ullong m_Offset;
+		uint64 m_Offset;
 		TArray<VertexAttribute> m_Attributes;
 	};
 
 	class ION_API VertexBuffer
 	{
 	public:
-		static TShared<VertexBuffer> Create(float* vertexAttributes, ullong count);
+		static TShared<VertexBuffer> Create(float* vertexAttributes, uint64 count);
 
 		virtual ~VertexBuffer() { }
 
 		virtual void SetLayout(const TShared<VertexLayout>& layout) = 0;
 
-		virtual uint GetVertexCount() const = 0;
+		virtual uint32 GetVertexCount() const = 0;
 
 	protected:
 		VertexBuffer() { }

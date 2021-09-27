@@ -8,44 +8,44 @@ namespace Ion
 	{
 	public:
 		WindowsFile();
-		WindowsFile(const std::wstring& filename);
+		WindowsFile(const WString& filename);
 		virtual ~WindowsFile() override;
 
 		// File :
 	protected:
-		virtual bool SetFilename_Impl(const std::wstring& filename) override;
+		virtual bool SetFilename_Impl(const WString& filename) override;
 		virtual bool SetType_Impl(IO::EFileType type) override;
 
 		// End of File
 
 		// IFile interface :
 	public:
-		virtual bool Open(ubyte mode) override;
+		virtual bool Open(uint8 mode) override;
 		virtual void Close() override;
 		virtual bool Delete() override;
 
 		/* Reads data from binary file and sets the file offset to the end of the read. */
-		virtual bool Read(ubyte* outBuffer, ullong count) override;
+		virtual bool Read(uint8* outBuffer, uint64 count) override;
 		/* Reads a line from a text file and sets the file offset to the beginning of the next line.
 		   If the count parameter, hence the out buffer size, is not big enough it will only write 
 		   to the end of the buffer and will move the offset to the end of the read section. */
-		virtual bool ReadLine(char* outBuffer, ullong count) override;
+		virtual bool ReadLine(char* outBuffer, uint64 count) override;
 		/* Reads a line from a text file and sets the file offset to the beginning of the next line.
 		   Will replace the specified string with the read content. */
-		virtual bool ReadLine(std::string& outStr) override;
+		virtual bool ReadLine(String& outStr) override;
 		/* Writes data to binary file and sets the file offset to the end of the write. */
-		virtual bool Write(const ubyte* inBuffer, ullong count) override;
+		virtual bool Write(const uint8* inBuffer, uint64 count) override;
 		/* Writes a line to a text file and sets the file offset to the beginning of the next line. 
 		   Parameter count is not a C string length, it is the buffer length (with the NULL character) */
-		virtual bool WriteLine(const char* inBuffer, ullong count) override;
+		virtual bool WriteLine(const char* inBuffer, uint64 count) override;
 		/* Writes a line to a text file and sets the file offset to the beginning of the next line. */
-		virtual bool WriteLine(const std::string& inStr) override;
+		virtual bool WriteLine(const String& inStr) override;
 
-		virtual bool AddOffset(llong count) override;
-		virtual bool SetOffset(llong count) override;
-		virtual llong GetOffset() const override;
+		virtual bool AddOffset(int64 count) override;
+		virtual bool SetOffset(int64 count) override;
+		virtual int64 GetOffset() const override;
 
-		virtual llong GetSize() const override;
+		virtual int64 GetSize() const override;
 		virtual WString GetExtension() const override;
 
 		virtual bool IsDirectory() const override;
@@ -63,6 +63,6 @@ namespace Ion
 		HANDLE m_FileHandle;
 		LARGE_INTEGER m_Offset;
 
-		bool ReadLine_Internal(char* outBuffer, ullong count, ullong* outReadCount, bool* bOutOverflow);
+		bool ReadLine_Internal(char* outBuffer, uint64 count, uint64* outReadCount, bool* bOutOverflow);
 	};
 }

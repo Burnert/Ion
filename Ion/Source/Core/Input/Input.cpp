@@ -5,8 +5,8 @@
 
 namespace Ion
 {
-	ubyte InputManager::InputPressedFlag = Bitflag(0);
-	ubyte InputManager::InputRepeatedFlag = Bitflag(1);
+	uint8 InputManager::InputPressedFlag = Bitflag(0);
+	uint8 InputManager::InputRepeatedFlag = Bitflag(1);
 
 	KeyCode InputManager::TransformKeyCode(KeyCode actualKeyCode)
 	{
@@ -66,7 +66,7 @@ namespace Ion
 	{
 		KeyCode actualKeyCode = (KeyCode)event.GetActualKeyCode();
 		// Set states on receiving event
-		ubyte* keyPtr = &m_InputStates[actualKeyCode];
+		uint8* keyPtr = &m_InputStates[actualKeyCode];
 		SetBitflags(*keyPtr, InputPressedFlag);
 
 		// If the normal key code is different than actual
@@ -85,7 +85,7 @@ namespace Ion
 	{
 		KeyCode actualKeyCode = (KeyCode)event.GetActualKeyCode();
 		// Unset states on receiving event
-		ubyte* keyPtr = &m_InputStates[actualKeyCode];
+		uint8* keyPtr = &m_InputStates[actualKeyCode];
 		UnsetBitflags(*keyPtr, InputPressedFlag);
 		UnsetBitflags(*keyPtr, InputRepeatedFlag);
 
@@ -115,7 +115,7 @@ namespace Ion
 	{
 		KeyCode actualKeyCode = (KeyCode)event.GetActualKeyCode();
 		// Set states on receiving event
-		ubyte* keyPtr = &m_InputStates[actualKeyCode];
+		uint8* keyPtr = &m_InputStates[actualKeyCode];
 		SetBitflags(*keyPtr, InputRepeatedFlag);
 
 		// If the normal key code is different than actual
@@ -134,7 +134,7 @@ namespace Ion
 	{
 		MouseButton buttonCode = (MouseButton)event.GetMouseButton();
 		// Mouse states are stored in the same array as key states
-		ubyte* statePtr = &m_InputStates[buttonCode];
+		uint8* statePtr = &m_InputStates[buttonCode];
 		SetBitflags(*statePtr, InputPressedFlag);
 
 		return false;
@@ -144,7 +144,7 @@ namespace Ion
 	{
 		MouseButton buttonCode = (MouseButton)event.GetMouseButton();
 		// Mouse states are stored in the same array as key states
-		ubyte* statePtr = &m_InputStates[buttonCode];
+		uint8* statePtr = &m_InputStates[buttonCode];
 		UnsetBitflags(*statePtr, InputPressedFlag);
 
 		return false;

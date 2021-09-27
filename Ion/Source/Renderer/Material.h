@@ -4,7 +4,7 @@ namespace Ion
 {
 	class Shader;
 
-	enum class EMaterialParameterType : ubyte
+	enum class EMaterialParameterType : uint8
 	{
 		Float,
 		Float2,

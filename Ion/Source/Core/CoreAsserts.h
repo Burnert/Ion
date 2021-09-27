@@ -22,7 +22,7 @@ namespace Ion
 		static constexpr const char* AssertFailedExLog = "Assertion exception: {0}\n{4}  function: {1}\n  in {2}:{3}";
 		static constexpr const char* AssertFailedPrintf = "Assertion failed: %s\n%s  function: %s\n  in %s:%d";
 
-		inline static int ShowMessageBox(const char* expression, const char* function, const char* file, int line, const char* message = "")
+		inline static int32 ShowMessageBox(const char* expression, const char* function, const char* file, int32 line, const char* message = "")
 		{
 #if ION_PLATFORM_WINDOWS
 			char buffer[550];
@@ -36,7 +36,7 @@ namespace Ion
 		}
 
 		template<typename... Args>
-		inline static int HandleFail(const char* expression, const char* function, const char* file, int line, const char* format = nullptr, Args&&... args)
+		inline static int32 HandleFail(const char* expression, const char* function, const char* file, int32 line, const char* format = nullptr, Args&&... args)
 		{
 			if (format != nullptr)
 			{
@@ -59,7 +59,7 @@ namespace Ion
 		}
 
 		template<typename... Args>
-		inline static int HandleFailEx(const char* expression, const char* function, const char* file, int line, const char* format = nullptr, Args&&... args)
+		inline static int32 HandleFailEx(const char* expression, const char* function, const char* file, int32 line, const char* format = nullptr, Args&&... args)
 		{
 			if (format != nullptr)
 			{

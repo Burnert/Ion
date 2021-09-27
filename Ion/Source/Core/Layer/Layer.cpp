@@ -46,5 +46,5 @@ namespace Ion
 		m_bEnabled = bEnabled;
 	}
 
-	uint Layer::s_LayerCount = 0;
+	uint32 Layer::s_LayerCount = 0;
 }

@@ -55,12 +55,12 @@ namespace Ion
 		// Shift hack:
 		if (m_bBothShiftsPressed)
 		{
-			ubyte keyState = 0;
+			uint8 keyState = 0;
 			keyState |= (GetAsyncKeyState(VK_LSHIFT) & 0x8000) >> 14;
 			keyState |= (GetAsyncKeyState(VK_RSHIFT) & 0x8000) >> 15;
 			if (keyState != 0x3)
 			{
-				uint actualKeyCode;
+				uint32 actualKeyCode;
 				// Left shift held, so right shift released and vice-versa
 				if (keyState == 0x2)
 					actualKeyCode = Key::RShift;
@@ -138,7 +138,7 @@ namespace Ion
 
 			case WM_SETFOCUS:
 			{
-				auto event = DeferredEvent::Create<WindowFocusEvent>((ullong)hWnd);
+				auto event = DeferredEvent::Create<WindowFocusEvent>((uint64)hWnd);
 				windowRef.m_DeferredEventCallback(event);
 
 				return 0;
@@ -146,7 +146,7 @@ namespace Ion
 
 			case WM_KILLFOCUS:
 			{
-				auto event = DeferredEvent::Create<WindowLostFocusEvent>((ullong)hWnd);
+				auto event = DeferredEvent::Create<WindowLostFocusEvent>((uint64)hWnd);
 				windowRef.m_DeferredEventCallback(event);
 
 				return 0;
@@ -154,7 +154,7 @@ namespace Ion
 
 			case WM_CLOSE:
 			{
-				auto event = DeferredEvent::Create<WindowCloseEvent>((ullong)hWnd);
+				auto event = DeferredEvent::Create<WindowCloseEvent>((uint64)hWnd);
 				windowRef.m_DeferredEventCallback(event);
 
 				return 0;
@@ -173,9 +173,9 @@ namespace Ion
 			case WM_MOVE:
 			{
 				POINTS pos = MAKEPOINTS(lParam);
-				int xPos = pos.x;
-				int yPos = pos.y;
-				auto event = WindowMovedEvent((ullong)hWnd, xPos, yPos);
+				int32 xPos = pos.x;
+				int32 yPos = pos.y;
+				auto event = WindowMovedEvent((uint64)hWnd, xPos, yPos);
 				windowRef.m_EventCallback(event);
 
 				return 0;
@@ -183,9 +183,9 @@ namespace Ion
 
 			case WM_SIZE:
 			{
-				int width  = LOWORD(lParam);
-				int height = HIWORD(lParam);
-				auto event = WindowResizeEvent((ullong)hWnd, width, height);
+				int32 width  = LOWORD(lParam);
+				int32 height = HIWORD(lParam);
+				auto event = WindowResizeEvent((uint64)hWnd, width, height);
 				windowRef.m_EventCallback(event);
 
 				return 0;
@@ -198,8 +198,8 @@ namespace Ion
 			case WM_KEYUP:
 			case WM_SYSKEYUP:
 			{
-				uint keyCode       = (uint)wParam;
-				uint actualKeyCode = keyCode;
+				uint32 keyCode       = (uint32)wParam;
+				uint32 actualKeyCode = keyCode;
 				bool bState        = !(HIWORD(lParam) & KF_UP);
 				bool bExtendedKey  = (HIWORD(lParam) & KF_EXTENDED);
 
@@ -259,7 +259,7 @@ namespace Ion
 					// Note:
 					// Distinguishing between left and right Shift keys
 					// is a bit diffrent from the other keys.
-					ubyte scanCode = LOBYTE(HIWORD(lParam));
+					uint8 scanCode = LOBYTE(HIWORD(lParam));
 
 					if (scanCode == 0x36)
 						actualKeyCode = VK_RSHIFT;
@@ -336,7 +336,7 @@ namespace Ion
 			case WM_MBUTTONDOWN:
 			case WM_XBUTTONDOWN:
 			{
-				uint button = MouseButtonFromMessage(uMsg, wParam);;
+				uint32 button = MouseButtonFromMessage(uMsg, wParam);;
 				bool bState =
 					uMsg == WM_LBUTTONDOWN ||
 					uMsg == WM_RBUTTONDOWN ||
@@ -363,7 +363,7 @@ namespace Ion
 			case WM_MBUTTONDBLCLK:
 			case WM_XBUTTONDBLCLK:
 			{
-				uint button = MouseButtonFromMessage(uMsg, wParam);
+				uint32 button = MouseButtonFromMessage(uMsg, wParam);
 
 				auto pressedEvent = MouseButtonPressedEvent(button);
 				windowRef.m_EventCallback(pressedEvent);
@@ -388,8 +388,8 @@ namespace Ion
 				RECT clientRect;
 				GetClientRect(hWnd, &clientRect);
 
-				int xPos = GET_X_LPARAM(lParam);
-				int yPos = GET_Y_LPARAM(lParam);
+				int32 xPos = GET_X_LPARAM(lParam);
+				int32 yPos = GET_Y_LPARAM(lParam);
 
 				float xNormalised = (float)xPos / clientRect.right;
 				float yNormalised = (float)yPos / clientRect.bottom;
@@ -419,9 +419,9 @@ namespace Ion
 				if (!InputManager::IsRawInputEnabled())
 					break;
 
-				uint size;
+				uint32 size;
 				GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &size, sizeof(RAWINPUTHEADER));
-				ubyte* buffer = new ubyte[size];
+				uint8* buffer = new uint8[size];
 				if (buffer == NULL)
 					return 0;
 
@@ -455,7 +455,7 @@ namespace Ion
 						// Mouse Scrolled Event
 						if (data->usButtonFlags & RI_MOUSE_WHEEL)
 						{
-							auto event = RawInputMouseScrolledEvent((float)(short)data->usButtonData);
+							auto event = RawInputMouseScrolledEvent((float)(int16)data->usButtonData);
 							windowRef.m_EventCallback(event);
 						}
 
@@ -466,12 +466,12 @@ namespace Ion
 							// There can be multiple presses in one message so I have
 							// to loop through all of them here so everything gets
 							// sent as an event.
-							for (uint flag = Bitflag(0); flag != Bitflag(10); flag <<= 2)
+							for (uint32 flag = Bitflag(0); flag != Bitflag(10); flag <<= 2)
 							{
-								uint buttonFlag = data->usButtonFlags & flag;
+								uint32 buttonFlag = data->usButtonFlags & flag;
 								if (buttonFlag)
 								{
-									uint button;
+									uint32 button;
 									switch (buttonFlag)
 									{
 									case RI_MOUSE_LEFT_BUTTON_DOWN:     button = Mouse::Left;      break;
@@ -492,12 +492,12 @@ namespace Ion
 						if (data->usButtonFlags & 0x02AA)
 						{
 							// Similar loop for button releases
-							for (uint flag = Bitflag(1); flag != Bitflag(11); flag <<= 2)
+							for (uint32 flag = Bitflag(1); flag != Bitflag(11); flag <<= 2)
 							{
-								uint buttonFlag = data->usButtonFlags & flag;
+								uint32 buttonFlag = data->usButtonFlags & flag;
 								if (buttonFlag)
 								{
-									uint button;
+									uint32 button;
 									switch (buttonFlag)
 									{
 									case RI_MOUSE_LEFT_BUTTON_UP:     button = Mouse::Left;      break;
@@ -601,8 +601,8 @@ namespace Ion
 		WindowStyleEx |= WS_EX_APPWINDOW;
 		WindowStyleEx |= WS_EX_WINDOWEDGE;
 
-		int windowWidth = 1280;
-		int windowHeight = 720;
+		int32 windowWidth = 1280;
+		int32 windowHeight = 720;
 
 		RECT windowRect { };
 		if (!AdjustWindowRectEx(&windowRect, WindowStyle, false, WindowStyleEx))
@@ -675,7 +675,7 @@ namespace Ion
 		{
 			m_bVisible = true;
 
-			int showWindowCmd = SW_SHOW;
+			int32 showWindowCmd = SW_SHOW;
 			ShowWindow(m_WindowHandle, showWindowCmd);
 		}
 	}
@@ -698,7 +698,7 @@ namespace Ion
 		}
 	}
 
-	void WindowsWindow::SetTitle(const std::wstring& title)
+	void WindowsWindow::SetTitle(const WString& title)
 	{
 		TRACE_FUNCTION();
 
@@ -742,8 +742,8 @@ namespace Ion
 		RECT windowRect;
 		GetClientRect(m_WindowHandle, &windowRect);
 
-		int width = windowRect.right - windowRect.left;
-		int height = windowRect.bottom - windowRect.top;
+		int32 width = windowRect.right - windowRect.left;
+		int32 height = windowRect.bottom - windowRect.top;
 		return { width, height };
 	}
 
@@ -782,15 +782,15 @@ namespace Ion
 
 			ionassertnd(SetWindowLong(m_WindowHandle, GWL_STYLE, (style & ~WS_OVERLAPPEDWINDOW) | WS_POPUP));
 
-			int x = monitorInfo.rcMonitor.left;
-			int y = monitorInfo.rcMonitor.top;
-			int width = monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left;
-			int height = monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top;
+			int32 x = monitorInfo.rcMonitor.left;
+			int32 y = monitorInfo.rcMonitor.top;
+			int32 width = monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left;
+			int32 height = monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top;
 			ionassertnd(SetWindowPos(m_WindowHandle, HWND_TOP, x, y, width, height, SWP_NOOWNERZORDER | SWP_FRAMECHANGED));
 
 			m_bFullScreenMode = true;
 
-			auto event = DeferredEvent::Create<WindowChangeDisplayModeEvent>((ullong)m_WindowHandle, EDisplayMode::FullScreen);
+			auto event = DeferredEvent::Create<WindowChangeDisplayModeEvent>((uint64)m_WindowHandle, EDisplayMode::FullScreen);
 			m_DeferredEventCallback(event);
 		}
 		// Disable
@@ -805,16 +805,16 @@ namespace Ion
 			else
 			{
 				RECT& windowRect = m_WindowBeforeFullScreen.WindowPlacement.rcNormalPosition;
-				int x = windowRect.left;
-				int y = windowRect.top;
-				int width = windowRect.right - windowRect.left;
-				int height = windowRect.bottom - windowRect.top;
+				int32 x = windowRect.left;
+				int32 y = windowRect.top;
+				int32 width = windowRect.right - windowRect.left;
+				int32 height = windowRect.bottom - windowRect.top;
 				ionassertnd(SetWindowPos(m_WindowHandle, HWND_NOTOPMOST, x, y, width, height, SWP_NOOWNERZORDER | SWP_FRAMECHANGED));
 			}
 
 			m_bFullScreenMode = false;
 
-			auto event = DeferredEvent::Create<WindowChangeDisplayModeEvent>((ullong)m_WindowHandle, EDisplayMode::Windowed);
+			auto event = DeferredEvent::Create<WindowChangeDisplayModeEvent>((uint64)m_WindowHandle, EDisplayMode::Windowed);
 			m_DeferredEventCallback(event);
 		}
 	}

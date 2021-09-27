@@ -12,9 +12,9 @@ namespace Ion
 		return s_Instance;
 	}
 
-	bool WindowsInputManager::TranslateWindowsKeyCode(uint* keyCodePtr)
+	bool WindowsInputManager::TranslateWindowsKeyCode(uint32* keyCodePtr)
 	{
-		uint& keyCode = *keyCodePtr;
+		uint32& keyCode = *keyCodePtr;
 		*keyCodePtr = s_InputKeyCodeLookup[keyCode];
 		return (bool)(*keyCodePtr);
 	}

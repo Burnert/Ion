@@ -7,12 +7,12 @@ namespace Ion
 	class ION_API IndexBuffer
 	{
 	public:
-		static TShared<IndexBuffer> Create(uint* indices, uint count);
+		static TShared<IndexBuffer> Create(uint32* indices, uint32 count);
 
 		virtual ~IndexBuffer() { }
 
-		virtual uint GetIndexCount() const = 0;
-		virtual uint GetTriangleCount() const = 0;
+		virtual uint32 GetIndexCount() const = 0;
+		virtual uint32 GetTriangleCount() const = 0;
 
 	protected:
 		IndexBuffer() { }

@@ -30,7 +30,7 @@ namespace Ion
 		// Bind the default VAO and forget about it for the rest of the world.
 		// Maybe I'll implement it in some way in the future but I don't think it's necessary.
 		// @TODO: Think about it!
-		uint vao;
+		uint32 vao;
 		glCreateVertexArrays(1, &vao);
 		glBindVertexArray(vao);
 	}
@@ -159,7 +159,7 @@ namespace Ion
 
 	void OpenGLRenderer::SetVSyncEnabled(bool bEnabled) const
 	{
-		OpenGL::SetSwapInterval((int)bEnabled);
+		OpenGL::SetSwapInterval((int32)bEnabled);
 	}
 
 	bool OpenGLRenderer::IsVSyncEnabled() const
@@ -179,7 +179,7 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		SViewportDimensions dimensions;
-		glGetIntegerv(GL_VIEWPORT, (int*)&dimensions);
+		glGetIntegerv(GL_VIEWPORT, (int32*)&dimensions);
 		return dimensions;
 	}
 
@@ -205,7 +205,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		int polygonMode;
+		int32 polygonMode;
 		glGetIntegerv(GL_POLYGON_MODE, &polygonMode);
 		return GLPolygonModeToPolygonDrawMode(polygonMode);
 	}

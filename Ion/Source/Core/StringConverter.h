@@ -11,9 +11,9 @@ namespace Ion
 		/* Converts a Wide String to Multi-Byte String using UTF-8 code page. */
 		NODISCARD inline static String WStringToString(const WString& wstring)
 		{
-			ullong length = wstring.size();
+			uint64 length = wstring.size();
 			char* cstr = new char[(length + 1) * sizeof(char)];
-			WCharToChar(wstring.c_str(), cstr, (int)length);
+			WCharToChar(wstring.c_str(), cstr, (int32)length);
 			String string(cstr);
 			delete[] cstr;
 			return std::move(string);
@@ -22,25 +22,25 @@ namespace Ion
 		/* Converts a Multi-Byte String to Wide String using UTF-8 code page. */
 		NODISCARD inline static WString StringToWString(const String& string)
 		{
-			ullong length = string.size();
+			uint64 length = string.size();
 			wchar* wcstr = new wchar[(length + 1) * sizeof(wchar)];
-			CharToWChar(string.c_str(), wcstr, (int)length);
+			CharToWChar(string.c_str(), wcstr, (int32)length);
 			WString wstring(wcstr);
 			delete[] wcstr;
 			return std::move(wstring);
 		}
 
-		static int WCharToChar(const wchar* wcstr, char* outCstr, int cstrLength);
-		static int CharToWChar(const char* cstr, wchar* outWcstr, int wcstrLength);
+		static int32 WCharToChar(const wchar* wcstr, char* outCstr, int32 cstrLength);
+		static int32 CharToWChar(const char* cstr, wchar* outWcstr, int32 wcstrLength);
 
 		template<size_t Size>
-		inline static int WCharToChar(const wchar* wcstr, char (&outCstr)[Size])
+		inline static int32 WCharToChar(const wchar* wcstr, char (&outCstr)[Size])
 		{
 			return WCharToChar(wcstr, outCstr, Size - 1);
 		}
 
 		template<size_t Size>
-		inline static int CharToWChar(const char* cstr, wchar(&outWcstr)[Size])
+		inline static int32 CharToWChar(const char* cstr, wchar(&outWcstr)[Size])
 		{
 			return CharToWChar(cstr, outWcstr, (Size / sizeof(wchar)) - 1);
 		}

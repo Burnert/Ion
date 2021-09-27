@@ -4,13 +4,13 @@
 
 namespace Ion
 {
-	OpenGLIndexBuffer::OpenGLIndexBuffer(uint* indices, uint count)
+	OpenGLIndexBuffer::OpenGLIndexBuffer(uint32* indices, uint32 count)
 	{
 		TRACE_FUNCTION();
 
 		glGenBuffers(1, &m_ID);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ID);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(uint), indices, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(uint32), indices, GL_STATIC_DRAW);
 		m_Count = count;
 		m_TriangleCount = count / 3;
 	}
@@ -22,12 +22,12 @@ namespace Ion
 		glDeleteBuffers(1, &m_ID);
 	}
 
-	uint OpenGLIndexBuffer::GetIndexCount() const
+	uint32 OpenGLIndexBuffer::GetIndexCount() const
 	{
 		return m_Count;
 	}
 
-	uint OpenGLIndexBuffer::GetTriangleCount() const
+	uint32 OpenGLIndexBuffer::GetTriangleCount() const
 	{
 		return m_TriangleCount;
 	}

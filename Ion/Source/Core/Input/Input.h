@@ -7,7 +7,7 @@ namespace Ion
 {
 	namespace Mouse
 	{
-		enum Mouse : ubyte
+		enum Mouse : uint8
 		{
 			Invalid         = 0x00,
 
@@ -21,7 +21,7 @@ namespace Ion
 	
 	namespace Key
 	{
-		enum Key : ubyte
+		enum Key : uint8
 		{
 			Invalid         = 0x00,
 
@@ -196,14 +196,14 @@ namespace Ion
 		InputManager();
 		virtual ~InputManager() { }
 
-		static ubyte InputPressedFlag;
-		static ubyte InputRepeatedFlag;
+		static uint8 InputPressedFlag;
+		static uint8 InputRepeatedFlag;
 
 		void OnEvent(Event& event);
 
 	private:
 		static TShared<InputManager> s_Instance;
-		ubyte m_InputStates[256];
+		uint8 m_InputStates[256];
 
 		bool OnKeyPressedEvent(KeyPressedEvent& event);
 		bool OnKeyReleasedEvent(KeyReleasedEvent& event);

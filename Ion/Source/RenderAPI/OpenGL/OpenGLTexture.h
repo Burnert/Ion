@@ -11,7 +11,7 @@ namespace Ion
 	public:
 		virtual ~OpenGLTexture() override;
 
-		virtual void Bind(uint slot = 0) const override;
+		virtual void Bind(uint32 slot = 0) const override;
 		virtual void Unbind() const override;
 
 	protected:
@@ -22,6 +22,6 @@ namespace Ion
 		void CreateTexture();
 
 	private:
-		uint m_ID;
+		uint32 m_ID;
 	};
 }

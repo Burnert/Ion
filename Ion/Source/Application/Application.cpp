@@ -65,7 +65,7 @@ namespace Ion
 
 		const char* renderAPILabel = RenderAPI::GetCurrentDisplayName();
 
-		std::wstring windowTitle = TEXT("Ion - ");
+		WString windowTitle = TEXT("Ion - ");
 		windowTitle += StringConverter::StringToWString(renderAPILabel);
 		m_Window->SetTitle(windowTitle);
 
@@ -153,8 +153,8 @@ namespace Ion
 		dispatcher.Dispatch<WindowResizeEvent>(
 			[this](WindowResizeEvent& event)
 			{
-				int width = (int)event.GetWidth();
-				int height = (int)event.GetHeight();
+				int32 width = (int32)event.GetWidth();
+				int32 height = (int32)event.GetHeight();
 
 				m_Renderer->SetViewportDimensions(SViewportDimensions { 0, 0, width, height });
 

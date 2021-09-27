@@ -130,18 +130,18 @@ namespace Ion
 		std::thread::id m_MainThreadId;
 
 		template<typename T>
-		friend void ParseCommandLineArgs(int argc, T* argv[]);
+		friend void ParseCommandLineArgs(int32 argc, T* argv[]);
 		static wchar* s_EnginePath;
 	};
 
 	Application* CreateApplication();
 
 	template<typename T>
-	void ParseCommandLineArgs(int argc, T* argv[])
+	void ParseCommandLineArgs(int32 argc, T* argv[])
 	{
 		// @TODO: Save engine path in system environment variables or something
 
-		for (int i = 0; i < argc; ++i)
+		for (int32 i = 0; i < argc; ++i)
 		{
 			bool bHasNextArg = i + 1 < argc;
 			T* arg = argv[i];
@@ -150,7 +150,7 @@ namespace Ion
 			{
 				if constexpr (TIsSameV<T, char>)
 				{
-					int enginePathLength = (int)strlen(nextArg);
+					int32 enginePathLength = (int32)strlen(nextArg);
 					Application::s_EnginePath = new wchar[enginePathLength + 1];
 					StringConverter::CharToWChar(nextArg, Application::s_EnginePath, enginePathLength + 1);
 				}

@@ -12,7 +12,7 @@ namespace Ion
 		m_ID = 0;
 	}
 
-	void OpenGLTexture::Bind(uint slot) const
+	void OpenGLTexture::Bind(uint32 slot) const
 	{
 		TRACE_FUNCTION();
 
@@ -47,9 +47,9 @@ namespace Ion
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_ID);
 		TRACE_END(0);
 
-		int width = m_TextureImage->GetWidth();
-		int height = m_TextureImage->GetHeight();
-		const ubyte* pixelData = m_TextureImage->GetPixelData();
+		int32 width = m_TextureImage->GetWidth();
+		int32 height = m_TextureImage->GetHeight();
+		const uint8* pixelData = m_TextureImage->GetPixelData();
 
 		TRACE_BEGIN(1, "OpenGLTexture - glTextureStorage2D");
 		glTextureStorage2D(m_ID, 1, GL_RGBA8, width, height);

@@ -41,8 +41,8 @@ namespace Ion
 		TShared<IndexBuffer> m_IndexBuffer;
 		TShared<Material> m_Material;
 
-		uint m_VertexCount;
-		uint m_TriangleCount;
+		uint32 m_VertexCount;
+		uint32 m_TriangleCount;
 
 		Matrix4 m_TransformMatrix;
 	};

@@ -8,7 +8,7 @@ namespace Ion
 		: File(TEXT(""))
 	{ }
 
-	File::File(const std::wstring& filename) :
+	File::File(const WString& filename) :
 		m_Filename(filename),
 		m_Type(IO::FT_Text),
 		m_Mode((IO::EFileMode)0),
@@ -16,7 +16,7 @@ namespace Ion
 		WriteNewLineType(IO::NLT_CRLF)
 	{ }
 
-	bool File::SetFilename(const std::wstring& filename)
+	bool File::SetFilename(const WString& filename)
 	{
 		if (SetFilename_Impl(m_Filename))
 		{
@@ -26,7 +26,7 @@ namespace Ion
 		return false;
 	}
 
-	bool File::SetFilename_Impl(const std::wstring& filename)
+	bool File::SetFilename_Impl(const WString& filename)
 	{
 		return true;
 	}

@@ -32,7 +32,7 @@ namespace Ion
 		return new WindowsFile();
 	}
 
-	File* File::Create(const std::wstring& filename)
+	File* File::Create(const WString& filename)
 	{
 		return new WindowsFile(filename);
 	}
@@ -41,7 +41,7 @@ namespace Ion
 		: WindowsFile(TEXT(""))
 	{ }
 
-	WindowsFile::WindowsFile(const std::wstring& filename) :
+	WindowsFile::WindowsFile(const WString& filename) :
 		File(filename),
 		m_FileHandle(INVALID_HANDLE_VALUE),
 		m_Offset({ 0, 0 })
@@ -52,7 +52,7 @@ namespace Ion
 		Close();
 	}
 
-	bool WindowsFile::SetFilename_Impl(const std::wstring& filename)
+	bool WindowsFile::SetFilename_Impl(const WString& filename)
 	{
 		if (IsOpen())
 		{
@@ -72,7 +72,7 @@ namespace Ion
 		return true;
 	}
 
-	bool WindowsFile::Open(ubyte mode)
+	bool WindowsFile::Open(uint8 mode)
 	{
 		// This makes sure the filename is not blank before opening the file.
 		// If it is, then clearly something went wrong.
@@ -124,7 +124,7 @@ namespace Ion
 		if (mode & IO::FM_Write && mode & IO::FM_Append)
 		{
 			// Set the pointer to the end of the file
-			llong offset = m_FileSize;
+			int64 offset = m_FileSize;
 			SetOffset(offset);
 		}
 
@@ -165,7 +165,7 @@ namespace Ion
 		return true;
 	}
 
-	bool WindowsFile::Read(ubyte* outBuffer, ullong count)
+	bool WindowsFile::Read(uint8* outBuffer, uint64 count)
 	{
 		// Handle internal errors
 		if (m_FileHandle == INVALID_HANDLE_VALUE)
@@ -192,14 +192,14 @@ namespace Ion
 		return true;
 	}
 
-	bool WindowsFile::ReadLine_Internal(char* outBuffer, ullong count, ullong* outReadCount, bool* bOutOverflow)
+	bool WindowsFile::ReadLine_Internal(char* outBuffer, uint64 count, uint64* outReadCount, bool* bOutOverflow)
 	{
 		// @TODO: Make the CRLF support more correct with a bigger temporary buffer
 
 		if (bOutOverflow != nullptr)
 			*bOutOverflow = false;
 
-		llong initialOffset = m_Offset.QuadPart;
+		int64 initialOffset = m_Offset.QuadPart;
 
 		DWORD bytesRead;
 		if (!ReadFile(m_FileHandle, outBuffer, (DWORD)count, &bytesRead, NULL))
@@ -216,7 +216,7 @@ namespace Ion
 		bool bCR = false;
 		// This will be the index of the terminating NULL.
 		ulong zeroIndex = bytesRead - 1;
-		for (ushort i = 0; i < bytesRead; ++i)
+		for (uint16 i = 0; i < bytesRead; ++i)
 		{
 			// Windows NewLine is CRLF - 0D0A, so it has to be handled appropriately.
 			// If this is the last byte it should be treated as an overflow, because
@@ -297,7 +297,7 @@ namespace Ion
 		return true;
 	}
 
-	bool WindowsFile::ReadLine(char* outBuffer, ullong count)
+	bool WindowsFile::ReadLine(char* outBuffer, uint64 count)
 	{
 		// Handle internal errors
 		if (m_FileHandle == INVALID_HANDLE_VALUE)
@@ -311,14 +311,14 @@ namespace Ion
 			return false;
 		}
 
-		ullong readCount = 0;
+		uint64 readCount = 0;
 		bool bResult = ReadLine_Internal(outBuffer, count, &readCount, nullptr);
 
 		_DEBUG_LOG( if (bResult) LOG_TRACE(TEXT("'{0}': Read {1} bytes."), m_Filename, readCount) );
 		return bResult;
 	}
 
-	bool WindowsFile::ReadLine(std::string& outStr)
+	bool WindowsFile::ReadLine(String& outStr)
 	{
 		// Handle internal errors
 		if (m_FileHandle == INVALID_HANDLE_VALUE)
@@ -334,10 +334,10 @@ namespace Ion
 
 		outStr = "";
 		bool bOverflow = false;
-		ullong readCount = 0;
+		uint64 readCount = 0;
 		bool bResult;
 		// Start with 512B buffer
-		const uint bufferSize = 512;
+		const uint32 bufferSize = 512;
 		char tempBuffer[bufferSize];
 		// Call the internal ReadLine function until we hit the new line character
 		// Should happen instantly unless the line is huge
@@ -355,7 +355,7 @@ namespace Ion
 		return bResult;
 	}
 
-	bool WindowsFile::Write(const ubyte* inBuffer, ullong count)
+	bool WindowsFile::Write(const uint8* inBuffer, uint64 count)
 	{
 		// Handle internal errors
 		if (m_FileHandle == INVALID_HANDLE_VALUE)
@@ -380,14 +380,14 @@ namespace Ion
 
 		// Compare new offset to current file size cache
 		// and set the new size based on the result.
-		llong sizeDifference = std::max(0ll, m_Offset.QuadPart - m_FileSize);
+		int64 sizeDifference = std::max(0ll, m_Offset.QuadPart - m_FileSize);
 		UpdateFileSizeCache(m_FileSize + sizeDifference);
 
 		_DEBUG_LOG( LOG_TRACE(TEXT("'{0}': Written {1} bytes."), m_Filename, bytesWritten) );
 		return true;
 	}
 
-	bool WindowsFile::WriteLine(const char* inBuffer, ullong count)
+	bool WindowsFile::WriteLine(const char* inBuffer, uint64 count)
 	{
 		// Handle internal errors
 		if (m_FileHandle == INVALID_HANDLE_VALUE)
@@ -433,19 +433,19 @@ namespace Ion
 		// Compare new offset to current file size cache
 		// and set the new size based on the result.
 		// (Faster than actually getting the filesize)
-		llong sizeDifference = std::max(0ll, m_Offset.QuadPart - m_FileSize);
+		int64 sizeDifference = std::max(0ll, m_Offset.QuadPart - m_FileSize);
 		UpdateFileSizeCache(m_FileSize + sizeDifference);
 
 		_DEBUG_LOG( LOG_TRACE(TEXT("'{0}': Written {1} bytes."), m_Filename, bytesWritten) );
 		return true;
 	}
 
-	bool WindowsFile::WriteLine(const std::string& inStr)
+	bool WindowsFile::WriteLine(const String& inStr)
 	{
 		return WriteLine(inStr.c_str(), inStr.size() + 1);
 	}
 
-	bool WindowsFile::AddOffset(llong count)
+	bool WindowsFile::AddOffset(int64 count)
 	{
 		if (m_FileHandle == INVALID_HANDLE_VALUE)
 		{
@@ -463,7 +463,7 @@ namespace Ion
 		return true;
 	}
 
-	bool WindowsFile::SetOffset(llong count)
+	bool WindowsFile::SetOffset(int64 count)
 	{
 		if (m_FileHandle == INVALID_HANDLE_VALUE)
 		{
@@ -481,12 +481,12 @@ namespace Ion
 		return true;
 	}
 
-	llong WindowsFile::GetOffset() const
+	int64 WindowsFile::GetOffset() const
 	{
 		return m_Offset.QuadPart; 
 	}
 	
-	llong WindowsFile::GetSize() const
+	int64 WindowsFile::GetSize() const
 	{
 		// @TODO: Make this function work even without a need to open the file
 
@@ -511,7 +511,7 @@ namespace Ion
 
 	WString WindowsFile::GetExtension() const
 	{
-		ullong dotIndex = m_Filename.find_last_of(L'.');
+		uint64 dotIndex = m_Filename.find_last_of(L'.');
 		WString filename = m_Filename.substr(dotIndex + 1, (size_t)-1);
 		std::transform(filename.begin(), filename.end(), filename.begin(), [](wchar ch) { return std::tolower(ch); });
 		return filename;

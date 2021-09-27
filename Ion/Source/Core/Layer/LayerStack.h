@@ -76,7 +76,7 @@ namespace Ion
 
 	private:
 		LayerVec m_Layers;
-		uint m_LayerInsertIndex;
+		uint32 m_LayerInsertIndex;
 
 		LayerIterator FindLayer(const char* name);
 	};

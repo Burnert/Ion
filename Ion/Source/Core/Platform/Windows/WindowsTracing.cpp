@@ -6,8 +6,8 @@
 
 namespace Ion
 {
-	static llong g_PerformanceFrequency;
-	static llong g_InitTime;
+	static int64 g_PerformanceFrequency;
+	static int64 g_InitTime;
 
 	void DebugTracing::Init()
 	{
@@ -23,7 +23,7 @@ namespace Ion
 		delete s_SessionDumpFile;
 	}
 
-	llong DebugTracing::TimestampToMicroseconds(llong timestamp)
+	int64 DebugTracing::TimestampToMicroseconds(int64 timestamp)
 	{
 		return (timestamp * 1000000) / g_PerformanceFrequency;
 	}
@@ -36,7 +36,7 @@ namespace Ion
 		ionassert(HasSessionStarted());
 		if (m_bRunning)
 		{
-			llong startTime;
+			int64 startTime;
 			QueryPerformanceCounter((LARGE_INTEGER*)&startTime);
 			m_StartTime = startTime - g_InitTime;
 		}
@@ -52,7 +52,7 @@ namespace Ion
 		}
 		m_bRunning = false;
 
-		llong endTime;
+		int64 endTime;
 		QueryPerformanceCounter((LARGE_INTEGER*)&endTime);
 		endTime -= g_InitTime;
 		float duration = (float)((endTime - m_StartTime) * 1000000 / g_PerformanceFrequency);

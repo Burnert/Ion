@@ -91,7 +91,7 @@ namespace Ion
 		ionassertnd(wglSwapIntervalEXT, "WGL_GLX_swap_control not found!");
 
 		PIXELFORMATDESCRIPTOR pfd { };
-		const int attributes[] = {
+		const int32 attributes[] = {
 			WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
 			WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
 			WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
@@ -103,7 +103,7 @@ namespace Ion
 			WGL_STENCIL_BITS_ARB, 8,
 			0 // End
 		};
-		int pixelFormat = 0;
+		int32 pixelFormat = 0;
 		UINT numFormats;
 
 		TRACE_BEGIN(0, "OpenGLWindows - wglChoosePixelFormatARB");
@@ -115,7 +115,7 @@ namespace Ion
 		ionassertnd(SetPixelFormat(hdc, pixelFormat, &pfd), "Cannot set the pixel format!");
 		TRACE_END(1);
 
-		const int wglAttributes[] = {
+		const int32 wglAttributes[] = {
 			WGL_CONTEXT_MAJOR_VERSION_ARB, s_MajorVersion,
 			WGL_CONTEXT_MINOR_VERSION_ARB, s_MinorVersion,
 			WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB 
@@ -252,7 +252,7 @@ namespace Ion
 		pfd.iLayerType = PFD_MAIN_PLANE;
 
 		TRACE_BEGIN(2, "DummyWindow - Win32::ChoosePixelFormat");
-		int pixelFormat = ChoosePixelFormat(m_DeviceContext, &pfd);
+		int32 pixelFormat = ChoosePixelFormat(m_DeviceContext, &pfd);
 		ionassertnd(pixelFormat);
 		TRACE_END(2);
 
@@ -286,13 +286,13 @@ namespace Ion
 	// OpenGL implementation
 	// -----------------------------------
 
-	void OpenGL::SetSwapInterval(int interval)
+	void OpenGL::SetSwapInterval(int32 interval)
 	{
-		int bResult = wglSwapIntervalEXT(interval);
+		int32 bResult = wglSwapIntervalEXT(interval);
 		ionassert(bResult);
 	}
 
-	int OpenGL::GetSwapInterval()
+	int32 OpenGL::GetSwapInterval()
 	{
 		return wglGetSwapIntervalEXT();
 	}
@@ -324,12 +324,12 @@ namespace Ion
 		pfd.cDepthBits   = 24;
 		pfd.iLayerType   = PFD_MAIN_PLANE;
 
-		int pixelFormat = ChoosePixelFormat(data->DeviceContext, &pfd);
+		int32 pixelFormat = ChoosePixelFormat(data->DeviceContext, &pfd);
 		ionassertnd(pixelFormat);
 
 		ionassertnd(SetPixelFormat(data->DeviceContext, pixelFormat, &pfd));
 
-		const int wglAttributes[] = {
+		const int32 wglAttributes[] = {
 			WGL_CONTEXT_MAJOR_VERSION_ARB, s_MajorVersion,
 			WGL_CONTEXT_MINOR_VERSION_ARB, s_MinorVersion,
 			WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB

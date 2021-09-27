@@ -9,8 +9,8 @@ namespace Ion
 {
 	struct WindowDimensions
 	{
-		int Width;
-		int Height;
+		int32 Width;
+		int32 Height;
 
 		inline float GetAspectRatio()
 		{
@@ -18,7 +18,7 @@ namespace Ion
 		}
 	};
 
-	enum class EDisplayMode : ubyte
+	enum class EDisplayMode : uint8
 	{
 		Windowed,
 		BorderlessWindow,
@@ -40,7 +40,7 @@ namespace Ion
 		virtual void Show() { }
 		virtual void Hide() { }
 
-		virtual void SetTitle(const std::wstring& title) { }
+		virtual void SetTitle(const WString& title) { }
 
 		virtual void SetEnabled(bool bEnabled) { }
 

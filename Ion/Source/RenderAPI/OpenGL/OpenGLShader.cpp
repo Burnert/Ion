@@ -18,13 +18,13 @@ namespace Ion
 		CleanupDeleteShaders();
 	}
 
-	void OpenGLShader::AddShaderSource(EShaderType type, std::string source)
+	void OpenGLShader::AddShaderSource(EShaderType type, String source)
 	{
 		TRACE_FUNCTION();
 
 		if (!m_bCompiled)
 		{
-			uint id;
+			uint32 id;
 
 			auto& it = m_Shaders.find(type);
 			if (it == m_Shaders.end())
@@ -56,7 +56,7 @@ namespace Ion
 
 			glCompileShader(shader.ID);
 
-			int bCompiled = 0;
+			int32 bCompiled = 0;
 			glGetShaderiv(shader.ID, GL_COMPILE_STATUS, &bCompiled);
 
 			ionexcept(bCompiled, "Shader compilation failure! (%s)", ShaderTypeToString(shader.Type))
@@ -93,7 +93,7 @@ namespace Ion
 		glLinkProgram(m_ProgramID);
 		TRACE_END(2);
 
-		int bLinked = 0;
+		int32 bLinked = 0;
 		glGetProgramiv(m_ProgramID, GL_LINK_STATUS, &bLinked);
 
 		ionexcept(bLinked, "Shader linkage failure!")
@@ -118,209 +118,209 @@ namespace Ion
 		return true;
 	}
 
-	bool OpenGLShader::HasUniform(const std::string& name) const
+	bool OpenGLShader::HasUniform(const String& name) const
 	{
 		TRACE_FUNCTION();
 
 		glUseProgram(m_ProgramID);
-		int location = GetUniformLocation(name);
+		int32 location = GetUniformLocation(name);
 		return location != -1;
 	}
 
-	void OpenGLShader::SetUniform1f(const std::string& name, float value) const
+	void OpenGLShader::SetUniform1f(const String& name, float value) const
 	{
 		TRACE_FUNCTION();
 
 		glUseProgram(m_ProgramID);
-		int location = GetUniformLocation(name);
+		int32 location = GetUniformLocation(name);
 		glUniform1fv(location, 1, &value);
 	}
 
-	void OpenGLShader::SetUniform2f(const std::string& name, const Vector2& value) const
+	void OpenGLShader::SetUniform2f(const String& name, const Vector2& value) const
 	{
 		TRACE_FUNCTION();
 
 		glUseProgram(m_ProgramID);
-		int location = GetUniformLocation(name);
+		int32 location = GetUniformLocation(name);
 		glUniform2fv(location, 1, (float*)&value);
 	}
 
-	void OpenGLShader::SetUniform3f(const std::string& name, const Vector3& value) const
+	void OpenGLShader::SetUniform3f(const String& name, const Vector3& value) const
 	{
 		TRACE_FUNCTION();
 
 		glUseProgram(m_ProgramID);
-		int location = GetUniformLocation(name);
+		int32 location = GetUniformLocation(name);
 		glUniform3fv(location, 1, (float*)&value);
 	}
 
-	void OpenGLShader::SetUniform4f(const std::string& name, const Vector4& value) const
+	void OpenGLShader::SetUniform4f(const String& name, const Vector4& value) const
 	{
 		TRACE_FUNCTION();
 
 		glUseProgram(m_ProgramID);
-		int location = GetUniformLocation(name);
+		int32 location = GetUniformLocation(name);
 		glUniform4fv(location, 1, (float*)&value);
 	}
 
-	void OpenGLShader::SetUniform1i(const std::string& name, int value) const
+	void OpenGLShader::SetUniform1i(const String& name, int32 value) const
 	{
 		TRACE_FUNCTION();
 
 		glUseProgram(m_ProgramID);
-		int location = GetUniformLocation(name);
+		int32 location = GetUniformLocation(name);
 		glUniform1iv(location, 1, &value);
 	}
 
-	void OpenGLShader::SetUniform2i(const std::string& name, const IVector2& value) const
+	void OpenGLShader::SetUniform2i(const String& name, const IVector2& value) const
 	{
 		TRACE_FUNCTION();
 
 		glUseProgram(m_ProgramID);
-		int location = GetUniformLocation(name);
-		glUniform2iv(location, 1, (int*)&value);
+		int32 location = GetUniformLocation(name);
+		glUniform2iv(location, 1, (int32*)&value);
 	}
 
-	void OpenGLShader::SetUniform3i(const std::string& name, const IVector3& value) const
+	void OpenGLShader::SetUniform3i(const String& name, const IVector3& value) const
 	{
 		TRACE_FUNCTION();
 
 		glUseProgram(m_ProgramID);
-		int location = GetUniformLocation(name);
-		glUniform3iv(location, 1, (int*)&value);
+		int32 location = GetUniformLocation(name);
+		glUniform3iv(location, 1, (int32*)&value);
 	}
 
-	void OpenGLShader::SetUniform4i(const std::string& name, const IVector4& value) const
+	void OpenGLShader::SetUniform4i(const String& name, const IVector4& value) const
 	{
 		TRACE_FUNCTION();
 
 		glUseProgram(m_ProgramID);
-		int location = GetUniformLocation(name);
-		glUniform4iv(location, 1, (int*)&value);
+		int32 location = GetUniformLocation(name);
+		glUniform4iv(location, 1, (int32*)&value);
 	}
 
-	void OpenGLShader::SetUniform1ui(const std::string& name, uint value) const
+	void OpenGLShader::SetUniform1ui(const String& name, uint32 value) const
 	{
 		TRACE_FUNCTION();
 
 		glUseProgram(m_ProgramID);
-		int location = GetUniformLocation(name);
+		int32 location = GetUniformLocation(name);
 		glUniform1uiv(location, 1, &value);
 	}
 
-	void OpenGLShader::SetUniform2ui(const std::string& name, const UVector2& value) const
+	void OpenGLShader::SetUniform2ui(const String& name, const UVector2& value) const
 	{
 		TRACE_FUNCTION();
 
 		glUseProgram(m_ProgramID);
-		int location = GetUniformLocation(name);
-		glUniform2uiv(location, 1, (uint*)&value);
+		int32 location = GetUniformLocation(name);
+		glUniform2uiv(location, 1, (uint32*)&value);
 	}
 
-	void OpenGLShader::SetUniform3ui(const std::string& name, const UVector3& value) const
+	void OpenGLShader::SetUniform3ui(const String& name, const UVector3& value) const
 	{
 		TRACE_FUNCTION();
 
 		glUseProgram(m_ProgramID);
-		int location = GetUniformLocation(name);
-		glUniform3uiv(location, 1, (uint*)&value);
+		int32 location = GetUniformLocation(name);
+		glUniform3uiv(location, 1, (uint32*)&value);
 	}
 
-	void OpenGLShader::SetUniform4ui(const std::string& name, const UVector4& value) const
+	void OpenGLShader::SetUniform4ui(const String& name, const UVector4& value) const
 	{
 		TRACE_FUNCTION();
 
 		glUseProgram(m_ProgramID);
-		int location = GetUniformLocation(name);
-		glUniform4uiv(location, 1, (uint*)&value);
+		int32 location = GetUniformLocation(name);
+		glUniform4uiv(location, 1, (uint32*)&value);
 	}
 
-	void OpenGLShader::SetUniformMatrix2f(const std::string& name, const Matrix2& value) const
+	void OpenGLShader::SetUniformMatrix2f(const String& name, const Matrix2& value) const
 	{
 		TRACE_FUNCTION();
 
 		glUseProgram(m_ProgramID);
-		int location = GetUniformLocation(name);
+		int32 location = GetUniformLocation(name);
 		glUniformMatrix2fv(location, 1, false, (float*)&value);
 	}
 
-	void OpenGLShader::SetUniformMatrix2x3f(const std::string& name, const Matrix2x3& value) const
+	void OpenGLShader::SetUniformMatrix2x3f(const String& name, const Matrix2x3& value) const
 	{
 		TRACE_FUNCTION();
 
 		glUseProgram(m_ProgramID);
-		int location = GetUniformLocation(name);
+		int32 location = GetUniformLocation(name);
 		glUniformMatrix2x3fv(location, 1, false, (float*)&value);
 	}
 
-	void OpenGLShader::SetUniformMatrix2x4f(const std::string& name, const Matrix2x4& value) const
+	void OpenGLShader::SetUniformMatrix2x4f(const String& name, const Matrix2x4& value) const
 	{
 		TRACE_FUNCTION();
 
 		glUseProgram(m_ProgramID);
-		int location = GetUniformLocation(name);
+		int32 location = GetUniformLocation(name);
 		glUniformMatrix2x4fv(location, 1, false, (float*)&value);
 	}
 
-	void OpenGLShader::SetUniformMatrix3f(const std::string& name, const Matrix3& value) const
+	void OpenGLShader::SetUniformMatrix3f(const String& name, const Matrix3& value) const
 	{
 		TRACE_FUNCTION();
 
 		glUseProgram(m_ProgramID);
-		int location = GetUniformLocation(name);
+		int32 location = GetUniformLocation(name);
 		glUniformMatrix3fv(location, 1, false, (float*)&value);
 	}
 
-	void OpenGLShader::SetUniformMatrix3x2f(const std::string& name, const Matrix3x2& value) const
+	void OpenGLShader::SetUniformMatrix3x2f(const String& name, const Matrix3x2& value) const
 	{
 		TRACE_FUNCTION();
 
 		glUseProgram(m_ProgramID);
-		int location = GetUniformLocation(name);
+		int32 location = GetUniformLocation(name);
 		glUniformMatrix3x2fv(location, 1, false, (float*)&value);
 	}
 
-	void OpenGLShader::SetUniformMatrix3x4f(const std::string& name, const Matrix3x4& value) const
+	void OpenGLShader::SetUniformMatrix3x4f(const String& name, const Matrix3x4& value) const
 	{
 		TRACE_FUNCTION();
 
 		glUseProgram(m_ProgramID);
-		int location = GetUniformLocation(name);
+		int32 location = GetUniformLocation(name);
 		glUniformMatrix3x4fv(location, 1, false, (float*)&value);
 	}
 
-	void OpenGLShader::SetUniformMatrix4f(const std::string& name, const Matrix4& value) const
+	void OpenGLShader::SetUniformMatrix4f(const String& name, const Matrix4& value) const
 	{
 		TRACE_FUNCTION();
 
 		glUseProgram(m_ProgramID);
-		int location = GetUniformLocation(name);
+		int32 location = GetUniformLocation(name);
 		glUniformMatrix4fv(location, 1, false, (float*)&value);
 	}
 
-	void OpenGLShader::SetUniformMatrix4x2f(const std::string& name, const Matrix4x2& value) const
+	void OpenGLShader::SetUniformMatrix4x2f(const String& name, const Matrix4x2& value) const
 	{
 		TRACE_FUNCTION();
 
 		glUseProgram(m_ProgramID);
-		int location = GetUniformLocation(name);
+		int32 location = GetUniformLocation(name);
 		glUniformMatrix4x2fv(location, 1, false, (float*)&value);
 	}
 
-	void OpenGLShader::SetUniformMatrix4x3f(const std::string& name, const Matrix4x3& value) const
+	void OpenGLShader::SetUniformMatrix4x3f(const String& name, const Matrix4x3& value) const
 	{
 		TRACE_FUNCTION();
 
 		glUseProgram(m_ProgramID);
-		int location = GetUniformLocation(name);
+		int32 location = GetUniformLocation(name);
 		glUniformMatrix4x3fv(location, 1, false, (float*)&value);
 	}
 
-	int OpenGLShader::GetUniformLocation(const std::string& name) const
+	int32 OpenGLShader::GetUniformLocation(const String& name) const
 	{
 		TRACE_FUNCTION();
 
-		int location;
+		int32 location;
 
 		auto it = m_UniformCache.find(name);
 		if (it == m_UniformCache.end())

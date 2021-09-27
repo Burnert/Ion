@@ -9,14 +9,14 @@ namespace Ion
 	{
 		friend class OpenGLRenderer;
 	public:
-		OpenGLVertexBuffer(float* vertexAttributes, ullong count);
+		OpenGLVertexBuffer(float* vertexAttributes, uint64 count);
 		virtual ~OpenGLVertexBuffer() override;
 
 		virtual void SetLayout(const TShared<VertexLayout>& layout) override;
 
-		virtual uint GetVertexCount() const override;
+		virtual uint32 GetVertexCount() const override;
 
-		static constexpr FORCEINLINE uint VertexAttributeTypeToGLType(EVertexAttributeType type)
+		static constexpr FORCEINLINE uint32 VertexAttributeTypeToGLType(EVertexAttributeType type)
 		{
 			switch (type)
 			{
@@ -40,8 +40,8 @@ namespace Ion
 		void BindLayout() const;
 
 	private:
-		uint m_ID;
-		uint m_VertexCount;
+		uint32 m_ID;
+		uint32 m_VertexCount;
 		TShared<VertexLayout> m_VertexLayout;
 	};
 }

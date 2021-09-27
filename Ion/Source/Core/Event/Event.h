@@ -48,7 +48,7 @@ namespace Ion
 		RawInputMouseScrolled,
 	};
 
-	enum EEventCategory : uint
+	enum EEventCategory : uint32
 	{
 		EC_None        = 0,
 		EC_Application = Bitflag(0),
@@ -73,11 +73,11 @@ virtual EEventType GetType() const override { return GetStaticType(); } \
 #endif
 
 #define SET_EVENT_CATEGORY(category) \
-	FORCEINLINE virtual uint GetCategoryFlags() const override { return category; }
+	FORCEINLINE virtual uint32 GetCategoryFlags() const override { return category; }
 
 #ifdef ION_LOG_ENABLED // Debug / Release
 	#define SET_EVENT_TOSTRING_FORMAT(format) \
-	FORCEINLINE virtual std::string Debug_ToString() const override \
+	FORCEINLINE virtual String Debug_ToString() const override \
 	{ \
 		std::stringstream ss; \
 		ss << Debug_GetName() << ": " << format; \
@@ -98,16 +98,16 @@ virtual EEventType GetType() const override { return GetStaticType(); } \
 
 	public:
 		FORCEINLINE virtual EEventType GetType() const = 0;
-		FORCEINLINE virtual uint GetCategoryFlags() const = 0;
+		FORCEINLINE virtual uint32 GetCategoryFlags() const = 0;
 
 		FORCEINLINE bool IsInCategory(EEventCategory category) const
 		{
-			return GetCategoryFlags() & (uint)category;
+			return GetCategoryFlags() & (uint32)category;
 		}
 
 #ifdef ION_LOG_ENABLED
 		FORCEINLINE virtual const char* Debug_GetName() const = 0;
-		FORCEINLINE virtual std::string Debug_ToString() const { return Debug_GetName(); }
+		FORCEINLINE virtual String Debug_ToString() const { return Debug_GetName(); }
 #endif
 
 	protected:

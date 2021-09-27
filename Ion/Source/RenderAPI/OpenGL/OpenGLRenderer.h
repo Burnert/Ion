@@ -32,7 +32,7 @@ namespace Ion
 		virtual void SetPolygonDrawMode(EPolygonDrawMode drawMode) const override;
 		virtual EPolygonDrawMode GetPolygonDrawMode() const override;
 
-		FORCEINLINE static uint PolygonDrawModeToGLPolygonMode(EPolygonDrawMode drawMode)
+		FORCEINLINE static uint32 PolygonDrawModeToGLPolygonMode(EPolygonDrawMode drawMode)
 		{
 			switch (drawMode)
 			{
@@ -42,7 +42,7 @@ namespace Ion
 			default:                        return 0;
 			}
 		}
-		FORCEINLINE static EPolygonDrawMode GLPolygonModeToPolygonDrawMode(int polygonMode)
+		FORCEINLINE static EPolygonDrawMode GLPolygonModeToPolygonDrawMode(int32 polygonMode)
 		{
 			switch (polygonMode)
 			{
