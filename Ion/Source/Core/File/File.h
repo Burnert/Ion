@@ -85,6 +85,8 @@ namespace Ion
 		
 		// @TODO: Add copy and move constructors
 
+		static bool LoadToString(const WString& filename, String& outStr);
+
 		// IFile:
 
 		virtual bool Read(uint8* outBuffer, uint64 count) = 0;

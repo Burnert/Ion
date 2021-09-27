@@ -35,24 +35,11 @@ public:
 
 #pragma warning(disable:6001)
 
-		int64 size;
-
-		// @TODO: Figure out a nice way to load all of these shaders
-		// That's a lot of lines to just read one file
-
-		File* vertSrcFile = File::Create(GetEnginePath() + L"/Shaders/Basic.vert");
-		vertSrcFile->Open(IO::FM_Read);
 		String vertSrc;
-		vertSrcFile->Read(vertSrc);
-		vertSrcFile->Close();
-		delete vertSrcFile;
-
-		File* fragSrcFile = File::Create(GetEnginePath() + L"/Shaders/Basic.frag");
-		fragSrcFile->Open(IO::FM_Read);
 		String fragSrc;
-		fragSrcFile->Read(fragSrc);
-		fragSrcFile->Close();
-		delete fragSrcFile;
+
+		File::LoadToString(GetEnginePath() + L"/Shaders/Basic.vert", vertSrc);
+		File::LoadToString(GetEnginePath() + L"/Shaders/Basic.frag", fragSrc);
 
 		bool bResult;
 
