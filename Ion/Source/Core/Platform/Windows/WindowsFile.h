@@ -49,7 +49,7 @@ namespace Ion
 		virtual WString GetExtension() const override;
 
 		virtual bool IsDirectory() const override;
-		virtual std::vector<FileInfo> GetFilesInDirectory() const override;
+		virtual TArray<FileInfo> GetFilesInDirectory() const override;
 		virtual WString FindInDirectoryRecursive(const WString& filename) const override;
 
 		virtual bool IsOpen() const override;

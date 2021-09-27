@@ -283,9 +283,9 @@ namespace Ion
 		uint* endIndex = indices + indexCount;
 		uint* indexPtr = indices;
 
-		std::vector<ColladaDocument::Vertex> finalVertices;
-		std::unordered_set<ColladaDocument::Vertex, ColladaDocument::Vertex::Hash> finalVerticesSet;
-		std::vector<uint> finalIndices;
+		TArray<ColladaDocument::Vertex> finalVertices;
+		THashSet<ColladaDocument::Vertex, ColladaDocument::Vertex::Hash> finalVerticesSet;
+		TArray<uint> finalIndices;
 
 #if ION_ENABLE_TRACING
 		uint debugCurrentIndex = 0;

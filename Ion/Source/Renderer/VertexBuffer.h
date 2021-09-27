@@ -34,7 +34,7 @@ namespace Ion
 
 		FORCEINLINE uint GetStride() const { return (uint)m_Offset; }
 
-		FORCEINLINE const std::vector<VertexAttribute>& GetAttributes() const { return m_Attributes; }
+		FORCEINLINE const TArray<VertexAttribute>& GetAttributes() const { return m_Attributes; }
 
 		static constexpr FORCEINLINE ullong GetSizeOfAttributeType(const EVertexAttributeType type)
 		{
@@ -55,7 +55,7 @@ namespace Ion
 
 	private:
 		ullong m_Offset;
-		std::vector<VertexAttribute> m_Attributes;
+		TArray<VertexAttribute> m_Attributes;
 	};
 
 	class ION_API VertexBuffer

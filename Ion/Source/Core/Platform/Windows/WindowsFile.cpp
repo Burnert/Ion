@@ -523,12 +523,12 @@ namespace Ion
 		return attributes & FILE_ATTRIBUTE_DIRECTORY;
 	}
 
-	std::vector<FileInfo> WindowsFile::GetFilesInDirectory() const
+	TArray<FileInfo> WindowsFile::GetFilesInDirectory() const
 	{
 		ionassert(m_Filename != L"");
 		ionassert(IsDirectory());
 
-		std::vector<FileInfo> files;
+		TArray<FileInfo> files;
 		WIN32_FIND_DATA ffd;
 
 		WString directory = m_Filename + L"\\*";

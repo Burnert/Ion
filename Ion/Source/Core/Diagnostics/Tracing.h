@@ -59,8 +59,8 @@ namespace Ion
 	private:
 		static const char* s_CurrentSessionName;
 		static bool s_bSessionRecording;
-		static std::vector<TraceResult> s_TraceResults;
-		static std::unordered_map<String, TraceResult*> s_NamedTraceResults;
+		static TArray<TraceResult> s_TraceResults;
+		static THashMap<String, TraceResult*> s_NamedTraceResults;
 		static File* s_SessionDumpFile;
 	};
 }

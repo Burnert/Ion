@@ -69,7 +69,7 @@ namespace Ion
 		const OpenGLShader* shader = (OpenGLShader*)material->GetShaderRaw();
 
 		const DirectionalLight* dirLight = scene->GetActiveDirectionalLight();
-		const std::unordered_set<Light*> lights = scene->GetLights();
+		const THashSet<Light*> lights = scene->GetLights();
 		uint32 lightNum = scene->GetLightNumber();
 
 		vertexBuffer->Bind();

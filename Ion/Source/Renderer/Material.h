@@ -226,8 +226,8 @@ namespace Ion
 
 	private:
 		TShared<Shader> m_Shader;
-		std::unordered_map<String, void*> m_Parameters;
-		std::unordered_map<String, String> m_UniformLinks;
+		THashMap<String, void*> m_Parameters;
+		THashMap<String, String> m_UniformLinks;
 
 		// @TODO: Add texture pointers to material
 	};

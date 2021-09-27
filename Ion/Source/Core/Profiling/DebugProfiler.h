@@ -80,7 +80,7 @@ namespace Performance
 
 	private:
 		static DebugProfiler* s_Instance;
-		std::unordered_map<std::string, DebugCounter*> m_RegisteredCounters;
+		THashMap<std::string, DebugCounter*> m_RegisteredCounters;
 	};
 
 	/* Use the SCOPED_PERFORMANCE_COUNTER macro to use this counter */

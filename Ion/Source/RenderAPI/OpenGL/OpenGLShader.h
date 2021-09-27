@@ -62,8 +62,8 @@ namespace Ion
 	private:
 		uint m_ProgramID;
 		bool m_bCompiled;
-		std::unordered_map<EShaderType, SShaderInfo> m_Shaders;
+		THashMap<EShaderType, SShaderInfo> m_Shaders;
 
-		mutable std::unordered_map<std::string, int> m_UniformCache;
+		mutable THashMap<std::string, int> m_UniformCache;
 	};
 }

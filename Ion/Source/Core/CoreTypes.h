@@ -43,3 +43,16 @@ using TUnique      = std::unique_ptr<T>;
 
 template<typename T>
 using TWeak        = std::weak_ptr<T>;
+
+// Data structures
+
+// @TODO: Implement simplified versions of these in the future, also the pointers and String above ^^
+
+template<typename T, typename Hasher = std::hash<T>, typename Allocator = std::allocator<T>>
+using THashSet     = std::unordered_set<T, Hasher, std::equal_to<T>, Allocator>;
+
+template<typename T, typename U, typename Hasher = std::hash<T>, typename Allocator = std::allocator<std::pair<const T, U>>>
+using THashMap     = std::unordered_map<T, U, Hasher, std::equal_to<T>, Allocator>;
+
+template<typename T, typename Allocator = std::allocator<T>>
+using TArray       = std::vector<T, Allocator>;

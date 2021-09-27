@@ -62,7 +62,7 @@ namespace Ion
 		virtual WString GetExtension() const = 0;
 
 		virtual bool IsDirectory() const = 0;
-		virtual std::vector<FileInfo> GetFilesInDirectory() const = 0;
+		virtual TArray<FileInfo> GetFilesInDirectory() const = 0;
 		virtual WString FindInDirectoryRecursive(const WString& filename) const = 0;
 
 		virtual bool IsOpen() const = 0;

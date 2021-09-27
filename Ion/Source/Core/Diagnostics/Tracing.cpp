@@ -104,8 +104,8 @@ namespace Ion
 
 	const char* DebugTracing::s_CurrentSessionName = nullptr;
 	bool DebugTracing::s_bSessionRecording = false;
-	std::vector<DebugTracing::TraceResult> DebugTracing::s_TraceResults;
-	std::unordered_map<String, DebugTracing::TraceResult*> DebugTracing::s_NamedTraceResults;
+	TArray<DebugTracing::TraceResult> DebugTracing::s_TraceResults;
+	THashMap<String, DebugTracing::TraceResult*> DebugTracing::s_NamedTraceResults;
 	File* DebugTracing::s_SessionDumpFile = nullptr;
 }
 

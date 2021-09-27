@@ -10,7 +10,7 @@ namespace Ion
 	{
 	public:
 		using LayerPtr = TShared<Layer>;
-		using LayerVec = std::vector<LayerPtr>;
+		using LayerVec = TArray<LayerPtr>;
 
 		using LayerIterator             = LayerVec::iterator;
 		using LayerReverseIterator      = LayerVec::reverse_iterator;

@@ -38,7 +38,7 @@ namespace Ion
 			uint GetFullStride() const;
 			TShared<VertexLayout> CreateLayout() const;
 
-			std::vector<TriangleInput> m_TriangleInputs;
+			TArray<TriangleInput> m_TriangleInputs;
 			uint m_AttributeCount = 0;
 		};
 
@@ -80,7 +80,7 @@ namespace Ion
 			};
 
 		private:
-			std::vector<float> m_Elements;
+			TArray<float> m_Elements;
 		};
 
 	public:
