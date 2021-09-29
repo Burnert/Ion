@@ -47,7 +47,7 @@ namespace Ion
 		return m_IndexBuffer;
 	}
 
-	const TShared<Material>& Mesh::GetMaterial() const
+	const TWeak<Material>& Mesh::GetMaterial() const
 	{
 		return m_Material;
 	}
@@ -66,7 +66,7 @@ namespace Ion
 
 	const Material* Mesh::GetMaterialRaw() const
 	{
-		return m_Material.get();
+		return m_Material.lock().get();
 	}
 
 	const Matrix4& Mesh::GetTransformMatrix() const

@@ -61,5 +61,9 @@ namespace Ion
 		TRACE_BEGIN(2, "OpenGLTexture - glTextureSubImage2D");
 		glTextureSubImage2D(m_ID, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixelData);
 		TRACE_END(2);
+
+		TRACE_BEGIN(3, "OpenGLTexture - glGenerateTextureMipmap");
+		glGenerateTextureMipmap(m_ID);
+		TRACE_END(3);
 	}
 }

@@ -16,14 +16,15 @@ struct Light
 };
 
 #define MAX_LIGHTS 100
+#define MAX_TEXTURES 16
 
-uniform sampler2D u_TextureSampler;
 uniform vec3 u_CameraLocation;
 uniform vec3 u_CameraDirection;
 uniform vec4 u_AmbientLightColor;
 uniform DirectionalLight u_DirectionalLight;
 uniform uint u_LightNum;
 uniform Light u_Lights[MAX_LIGHTS];
+uniform sampler2D u_Samplers[MAX_TEXTURES];
 
 in vec2 v_TexCoord;
 in vec3 v_WorldNormal;
@@ -101,7 +102,7 @@ void main()
 	vec3 finalLightDiffuse = ambientLightDiffuse + dirLightDiffuse + pointLightsDiffuse;
 	vec3 finalLightSpecular = dirLightSpecular + pointLightsSpecular;
 
-	Color = texture(u_TextureSampler, v_TexCoord).rgba * vec4(finalLightDiffuse, 1.0) + vec4(finalLightSpecular, 1.0);
+	Color = texture(u_Samplers[0], v_TexCoord).rgba * vec4(finalLightDiffuse, 1.0) + vec4(finalLightSpecular, 1.0);
 
 	// Visualize world normal
 	// Color = vec4((WorldNormal + 1.0) * 0.5, 1.0);

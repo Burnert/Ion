@@ -100,9 +100,9 @@ public:
 		TShared<VertexBuffer> colladaVertexBuffer = VertexBuffer::Create(colladaData.VertexAttributes, colladaData.VertexAttributeCount);
 		colladaVertexBuffer->SetLayout(colladaData.Layout);
 
-		TShared<IndexBuffer> colladaIndexBuffer = IndexBuffer::Create(colladaData.Indices, (uint)colladaData.IndexCount);
+		TShared<IndexBuffer> colladaIndexBuffer = IndexBuffer::Create(colladaData.Indices, (uint32)colladaData.IndexCount);
 
-		WString textureFileName = L"black.png";
+		WString textureFileName = L"char.png";
 		memset(m_TextureFileNameBuffer, 0, sizeof(m_TextureFileNameBuffer));
 		StringConverter::WCharToChar(textureFileName.c_str(), m_TextureFileNameBuffer);
 
@@ -110,18 +110,22 @@ public:
 		Image* textureImage = new Image;
 		ionassertnd(textureImage->Load(textureFile));
 		delete textureFile;
+
 		m_TextureCollada = Texture::Create(textureImage);
-		m_TextureCollada->Bind(1);
 
-		TShared<Material> material = Material::Create();
-		material->SetShader(shader);
+		m_Material = Material::Create();
+		m_Material->SetShader(shader);
+		m_Material->CreateParameter("Texture", EMaterialParameterType::Texture2D);
+		m_Material->SetParameter("Texture", m_TextureCollada);
+		m_Material->CreateParameter("Texture1", EMaterialParameterType::Texture2D);
+		m_Material->SetParameter("Texture1", m_TextureCollada);
 
-		shader->SetUniform1i("u_TextureSampler", 1);
+		m_Material->RemoveParameter("Texture1");
 
 		m_MeshCollada = Mesh::Create();
 		m_MeshCollada->SetVertexBuffer(colladaVertexBuffer);
 		m_MeshCollada->SetIndexBuffer(colladaIndexBuffer);
-		m_MeshCollada->SetMaterial(material);
+		m_MeshCollada->SetMaterial(m_Material);
 		m_MeshCollada->SetTransform(Math::Rotate(Math::Radians(-90.0f), Vector3(1.0f, 0.0f, 0.0f)));
 
 		m_Scene->AddDrawableObject(m_MeshCollada.get());
@@ -138,7 +142,7 @@ public:
 
 	virtual void OnUpdate(float deltaTime) override
 	{
-		TShared<Material> meshMaterial = m_MeshCollada->GetMaterial();
+		TShared<Material> meshMaterial = m_MeshCollada->GetMaterial().lock();
 		TShared<Shader> meshShader = meshMaterial->GetShader();
 
 		static float c_Angle = 0.0f;
@@ -149,9 +153,6 @@ public:
 		float aspectRatio = dimensions.GetAspectRatio();
 		m_Camera->SetAspectRatio(aspectRatio);
 		m_AuxCamera->SetAspectRatio(aspectRatio);
-
-		//m_LightDirection = Math::Normalize(m_LightDirection);
-		//meshShader->SetUniform3f("u_LightDirection", m_LightDirection);
 
 		m_Scene->SetAmbientLightColor(m_AmbientLightColor);
 
@@ -237,7 +238,7 @@ public:
 						Image* textureImage = new Image;
 						ionassertnd(textureImage->Load(textureFile));
 						m_TextureCollada = Texture::Create(textureImage);
-						m_TextureCollada->Bind(1);
+						m_MeshCollada->GetMaterial().lock()->SetParameter("Texture", m_TextureCollada);
 					}
 					delete textureFile;
 				}
@@ -380,6 +381,7 @@ private:
 	TShared<Mesh> m_MeshCollada;
 	TShared<Camera> m_Camera;
 	TShared<Camera> m_AuxCamera;
+	TShared<Material> m_Material;
 	TShared<Texture> m_TextureCollada;
 	TShared<DirectionalLight> m_DirectionalLight;
 	TShared<Scene> m_Scene;
@@ -394,8 +396,6 @@ private:
 	Transform m_MeshTransform = { m_MeshLocation, m_MeshRotation, m_MeshScale };
 
 	Vector3 m_AuxCameraLocation = { 0.0f, 0.0f, 4.0f };
-
-	//Vector3 m_LightDirection = Math::Normalize(Vector3 { -0.2f, -0.4f, -0.8f });
 
 	Vector4 m_AmbientLightColor = Vector4(0.1f, 0.11f, 0.14f, 1.0f);
 

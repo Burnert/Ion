@@ -2,8 +2,6 @@
 
 namespace Ion
 {
-	class Shader;
-
 	enum class EMaterialParameterType : uint8
 	{
 		Float,
@@ -11,18 +9,20 @@ namespace Ion
 		Float3,
 		Float4,
 		Bool,
+		Texture2D,
 	};
 
 	inline static constexpr const char* MaterialParameterTypeToString(EMaterialParameterType type)
 	{
 		switch (type)
 		{
-		case EMaterialParameterType::Float:  return TypeToString<float>();
-		case EMaterialParameterType::Float2: return TypeToString<Vector2>();
-		case EMaterialParameterType::Float3: return TypeToString<Vector3>();
-		case EMaterialParameterType::Float4: return TypeToString<Vector4>();
-		case EMaterialParameterType::Bool:   return TypeToString<bool>();
-		default:                             return TypeToString<void>();
+		case EMaterialParameterType::Float:      return TypeToString<float>();
+		case EMaterialParameterType::Float2:     return TypeToString<Vector2>();
+		case EMaterialParameterType::Float3:     return TypeToString<Vector3>();
+		case EMaterialParameterType::Float4:     return TypeToString<Vector4>();
+		case EMaterialParameterType::Bool:       return TypeToString<bool>();
+		case EMaterialParameterType::Texture2D:  return "Texture2D";
+		default:                                 return TypeToString<void>();
 		}
 	}
 
@@ -49,7 +49,7 @@ namespace Ion
 			m_Min(-1.0f),
 			m_Max(1.0f)
 		{
-			if constexpr      (TIsSameV<T, float>)    m_Type = EMaterialParameterType::Float;
+			if constexpr      (TIsSameV<T, float>)   m_Type = EMaterialParameterType::Float;
 			else if constexpr (TIsSameV<T, Vector2>) m_Type = EMaterialParameterType::Float2;
 			else if constexpr (TIsSameV<T, Vector3>) m_Type = EMaterialParameterType::Float3;
 			else if constexpr (TIsSameV<T, Vector4>) m_Type = EMaterialParameterType::Float4;
@@ -122,6 +122,39 @@ namespace Ion
 		bool m_Value;
 	};
 
+	class Texture;
+
+	// Texture2D Material Parameter specialization
+	template<typename T>
+	class TMaterialParameter<T,
+		// @TODO: This TShared<Texture> is weird but necessary with this kind of implementation
+		typename TEnableIfT<TIsSameV<T, TShared<Texture>>>>
+	{
+		friend class Material;
+	public:
+		TMaterialParameter(uint32 slot) :
+			m_Type(EMaterialParameterType::Texture2D),
+			m_ReservedSlot(slot)
+		{ }
+
+		FORCEINLINE void SetValue(const TShared<Texture>& texture)
+		{
+			m_Texture = texture;
+		}
+
+		FORCEINLINE const TWeak<Texture>& GetValue() const
+		{
+			return m_Texture;
+		}
+
+	private:
+		EMaterialParameterType m_Type;
+		TWeak<Texture> m_Texture;
+		uint32 m_ReservedSlot;
+	};
+
+	class Shader;
+
 	class ION_API Material
 	{
 		friend class Renderer;
@@ -174,15 +207,18 @@ namespace Ion
 
 		void UpdateShaderUniforms() const;
 
+		void BindTextures() const;
+
 		template<typename Type>
 		inline static constexpr bool IsStaticTypeSame(EMaterialParameterType type)
 		{
 			return
 				TIsSameV<Type, float>    && type == EMaterialParameterType::Float  ||
-				TIsSameV<Type, Vector2> && type == EMaterialParameterType::Float2 ||
-				TIsSameV<Type, Vector3> && type == EMaterialParameterType::Float3 ||
-				TIsSameV<Type, Vector4> && type == EMaterialParameterType::Float4 ||
-				TIsSameV<Type, bool>     && type == EMaterialParameterType::Bool;
+				TIsSameV<Type, Vector2>  && type == EMaterialParameterType::Float2 ||
+				TIsSameV<Type, Vector3>  && type == EMaterialParameterType::Float3 ||
+				TIsSameV<Type, Vector4>  && type == EMaterialParameterType::Float4 ||
+				TIsSameV<Type, bool>     && type == EMaterialParameterType::Bool   ||
+				TIsSameV<Type, TShared<Texture>>  && type == EMaterialParameterType::Texture2D;
 		}
 
 	protected:
@@ -216,7 +252,8 @@ namespace Ion
 				EMaterialParameterType::Float,
 				EMaterialParameterType::Float2,
 				EMaterialParameterType::Float3,
-				EMaterialParameterType::Float4), "Used ExtractParameterType on a pointer of incorrect type! This will lead to unexpected behavior.");
+				EMaterialParameterType::Float4,
+				EMaterialParameterType::Texture2D), "Used ExtractParameterType on a pointer of incorrect type! This will lead to unexpected behavior.");
 			// The first field of the object is always the type, so if the pointer points
 			// to a valid TMaterialParameter object this cast must yield a correct value.
 			return *(EMaterialParameterType*)paramPtr;
@@ -225,11 +262,12 @@ namespace Ion
 		FORCEINLINE const Shader* GetShaderRaw() const { return m_Shader.get(); }
 
 	private:
+		// @TODO: Make it so that each type has its own collection (should be faster this way)
+
 		TShared<Shader> m_Shader;
 		THashMap<String, void*> m_Parameters;
 		THashMap<String, String> m_UniformLinks;
-
-		// @TODO: Add texture pointers to material
+		THashSet<TMaterialParameter<TShared<Texture>>*> m_TextureParameters;
 	};
 }
 

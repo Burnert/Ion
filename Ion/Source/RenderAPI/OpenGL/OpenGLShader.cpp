@@ -66,7 +66,6 @@ namespace Ion
 				int32 logLength = 0;
 				glGetShaderiv(shader.ID, GL_INFO_LOG_LENGTH, &logLength);
 
-				// The maxLength includes the NULL character
 				char* message = (char*)_malloca(logLength);
 				glGetShaderInfoLog(shader.ID, logLength, &logLength, message);
 

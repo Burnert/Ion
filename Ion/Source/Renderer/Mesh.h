@@ -22,7 +22,7 @@ namespace Ion
 
 		const TShared<VertexBuffer>& GetVertexBuffer() const;
 		const TShared<IndexBuffer>& GetIndexBuffer() const;
-		const TShared<Material>& GetMaterial() const;
+		const TWeak<Material>& GetMaterial() const;
 
 		// IDrawable:
 
@@ -39,7 +39,7 @@ namespace Ion
 	private:
 		TShared<VertexBuffer> m_VertexBuffer;
 		TShared<IndexBuffer> m_IndexBuffer;
-		TShared<Material> m_Material;
+		TWeak<Material> m_Material;
 
 		uint32 m_VertexCount;
 		uint32 m_TriangleCount;

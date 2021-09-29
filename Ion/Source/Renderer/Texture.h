@@ -2,7 +2,7 @@
 
 namespace Ion
 {
-	struct STextureDimensions
+	struct TextureDimensions
 	{
 		int32 Width;
 		int32 Height;
@@ -19,10 +19,10 @@ namespace Ion
 		virtual void Bind(uint32 slot = 0) const = 0;
 		virtual void Unbind() const = 0;
 
-		FORCEINLINE STextureDimensions GetTextureDimensions() const
+		FORCEINLINE TextureDimensions GetTextureDimensions() const
 		{
 			ionassert(m_TextureImage, "Texture image is not set!");
-			return STextureDimensions {
+			return TextureDimensions {
 				m_TextureImage->GetWidth(),
 				m_TextureImage->GetHeight(),
 			};

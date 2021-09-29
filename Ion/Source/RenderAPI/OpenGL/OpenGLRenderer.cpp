@@ -69,20 +69,22 @@ namespace Ion
 		const OpenGLShader* shader = (OpenGLShader*)material->GetShaderRaw();
 
 		const DirectionalLight* dirLight = scene->GetActiveDirectionalLight();
-		const THashSet<Light*> lights = scene->GetLights();
+		const THashSet<Light*>& lights = scene->GetLights();
 		uint32 lightNum = scene->GetLightNumber();
 
 		vertexBuffer->Bind();
 		vertexBuffer->BindLayout();
 		indexBuffer->Bind();
 		shader->Bind();
+
+		material->BindTextures();
 		material->UpdateShaderUniforms();
 
 		// Calculate the Model View Projection Matrix based on the current scene camera
 		TShared<Camera> activeCamera = m_CurrentScene->GetActiveCamera();
+		ionassert(activeCamera, "Cannot render without an active camera.");
 		Vector3 cameraLocation = Vector3(activeCamera->GetTransform()[3]);
 		Vector3 cameraDirection = Vector3(activeCamera->GetTransform() * Vector4(0.0f, 0.0f, -1.0f, 0.0f));
-		ionassert(activeCamera, "Cannot render without an active camera.");
 
 		// Setup matrices
 
@@ -94,6 +96,7 @@ namespace Ion
 		const Matrix4 inverseTranspose = Math::InverseTranspose(modelMatrix);
 
 		// Set global uniforms
+		// @TODO: Make a uniform buffer with these
 
 		shader->SetUniformMatrix4f("u_MVP", modelViewProjectionMatrix);
 		shader->SetUniformMatrix4f("u_ModelMatrix", modelMatrix);

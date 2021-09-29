@@ -1,6 +1,7 @@
 #include "IonPCH.h"
 
 #include "Material.h"
+#include "Texture.h"
 #include "Shader.h"
 
 namespace Ion
@@ -12,6 +13,12 @@ namespace Ion
 
 	Material::~Material()
 	{
+		for (auto& param : m_Parameters)
+		{
+			void* paramPtr = param.second;
+			if (paramPtr)
+				delete paramPtr;
+		}
 	}
 
 	void Material::SetShader(const TShared<Shader>& shader)
@@ -41,6 +48,19 @@ namespace Ion
 		case Ion::EMaterialParameterType::Bool:
 			m_Parameters.insert({ name, new TMaterialParameter<bool> });
 			break;
+		case Ion::EMaterialParameterType::Texture2D:
+			{
+				uint32 slot = (uint32)m_TextureParameters.size();
+				ionassert(slot < 16, "There can't be more than 16 textures in one material!");
+				TMaterialParameter<TShared<Texture>>* param = new TMaterialParameter<TShared<Texture>>(slot);
+				m_Parameters.insert({ name, param });
+				m_TextureParameters.insert(param);
+
+				char samplerUniformName[20];
+				sprintf_s(samplerUniformName, "u_Samplers[%u]", param->m_ReservedSlot);
+				LinkParameterToUniform(name, samplerUniformName);
+			}
+			break;
 		default:
 			LOG_WARN("Unknown parameter type for parameter named '{0}'!", name);
 			break;
@@ -49,9 +69,12 @@ namespace Ion
 
 	void Material::RemoveParameter(const String& name)
 	{
+#pragma warning(disable:6001)
 		const auto itParams = m_Parameters.find(name);
 		if (itParams != m_Parameters.end())
 		{
+			void* paramPtr = itParams->second;
+
 			m_Parameters.erase(itParams);
 			// Remove the uniform link too if it exists
 			const auto itLinks = m_UniformLinks.find(name);
@@ -59,6 +82,15 @@ namespace Ion
 			{
 				m_UniformLinks.erase(itLinks);
 			}
+
+			if (ExtractParameterType(paramPtr) == EMaterialParameterType::Texture2D)
+			{
+				m_TextureParameters.erase((TMaterialParameter<TShared<Texture>>*)paramPtr);
+			}
+
+			// Free the memory
+			if (paramPtr)
+				delete paramPtr;
 		}
 		else
 		{
@@ -129,6 +161,27 @@ namespace Ion
 					m_Shader->SetUniform1ui(uniformName, parameter->GetValue());
 				}
 				break;
+				case EMaterialParameterType::Texture2D:
+				{
+					TMaterialParameter<TShared<Texture>>* parameter = reinterpret_cast<TMaterialParameter<TShared<Texture>>*>(paramPtr);
+					m_Shader->SetUniform1i(uniformName, parameter->m_ReservedSlot);
+				}
+			}
+		}
+	}
+
+	void Material::BindTextures() const
+	{
+		for (TMaterialParameter<TShared<Texture>>* param : m_TextureParameters)
+		{
+			if (!param->GetValue().expired())
+			{
+				const TShared<Texture> texture = param->GetValue().lock();
+				texture->Bind(param->m_ReservedSlot);
+			}
+			else
+			{
+				LOG_WARN("Texture in slot {0} is no longer valid!", param->m_ReservedSlot);
 			}
 		}
 	}
