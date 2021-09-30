@@ -30,6 +30,14 @@ namespace Ion
 		return s_DisplayName;
 	}
 
+	void OpenGL::FilterDebugMessages()
+	{
+		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
+		//glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW, 0, nullptr, GL_FALSE);
+		//glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_MEDIUM, 0, nullptr, GL_FALSE);
+		//glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_HIGH, 0, nullptr, GL_FALSE);
+	}
+
 	void OpenGL::SetDisplayVersion(const char* version)
 	{
 		strcpy_s((s_DisplayName + 7), 120 - 7, version);

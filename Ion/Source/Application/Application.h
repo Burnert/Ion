@@ -129,6 +129,8 @@ namespace Ion
 
 		std::thread::id m_MainThreadId;
 
+		WString m_BaseWindowTitle;
+
 		template<typename T>
 		friend void ParseCommandLineArgs(int32 argc, T* argv[]);
 		static wchar* s_EnginePath;

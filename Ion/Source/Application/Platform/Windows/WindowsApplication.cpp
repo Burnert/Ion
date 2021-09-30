@@ -52,6 +52,8 @@ namespace Ion
 		QueryPerformanceFrequency(&largeInteger);
 		s_PerformanceFrequency = (float)largeInteger.QuadPart;
 
+		QueryPerformanceCounter(&s_liFirstFrameTime);
+
 		Init();
 	}
 
@@ -105,18 +107,20 @@ namespace Ion
 	{
 		// @TODO: Would be nice if it were pausable
 
-		LARGE_INTEGER time;
-		QueryPerformanceCounter(&time);
+		LARGE_INTEGER liTime;
+		QueryPerformanceCounter(&liTime);
+
+		float time = (float)(liTime.QuadPart - s_liFirstFrameTime.QuadPart);
 
 		if (s_LastFrameTime == 0.0f)
 		{
-			s_LastFrameTime = (float)time.QuadPart;
+			s_LastFrameTime = time;
 		}
 
 		float difference;
-		difference = time.QuadPart - s_LastFrameTime;
+		difference = time - s_LastFrameTime;
 
-		s_LastFrameTime = (float)time.QuadPart;
+		s_LastFrameTime = time;
 
 		return difference / s_PerformanceFrequency;
 	}
@@ -124,6 +128,7 @@ namespace Ion
 	HINSTANCE WindowsApplication::m_HInstance;
 
 	float WindowsApplication::s_PerformanceFrequency = 0;
+	LARGE_INTEGER WindowsApplication::s_liFirstFrameTime;
 	float WindowsApplication::s_LastFrameTime = 0;
 
 	// -------------------------------------------------------------

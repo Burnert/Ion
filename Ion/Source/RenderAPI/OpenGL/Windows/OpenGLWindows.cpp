@@ -145,6 +145,8 @@ namespace Ion
 
 		glDebugMessageCallback(OpenGLWindows::DebugCallback, nullptr);
 
+		FilterDebugMessages();
+
 		return renderingContext;
 	}
 
@@ -169,13 +171,13 @@ namespace Ion
 		switch (severity)
 		{
 		case GL_DEBUG_SEVERITY_HIGH:
-			LOG_CRITICAL("OpenGL Critical Error: \n{0}", message);
+			LOG_CRITICAL("OpenGL Warning (High Severity): \n{0}", message);
 			break;
 		case GL_DEBUG_SEVERITY_MEDIUM:
-			LOG_ERROR("OpenGL Error: \n{0}", message);
+			LOG_ERROR("OpenGL Warning (Medium Severity): \n{0}", message);
 			break;
 		case GL_DEBUG_SEVERITY_LOW:
-			LOG_WARN("OpenGL Warning: \n{0}", message);
+			LOG_WARN("OpenGL Warning (Low Severity): \n{0}", message);
 			break;
 		case GL_DEBUG_SEVERITY_NOTIFICATION:
 			LOG_TRACE("OpenGL Notification: \n{0}", message);
@@ -348,6 +350,8 @@ namespace Ion
 
 		glEnable(GL_DEBUG_OUTPUT);
 		glDebugMessageCallback(OpenGLWindows::DebugCallback, nullptr);
+
+		FilterDebugMessages();
 
 		ionassertnd(wglSwapIntervalEXT(0));
 	}

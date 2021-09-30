@@ -265,6 +265,8 @@ public:
 			//ImGui::ShowUserGuide();
 			//ImGui::End();
 
+			ImGui::ShowMetricsWindow();
+
 			ImGui::Begin("Diagnostics");
 			{
 				if (ImGui::Button("Start profiling"))

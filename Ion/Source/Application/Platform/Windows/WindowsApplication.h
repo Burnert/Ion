@@ -48,6 +48,7 @@ namespace Ion
 		static HINSTANCE m_HInstance;
 
 		static float s_PerformanceFrequency;
+		static LARGE_INTEGER s_liFirstFrameTime;
 		static float s_LastFrameTime;
 	};
 }

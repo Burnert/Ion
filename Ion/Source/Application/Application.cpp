@@ -65,9 +65,9 @@ namespace Ion
 
 		const char* renderAPILabel = RenderAPI::GetCurrentDisplayName();
 
-		WString windowTitle = TEXT("Ion - ");
-		windowTitle += StringConverter::StringToWString(renderAPILabel);
-		m_Window->SetTitle(windowTitle);
+		m_BaseWindowTitle = TEXT("Ion - ");
+		m_BaseWindowTitle += StringConverter::StringToWString(renderAPILabel);
+		m_Window->SetTitle(m_BaseWindowTitle);
 
 		m_Window->Show();
 
@@ -100,6 +100,10 @@ namespace Ion
 
 		ImGuiNewFramePlatform();
 		ImGui::NewFrame();
+
+		wchar fps[30];
+		swprintf_s(fps, L" (%.2f FPS)", 1.0f / deltaTime);
+		m_Window->SetTitle(m_BaseWindowTitle + fps);
 
 		m_LayerStack->OnUpdate(deltaTime);
 
@@ -217,6 +221,8 @@ namespace Ion
 
 	float Application::CalculateFrameTime()
 	{
+		// Note: Implemented per platform
+
 		LOG_WARN("Cannot calculate frame time on this platform!");
 		return 0.0f;
 	}

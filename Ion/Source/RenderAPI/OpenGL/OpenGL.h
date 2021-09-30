@@ -25,6 +25,8 @@ namespace Ion
 
 		static const char* GetDisplayName();
 
+		static void FilterDebugMessages();
+
 		// Implemented per platform:
 	public:
 		static void SetSwapInterval(int32 interval);
