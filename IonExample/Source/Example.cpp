@@ -29,6 +29,37 @@ public:
 		ION_LOG_DEBUG("IonExample constructed.");
 	}
 
+	static void InitExampleModel(TShared<Mesh>& mesh, TShared<Material>& material, TShared<Texture>& texture, 
+		const TShared<Shader>& shader, TShared<Scene>& scene, const wchar* meshPath, const wchar* texturePath,
+		const Matrix4& transform)
+	{
+		TUnique<File> file = TUnique<File>(File::Create(meshPath));
+		ColladaDocument model(file.get());
+		const ColladaData& data = model.GetData();
+		TShared<VertexBuffer> vb = VertexBuffer::Create(data.VertexAttributes, data.VertexAttributeCount);
+		vb->SetLayout(data.Layout);
+		TShared<IndexBuffer> ib = IndexBuffer::Create(data.Indices, (uint32)data.IndexCount);
+
+		File* tfile = File::Create(texturePath);
+		Image* image = new Image;
+		ionassertnd(image->Load(tfile));
+		delete tfile;
+		texture = Texture::Create(image);
+
+		material = Material::Create();
+		material->SetShader(shader);
+		material->CreateParameter("Texture", EMaterialParameterType::Texture2D);
+		material->SetParameter("Texture", texture);
+
+		mesh = Mesh::Create();
+		mesh->SetVertexBuffer(vb);
+		mesh->SetIndexBuffer(ib);
+		mesh->SetMaterial(material);
+		mesh->SetTransform(transform);
+
+		scene->AddDrawableObject(mesh.get());
+	}
+
 	virtual void OnInit() override
 	{
 		// @TODO: Figure out how the hell to calculate light blending and all that
@@ -131,62 +162,24 @@ public:
 		m_Scene->AddDrawableObject(m_MeshCollada.get());
 
 		// 4Pak
-		{
-			TUnique<File> file4Pak = TUnique<File>(File::Create(L"Assets/models/4pak.dae"));
-			ColladaDocument model4Pak(file4Pak.get());
-			const ColladaData& data4Pak = model4Pak.GetData();
-			TShared<VertexBuffer> vb4Pak = VertexBuffer::Create(data4Pak.VertexAttributes, data4Pak.VertexAttributeCount);
-			vb4Pak->SetLayout(data4Pak.Layout);
-			TShared<IndexBuffer> ib4Pak = IndexBuffer::Create(data4Pak.Indices, (uint32)data4Pak.IndexCount);
-
-			File* tfile4Pak = File::Create(L"Assets/textures/4pak.png");
-			Image* image4Pak = new Image;
-			ionassertnd(image4Pak->Load(tfile4Pak));
-			delete tfile4Pak;
-			m_Texture4Pak = Texture::Create(image4Pak);
-
-			m_Material4Pak = Material::Create();
-			m_Material4Pak->SetShader(shader);
-			m_Material4Pak->CreateParameter("Texture", EMaterialParameterType::Texture2D);
-			m_Material4Pak->SetParameter("Texture", m_Texture4Pak);
-
-			m_Mesh4Pak = Mesh::Create();
-			m_Mesh4Pak->SetVertexBuffer(vb4Pak);
-			m_Mesh4Pak->SetIndexBuffer(ib4Pak);
-			m_Mesh4Pak->SetMaterial(m_Material4Pak);
-			m_Mesh4Pak->SetTransform(Math::Translate(Vector3(2.0f, 0.0f, 0.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
-
-			m_Scene->AddDrawableObject(m_Mesh4Pak.get());
-		}
+		InitExampleModel(m_Mesh4Pak, m_Material4Pak, m_Texture4Pak, shader, m_Scene, L"Assets/models/4pak.dae", L"Assets/textures/4pak.png",
+			Math::Translate(Vector3(2.0f, 1.0f, 0.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
 
 		// Piwsko
-		{
-			TUnique<File> filePiwsko = TUnique<File>(File::Create(L"Assets/models/piwsko.dae"));
-			ColladaDocument modelPiwsko(filePiwsko.get());
-			const ColladaData& dataPiwsko = modelPiwsko.GetData();
-			TShared<VertexBuffer> vbPiwsko = VertexBuffer::Create(dataPiwsko.VertexAttributes, dataPiwsko.VertexAttributeCount);
-			vbPiwsko->SetLayout(dataPiwsko.Layout);
-			TShared<IndexBuffer> ibPiwsko = IndexBuffer::Create(dataPiwsko.Indices, (uint32)dataPiwsko.IndexCount);
+		InitExampleModel(m_MeshPiwsko, m_MaterialPiwsko, m_TexturePiwsko, shader, m_Scene, L"Assets/models/piwsko.dae", L"Assets/textures/piwsko.png",
+			Math::Translate(Vector3(-2.0f, 1.0f, 0.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
 
-			File* tfilePiwsko = File::Create(L"Assets/textures/piwsko.png");
-			Image* imagePiwsko = new Image;
-			ionassertnd(imagePiwsko->Load(tfilePiwsko));
-			delete tfilePiwsko;
-			m_TexturePiwsko = Texture::Create(imagePiwsko);
+		// Oscypek
+		InitExampleModel(m_MeshOscypek, m_MaterialOscypek, m_TextureOscypek, shader, m_Scene, L"Assets/models/oscypek.dae", L"Assets/textures/oscypek.png",
+			Math::Translate(Vector3(-1.0f, 1.0f, 1.0f))* Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
 
-			m_MaterialPiwsko = Material::Create();
-			m_MaterialPiwsko->SetShader(shader);
-			m_MaterialPiwsko->CreateParameter("Texture", EMaterialParameterType::Texture2D);
-			m_MaterialPiwsko->SetParameter("Texture", m_TexturePiwsko);
+		// Ciupaga
+		InitExampleModel(m_MeshCiupaga, m_MaterialCiupaga, m_TextureCiupaga, shader, m_Scene, L"Assets/models/ciupaga.dae", L"Assets/textures/ciupaga.png",
+			Math::Translate(Vector3(1.0f, 1.0f, 1.0f))* Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 90.0f, 0.0f)))));
 
-			m_MeshPiwsko = Mesh::Create();
-			m_MeshPiwsko->SetVertexBuffer(vbPiwsko);
-			m_MeshPiwsko->SetIndexBuffer(ibPiwsko);
-			m_MeshPiwsko->SetMaterial(m_MaterialPiwsko);
-			m_MeshPiwsko->SetTransform(Math::Translate(Vector3(-2.0f, 0.0f, 0.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
-
-			m_Scene->AddDrawableObject(m_MeshPiwsko.get());
-		}
+		// Slovak
+		InitExampleModel(m_MeshSlovak, m_MaterialSlovak, m_TextureSlovak, shader, m_Scene, L"Assets/models/slovak.dae", L"Assets/textures/slovak.png",
+			Math::Translate(Vector3(1.0f, 0.0f, -2.0f))* Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
 
 		File* dirTest = File::Create();
 		dirTest->SetFilename(L"Assets");
@@ -451,6 +444,18 @@ private:
 	TShared<Mesh> m_MeshPiwsko;
 	TShared<Material> m_MaterialPiwsko;
 	TShared<Texture> m_TexturePiwsko;
+
+	TShared<Mesh> m_MeshCiupaga;
+	TShared<Material> m_MaterialCiupaga;
+	TShared<Texture> m_TextureCiupaga;
+
+	TShared<Mesh> m_MeshOscypek;
+	TShared<Material> m_MaterialOscypek;
+	TShared<Texture> m_TextureOscypek;
+
+	TShared<Mesh> m_MeshSlovak;
+	TShared<Material> m_MaterialSlovak;
+	TShared<Texture> m_TextureSlovak;
 
 	Vector4 m_CameraLocation = { 0.0f, 0.0f, 2.0f, 1.0f };
 	Vector3 m_CameraRotation = { 0.0f, 0.0f, 0.0f };
