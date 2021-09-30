@@ -130,6 +130,64 @@ public:
 
 		m_Scene->AddDrawableObject(m_MeshCollada.get());
 
+		// 4Pak
+		{
+			TUnique<File> file4Pak = TUnique<File>(File::Create(L"Assets/models/4pak.dae"));
+			ColladaDocument model4Pak(file4Pak.get());
+			const ColladaData& data4Pak = model4Pak.GetData();
+			TShared<VertexBuffer> vb4Pak = VertexBuffer::Create(data4Pak.VertexAttributes, data4Pak.VertexAttributeCount);
+			vb4Pak->SetLayout(data4Pak.Layout);
+			TShared<IndexBuffer> ib4Pak = IndexBuffer::Create(data4Pak.Indices, (uint32)data4Pak.IndexCount);
+
+			File* tfile4Pak = File::Create(L"Assets/textures/4pak.png");
+			Image* image4Pak = new Image;
+			ionassertnd(image4Pak->Load(tfile4Pak));
+			delete tfile4Pak;
+			m_Texture4Pak = Texture::Create(image4Pak);
+
+			m_Material4Pak = Material::Create();
+			m_Material4Pak->SetShader(shader);
+			m_Material4Pak->CreateParameter("Texture", EMaterialParameterType::Texture2D);
+			m_Material4Pak->SetParameter("Texture", m_Texture4Pak);
+
+			m_Mesh4Pak = Mesh::Create();
+			m_Mesh4Pak->SetVertexBuffer(vb4Pak);
+			m_Mesh4Pak->SetIndexBuffer(ib4Pak);
+			m_Mesh4Pak->SetMaterial(m_Material4Pak);
+			m_Mesh4Pak->SetTransform(Math::Translate(Vector3(2.0f, 0.0f, 0.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
+
+			m_Scene->AddDrawableObject(m_Mesh4Pak.get());
+		}
+
+		// Piwsko
+		{
+			TUnique<File> filePiwsko = TUnique<File>(File::Create(L"Assets/models/piwsko.dae"));
+			ColladaDocument modelPiwsko(filePiwsko.get());
+			const ColladaData& dataPiwsko = modelPiwsko.GetData();
+			TShared<VertexBuffer> vbPiwsko = VertexBuffer::Create(dataPiwsko.VertexAttributes, dataPiwsko.VertexAttributeCount);
+			vbPiwsko->SetLayout(dataPiwsko.Layout);
+			TShared<IndexBuffer> ibPiwsko = IndexBuffer::Create(dataPiwsko.Indices, (uint32)dataPiwsko.IndexCount);
+
+			File* tfilePiwsko = File::Create(L"Assets/textures/piwsko.png");
+			Image* imagePiwsko = new Image;
+			ionassertnd(imagePiwsko->Load(tfilePiwsko));
+			delete tfilePiwsko;
+			m_TexturePiwsko = Texture::Create(imagePiwsko);
+
+			m_MaterialPiwsko = Material::Create();
+			m_MaterialPiwsko->SetShader(shader);
+			m_MaterialPiwsko->CreateParameter("Texture", EMaterialParameterType::Texture2D);
+			m_MaterialPiwsko->SetParameter("Texture", m_TexturePiwsko);
+
+			m_MeshPiwsko = Mesh::Create();
+			m_MeshPiwsko->SetVertexBuffer(vbPiwsko);
+			m_MeshPiwsko->SetIndexBuffer(ibPiwsko);
+			m_MeshPiwsko->SetMaterial(m_MaterialPiwsko);
+			m_MeshPiwsko->SetTransform(Math::Translate(Vector3(-2.0f, 0.0f, 0.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
+
+			m_Scene->AddDrawableObject(m_MeshPiwsko.get());
+		}
+
 		File* dirTest = File::Create();
 		dirTest->SetFilename(L"Assets");
 		ionassert(dirTest->IsDirectory());
@@ -385,6 +443,14 @@ private:
 	TShared<Texture> m_TextureCollada;
 	TShared<DirectionalLight> m_DirectionalLight;
 	TShared<Scene> m_Scene;
+
+	TShared<Mesh> m_Mesh4Pak;
+	TShared<Material> m_Material4Pak;
+	TShared<Texture> m_Texture4Pak;
+
+	TShared<Mesh> m_MeshPiwsko;
+	TShared<Material> m_MaterialPiwsko;
+	TShared<Texture> m_TexturePiwsko;
 
 	Vector4 m_CameraLocation = { 0.0f, 0.0f, 2.0f, 1.0f };
 	Vector3 m_CameraRotation = { 0.0f, 0.0f, 0.0f };
