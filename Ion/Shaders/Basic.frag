@@ -37,12 +37,12 @@ vec3 WorldNormal = normalize(v_WorldNormal);
 
 float SpecularIntensity = 0.5;
 
-float CalculateSpecularIntensity(vec3 lightDirection, float shininess)
+float CalculateSpecularIntensity(vec3 lightDirection, float shininess, float falloff = 1.0)
 {
 	// Points from the view towards the pixel in world space
 	vec3 viewDirection = normalize(u_CameraLocation - v_PixelLocationWS);
 	vec3 reflectedDirection = reflect(lightDirection, WorldNormal);
-	return pow(max(dot(reflectedDirection, viewDirection), 0.0), shininess) * SpecularIntensity;
+	return pow(max(dot(reflectedDirection, viewDirection), 0.0), shininess) * SpecularIntensity * falloff;
 }
 
 vec3 CalculateAmbientLight()
@@ -55,7 +55,7 @@ void CalculateDirectionalLight(out vec3 outDiffuse, out vec3 outSpecular)
 	float baseIntensity = max(dot(WorldNormal, -u_DirectionalLight.Direction), 0.0);
 	outDiffuse = baseIntensity * u_DirectionalLight.Color * u_DirectionalLight.Intensity;
 
-	float specular = CalculateSpecularIntensity(u_DirectionalLight.Direction, 32);
+	float specular = CalculateSpecularIntensity(u_DirectionalLight.Direction, 32.0) * u_DirectionalLight.Intensity;
 	outSpecular = u_DirectionalLight.Color * specular;
 }
 
@@ -67,7 +67,7 @@ void CalculateLight(Light light, out vec3 outDiffuse, out vec3 outSpecular)
 	float lightIntensity = max(dot(-lightDir, WorldNormal), 0.0) * light.Intensity * falloff;
 	outDiffuse = light.Color * lightIntensity;
 
-	float specular = CalculateSpecularIntensity(lightDir, 32);
+	float specular = CalculateSpecularIntensity(lightDir, 32.0, falloff) * lightIntensity;
 	outSpecular = light.Color * specular;
 }
 
