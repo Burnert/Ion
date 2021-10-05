@@ -244,6 +244,7 @@ public:
 
 		m_Camera->SetTransform(m_CameraTransform.GetMatrix());
 
+		m_MeshRotation.y = std::fmodf(m_MeshRotation.y + deltaTime * 90, 360);
 		m_MeshTransform = { m_MeshLocation, m_MeshRotation, m_MeshScale };
 		m_MeshCollada->SetTransform(m_MeshTransform.GetMatrix());
 
