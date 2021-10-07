@@ -68,8 +68,8 @@ namespace Ion
 					actualKeyCode = Key::LShift;
 				m_bBothShiftsPressed = false;
 
-				auto event = KeyReleasedEvent(Key::Shift, actualKeyCode);
-				m_EventCallback(event);
+				KeyReleasedEvent event(Key::Shift, actualKeyCode);
+				PostEvent(event);
 			}
 		}
 	}
@@ -138,24 +138,24 @@ namespace Ion
 
 			case WM_SETFOCUS:
 			{
-				auto event = DeferredEvent::Create<WindowFocusEvent>((uint64)hWnd);
-				windowRef.m_DeferredEventCallback(event);
+				WindowFocusEvent event((uint64)hWnd);
+				windowRef.PostDeferredEvent(event);
 
 				return 0;
 			}
 
 			case WM_KILLFOCUS:
 			{
-				auto event = DeferredEvent::Create<WindowLostFocusEvent>((uint64)hWnd);
-				windowRef.m_DeferredEventCallback(event);
+				WindowLostFocusEvent event((uint64)hWnd);
+				windowRef.PostDeferredEvent(event);
 
 				return 0;
 			}
 
 			case WM_CLOSE:
 			{
-				auto event = DeferredEvent::Create<WindowCloseEvent>((uint64)hWnd);
-				windowRef.m_DeferredEventCallback(event);
+				WindowCloseEvent event((uint64)hWnd);
+				windowRef.PostDeferredEvent(event);
 
 				return 0;
 			}
@@ -175,8 +175,8 @@ namespace Ion
 				POINTS pos = MAKEPOINTS(lParam);
 				int32 xPos = pos.x;
 				int32 yPos = pos.y;
-				auto event = WindowMovedEvent((uint64)hWnd, xPos, yPos);
-				windowRef.m_EventCallback(event);
+				WindowMovedEvent event((uint64)hWnd, xPos, yPos);
+				windowRef.PostEvent(event);
 
 				return 0;
 			}
@@ -185,8 +185,8 @@ namespace Ion
 			{
 				int32 width  = LOWORD(lParam);
 				int32 height = HIWORD(lParam);
-				auto event = WindowResizeEvent((uint64)hWnd, width, height);
-				windowRef.m_EventCallback(event);
+				WindowResizeEvent event((uint64)hWnd, width, height);
+				windowRef.PostEvent(event);
 
 				return 0;
 			}
@@ -297,13 +297,13 @@ namespace Ion
 
 					if (bRepeated)
 					{
-						auto event = KeyRepeatedEvent(keyCode, actualKeyCode);
-						windowRef.m_EventCallback(event);
+						KeyRepeatedEvent event(keyCode, actualKeyCode);
+						windowRef.PostEvent(event);
 					}
 					else
 					{
-						auto event = KeyPressedEvent(keyCode, actualKeyCode);
-						windowRef.m_EventCallback(event);
+						KeyPressedEvent event(keyCode, actualKeyCode);
+						windowRef.PostEvent(event);
 					}
 				}
 				else
@@ -314,12 +314,12 @@ namespace Ion
 					// At this point keycode variables are already translated.
 					if (keyCode == Key::PrintScr)
 					{
-						auto printScreenPressed = KeyPressedEvent(keyCode, actualKeyCode);
-						windowRef.m_EventCallback(printScreenPressed);
+						KeyPressedEvent printScreenPressed(keyCode, actualKeyCode);
+						windowRef.PostEvent(printScreenPressed);
 					}
 
-					auto event = KeyReleasedEvent(keyCode, actualKeyCode);
-					windowRef.m_EventCallback(event);
+					KeyReleasedEvent event(keyCode, actualKeyCode);
+					windowRef.PostEvent(event);
 				}
 
 				return 0;
@@ -346,13 +346,13 @@ namespace Ion
 				// Down: true, Up: false
 				if (bState)
 				{
-					auto event = MouseButtonPressedEvent(button);
-					windowRef.m_EventCallback(event);
+					MouseButtonPressedEvent event(button);
+					windowRef.PostEvent(event);
 				}
 				else
 				{
-					auto event = MouseButtonReleasedEvent(button);
-					windowRef.m_EventCallback(event);
+					MouseButtonReleasedEvent event(button);
+					windowRef.PostEvent(event);
 				}
 
 				return 0;
@@ -365,11 +365,11 @@ namespace Ion
 			{
 				uint32 button = MouseButtonFromMessage(uMsg, wParam);
 
-				auto pressedEvent = MouseButtonPressedEvent(button);
-				windowRef.m_EventCallback(pressedEvent);
+				MouseButtonPressedEvent pressedEvent(button);
+				windowRef.PostEvent(pressedEvent);
 
-				auto doubleClickEvent = MouseDoubleClickEvent(button);
-				windowRef.m_EventCallback(doubleClickEvent);
+				MouseDoubleClickEvent doubleClickEvent(button);
+				windowRef.PostEvent(doubleClickEvent);
 
 				return 0;
 			}
@@ -377,8 +377,8 @@ namespace Ion
 			case WM_MOUSEWHEEL:
 			{
 				float delta = (float)GET_WHEEL_DELTA_WPARAM(wParam);
-				auto event = MouseScrolledEvent(delta);
-				windowRef.m_EventCallback(event);
+				MouseScrolledEvent event(delta);
+				windowRef.PostEvent(event);
 
 				return 0;
 			}
@@ -394,8 +394,8 @@ namespace Ion
 				float xNormalised = (float)xPos / clientRect.right;
 				float yNormalised = (float)yPos / clientRect.bottom;
 
-				auto event = MouseMovedEvent(xNormalised, yNormalised);
-				windowRef.m_EventCallback(event);
+				MouseMovedEvent event(xNormalised, yNormalised);
+				windowRef.PostEvent(event);
 
 				return 0;
 			}
@@ -448,15 +448,15 @@ namespace Ion
 						if (data->lLastX != 0 ||
 							data->lLastY != 0)
 						{
-							auto event = RawInputMouseMovedEvent((float)data->lLastX, (float)data->lLastY);
-							windowRef.m_EventCallback(event);
+							RawInputMouseMovedEvent event((float)data->lLastX, (float)data->lLastY);
+							windowRef.PostEvent(event);
 						}
 
 						// Mouse Scrolled Event
 						if (data->usButtonFlags & RI_MOUSE_WHEEL)
 						{
-							auto event = RawInputMouseScrolledEvent((float)(int16)data->usButtonData);
-							windowRef.m_EventCallback(event);
+							RawInputMouseScrolledEvent event((float)(int16)data->usButtonData);
+							windowRef.PostEvent(event);
 						}
 
 						// Mouse Button Pressed Event
@@ -481,8 +481,8 @@ namespace Ion
 									case RI_MOUSE_BUTTON_5_DOWN:        button = Mouse::Button5;   break;
 									}
 
-									auto event = RawInputMouseButtonPressedEvent(button);
-									windowRef.m_EventCallback(event);
+									RawInputMouseButtonPressedEvent event(button);
+									windowRef.PostEvent(event);
 								}
 							}
 						}
@@ -507,8 +507,8 @@ namespace Ion
 									case RI_MOUSE_BUTTON_5_UP:        button = Mouse::Button5;   break;
 									}
 
-									auto event = RawInputMouseButtonReleasedEvent(button);
-									windowRef.m_EventCallback(event);
+									RawInputMouseButtonReleasedEvent event(button);
+									windowRef.PostEvent(event);
 								}
 							}
 						}
@@ -790,8 +790,8 @@ namespace Ion
 
 			m_bFullScreenMode = true;
 
-			auto event = DeferredEvent::Create<WindowChangeDisplayModeEvent>((uint64)m_WindowHandle, EDisplayMode::FullScreen);
-			m_DeferredEventCallback(event);
+			WindowChangeDisplayModeEvent event((uint64)m_WindowHandle, EDisplayMode::FullScreen);
+			PostDeferredEvent(event);
 		}
 		// Disable
 		else if (m_bFullScreenMode && !bFullscreen)
@@ -814,8 +814,8 @@ namespace Ion
 
 			m_bFullScreenMode = false;
 
-			auto event = DeferredEvent::Create<WindowChangeDisplayModeEvent>((uint64)m_WindowHandle, EDisplayMode::Windowed);
-			m_DeferredEventCallback(event);
+			WindowChangeDisplayModeEvent event((uint64)m_WindowHandle, EDisplayMode::Windowed);
+			PostDeferredEvent(event);
 		}
 	}
 

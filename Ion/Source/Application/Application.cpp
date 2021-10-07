@@ -25,12 +25,11 @@ namespace Ion
 	}
 
 	Application::Application() :
-		m_EventQueue(MakeUnique<EventQueue>()),
+		m_EventQueue(MakeUnique<EventQueue<EventHandler>>()),
 		m_LayerStack(MakeUnique<LayerStack>()),
 		m_MainThreadId(std::this_thread::get_id()),
 		m_bRunning(true)
 	{
-		m_EventQueue->SetEventHandler(BIND_METHOD_1P(Application::DispatchEvent));
 		Logger::Init();
 	}
 
@@ -133,12 +132,12 @@ namespace Ion
 		DispatchEvent(event);
 	}
 
-	void Application::PostDeferredEvent(DeferredEvent& event)
+	void Application::PostDeferredEvent(Event& event)
 	{
-		m_EventQueue->PushEvent(std::move(event));
+		m_EventQueue->PushEvent(event);
 	}
 
-	void Application::DispatchEvent(Event& event)
+	void Application::DispatchEvent(const Event& event)
 	{
 		TRACE_FUNCTION();
 
@@ -217,14 +216,6 @@ namespace Ion
 
 			m_EventQueue->ProcessEvents();
 		}
-	}
-
-	float Application::CalculateFrameTime()
-	{
-		// Note: Implemented per platform
-
-		LOG_WARN("Cannot calculate frame time on this platform!");
-		return 0.0f;
 	}
 
 	void Application::InitImGui() const

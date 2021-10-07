@@ -8,27 +8,26 @@ namespace Ion
 
 	class ION_API EventDispatcher
 	{
-		template<typename T, typename TEnableIfT<TIsBaseOfV<Event, T>>* = nullptr>
-		using EventFunc = std::function<bool(T&)>;
+		template<typename T>
+		using EventCallback = TFunction<void(T&)>;
 
 	public:
-		EventDispatcher(Event& event) :
-			m_Event(event) {}
+		EventDispatcher(Event& event) { }
 
-		template<typename T, typename TEnableIfT<TIsBaseOfV<Event, T>>* = nullptr>
-		bool Dispatch(EventFunc<T> callback)
+		template<typename T>
+		void Bind(EventCallback<T> callback)
 		{
-			if (m_Event.GetType() == T::GetStaticType())
-			{
-				m_Event.m_bHandled = callback(*(T*)&m_Event);
-				return true;
-			}
-			return false;
+			m_Callbacks.insert(T::_GetType(), callback)
 		}
 
-		FORCEINLINE bool Handled() const { return m_Event.m_bHandled; }
+		template<typename T>
+		void Dispatch(const T& event)
+		{
+			// nie wiem co tu sie odpitala
+			void (*callback)(const T&);
+		}
 
 	private:
-		Event& m_Event;
+		THashMap<EEventType, void*> m_Callbacks;
 	};
 }

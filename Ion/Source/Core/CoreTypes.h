@@ -56,3 +56,6 @@ using THashMap     = std::unordered_map<T, U, Hasher, std::equal_to<T>, Allocato
 
 template<typename T, typename Allocator = std::allocator<T>>
 using TArray       = std::vector<T, Allocator>;
+
+template<typename T>
+using TFunction    = std::function<T>;

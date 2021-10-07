@@ -42,6 +42,9 @@ namespace Ion
 		TRACE_SESSION_END();
 	}
 
+	static LARGE_INTEGER s_FirstFrameTime;
+	static float s_LastFrameTime = 0;
+
 	void WindowsApplication::InitWindows(HINSTANCE hInstance)
 	{
 		TRACE_FUNCTION();
@@ -52,7 +55,7 @@ namespace Ion
 		QueryPerformanceFrequency(&largeInteger);
 		s_PerformanceFrequency = (float)largeInteger.QuadPart;
 
-		QueryPerformanceCounter(&s_liFirstFrameTime);
+		QueryPerformanceCounter(&s_FirstFrameTime);
 
 		Init();
 	}
@@ -86,31 +89,30 @@ namespace Ion
 		Application::Render();
 	}
 
-	void WindowsApplication::DispatchEvent(Event& event)
+	void WindowsApplication::DispatchEvent(const Event& event)
 	{
 		TRACE_FUNCTION();
 
-		EventDispatcher dispatcher(event);
-
+		switch (event.GetType())
+		{
 		// Handle close event in application
-		dispatcher.Dispatch<WindowCloseEvent>(
-			[this](WindowCloseEvent& event)
-			{
-				DestroyWindow((HWND)event.GetWindowHandle());
-				return false;
-			});
+		case EEventType::WindowClose:
+			WindowCloseEvent& windowCloseEvent = (WindowCloseEvent&)event;
+			DestroyWindow((HWND)windowCloseEvent.GetWindowHandle());
+			break;
+		}
 
 		Application::DispatchEvent(event);
 	}
 
-	float WindowsApplication::CalculateFrameTime()
+	float Application::CalculateFrameTime()
 	{
 		// @TODO: Would be nice if it were pausable
 
 		LARGE_INTEGER liTime;
 		QueryPerformanceCounter(&liTime);
 
-		float time = (float)(liTime.QuadPart - s_liFirstFrameTime.QuadPart);
+		float time = (float)(liTime.QuadPart - s_FirstFrameTime.QuadPart);
 
 		if (s_LastFrameTime == 0.0f)
 		{
@@ -122,14 +124,12 @@ namespace Ion
 
 		s_LastFrameTime = time;
 
-		return difference / s_PerformanceFrequency;
+		return difference / WindowsApplication::s_PerformanceFrequency;
 	}
 
 	HINSTANCE WindowsApplication::m_HInstance;
 
 	float WindowsApplication::s_PerformanceFrequency = 0;
-	LARGE_INTEGER WindowsApplication::s_liFirstFrameTime;
-	float WindowsApplication::s_LastFrameTime = 0;
 
 	// -------------------------------------------------------------
 	//  ImGui related  ---------------------------------------------

@@ -165,6 +165,8 @@ namespace Ion
 		RawInput = 2,
 	};
 
+	class EventDispatcher;
+
 	class KeyPressedEvent;
 	class KeyReleasedEvent;
 	class KeyRepeatedEvent;
@@ -202,8 +204,7 @@ namespace Ion
 		void OnEvent(Event& event);
 
 	private:
-		static TShared<InputManager> s_Instance;
-		uint8 m_InputStates[256];
+		EventDispatcher m_EventDispatcher;
 
 		bool OnKeyPressedEvent(KeyPressedEvent& event);
 		bool OnKeyReleasedEvent(KeyReleasedEvent& event);
@@ -211,6 +212,9 @@ namespace Ion
 
 		bool OnMouseButtonPressedEvent(MouseButtonPressedEvent& event);
 		bool OnMouseButtonReleasedEvent(MouseButtonReleasedEvent& event);
+
+		static TShared<InputManager> s_Instance;
+		uint8 m_InputStates[256];
 
 		MouseInputType m_MouseInputType;
 	};

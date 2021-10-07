@@ -28,10 +28,6 @@ namespace Ion
 	class ION_API GenericWindow
 	{
 	public:
-		using EventPtr = TShared<Event>;
-		using EventCallback = std::function<void(Event&)>;
-		using DeferredEventCallback = std::function<void(DeferredEvent&)>;
-
 		virtual ~GenericWindow() { }
 
 		virtual bool Initialize();
@@ -74,9 +70,6 @@ namespace Ion
 
 		Vector2 GetCenterPosition() const;
 
-		void SetEventCallback(EventCallback callback);
-		void SetDeferredEventCallback(DeferredEventCallback callback);
-
 	public:
 		// Implemented per platform.
 		static TShared<GenericWindow> Create();
@@ -85,14 +78,10 @@ namespace Ion
 		// Protected constructor: Only shared_ptrs of this class can be made.
 		GenericWindow();
 
-		// Function that gets called every time an event occurs.
-		EventCallback m_EventCallback;
-		DeferredEventCallback m_DeferredEventCallback;
+		void PostEvent(Event& event) const;
+		void PostDeferredEvent(Event& event) const;
 
 		bool m_bCursorLocked;
 		bool m_bCursorShown;
 	};
-
-	
 }
-

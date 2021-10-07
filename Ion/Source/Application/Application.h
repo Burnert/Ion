@@ -18,7 +18,9 @@ Ion::Application* Ion::CreateApplication() \
 
 namespace Ion
 {
+	template<void(const Event&)>
 	class EventQueue;
+
 	class InputManager;
 
 	class Renderer;
@@ -28,6 +30,7 @@ namespace Ion
 
 	class ION_API Application
 	{
+		friend GenericWindow;
 	public:
 		using EventPtr = TShared<Event>;
 
@@ -71,7 +74,7 @@ namespace Ion
 		void Shutdown();
 
 		void PostEvent(Event& event);
-		void PostDeferredEvent(DeferredEvent& event);
+		void PostDeferredEvent(Event& event);
 
 		/* Platform specific method for polling application events / messages. */
 		virtual void PollEvents();
@@ -79,7 +82,7 @@ namespace Ion
 		virtual void Update(float DeltaTime);
 		virtual void Render();
 
-		virtual void DispatchEvent(Event& event);
+		virtual void DispatchEvent(const Event& event);
 
 		// To be overriden in client:
 
@@ -106,7 +109,12 @@ namespace Ion
 		static Application* s_Instance;
 
 	private:
-		virtual float CalculateFrameTime();
+		float CalculateFrameTime(); // Implemented per platform
+
+		static inline void EventHandler(const Event& event)
+		{
+			Application::Get()->DispatchEvent(event);
+		}
 
 		// @TODO: Move ImGui stuff to some generic Platform class
 
@@ -124,7 +132,7 @@ namespace Ion
 
 		TShared<Renderer> m_Renderer;
 
-		TUnique<EventQueue> m_EventQueue;
+		TUnique<EventQueue<EventHandler>> m_EventQueue;
 		TUnique<LayerStack> m_LayerStack;
 
 		std::thread::id m_MainThreadId;

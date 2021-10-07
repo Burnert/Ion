@@ -2,6 +2,7 @@
 
 #include "Input.h"
 #include "Core/CoreUtility.h"
+#include "Core/Event/EventDispatcher.h"
 
 namespace Ion
 {
@@ -31,6 +32,7 @@ namespace Ion
 		m_MouseInputType(MouseInputType::RawInput)
 	{
 		memset(m_InputStates, 0, sizeof(m_InputStates));
+		m_EventDispatcher.Bind<KeyPressedEvent>(BIND_METHOD_1P(InputManager::OnKeyPressedEvent));
 	}
 
 	bool InputManager::IsKeyPressed(KeyCode keyCode)
@@ -51,8 +53,6 @@ namespace Ion
 	void InputManager::OnEvent(Event& event)
 	{
 		TRACE_FUNCTION();
-
-		EventDispatcher dispatcher(event);
 
 		dispatcher.Dispatch<KeyPressedEvent>(BIND_METHOD_1P(InputManager::OnKeyPressedEvent));
 		dispatcher.Dispatch<KeyReleasedEvent>(BIND_METHOD_1P(InputManager::OnKeyReleasedEvent));

@@ -4,6 +4,8 @@
 #include "Core/CoreTypes.h"
 #include "Core/Logging/Logger.h"
 
+#include "Application/Application.h"
+
 namespace Ion
 {
 	GenericWindow::GenericWindow() :
@@ -48,13 +50,13 @@ namespace Ion
 		return nullptr;
 	}
 
-	void GenericWindow::SetEventCallback(EventCallback callback)
+	void GenericWindow::PostEvent(Event& event) const
 	{
-		m_EventCallback = callback;
+		Application::Get()->PostEvent(event);
 	}
 
-	void GenericWindow::SetDeferredEventCallback(DeferredEventCallback callback)
+	void GenericWindow::PostDeferredEvent(Event& event) const
 	{
-		m_DeferredEventCallback = callback;
+		Application::Get()->PostDeferredEvent(event);
 	}
 }

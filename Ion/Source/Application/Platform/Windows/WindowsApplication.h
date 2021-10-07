@@ -14,6 +14,7 @@ namespace Ion
 {
 	class ION_API WindowsApplication : public Application
 	{
+		friend class Application;
 	public:
 		static WindowsApplication* Get();
 
@@ -32,13 +33,11 @@ namespace Ion
 		virtual void PollEvents() final override;
 		virtual void Update(float DeltaTime) final override;
 		virtual void Render() final override;
-		virtual void DispatchEvent(Event& event) final override;
+		virtual void DispatchEvent(const Event& event) final override;
 
 		// End of final overrides
 
 	private:
-		virtual float CalculateFrameTime() override;
-
 		virtual void InitImGuiBackend(const TShared<GenericWindow>& window) const override;
 		virtual void ImGuiNewFramePlatform() const override;
 		virtual void ImGuiRenderPlatform(ImDrawData* drawData) const override;
@@ -48,8 +47,8 @@ namespace Ion
 		static HINSTANCE m_HInstance;
 
 		static float s_PerformanceFrequency;
-		static LARGE_INTEGER s_liFirstFrameTime;
-		static float s_LastFrameTime;
+		//static LARGE_INTEGER s_liFirstFrameTime;
+		//static float s_LastFrameTime;
 	};
 }
 
