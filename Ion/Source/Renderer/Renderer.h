@@ -14,7 +14,7 @@
 
 namespace Ion
 {
-	struct SViewportDimensions
+	struct ViewportDimensions
 	{
 		int32 X;
 		int32 Y;
@@ -51,8 +51,8 @@ namespace Ion
 		virtual void SetVSyncEnabled(bool bEnabled) const = 0;
 		virtual bool IsVSyncEnabled() const = 0;
 
-		virtual void SetViewportDimensions(const SViewportDimensions& dimensions) const = 0;
-		virtual SViewportDimensions GetViewportDimensions() const = 0;
+		virtual void SetViewportDimensions(const ViewportDimensions& dimensions) const = 0;
+		virtual ViewportDimensions GetViewportDimensions() const = 0;
 
 		virtual void SetPolygonDrawMode(EPolygonDrawMode drawMode) const = 0;
 		virtual EPolygonDrawMode GetPolygonDrawMode() const = 0;

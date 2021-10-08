@@ -65,15 +65,13 @@ namespace Ion
 	m_DebugInfo = str; \
 }
 #else
-#define SET_DEBUG_INFO_STRING(format)
+#define SET_DEBUG_INFO_STRING(format, ...)
 #endif
 
 #define STATIC_EVENT_TYPE_GETTER(type) static inline EEventType _GetType() { return type; }
 
 	class ION_API Event
 	{
-		friend class EventDispatcher;
-
 		//template<void(const Event&)>
 		//friend class EventQueue;
 

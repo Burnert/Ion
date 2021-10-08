@@ -74,7 +74,7 @@ namespace Ion
 		}
 	}
 
-	void LayerStack::OnEvent(Event& event)
+	void LayerStack::OnEvent(const Event& event)
 	{
 		TRACE_FUNCTION();
 

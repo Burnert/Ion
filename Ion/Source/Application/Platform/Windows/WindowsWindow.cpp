@@ -27,6 +27,21 @@ namespace Ion
 {
 	static const char* _windowNoInitMessage = "Cannot {0} before the window is initialized!";
 
+	// Post events directly to Application
+	// This is needed for compile time event dispatch
+	template<typename T>
+	inline void PostEvent(const T& event)
+	{
+		Application::Get()->PostEvent(event);
+	}
+	// Post events directly to Application
+	// The type is needed for copying the events to the event queue
+	template<typename T>
+	inline void PostDeferredEvent(const T& event)
+	{
+		Application::Get()->PostDeferredEvent(event);
+	}
+
 	// Generic Window
 
 	TShared<GenericWindow> GenericWindow::Create()
@@ -139,7 +154,7 @@ namespace Ion
 			case WM_SETFOCUS:
 			{
 				WindowFocusEvent event((uint64)hWnd);
-				windowRef.PostDeferredEvent(event);
+				PostDeferredEvent(event);
 
 				return 0;
 			}
@@ -147,7 +162,7 @@ namespace Ion
 			case WM_KILLFOCUS:
 			{
 				WindowLostFocusEvent event((uint64)hWnd);
-				windowRef.PostDeferredEvent(event);
+				PostDeferredEvent(event);
 
 				return 0;
 			}
@@ -155,7 +170,7 @@ namespace Ion
 			case WM_CLOSE:
 			{
 				WindowCloseEvent event((uint64)hWnd);
-				windowRef.PostDeferredEvent(event);
+				PostDeferredEvent(event);
 
 				return 0;
 			}
@@ -176,7 +191,7 @@ namespace Ion
 				int32 xPos = pos.x;
 				int32 yPos = pos.y;
 				WindowMovedEvent event((uint64)hWnd, xPos, yPos);
-				windowRef.PostEvent(event);
+				PostEvent(event);
 
 				return 0;
 			}
@@ -186,7 +201,7 @@ namespace Ion
 				int32 width  = LOWORD(lParam);
 				int32 height = HIWORD(lParam);
 				WindowResizeEvent event((uint64)hWnd, width, height);
-				windowRef.PostEvent(event);
+				PostEvent(event);
 
 				return 0;
 			}
@@ -298,12 +313,12 @@ namespace Ion
 					if (bRepeated)
 					{
 						KeyRepeatedEvent event(keyCode, actualKeyCode);
-						windowRef.PostEvent(event);
+						PostEvent(event);
 					}
 					else
 					{
 						KeyPressedEvent event(keyCode, actualKeyCode);
-						windowRef.PostEvent(event);
+						PostEvent(event);
 					}
 				}
 				else
@@ -315,11 +330,11 @@ namespace Ion
 					if (keyCode == Key::PrintScr)
 					{
 						KeyPressedEvent printScreenPressed(keyCode, actualKeyCode);
-						windowRef.PostEvent(printScreenPressed);
+						PostEvent(printScreenPressed);
 					}
 
 					KeyReleasedEvent event(keyCode, actualKeyCode);
-					windowRef.PostEvent(event);
+					PostEvent(event);
 				}
 
 				return 0;
@@ -347,12 +362,12 @@ namespace Ion
 				if (bState)
 				{
 					MouseButtonPressedEvent event(button);
-					windowRef.PostEvent(event);
+					PostEvent(event);
 				}
 				else
 				{
 					MouseButtonReleasedEvent event(button);
-					windowRef.PostEvent(event);
+					PostEvent(event);
 				}
 
 				return 0;
@@ -366,10 +381,10 @@ namespace Ion
 				uint32 button = MouseButtonFromMessage(uMsg, wParam);
 
 				MouseButtonPressedEvent pressedEvent(button);
-				windowRef.PostEvent(pressedEvent);
+				PostEvent(pressedEvent);
 
 				MouseDoubleClickEvent doubleClickEvent(button);
-				windowRef.PostEvent(doubleClickEvent);
+				PostEvent(doubleClickEvent);
 
 				return 0;
 			}
@@ -378,7 +393,7 @@ namespace Ion
 			{
 				float delta = (float)GET_WHEEL_DELTA_WPARAM(wParam);
 				MouseScrolledEvent event(delta);
-				windowRef.PostEvent(event);
+				PostEvent(event);
 
 				return 0;
 			}
@@ -395,7 +410,7 @@ namespace Ion
 				float yNormalised = (float)yPos / clientRect.bottom;
 
 				MouseMovedEvent event(xNormalised, yNormalised);
-				windowRef.PostEvent(event);
+				PostEvent(event);
 
 				return 0;
 			}
@@ -449,14 +464,14 @@ namespace Ion
 							data->lLastY != 0)
 						{
 							RawInputMouseMovedEvent event((float)data->lLastX, (float)data->lLastY);
-							windowRef.PostEvent(event);
+							PostEvent(event);
 						}
 
 						// Mouse Scrolled Event
 						if (data->usButtonFlags & RI_MOUSE_WHEEL)
 						{
 							RawInputMouseScrolledEvent event((float)(int16)data->usButtonData);
-							windowRef.PostEvent(event);
+							PostEvent(event);
 						}
 
 						// Mouse Button Pressed Event
@@ -482,7 +497,7 @@ namespace Ion
 									}
 
 									RawInputMouseButtonPressedEvent event(button);
-									windowRef.PostEvent(event);
+									PostEvent(event);
 								}
 							}
 						}
@@ -508,7 +523,7 @@ namespace Ion
 									}
 
 									RawInputMouseButtonReleasedEvent event(button);
-									windowRef.PostEvent(event);
+									PostEvent(event);
 								}
 							}
 						}

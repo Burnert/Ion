@@ -2,6 +2,7 @@
 
 #include "Core/CoreTypes.h"
 #include "Core/CoreApi.h"
+#include "Core/Event/EventDispatcher.h"
 
 namespace Ion
 {
@@ -165,8 +166,6 @@ namespace Ion
 		RawInput = 2,
 	};
 
-	class EventDispatcher;
-
 	class KeyPressedEvent;
 	class KeyReleasedEvent;
 	class KeyRepeatedEvent;
@@ -194,6 +193,21 @@ namespace Ion
 		// @TODO: you know what
 		static bool IsRawInputEnabled() { return true; }
 
+		void OnKeyPressedEvent(const KeyPressedEvent& event);
+		void OnKeyReleasedEvent(const KeyReleasedEvent& event);
+		void OnKeyRepeatedEvent(const KeyRepeatedEvent& event);
+
+		void OnMouseButtonPressedEvent(const MouseButtonPressedEvent& event);
+		void OnMouseButtonReleasedEvent(const MouseButtonReleasedEvent& event);
+
+		using InputEventFunctions = TEventFunctionPack<
+			TMemberEventFunction<InputManager, KeyPressedEvent, &InputManager::OnKeyPressedEvent>,
+			TMemberEventFunction<InputManager, KeyReleasedEvent, &InputManager::OnKeyReleasedEvent>,
+			TMemberEventFunction<InputManager, KeyRepeatedEvent, &InputManager::OnKeyRepeatedEvent>,
+			TMemberEventFunction<InputManager, MouseButtonPressedEvent, &InputManager::OnMouseButtonPressedEvent>,
+			TMemberEventFunction<InputManager, MouseButtonReleasedEvent, &InputManager::OnMouseButtonReleasedEvent>
+		>;
+
 	protected:
 		InputManager();
 		virtual ~InputManager() { }
@@ -201,17 +215,15 @@ namespace Ion
 		static uint8 InputPressedFlag;
 		static uint8 InputRepeatedFlag;
 
-		void OnEvent(Event& event);
+		template<typename T>
+		void DispatchEvent(const T& event)
+		{
+			TRACE_FUNCTION();
+			m_EventDispatcher.Dispatch(this, event);
+		}
 
 	private:
-		EventDispatcher m_EventDispatcher;
-
-		bool OnKeyPressedEvent(KeyPressedEvent& event);
-		bool OnKeyReleasedEvent(KeyReleasedEvent& event);
-		bool OnKeyRepeatedEvent(KeyRepeatedEvent& event);
-
-		bool OnMouseButtonPressedEvent(MouseButtonPressedEvent& event);
-		bool OnMouseButtonReleasedEvent(MouseButtonReleasedEvent& event);
+		EventDispatcher<InputEventFunctions> m_EventDispatcher;
 
 		static TShared<InputManager> s_Instance;
 		uint8 m_InputStates[256];

@@ -33,6 +33,11 @@ namespace Ion
 		Logger::Init();
 	}
 
+	Application::~Application()
+	{
+		Shutdown();
+	}
+
 	void Application::Start()
 	{
 		ionassert(0, "Start function not implemented!");
@@ -51,9 +56,6 @@ namespace Ion
 
 		// Current thread will render graphics in this window.
 		m_Window->Initialize();
-
-		m_Window->SetEventCallback(BIND_METHOD_1P(Application::PostEvent));
-		m_Window->SetDeferredEventCallback(BIND_METHOD_1P(Application::PostDeferredEvent));
 
 		m_Renderer = Renderer::Create();
 		m_Renderer->Init();
@@ -86,6 +88,10 @@ namespace Ion
 		// Call client overriden Shutdown function
 		OnShutdown();
 		TRACE_END(0);
+	}
+
+	void Application::Exit()
+	{
 	}
 
 	void Application::PollEvents()
@@ -127,42 +133,10 @@ namespace Ion
 		m_Window->SwapBuffers();
 	}
 
-	void Application::PostEvent(Event& event)
-	{
-		DispatchEvent(event);
-	}
-
-	void Application::PostDeferredEvent(Event& event)
-	{
-		m_EventQueue->PushEvent(event);
-	}
-
+	/*
 	void Application::DispatchEvent(const Event& event)
 	{
 		TRACE_FUNCTION();
-
-		//ION_LOG_ENGINE_DEBUG("Event: {0}", event.Debug_ToString());
-
-		EventDispatcher dispatcher(event);
-
-		// Handle close event in application
-		dispatcher.Dispatch<WindowCloseEvent>(
-			[this](WindowCloseEvent& event)
-			{
-				m_bRunning = false;
-				return false;
-			});
-
-		dispatcher.Dispatch<WindowResizeEvent>(
-			[this](WindowResizeEvent& event)
-			{
-				int32 width = (int32)event.GetWidth();
-				int32 height = (int32)event.GetHeight();
-
-				m_Renderer->SetViewportDimensions(SViewportDimensions { 0, 0, width, height });
-
-				return true;
-			});
 
 		dispatcher.Dispatch<KeyPressedEvent>(
 			[this](KeyPressedEvent& event)
@@ -192,13 +166,51 @@ namespace Ion
 				}
 				return true;
 			});
+	}
+	*/
 
-		m_InputManager->OnEvent(event);
-		m_LayerStack->OnEvent(event);
+	void Application::OnWindowCloseEvent_Internal(const WindowCloseEvent& event)
+	{
+		m_bRunning = false;
+	}
 
-		TRACE_BEGIN(0, "Application - Client::OnEvent");
-		OnEvent(event);
-		TRACE_END(0);
+	void Application::OnWindowResizeEvent_Internal(const WindowResizeEvent& event)
+	{
+		int32 width = (int32)event.GetWidth();
+		int32 height = (int32)event.GetHeight();
+
+		m_Renderer->SetViewportDimensions(ViewportDimensions { 0, 0, width, height });
+	}
+
+	void Application::OnKeyPressedEvent_Internal(const KeyPressedEvent& event)
+	{
+		// Toggle fullscreen with Alt + Enter
+		if (event.GetKeyCode() == Key::Enter)
+		{
+			if (GetInputManager()->IsKeyPressed(Key::LAlt))
+			{
+				bool bFullScreen = GetWindow()->IsFullScreenEnabled();
+				GetWindow()->EnableFullScreen(!bFullScreen);
+			}
+		}
+		// Exit application with Alt + F4
+		else if (event.GetKeyCode() == Key::F4)
+		{
+			if (GetInputManager()->IsKeyPressed(Key::LAlt))
+			{
+				Exit();
+			}
+		}
+	}
+
+	void Application::OnKeyReleasedEvent_Internal(const KeyReleasedEvent& event)
+	{
+
+	}
+
+	void Application::OnKeyRepeatedEvent_Internal(const KeyRepeatedEvent& event)
+	{
+
 	}
 
 	void Application::Run()

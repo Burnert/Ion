@@ -36,15 +36,17 @@ namespace Ion
 
 		static WString GetEnginePath() { return s_EnginePath; }
 
-		virtual ~Application() { }
+		virtual ~Application();
 
 		/* Called by the Entry Point */
 		virtual void Start();
 
 		/* Creates an instance of an application singleton */
 		template<typename T>
-		static TEnableIfT<TIsBaseOfV<Application, T>, T*> Create()
+		static T* Create()
 		{
+			static_assert(TIsBaseOfV<Application, T>);
+
 			s_Instance = new T;
 			return (T*)s_Instance;
 		}
@@ -73,8 +75,66 @@ namespace Ion
 		void Run();
 		void Shutdown();
 
-		void PostEvent(Event& event);
-		void PostDeferredEvent(Event& event);
+		void Exit();
+
+		// Event system related functions
+
+		template<typename T>
+		friend void PostEvent(const T& event);
+
+		template<typename T>
+		inline void PostEvent(const T& event)
+		{
+			DispatchEvent(event);
+		}
+
+		template<typename T>
+		friend void PostDeferredEvent(const T& event);
+
+		template<typename T>
+		void PostDeferredEvent(const T& event)
+		{
+			m_EventQueue->PushEvent(event);
+		}
+
+		template<typename T>
+		void DispatchEvent(const T& event)
+		{
+			m_EventDispatcher.Dispatch(this, event);
+
+			m_InputManager->DispatchEvent(event);
+			m_LayerStack->OnEvent(event);
+
+			TRACE_BEGIN(0, "Application - Client::OnEvent");
+			OnEvent(event);
+			TRACE_END(0);
+		}
+
+		// Static event handler for EventQueue
+		static inline void EventHandler(const Event& event)
+		{
+			Application::Get()->DispatchEvent(event);
+		}
+
+		// Event functions
+
+		virtual void OnWindowCloseEvent_Internal(const WindowCloseEvent& event); // Virtual because it's overriden in WindowsApplication
+		void OnWindowResizeEvent_Internal(const WindowResizeEvent& event);
+
+		void OnKeyPressedEvent_Internal(const KeyPressedEvent& event);
+		void OnKeyReleasedEvent_Internal(const KeyReleasedEvent& event);
+		void OnKeyRepeatedEvent_Internal(const KeyRepeatedEvent& event);
+
+		// @TODO: If possible, make this system set the event functions automatically based on function signatures
+		// because writing this big type thing is a bit unnecessary 
+
+		using ApplicationEventFunctions = TEventFunctionPack<
+			TMemberEventFunction<Application, WindowCloseEvent, &Application::OnWindowCloseEvent_Internal>,
+			TMemberEventFunction<Application, WindowResizeEvent, &Application::OnWindowResizeEvent_Internal>,
+			TMemberEventFunction<Application, KeyPressedEvent, &Application::OnKeyPressedEvent_Internal>,
+			TMemberEventFunction<Application, KeyReleasedEvent, &Application::OnKeyReleasedEvent_Internal>,
+			TMemberEventFunction<Application, KeyRepeatedEvent, &Application::OnKeyRepeatedEvent_Internal>
+		>;
 
 		/* Platform specific method for polling application events / messages. */
 		virtual void PollEvents();
@@ -82,7 +142,7 @@ namespace Ion
 		virtual void Update(float DeltaTime);
 		virtual void Render();
 
-		virtual void DispatchEvent(const Event& event);
+	protected:
 
 		// To be overriden in client:
 
@@ -100,7 +160,7 @@ namespace Ion
 		virtual void OnShutdown() { }
 		/* Override this in the client if you want to use it.
 		   Called when the application receives an event. */
-		virtual void OnEvent(Event& event) { }
+		virtual void OnEvent(const Event& event) { }
 
 		// End of overridables
 
@@ -110,11 +170,6 @@ namespace Ion
 
 	private:
 		float CalculateFrameTime(); // Implemented per platform
-
-		static inline void EventHandler(const Event& event)
-		{
-			Application::Get()->DispatchEvent(event);
-		}
 
 		// @TODO: Move ImGui stuff to some generic Platform class
 
@@ -132,6 +187,7 @@ namespace Ion
 
 		TShared<Renderer> m_Renderer;
 
+		EventDispatcher<ApplicationEventFunctions> m_EventDispatcher;
 		TUnique<EventQueue<EventHandler>> m_EventQueue;
 		TUnique<LayerStack> m_LayerStack;
 

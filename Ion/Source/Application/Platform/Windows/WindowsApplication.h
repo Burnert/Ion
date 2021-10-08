@@ -18,8 +18,6 @@ namespace Ion
 	public:
 		static WindowsApplication* Get();
 
-		virtual ~WindowsApplication() override;
-
 		/* Called by the Entry Point */
 		virtual void Start();
 
@@ -33,9 +31,10 @@ namespace Ion
 		virtual void PollEvents() final override;
 		virtual void Update(float DeltaTime) final override;
 		virtual void Render() final override;
-		virtual void DispatchEvent(const Event& event) final override;
 
 		// End of final overrides
+
+		virtual void OnWindowCloseEvent_Internal(const WindowCloseEvent& event) override;
 
 	private:
 		virtual void InitImGuiBackend(const TShared<GenericWindow>& window) const override;

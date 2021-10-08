@@ -49,14 +49,4 @@ namespace Ion
 	{
 		return nullptr;
 	}
-
-	void GenericWindow::PostEvent(Event& event) const
-	{
-		Application::Get()->PostEvent(event);
-	}
-
-	void GenericWindow::PostDeferredEvent(Event& event) const
-	{
-		Application::Get()->PostDeferredEvent(event);
-	}
 }

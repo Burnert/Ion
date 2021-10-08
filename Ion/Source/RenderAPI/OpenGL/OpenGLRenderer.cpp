@@ -170,18 +170,18 @@ namespace Ion
 		return (bool)OpenGL::GetSwapInterval();
 	}
 
-	void OpenGLRenderer::SetViewportDimensions(const SViewportDimensions& dimensions) const
+	void OpenGLRenderer::SetViewportDimensions(const ViewportDimensions& dimensions) const
 	{
 		TRACE_FUNCTION();
 
 		glViewport(dimensions.X, dimensions.Y, dimensions.Width, dimensions.Height);
 	}
 
-	SViewportDimensions OpenGLRenderer::GetViewportDimensions() const
+	ViewportDimensions OpenGLRenderer::GetViewportDimensions() const
 	{
 		TRACE_FUNCTION();
 
-		SViewportDimensions dimensions;
+		ViewportDimensions dimensions;
 		glGetIntegerv(GL_VIEWPORT, (int32*)&dimensions);
 		return dimensions;
 	}

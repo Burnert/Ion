@@ -78,9 +78,6 @@ namespace Ion
 		// Protected constructor: Only shared_ptrs of this class can be made.
 		GenericWindow();
 
-		void PostEvent(Event& event) const;
-		void PostDeferredEvent(Event& event) const;
-
 		bool m_bCursorLocked;
 		bool m_bCursorShown;
 	};

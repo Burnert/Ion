@@ -371,65 +371,59 @@ public:
 	{
 	}
 
-	virtual void OnEvent(Ion::Event& event) override
+	virtual void OnEvent(const Event& event) override
 	{
-		EventDispatcher dispatcher(event);
-
-		dispatcher.Dispatch<KeyPressedEvent>(
-			[this](KeyPressedEvent& event)
-			{
-				if (event.GetKeyCode() == Key::F4)
-				{
-					m_bDrawImGui = !m_bDrawImGui;
-					return true;
-				}
-				return false;
-			});
-
-		dispatcher.Dispatch<RawInputMouseMovedEvent>(
-			[this](RawInputMouseMovedEvent& event)
-			{
-				if (GetInputManager()->IsMouseButtonPressed(Mouse::Right))
-				{
-					float yawDelta = event.GetX() * 0.2f;
-					float pitchDelta = event.GetY() * 0.2f;
-
-					Rotator cameraRotation = m_CameraTransform.GetRotation();
-					cameraRotation.SetPitch(Math::Clamp(cameraRotation.Pitch() - pitchDelta, -89.99f, 89.99f));
-					cameraRotation.SetYaw(cameraRotation.Yaw() - yawDelta);
-					m_CameraTransform.SetRotation(cameraRotation);
-
-					return true;
-				}
-				return false;
-			});
-
-		dispatcher.Dispatch<MouseButtonPressedEvent>(
-			[this](MouseButtonPressedEvent& event)
-			{
-				if (event.GetMouseButton() == Mouse::Right)
-				{
-					ImGui::SetWindowFocus();
-
-					GetWindow()->LockCursor();
-					GetWindow()->ShowCursor(false);
-					return true;
-				}
-				return false;
-			});
-
-		dispatcher.Dispatch<MouseButtonReleasedEvent>(
-			[this](MouseButtonReleasedEvent& event)
-			{
-				if (event.GetMouseButton() == Mouse::Right)
-				{
-					GetWindow()->UnlockCursor();
-					GetWindow()->ShowCursor(true);
-					return true;
-				}
-				return false;
-			});
+		m_EventDispatcher.Dispatch(this, event);
 	}
+
+	void OnKeyPressedEvent(const KeyPressedEvent& event)
+	{
+		if (event.GetKeyCode() == Key::F4)
+		{
+			m_bDrawImGui = !m_bDrawImGui;
+		}
+	}
+
+	void OnRawInputMouseMovedEvent(const RawInputMouseMovedEvent& event)
+	{
+		if (GetInputManager()->IsMouseButtonPressed(Mouse::Right))
+		{
+			float yawDelta = event.GetX() * 0.2f;
+			float pitchDelta = event.GetY() * 0.2f;
+
+			Rotator cameraRotation = m_CameraTransform.GetRotation();
+			cameraRotation.SetPitch(Math::Clamp(cameraRotation.Pitch() - pitchDelta, -89.99f, 89.99f));
+			cameraRotation.SetYaw(cameraRotation.Yaw() - yawDelta);
+			m_CameraTransform.SetRotation(cameraRotation);
+		}
+	}
+
+	void OnRawInputMouseButtonPressedEvent(const RawInputMouseButtonPressedEvent& event)
+	{
+		if (event.GetMouseButton() == Mouse::Right)
+		{
+			ImGui::SetWindowFocus();
+
+			GetWindow()->LockCursor();
+			GetWindow()->ShowCursor(false);
+		}
+	}
+
+	void OnRawInputMouseButtonReleasedEvent(const RawInputMouseButtonReleasedEvent& event)
+	{
+		if (event.GetMouseButton() == Mouse::Right)
+		{
+			GetWindow()->UnlockCursor();
+			GetWindow()->ShowCursor(true);
+		}
+	}
+
+	using ExampleEventFunctions = TEventFunctionPack <
+		TMemberEventFunction<IonExample, KeyPressedEvent, &IonExample::OnKeyPressedEvent>,
+		TMemberEventFunction<IonExample, RawInputMouseMovedEvent, &IonExample::OnRawInputMouseMovedEvent>,
+		TMemberEventFunction<IonExample, RawInputMouseButtonPressedEvent, &IonExample::OnRawInputMouseButtonPressedEvent>,
+		TMemberEventFunction<IonExample, RawInputMouseButtonReleasedEvent, &IonExample::OnRawInputMouseButtonReleasedEvent>
+	>;
 
 private:
 	TShared<Mesh> m_MeshCollada;
@@ -487,6 +481,8 @@ private:
 	char m_TextureFileNameBuffer[MAX_PATH + 1];
 
 	bool m_bDrawImGui = true;
+
+	EventDispatcher<ExampleEventFunctions> m_EventDispatcher;
 };
 
 USE_APPLICATION_CLASS(IonExample);

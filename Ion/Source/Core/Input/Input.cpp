@@ -2,7 +2,6 @@
 
 #include "Input.h"
 #include "Core/CoreUtility.h"
-#include "Core/Event/EventDispatcher.h"
 
 namespace Ion
 {
@@ -32,7 +31,7 @@ namespace Ion
 		m_MouseInputType(MouseInputType::RawInput)
 	{
 		memset(m_InputStates, 0, sizeof(m_InputStates));
-		m_EventDispatcher.Bind<KeyPressedEvent>(BIND_METHOD_1P(InputManager::OnKeyPressedEvent));
+		//m_EventDispatcher.Bind<KeyPressedEvent>(BIND_METHOD_1P(InputManager::OnKeyPressedEvent));
 	}
 
 	bool InputManager::IsKeyPressed(KeyCode keyCode)
@@ -50,19 +49,7 @@ namespace Ion
 		return (bool)(s_Instance->m_InputStates[mouseButton] & InputPressedFlag);
 	}
 
-	void InputManager::OnEvent(Event& event)
-	{
-		TRACE_FUNCTION();
-
-		dispatcher.Dispatch<KeyPressedEvent>(BIND_METHOD_1P(InputManager::OnKeyPressedEvent));
-		dispatcher.Dispatch<KeyReleasedEvent>(BIND_METHOD_1P(InputManager::OnKeyReleasedEvent));
-		dispatcher.Dispatch<KeyRepeatedEvent>(BIND_METHOD_1P(InputManager::OnKeyRepeatedEvent));
-
-		dispatcher.Dispatch<MouseButtonPressedEvent>(BIND_METHOD_1P(InputManager::OnMouseButtonPressedEvent));
-		dispatcher.Dispatch<MouseButtonReleasedEvent>(BIND_METHOD_1P(InputManager::OnMouseButtonReleasedEvent));
-	}
-
-	bool InputManager::OnKeyPressedEvent(KeyPressedEvent& event)
+	void InputManager::OnKeyPressedEvent(const KeyPressedEvent& event)
 	{
 		KeyCode actualKeyCode = (KeyCode)event.GetActualKeyCode();
 		// Set states on receiving event
@@ -77,11 +64,9 @@ namespace Ion
 			keyPtr = &m_InputStates[keyCode];
 			SetBitflags(*keyPtr, InputPressedFlag);
 		}
-
-		return false;
 	}
 
-	bool InputManager::OnKeyReleasedEvent(KeyReleasedEvent& event)
+	void InputManager::OnKeyReleasedEvent(const KeyReleasedEvent& event)
 	{
 		KeyCode actualKeyCode = (KeyCode)event.GetActualKeyCode();
 		// Unset states on receiving event
@@ -107,11 +92,9 @@ namespace Ion
 				UnsetBitflags(*keyPtr, InputRepeatedFlag);
 			}
 		}
-
-		return false;
 	}
 
-	bool InputManager::OnKeyRepeatedEvent(KeyRepeatedEvent& event)
+	void InputManager::OnKeyRepeatedEvent(const KeyRepeatedEvent& event)
 	{
 		KeyCode actualKeyCode = (KeyCode)event.GetActualKeyCode();
 		// Set states on receiving event
@@ -126,28 +109,22 @@ namespace Ion
 			keyPtr = &m_InputStates[keyCode];
 			SetBitflags(*keyPtr, InputRepeatedFlag);
 		}
-
-		return false;
 	}
 
-	bool InputManager::OnMouseButtonPressedEvent(MouseButtonPressedEvent& event)
+	void InputManager::OnMouseButtonPressedEvent(const MouseButtonPressedEvent& event)
 	{
 		MouseButton buttonCode = (MouseButton)event.GetMouseButton();
 		// Mouse states are stored in the same array as key states
 		uint8* statePtr = &m_InputStates[buttonCode];
 		SetBitflags(*statePtr, InputPressedFlag);
-
-		return false;
 	}
 
-	bool InputManager::OnMouseButtonReleasedEvent(MouseButtonReleasedEvent& event)
+	void InputManager::OnMouseButtonReleasedEvent(const MouseButtonReleasedEvent& event)
 	{
 		MouseButton buttonCode = (MouseButton)event.GetMouseButton();
 		// Mouse states are stored in the same array as key states
 		uint8* statePtr = &m_InputStates[buttonCode];
 		UnsetBitflags(*statePtr, InputPressedFlag);
-
-		return false;
 	}
 
 	TShared<InputManager> InputManager::s_Instance = nullptr;

@@ -16,12 +16,6 @@ namespace Ion
 		return static_cast<WindowsApplication*>(Application::Get());
 	}
 
-	WindowsApplication::~WindowsApplication()
-	{
-		// Shutdown
-		Shutdown();
-	}
-
 	void WindowsApplication::Start()
 	{
 #if ION_ENABLE_TRACING
@@ -89,22 +83,6 @@ namespace Ion
 		Application::Render();
 	}
 
-	void WindowsApplication::DispatchEvent(const Event& event)
-	{
-		TRACE_FUNCTION();
-
-		switch (event.GetType())
-		{
-		// Handle close event in application
-		case EEventType::WindowClose:
-			WindowCloseEvent& windowCloseEvent = (WindowCloseEvent&)event;
-			DestroyWindow((HWND)windowCloseEvent.GetWindowHandle());
-			break;
-		}
-
-		Application::DispatchEvent(event);
-	}
-
 	float Application::CalculateFrameTime()
 	{
 		// @TODO: Would be nice if it were pausable
@@ -125,6 +103,12 @@ namespace Ion
 		s_LastFrameTime = time;
 
 		return difference / WindowsApplication::s_PerformanceFrequency;
+	}
+
+	void WindowsApplication::OnWindowCloseEvent_Internal(const WindowCloseEvent& event)
+	{
+		DestroyWindow((HWND)event.GetWindowHandle());
+		Application::OnWindowCloseEvent_Internal(event);
 	}
 
 	HINSTANCE WindowsApplication::m_HInstance;

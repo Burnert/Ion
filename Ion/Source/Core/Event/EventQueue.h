@@ -5,13 +5,14 @@
 namespace Ion
 {
 	template<void Handler(const Event&)>
-	class ION_API EventQueue
+	class EventQueue
 	{
 	public:
 		template<typename EventT>
 		void PushEvent(const EventT& event)
 		{
-			m_Events.emplace_back<EventT>(event);
+			Event* e = new EventT(event);
+			m_Events.push_back(e);
 		}
 
 		bool ProcessEvents()
@@ -20,15 +21,26 @@ namespace Ion
 
 			if (!m_Events.empty())
 			{
-				for (Event* e : m_Events)
+				for (int i = 0; i < m_Events.size(); ++i)
 				{
-					Handler(e);
+					const Event* e = m_Events[i];
+					Handler(*e);
 				}
 
-				m_Events.clear();
+				Clear();
 				return true;
 			}
 			return false;
+		}
+
+		void Clear()
+		{
+			for (int i = 0; i < m_Events.size(); ++i)
+			{
+				Event* e = m_Events[i];
+				delete e;
+			}
+			m_Events.clear();
 		}
 
 	private:

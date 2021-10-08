@@ -29,7 +29,7 @@ namespace Ion
 		/* Return false in the implementation if the event could not be handled.
 		   The event will then be propagated down the layer stack.
 		   Else return true. */
-		virtual bool OnEvent(Event& event);
+		virtual bool OnEvent(const Event& event);
 
 		/* This function can be called only inside OnEvent's body.
 		   Call this if you want to propagate the event down the layer stack

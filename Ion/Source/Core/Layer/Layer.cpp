@@ -31,7 +31,7 @@ namespace Ion
 		ION_LOG_ENGINE_DEBUG("Layer {0} Render", m_Name);
 	}
 
-	bool Layer::OnEvent(Event& event)
+	bool Layer::OnEvent(const Event& event)
 	{
 		return false;
 	}

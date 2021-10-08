@@ -72,13 +72,14 @@ namespace Ion
 		for (const TraceResult& result : s_TraceResults)
 		{
 			int32 charsWritten;
-			char eventBuffer[1000];
-			memset(eventBuffer, 0, 1000);
+			// 4096 for some crazy template magic
+			char eventBuffer[4096];
+			memset(eventBuffer, 0, 4096);
 			// Begin event
 			charsWritten = sprintf_s(eventBuffer, "{\"name\":\"%s\",\"cat\":\"%s\",\"ph\":\"B\",\"ts\":%lld,\"pid\":%d,\"tid\":%d},",
 				result.Name, "cat", TimestampToMicroseconds(result.Timestamp), 0, 0);
 			s_SessionDumpFile->Write((uint8*)eventBuffer, charsWritten);
-			memset(eventBuffer, 0, 1000);
+			memset(eventBuffer, 0, 4096);
 			// End event
 			charsWritten = sprintf_s(eventBuffer, "{\"ph\":\"E\",\"ts\":%lld,\"pid\":%d,\"tid\":%d},",
 				TimestampToMicroseconds(result.EndTimestamp), 0, 0);

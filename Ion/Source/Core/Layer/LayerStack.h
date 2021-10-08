@@ -60,7 +60,7 @@ namespace Ion
 
 		void OnUpdate(float DeltaTime);
 		void OnRender();
-		void OnEvent(Event& event);
+		void OnEvent(const Event& event);
 
 		// Iterators
 

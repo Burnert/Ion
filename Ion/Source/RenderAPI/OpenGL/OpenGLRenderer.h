@@ -26,8 +26,8 @@ namespace Ion
 		virtual void SetVSyncEnabled(bool bEnabled) const override;
 		virtual bool IsVSyncEnabled() const override;
 
-		virtual void SetViewportDimensions(const SViewportDimensions& dimensions) const override;
-		virtual SViewportDimensions GetViewportDimensions() const override;
+		virtual void SetViewportDimensions(const ViewportDimensions& dimensions) const override;
+		virtual ViewportDimensions GetViewportDimensions() const override;
 
 		virtual void SetPolygonDrawMode(EPolygonDrawMode drawMode) const override;
 		virtual EPolygonDrawMode GetPolygonDrawMode() const override;
