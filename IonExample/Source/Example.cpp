@@ -24,7 +24,8 @@ class IonExample : public IonApplication
 {
 public:
 	IonExample()
-		: m_TextureFileNameBuffer("")
+		: m_TextureFileNameBuffer(""),
+		m_EventDispatcher(this)
 	{
 		ION_LOG_DEBUG("IonExample constructed.");
 	}
@@ -373,7 +374,7 @@ public:
 
 	virtual void OnEvent(const Event& event) override
 	{
-		m_EventDispatcher.Dispatch(this, event);
+		m_EventDispatcher.Dispatch(event);
 	}
 
 	void OnKeyPressedEvent(const KeyPressedEvent& event)
@@ -398,7 +399,7 @@ public:
 		}
 	}
 
-	void OnRawInputMouseButtonPressedEvent(const RawInputMouseButtonPressedEvent& event)
+	void OnMouseButtonPressedEvent(const MouseButtonPressedEvent& event)
 	{
 		if (event.GetMouseButton() == Mouse::Right)
 		{
@@ -409,20 +410,21 @@ public:
 		}
 	}
 
-	void OnRawInputMouseButtonReleasedEvent(const RawInputMouseButtonReleasedEvent& event)
+	void OnMouseButtonReleasedEvent(const MouseButtonReleasedEvent& event)
 	{
 		if (event.GetMouseButton() == Mouse::Right)
 		{
 			GetWindow()->UnlockCursor();
 			GetWindow()->ShowCursor(true);
+			std::pair s(1, 4.0);
 		}
 	}
 
 	using ExampleEventFunctions = TEventFunctionPack <
-		TMemberEventFunction<IonExample, KeyPressedEvent, &IonExample::OnKeyPressedEvent>,
-		TMemberEventFunction<IonExample, RawInputMouseMovedEvent, &IonExample::OnRawInputMouseMovedEvent>,
-		TMemberEventFunction<IonExample, RawInputMouseButtonPressedEvent, &IonExample::OnRawInputMouseButtonPressedEvent>,
-		TMemberEventFunction<IonExample, RawInputMouseButtonReleasedEvent, &IonExample::OnRawInputMouseButtonReleasedEvent>
+		TMemberEventFunction<IonExample, KeyPressedEvent, &OnKeyPressedEvent>,
+		TMemberEventFunction<IonExample, RawInputMouseMovedEvent, &OnRawInputMouseMovedEvent>,
+		TMemberEventFunction<IonExample, MouseButtonPressedEvent, &OnMouseButtonPressedEvent>,
+		TMemberEventFunction<IonExample, MouseButtonReleasedEvent, &OnMouseButtonReleasedEvent>
 	>;
 
 private:
@@ -482,7 +484,7 @@ private:
 
 	bool m_bDrawImGui = true;
 
-	EventDispatcher<ExampleEventFunctions> m_EventDispatcher;
+	EventDispatcher<ExampleEventFunctions, IonExample> m_EventDispatcher;
 };
 
 USE_APPLICATION_CLASS(IonExample);

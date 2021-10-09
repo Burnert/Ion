@@ -27,11 +27,11 @@ namespace Ion
 	}
 
 	InputManager::InputManager() :
+		m_EventDispatcher(this),
 		// Use Raw Input by default
 		m_MouseInputType(MouseInputType::RawInput)
 	{
 		memset(m_InputStates, 0, sizeof(m_InputStates));
-		//m_EventDispatcher.Bind<KeyPressedEvent>(BIND_METHOD_1P(InputManager::OnKeyPressedEvent));
 	}
 
 	bool InputManager::IsKeyPressed(KeyCode keyCode)

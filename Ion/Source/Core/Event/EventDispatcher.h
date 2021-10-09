@@ -40,10 +40,7 @@ namespace Ion
 		using OtherFunctions = TEventFunctionPack<Other...>;
 	};
 
-	// @TODO: Make 2 specializations of this class for an in class member function dispatcher and a non class one
-	// because writing "this" everywhere in Dispatch functions is really ugly
-
-	template<typename EventFunctions>
+	template<typename EventFunctions, typename ClassT = void>
 	class EventDispatcher
 	{
 		template<typename T>
@@ -51,6 +48,10 @@ namespace Ion
 
 	public:
 		EventDispatcher() { }
+
+		EventDispatcher(ClassT* owner)
+			: m_Owner(owner)
+		{ }
 
 		template<typename EventT>
 		void Dispatch(const EventT& event)
@@ -60,21 +61,60 @@ namespace Ion
 			DispatchExpand<EventT, EventFunctions>(event);
 		}
 
-		template<typename ClassT, typename EventT>
-		void Dispatch(ClassT* object, const EventT& event)
+		// Runtime version of Dispatch (used when the event type is not known at compile time)
+		void Dispatch(const Event& event)
 		{
 			TRACE_FUNCTION();
 
-			DispatchExpand<ClassT, EventT, EventFunctions>(object, event);
+			DispatchExpandRuntime<EventFunctions>(event);
 		}
 
-		// Runtime version of Dispatch (used when the event type is not known at compile time)
-		template<typename ClassT>
-		void Dispatch(ClassT* object, const Event& event)
+	private:
+		// Member function version
+		template<typename EventT, typename FuncPack>
+		void DispatchExpand(const EventT& event)
+		{
+			// Find the correct type
+			if constexpr (TIsSameV<FuncPack::ThisFunction::EventType, EventT>)
+			{
+				FuncPack::ThisFunction::Call(m_Owner, event);
+			}
+			else if constexpr (!TIsSameV<FuncPack::OtherFunctions, TEventFunctionPack<>>)
+			{
+				// Recursive template iterate if possible
+				DispatchExpand<EventT, FuncPack::OtherFunctions>(event);
+			}
+		}
+
+		template<typename FuncPack>
+		void DispatchExpandRuntime(const Event& event)
+		{
+			// Find the correct type at runtime
+			if (FuncPack::ThisFunction::EventType::_GetType() == event.GetType())
+			{
+				// Cast to the correct type (based on EventDispatcher template arguments)
+				FuncPack::ThisFunction::EventType* eventPtr = (FuncPack::ThisFunction::EventType*)&event;
+				FuncPack::ThisFunction::Call(m_Owner, *eventPtr);
+			}
+			else if constexpr (!TIsSameV<FuncPack::OtherFunctions, TEventFunctionPack<>>)
+			{
+				// Recursive template iterate if possible
+				DispatchExpandRuntime<FuncPack::OtherFunctions>(event);
+			}
+		}
+
+		ClassT* m_Owner;
+	};
+
+	template<typename EventFunctions>
+	class EventDispatcher<EventFunctions, void>
+	{
+		template<typename EventT>
+		void Dispatch(const EventT& event)
 		{
 			TRACE_FUNCTION();
 
-			DispatchExpandRuntime<ClassT, EventFunctions>(object, event);
+			DispatchExpand<EventT, EventFunctions>(event);
 		}
 
 	private:
@@ -93,38 +133,6 @@ namespace Ion
 				DispatchExpand<EventT, FuncPack::OtherFunctions>(event);
 			}
 		}
-
-		// Member function version
-		template<typename ClassT, typename EventT, typename FuncPack>
-		void DispatchExpand(ClassT* object, const EventT& event)
-		{
-			// Find the correct type
-			if constexpr (TIsSameV<FuncPack::ThisFunction::EventType, EventT>)
-			{
-				FuncPack::ThisFunction::Call(object, event);
-			}
-			else if constexpr (!TIsSameV<FuncPack::OtherFunctions, TEventFunctionPack<>>)
-			{
-				// Recursive template iterate if possible
-				DispatchExpand<ClassT, EventT, FuncPack::OtherFunctions>(object, event);
-			}
-		}
-
-		template<typename ClassT, typename FuncPack>
-		void DispatchExpandRuntime(ClassT* object, const Event& event)
-		{
-			// Find the correct type at runtime
-			if (FuncPack::ThisFunction::EventType::_GetType() == event.GetType())
-			{
-				// Cast to the correct type (based on EventDispatcher template arguments)
-				FuncPack::ThisFunction::EventType* eventPtr = (FuncPack::ThisFunction::EventType*)&event;
-				FuncPack::ThisFunction::Call(object, *eventPtr);
-			}
-			else if constexpr (!TIsSameV<FuncPack::OtherFunctions, TEventFunctionPack<>>)
-			{
-				// Recursive template iterate if possible
-				DispatchExpandRuntime<ClassT, FuncPack::OtherFunctions>(object, event);
-			}
-		}
 	};
+
 }

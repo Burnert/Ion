@@ -100,7 +100,7 @@ namespace Ion
 		template<typename T>
 		void DispatchEvent(const T& event)
 		{
-			m_EventDispatcher.Dispatch(this, event);
+			m_EventDispatcher.Dispatch(event);
 
 			m_InputManager->DispatchEvent(event);
 			m_LayerStack->OnEvent(event);
@@ -187,7 +187,7 @@ namespace Ion
 
 		TShared<Renderer> m_Renderer;
 
-		EventDispatcher<ApplicationEventFunctions> m_EventDispatcher;
+		EventDispatcher<ApplicationEventFunctions, Application> m_EventDispatcher;
 		TUnique<EventQueue<EventHandler>> m_EventQueue;
 		TUnique<LayerStack> m_LayerStack;
 

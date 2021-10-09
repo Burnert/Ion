@@ -25,6 +25,7 @@ namespace Ion
 	}
 
 	Application::Application() :
+		m_EventDispatcher(this),
 		m_EventQueue(MakeUnique<EventQueue<EventHandler>>()),
 		m_LayerStack(MakeUnique<LayerStack>()),
 		m_MainThreadId(std::this_thread::get_id()),
@@ -146,15 +147,6 @@ namespace Ion
 				{
 					bool vsync = GetRenderer()->IsVSyncEnabled();
 					GetRenderer()->SetVSyncEnabled(!vsync);
-				}
-				// Toggle fullscreen with Alt + Enter
-				else if (event.GetKeyCode() == Key::Enter)
-				{
-					if (GetInputManager()->IsKeyPressed(Key::LAlt))
-					{
-						bool bFullScreen = GetWindow()->IsFullScreenEnabled();
-						GetWindow()->EnableFullScreen(!bFullScreen);
-					}
 				}
 				else if (event.GetKeyCode() == Key::F1)
 				{

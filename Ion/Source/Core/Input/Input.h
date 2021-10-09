@@ -219,11 +219,11 @@ namespace Ion
 		void DispatchEvent(const T& event)
 		{
 			TRACE_FUNCTION();
-			m_EventDispatcher.Dispatch(this, event);
+			m_EventDispatcher.Dispatch(event);
 		}
 
 	private:
-		EventDispatcher<InputEventFunctions> m_EventDispatcher;
+		EventDispatcher<InputEventFunctions, InputManager> m_EventDispatcher;
 
 		static TShared<InputManager> s_Instance;
 		uint8 m_InputStates[256];
