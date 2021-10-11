@@ -20,7 +20,7 @@ namespace Ion
 	struct TMemberEventFunction
 	{
 		using EventType = EventT;
-
+		
 		static void Call(ClassT* object, const EventT& event)
 		{
 			(object->*Func)(event);
@@ -43,12 +43,7 @@ namespace Ion
 	template<typename EventFunctions, typename ClassT = void>
 	class EventDispatcher
 	{
-		template<typename T>
-		using EventCallback = TFunction<void(T&)>;
-
 	public:
-		EventDispatcher() { }
-
 		EventDispatcher(ClassT* owner)
 			: m_Owner(owner)
 		{ }
