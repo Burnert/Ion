@@ -34,17 +34,18 @@ public:
 		const TShared<Shader>& shader, TShared<Scene>& scene, const wchar* meshPath, const wchar* texturePath,
 		const Matrix4& transform)
 	{
-		TUnique<FileOld> file = TUnique<FileOld>(FileOld::Create(meshPath));
-		ColladaDocument model(file.get());
+		String collada;
+		File::ReadToString(meshPath, collada);
+
+		ColladaDocument model(collada);
 		const ColladaData& data = model.GetData();
 		TShared<VertexBuffer> vb = VertexBuffer::Create(data.VertexAttributes, data.VertexAttributeCount);
 		vb->SetLayout(data.Layout);
 		TShared<IndexBuffer> ib = IndexBuffer::Create(data.Indices, (uint32)data.IndexCount);
 
-		FileOld* tfile = FileOld::Create(texturePath);
+		File texFile(texturePath);
 		Image* image = new Image;
-		ionassertnd(image->Load(tfile));
-		delete tfile;
+		ionassertnd(image->Load(texFile));
 		texture = Texture::Create(image);
 
 		material = Material::Create();
@@ -68,7 +69,7 @@ public:
 		String vertSrc;
 		String fragSrc;
 
-		FilePath shadersPath(GetCheckedEnginePath() + L"Shaders");
+		FilePath shadersPath = GetCheckedEnginePath() + L"Shaders";
 
 		File::ReadToString(shadersPath + L"Basic.vert", vertSrc);
 		File::ReadToString(shadersPath + L"Basic.frag", fragSrc);
@@ -121,11 +122,14 @@ public:
 
 		// @TODO: Create an asset manager for textures, meshes and other files that can be imported
 
-		TUnique<FileOld> colladaFile = TUnique<FileOld>(FileOld::Create(L"char.dae"));
-		ColladaDocument colladaDoc(colladaFile.get());
+		String collada;
+		File::ReadToString(L"char.dae", collada);
 
-		//TUnique<File> colladaStressTestFile = TUnique<File>(File::Create(L"spherestresstest.dae"));
-		//ColladaDocument colladaStressTest(colladaStressTestFile.get());
+		ColladaDocument colladaDoc(collada);
+
+		//String colladaStressTestFile;
+		//File::ReadToString(L"spherestresstest.dae", colladaStressTestFile);
+		//ColladaDocument colladaStressTest(colladaStressTestFile);
 
 		const ColladaData& colladaData = colladaDoc.GetData();
 

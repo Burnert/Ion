@@ -49,6 +49,7 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		m_XMLString = xml;
+
 		m_XML.parse<0>(m_XMLString);
 	}
 }

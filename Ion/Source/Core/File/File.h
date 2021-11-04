@@ -191,7 +191,7 @@ namespace Ion
 			Append    = Bitflag(2),
 			Reset     = Bitflag(3),
 			CreateNew = Bitflag(4),
-			DontOpen  = Bitflag(5),
+			DoNotOpen = Bitflag(5),
 		};
 	}
 
@@ -266,11 +266,10 @@ namespace Ion
 	{
 		friend class FilePath;
 	public:
-		File(const FilePath& path, uint8 mode);
-		File(const WString& filename, uint8 mode);
+		File(const FilePath& path, uint8 mode = EFileMode::DoNotOpen);
+		File(const WString& filename, uint8 mode = EFileMode::DoNotOpen);
 
-		bool Open(const FilePath& path, uint8 mode);
-		bool Open(const WString& filename, uint8 mode);
+		bool Open(uint8 mode);
 
 		static bool Delete(const FilePath& path);
 		static inline bool Delete(const WString& filename)
@@ -323,6 +322,7 @@ namespace Ion
 		}
 
 		static bool ReadToString(const FilePath& filePath, String& outString);
+		static bool ReadToString(const WString& filePath, String& outString);
 
 		// Write functions
 
@@ -404,6 +404,11 @@ namespace Ion
 
 		FilePath GetFilePath(EFilePathValidation validation = EFilePathValidation::Unchecked) const;
 
+		inline const WString& GetFullPath() const
+		{
+			return m_FilePath;
+		}
+
 		static bool IsFileNameLegal(const WString& name);
 
 		~File();
@@ -415,7 +420,7 @@ namespace Ion
 		File& operator=(File&&) = default;
 
 	private:
-		WString m_Filename;
+		WString m_FilePath;
 		EFileType m_Type;
 		uint8 m_Mode;
 		bool m_bOpen;
@@ -490,6 +495,9 @@ namespace Ion
 		FilePath(const WString& path, EFilePathValidation validation = EFilePathValidation::Unchecked);
 		FilePath(const FilePath& path, EFilePathValidation validation);
 
+		FilePath(const FilePath&) = default;
+		FilePath(FilePath&&) noexcept = default;
+
 		void Set(const WString& path);
 		void Set(const FilePath& path);
 
@@ -555,9 +563,19 @@ namespace Ion
 			return Exists_Native(path);
 		}
 
+		inline static bool Exists(const WString& path)
+		{
+			return Exists(path.c_str());
+		}
+
 		inline static bool IsDirectory(const wchar* path)
 		{
 			return IsDirectory_Native(path);
+		}
+
+		inline static bool IsDirectory(const WString& path)
+		{
+			return IsDirectory(path.c_str());
 		}
 
 		inline static bool IsFile(const wchar* path)
@@ -565,12 +583,14 @@ namespace Ion
 			return Exists(path) && !IsDirectory(path);
 		}
 
+		inline static bool IsFile(const WString& path)
+		{
+			return IsFile(path.c_str());
+		}
+
 		static FileList ListFiles(const wchar* path);
 		//static WString Find(const wchar* path, const wchar* name);
 		//static WString FindRecursive(const wchar* path, const wchar* name);
-
-		FilePath(const FilePath&) = default;
-		FilePath(FilePath&&) noexcept = default;
 
 		FilePath& operator=(const FilePath&) = default;
 		FilePath& operator=(FilePath&&) = default;
@@ -580,6 +600,11 @@ namespace Ion
 
 		FilePath operator+(const FilePath& path) const;
 		FilePath operator+(const WString& directory) const;
+
+		inline operator WString() const
+		{
+			return ToString();
+		}
 
 	private:
 		static TArray<WString> SplitPathName(const WString& path);

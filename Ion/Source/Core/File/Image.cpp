@@ -83,4 +83,37 @@ namespace Ion
 
 		return m_PixelData;
 	}
+
+	const uint8* Image::Load(File& file)
+	{
+		TRACE_FUNCTION();
+
+		_FAIL_M(file.Exists(), L"Cannot load image from '{0}'.\nThe file does not exist.", file.GetFullPath());
+
+		bool bResult;
+		bResult = file.Open(EFileMode::Read);
+		_FAIL(bResult);
+
+		int64 fileSize = file.GetSize();
+		_FAIL_M(fileSize, L"Cannot load image from '{0}'.\nThe file is empty.", file.GetFullPath());
+
+		uint8* data = new uint8[fileSize];
+		bResult = file.Read(data, fileSize);
+		_FAIL(bResult);
+
+		// OpenGL expects the image to be written in memory from bottom to top
+		if (RenderAPI::GetCurrent() == ERenderAPI::OpenGL)
+		{
+			stbi_set_flip_vertically_on_load(1);
+		}
+
+		// Load pixel data with no desired channel number
+		m_PixelData = stbi_load_from_memory(data, (int32)fileSize, &m_Width, &m_Height, &m_Channels, 4);
+		_FAIL_M(m_PixelData, L"Cannot load pixel data from '{0}'.", file.GetFullPath());
+
+		delete[] data;
+		file.Close();
+
+		return m_PixelData;
+	}
 }

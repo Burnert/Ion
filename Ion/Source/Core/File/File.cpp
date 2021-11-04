@@ -72,16 +72,21 @@ namespace Ion
 	{ }
 
 	File::File(const WString& filename, uint8 mode) :
-		m_Filename(filename),
+		m_FilePath(filename),
 		m_Type(EFileType::Text),
 		m_Mode(mode),
 		m_bOpen(false),
 		m_Offset(0),
 		m_FileSize(0)
 	{
-		ionassertnd(Open(filename, mode));
+		ionassert(!filename.empty(), "The filename cannot be empty.");
 
 		UpdateFileExtensionCache();
+
+		if (!(m_Mode & EFileMode::DoNotOpen))
+		{
+			ionassertnd(Open(mode));
+		}
 	}
 
 	File::~File()
@@ -90,20 +95,17 @@ namespace Ion
 			Close();
 	}
 
-	bool File::Open(const FilePath& path, uint8 mode)
-	{
-		return Open(path.ToString(), mode);
-	}
-
-	bool File::Open(const WString& filename, uint8 mode)
+	bool File::Open(uint8 mode)
 	{
 		ionassert(!IsOpen());
-		ionassert(!filename.empty(), "The filename cannot be empty.");
 		ionassert(mode & (EFileMode::Read | EFileMode::Write), "File mode has to have at least one of Read and Write flags set.");
 		ionassert(!(mode & EFileMode::Read && !(mode & EFileMode::Write) && mode & EFileMode::Reset),
 			"You cannot reset the file, if you only want to read from it.");
 		ionassert(!(mode & EFileMode::Read && !(mode & EFileMode::Write) && mode & EFileMode::CreateNew),
 			"Creating a new file, if it is only going to be read, is redundant.");
+
+		m_Mode = mode;
+		m_bOpen = true;
 
 		return Open_Native();
 	}
@@ -120,6 +122,7 @@ namespace Ion
 		m_Mode = 0;
 		m_Offset = 0;
 		m_FileSize = 0;
+		m_bOpen = false;
 
 		Close_Native();
 	}
@@ -136,9 +139,9 @@ namespace Ion
 
 	void File::UpdateFileExtensionCache() const
 	{
-		ionassert(!m_Filename.empty());
+		ionassert(!m_FilePath.empty());
 
-		uint64 dotIndex = m_Filename.find_last_of(L'.');
+		uint64 dotIndex = m_FilePath.find_last_of(L'.');
 
 		if (dotIndex == WString::npos)
 		{
@@ -146,7 +149,7 @@ namespace Ion
 		}
 		else
 		{
-			WString extension = m_Filename.substr(dotIndex + 1, (size_t)-1);
+			WString extension = m_FilePath.substr(dotIndex + 1, (size_t)-1);
 
 			std::transform(extension.begin(), extension.end(), extension.begin(), [](wchar ch) { return std::tolower(ch); });
 			m_FileExtension = extension;
@@ -279,7 +282,16 @@ namespace Ion
 
 	bool File::ReadToString(const FilePath& filePath, String& outString)
 	{
-		ionassert(filePath.Exists() && filePath.IsFile(), "The file does not exist or is a directory.");
+		return ReadToString(filePath.ToString(), outString);
+	}
+
+	bool File::ReadToString(const WString& filePath, String& outString)
+	{
+		if (!(FilePath::Exists(filePath) && FilePath::IsFile(filePath)))
+		{
+			LOG_ERROR(L"The file \"{0}\" does not exist or is a directory.", filePath);
+			return false;
+		}
 
 		File file(filePath, EFileMode::Read);
 		return file.Read(outString);

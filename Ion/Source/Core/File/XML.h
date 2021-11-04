@@ -18,6 +18,7 @@ namespace Ion
 		/* Takes the ownership of the xml character buffer */
 		XMLDocument(char* xml);
 		XMLDocument(FileOld* xmlFile);
+		XMLDocument() = delete;
 		~XMLDocument();
 
 		template<typename Pred>
