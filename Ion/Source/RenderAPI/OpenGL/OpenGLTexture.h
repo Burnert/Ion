@@ -15,7 +15,7 @@ namespace Ion
 		virtual void Unbind() const override;
 
 	protected:
-		OpenGLTexture(File* file);
+		OpenGLTexture(FileOld* file);
 		OpenGLTexture(Image* image);
 
 	private:

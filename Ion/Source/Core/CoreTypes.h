@@ -35,6 +35,15 @@ using TString      = WString;
 using TString      = String;
 #endif
 
+using StringView   = std::string_view;
+using WStringView  = std::wstring_view;
+
+#ifdef UNICODE
+using TStringView  = WStringView;
+#else
+using TStringView  = StringView;
+#endif
+
 template<typename T>
 using TShared      = std::shared_ptr<T>;
 

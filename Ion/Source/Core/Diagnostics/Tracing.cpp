@@ -107,7 +107,7 @@ namespace Ion
 	bool DebugTracing::s_bSessionRecording = false;
 	TArray<DebugTracing::TraceResult> DebugTracing::s_TraceResults;
 	THashMap<String, DebugTracing::TraceResult*> DebugTracing::s_NamedTraceResults;
-	File* DebugTracing::s_SessionDumpFile = nullptr;
+	FileOld* DebugTracing::s_SessionDumpFile = nullptr;
 }
 
 #endif

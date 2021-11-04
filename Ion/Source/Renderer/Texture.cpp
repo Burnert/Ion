@@ -7,7 +7,7 @@
 
 namespace Ion
 {
-	TShared<Texture> Texture::Create(File* file)
+	TShared<Texture> Texture::Create(FileOld* file)
 	{
 		return MakeShareable(new OpenGLTexture(file));
 	}
@@ -25,7 +25,7 @@ namespace Ion
 		}
 	}
 
-	Texture::Texture(File* file)
+	Texture::Texture(FileOld* file)
 	{
 		TRACE_FUNCTION();
 

@@ -262,5 +262,5 @@ namespace Ion
 
 	Application* Application::s_Instance = nullptr;
 
-	wchar* Application::s_EnginePath = nullptr;
+	FilePath Application::s_EnginePath = L"";
 }

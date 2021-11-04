@@ -34,7 +34,9 @@ namespace Ion
 	public:
 		using EventPtr = TShared<Event>;
 
-		static WString GetEnginePath() { return s_EnginePath; }
+		/* Gets the engine path with path validation */
+		static FilePath GetCheckedEnginePath() { return FilePath(s_EnginePath, EFilePathValidation::Checked); }
+		static const FilePath& GetEnginePath() { return s_EnginePath; }
 
 		virtual ~Application();
 
@@ -197,7 +199,7 @@ namespace Ion
 
 		template<typename T>
 		friend void ParseCommandLineArgs(int32 argc, T* argv[]);
-		static wchar* s_EnginePath;
+		static FilePath s_EnginePath;
 	};
 
 	Application* CreateApplication();
@@ -216,13 +218,11 @@ namespace Ion
 			{
 				if constexpr (TIsSameV<T, char>)
 				{
-					int32 enginePathLength = (int32)strlen(nextArg);
-					Application::s_EnginePath = new wchar[enginePathLength + 1];
-					StringConverter::CharToWChar(nextArg, Application::s_EnginePath, enginePathLength + 1);
+					Application::s_EnginePath.Set(StringConverter::StringToWString(nextArg));
 				}
 				else
 				{
-					Application::s_EnginePath = nextArg;
+					Application::s_EnginePath.Set(nextArg);
 				}
 				i++;
 			}

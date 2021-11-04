@@ -20,14 +20,16 @@ constexpr const wchar* StringLiteralAs(char* str, wchar* wstr) { return wstr; }
 
 template<typename T>
 inline static int32 tstrcmp(const T* s1, const T* s2) { return 0; }
-template<> inline static int32 tstrcmp(const char* s1, const char* s2)   { return strcmp(s1, s2); }
-template<> inline static int32 tstrcmp(const wchar* s1, const wchar* s2) { return wcscmp(s1, s2); }
+template<> inline static int32 tstrcmp<char>(const char* s1, const char* s2)   { return strcmp(s1, s2); }
+template<> inline static int32 tstrcmp<wchar>(const wchar* s1, const wchar* s2) { return wcscmp(s1, s2); }
 
 template<typename T>
 inline static uint64 tstrlen(const T* s) { return 0; }
-template<> inline static uint64 tstrlen(const char* s)  { return strlen(s); }
-template<> inline static uint64 tstrlen(const wchar* s) { return wcslen(s); }
+template<> inline static uint64 tstrlen<char>(const char* s)  { return strlen(s); }
+template<> inline static uint64 tstrlen<wchar>(const wchar* s) { return wcslen(s); }
 
+FORCEINLINE constexpr const char* BoolStr(bool value) { return value ? "true" : "false"; }
+FORCEINLINE constexpr const wchar* BoolWStr(bool value) { return value ? L"true" : L"false"; }
 
 // Type definition to String converter functions
 

@@ -72,10 +72,54 @@ NODISCARD constexpr FORCEINLINE TUnique<T> MakeUnique(Types&&... args)
 	return std::make_unique<T>(std::forward<Types>(args)...);
 }
 
+template<typename T>
+NODISCARD constexpr FORCEINLINE TRemoveRef<T>&& Move(T&& arg) noexcept
+{
+	return static_cast<TRemoveRef<T>&&>(arg);
+}
+
 // Common:
+
+template<typename T, T... Elements>
+struct StaticArray;
+
+template<typename T>
+struct StaticArray<T> { };
+
+template<typename T, T First, T... Rest>
+struct StaticArray<T, First, Rest...>
+{
+	using Type = T;
+
+	constexpr static Type Element = First;
+	constexpr static StaticArray<T, Rest...> OtherElements = StaticArray<T, Rest...>();
+};
+
+template<typename T, typename U, uint64 Size>
+NODISCARD inline constexpr bool IsAnyOf(T&& item, const U(&elements)[Size])
+{
+	for (uint64 i = 0; i < Size; ++i)
+	{
+		if (elements[i] == item)
+			return true;
+	}
+	return false;
+}
 
 template<typename T, typename... Elements>
 NODISCARD inline constexpr bool IsAnyOf(T&& item, Elements&&... elements)
 {
 	return ((item == elements) || ...);
+}
+
+template<typename T, typename U, uint64 Size>
+NODISCARD inline constexpr bool IsNoneOf(T&& item, const U(&elements)[Size])
+{
+	return !IsAnyOf(item, elements);
+}
+
+template<typename T, typename... Elements>
+NODISCARD inline constexpr bool IsNoneOf(T&& item, Elements&&... elements)
+{
+	return !IsAnyOf(item, elements...);
 }

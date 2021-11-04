@@ -34,14 +34,14 @@ public:
 		const TShared<Shader>& shader, TShared<Scene>& scene, const wchar* meshPath, const wchar* texturePath,
 		const Matrix4& transform)
 	{
-		TUnique<File> file = TUnique<File>(File::Create(meshPath));
+		TUnique<FileOld> file = TUnique<FileOld>(FileOld::Create(meshPath));
 		ColladaDocument model(file.get());
 		const ColladaData& data = model.GetData();
 		TShared<VertexBuffer> vb = VertexBuffer::Create(data.VertexAttributes, data.VertexAttributeCount);
 		vb->SetLayout(data.Layout);
 		TShared<IndexBuffer> ib = IndexBuffer::Create(data.Indices, (uint32)data.IndexCount);
 
-		File* tfile = File::Create(texturePath);
+		FileOld* tfile = FileOld::Create(texturePath);
 		Image* image = new Image;
 		ionassertnd(image->Load(tfile));
 		delete tfile;
@@ -63,15 +63,15 @@ public:
 
 	virtual void OnInit() override
 	{
-		// @TODO: Figure out how the hell to calculate light blending and all that
-
 #pragma warning(disable:6001)
 
 		String vertSrc;
 		String fragSrc;
 
-		File::LoadToString(GetEnginePath() + L"/Shaders/Basic.vert", vertSrc);
-		File::LoadToString(GetEnginePath() + L"/Shaders/Basic.frag", fragSrc);
+		FilePath shadersPath(GetCheckedEnginePath() + L"Shaders");
+
+		File::ReadToString(shadersPath + L"Basic.vert", vertSrc);
+		File::ReadToString(shadersPath + L"Basic.frag", fragSrc);
 
 		bool bResult;
 
@@ -121,7 +121,7 @@ public:
 
 		// @TODO: Create an asset manager for textures, meshes and other files that can be imported
 
-		TUnique<File> colladaFile = TUnique<File>(File::Create(L"char.dae"));
+		TUnique<FileOld> colladaFile = TUnique<FileOld>(FileOld::Create(L"char.dae"));
 		ColladaDocument colladaDoc(colladaFile.get());
 
 		//TUnique<File> colladaStressTestFile = TUnique<File>(File::Create(L"spherestresstest.dae"));
@@ -138,7 +138,7 @@ public:
 		memset(m_TextureFileNameBuffer, 0, sizeof(m_TextureFileNameBuffer));
 		StringConverter::WCharToChar(textureFileName.c_str(), m_TextureFileNameBuffer);
 
-		File* textureFile = File::Create(textureFileName);
+		FileOld* textureFile = FileOld::Create(textureFileName);
 		Image* textureImage = new Image;
 		ionassertnd(textureImage->Load(textureFile));
 		delete textureFile;
@@ -182,7 +182,7 @@ public:
 		InitExampleModel(m_MeshSlovak, m_MaterialSlovak, m_TextureSlovak, shader, m_Scene, L"Assets/models/slovak.dae", L"Assets/textures/slovak.png",
 			Math::Translate(Vector3(1.0f, 0.0f, -2.0f))* Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
 
-		File* dirTest = File::Create();
+		FileOld* dirTest = FileOld::Create();
 		dirTest->SetFilename(L"Assets");
 		ionassert(dirTest->IsDirectory());
 		std::vector<FileInfo> files = dirTest->GetFilesInDirectory();
@@ -287,7 +287,7 @@ public:
 				ImGui::InputText("Texture file", m_TextureFileNameBuffer, sizeof(m_TextureFileNameBuffer));
 				if (ImGui::Button("Set Texture"))
 				{
-					File* textureFile = File::Create(StringConverter::StringToWString(m_TextureFileNameBuffer));
+					FileOld* textureFile = FileOld::Create(StringConverter::StringToWString(m_TextureFileNameBuffer));
 					if (textureFile->Exists())
 					{
 						Image* textureImage = new Image;

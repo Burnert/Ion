@@ -21,7 +21,7 @@ namespace Ion
 		InitXML(xml);
 	}
 
-	XMLDocument::XMLDocument(File* xmlFile)
+	XMLDocument::XMLDocument(FileOld* xmlFile)
 	{
 		ionassert(xmlFile->Exists());
 

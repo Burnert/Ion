@@ -51,7 +51,7 @@ namespace Ion
 		other.m_PixelData = nullptr;
 	}
 
-	const uint8* Image::Load(File* file)
+	const uint8* Image::Load(FileOld* file)
 	{
 		TRACE_FUNCTION();
 

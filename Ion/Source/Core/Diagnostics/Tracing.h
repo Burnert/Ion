@@ -61,7 +61,7 @@ namespace Ion
 		static bool s_bSessionRecording;
 		static TArray<TraceResult> s_TraceResults;
 		static THashMap<String, TraceResult*> s_NamedTraceResults;
-		static File* s_SessionDumpFile;
+		static FileOld* s_SessionDumpFile;
 	};
 }
 

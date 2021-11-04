@@ -17,7 +17,7 @@ namespace Ion
 		XMLDocument(const String& xml);
 		/* Takes the ownership of the xml character buffer */
 		XMLDocument(char* xml);
-		XMLDocument(File* xmlFile);
+		XMLDocument(FileOld* xmlFile);
 		~XMLDocument();
 
 		template<typename Pred>

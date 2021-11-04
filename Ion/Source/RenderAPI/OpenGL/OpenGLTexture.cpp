@@ -25,7 +25,7 @@ namespace Ion
 		// @TODO: Implement a texture manager with some indication which slots are bound by which textures
 	}
 
-	OpenGLTexture::OpenGLTexture(File* file)
+	OpenGLTexture::OpenGLTexture(FileOld* file)
 		: Texture(file)
 	{
 		CreateTexture();

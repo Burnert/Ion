@@ -4,12 +4,12 @@
 
 namespace Ion
 {
-	class ION_API WindowsFile : public File
+	class ION_API WindowsFileOld : public FileOld
 	{
 	public:
-		WindowsFile();
-		WindowsFile(const WString& filename);
-		virtual ~WindowsFile() override;
+		WindowsFileOld();
+		WindowsFileOld(const WString& filename);
+		virtual ~WindowsFileOld() override;
 
 		// File :
 	protected:
@@ -69,4 +69,6 @@ namespace Ion
 
 		bool ReadLine_Internal(char* outBuffer, uint64 count, uint64* outReadCount, bool* bOutOverflow);
 	};
+
+	
 }

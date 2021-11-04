@@ -14,7 +14,7 @@ namespace Ion
 		QueryPerformanceFrequency((LARGE_INTEGER*)&g_PerformanceFrequency);
 		QueryPerformanceCounter((LARGE_INTEGER*)&g_InitTime);
 
-		s_SessionDumpFile = File::Create();
+		s_SessionDumpFile = FileOld::Create();
 	}
 
 	void DebugTracing::Shutdown()

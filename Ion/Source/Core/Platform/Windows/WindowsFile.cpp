@@ -1,6 +1,7 @@
 #include "IonPCH.h"
 
-#include "WindowsFile.h"
+#include "Core/File/File.h"
+
 #include "Core/CoreMacros.h"
 #include "Core/Platform/Windows/WindowsUtility.h"
 
@@ -21,72 +22,26 @@ LOG_ERROR(TEXT("File '{0}' cannot be written because the Write access mode was n
 
 #endif
 
+#define _VERIFY_HANDLE(...) \
+if (m_NativeFile.m_FileHandle == INVALID_HANDLE_VALUE) \
+{ \
+	_PRINT_HANDLE_ERROR(); \
+	return __VA_ARGS__; \
+}
+
 /* Code inside this macro works only on debug and with DebugLog enabled. */
-#define _DEBUG_LOG(x)   DEBUG( if (m_DebugLog) { x; } )
+#define _DEBUG_LOG(x)          DEBUG( if (m_DebugLog) { x; } )
+#define _DEBUG_STATIC_LOG(x)   DEBUG( if (s_GlobalDebugLog) { x; } )
 
 
 namespace Ion
-{
-	File* File::Create()
+{ 
+	bool File::Open_Native() // static
 	{
-		return new WindowsFile();
-	}
-
-	File* File::Create(const WString& filename)
-	{
-		return new WindowsFile(filename);
-	}
-
-	WindowsFile::WindowsFile()
-		: WindowsFile(TEXT(""))
-	{ }
-
-	WindowsFile::WindowsFile(const WString& filename) :
-		File(filename),
-		m_FileHandle(INVALID_HANDLE_VALUE),
-		m_Offset({ 0, 0 })
-	{ }
-
-	WindowsFile::~WindowsFile()
-	{
-		Close();
-	}
-
-	bool WindowsFile::SetFilename_Impl(const WString& filename)
-	{
-		if (IsOpen())
-		{
-			LOG_WARN(TEXT("'{0}': Cannot set the file name when the file is open!"));
-			return false;
-		}
-		return true;
-	}
-
-	bool WindowsFile::SetType_Impl(IO::EFileType type)
-	{
-		if (IsOpen())
-		{
-			LOG_WARN(TEXT("'{0}': Cannot set the file type when the file is open!"));
-			return false;
-		}
-		return true;
-	}
-
-	bool WindowsFile::Open(uint8 mode)
-	{
-		// This makes sure the filename is not blank before opening the file.
-		// If it is, then clearly something went wrong.
-		ionassert(IsFilenameValid());
-
 		// Handle errors first
-		if (m_FileHandle != INVALID_HANDLE_VALUE)
+		if (m_NativeFile.m_FileHandle != INVALID_HANDLE_VALUE)
 		{
 			LOG_ERROR(TEXT("File '{0}' is already open!"), m_Filename);
-			return false;
-		}
-		if (!(mode & (IO::FM_Read | IO::FM_Write)))
-		{
-			LOG_ERROR(TEXT("'{0}': FileMode has to have either Read or Write flag set!"));
 			return false;
 		}
 
@@ -94,146 +49,130 @@ namespace Ion
 
 		DWORD dwDesiredAccess = 0;
 		DWORD dwCreationDisposition = OPEN_EXISTING;
-		if (mode & IO::FM_Read)
+
+		bool bAppend = false;
+
+		if (m_Mode & EFileMode::Read)
+		{
 			dwDesiredAccess |= GENERIC_READ;
-		if (mode & IO::FM_Write)
+		}
+
+		if (m_Mode & EFileMode::Write)
+		{
 			dwDesiredAccess |= GENERIC_WRITE;
-		if (mode & IO::FM_Reset)
-			dwCreationDisposition = TRUNCATE_EXISTING;
 
-		m_Mode = mode;
-		m_FileHandle = CreateFile(m_Filename.c_str(), dwDesiredAccess, 0, NULL, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, NULL);
+			if (m_Mode & EFileMode::CreateNew)
+			{
+				dwCreationDisposition = OPEN_ALWAYS;
+			}
+			else if (m_Mode & EFileMode::Reset)
+			{
+				dwCreationDisposition = TRUNCATE_EXISTING;
+			}
+			else if (m_Mode & EFileMode::Append)
+			{
+				// This flag doesn't change anything if the file is empty,
+				// which is the case when creating a new file or resetting an existing one.
+				// That's why it's ignored until both of the above flags are not set
+				bAppend = true;
+			}
+		}
 
-		if (m_FileHandle == INVALID_HANDLE_VALUE)
+		m_NativeFile.m_FileHandle = CreateFile(m_Filename.c_str(), dwDesiredAccess, 0, NULL, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, NULL);
+
+		if (m_NativeFile.m_FileHandle == INVALID_HANDLE_VALUE)
 		{
 			DWORD lastError = GetLastError();
 			if (lastError != ERROR_FILE_NOT_FOUND)
-				goto lError;
+			{
+				Windows::PrintLastError(TEXT("File '{0}' cannot be opened!"), m_Filename);
+				return false;
+			}
 
-			_DEBUG_LOG( LOG_WARN(TEXT("File '{0}' not found!"), m_Filename) );
-
-			m_FileHandle = CreateFile(m_Filename.c_str(), dwDesiredAccess, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-			if (m_FileHandle == INVALID_HANDLE_VALUE)
-				goto lError;
-
-			_DEBUG_LOG( LOG_DEBUG(TEXT("File '{0}' created."), m_Filename) );
+			_DEBUG_LOG(LOG_WARN(TEXT("File '{0}' not found!"), m_Filename));
 		}
 
 		UpdateFileSizeCache();
 
-		if (mode & IO::FM_Write && mode & IO::FM_Append)
+		if (bAppend)
 		{
 			// Set the pointer to the end of the file
-			int64 offset = m_FileSize;
-			SetOffset(offset);
+			SetOffset(m_FileSize);
 		}
 
-		_DEBUG_LOG( LOG_TRACE(TEXT("File '{0}' opened."), m_Filename) );
-		return true;
-
-		// Other error
-	lError:
-		Windows::PrintLastError(TEXT("File '{0}' cannot be opened!"), m_Filename);
-		return false;
-	}
-
-	void WindowsFile::Close()
-	{
-		if (m_FileHandle != INVALID_HANDLE_VALUE)
-		{
-			_DEBUG_LOG( LOG_TRACE(TEXT("File '{0}' was closed."), m_Filename) );
-			CloseHandle(m_FileHandle);
-			m_FileHandle = INVALID_HANDLE_VALUE;
-		}
-	}
-
-	bool WindowsFile::Delete()
-	{
-		if (m_FileHandle != INVALID_HANDLE_VALUE)
-		{
-			LOG_ERROR(TEXT("Cannot delete '{0}' before it is closed!"), m_Filename);
-			return false;
-		}
-
-		if (!DeleteFile(m_Filename.c_str()))
-		{
-			Windows::PrintLastError(TEXT("Cannot delete file '{0}'!"), m_Filename);
-			return false;
-		}
-
-		_DEBUG_LOG( LOG_DEBUG(TEXT("File '{0}' was deleted."), m_Filename) );
+		_DEBUG_LOG(LOG_TRACE(TEXT("File '{0}' opened."), m_Filename));
 		return true;
 	}
 
-	bool WindowsFile::Read(uint8* outBuffer, uint64 count)
+	bool File::Delete_Native(const WString& filename) // static
 	{
-		// Handle internal errors
-		if (m_FileHandle == INVALID_HANDLE_VALUE)
+		const wchar* path = filename.c_str();
+
+		if (!DeleteFile(path))
 		{
-			_PRINT_HANDLE_ERROR();
-			return false;
-		}
-		if (!(m_Mode & IO::FM_Read))
-		{
-			_PRINT_READ_ERROR();
+			Windows::PrintLastError(TEXT("Cannot delete file '{0}'!"), path);
 			return false;
 		}
 
-		ulong bytesRead;
-		if (!ReadFile(m_FileHandle, outBuffer, (DWORD)count, &bytesRead, NULL))
+		_DEBUG_STATIC_LOG(LOG_DEBUG(TEXT("File '{0}' has been deleted."), path));
+		return true;
+	}
+
+	bool File::Close_Native()
+	{
+		CloseHandle(m_NativeFile.m_FileHandle);
+		_DEBUG_LOG(LOG_TRACE(TEXT("File '{0}' was closed."), m_Filename));
+
+		*(size_t*)&m_NativeFile.m_FileHandle = (size_t)INVALID_HANDLE_VALUE;
+
+		return true;
+	}
+
+	bool File::Read_Native(uint8* outBuffer, uint64 count)
+	{
+		ionassert(count <= std::numeric_limits<DWORD>::max(), "Count must fit in a DWORD type.");
+
+		_VERIFY_HANDLE(false);
+
+		DWORD bytesRead;
+		if (!ReadFile(m_NativeFile.m_FileHandle, outBuffer, (DWORD)count, &bytesRead, NULL))
 		{
 			Windows::PrintLastError(TEXT("Cannot read file '{0}'!"), m_Filename);
 			return false;
 		}
-		// Retrieves the file pointer
-		m_Offset.QuadPart += bytesRead;
+		m_Offset += bytesRead;
 
-		_DEBUG_LOG( LOG_TRACE(TEXT("'{0}': Read {1} bytes."), m_Filename, bytesRead) );
+		_DEBUG_LOG(LOG_TRACE(TEXT("'{0}': Read {1} bytes."), m_Filename, bytesRead));
 		return true;
 	}
 
-	bool WindowsFile::Read(String& outStr)
+	bool File::ReadLine_Internal(char* outBuffer, uint64 count, uint64* outReadCount, bool* bOutOverflow)
 	{
-		int64 count = GetSize();
-		char* buffer = new char[count + 1];
-		buffer[count] = (char)0;
-
-		bool bResult = Read((uint8*)buffer, count);
-		if (bResult)
-		{
-			// @TODO: Why would I want to copy this whole buffer instead of just moving the pointer into the string?
-			outStr.assign(buffer);
-		}
-		delete[] buffer;
-
-		return bResult;
-	}
-
-	bool WindowsFile::ReadLine_Internal(char* outBuffer, uint64 count, uint64* outReadCount, bool* bOutOverflow)
-	{
+#pragma warning(disable:6385)
+#pragma warning(disable:26451)
 		// @TODO: Make the CRLF support more correct with a bigger temporary buffer
 
 		if (bOutOverflow != nullptr)
 			*bOutOverflow = false;
 
-		int64 initialOffset = m_Offset.QuadPart;
+		int64 initialOffset = m_Offset;
 
 		DWORD bytesRead;
-		if (!ReadFile(m_FileHandle, outBuffer, (DWORD)count, &bytesRead, NULL))
+		if (!ReadFile(m_NativeFile.m_FileHandle, outBuffer, (DWORD)count, &bytesRead, NULL))
 		{
 			Windows::PrintLastError(TEXT("Cannot read file '{0}'!"), m_Filename);
 			return false;
 		}
 
 		// Retrieves the file pointer
-		m_Offset.QuadPart += bytesRead;
+		m_Offset += bytesRead;
 
 		bool bNewLineFound = false;
 		bool bCRLF = false;
 		bool bCR = false;
 		// This will be the index of the terminating NULL.
-		ulong zeroIndex = bytesRead - 1;
-		for (uint16 i = 0; i < bytesRead; ++i)
+		uint32 zeroIndex = bytesRead - 1;
+		for (uint32 i = 0; i < bytesRead; ++i)
 		{
 			// Windows NewLine is CRLF - 0D0A, so it has to be handled appropriately.
 			// If this is the last byte it should be treated as an overflow, because
@@ -256,7 +195,7 @@ namespace Ion
 				}
 				else
 				{
-					_DEBUG_LOG( LOG_WARN(TEXT("'{0}': CR was found but the next byte could not be checked! {1} byte buffer was to small."), m_Filename, count) );
+					_DEBUG_LOG(LOG_WARN(TEXT("'{0}': CR was found but the next byte could not be checked! {1} byte buffer was to small."), m_Filename, count));
 					// Set the offset back to the CR character
 					// so it can be interpreted later and then exit.
 					SetOffset(initialOffset + i);
@@ -283,7 +222,7 @@ namespace Ion
 
 		// If it is the end of file it has to be treated as a new line
 		// so it doesn't cut the last character
-		if (m_Offset.QuadPart == m_FileSize)
+		if (m_Offset == m_FileSize)
 		{
 			// The last character cannot be written if the buffer is too small to fit the terminating zero.
 			if (zeroIndex + 1 < count)
@@ -301,61 +240,45 @@ namespace Ion
 
 		// If it's the end of the file treat it as if new line was found.
 		// No overflow in this case.
-		if (!(bNewLineFound || m_Offset.QuadPart == m_FileSize))
+		if (!(bNewLineFound || m_Offset == m_FileSize))
 		{
 			// This is still considered a successful read
 			// but it's not a complete one.
 			if (bOutOverflow != nullptr)
 				*bOutOverflow = true;
 
-			_DEBUG_LOG( LOG_WARN(TEXT("'{0}': File read output buffer overflow! {1} byte buffer was to small."), m_Filename, count) );
+			_DEBUG_LOG(LOG_WARN(TEXT("'{0}': File read output buffer overflow! {1} byte buffer was to small."), m_Filename, count));
 		}
 
 		return true;
 	}
 
-	bool WindowsFile::ReadLine(char* outBuffer, uint64 count)
+	bool File::ReadLine_Native(char* outBuffer, uint64 count)
 	{
-		// Handle internal errors
-		if (m_FileHandle == INVALID_HANDLE_VALUE)
-		{
-			_PRINT_HANDLE_ERROR();
-			return false;
-		}
-		if (!(m_Mode & IO::FM_Read))
-		{
-			_PRINT_READ_ERROR();
-			return false;
-		}
+		ionassert(count <= std::numeric_limits<DWORD>::max(), "Count must fit in a DWORD type.");
+
+		_VERIFY_HANDLE(false);
 
 		uint64 readCount = 0;
 		bool bResult = ReadLine_Internal(outBuffer, count, &readCount, nullptr);
 
-		_DEBUG_LOG( if (bResult) LOG_TRACE(TEXT("'{0}': Read {1} bytes."), m_Filename, readCount) );
+		_DEBUG_LOG(if (bResult) LOG_TRACE(TEXT("'{0}': Read {1} bytes."), m_Filename, readCount));
 		return bResult;
 	}
 
-	bool WindowsFile::ReadLine(String& outStr)
+	bool File::ReadLine_Native(String& outStr)
 	{
-		// Handle internal errors
-		if (m_FileHandle == INVALID_HANDLE_VALUE)
-		{
-			_PRINT_HANDLE_ERROR();
-			return false;
-		}
-		if (!(m_Mode & IO::FM_Read))
-		{
-			_PRINT_READ_ERROR();
-			return false;
-		}
+		_VERIFY_HANDLE(false);
 
-		outStr = "";
+		outStr.clear();
 		bool bOverflow = false;
 		uint64 readCount = 0;
 		bool bResult;
-		// Start with 512B buffer
+
+		// Start with a 512B buffer
 		const uint32 bufferSize = 512;
 		char tempBuffer[bufferSize];
+
 		// Call the internal ReadLine function until we hit the new line character
 		// Should happen instantly unless the line is huge
 		do
@@ -368,62 +291,43 @@ namespace Ion
 		}
 		while (bOverflow);
 
-		_DEBUG_LOG( if (bResult) LOG_TRACE(TEXT("'{0}': Read {1} bytes."), m_Filename, readCount) );
+		_DEBUG_LOG(if (bResult) LOG_TRACE(TEXT("'{0}': Read {1} bytes."), m_Filename, readCount));
 		return bResult;
 	}
 
-	bool WindowsFile::Write(const uint8* inBuffer, uint64 count)
+	bool File::Write_Native(const uint8* inBuffer, uint64 count)
 	{
-		// Handle internal errors
-		if (m_FileHandle == INVALID_HANDLE_VALUE)
-		{
-			_PRINT_HANDLE_ERROR();
-			return false;
-		}
-		if (!(m_Mode & IO::FM_Write))
-		{
-			_PRINT_WRITE_ERROR();
-			return false;
-		}
+		ionassert(count <= std::numeric_limits<DWORD>::max(), "Count must fit in a DWORD type.");
 
-		ulong bytesWritten;
-		if (!WriteFile(m_FileHandle, inBuffer, (DWORD)count, &bytesWritten, NULL))
+		_VERIFY_HANDLE(false);
+
+		DWORD bytesWritten;
+		if (!WriteFile(m_NativeFile.m_FileHandle, inBuffer, (DWORD)count, &bytesWritten, NULL))
 		{
 			Windows::PrintLastError(TEXT("Cannot write file '{0}'!"), m_Filename);
 			return false;
 		}
 		// Retrieves the file pointer
-		m_Offset.QuadPart += bytesWritten;
+		m_Offset += bytesWritten;
 
 		// Compare new offset to current file size cache
 		// and set the new size based on the result.
-		int64 sizeDifference = std::max(0ll, m_Offset.QuadPart - m_FileSize);
+		int64 sizeDifference = std::max((int64)0, m_Offset - m_FileSize);
 		UpdateFileSizeCache(m_FileSize + sizeDifference);
 
-		_DEBUG_LOG( LOG_TRACE(TEXT("'{0}': Written {1} bytes."), m_Filename, bytesWritten) );
+		_DEBUG_LOG(LOG_TRACE(TEXT("'{0}': Written {1} bytes."), m_Filename, bytesWritten));
 		return true;
 	}
 
-	bool WindowsFile::Write(const String& inStr)
+	bool File::WriteLine_Native(const char* inBuffer, uint64 count, ENewLineType newLineType)
 	{
-		return Write((const uint8*)inStr.c_str(), inStr.size());
-	}
+#pragma warning(disable:6011)
+		ionassert(count <= std::numeric_limits<DWORD>::max(), "Count must fit in a DWORD type.");
+		ionassert(newLineType != ENewLineType::CRLF || count < std::numeric_limits<DWORD>::max());
 
-	bool WindowsFile::WriteLine(const char* inBuffer, uint64 count)
-	{
-		// Handle internal errors
-		if (m_FileHandle == INVALID_HANDLE_VALUE)
-		{
-			_PRINT_HANDLE_ERROR();
-			return false;
-		}
-		if (!(m_Mode & IO::FM_Write))
-		{
-			_PRINT_WRITE_ERROR();
-			return false;
-		}
+		_VERIFY_HANDLE(false);
 
-		bool bCRLF = WriteNewLineType == IO::NLT_CRLF;
+		bool bCRLF = newLineType == ENewLineType::CRLF;
 		// Allocate on stack if the buffer is small
 		char* tempBuffer = (char*)_malloca(count + bCRLF);
 		// Copy the inBuffer and set the last character to NewLine instead of NULL
@@ -435,12 +339,12 @@ namespace Ion
 		}
 		else
 		{
-			char newLineChar = WriteNewLineType == IO::NLT_LF ? '\n' : '\r';
+			char newLineChar = newLineType == ENewLineType::LF ? '\n' : '\r';
 			tempBuffer[count - 1] = newLineChar;
 		}
 
 		ulong bytesWritten;
-		if (!WriteFile(m_FileHandle, tempBuffer, (DWORD)count + bCRLF, &bytesWritten, NULL))
+		if (!WriteFile(m_NativeFile.m_FileHandle, tempBuffer, (DWORD)count + bCRLF, &bytesWritten, NULL))
 		{
 			Windows::PrintLastError(TEXT("Cannot write file '{0}'!"), m_Filename);
 			return false;
@@ -450,34 +354,23 @@ namespace Ion
 		_freea(tempBuffer);
 
 		// Retrieves the file pointer
-		m_Offset.QuadPart += bytesWritten;
+		m_Offset += bytesWritten;
 
 		// Compare new offset to current file size cache
 		// and set the new size based on the result.
 		// (Faster than actually getting the filesize)
-		int64 sizeDifference = std::max(0ll, m_Offset.QuadPart - m_FileSize);
+		int64 sizeDifference = std::max((int64)0, m_Offset - m_FileSize);
 		UpdateFileSizeCache(m_FileSize + sizeDifference);
 
-		_DEBUG_LOG( LOG_TRACE(TEXT("'{0}': Written {1} bytes."), m_Filename, bytesWritten) );
+		_DEBUG_LOG(LOG_TRACE(TEXT("'{0}': Written {1} bytes."), m_Filename, bytesWritten));
 		return true;
 	}
 
-	bool WindowsFile::WriteLine(const String& inStr)
+	bool File::AddOffset_Native(int64 count)
 	{
-		return WriteLine(inStr.c_str(), inStr.size() + 1);
-	}
+		_VERIFY_HANDLE(false);
 
-	bool WindowsFile::AddOffset(int64 count)
-	{
-		if (m_FileHandle == INVALID_HANDLE_VALUE)
-		{
-			_PRINT_HANDLE_ERROR();
-			return false;
-		}
-
-		LARGE_INTEGER _count;
-		_count.QuadPart = count;
-		if (!SetFilePointerEx(m_FileHandle, _count, &m_Offset, FILE_CURRENT))
+		if (!SetFilePointerEx(m_NativeFile.m_FileHandle, *(LARGE_INTEGER*)&count, (LARGE_INTEGER*)&m_Offset, FILE_CURRENT))
 		{
 			Windows::PrintLastError(TEXT("'{0}': Cannot add file offset!"), m_Filename);
 			return false;
@@ -485,17 +378,11 @@ namespace Ion
 		return true;
 	}
 
-	bool WindowsFile::SetOffset(int64 count)
+	bool File::SetOffset_Native(int64 count)
 	{
-		if (m_FileHandle == INVALID_HANDLE_VALUE)
-		{
-			_PRINT_HANDLE_ERROR();
-			return false;
-		}
+		_VERIFY_HANDLE(false);
 
-		LARGE_INTEGER _count;
-		_count.QuadPart = count;
-		if (!SetFilePointerEx(m_FileHandle, _count, &m_Offset, FILE_BEGIN))
+		if (!SetFilePointerEx(m_NativeFile.m_FileHandle, *(LARGE_INTEGER*)&m_Offset, (LARGE_INTEGER*)&m_Offset, FILE_BEGIN))
 		{
 			Windows::PrintLastError(TEXT("'{0}': Cannot set file offset!"), m_Filename);
 			return false;
@@ -503,59 +390,94 @@ namespace Ion
 		return true;
 	}
 
-	int64 WindowsFile::GetOffset() const
+	int64 File::GetSize() const
 	{
-		return m_Offset.QuadPart; 
-	}
-	
-	int64 WindowsFile::GetSize() const
-	{
-		// @TODO: Make this function work even without a need to open the file
+		_VERIFY_HANDLE(-1);
 
-		if (m_FileHandle == INVALID_HANDLE_VALUE)
+		if (m_FileSize == -1)
 		{
-			_PRINT_HANDLE_ERROR();
-			return -1ll;
+			GetFileSizeEx(m_NativeFile.m_FileHandle, (LARGE_INTEGER*)&m_FileSize);
+
+			_DEBUG_LOG(LOG_TRACE(TEXT("'{0}': New file size cache = {1} bytes."), m_Filename, m_FileSize));
+		}
+		
+		return m_FileSize;
+	}
+
+	bool File::Exists() const
+	{
+		return GetFileAttributes(m_Filename.c_str()) != INVALID_FILE_ATTRIBUTES;
+	}
+
+	bool File::IsDirectory() const
+	{
+		return GetFileAttributes(m_Filename.c_str()) & FILE_ATTRIBUTE_DIRECTORY;
+	}
+
+	FilePath File::GetFilePath(EFilePathValidation validation) const
+	{
+		return FilePath(m_Filename, validation);
+	}
+
+	const ENewLineType File::s_DefaultNewLineType = ENewLineType::CRLF;
+
+	// -----------------------------------------------------
+	// FilePath: -------------------------------------------
+	// -----------------------------------------------------
+
+	bool FilePath::Make_Native(const wchar* name)
+	{
+		WString path = m_PathName + name;
+
+		if (!CreateDirectory(path.c_str(), NULL))
+		{
+			DWORD dwError = GetLastError();
+			if (dwError == ERROR_ALREADY_EXISTS)
+			{
+				LOG_WARN(L"The path \"{0}\" already exists!");
+				return false;
+			}
+			if (dwError == ERROR_PATH_NOT_FOUND)
+			{
+				LOG_ERROR(L"Cannot make path \"{0}\"!");
+				// @TODO: Make this recursive?
+				return false;
+			}
 		}
 
-		if (m_FileSize != -1)
-		{
-			return m_FileSize;
-		}
-
-		LARGE_INTEGER fileSize;
-		GetFileSizeEx(m_FileHandle, &fileSize);
-		m_FileSize = fileSize.QuadPart;
-
-		_DEBUG_LOG( LOG_TRACE(TEXT("'{0}': New file size cache = {1} bytes."), m_Filename, m_FileSize) );
-		return fileSize.QuadPart;
+		return true;
 	}
 
-	WString WindowsFile::GetExtension() const
+	bool FilePath::Delete_Native()
 	{
-		uint64 dotIndex = m_Filename.find_last_of(L'.');
-		WString filename = m_Filename.substr(dotIndex + 1, (size_t)-1);
-		std::transform(filename.begin(), filename.end(), filename.begin(), [](wchar ch) { return std::tolower(ch); });
-		return filename;
+		return RemoveDirectory(m_PathName.c_str());
 	}
 
-	bool WindowsFile::IsDirectory() const
+	bool FilePath::DeleteForce_Native()
 	{
-		DWORD attributes = GetFileAttributes(m_Filename.c_str());
-		return attributes & FILE_ATTRIBUTE_DIRECTORY;
+		// @TODO: Remove all the files from the directory first
+
+		return Delete_Native();
 	}
 
-	TArray<FileInfo> WindowsFile::GetFilesInDirectory() const
+	bool FilePath::Exists_Native(const wchar* path)
 	{
-		ionassert(m_Filename != L"");
-		ionassert(IsDirectory());
+		return GetFileAttributes(path) != INVALID_FILE_ATTRIBUTES;
+	}
 
+	bool FilePath::IsDirectory_Native(const wchar* path)
+	{
+		return GetFileAttributes(path) & FILE_ATTRIBUTE_DIRECTORY;
+	}
+
+	TArray<FileInfo> FilePath::ListFiles_Native() const
+	{
 		TArray<FileInfo> files;
 		WIN32_FIND_DATA ffd;
 
-		WString directory = m_Filename + L"\\*";
+		WString path = m_PathName + L"/*";
 
-		HANDLE hFound = FindFirstFile(directory.c_str(), &ffd);
+		HANDLE hFound = FindFirstFile(path.c_str(), &ffd);
 		if (hFound == INVALID_HANDLE_VALUE)
 		{
 			return files;
@@ -563,8 +485,8 @@ namespace Ion
 
 		do
 		{
-			wchar fullPath[MAX_PATH + 1];
-			GetFullPathName(ffd.cFileName, MAX_PATH + 1, fullPath, nullptr);
+			wchar fullPath[MaxPathLength + 1];
+			GetFullPathName(ffd.cFileName, MaxPathLength + 1, fullPath, nullptr);
 
 			LARGE_INTEGER fileSize;
 			fileSize.LowPart = ffd.nFileSizeLow;
@@ -572,33 +494,10 @@ namespace Ion
 
 			bool bDirectory = ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
 
-			files.emplace_back(FileInfo { ffd.cFileName, fullPath, fileSize.QuadPart, bDirectory });
+			files.emplace_back(ffd.cFileName, fullPath, fileSize.QuadPart, bDirectory);
 		}
 		while (FindNextFile(hFound, &ffd));
 
 		return files;
-	}
-
-	WString WindowsFile::FindInDirectoryRecursive(const WString& filename) const
-	{
-		// @TODO: Implement this
-
-		return WString();
-	}
-
-	bool WindowsFile::IsOpen() const
-	{ 
-		return m_FileHandle != INVALID_HANDLE_VALUE;
-	}
-
-	bool WindowsFile::Exists() const
-	{
-		DWORD attributes = GetFileAttributes(m_Filename.c_str());
-		return attributes != INVALID_FILE_ATTRIBUTES;
-	}
-
-	bool WindowsFile::EndOfFile() const
-	{
-		return m_Offset.QuadPart >= GetSize();
 	}
 }

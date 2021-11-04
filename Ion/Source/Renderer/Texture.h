@@ -11,7 +11,7 @@ namespace Ion
 	class ION_API Texture
 	{
 	public:
-		static TShared<Texture> Create(File* file);
+		static TShared<Texture> Create(FileOld* file);
 		static TShared<Texture> Create(Image* image);
 
 		virtual ~Texture();
@@ -40,7 +40,7 @@ namespace Ion
 		}
 
 	protected:
-		Texture(File* file);
+		Texture(FileOld* file);
 		Texture(Image* image);
 
 	protected:

@@ -21,7 +21,7 @@ namespace Ion
 		Load();
 	}
 
-	ColladaDocument::ColladaDocument(File* colladaFile)
+	ColladaDocument::ColladaDocument(FileOld* colladaFile)
 		: XMLDocument(colladaFile),
 		m_Data({ }),
 		m_bParsed(false)

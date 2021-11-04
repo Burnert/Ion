@@ -85,7 +85,9 @@ namespace Ion
 /* Logs an assertion failure if the expression evaluates to false and executes a specified fallback code
  * Example:
  * ionexcept(value != 0)
- * { return -1; }
+ * { 
+ *     return -1;
+ * } 
  * In Debug: Stops the execution first 
  * Never deletes the expression in non-debug builds. */
 #define ionexcept(x, ...) \
