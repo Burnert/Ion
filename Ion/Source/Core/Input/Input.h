@@ -117,7 +117,7 @@ namespace Ion
 			Down            = 0x92,
 			PrintScr        = 0x93,
 			Help            = 0x94,
-			Numlock         = 0x95,
+			NumLock         = 0x95,
 			ScrollLock      = 0x96,
 			LWin            = 0x97,
 			RWin            = 0x98,

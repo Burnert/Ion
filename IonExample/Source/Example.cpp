@@ -37,8 +37,8 @@ public:
 		String collada;
 		File::ReadToString(meshPath, collada);
 
-		ColladaDocument model(collada);
-		const ColladaData& data = model.GetData();
+		TUnique<ColladaDocument> model = MakeUnique<ColladaDocument>(collada);
+		const ColladaData& data = model->GetData();
 		TShared<VertexBuffer> vb = VertexBuffer::Create(data.VertexAttributes, data.VertexAttributeCount);
 		vb->SetLayout(data.Layout);
 		TShared<IndexBuffer> ib = IndexBuffer::Create(data.Indices, (uint32)data.IndexCount);
@@ -125,13 +125,13 @@ public:
 		String collada;
 		File::ReadToString(L"char.dae", collada);
 
-		ColladaDocument colladaDoc(collada);
+		TUnique<ColladaDocument> colladaDoc = MakeUnique<ColladaDocument>(collada);
 
 		//String colladaStressTestFile;
 		//File::ReadToString(L"spherestresstest.dae", colladaStressTestFile);
 		//ColladaDocument colladaStressTest(colladaStressTestFile);
 
-		const ColladaData& colladaData = colladaDoc.GetData();
+		const ColladaData& colladaData = colladaDoc->GetData();
 
 		TShared<VertexBuffer> colladaVertexBuffer = VertexBuffer::Create(colladaData.VertexAttributes, colladaData.VertexAttributeCount);
 		colladaVertexBuffer->SetLayout(colladaData.Layout);

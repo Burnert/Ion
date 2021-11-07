@@ -85,7 +85,7 @@ namespace Ion
 		friend void PostEvent(const T& event);
 
 		template<typename T>
-		inline void PostEvent(const T& event)
+		void PostEvent(const T& event)
 		{
 			DispatchEvent(event);
 		}
