@@ -48,7 +48,7 @@ namespace Ion
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
-	void OpenGLRenderer::Draw(const IDrawable* drawable, const TShared<Scene>& targetScene) const
+	void OpenGLRenderer::Draw(const RPrimitiveRenderProxy& primitive, const TShared<Scene>& targetScene) const
 	{
 		TRACE_FUNCTION();
 
@@ -63,13 +63,13 @@ namespace Ion
 			scene = m_CurrentScene;
 		}
 
-		const Material* material = drawable->GetMaterialRaw();
-		const OpenGLVertexBuffer* vertexBuffer = (OpenGLVertexBuffer*)drawable->GetVertexBufferRaw();
-		const OpenGLIndexBuffer* indexBuffer = (OpenGLIndexBuffer*)drawable->GetIndexBufferRaw();
-		const OpenGLShader* shader = (OpenGLShader*)material->GetShaderRaw();
+		const Material* material = primitive.Material;
+		const OpenGLVertexBuffer* vertexBuffer = (OpenGLVertexBuffer*)primitive.VertexBuffer;
+		const OpenGLIndexBuffer* indexBuffer = (OpenGLIndexBuffer*)primitive.IndexBuffer;
+		const OpenGLShader* shader = (OpenGLShader*)primitive.Shader;
 
-		const DirectionalLight* dirLight = scene->GetActiveDirectionalLight();
-		const THashSet<Light*>& lights = scene->GetLights();
+		const RLightRenderProxy& dirLight = scene->GetRenderDirLight();
+		const TArray<RLightRenderProxy>& lights = scene->GetRenderLights();
 		uint32 lightNum = scene->GetLightNumber();
 
 		vertexBuffer->Bind();
@@ -81,18 +81,17 @@ namespace Ion
 		material->UpdateShaderUniforms();
 
 		// Calculate the Model View Projection Matrix based on the current scene camera
-		TShared<Camera> activeCamera = m_CurrentScene->GetActiveCamera();
-		ionassert(activeCamera, "Cannot render without an active camera.");
-		Vector3 cameraLocation = Vector3(activeCamera->GetTransform()[3]);
-		Vector3 cameraDirection = Vector3(activeCamera->GetTransform() * Vector4(0.0f, 0.0f, -1.0f, 0.0f));
+		const RCameraRenderProxy& activeCamera = m_CurrentScene->GetCameraRenderProxy();
+		Vector3 cameraLocation = activeCamera.Location;
+		Vector3 cameraDirection = activeCamera.Forward;
 
 		// Setup matrices
 
-		const Matrix4& modelMatrix = drawable->GetTransformMatrix();
-		const Matrix4& viewProjectionMatrix = activeCamera->GetViewProjectionMatrix();
-		const Matrix4 modelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
-		const Matrix4 viewMatrix = activeCamera->GetViewMatrix();
-		const Matrix4 projectionMatrix = activeCamera->GetProjectionMatrix();
+		const Matrix4& modelMatrix = primitive.Transform;
+		const Matrix4& viewProjectionMatrix = activeCamera.ViewProjectionMatrix;
+		const Matrix4& modelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
+		const Matrix4& viewMatrix = activeCamera.ViewMatrix;
+		const Matrix4& projectionMatrix = activeCamera.ProjectionMatrix;
 		const Matrix4 inverseTranspose = Math::InverseTranspose(modelMatrix);
 
 		// Set global uniforms
@@ -106,11 +105,11 @@ namespace Ion
 		shader->SetUniformMatrix4f("u_InverseTranspose", inverseTranspose);
 		shader->SetUniform3f("u_CameraLocation", cameraLocation);
 		shader->SetUniform3f("u_CameraDirection", cameraDirection);
-		if (dirLight)
+		if (scene->HasDirectionalLight())
 		{
-			shader->SetUniform3f("u_DirectionalLight.Direction", dirLight->m_LightDirection);
-			shader->SetUniform3f("u_DirectionalLight.Color", dirLight->m_Color);
-			shader->SetUniform1f("u_DirectionalLight.Intensity", dirLight->m_Intensity);
+			shader->SetUniform3f("u_DirectionalLight.Direction", dirLight.Direction);
+			shader->SetUniform3f("u_DirectionalLight.Color", dirLight.Color);
+			shader->SetUniform1f("u_DirectionalLight.Intensity", dirLight.Intensity);
 		}
 		else
 		{
@@ -119,18 +118,18 @@ namespace Ion
 		shader->SetUniform4f("u_AmbientLightColor", scene->GetAmbientLightColor());
 		shader->SetUniform1ui("u_LightNum", lightNum);
 		uint32 lightIndex = 0;
-		for (Light* light : lights)
+		for (const RLightRenderProxy& light : lights)
 		{
 			char uniformName[100];
 
 			sprintf_s(uniformName, "u_Lights[%u].%s", lightIndex, "Location");
-			shader->SetUniform3f(uniformName, light->m_Location);
+			shader->SetUniform3f(uniformName, light.Location);
 			sprintf_s(uniformName, "u_Lights[%u].%s", lightIndex, "Color");
-			shader->SetUniform3f(uniformName, light->m_Color);
+			shader->SetUniform3f(uniformName, light.Color);
 			sprintf_s(uniformName, "u_Lights[%u].%s", lightIndex, "Intensity");
-			shader->SetUniform1f(uniformName, light->m_Intensity);
+			shader->SetUniform1f(uniformName, light.Intensity);
 			sprintf_s(uniformName, "u_Lights[%u].%s", lightIndex, "Falloff");
-			shader->SetUniform1f(uniformName, light->m_Falloff);
+			shader->SetUniform1f(uniformName, light.Falloff);
 			
 			lightIndex++;
 		}
@@ -144,9 +143,10 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		m_CurrentScene = scene;
-		for (IDrawable* drawable : scene->GetDrawableObjects())
+
+		for (const RPrimitiveRenderProxy& primitive : scene->GetScenePrimitives())
 		{
-			Draw(drawable, scene);
+			Draw(primitive, scene);
 		}
 	}
 

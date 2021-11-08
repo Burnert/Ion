@@ -158,7 +158,7 @@ namespace Ion
 	class ION_API Material
 	{
 		friend class Renderer;
-
+		friend class Scene;
 #if PLATFORM_SUPPORTS_OPENGL
 		friend class OpenGLRenderer;
 #endif

@@ -256,8 +256,9 @@ public:
 		c_Angle += deltaTime;
 		c_Tint.y = (((c_Tint.y + deltaTime) >= 2.0f) ? 0.0f : (c_Tint.y + deltaTime));
 
-
 		m_AuxCamera->SetTransform(Math::Translate(m_AuxCameraLocation));
+
+		m_Scene->UpdateRenderData();
 
 		// ImGui:
 
@@ -360,6 +361,10 @@ public:
 						}
 					}
 					ImGui::EndCombo();
+				}
+				if (ImGui::Button("Toggle VSync"))
+				{
+					GetRenderer()->SetVSyncEnabled(!GetRenderer()->IsVSyncEnabled());
 				}
 			}
 			ImGui::End();

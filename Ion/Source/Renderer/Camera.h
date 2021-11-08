@@ -2,6 +2,16 @@
 
 namespace Ion
 {
+	struct RCameraRenderProxy
+	{
+		Matrix4 Transform;
+		Matrix4 ViewProjectionMatrix;
+		Matrix4 ViewMatrix;
+		Matrix4 ProjectionMatrix;
+		Vector3 Location;
+		Vector3 Forward;
+	};
+
 	class ION_API Camera
 	{
 	public:
@@ -11,8 +21,10 @@ namespace Ion
 
 		// @TODO: Setting the location here is a temporary solution
 
-		void SetLocation(const Vector3& location);
-		FORCEINLINE const Vector3& GetLocation() const { return m_CameraLocation; }
+		FORCEINLINE const Vector3 GetLocation() const
+		{
+			return m_CameraTransform[3];
+		}
 
 		void SetTransform(const Matrix4& transformMatrix);
 		FORCEINLINE const Matrix4& GetTransform() const { return m_CameraTransform; }
@@ -46,6 +58,8 @@ namespace Ion
 
 		void SetFarClip(float farClip);
 		FORCEINLINE float GetFarClip() const { return m_FarClip; }
+
+		void CopyRenderData(RCameraRenderProxy& outRenderProxy);
 
 	protected:
 		Camera();

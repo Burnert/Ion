@@ -1,6 +1,9 @@
 #include "IonPCH.h"
 
 #include "Scene.h"
+#include "Drawable.h"
+#include "Material.h"
+#include "Light.h"
 
 namespace Ion
 {
@@ -43,5 +46,50 @@ namespace Ion
 	bool Scene::RemoveDrawableObject(IDrawable* drawable)
 	{
 		return (bool)m_DrawableObjects.erase(drawable);
+	}
+
+	void Scene::UpdateRenderData()
+	{
+		ionassert(m_ActiveCamera, "Cannot render without an active camera.");
+
+		m_RenderPrimitives.clear();
+		for (IDrawable* drawable : m_DrawableObjects)
+		{
+			RPrimitiveRenderProxy primitiveProxy;
+			primitiveProxy.VertexBuffer = drawable->GetVertexBufferRaw();
+			primitiveProxy.IndexBuffer = drawable->GetIndexBufferRaw();
+			primitiveProxy.Material = drawable->GetMaterialRaw();
+			primitiveProxy.Shader = primitiveProxy.Material->GetShaderRaw();
+			primitiveProxy.Transform = drawable->GetTransformMatrix();
+
+			m_RenderPrimitives.push_back(primitiveProxy);
+		}
+
+		m_RenderLights.clear();
+		for (Light* light : m_Lights)
+		{
+			RLightRenderProxy lightProxy;
+			light->CopyRenderData(lightProxy);
+			m_RenderLights.push_back(lightProxy);
+		}
+
+		if (m_ActiveDirectionalLight)
+		{
+			m_ActiveDirectionalLight->CopyRenderData(m_RenderDirLight);
+		}
+		else
+		{
+			m_RenderDirLight = { };
+		}
+
+		m_ActiveCamera->CopyRenderData(m_RenderCamera);
+
+		// Shrink arrays
+
+		if (m_RenderPrimitives.capacity() > m_RenderPrimitives.size() * 2)
+			m_RenderPrimitives.shrink_to_fit();
+
+		if (m_RenderLights.capacity() > m_RenderLights.size() * 2)
+			m_RenderLights.shrink_to_fit();
 	}
 }

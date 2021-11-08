@@ -9,11 +9,11 @@ namespace Ion
 		Pixel,
 	};
 
-	struct SShaderInfo
+	struct ShaderInfo
 	{
 		uint32 ID;
-		EShaderType Type;
 		String Source;
+		EShaderType Type;
 	};
 
 	class ION_API Shader

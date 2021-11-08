@@ -39,7 +39,7 @@ namespace Ion
 			const char* src = source.c_str();
 			glShaderSource(id, 1, &src, 0);
 
-			m_Shaders[type] = { id, type, source };
+			m_Shaders[type] = { id, source, type };
 		}
 	}
 
@@ -52,7 +52,7 @@ namespace Ion
 		TRACE_BEGIN(0, "OpenGLShader - Shader Compilation");
 		for (auto& entry : m_Shaders)
 		{
-			const SShaderInfo& shader = entry.second;
+			const ShaderInfo& shader = entry.second;
 
 			glCompileShader(shader.ID);
 
@@ -82,7 +82,7 @@ namespace Ion
 		TRACE_BEGIN(1, "OpenGLShader - Shader Attachment");
 		for (auto& entry : m_Shaders)
 		{
-			const SShaderInfo& shader = entry.second;
+			const ShaderInfo& shader = entry.second;
 
 			glAttachShader(m_ProgramID, shader.ID);
 		}
@@ -108,7 +108,7 @@ namespace Ion
 		// Shaders need to be detached after a successful link
 		for (auto& entry : m_Shaders)
 		{
-			const SShaderInfo& shader = entry.second;
+			const ShaderInfo& shader = entry.second;
 
 			glDetachShader(m_ProgramID, shader.ID);
 		}
@@ -333,6 +333,7 @@ namespace Ion
 			else
 			{
 				LOG_WARN("Cannot find uniform named '{0}'!", name.c_str());
+				m_UniformCache[name] = -1;
 			}
 			TRACE_END(0);
 		}
@@ -363,11 +364,16 @@ namespace Ion
 
 		for (auto& entry : m_Shaders)
 		{
-			const SShaderInfo& shader = entry.second;
+			const ShaderInfo& shader = entry.second;
 
 			glDeleteShader(shader.ID);
 		}
 
 		m_Shaders.clear();
+	}
+
+	void OpenGLShader::InvalidateUniformCache()
+	{
+		m_UniformCache.clear();
 	}
 }

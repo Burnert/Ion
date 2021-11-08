@@ -16,7 +16,7 @@ namespace Ion
 		virtual void Clear() const override;
 		virtual void Clear(const Vector4& color) const override;
 
-		virtual void Draw(const IDrawable* drawable, const TShared<Scene>& targetScene = nullptr) const override;
+		virtual void Draw(const RPrimitiveRenderProxy& primitive, const TShared<Scene>& targetScene = nullptr) const override;
 
 		virtual void RenderScene(const TShared<Scene>& scene) override;
 

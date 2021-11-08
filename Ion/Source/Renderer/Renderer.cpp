@@ -7,8 +7,8 @@
 
 namespace Ion
 {
-    TShared<Renderer> Renderer::Create()
-    {
+	TShared<Renderer> Renderer::Create()
+	{
 		switch (RenderAPI::GetCurrent())
 		{
 		case ERenderAPI::OpenGL:
@@ -16,5 +16,5 @@ namespace Ion
 		default:
 			return TShared<Renderer>(nullptr);
 		}
-    }
+	}
 }

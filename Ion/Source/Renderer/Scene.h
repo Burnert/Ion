@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Core/Core.h"
+#include "Camera.h"
+#include "Light.h"
 
 namespace Ion
 {
@@ -8,6 +10,20 @@ namespace Ion
 	class Camera;
 	class Light;
 	class DirectionalLight;
+
+	class VertexBuffer;
+	class IndexBuffer;
+	class Material;
+	class Shader;
+
+	struct RPrimitiveRenderProxy
+	{
+		const VertexBuffer* VertexBuffer;
+		const IndexBuffer* IndexBuffer;
+		const Material* Material;
+		const Shader* Shader;
+		Matrix4 Transform;
+	};
 
 	class ION_API Scene
 	{
@@ -38,18 +54,39 @@ namespace Ion
 
 		~Scene() { }
 
+		void UpdateRenderData();
+
+		// Render Thread: --------------------------------------------------------------------------
+
+		FORCEINLINE const TArray<RPrimitiveRenderProxy>& GetScenePrimitives() const { return m_RenderPrimitives; }
+		FORCEINLINE const TArray<RLightRenderProxy>& GetRenderLights() const { return m_RenderLights; }
+		FORCEINLINE const RLightRenderProxy& GetRenderDirLight() const { return m_RenderDirLight; }
+		FORCEINLINE const RCameraRenderProxy& GetCameraRenderProxy() const { return m_RenderCamera; }
+		
+		FORCEINLINE bool HasDirectionalLight() const { return m_ActiveDirectionalLight; }
+
 	protected:
 		Scene() :
 			m_AmbientLightColor(0.0f),
-			m_ActiveDirectionalLight(nullptr)
+			m_ActiveDirectionalLight(nullptr),
+			m_RenderCamera({ }),
+			m_RenderDirLight({ })
 		{ }
 
 	private:
 		THashSet<IDrawable*> m_DrawableObjects;
+
 		TShared<Camera> m_ActiveCamera;
 
 		Vector4 m_AmbientLightColor;
 		DirectionalLight* m_ActiveDirectionalLight;
 		THashSet<Light*> m_Lights;
+
+		// Render Thread: -------------------------------------
+
+		TArray<RPrimitiveRenderProxy> m_RenderPrimitives;
+		TArray<RLightRenderProxy> m_RenderLights;
+		RLightRenderProxy m_RenderDirLight;
+		RCameraRenderProxy m_RenderCamera;
 	};
 }

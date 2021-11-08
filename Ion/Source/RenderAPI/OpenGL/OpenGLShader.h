@@ -58,11 +58,12 @@ namespace Ion
 
 	private:
 		void CleanupDeleteShaders();
+		void InvalidateUniformCache();
 
 	private:
 		uint32 m_ProgramID;
 		bool m_bCompiled;
-		THashMap<EShaderType, SShaderInfo> m_Shaders;
+		THashMap<EShaderType, ShaderInfo> m_Shaders;
 
 		mutable THashMap<String, int32> m_UniformCache;
 	};
