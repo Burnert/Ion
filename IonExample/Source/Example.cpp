@@ -127,10 +127,6 @@ public:
 
 		TUnique<ColladaDocument> colladaDoc = MakeUnique<ColladaDocument>(collada);
 
-		//String colladaStressTestFile;
-		//File::ReadToString(L"spherestresstest.dae", colladaStressTestFile);
-		//ColladaDocument colladaStressTest(colladaStressTestFile);
-
 		const ColladaData& colladaData = colladaDoc->GetData();
 
 		TShared<VertexBuffer> colladaVertexBuffer = VertexBuffer::Create(colladaData.VertexAttributes, colladaData.VertexAttributeCount);
@@ -185,6 +181,10 @@ public:
 		// Slovak
 		InitExampleModel(m_MeshSlovak, m_MaterialSlovak, m_TextureSlovak, shader, m_Scene, L"Assets/models/slovak.dae", L"Assets/textures/slovak.png",
 			Math::Translate(Vector3(1.0f, 0.0f, -2.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
+
+		// Kula
+		InitExampleModel(m_MeshStress, m_MaterialStress, m_TextureStress, shader, m_Scene, L"spherestresstest.dae", L"Assets/test.png",
+			Math::Translate(Vector3(-1.0f, 0.0f, -2.0f))* Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
 
 		FileOld* dirTest = FileOld::Create();
 		dirTest->SetFilename(L"Assets");
@@ -459,6 +459,10 @@ private:
 	TShared<Mesh> m_MeshSlovak;
 	TShared<Material> m_MaterialSlovak;
 	TShared<Texture> m_TextureSlovak;
+
+	TShared<Mesh> m_MeshStress;
+	TShared<Material> m_MaterialStress;
+	TShared<Texture> m_TextureStress;
 
 	Vector4 m_CameraLocation = { 0.0f, 0.0f, 2.0f, 1.0f };
 	Vector3 m_CameraRotation = { 0.0f, 0.0f, 0.0f };
