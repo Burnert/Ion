@@ -376,6 +376,58 @@ namespace Ion
 		return true;
 	}
 
+	float* ColladaDocument::ExtractFloatArray(XMLNode* sourceNode, uint64& outSize, TransformFn transformFunction)
+	{
+		TRACE_FUNCTION();
+
+		XMLNode* floatArrayNode = sourceNode->first_node("float_array");
+		_ionexcept_r(floatArrayNode, "The <source> node does not have a <float_array> node.");
+
+		// Node structure
+		// <float_array id="mesh-positions-array" count="1234">1.123456 -5.282121 10.33126</float_array>
+
+		uint64 floatArraySize = floatArrayNode->value_size();
+
+		XMLAttribute* countAttribute = floatArrayNode->first_attribute("count");
+		_ionexcept_r(countAttribute);
+
+		const char* countStr = countAttribute->value();
+		uint32 count = strtoul(countStr, nullptr, 10);
+		_ionexcept_r(count != 0);
+
+		outSize = count;
+
+		float* floatArray = new float[count];
+		float* currentValuePtr = floatArray;
+
+		// Extract vertices one by one
+		char* valueCharPtr = floatArrayNode->value();
+		_ionexcept_r(*valueCharPtr);
+		char* valueStartPtr = valueCharPtr;
+		DEBUG(uint64 debugValueCount = 0);
+		do
+		{
+			// Float values are separated by space
+			// Handle the edge case of the pointer being at the end of the buffer
+			if (*valueCharPtr == ' ' || !*valueCharPtr)
+			{
+				*currentValuePtr = strtof(valueStartPtr, nullptr);
+				// Transform values using the specified transform function
+				// Useful for changing the scale of the model
+				if (transformFunction)
+				{
+					*currentValuePtr = transformFunction(*currentValuePtr);
+				}
+				currentValuePtr++;
+				valueStartPtr = valueCharPtr + 1;
+				DEBUG(debugValueCount++);
+			}
+		}
+		while (*valueCharPtr++); // The last character is null
+		ionassert(debugValueCount == count);
+		return floatArray;
+	}
+
 	ColladaDocument::TrianglesNodeData::TriangleInput* ColladaDocument::TrianglesNodeData::AddTriangleInput(XMLNode* meshNode, XMLNode* inputNode)
 	{
 		TRACE_FUNCTION();

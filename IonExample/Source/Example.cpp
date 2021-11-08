@@ -176,15 +176,15 @@ public:
 
 		// Oscypek
 		InitExampleModel(m_MeshOscypek, m_MaterialOscypek, m_TextureOscypek, shader, m_Scene, L"Assets/models/oscypek.dae", L"Assets/textures/oscypek.png",
-			Math::Translate(Vector3(-1.0f, 1.0f, 1.0f))* Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
+			Math::Translate(Vector3(-1.0f, 1.0f, 1.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
 
 		// Ciupaga
 		InitExampleModel(m_MeshCiupaga, m_MaterialCiupaga, m_TextureCiupaga, shader, m_Scene, L"Assets/models/ciupaga.dae", L"Assets/textures/ciupaga.png",
-			Math::Translate(Vector3(1.0f, 1.0f, 1.0f))* Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 90.0f, 0.0f)))));
+			Math::Translate(Vector3(1.0f, 1.0f, 1.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 90.0f, 0.0f)))));
 
 		// Slovak
 		InitExampleModel(m_MeshSlovak, m_MaterialSlovak, m_TextureSlovak, shader, m_Scene, L"Assets/models/slovak.dae", L"Assets/textures/slovak.png",
-			Math::Translate(Vector3(1.0f, 0.0f, -2.0f))* Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
+			Math::Translate(Vector3(1.0f, 0.0f, -2.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
 
 		FileOld* dirTest = FileOld::Create();
 		dirTest->SetFilename(L"Assets");
