@@ -54,23 +54,17 @@ namespace Ion
 
 		// Create a platform specific window.
 		m_Window = GenericWindow::Create();
-
 		// Current thread will render graphics in this window.
 		m_Window->Initialize();
 
 		m_Renderer = Renderer::Create();
 		m_Renderer->Init();
-
 		m_Renderer->SetVSyncEnabled(false);
 
 		InitImGui();
 
-		const char* renderAPILabel = RenderAPI::GetCurrentDisplayName();
 
-		m_BaseWindowTitle = TEXT("Ion - ");
-		m_BaseWindowTitle += StringConverter::StringToWString(renderAPILabel);
-		m_Window->SetTitle(m_BaseWindowTitle);
-
+		SetupWindowTitle();
 		m_Window->Show();
 
 		TRACE_BEGIN(0, "Application - Client::OnInit");
@@ -107,10 +101,8 @@ namespace Ion
 		ImGuiNewFramePlatform();
 		ImGui::NewFrame();
 
-		wchar fps[30];
-		swprintf_s(fps, L" (%.2f FPS)", 1.0f / deltaTime);
-		m_Window->SetTitle(m_BaseWindowTitle + fps);
-
+		UpdateWindowTitle(deltaTime);
+		
 		m_LayerStack->OnUpdate(deltaTime);
 
 		TRACE_BEGIN(0, "Application - Client::OnUpdate");
@@ -132,6 +124,20 @@ namespace Ion
 		ImGuiRenderPlatform(ImGui::GetDrawData());
 
 		m_Window->SwapBuffers();
+	}
+
+	void Application::SetupWindowTitle()
+	{
+		m_BaseWindowTitle = TEXT("Ion - ");
+		m_BaseWindowTitle += StringConverter::StringToWString(RenderAPI::GetCurrentDisplayName());
+		m_Window->SetTitle(m_BaseWindowTitle);
+	}
+
+	void Application::UpdateWindowTitle(float deltaTime)
+	{
+		wchar fps[30];
+		swprintf_s(fps, L" (%.2f FPS)", 1.0f / deltaTime);
+		m_Window->SetTitle(m_BaseWindowTitle + fps);
 	}
 
 	/*

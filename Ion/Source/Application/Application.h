@@ -173,6 +173,9 @@ namespace Ion
 	private:
 		float CalculateFrameTime(); // Implemented per platform
 
+		void SetupWindowTitle();
+		void UpdateWindowTitle(float deltaTime);
+
 		// @TODO: Move ImGui stuff to some generic Platform class
 
 		void InitImGui() const;
