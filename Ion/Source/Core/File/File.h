@@ -217,12 +217,19 @@ namespace Ion
 
 	struct FileList
 	{
-		TArray<FileInfo> Files;
+		using FileInfoArray = TArray<FileInfo>;
+
+		using Iterator             = FileInfoArray::iterator;
+		using ConstIterator        = FileInfoArray::const_iterator;
+		using ReverseIterator      = FileInfoArray::reverse_iterator;
+		using ConstReverseIterator = FileInfoArray::const_reverse_iterator;
+
+		FileInfoArray Files;
 
 		uint32 GetCount() const { return (uint32)Files.size(); }
 		bool IsEmpty() const { return Files.empty(); }
 
-		FileList(TArray<FileInfo>&& files) noexcept
+		FileList(FileInfoArray&& files) noexcept
 			: Files(files)
 		{ }
 
@@ -232,17 +239,17 @@ namespace Ion
 		FileList& operator=(const FileList&) = default;
 		FileList& operator=(FileList&&) noexcept = default;
 
-		inline TArray<FileInfo>::iterator begin() { return Files.begin(); }
-		inline TArray<FileInfo>::iterator end() { return Files.end(); }
+		inline Iterator begin() { return Files.begin(); }
+		inline Iterator end()   { return Files.end();   }
 
-		inline TArray<FileInfo>::const_iterator cbegin() { return Files.cbegin(); }
-		inline TArray<FileInfo>::const_iterator cend() { return Files.cend(); }
+		inline ConstIterator begin() const { return Files.begin(); }
+		inline ConstIterator end() const   { return Files.end();   }
 
-		inline TArray<FileInfo>::reverse_iterator rbegin() { return Files.rbegin(); }
-		inline TArray<FileInfo>::reverse_iterator rend() { return Files.rend(); }
+		inline ReverseIterator rbegin() { return Files.rbegin(); }
+		inline ReverseIterator rend()   { return Files.rend();   }
 
-		inline TArray<FileInfo>::const_reverse_iterator crbegin() { return Files.crbegin(); }
-		inline TArray<FileInfo>::const_reverse_iterator crend() { return Files.crend(); }
+		inline ConstReverseIterator rbegin() const { return Files.rbegin(); }
+		inline ConstReverseIterator rend() const   { return Files.rend();   }
 	};
 
 #if ION_PLATFORM_WINDOWS
