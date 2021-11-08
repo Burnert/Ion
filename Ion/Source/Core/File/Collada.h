@@ -46,9 +46,12 @@ namespace Ion
 		{
 			friend class ColladaDocument;
 		public:
-			Vertex(uint32 elementCount, float* elements) :
-				m_Elements(elementCount)
+			constexpr static uint32 MaxVertexElements = 64;
+
+			Vertex(float* elements, uint32 elementCount) :
+				m_ElementCount(elementCount)
 			{
+				ionassert(elementCount <= MaxVertexElements, "Too many vertex elements.");
 				memcpy(&m_Elements[0], elements, elementCount * sizeof(float));
 			}
 			Vertex(const Vertex& other) = default;
@@ -56,7 +59,12 @@ namespace Ion
 
 			inline bool operator==(const Vertex& other) const
 			{
-				for (uint32 i = 0; i < m_Elements.size(); ++i)
+				if (m_ElementCount != other.m_ElementCount)
+				{
+					return false;
+				}
+
+				for (uint32 i = 0; i < m_ElementCount; ++i)
 				{
 					if (m_Elements[i] != other.m_Elements[i])
 					{
@@ -70,17 +78,19 @@ namespace Ion
 			{
 				size_t operator() (const Vertex& vertex) const
 				{
-					String temp = "";
-					for (uint32 i = 0; i < vertex.m_Elements.size(); ++i)
+					size_t hash = 0;
+					std::hash<float> hasher;
+					for (uint32 i = 0; i < vertex.m_ElementCount; ++i)
 					{
-						temp += std::to_string(vertex.m_Elements[i]);
+						hash ^= hasher(vertex.m_Elements[i]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
 					}
-					return std::hash<String>()(temp);
+					return hash;
 				}
 			};
 
 		private:
-			TArray<float> m_Elements;
+			uint32 m_ElementCount;
+			float m_Elements[MaxVertexElements];
 		};
 
 	public:

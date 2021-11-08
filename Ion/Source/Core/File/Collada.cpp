@@ -287,6 +287,10 @@ namespace Ion
 		THashSet<ColladaDocument::Vertex, ColladaDocument::Vertex::Hash> finalVerticesSet;
 		TArray<uint32> finalIndices;
 
+		finalVertices.reserve(indexCount);
+		finalVerticesSet.reserve(indexCount);
+		finalIndices.reserve(indexCount);
+
 #if ION_ENABLE_TRACING
 		uint32 debugCurrentIndex = 0;
 #endif
@@ -316,7 +320,7 @@ namespace Ion
 			// When a full interleaved vertex was created, add it to the pool
 			if (currentAttribute == 0)
 			{
-				ColladaDocument::Vertex vertex(fullStride, currentVertex);
+				ColladaDocument::Vertex vertex(currentVertex, fullStride);
 				TRACE_BEGIN(0, "ColladaDocument::ParseTriangles - Find identical vertex (Set)");
 				// Inserting to a set and checking uniqueness this way is much faster 
 				// than searching the whole vector for duplicates for EVERY single vertex.
