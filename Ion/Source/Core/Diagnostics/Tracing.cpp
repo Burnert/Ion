@@ -65,9 +65,14 @@ namespace Ion
 		DumpResults();
 	}
 
+	// @TODO: Make this output the results in a separate thread
+
 	void DebugTracing::DumpResults()
 	{
 		ionassert(HasSessionStarted());
+
+		String fileDumpTemp;
+		fileDumpTemp.reserve(ION_TRACE_DUMP_THRESHOLD * 100);
 
 		for (const TraceResult& result : s_TraceResults)
 		{
@@ -78,13 +83,17 @@ namespace Ion
 			// Begin event
 			charsWritten = sprintf_s(eventBuffer, "{\"name\":\"%s\",\"cat\":\"%s\",\"ph\":\"B\",\"ts\":%lld,\"pid\":%d,\"tid\":%d},",
 				result.Name, "cat", TimestampToMicroseconds(result.Timestamp), 0, 0);
-			s_SessionDumpFile->Write((uint8*)eventBuffer, charsWritten);
+			fileDumpTemp += eventBuffer;
+
 			memset(eventBuffer, 0, 4096);
+
 			// End event
 			charsWritten = sprintf_s(eventBuffer, "{\"ph\":\"E\",\"ts\":%lld,\"pid\":%d,\"tid\":%d},",
 				TimestampToMicroseconds(result.EndTimestamp), 0, 0);
-			s_SessionDumpFile->Write((uint8*)eventBuffer, charsWritten);
+			fileDumpTemp += eventBuffer;
 		}
+
+		s_SessionDumpFile->Write(fileDumpTemp.c_str(), fileDumpTemp.size());
 
 		s_TraceResults.clear();
 		s_NamedTraceResults.clear();
