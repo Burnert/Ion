@@ -1,6 +1,8 @@
 #include "IonPCH.h"
 
 #include "Application.h"
+#include "GameLayer.h"
+#include "ImGuiLayer.h"
 
 #include "Core/Event/InputEvent.h"
 #include "Core/Event/EventQueue.h"
@@ -63,6 +65,8 @@ namespace Ion
 
 		InitImGui();
 
+		m_LayerStack->PushLayer<GameLayer>("GameLayer");
+		m_LayerStack->PushOverlayLayer<ImGuiLayer>("ImGui");
 
 		SetupWindowTitle();
 		m_Window->Show();

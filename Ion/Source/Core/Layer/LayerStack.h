@@ -22,12 +22,11 @@ namespace Ion
 
 		/* Creates and pushes a layer object with specified name and parameters into the layer stack */
 		template<typename LayerT, typename... Types>
-		TEnableIfT<TIsBaseOfV<Layer, LayerT>, LayerPtr>
-			PushLayer(const char* name, Types&&... args)
+		LayerPtr PushLayer(const char* name, Types&&... args)
 		{
 			LayerPtr layer = MakeShared<LayerT>(name, args...);
 			layer->OnAttach();
-			LayerIterator layerIt = m_Layers.insert(begin() + m_LayerInsertIndex, std::move(layer));
+			LayerIterator layerIt = m_Layers.emplace(begin() + m_LayerInsertIndex, Move(layer));
 			m_LayerInsertIndex++;
 
 			return *layerIt;
@@ -35,14 +34,13 @@ namespace Ion
 
 		/* Creates and pushes a layer object (overlay) with specified name and parameters on top of other layers */
 		template<typename LayerT, typename... Types>
-		TEnableIfT<TIsBaseOfV<Layer, LayerT>, LayerPtr>
-			PushOverlayLayer(const char* name, Types&&... args)
+		LayerPtr PushOverlayLayer(const char* name, Types&&... args)
 		{
 			LayerPtr overlay = MakeShared<LayerT>(name, args...);
 			overlay->OnAttach();
-			m_Layers.push_back(std::move(overlay));
+			LayerPtr& layerPtr = m_Layers.emplace_back(Move(overlay));
 
-			return *(end() - 1);
+			return layerPtr;
 		}
 
 		/* Removes a layer based on its name */

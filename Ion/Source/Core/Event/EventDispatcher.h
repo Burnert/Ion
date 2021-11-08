@@ -104,6 +104,7 @@ namespace Ion
 	template<typename EventFunctions>
 	class EventDispatcher<EventFunctions, void>
 	{
+	public:
 		template<typename EventT>
 		void Dispatch(const EventT& event)
 		{
