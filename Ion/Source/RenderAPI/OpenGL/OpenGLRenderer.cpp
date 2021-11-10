@@ -9,7 +9,7 @@
 namespace Ion
 {
 	OpenGLRenderer::OpenGLRenderer()
-		: m_CurrentScene({ })
+		: m_CurrentScene(nullptr)
 	{ }
 
 	OpenGLRenderer::~OpenGLRenderer()
@@ -19,6 +19,8 @@ namespace Ion
 	void OpenGLRenderer::Init()
 	{
 		TRACE_FUNCTION();
+
+		SetVSyncEnabled(false);
 
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
@@ -48,29 +50,18 @@ namespace Ion
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
-	void OpenGLRenderer::Draw(const RPrimitiveRenderProxy& primitive, const TShared<Scene>& targetScene) const
+	void OpenGLRenderer::Draw(const RPrimitiveRenderProxy& primitive, const RSceneProxy& scene) const
 	{
 		TRACE_FUNCTION();
 
-		TShared<Scene> scene;
-		if (targetScene)
-		{
-			scene = targetScene;
-		}
-		else
-		{
-			ionassert(m_CurrentScene, "Cannot render before setting the current scene if the target scene is not specified.");
-			scene = m_CurrentScene;
-		}
+		const Material* material = primitive.Material.Ptr;
+		const OpenGLVertexBuffer* vertexBuffer = (OpenGLVertexBuffer*)primitive.VertexBuffer.Ptr;
+		const OpenGLIndexBuffer* indexBuffer = (OpenGLIndexBuffer*)primitive.IndexBuffer.Ptr;
+		const OpenGLShader* shader = (OpenGLShader*)primitive.Shader.Ptr;
 
-		const Material* material = primitive.Material;
-		const OpenGLVertexBuffer* vertexBuffer = (OpenGLVertexBuffer*)primitive.VertexBuffer;
-		const OpenGLIndexBuffer* indexBuffer = (OpenGLIndexBuffer*)primitive.IndexBuffer;
-		const OpenGLShader* shader = (OpenGLShader*)primitive.Shader;
-
-		const RLightRenderProxy& dirLight = scene->GetRenderDirLight();
-		const TArray<RLightRenderProxy>& lights = scene->GetRenderLights();
-		uint32 lightNum = scene->GetLightNumber();
+		const RLightRenderProxy& dirLight = scene.RenderDirLight;
+		const TArray<RLightRenderProxy>& lights = scene.RenderLights;
+		uint32 lightNum = (uint32)scene.RenderLights.size();
 
 		vertexBuffer->Bind();
 		vertexBuffer->BindLayout();
@@ -81,7 +72,7 @@ namespace Ion
 		material->UpdateShaderUniforms();
 
 		// Calculate the Model View Projection Matrix based on the current scene camera
-		const RCameraRenderProxy& activeCamera = m_CurrentScene->GetCameraRenderProxy();
+		const RCameraRenderProxy& activeCamera = scene.RenderCamera;
 		Vector3 cameraLocation = activeCamera.Location;
 		Vector3 cameraDirection = activeCamera.Forward;
 
@@ -105,7 +96,7 @@ namespace Ion
 		shader->SetUniformMatrix4f("u_InverseTranspose", inverseTranspose);
 		shader->SetUniform3f("u_CameraLocation", cameraLocation);
 		shader->SetUniform3f("u_CameraDirection", cameraDirection);
-		if (scene->HasDirectionalLight())
+		if (scene.bHasDirLight)
 		{
 			shader->SetUniform3f("u_DirectionalLight.Direction", dirLight.Direction);
 			shader->SetUniform3f("u_DirectionalLight.Color", dirLight.Color);
@@ -115,7 +106,7 @@ namespace Ion
 		{
 			shader->SetUniform1f("u_DirectionalLight.Intensity", 0.0f);
 		}
-		shader->SetUniform4f("u_AmbientLightColor", scene->GetAmbientLightColor());
+		shader->SetUniform4f("u_AmbientLightColor", scene.AmbientLightColor);
 		shader->SetUniform1ui("u_LightNum", lightNum);
 		uint32 lightIndex = 0;
 		for (const RLightRenderProxy& light : lights)
@@ -138,24 +129,22 @@ namespace Ion
 		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
 	}
 
-	void OpenGLRenderer::RenderScene(const TShared<Scene>& scene)
+	void OpenGLRenderer::RenderScene(const RSceneProxy& scene)
 	{
 		TRACE_FUNCTION();
 
-		m_CurrentScene = scene;
-
-		for (const RPrimitiveRenderProxy& primitive : scene->GetScenePrimitives())
+		for (const RPrimitiveRenderProxy& primitive : scene.RenderPrimitives)
 		{
 			Draw(primitive, scene);
 		}
 	}
 
-	void OpenGLRenderer::SetCurrentScene(const TShared<Scene>& scene)
+	void OpenGLRenderer::SetCurrentScene(const Scene* scene)
 	{
 		m_CurrentScene = scene;
 	}
 
-	const TShared<Scene>& OpenGLRenderer::GetCurrentScene() const
+	const Scene* OpenGLRenderer::GetCurrentScene() const
 	{
 		return m_CurrentScene;
 	}

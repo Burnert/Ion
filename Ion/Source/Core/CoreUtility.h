@@ -78,6 +78,10 @@ NODISCARD constexpr FORCEINLINE TRemoveRef<T>&& Move(T&& arg) noexcept
 	return static_cast<TRemoveRef<T>&&>(arg);
 }
 
+// Thread:
+
+
+
 // Common:
 
 template<typename T, T... Elements>

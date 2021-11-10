@@ -1,10 +1,13 @@
 #pragma once
 
 #include "Application/Window/GenericWindow.h"
+#include "RenderAPI/OpenGL/Windows/OpenGLWindows.h"
 
 namespace Ion
 {
-	struct SWindowDataBeforeFullScreen
+	struct WindowsOpenGLData;
+
+	struct WindowDataBeforeFullScreen
 	{
 		WINDOWPLACEMENT WindowPlacement;
 		DWORD Style;
@@ -55,16 +58,11 @@ namespace Ion
 		// End of GenericWindow
 
 		HDC GetDeviceContext() const;
-		HGLRC GetRenderingContext() const;
 		FORCEINLINE HWND GetWindowHandle() const { return m_WindowHandle; }
 
 		static bool RegisterWindowClass(HINSTANCE hInstance, LPCWSTR className);
 
-		FORCEINLINE static HGLRC GetCurrentRenderingContext() { return wglGetCurrentContext(); }
-
-	protected:
-		HGLRC CreateRenderingContext(HDC deviceContext, HGLRC parentContext = nullptr);
-		void DeleteRenderingContext();
+		WindowsOpenGLData& GetOpenGLContext() { return m_OpenGLContext; }
 
 	protected:
 		// Protected constructor: Only shared_ptrs of this class can be made.
@@ -77,7 +75,8 @@ namespace Ion
 	private:
 		HWND  m_WindowHandle;
 		HDC   m_DeviceContext;
-		HGLRC m_RenderingContext;
+
+		WindowsOpenGLData m_OpenGLContext;
 
 		WString m_Title;
 		bool m_bVisible = false;
@@ -88,7 +87,7 @@ namespace Ion
 		static bool m_bBothShiftsPressed;
 
 		bool m_bFullScreenMode = false;
-		SWindowDataBeforeFullScreen m_WindowBeforeFullScreen { };
+		WindowDataBeforeFullScreen m_WindowBeforeFullScreen { };
 
 		static MouseButton MouseButtonFromMessage(UINT uMsg, WPARAM wParam);
 	};

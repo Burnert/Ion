@@ -22,8 +22,6 @@ using uint16 = uint16_t;
 using uint32 = uint32_t;
 using uint64 = uint64_t;
 
-
-
 using wchar        = wchar_t;
 
 using String       = std::string;
@@ -66,5 +64,19 @@ using THashMap     = std::unordered_map<T, U, Hasher, std::equal_to<T>, Allocato
 template<typename T, typename Allocator = std::allocator<T>>
 using TArray       = std::vector<T, Allocator>;
 
+// Function
+
 template<typename T>
-using TFunction    = std::function<T>;
+using TFunction = std::function<T>;
+
+// Thread
+
+using Thread = std::thread;
+using Mutex = std::mutex;
+using ConditionVariable = std::condition_variable;
+using LockGuard = std::lock_guard<Mutex>;
+using ScopedLock = std::scoped_lock<Mutex>;
+using UniqueLock = std::unique_lock<Mutex>;
+
+template<typename T>
+using TAtomic = std::atomic<T>;

@@ -25,8 +25,12 @@ namespace Ion
 		// Init
 		TRACE_SESSION_BEGIN("Init");
 		TRACE_RECORD_START();
+
 		HINSTANCE hInstance = GetModuleHandle(nullptr);
 		InitWindows(hInstance);
+
+		Init();
+
 		TRACE_RECORD_STOP();
 		TRACE_SESSION_END();
 
@@ -50,8 +54,6 @@ namespace Ion
 		s_PerformanceFrequency = (float)largeInteger.QuadPart;
 
 		QueryPerformanceCounter(&s_FirstFrameTime);
-
-		Init();
 	}
 
 	void WindowsApplication::PollEvents()

@@ -13,6 +13,7 @@
 
 #include "Ion.h"
 #include "Renderer/Renderer.h"
+#include "RenderAPI/RenderAPI.h"
 #include "UserInterface/ImGui.h"
 
 #include "Core/File/Collada.h"
@@ -138,10 +139,9 @@ public:
 		memset(m_TextureFileNameBuffer, 0, sizeof(m_TextureFileNameBuffer));
 		StringConverter::WCharToChar(textureFileName.c_str(), m_TextureFileNameBuffer);
 
-		FileOld* textureFile = FileOld::Create(textureFileName);
+		File textureFile(textureFileName);
 		Image* textureImage = new Image;
 		ionassertnd(textureImage->Load(textureFile));
-		delete textureFile;
 
 		m_TextureCollada = Texture::Create(textureImage);
 
@@ -182,9 +182,11 @@ public:
 		InitExampleModel(m_MeshSlovak, m_MaterialSlovak, m_TextureSlovak, shader, m_Scene, L"Assets/models/slovak.dae", L"Assets/textures/slovak.png",
 			Math::Translate(Vector3(1.0f, 0.0f, -2.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
 
+		// @TODO: Something is completely glitched with how models render.
+
 		// Kula
-		InitExampleModel(m_MeshStress, m_MaterialStress, m_TextureStress, shader, m_Scene, L"spherestresstest.dae", L"Assets/test.png",
-			Math::Translate(Vector3(-1.0f, 0.0f, -2.0f))* Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
+		//InitExampleModel(m_MeshStress, m_MaterialStress, m_TextureStress, shader, m_Scene, L"spherestresstest.dae", L"Assets/test.png",
+		//	Math::Translate(Vector3(-1.0f, 0.0f, -2.0f))* Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
 
 		FileOld* dirTest = FileOld::Create();
 		dirTest->SetFilename(L"Assets");
@@ -258,11 +260,11 @@ public:
 
 		m_AuxCamera->SetTransform(Math::Translate(m_AuxCameraLocation));
 
-		m_Scene->UpdateRenderData();
+		//m_Scene->UpdateRenderData();
 
 		// ImGui:
 
-		if (m_bDrawImGui)
+		if (m_bDrawImGui && false)
 		{
 			//ImGui::ShowDemoWindow();
 			//ImGui::ShowAboutWindow();
@@ -344,15 +346,15 @@ public:
 							currentDrawMode = m_DrawModes[i];
 							if (currentDrawMode == m_DrawModes[0])
 							{
-								GetRenderer()->SetPolygonDrawMode(EPolygonDrawMode::Fill);
+								RenderCommand::SetPolygonDrawMode(EPolygonDrawMode::Fill);
 							}
 							else if (currentDrawMode == m_DrawModes[1])
 							{
-								GetRenderer()->SetPolygonDrawMode(EPolygonDrawMode::Lines);
+								RenderCommand::SetPolygonDrawMode(EPolygonDrawMode::Lines);
 							}
 							else if (currentDrawMode == m_DrawModes[2])
 							{
-								GetRenderer()->SetPolygonDrawMode(EPolygonDrawMode::Points);
+								RenderCommand::SetPolygonDrawMode(EPolygonDrawMode::Points);
 							}
 						}
 						if (selected)
@@ -364,17 +366,24 @@ public:
 				}
 				if (ImGui::Button("Toggle VSync"))
 				{
-					GetRenderer()->SetVSyncEnabled(!GetRenderer()->IsVSyncEnabled());
+					RenderCommand::SetVSyncEnabled(!Renderer::Get()->IsVSyncEnabledAtomic());
 				}
 			}
 			ImGui::End();
 		}
+
+		//Renderer::Get()->SetVSyncEnabled(true);
+		//RenderCommand::SetVSyncEnabled(true);
+		//Renderer::Get()->SetPolygonDrawMode(EPolygonDrawMode::Lines);
+
+		RenderCommand::Clear(Vector4(0.1f, 0.1f, 0.1f, 1.0f));
+		RenderCommand::RenderScene(m_Scene.get());
 	}
 
 	virtual void OnRender() override
 	{
-		GetRenderer()->Clear(Vector4(0.1f, 0.1f, 0.1f, 1.0f));
-		GetRenderer()->RenderScene(m_Scene);
+		// @TODO: move this shit somewhere idk
+		m_Scene->UpdateRenderData();
 	}
 
 	virtual void OnShutdown() override

@@ -55,11 +55,6 @@ namespace Ion
 
 		static Application* Get();
 
-		FORCEINLINE static const TShared<Renderer>& GetRenderer()
-		{
-			return Get()->m_Renderer;
-		}
-
 		FORCEINLINE static const TShared<GenericWindow>& GetWindow()
 		{
 			return Get()->m_Window;
@@ -68,6 +63,11 @@ namespace Ion
 		FORCEINLINE static const TShared<InputManager>& GetInputManager()
 		{
 			return Get()->m_InputManager;
+		}
+
+		FORCEINLINE static Thread::id GetMainThreadId()
+		{
+			return Get()->m_MainThreadId;
 		}
 
 	protected:
@@ -176,6 +176,26 @@ namespace Ion
 		void SetupWindowTitle();
 		void UpdateWindowTitle(float deltaTime);
 
+		void StartRenderThread();
+
+		void SyncThread(Mutex& syncMutex);
+
+		void SyncWithRenderThread();
+
+		// Render Thread: -----------------------------------------------------
+
+		static void RenderThreadProc();
+		void RenderThread();
+		void InitRenderer();
+		void RenderLoop();
+
+		void SyncWithMainThread();
+
+		ConditionVariable m_WaitForMainThread;
+		Mutex m_RenderMutex;
+
+		// End of Render Thread: ---------------------------------------------
+
 		// @TODO: Move ImGui stuff to some generic Platform class
 
 		void InitImGui() const;
@@ -185,24 +205,34 @@ namespace Ion
 		virtual void ImGuiRenderPlatform(ImDrawData* drawData) const { }
 		virtual void ImGuiShutdownPlatform() const { }
 
-		bool m_bRunning;
+	private:
+		TAtomic<bool> m_bRunning;
 
 		TShared<GenericWindow> m_Window;
 		TShared<InputManager> m_InputManager;
 
-		TShared<Renderer> m_Renderer;
+		// Owned by the Render Thread
+		Renderer* m_Renderer;
 
 		EventDispatcher<ApplicationEventFunctions, Application> m_EventDispatcher;
 		TUnique<EventQueue<EventHandler>> m_EventQueue;
 		TUnique<LayerStack> m_LayerStack;
 
-		std::thread::id m_MainThreadId;
+		Thread::id m_MainThreadId;
+		Thread m_RenderThread;
+
+		ConditionVariable m_WaitForRenderThread;
+		Mutex m_MainMutex;
+
+		Mutex m_SyncMutex;
+		ConditionVariable m_SyncVar;
 
 		WString m_BaseWindowTitle;
 
+		static FilePath s_EnginePath;
+
 		template<typename T>
 		friend void ParseCommandLineArgs(int32 argc, T* argv[]);
-		static FilePath s_EnginePath;
 	};
 
 	Application* CreateApplication();

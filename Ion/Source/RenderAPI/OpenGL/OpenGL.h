@@ -7,6 +7,8 @@ struct ImGuiViewport;
 
 namespace Ion
 {
+	class GenericWindow;
+
 	class ION_API OpenGL
 	{
 		friend class RenderAPI;
@@ -31,6 +33,10 @@ namespace Ion
 	public:
 		static void SetSwapInterval(int32 interval);
 		static int32 GetSwapInterval();
+
+		static void CreateContext(GenericWindow& window);
+		static void MakeContextCurrent(GenericWindow& window);
+		static void UseShareContext(GenericWindow& window);
 
 		// End Implemented per platform
 

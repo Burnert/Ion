@@ -56,10 +56,10 @@ namespace Ion
 		for (IDrawable* drawable : m_DrawableObjects)
 		{
 			RPrimitiveRenderProxy primitiveProxy;
-			primitiveProxy.VertexBuffer = drawable->GetVertexBufferRaw();
-			primitiveProxy.IndexBuffer = drawable->GetIndexBufferRaw();
-			primitiveProxy.Material = drawable->GetMaterialRaw();
-			primitiveProxy.Shader = primitiveProxy.Material->GetShaderRaw();
+			primitiveProxy.VertexBuffer.Ptr = drawable->GetVertexBufferRaw();
+			primitiveProxy.IndexBuffer.Ptr = drawable->GetIndexBufferRaw();
+			primitiveProxy.Material.Ptr = drawable->GetMaterialRaw();
+			primitiveProxy.Shader.Ptr = primitiveProxy.Material.Ptr->GetShaderRaw();
 			primitiveProxy.Transform = drawable->GetTransformMatrix();
 
 			m_RenderPrimitives.push_back(primitiveProxy);
@@ -91,5 +91,15 @@ namespace Ion
 
 		if (m_RenderLights.capacity() > m_RenderLights.size() * 2)
 			m_RenderLights.shrink_to_fit();
+	}
+
+	void Scene::CopySceneData(RSceneProxy& outProxy) const
+	{
+		outProxy.RenderPrimitives = m_RenderPrimitives;
+		outProxy.RenderLights = m_RenderLights;
+		outProxy.RenderDirLight = m_RenderDirLight;
+		outProxy.RenderCamera = m_RenderCamera;
+		outProxy.AmbientLightColor = m_AmbientLightColor;
+		outProxy.bHasDirLight = (bool)m_ActiveDirectionalLight;
 	}
 }

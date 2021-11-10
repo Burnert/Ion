@@ -12,7 +12,7 @@ namespace Ion
 		OpenGLShader();
 		virtual ~OpenGLShader() override;
 
-		virtual void AddShaderSource(EShaderType type, String source) override;
+		virtual void AddShaderSource(EShaderType type, const String& source) override;
 
 		virtual bool Compile() override;
 

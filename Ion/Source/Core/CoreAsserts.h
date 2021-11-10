@@ -115,4 +115,6 @@ if (!!(x) || Ion::AssertionHelper::HandleFailEx(#x, __FUNCSIG__, __FILE__, __LIN
 #define ionassertnd(x, ...) (void)(x)
 #define ionassert(x, ...) ((void)0)
 
+#define _ionexcept_r(x, ...) ionexcept(x, __VA_ARGS__) return 0
+
 #endif

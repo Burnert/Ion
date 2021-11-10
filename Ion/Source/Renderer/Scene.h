@@ -16,13 +16,54 @@ namespace Ion
 	class Material;
 	class Shader;
 
+	struct RVertexBufferProxy
+	{
+		const VertexBuffer* Ptr;
+		uint32 RendererID;
+	};
+
+	struct RIndexBufferProxy
+	{
+		const IndexBuffer* Ptr;
+		uint32 RendererID;
+	};
+
+	struct RMaterialProxy
+	{
+		const Material* Ptr;
+		// Uniforms?
+	};
+
+	struct RShaderProxy
+	{
+		const Shader* Ptr;
+		uint32 RendererID;
+	};
+
 	struct RPrimitiveRenderProxy
 	{
-		const VertexBuffer* VertexBuffer;
-		const IndexBuffer* IndexBuffer;
-		const Material* Material;
-		const Shader* Shader;
+		RVertexBufferProxy VertexBuffer;
+		RIndexBufferProxy IndexBuffer;
+		RMaterialProxy Material;
+		RShaderProxy Shader;
 		Matrix4 Transform;
+	};
+
+	struct RSceneProxy
+	{
+		TArray<RPrimitiveRenderProxy> RenderPrimitives;
+		TArray<RLightRenderProxy> RenderLights;
+		RLightRenderProxy RenderDirLight;
+		RCameraRenderProxy RenderCamera;
+		Vector4 AmbientLightColor;
+		union
+		{
+			uint64 PackedFlags;
+			struct
+			{
+				uint64 bHasDirLight : 1;
+			};
+		};
 	};
 
 	class ION_API Scene
@@ -54,7 +95,10 @@ namespace Ion
 
 		~Scene() { }
 
+		// Render Thread related:
+
 		void UpdateRenderData();
+		void CopySceneData(RSceneProxy& outProxy) const;
 
 		// Render Thread: --------------------------------------------------------------------------
 
@@ -64,6 +108,8 @@ namespace Ion
 		FORCEINLINE const RCameraRenderProxy& GetCameraRenderProxy() const { return m_RenderCamera; }
 		
 		FORCEINLINE bool HasDirectionalLight() const { return m_ActiveDirectionalLight; }
+
+		// End of Render Thread --------------------------------------------------------------------------
 
 	protected:
 		Scene() :
@@ -88,5 +134,7 @@ namespace Ion
 		TArray<RLightRenderProxy> m_RenderLights;
 		RLightRenderProxy m_RenderDirLight;
 		RCameraRenderProxy m_RenderCamera;
+
+		// End of Render Thread --------------------------------------------------------------------------
 	};
 }

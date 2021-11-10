@@ -75,8 +75,10 @@ namespace Ion
 		ionassertnd(FreeLibrary(s_OpenGLModule));
 	}
 
-	HGLRC OpenGLWindows::CreateGLContext(HDC hdc, HGLRC shareContext)
+	HGLRC OpenGLWindows::CreateContext(HDC hdc, HGLRC shareContext)
 	{
+		// @TODO: Change asserts to excepts in all this code
+
 		#pragma warning(disable:6011)
 		#pragma warning(disable:6387)
 
@@ -144,8 +146,12 @@ namespace Ion
 		TRACE_END(3);
 
 		glDebugMessageCallback(OpenGLWindows::DebugCallback, nullptr);
-
 		FilterDebugMessages();
+		
+		if (shareContext)
+		{
+			wglShareLists(shareContext, renderingContext);
+		}
 
 		return renderingContext;
 	}
@@ -164,6 +170,17 @@ namespace Ion
 			return address;
 
 		return ::GetProcAddress(s_OpenGLModule, name);
+	}
+
+	void OpenGLWindows::CreateWindowsGLContext(WindowsOpenGLData& inOutData)
+	{
+		TRACE_FUNCTION();
+
+		// Setup Rendering Context
+		inOutData.RenderingContext = CreateContext(inOutData.DeviceContext, NULL);
+		inOutData.ShareContext = CreateContext(inOutData.DeviceContext, inOutData.RenderingContext);
+
+		MakeContextCurrent(inOutData.DeviceContext, inOutData.RenderingContext);
 	}
 
 	void OpenGLWindows::DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
@@ -297,6 +314,30 @@ namespace Ion
 	int32 OpenGL::GetSwapInterval()
 	{
 		return wglGetSwapIntervalEXT();
+	}
+
+	void OpenGL::CreateContext(GenericWindow& window)
+	{
+		WindowsWindow& windowsWindow = (WindowsWindow&)window;
+		WindowsOpenGLData& context = windowsWindow.GetOpenGLContext();
+
+		OpenGLWindows::CreateWindowsGLContext(context);
+	}
+
+	void OpenGL::MakeContextCurrent(GenericWindow& window)
+	{
+		WindowsWindow& windowsWindow = (WindowsWindow&)window;
+		const WindowsOpenGLData& context = windowsWindow.GetOpenGLContext();
+
+		OpenGLWindows::MakeContextCurrent(context.DeviceContext, context.RenderingContext);
+	}
+
+	void OpenGL::UseShareContext(GenericWindow& window)
+	{
+		WindowsWindow& windowsWindow = (WindowsWindow&)window;
+		const WindowsOpenGLData& context = windowsWindow.GetOpenGLContext();
+
+		OpenGLWindows::MakeContextCurrent(context.DeviceContext, context.ShareContext);
 	}
 
 	// ----------------------------------------------

@@ -1,6 +1,7 @@
 #include "IonPCH.h"
 
 #include "Tracing.h"
+#include "Application/Application.h"
 
 #if ION_ENABLE_TRACING
 
@@ -108,7 +109,8 @@ namespace Ion
 
 		if (s_TraceResults.size() >= ION_TRACE_DUMP_THRESHOLD)
 		{
-			DumpResults();
+			if (std::this_thread::get_id() == Application::GetMainThreadId())
+				DumpResults();
 		}
 	}
 

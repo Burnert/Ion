@@ -18,7 +18,7 @@ namespace Ion
 		CleanupDeleteShaders();
 	}
 
-	void OpenGLShader::AddShaderSource(EShaderType type, String source)
+	void OpenGLShader::AddShaderSource(EShaderType type, const String& source)
 	{
 		TRACE_FUNCTION();
 
@@ -121,7 +121,6 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		glUseProgram(m_ProgramID);
 		int32 location = GetUniformLocation(name);
 		return location != -1;
 	}
@@ -130,7 +129,6 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		glUseProgram(m_ProgramID);
 		int32 location = GetUniformLocation(name);
 		glUniform1fv(location, 1, &value);
 	}
@@ -139,7 +137,6 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		glUseProgram(m_ProgramID);
 		int32 location = GetUniformLocation(name);
 		glUniform2fv(location, 1, (float*)&value);
 	}
@@ -148,7 +145,6 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		glUseProgram(m_ProgramID);
 		int32 location = GetUniformLocation(name);
 		glUniform3fv(location, 1, (float*)&value);
 	}
@@ -157,7 +153,6 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		glUseProgram(m_ProgramID);
 		int32 location = GetUniformLocation(name);
 		glUniform4fv(location, 1, (float*)&value);
 	}
@@ -166,7 +161,6 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		glUseProgram(m_ProgramID);
 		int32 location = GetUniformLocation(name);
 		glUniform1iv(location, 1, &value);
 	}
@@ -175,7 +169,6 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		glUseProgram(m_ProgramID);
 		int32 location = GetUniformLocation(name);
 		glUniform2iv(location, 1, (int32*)&value);
 	}
@@ -184,7 +177,6 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		glUseProgram(m_ProgramID);
 		int32 location = GetUniformLocation(name);
 		glUniform3iv(location, 1, (int32*)&value);
 	}
@@ -193,7 +185,6 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		glUseProgram(m_ProgramID);
 		int32 location = GetUniformLocation(name);
 		glUniform4iv(location, 1, (int32*)&value);
 	}
@@ -202,7 +193,6 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		glUseProgram(m_ProgramID);
 		int32 location = GetUniformLocation(name);
 		glUniform1uiv(location, 1, &value);
 	}
@@ -211,7 +201,6 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		glUseProgram(m_ProgramID);
 		int32 location = GetUniformLocation(name);
 		glUniform2uiv(location, 1, (uint32*)&value);
 	}
@@ -220,7 +209,6 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		glUseProgram(m_ProgramID);
 		int32 location = GetUniformLocation(name);
 		glUniform3uiv(location, 1, (uint32*)&value);
 	}
@@ -229,7 +217,6 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		glUseProgram(m_ProgramID);
 		int32 location = GetUniformLocation(name);
 		glUniform4uiv(location, 1, (uint32*)&value);
 	}
@@ -238,7 +225,6 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		glUseProgram(m_ProgramID);
 		int32 location = GetUniformLocation(name);
 		glUniformMatrix2fv(location, 1, false, (float*)&value);
 	}
@@ -247,7 +233,6 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		glUseProgram(m_ProgramID);
 		int32 location = GetUniformLocation(name);
 		glUniformMatrix2x3fv(location, 1, false, (float*)&value);
 	}
@@ -256,7 +241,6 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		glUseProgram(m_ProgramID);
 		int32 location = GetUniformLocation(name);
 		glUniformMatrix2x4fv(location, 1, false, (float*)&value);
 	}
@@ -265,7 +249,6 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		glUseProgram(m_ProgramID);
 		int32 location = GetUniformLocation(name);
 		glUniformMatrix3fv(location, 1, false, (float*)&value);
 	}
@@ -274,7 +257,6 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		glUseProgram(m_ProgramID);
 		int32 location = GetUniformLocation(name);
 		glUniformMatrix3x2fv(location, 1, false, (float*)&value);
 	}
@@ -283,7 +265,6 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		glUseProgram(m_ProgramID);
 		int32 location = GetUniformLocation(name);
 		glUniformMatrix3x4fv(location, 1, false, (float*)&value);
 	}
@@ -292,7 +273,6 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		glUseProgram(m_ProgramID);
 		int32 location = GetUniformLocation(name);
 		glUniformMatrix4fv(location, 1, false, (float*)&value);
 	}
@@ -301,7 +281,6 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		glUseProgram(m_ProgramID);
 		int32 location = GetUniformLocation(name);
 		glUniformMatrix4x2fv(location, 1, false, (float*)&value);
 	}
@@ -310,7 +289,6 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		glUseProgram(m_ProgramID);
 		int32 location = GetUniformLocation(name);
 		glUniformMatrix4x3fv(location, 1, false, (float*)&value);
 	}
@@ -324,6 +302,8 @@ namespace Ion
 		auto it = m_UniformCache.find(name);
 		if (it == m_UniformCache.end())
 		{
+			glUseProgram(m_ProgramID);
+
 			TRACE_BEGIN(0, "OpenGLShader - Uniform cache miss - glGetUniformLocation");
 			location = glGetUniformLocation(m_ProgramID, name.c_str());
 			if (location != -1) // -1 means the uniform hasn't been found

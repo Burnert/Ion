@@ -12,6 +12,13 @@ namespace Ion
 		HGLRC RenderingContext;
 	};
 
+	struct WindowsOpenGLData
+	{
+		HDC DeviceContext;
+		HGLRC RenderingContext;
+		HGLRC ShareContext;
+	};
+
 	class ION_API OpenGLWindows : public OpenGL
 	{
 		friend class WindowsApplication;
@@ -21,10 +28,11 @@ namespace Ion
 		/* Called by the Application class */
 		static void Init();
 
-		static HGLRC CreateGLContext(HDC hdc, HGLRC shareContext = nullptr);
 		static void MakeContextCurrent(HDC hdc, HGLRC hglrc);
 
 		FORCEINLINE static HGLRC GetShareContext() { return s_hShareContext; }
+
+		static void CreateWindowsGLContext(WindowsOpenGLData& inOutData);
 
 		static void APIENTRY DebugCallback(
 			GLenum source,
@@ -43,6 +51,9 @@ namespace Ion
 		static void FreeLibraries();
 
 		static void* GetProcAddress(const char* name);
+
+	private:
+		static HGLRC CreateContext(HDC hdc, HGLRC shareContext = nullptr);
 
 	private:
 		static HMODULE s_OpenGLModule;

@@ -31,6 +31,7 @@ namespace Ion
 		m_EventQueue(MakeUnique<EventQueue<EventHandler>>()),
 		m_LayerStack(MakeUnique<LayerStack>()),
 		m_MainThreadId(std::this_thread::get_id()),
+		m_RenderThread(),
 		m_bRunning(true)
 	{
 		Logger::Init();
@@ -50,23 +51,25 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		m_InputManager = InputManager::Create();
+		m_MainThreadId = std::this_thread::get_id();
 
-		RenderAPI::Init(ERenderAPI::OpenGL);
+		m_InputManager = InputManager::Create();
 
 		// Create a platform specific window.
 		m_Window = GenericWindow::Create();
 		// Current thread will render graphics in this window.
 		m_Window->Initialize();
 
-		m_Renderer = Renderer::Create();
-		m_Renderer->Init();
-		m_Renderer->SetVSyncEnabled(false);
-
-		InitImGui();
-
 		m_LayerStack->PushLayer<GameLayer>("GameLayer");
 		m_LayerStack->PushOverlayLayer<ImGuiLayer>("ImGui");
+
+		StartRenderThread();
+
+		// Wait for the renderer to initialize on its own thread
+		UniqueLock lock(m_MainMutex);
+		m_WaitForRenderThread.wait(lock);
+
+		RenderAPI::UseShareContext(*m_Window);
 
 		SetupWindowTitle();
 		m_Window->Show();
@@ -75,6 +78,29 @@ namespace Ion
 		// Call client overriden Init function
 		OnInit();
 		TRACE_END(0);
+	}
+
+	void Application::Run()
+	{
+		TRACE_FUNCTION();
+
+		bool bFirstFrame = true;
+		// Application loop
+		while (m_bRunning)
+		{
+			SyncWithRenderThread();
+
+			PollEvents();
+
+			float deltaTime = CalculateFrameTime();
+			Update(deltaTime);
+
+			m_EventQueue->ProcessEvents();
+
+			SyncWithRenderThread();
+		}
+
+		// @TODO: Crash when exiting (thread related)
 	}
 
 	void Application::Shutdown()
@@ -102,8 +128,8 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		ImGuiNewFramePlatform();
-		ImGui::NewFrame();
+		//ImGuiNewFramePlatform();
+		//ImGui::NewFrame();
 
 		UpdateWindowTitle(deltaTime);
 		
@@ -121,13 +147,13 @@ namespace Ion
 		m_LayerStack->OnRender();
 
 		TRACE_BEGIN(0, "Application - Client::OnRender");
-		OnRender();
+		//OnRender();
 		TRACE_END(0);
 
-		ImGui::Render();
-		ImGuiRenderPlatform(ImGui::GetDrawData());
+		//ImGui::Render();
+		//ImGuiRenderPlatform(ImGui::GetDrawData());
 
-		m_Window->SwapBuffers();
+		// @TODO: Fix ImGui ASAP
 	}
 
 	void Application::SetupWindowTitle()
@@ -143,6 +169,92 @@ namespace Ion
 		swprintf_s(fps, L" (%.2f FPS)", 1.0f / deltaTime);
 		m_Window->SetTitle(m_BaseWindowTitle + fps);
 	}
+
+	void Application::StartRenderThread()
+	{
+		ionassert(!m_RenderThread.joinable(), "Render thread is already running.");
+		m_RenderThread = Thread(RenderThreadProc);
+	}
+
+	void Application::SyncThread(Mutex& syncMutex)
+	{
+		// Not sure if this is a most optimal solution,
+		// but I couldn't think of anything else.
+		// Works for only 2 threads.
+
+		if (m_SyncMutex.try_lock())
+		{
+			UniqueLock lock(syncMutex);
+			m_SyncVar.wait(lock);
+			m_SyncMutex.unlock();
+		}
+		else
+		{
+			m_SyncVar.notify_one();
+		}
+	}
+
+	void Application::SyncWithRenderThread()
+	{
+		SyncThread(m_MainMutex);
+	}
+
+	// Render Thread: -------------------------------------------
+
+	void Application::RenderThreadProc()
+	{
+		// @TODO: Move to platform code
+		SetThreadDescription(GetCurrentThread(), L"RenderThread");
+
+		Application* application = Get();
+
+		application->RenderThread();
+	}
+
+	void Application::RenderThread()
+	{
+		RenderAPI::Init(ERenderAPI::OpenGL);
+		RenderAPI::CreateContext(*m_Window);
+		InitRenderer();
+
+		InitImGui();
+
+		m_WaitForRenderThread.notify_one();
+
+		RenderLoop();
+	}
+
+	void Application::InitRenderer()
+	{
+		m_Renderer = Renderer::Create();
+		m_Renderer->Init();
+		m_Renderer->UpdateAtomicVariables();
+	}
+
+	void Application::RenderLoop()
+	{
+		while (m_bRunning)
+		{
+			SyncWithMainThread();
+
+			Render();
+			m_Renderer->RenderFrame();
+
+			SyncWithMainThread();
+
+			m_Window->SwapBuffers();
+
+			// @TODO: quick fix, this is supposed to copy data to the render thread
+			OnRender();
+		}
+	}
+
+	void Application::SyncWithMainThread()
+	{
+		SyncThread(m_RenderMutex);
+	}
+
+	// End of Render Thread: ------------------------------------
 
 	/*
 	void Application::DispatchEvent(const Event& event)
@@ -181,7 +293,7 @@ namespace Ion
 		int32 width = (int32)event.GetWidth();
 		int32 height = (int32)event.GetHeight();
 
-		m_Renderer->SetViewportDimensions(ViewportDimensions { 0, 0, width, height });
+		RenderCommand::SetViewportDimensions(ViewportDimensions { 0, 0, width, height });
 	}
 
 	void Application::OnKeyPressedEvent_Internal(const KeyPressedEvent& event)
@@ -213,23 +325,6 @@ namespace Ion
 	void Application::OnKeyRepeatedEvent_Internal(const KeyRepeatedEvent& event)
 	{
 
-	}
-
-	void Application::Run()
-	{
-		TRACE_FUNCTION();
-
-		// Application loop
-		while (m_bRunning)
-		{
-			PollEvents();
-
-			float deltaTime = CalculateFrameTime();
-			Update(deltaTime);
-			Render();
-
-			m_EventQueue->ProcessEvents();
-		}
 	}
 
 	void Application::InitImGui() const

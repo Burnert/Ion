@@ -5,6 +5,9 @@
 #include <memory>
 #include <functional>
 #include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <atomic>
 #include <utility>
 #include <chrono>
 #include <algorithm>

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "RenderCommand.h"
+
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "Shader.h"
@@ -29,10 +31,35 @@ namespace Ion
 		Points,
 	};
 
+	class ION_API RenderCommandQueue
+	{
+	public:
+		void PushCommand(RenderCommand& command);
+		void PushCommand(RenderCommandEx& command);
+
+		void Flush();
+
+	private:
+		void ExecuteCommands();
+		void Execute(RenderCommand& command);
+		void FreeCommand(RenderCommand& command);
+
+	private:
+		TArray<RenderCommand> m_RenderCommands;
+		TArray<RenderCommandEx> m_RenderCommandsEx;
+
+		Mutex m_QueueMutex;
+	};
+
 	class ION_API Renderer
 	{
 	public:
-		static TShared<Renderer> Create();
+		static Renderer* Create();
+
+		static Renderer* Get()
+		{
+			return s_Instance;
+		}
 
 		virtual ~Renderer() { };
 
@@ -41,12 +68,12 @@ namespace Ion
 		virtual void Clear() const = 0;
 		virtual void Clear(const Vector4& color) const = 0;
 
-		virtual void Draw(const RPrimitiveRenderProxy& primitive, const TShared<Scene>& targetScene = nullptr) const = 0;
+		virtual void Draw(const RPrimitiveRenderProxy& primitive, const RSceneProxy& targetScene) const = 0;
 
-		virtual void SetCurrentScene(const TShared<Scene>& scene) = 0;
-		virtual const TShared<Scene>& GetCurrentScene() const = 0;
+		virtual void SetCurrentScene(const Scene* scene) = 0;
+		virtual const Scene* GetCurrentScene() const = 0;
 
-		virtual void RenderScene(const TShared<Scene>& scene) = 0;
+		virtual void RenderScene(const RSceneProxy& scene) = 0;
 
 		virtual void SetVSyncEnabled(bool bEnabled) const = 0;
 		virtual bool IsVSyncEnabled() const = 0;
@@ -57,7 +84,40 @@ namespace Ion
 		virtual void SetPolygonDrawMode(EPolygonDrawMode drawMode) const = 0;
 		virtual EPolygonDrawMode GetPolygonDrawMode() const = 0;
 
+		bool IsVSyncEnabledAtomic() const
+		{
+			return m_bVSyncEnabled;
+		}
+		ViewportDimensions GetViewportDimensionsAtomic() const
+		{
+			return m_ViewportDimensions;
+		}
+		EPolygonDrawMode GetPolygonDrawModeAtomic() const
+		{
+			return m_PolygonDrawMode;
+		}
+
+		void RenderFrame();
+
 	protected:
 		Renderer() { }
+
+		friend struct RenderCommand;
+		friend class RenderCommandQueue;
+
+		static void PushRenderCommand(RenderCommand& command);
+		static void PushRenderCommand(RenderCommandEx& command);
+
+		friend class Application;
+		void UpdateAtomicVariables();
+
+	private:
+		static Renderer* s_Instance;
+
+		RenderCommandQueue m_RenderCommandQueue;
+
+		TAtomic<bool> m_bVSyncEnabled;
+		TAtomic<ViewportDimensions> m_ViewportDimensions;
+		TAtomic<EPolygonDrawMode> m_PolygonDrawMode;
 	};
 }

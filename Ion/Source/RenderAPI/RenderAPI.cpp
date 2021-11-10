@@ -37,6 +37,34 @@ namespace Ion
 		}
 	}
 
+	// OpenGL: --------------------------------------------------
+
+	void RenderAPI::CreateContext(GenericWindow& window)
+	{
+		if (m_CurrentRenderAPI == ERenderAPI::OpenGL)
+		{
+			OpenGL::CreateContext(window);
+		}
+	}
+
+	void RenderAPI::MakeContextCurrent(GenericWindow& window)
+	{
+		if (m_CurrentRenderAPI == ERenderAPI::OpenGL)
+		{
+			OpenGL::MakeContextCurrent(window);
+		}
+	}
+
+	void RenderAPI::UseShareContext(GenericWindow& window)
+	{
+		if (m_CurrentRenderAPI == ERenderAPI::OpenGL)
+		{
+			OpenGL::UseShareContext(window);
+		}
+	}
+
+	// ImGui: --------------------------------------------------
+
 	void RenderAPI::InitImGuiBackend()
 	{
 		TRACE_FUNCTION();

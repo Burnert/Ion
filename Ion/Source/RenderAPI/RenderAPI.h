@@ -4,6 +4,8 @@ struct ImDrawData;
 
 namespace Ion
 {
+	class GenericWindow;
+
 	// @TODO: Implement other Render APIs in the future
 	enum class ERenderAPI
 	{
@@ -22,6 +24,14 @@ namespace Ion
 		static FORCEINLINE ERenderAPI GetCurrent() { return m_CurrentRenderAPI; }
 
 		static const char* GetCurrentDisplayName();
+
+		// OpenGL: --------------------------------------------------
+
+		static void CreateContext(GenericWindow& window);
+		static void MakeContextCurrent(GenericWindow& window);
+		static void UseShareContext(GenericWindow& window);
+
+		// ImGui: --------------------------------------------------
 
 		static void InitImGuiBackend();
 		static void ImGuiNewFrame();

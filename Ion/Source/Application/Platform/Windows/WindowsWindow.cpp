@@ -11,6 +11,7 @@
 
 #include "Core/Platform/PlatformCore.h"
 
+#include "RenderAPI/RenderAPI.h"
 #include "RenderAPI/OpenGL/Windows/OpenGLWindows.h"
 
 #include "UserInterface/ImGui.h"
@@ -60,7 +61,7 @@ namespace Ion
 	WindowsWindow::WindowsWindow() :
 		m_WindowHandle(NULL),
 		m_DeviceContext(NULL),
-		m_RenderingContext(NULL)
+		m_OpenGLContext({ })
 	{ }
 
 	void WindowsWindow::PollEvents_Application()
@@ -554,7 +555,7 @@ namespace Ion
 
 	WindowsWindow::~WindowsWindow() 
 	{
-		DeleteRenderingContext();
+		//DeleteRenderingContext();
 	}
 
 	bool WindowsWindow::RegisterWindowClass(HINSTANCE hInstance, LPCWSTR className)
@@ -658,7 +659,9 @@ namespace Ion
 		SetProp(m_WindowHandle, L"WinObj", this);
 
 		m_DeviceContext = GetDC(m_WindowHandle);
-		CreateRenderingContext(m_DeviceContext);
+
+		// Set OpenGL data for later initialization.
+		m_OpenGLContext.DeviceContext = m_DeviceContext;
 
 		// Raw Input
 
@@ -784,7 +787,7 @@ namespace Ion
 
 			DWORD style = GetWindowLong(m_WindowHandle, GWL_STYLE);
 
-			m_WindowBeforeFullScreen = SWindowDataBeforeFullScreen {
+			m_WindowBeforeFullScreen = WindowDataBeforeFullScreen {
 				windowPlacement,
 				style,
 				bMaximized,
@@ -891,35 +894,9 @@ namespace Ion
 		}
 	}
 
-	HGLRC WindowsWindow::CreateRenderingContext(HDC deviceContext, HGLRC parentContext)
-	{
-		TRACE_FUNCTION();
-
-		if (m_WindowHandle == NULL)
-		{
-			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "create OpenGL rendering context");
-			return NULL;
-		}
-
-		// Setup Rendering Context
-		m_RenderingContext = OpenGLWindows::CreateGLContext(deviceContext, parentContext);
-		return m_RenderingContext;
-	}
-
-	void WindowsWindow::DeleteRenderingContext()
-	{
-		if (m_RenderingContext != NULL)
-		{
-			wglDeleteContext(m_RenderingContext);
-		}
-	}
-
 	void WindowsWindow::MakeRenderingContextCurrent()
 	{
-		// @TODO: Move this whole "MakeContextCurrent" thing into RenderAPI specific files
-		// It shouldn't be tied to the window at all
-
-		OpenGLWindows::MakeContextCurrent(m_DeviceContext, m_RenderingContext);
+		RenderAPI::MakeContextCurrent(*this);
 	}
 
 	void WindowsWindow::SwapBuffers()
@@ -945,17 +922,6 @@ namespace Ion
 		}
 
 		return m_DeviceContext;
-	}
-
-	HGLRC WindowsWindow::GetRenderingContext() const
-	{
-		if (m_WindowHandle == NULL)
-		{
-			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "get the Rendering Context");
-			return NULL;
-		}
-
-		return m_RenderingContext;
 	}
 
 	bool WindowsWindow::s_bRegistered = false;

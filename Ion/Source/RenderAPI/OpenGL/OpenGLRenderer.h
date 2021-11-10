@@ -16,12 +16,12 @@ namespace Ion
 		virtual void Clear() const override;
 		virtual void Clear(const Vector4& color) const override;
 
-		virtual void Draw(const RPrimitiveRenderProxy& primitive, const TShared<Scene>& targetScene = nullptr) const override;
+		virtual void Draw(const RPrimitiveRenderProxy& primitive, const RSceneProxy& targetScene) const override;
 
-		virtual void RenderScene(const TShared<Scene>& scene) override;
+		virtual void RenderScene(const RSceneProxy& scene) override;
 
-		virtual void SetCurrentScene(const TShared<Scene>& scene) override;
-		virtual const TShared<Scene>& GetCurrentScene() const override;
+		virtual void SetCurrentScene(const Scene* scene) override;
+		virtual const Scene* GetCurrentScene() const override;
 
 		virtual void SetVSyncEnabled(bool bEnabled) const override;
 		virtual bool IsVSyncEnabled() const override;
@@ -54,6 +54,6 @@ namespace Ion
 		}
 
 	private:
-		TShared<Scene> m_CurrentScene;
+		const Scene* m_CurrentScene;
 	};
 }
