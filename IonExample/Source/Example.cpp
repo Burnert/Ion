@@ -13,7 +13,6 @@
 
 #include "Ion.h"
 #include "Renderer/Renderer.h"
-#include "RenderAPI/RenderAPI.h"
 #include "UserInterface/ImGui.h"
 
 #include "Core/File/Collada.h"
@@ -67,6 +66,7 @@ public:
 	{
 #pragma warning(disable:6001)
 
+		/*
 		String vertSrc;
 		String fragSrc;
 
@@ -83,6 +83,8 @@ public:
 
 		bResult = shader->Compile();
 		ionassert(bResult);
+
+		*/
 
 		m_Camera = Camera::Create();
 		m_Camera->SetTransform(Math::Translate(Vector3(0.0f, 0.0f, 2.0f)));
@@ -123,6 +125,8 @@ public:
 
 		// @TODO: Create an asset manager for textures, meshes and other files that can be imported
 
+		/*
+
 		String collada;
 		File::ReadToString(L"char.dae", collada);
 
@@ -139,9 +143,10 @@ public:
 		memset(m_TextureFileNameBuffer, 0, sizeof(m_TextureFileNameBuffer));
 		StringConverter::WCharToChar(textureFileName.c_str(), m_TextureFileNameBuffer);
 
-		File textureFile(textureFileName);
+		FileOld* textureFile = FileOld::Create(textureFileName);
 		Image* textureImage = new Image;
 		ionassertnd(textureImage->Load(textureFile));
+		delete textureFile;
 
 		m_TextureCollada = Texture::Create(textureImage);
 
@@ -162,6 +167,10 @@ public:
 
 		m_Scene->AddDrawableObject(m_MeshCollada.get());
 
+		*/
+
+		/*
+
 		// 4Pak
 		InitExampleModel(m_Mesh4Pak, m_Material4Pak, m_Texture4Pak, shader, m_Scene, L"Assets/models/4pak.dae", L"Assets/textures/4pak.png",
 			Math::Translate(Vector3(2.0f, 1.0f, 0.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
@@ -181,6 +190,7 @@ public:
 		// Slovak
 		InitExampleModel(m_MeshSlovak, m_MaterialSlovak, m_TextureSlovak, shader, m_Scene, L"Assets/models/slovak.dae", L"Assets/textures/slovak.png",
 			Math::Translate(Vector3(1.0f, 0.0f, -2.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
+		*/
 
 		// @TODO: Something is completely glitched with how models render.
 
@@ -200,8 +210,8 @@ public:
 
 	virtual void OnUpdate(float deltaTime) override
 	{
-		TShared<Material> meshMaterial = m_MeshCollada->GetMaterial().lock();
-		TShared<Shader> meshShader = meshMaterial->GetShader();
+		//TShared<Material> meshMaterial = m_MeshCollada->GetMaterial().lock();
+		//TShared<Shader> meshShader = meshMaterial->GetShader();
 
 		static float c_Angle = 0.0f;
 		static Vector4 c_Tint(1.0f, 0.0f, 1.0f, 1.0f);
@@ -253,14 +263,12 @@ public:
 
 		m_MeshRotation.y = std::fmodf(m_MeshRotation.y + deltaTime * 90, 360);
 		m_MeshTransform = { m_MeshLocation, m_MeshRotation, m_MeshScale };
-		m_MeshCollada->SetTransform(m_MeshTransform.GetMatrix());
+		//m_MeshCollada->SetTransform(m_MeshTransform.GetMatrix());
 
 		c_Angle += deltaTime;
 		c_Tint.y = (((c_Tint.y + deltaTime) >= 2.0f) ? 0.0f : (c_Tint.y + deltaTime));
 
 		m_AuxCamera->SetTransform(Math::Translate(m_AuxCameraLocation));
-
-		//m_Scene->UpdateRenderData();
 
 		// ImGui:
 
@@ -346,15 +354,15 @@ public:
 							currentDrawMode = m_DrawModes[i];
 							if (currentDrawMode == m_DrawModes[0])
 							{
-								RenderCommand::SetPolygonDrawMode(EPolygonDrawMode::Fill);
+								Renderer::Get()->SetPolygonDrawMode(EPolygonDrawMode::Fill);
 							}
 							else if (currentDrawMode == m_DrawModes[1])
 							{
-								RenderCommand::SetPolygonDrawMode(EPolygonDrawMode::Lines);
+								Renderer::Get()->SetPolygonDrawMode(EPolygonDrawMode::Lines);
 							}
 							else if (currentDrawMode == m_DrawModes[2])
 							{
-								RenderCommand::SetPolygonDrawMode(EPolygonDrawMode::Points);
+								Renderer::Get()->SetPolygonDrawMode(EPolygonDrawMode::Points);
 							}
 						}
 						if (selected)
@@ -366,22 +374,66 @@ public:
 				}
 				if (ImGui::Button("Toggle VSync"))
 				{
-					RenderCommand::SetVSyncEnabled(!Renderer::Get()->IsVSyncEnabledAtomic());
+					Renderer::Get()->SetVSyncEnabled(!Renderer::Get()->IsVSyncEnabled());
 				}
 			}
 			ImGui::End();
 		}
-
-		//Renderer::Get()->SetVSyncEnabled(true);
-		//RenderCommand::SetVSyncEnabled(true);
-		//Renderer::Get()->SetPolygonDrawMode(EPolygonDrawMode::Lines);
-
-		RenderCommand::Clear(Vector4(0.1f, 0.1f, 0.1f, 1.0f));
-		RenderCommand::RenderScene(m_Scene.get());
 	}
 
 	virtual void OnRender() override
 	{
+		RenderCommand::Clear(Vector4(0.1f, 0.1f, 0.1f, 1.0f));
+		RenderCommand::RenderScene(m_Scene.get());
+
+		if (!m_Shader)
+		{
+			String vertSrc;
+			String fragSrc;
+
+			FilePath shadersPath = GetCheckedEnginePath() + L"Shaders";
+
+			File::ReadToString(shadersPath + L"Basic.vert", vertSrc);
+			File::ReadToString(shadersPath + L"Basic.frag", fragSrc);
+
+			m_Shader = Shader::Create();
+			m_Shader->AddShaderSource(EShaderType::Vertex, vertSrc);
+			m_Shader->AddShaderSource(EShaderType::Pixel, fragSrc);
+
+			bool bResult = m_Shader->Compile();
+			ionassert(bResult);
+		}
+
+		// 4Pak
+		if (!m_Mesh4Pak)
+			InitExampleModel(m_Mesh4Pak, m_Material4Pak, m_Texture4Pak, m_Shader, m_Scene, L"Assets/models/4pak.dae", L"Assets/textures/4pak.png",
+				Math::Translate(Vector3(2.0f, 1.0f, 0.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
+
+		// Piwsko
+		if (!m_MaterialPiwsko)
+			InitExampleModel(m_MeshPiwsko, m_MaterialPiwsko, m_TexturePiwsko, m_Shader, m_Scene, L"Assets/models/piwsko.dae", L"Assets/textures/piwsko.png",
+				Math::Translate(Vector3(-2.0f, 1.0f, 0.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
+
+		// Oscypek
+		if (!m_MaterialOscypek)
+			InitExampleModel(m_MeshOscypek, m_MaterialOscypek, m_TextureOscypek, m_Shader, m_Scene, L"Assets/models/oscypek.dae", L"Assets/textures/oscypek.png",
+				Math::Translate(Vector3(-1.0f, 1.0f, 1.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
+
+		// Ciupaga
+		if (!m_MaterialCiupaga)
+			InitExampleModel(m_MeshCiupaga, m_MaterialCiupaga, m_TextureCiupaga, m_Shader, m_Scene, L"Assets/models/ciupaga.dae", L"Assets/textures/ciupaga.png",
+				Math::Translate(Vector3(1.0f, 1.0f, 1.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 90.0f, 0.0f)))));
+
+		// Slovak
+		if (!m_MaterialSlovak)
+			InitExampleModel(m_MeshSlovak, m_MaterialSlovak, m_TextureSlovak, m_Shader, m_Scene, L"Assets/models/slovak.dae", L"Assets/textures/slovak.png",
+				Math::Translate(Vector3(1.0f, 0.0f, -2.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
+
+		// Kula
+		if (!m_MeshStress)
+			InitExampleModel(m_MeshStress, m_MaterialStress, m_TextureStress, m_Shader, m_Scene, L"spherestresstest.dae", L"Assets/test.png",
+				Math::Translate(Vector3(-1.0f, 0.0f, -2.0f))* Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
+
 		// @TODO: move this shit somewhere idk
 		m_Scene->UpdateRenderData();
 	}
@@ -453,6 +505,7 @@ private:
 	TShared<Texture> m_TextureCollada;
 	TShared<DirectionalLight> m_DirectionalLight;
 	TShared<Scene> m_Scene;
+	TShared<Shader> m_Shader;
 
 	TShared<Mesh> m_Mesh4Pak;
 	TShared<Material> m_Material4Pak;
