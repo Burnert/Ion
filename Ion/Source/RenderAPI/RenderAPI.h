@@ -9,17 +9,22 @@ namespace Ion
 	{
 		None,
 		OpenGL,
-		DirectX,
+		DX11,
 		DX12,
 		Vulkan,
 	};
 
+	class GenericWindow;
+
 	class ION_API RenderAPI
 	{
 	public:
-		static bool Init(ERenderAPI api);
+		static bool Init(ERenderAPI api, GenericWindow* window);
+		static void Shutdown();
 
-		static FORCEINLINE ERenderAPI GetCurrent() { return m_CurrentRenderAPI; }
+		static void EndFrame(GenericWindow& window);
+
+		static FORCEINLINE ERenderAPI GetCurrent() { return s_CurrentRenderAPI; }
 
 		static const char* GetCurrentDisplayName();
 
@@ -32,6 +37,6 @@ namespace Ion
 		static void SetCurrent(ERenderAPI api);
 
 	private:
-		static ERenderAPI m_CurrentRenderAPI;
+		static ERenderAPI s_CurrentRenderAPI;
 	};
 }

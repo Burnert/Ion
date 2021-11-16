@@ -46,7 +46,7 @@ namespace Ion
 
 	TShared<GenericWindow> GenericWindow::Create()
 	{
-		return Ion::WindowsWindow::Create();
+		return WindowsWindow::Create();
 	}
 
 	// Windows Window
@@ -658,7 +658,8 @@ namespace Ion
 		SetProp(m_WindowHandle, L"WinObj", this);
 
 		m_DeviceContext = GetDC(m_WindowHandle);
-		CreateRenderingContext(m_DeviceContext);
+		// @TODO: Move this
+		//CreateRenderingContext(m_DeviceContext);
 
 		// Raw Input
 

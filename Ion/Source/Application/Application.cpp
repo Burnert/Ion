@@ -16,6 +16,9 @@
 
 #include "UserInterface/ImGui.h"
 
+#include "RenderAPI/OpenGL/Windows/OpenGLWindows.h"
+#include "Platform/Windows/WindowsWindow.h"
+
 namespace Ion
 {
 	Application* Application::Get()
@@ -52,12 +55,12 @@ namespace Ion
 
 		m_InputManager = InputManager::Create();
 
-		RenderAPI::Init(ERenderAPI::OpenGL);
-
 		// Create a platform specific window.
 		m_Window = GenericWindow::Create();
-		// Current thread will render graphics in this window.
 		m_Window->Initialize();
+
+		// Current thread will render graphics in this window.
+		RenderAPI::Init(ERenderAPI::DX11, m_Window.get());
 
 		m_Renderer = Renderer::Create();
 		m_Renderer->Init();
@@ -87,6 +90,8 @@ namespace Ion
 		// Call client overriden Shutdown function
 		OnShutdown();
 		TRACE_END(0);
+
+		RenderAPI::Shutdown();
 	}
 
 	void Application::Exit()
@@ -127,7 +132,7 @@ namespace Ion
 		ImGui::Render();
 		ImGuiRenderPlatform(ImGui::GetDrawData());
 
-		m_Window->SwapBuffers();
+		RenderAPI::EndFrame(*m_Window);
 	}
 
 	void Application::SetupWindowTitle()
@@ -242,7 +247,7 @@ namespace Ion
 		ImGuiIO& imGuiIO = ImGui::GetIO();
 		imGuiIO.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 		imGuiIO.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-		if (RenderAPI::GetCurrent() == ERenderAPI::DirectX
+		if (RenderAPI::GetCurrent() == ERenderAPI::DX11
 #if defined PLATFORM_SUPPORTS_OPENGL && PLATFORM_ENABLE_IMGUI_VIEWPORTS_OPENGL
 			|| RenderAPI::GetCurrent() == ERenderAPI::OpenGL
 #endif

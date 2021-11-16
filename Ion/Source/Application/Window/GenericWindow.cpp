@@ -9,7 +9,8 @@
 namespace Ion
 {
 	GenericWindow::GenericWindow() :
-		m_bCursorLocked(false)
+		m_bCursorLocked(false),
+		m_bCursorShown(true)
 	{ }
 
 	bool GenericWindow::Initialize()

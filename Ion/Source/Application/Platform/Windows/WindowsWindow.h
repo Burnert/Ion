@@ -91,5 +91,7 @@ namespace Ion
 		SWindowDataBeforeFullScreen m_WindowBeforeFullScreen { };
 
 		static MouseButton MouseButtonFromMessage(UINT uMsg, WPARAM wParam);
+
+		friend class OpenGLWindows;
 	};
 }

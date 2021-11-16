@@ -7,12 +7,16 @@ struct ImGuiViewport;
 
 namespace Ion
 {
+	class GenericWindow;
+
 	class ION_API OpenGL
 	{
 		friend class RenderAPI;
 	public:
 		/* Called by the Application class */
-		static void Init();
+		static void Init(GenericWindow* window);
+
+		static void EndFrame(GenericWindow& window);
 
 		static FORCEINLINE const char* GetVendor()           { return (const char*)glGetString(GL_VENDOR); }
 		static FORCEINLINE const char* GetRendererName()     { return (const char*)glGetString(GL_RENDERER); }

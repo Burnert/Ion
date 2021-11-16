@@ -1,6 +1,7 @@
 #include "IonPCH.h"
 
 #include "OpenGLWindows.h"
+#include "Core/Platform/Windows/WindowsUtility.h"
 #include "Application/Platform/Windows/WindowsApplication.h"
 #include "Application/Platform/Windows/WindowsWindow.h"
 
@@ -29,10 +30,8 @@ namespace Ion
 		ionassertnd(gladLoadWGLLoader((GLADloadproc)GetProcAddress, hdc), "Could not load WGL extensions!");
 	}
 
-	void OpenGLWindows::Init()
+	void OpenGLWindows::InitOpenGL()
 	{
-		TRACE_FUNCTION();
-
 		ionassert(!s_GLInitialized);
 
 		InitLibraries();
@@ -59,7 +58,21 @@ namespace Ion
 
 		FreeLibraries();
 
+		wglMakeCurrent(0, 0);
+
 		s_GLInitialized = true;
+	}
+
+	void OpenGLWindows::Init(GenericWindow* window)
+	{
+		TRACE_FUNCTION();
+
+		InitOpenGL();
+
+		WindowsWindow* windowsWindow = (WindowsWindow*)window;
+		windowsWindow->m_RenderingContext = CreateGLContext(windowsWindow->m_DeviceContext);
+
+		MakeContextCurrent(windowsWindow->m_DeviceContext, windowsWindow->m_RenderingContext);
 	}
 
 	void OpenGLWindows::InitLibraries()

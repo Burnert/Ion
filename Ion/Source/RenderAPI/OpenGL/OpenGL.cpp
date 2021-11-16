@@ -8,15 +8,22 @@
 
 #include "UserInterface/ImGui.h"
 
+#include "Application/Window/GenericWindow.h"
+
 namespace Ion
 {
-	void OpenGL::Init()
+	void OpenGL::Init(GenericWindow* window)
 	{
 #ifdef ION_PLATFORM_WINDOWS
-		OpenGLWindows::Init();
+		OpenGLWindows::Init(window);
 #else
 		LOG_CRITICAL("OpenGL implementation is not defined on this platform!");
 #endif
+	}
+
+	void OpenGL::EndFrame(GenericWindow& window)
+	{
+		window.SwapBuffers();
 	}
 
 	char OpenGL::s_DisplayName[120] = "OpenGL ";

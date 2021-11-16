@@ -4,6 +4,8 @@
 
 #include "glad/glad.h"
 
+#pragma comment(lib, "opengl32.lib")
+
 namespace Ion
 {
 	struct ImGuiViewportDataOpenGLWin32
@@ -19,7 +21,7 @@ namespace Ion
 
 	public:
 		/* Called by the Application class */
-		static void Init();
+		static void Init(GenericWindow* window);
 
 		static HGLRC CreateGLContext(HDC hdc, HGLRC shareContext = nullptr);
 		static void MakeContextCurrent(HDC hdc, HGLRC hglrc);
@@ -36,6 +38,8 @@ namespace Ion
 			const void* userParam);
 
 	protected:
+		static void InitOpenGL();
+
 		static void InitGLLoader();
 		static void InitWGLLoader(HDC hdc);
 
