@@ -36,6 +36,7 @@ namespace Ion
 	};
 
 	class GenericWindow;
+	struct ViewportDimensions;
 
 	class ION_API DX11
 	{
@@ -47,6 +48,8 @@ namespace Ion
 
 		static void BeginFrame();
 		static void EndFrame();
+
+		static void ChangeDisplayMode(EDisplayMode mode, uint32 width, uint32 height);
 
 		static FORCEINLINE const char* GetVendor() { return 0; }
 		static FORCEINLINE const char* GetRendererName() { return 0; }
@@ -128,6 +131,7 @@ namespace Ion
 		static void SetDisplayVersion(const char* version);
 
 		static void CreateRenderTarget();
+		static void ResizeBuffers(uint32 width, uint32 height);
 
 	private:
 		static void InitImGuiBackend();

@@ -15,6 +15,7 @@ namespace Ion
 	};
 
 	class GenericWindow;
+	struct ViewportDimensions;
 
 	class ION_API RenderAPI
 	{
@@ -24,6 +25,8 @@ namespace Ion
 
 		static void BeginFrame();
 		static void EndFrame(GenericWindow& window);
+
+		static void ChangeDisplayMode(EDisplayMode mode, uint32 width, uint32 height);
 
 		static FORCEINLINE ERenderAPI GetCurrent() { return s_CurrentRenderAPI; }
 

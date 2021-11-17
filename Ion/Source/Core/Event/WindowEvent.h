@@ -108,19 +108,24 @@ namespace Ion
 	class ION_API WindowChangeDisplayModeEvent : public WindowEvent
 	{
 	public:
-		WindowChangeDisplayModeEvent(uint64 windowHandle, EDisplayMode displayMode) :
+		WindowChangeDisplayModeEvent(uint64 windowHandle, EDisplayMode displayMode, uint32 width, uint32 height) :
 			WindowEvent(windowHandle),
-			m_DisplayMode(displayMode)
+			m_DisplayMode(displayMode),
+			m_Width(width),
+			m_Height(height)
 		{
 			m_Type = EEventType::WindowChangeDisplayMode;
-			SET_DEBUG_INFO_STRING("WindowChangeDisplayModeEvent: { Handle: %I64u, Mode: %u }", GetWindowHandle(), (uint8)m_DisplayMode);
+			SET_DEBUG_INFO_STRING("WindowChangeDisplayModeEvent: { Handle: %I64u, Mode: %u, Width: %u, Height: %u }", GetWindowHandle(), (uint8)m_DisplayMode, m_Width, m_Height);
 		}
 
 		STATIC_EVENT_TYPE_GETTER(EEventType::WindowChangeDisplayMode);
 
-		FORCEINLINE EDisplayMode GetDisplayMode() { return m_DisplayMode; }
+		FORCEINLINE EDisplayMode GetDisplayMode() const { return m_DisplayMode; }
+		FORCEINLINE uint32 GetWidth() const { return m_Width; }
+		FORCEINLINE uint32 GetHeight() const { return m_Height; }
 
 	private:
 		EDisplayMode m_DisplayMode;
+		uint32 m_Width, m_Height;
 	};
 }

@@ -99,6 +99,22 @@ namespace Ion
 		}
 	}
 
+	void RenderAPI::ChangeDisplayMode(EDisplayMode mode, uint32 width, uint32 height)
+	{
+		switch (s_CurrentRenderAPI)
+		{
+#if PLATFORM_SUPPORTS_DX11
+		case ERenderAPI::DX11:
+		{
+			DX11::ChangeDisplayMode(mode, width, height);
+			break;
+		}
+#endif
+		default:
+			return;
+		}
+	}
+
 	const char* RenderAPI::GetCurrentDisplayName()
 	{
 		switch (s_CurrentRenderAPI)

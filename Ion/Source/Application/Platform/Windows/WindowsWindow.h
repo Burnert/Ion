@@ -4,9 +4,10 @@
 
 namespace Ion
 {
-	struct SWindowDataBeforeFullScreen
+	struct WindowDataBeforeFullScreen
 	{
 		WINDOWPLACEMENT WindowPlacement;
+		RECT ClientRect;
 		DWORD Style;
 		bool bMaximized;
 	};
@@ -88,7 +89,7 @@ namespace Ion
 		static bool m_bBothShiftsPressed;
 
 		bool m_bFullScreenMode = false;
-		SWindowDataBeforeFullScreen m_WindowBeforeFullScreen { };
+		WindowDataBeforeFullScreen m_WindowBeforeFullScreen { };
 
 		static MouseButton MouseButtonFromMessage(UINT uMsg, WPARAM wParam);
 

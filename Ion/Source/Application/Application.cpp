@@ -65,7 +65,7 @@ namespace Ion
 
 		m_Renderer = Renderer::Create();
 		m_Renderer->Init();
-		m_Renderer->SetVSyncEnabled(false);
+		m_Renderer->SetVSyncEnabled(true);
 
 		InitImGui();
 
@@ -193,6 +193,14 @@ namespace Ion
 		m_Renderer->SetViewportDimensions(ViewportDimensions { 0, 0, width, height });
 	}
 
+	void Application::OnWindowChangeDisplayModeEvent_Internal(const WindowChangeDisplayModeEvent& event)
+	{
+		ViewportDimensions dimensions { };
+		dimensions.Width = event.GetWidth();
+		dimensions.Height = event.GetHeight();
+		//RenderAPI::ChangeDisplayMode(event.GetDisplayMode(), dimensions);
+	}
+
 	void Application::OnKeyPressedEvent_Internal(const KeyPressedEvent& event)
 	{
 		// Toggle fullscreen with Alt + Enter
@@ -200,6 +208,8 @@ namespace Ion
 		{
 			if (GetInputManager()->IsKeyPressed(Key::LAlt))
 			{
+				LOG_DEBUG("Fullscreen Toggle");
+
 				bool bFullScreen = GetWindow()->IsFullScreenEnabled();
 				GetWindow()->EnableFullScreen(!bFullScreen);
 			}

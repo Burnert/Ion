@@ -36,6 +36,8 @@ namespace Ion
 
 	bool InputManager::IsKeyPressed(KeyCode keyCode)
 	{
+		// @TODO: This is getting bugged when the program freezes
+		// It's because this is event based and the program doesn't receive KeyUp events
 		return (bool)(s_Instance->m_InputStates[keyCode] & InputPressedFlag);
 	}
 

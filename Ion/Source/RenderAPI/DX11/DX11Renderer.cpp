@@ -83,16 +83,7 @@ namespace Ion
 		viewport.Height = (float)dimensions.Height;
 
 		//DX11::s_Context->RSSetViewports(1, &viewport);
-		if (DX11::s_RenderTarget)
-		{
-			DX11::s_RenderTarget->Release();
-			DX11::s_RenderTarget = nullptr;
-		}
-
-		dxcall(DX11::s_SwapChain->ResizeBuffers(2, dimensions.Width, dimensions.Height, DXGI_FORMAT_UNKNOWN, 0),
-			"Cannot resize the buffer.");
-
-		DX11::CreateRenderTarget();
+		DX11::ResizeBuffers(dimensions.Width, dimensions.Height);
 	}
 
 	ViewportDimensions DX11Renderer::GetViewportDimensions() const

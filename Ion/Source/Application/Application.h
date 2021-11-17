@@ -122,6 +122,7 @@ namespace Ion
 
 		virtual void OnWindowCloseEvent_Internal(const WindowCloseEvent& event); // Virtual because it's overriden in WindowsApplication
 		void OnWindowResizeEvent_Internal(const WindowResizeEvent& event);
+		void OnWindowChangeDisplayModeEvent_Internal(const WindowChangeDisplayModeEvent& event);
 
 		void OnKeyPressedEvent_Internal(const KeyPressedEvent& event);
 		void OnKeyReleasedEvent_Internal(const KeyReleasedEvent& event);
@@ -133,6 +134,7 @@ namespace Ion
 		using ApplicationEventFunctions = TEventFunctionPack<
 			TMemberEventFunction<Application, WindowCloseEvent, &Application::OnWindowCloseEvent_Internal>,
 			TMemberEventFunction<Application, WindowResizeEvent, &Application::OnWindowResizeEvent_Internal>,
+			TMemberEventFunction<Application, WindowChangeDisplayModeEvent, &Application::OnWindowChangeDisplayModeEvent_Internal>,
 			TMemberEventFunction<Application, KeyPressedEvent, &Application::OnKeyPressedEvent_Internal>,
 			TMemberEventFunction<Application, KeyReleasedEvent, &Application::OnKeyReleasedEvent_Internal>,
 			TMemberEventFunction<Application, KeyRepeatedEvent, &Application::OnKeyRepeatedEvent_Internal>

@@ -4,6 +4,8 @@
 #include "Application/Platform/Windows/WindowsWindow.h"
 #include "Core/Platform/Windows/WindowsUtility.h"
 
+#include "Renderer/Renderer.h"
+
 #include "UserInterface/ImGui.h"
 
 namespace Ion
@@ -44,7 +46,7 @@ namespace Ion
 		scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 		scd.OutputWindow = hwnd;
 		scd.Windowed = true;
-		scd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+		scd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
 		scd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
 		D3D_FEATURE_LEVEL targetFeatureLevel[] = {
@@ -85,11 +87,19 @@ namespace Ion
 		viewport.Height = (float)dimensions.Height;
 		s_Context->RSSetViewports(1, &viewport);
 
+		IDXGIFactory1* factory = nullptr;
+		dxcall(s_SwapChain->GetParent(IID_PPV_ARGS(&factory)), "Cannot get the Swap Chain factory.");
+		factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER);
+		factory->Release();
+
 		// @TODO: Add DirectX version logging.
 	}
 
 	void DX11::Shutdown()
 	{
+		if (s_SwapChain)
+			s_SwapChain->SetFullscreenState(false, nullptr);
+
 		// Free the D3D objects
 
 		if (s_Device)
@@ -117,6 +127,13 @@ namespace Ion
 	{
 		HRESULT hResult;
 		dxcall(s_SwapChain->Present(s_SwapInterval, 0), "Cannot present frame.");
+	}
+
+	void DX11::ChangeDisplayMode(EDisplayMode mode, uint32 width, uint32 height)
+	{
+		s_SwapChain->SetFullscreenState(mode == EDisplayMode::FullScreen, nullptr);
+
+		ResizeBuffers(width, height);
 	}
 
 	DX11::MessageArray DX11::GetDebugMessages()
@@ -224,6 +241,22 @@ namespace Ion
 			"Cannot create Render Target from back buffer.");
 
 		backBuffer->Release();
+	}
+
+	void DX11::ResizeBuffers(uint32 width, uint32 height)
+	{
+		HRESULT hResult = S_OK;
+
+		if (s_RenderTarget)
+		{
+			s_RenderTarget->Release();
+			s_RenderTarget = nullptr;
+		}
+
+		dxcall(s_SwapChain->ResizeBuffers(2, width, height, DXGI_FORMAT_UNKNOWN, 0),
+			"Cannot resize buffers.");
+
+		CreateRenderTarget();
 	}
 
 	void DX11::InitImGuiBackend()

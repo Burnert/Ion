@@ -11,6 +11,7 @@
 
 #include "Core/Platform/PlatformCore.h"
 
+#include "RenderAPI/RenderAPI.h"
 #include "RenderAPI/OpenGL/Windows/OpenGLWindows.h"
 
 #include "UserInterface/ImGui.h"
@@ -139,6 +140,8 @@ namespace Ion
 			}
 		}
 
+		//LOG_TRACE("MSG:{0}", uMsg);
+
 		WindowsWindow& windowRef = *(WindowsWindow*)GetProp(hWnd, L"WinObj");
 
 		// --------------------------------------
@@ -210,6 +213,11 @@ namespace Ion
 			{
 				// @TODO: Make Paint event when in modal loop
 
+				break;
+			}
+
+			case WM_SYSCHAR:
+			{
 				break;
 			}
 
@@ -792,8 +800,12 @@ namespace Ion
 
 			DWORD style = GetWindowLong(m_WindowHandle, GWL_STYLE);
 
-			m_WindowBeforeFullScreen = SWindowDataBeforeFullScreen {
+			RECT clientRect { };
+			GetClientRect(m_WindowHandle, &clientRect);
+
+			m_WindowBeforeFullScreen = WindowDataBeforeFullScreen {
 				windowPlacement,
+				clientRect,
 				style,
 				bMaximized,
 			};
@@ -813,13 +825,27 @@ namespace Ion
 
 			m_bFullScreenMode = true;
 
-			WindowChangeDisplayModeEvent event((uint64)m_WindowHandle, EDisplayMode::FullScreen);
-			PostDeferredEvent(event);
+			RenderAPI::ChangeDisplayMode(EDisplayMode::FullScreen, width, height);
+
+			WindowChangeDisplayModeEvent event((uint64)m_WindowHandle, EDisplayMode::FullScreen, width, height);
+			PostEvent(event);
 		}
 		// Disable
 		else if (m_bFullScreenMode && !bFullscreen)
 		{
 			ionassertnd(SetWindowLong(m_WindowHandle, GWL_STYLE, m_WindowBeforeFullScreen.Style));
+
+			RECT& clientRect = m_WindowBeforeFullScreen.ClientRect;
+			int32 clientWidth = clientRect.right - clientRect.left;
+			int32 clientHeight = clientRect.bottom - clientRect.top;
+
+			RenderAPI::ChangeDisplayMode(EDisplayMode::Windowed, clientWidth, clientHeight);
+
+			RECT& windowRect = m_WindowBeforeFullScreen.WindowPlacement.rcNormalPosition;
+			int32 x = windowRect.left;
+			int32 y = windowRect.top;
+			int32 width = windowRect.right - windowRect.left;
+			int32 height = windowRect.bottom - windowRect.top;
 
 			if (m_WindowBeforeFullScreen.bMaximized)
 			{
@@ -827,18 +853,13 @@ namespace Ion
 			}
 			else
 			{
-				RECT& windowRect = m_WindowBeforeFullScreen.WindowPlacement.rcNormalPosition;
-				int32 x = windowRect.left;
-				int32 y = windowRect.top;
-				int32 width = windowRect.right - windowRect.left;
-				int32 height = windowRect.bottom - windowRect.top;
 				ionassertnd(SetWindowPos(m_WindowHandle, HWND_NOTOPMOST, x, y, width, height, SWP_NOOWNERZORDER | SWP_FRAMECHANGED));
 			}
 
 			m_bFullScreenMode = false;
 
-			WindowChangeDisplayModeEvent event((uint64)m_WindowHandle, EDisplayMode::Windowed);
-			PostDeferredEvent(event);
+			WindowChangeDisplayModeEvent event((uint64)m_WindowHandle, EDisplayMode::Windowed, clientWidth, clientHeight);
+			PostEvent(event);
 		}
 	}
 
