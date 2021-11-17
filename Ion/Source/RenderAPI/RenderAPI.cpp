@@ -60,6 +60,22 @@ namespace Ion
 		}
 	}
 
+	void RenderAPI::BeginFrame()
+	{
+		switch (s_CurrentRenderAPI)
+		{
+#if PLATFORM_SUPPORTS_DX11
+		case ERenderAPI::DX11:
+		{
+			DX11::BeginFrame();
+			break;
+		}
+#endif
+		default:
+			return;
+		}
+	}
+
 	void RenderAPI::EndFrame(GenericWindow& window)
 	{
 		switch (s_CurrentRenderAPI)

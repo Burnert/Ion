@@ -1,9 +1,15 @@
 #pragma once
 
-#include "WindowsMacros.h"
 #include "Core/Logging/Logger.h"
 
 #include <comdef.h>
+
+#define WINDOWS_FORMAT_ERROR_MESSAGE(msgVarName, error) \
+WCHAR _##msgVarName[512]; \
+FormatMessage( \
+	FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, \
+	NULL, error, 0, _##msgVarName, 512, NULL); \
+WString msgVarName = _##msgVarName
 
 namespace Ion
 {
@@ -36,11 +42,12 @@ namespace Windows
 		const TCHAR* message = error.ErrorMessage();
 
 #ifdef ION_LOG_ENABLED
+		LOG_ERROR("Windows HRESULT Error:");
 		if constexpr (sizeof...(args) > 0)
 			LOG_ERROR(args...);
 		LOG_ERROR(TString(message));
 #else
-		MessageBox(NULL, message, TEXT("Win32 HRESULT Error"), MB_ICONERROR | MB_OK);
+		MessageBox(NULL, message, TEXT("Windows HRESULT Error"), MB_ICONERROR | MB_OK);
 #endif
 	}
 }

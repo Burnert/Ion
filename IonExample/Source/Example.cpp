@@ -74,6 +74,7 @@ public:
 		File::ReadToString(shadersPath + L"Basic.vert", vertSrc);
 		File::ReadToString(shadersPath + L"Basic.frag", fragSrc);
 
+#if 0
 		bool bResult;
 
 		TShared<Shader> shader = Shader::Create();
@@ -194,10 +195,12 @@ public:
 		{
 			LOG_INFO(L"{0}, {1}, {2}, {3}", info.Filename, info.FullPath, info.Size, info.bDirectory ? L"Dir" : L"File");
 		}
+#endif
 	}
 
 	virtual void OnUpdate(float deltaTime) override
 	{
+#if 0
 		TShared<Material> meshMaterial = m_MeshCollada->GetMaterial().lock();
 		TShared<Shader> meshShader = meshMaterial->GetShader();
 
@@ -259,6 +262,7 @@ public:
 		m_AuxCamera->SetTransform(Math::Translate(m_AuxCameraLocation));
 
 		m_Scene->UpdateRenderData();
+#endif
 
 		// ImGui:
 
@@ -374,7 +378,7 @@ public:
 	virtual void OnRender() override
 	{
 		GetRenderer()->Clear(Vector4(0.1f, 0.1f, 0.1f, 1.0f));
-		GetRenderer()->RenderScene(m_Scene);
+		//GetRenderer()->RenderScene(m_Scene);
 	}
 
 	virtual void OnShutdown() override

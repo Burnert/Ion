@@ -206,6 +206,13 @@ namespace Ion
 				return 0;
 			}
 
+			case WM_PAINT:
+			{
+				// @TODO: Make Paint event when in modal loop
+
+				break;
+			}
+
 			// Keyboard events
 
 			case WM_KEYDOWN:

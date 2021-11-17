@@ -18,6 +18,7 @@
 
 #include "RenderAPI/OpenGL/Windows/OpenGLWindows.h"
 #include "Platform/Windows/WindowsWindow.h"
+#include "RenderAPI/DX11/DX11.h"
 
 namespace Ion
 {
@@ -123,13 +124,16 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
+		ImGui::Render();
+
+		RenderAPI::BeginFrame();
+
 		m_LayerStack->OnRender();
 
 		TRACE_BEGIN(0, "Application - Client::OnRender");
 		OnRender();
 		TRACE_END(0);
 
-		ImGui::Render();
 		ImGuiRenderPlatform(ImGui::GetDrawData());
 
 		RenderAPI::EndFrame(*m_Window);

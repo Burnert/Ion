@@ -1,8 +1,44 @@
 #pragma once
 
-#define WINDOWS_FORMAT_ERROR_MESSAGE(msgVarName, error) \
-WCHAR _##msgVarName[512]; \
-FormatMessage( \
-	FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, \
-	NULL, error, 0, _##msgVarName, 512, NULL); \
-WString msgVarName = _##msgVarName
+#include "Core/CoreMacros.h"
+#include "Core/CoreAsserts.h"
+
+#define win_check(cond, ...) \
+if (!(cond)) \
+{ \
+	Ion::Windows::PrintLastError(__VA_ARGS__); \
+	ionlocation(); \
+	return; \
+}
+
+#define win_check_r(cond, ret, ...) \
+if (!(cond)) \
+{ \
+	Ion::Windows::PrintLastError(__VA_ARGS__); \
+	ionlocation(); \
+	return ret; \
+}
+
+#define win_check_hresult(hr, ...) \
+if (FAILED((hr))) \
+{ \
+	Ion::Windows::PrintHResultError(hr, __VA_ARGS__); \
+	ionlocation(); \
+	return; \
+}
+
+#define win_check_hresult_r(hr, ret, ...) \
+if (FAILED((hr))) \
+{ \
+	Ion::Windows::PrintHResultError(hr, __VA_ARGS__); \
+	ionlocation(); \
+	return ret; \
+}
+
+#define win_check_hresult_c(hr, onfailed, ...) \
+if (FAILED((hr))) \
+{ \
+	Ion::Windows::PrintHResultError(hr, __VA_ARGS__); \
+	ionlocation(); \
+	{ onfailed } \
+}

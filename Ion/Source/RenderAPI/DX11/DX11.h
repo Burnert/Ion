@@ -1,14 +1,40 @@
 #pragma once
 
 #include <d3d11.h>
+#include <DXGIDebug.h>
+
+#include "Core/Platform/Windows/WindowsMacros.h"
 
 #pragma comment(lib, "d3d11.lib")
+#pragma comment(lib, "dxguid.lib")
+
+#define dxcall_check_r(call, ret, ...) \
+{ \
+	Ion::DX11::PrepareDebugMessageQueue(); \
+	hResult = call; \
+	win_check_hresult_c(hResult, { Ion::DX11::PrintDebugMessages(); debugbreak(); return ret; }, __VA_ARGS__) \
+	Ion::DX11::PrintDebugMessages(); \
+}
+#define dxcall(call, ...) dxcall_check_r(call, , __VA_ARGS__)
+
+#define dxcall_v(call, ...) \
+{ \
+	Ion::DX11::PrepareDebugMessageQueue(); \
+	call; \
+	Ion::DX11::PrintDebugMessages(); \
+}
 
 struct ImDrawData;
 struct ImGuiViewport;
 
 namespace Ion
 {
+	struct DXGIDebugMessage
+	{
+		DXGI_INFO_QUEUE_MESSAGE_SEVERITY Severity;
+		String Message;
+	};
+
 	class GenericWindow;
 
 	class ION_API DX11
@@ -19,6 +45,7 @@ namespace Ion
 		static void Init(GenericWindow* window);
 		static void Shutdown();
 
+		static void BeginFrame();
 		static void EndFrame();
 
 		static FORCEINLINE const char* GetVendor() { return 0; }
@@ -27,17 +54,59 @@ namespace Ion
 		static FORCEINLINE const char* GetLanguageVersion() { return 0; }
 		static FORCEINLINE const char* GetExtensions() { return 0; }
 
-		static FORCEINLINE const char* GetFeatureLevelString() { return D3DFeatureLevelToString(s_FeatureLevel); }
-		static FORCEINLINE D3D_FEATURE_LEVEL GetFeatureLevel() { return s_FeatureLevel; }
+		static FORCEINLINE const char* GetFeatureLevelString()
+		{
+			return D3DFeatureLevelToString(s_FeatureLevel);
+		}
 
-		static const char* GetDisplayName() { return s_DisplayName; }
+		static FORCEINLINE D3D_FEATURE_LEVEL GetFeatureLevel()
+		{
+			return s_FeatureLevel;
+		}
+
+		static inline ID3D11Device* GetDevice()
+		{
+			return s_Device;
+		}
+
+		static inline ID3D11DeviceContext* GetContext()
+		{
+			return s_Context;
+		}
+
+		static inline IDXGISwapChain* GetSwapChain()
+		{
+			return s_SwapChain;
+		}
+
+		static inline ID3D11RenderTargetView* GetRenderTarget()
+		{
+			return s_RenderTarget;
+		}
+
+		static const char* GetDisplayName()
+		{
+			return s_DisplayName;
+		}
 
 		//static void FilterDebugMessages();
 
-		static void SetSwapInterval(uint32 interval) { s_SwapInterval = interval; }
-		static uint32 GetSwapInterval() { return s_SwapInterval; }
+		static void SetSwapInterval(uint32 interval)
+		{
+			s_SwapInterval = interval;
+		}
 
-		inline static char* D3DFeatureLevelToString(D3D_FEATURE_LEVEL level)
+		static uint32 GetSwapInterval()
+		{
+			return s_SwapInterval;
+		}
+
+		using MessageArray = TArray<DXGIDebugMessage>;
+		static MessageArray GetDebugMessages();
+		static void PrintDebugMessages();
+		static void PrepareDebugMessageQueue();
+
+		static constexpr const char* D3DFeatureLevelToString(D3D_FEATURE_LEVEL level)
 		{
 			switch (level)
 			{
@@ -58,16 +127,13 @@ namespace Ion
 	protected:
 		static void SetDisplayVersion(const char* version);
 
+		static void CreateRenderTarget();
+
 	private:
 		static void InitImGuiBackend();
 		static void ImGuiNewFrame();
 		static void ImGuiRender(ImDrawData* drawData);
 		static void ImGuiShutdown();
-
-		static void ImGuiImplRendererCreateWindowPlatform(ImGuiViewport* viewport);
-		static void ImGuiImplRendererRenderWindow(ImGuiViewport* viewport, void*);
-		static void ImGuiImplRendererSwapBuffers(ImGuiViewport* viewport, void*);
-		static void ImGuiImplRendererDestroyWindow(ImGuiViewport* viewport);
 
 	protected:
 		static bool s_Initialized;
@@ -82,6 +148,13 @@ namespace Ion
 		static ID3D11RenderTargetView* s_RenderTarget;
 
 		static uint32 s_SwapInterval;
+
+		// Debug
+
+		using DXGIGetDebugInterfaceProc = HRESULT(*)(REFIID, void**);
+		static DXGIGetDebugInterfaceProc DXGIGetDebugInterface;
+
+		static IDXGIInfoQueue* s_DebugInfoQueue;
 
 		friend class DX11Renderer;
 	};

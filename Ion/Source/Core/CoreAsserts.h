@@ -74,6 +74,14 @@ namespace Ion
 			}
 			return 0;
 		}
+
+		inline static int32 PrintLocationInfo(const char* function, const char* file, int32 line)
+		{
+			char message[500] = "";
+			sprintf_s(message, "^ At: function: %s\n  in %s:%d\n", function, file, line);
+			LOG_WARN(message);
+			return 0;
+		}
 	};
 }
 
@@ -109,6 +117,9 @@ if (!!(x) || Ion::AssertionHelper::HandleFailEx(#x, __FUNCSIG__, __FILE__, __LIN
 #else
 #define ionassert(x, ...) ((void)0)
 #endif
+
+#define ionlocation() (void)(Ion::AssertionHelper::PrintLocationInfo(__FUNCSIG__, __FILE__, __LINE__))
+
 #else
 
 #define ionexcept(x, ...) if (!(x))

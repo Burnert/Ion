@@ -2,6 +2,9 @@
 
 #include "DX11Renderer.h"
 
+#include "Core/Platform/Windows/WindowsMacros.h"
+#include "Core/Platform/Windows/WindowsUtility.h"
+
 namespace Ion
 {
 	DX11Renderer::DX11Renderer() :
@@ -70,14 +73,43 @@ namespace Ion
 
 	void DX11Renderer::SetViewportDimensions(const ViewportDimensions& dimensions) const
 	{
-		// @TODO: Implement
-		//DX11::s_SwapChain->ResizeBuffers
+		HRESULT hResult = S_OK;
+
+		// @TODO: Test
+		D3D11_VIEWPORT viewport { };
+		viewport.TopLeftX = (float)dimensions.X;
+		viewport.TopLeftY = (float)dimensions.Y;
+		viewport.Width = (float)dimensions.Width;
+		viewport.Height = (float)dimensions.Height;
+
+		//DX11::s_Context->RSSetViewports(1, &viewport);
+		if (DX11::s_RenderTarget)
+		{
+			DX11::s_RenderTarget->Release();
+			DX11::s_RenderTarget = nullptr;
+		}
+
+		dxcall(DX11::s_SwapChain->ResizeBuffers(2, dimensions.Width, dimensions.Height, DXGI_FORMAT_UNKNOWN, 0),
+			"Cannot resize the buffer.");
+
+		DX11::CreateRenderTarget();
 	}
 
 	ViewportDimensions DX11Renderer::GetViewportDimensions() const
 	{
-		// @TODO: Implement
-		return { };
+		// @TODO: Test
+		D3D11_VIEWPORT viewport { };
+		uint32 nViewports = 0;
+
+		//DX11::s_Context->RSGetViewports(&nViewports, &viewport);
+
+		ViewportDimensions dimensions { };
+		dimensions.X = (int32)viewport.TopLeftX;
+		dimensions.Y = (int32)viewport.TopLeftY;
+		dimensions.Width = (int32)viewport.Width;
+		dimensions.Height = (int32)viewport.Height;
+
+		return dimensions;
 	}
 
 	void DX11Renderer::SetPolygonDrawMode(EPolygonDrawMode drawMode) const

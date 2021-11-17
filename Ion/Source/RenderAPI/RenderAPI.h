@@ -22,6 +22,7 @@ namespace Ion
 		static bool Init(ERenderAPI api, GenericWindow* window);
 		static void Shutdown();
 
+		static void BeginFrame();
 		static void EndFrame(GenericWindow& window);
 
 		static FORCEINLINE ERenderAPI GetCurrent() { return s_CurrentRenderAPI; }

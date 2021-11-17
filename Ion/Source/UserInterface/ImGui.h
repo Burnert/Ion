@@ -7,7 +7,7 @@
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 #include "imgui/imgui.h"
 
-#ifdef ION_ENGINE
+#if ION_ENGINE
 
 // Force export ImGui Demo function symbols from the dll
 
@@ -17,10 +17,12 @@
 #pragma comment(linker, "/export:?ShowStyleEditor@ImGui@@YAXPEAUImGuiStyle@@@Z")
 #pragma comment(linker, "/export:?ShowFontSelector@ImGui@@YAXPEBD@Z")
 
-#ifdef ION_PLATFORM_WINDOWS
+#if ION_PLATFORM_WINDOWS
 #include "imgui/backends/imgui_impl_win32.h"
 #include "imgui/backends/imgui_impl_dx11.h"
-#endif
+#endif // ION_PLATFORM_WINDOWS
+#if PLATFORM_SUPPORTS_OPENGL
 #include "imgui/backends/imgui_impl_opengl3.h"
+#endif // PLATFORM_SUPPORTS_OPENGL
 
 #endif
