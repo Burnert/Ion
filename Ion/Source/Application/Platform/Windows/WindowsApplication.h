@@ -25,6 +25,8 @@ namespace Ion
 
 		FORCEINLINE static HINSTANCE GetHInstance() { return m_HInstance; }
 
+		static float GetPerformanceFrequency() { return s_PerformanceFrequency; }
+
 	protected:
 		// Tagged as final so it cannot be overriden in the client
 

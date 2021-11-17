@@ -140,8 +140,6 @@ namespace Ion
 			}
 		}
 
-		//LOG_TRACE("MSG:{0}", uMsg);
-
 		WindowsWindow& windowRef = *(WindowsWindow*)GetProp(hWnd, L"WinObj");
 
 		// --------------------------------------
@@ -415,7 +413,7 @@ namespace Ion
 
 			case WM_MOUSEMOVE:
 			{
-				RECT clientRect;
+				RECT clientRect { };
 				GetClientRect(hWnd, &clientRect);
 
 				int32 xPos = GET_X_LPARAM(lParam);

@@ -102,6 +102,8 @@ namespace Ion
 		template<typename T>
 		void DispatchEvent(const T& event)
 		{
+			TRACE_FUNCTION();
+
 			m_EventDispatcher.Dispatch(event);
 
 			m_InputManager->DispatchEvent(event);
@@ -115,6 +117,8 @@ namespace Ion
 		// Static event handler for EventQueue
 		static inline void EventHandler(const Event& event)
 		{
+			TRACE_FUNCTION();
+
 			Application::Get()->DispatchEvent(event);
 		}
 

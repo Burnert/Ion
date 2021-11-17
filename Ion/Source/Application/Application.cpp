@@ -20,6 +20,8 @@
 #include "Platform/Windows/WindowsWindow.h"
 #include "RenderAPI/DX11/DX11.h"
 
+#include "Platform/Windows/WindowsApplication.h"
+
 namespace Ion
 {
 	Application* Application::Get()
@@ -65,7 +67,7 @@ namespace Ion
 
 		m_Renderer = Renderer::Create();
 		m_Renderer->Init();
-		m_Renderer->SetVSyncEnabled(true);
+		m_Renderer->SetVSyncEnabled(false);
 
 		InitImGui();
 
@@ -111,7 +113,8 @@ namespace Ion
 		ImGuiNewFramePlatform();
 		ImGui::NewFrame();
 
-		UpdateWindowTitle(deltaTime);
+		// @TODO: This is broken and kills CPU
+		//UpdateWindowTitle(deltaTime);
 		
 		m_LayerStack->OnUpdate(deltaTime);
 
@@ -198,7 +201,6 @@ namespace Ion
 		ViewportDimensions dimensions { };
 		dimensions.Width = event.GetWidth();
 		dimensions.Height = event.GetHeight();
-		//RenderAPI::ChangeDisplayMode(event.GetDisplayMode(), dimensions);
 	}
 
 	void Application::OnKeyPressedEvent_Internal(const KeyPressedEvent& event)
@@ -241,6 +243,8 @@ namespace Ion
 		// Application loop
 		while (m_bRunning)
 		{
+			TRACE_SCOPE("Application Loop");
+
 			PollEvents();
 
 			float deltaTime = CalculateFrameTime();

@@ -107,6 +107,8 @@ namespace Ion
 
 	void WindowsApplication::OnWindowCloseEvent_Internal(const WindowCloseEvent& event)
 	{
+		TRACE_FUNCTION();
+
 		DestroyWindow((HWND)event.GetWindowHandle());
 		Application::OnWindowCloseEvent_Internal(event);
 	}
