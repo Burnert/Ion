@@ -74,7 +74,16 @@ using TNot = std::negation<T>;
 template<typename T>
 inline constexpr bool TNotV = std::negation_v<T>;
 
-// Remove Reference
+// Remove *
 
 template<typename T>
 using TRemoveRef = std::remove_reference_t<T>;
+
+template<typename T>
+using TRemovePtr = std::remove_pointer_t<T>;
+
+template<typename T>
+using TRemoveExtent = std::remove_extent_t<T>;
+
+template<typename T>
+using TRemoveAllExtents = std::remove_all_extents_t<T>;

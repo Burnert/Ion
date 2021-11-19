@@ -1,16 +1,25 @@
 #pragma once
 
 #include "Renderer/Shader.h"
-#include "OpenGL.h"
+#include "DX11.h"
+
+class IonExample;
 
 namespace Ion
 {
-	class ION_API OpenGLShader : public Shader
+	struct DXShader
 	{
-		friend class OpenGLRenderer;
+		void* ShaderPtr;
+		ID3DBlob* ShaderBlob;
+		String Source;
+		EShaderType Type;
+	};
+
+	class ION_API DX11Shader : public Shader
+	{
 	public:
-		OpenGLShader();
-		virtual ~OpenGLShader() override;
+		DX11Shader();
+		virtual ~DX11Shader() override;
 
 		virtual void AddShaderSource(EShaderType type, const String& source) override;
 
@@ -40,15 +49,13 @@ namespace Ion
 		virtual void SetUniformMatrix4x2f(const String& name, const Matrix4x2& value) const override;
 		virtual void SetUniformMatrix4x3f(const String& name, const Matrix4x3& value) const override;
 
-		int32 GetUniformLocation(const String& name) const;
-
-		FORCEINLINE static constexpr uint32 ShaderTypeToGLShaderType(EShaderType type)
+		static constexpr const char* ShaderTypeToTarget(EShaderType type)
 		{
 			switch (type)
 			{
-			case EShaderType::Vertex:    return GL_VERTEX_SHADER;
-			case EShaderType::Pixel:     return GL_FRAGMENT_SHADER;
-			default:                     return 0;
+			case Ion::EShaderType::Vertex:  return "vs_4_0";
+			case Ion::EShaderType::Pixel:   return "ps_4_0";
+			default:                        return "";
 			}
 		}
 
@@ -56,15 +63,44 @@ namespace Ion
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
 
-	private:
-		void CleanupDeleteShaders();
-		void InvalidateUniformCache();
+		template<typename T>
+		void IterateShaders(T callback)
+		{
+			for (auto& entry : m_Shaders)
+			{
+				DXShader& shader = entry.second;
+				callback(shader);
+			}
+		}
+
+		template<typename T>
+		void IterateShaders(T callback) const
+		{
+			for (const auto& entry : m_Shaders)
+			{
+				const DXShader& shader = entry.second;
+				callback(shader);
+			}
+		}
+
+		ID3DBlob* GetVertexShaderByteCode() const
+		{
+			auto it = m_Shaders.find(EShaderType::Vertex);
+			if (it == m_Shaders.end())
+				return nullptr;
+
+			const DXShader& shader = (*it).second;
+			return shader.ShaderBlob;
+		}
 
 	private:
-		uint32 m_ProgramID;
+		THashMap<EShaderType, DXShader> m_Shaders;
 		bool m_bCompiled;
-		THashMap<EShaderType, ShaderInfo> m_Shaders;
 
-		mutable THashMap<String, int32> m_UniformCache;
+		//mutable THashMap<String, int32> m_UniformCache;
+
+		friend class DX11Renderer;
+		friend class DX11VertexBuffer;
+		friend class ::IonExample;
 	};
 }

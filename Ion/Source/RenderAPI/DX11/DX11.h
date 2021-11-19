@@ -1,28 +1,45 @@
 #pragma once
 
 #include <d3d11.h>
-#include <DXGIDebug.h>
+#include <dxgidebug.h>
 
 #include "Core/Platform/Windows/WindowsMacros.h"
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxguid.lib")
 
-#define dxcall_check_r(call, ret, ...) \
+#if ION_LOG_ENABLED
+/// Requires
+/// HRESULT hResult;
+/// in function scope.
+/// Returns a custom value on error.
+#define dxcall_r(call, ret, ...) \
 { \
 	Ion::DX11::PrepareDebugMessageQueue(); \
 	hResult = call; \
 	win_check_hresult_c(hResult, { Ion::DX11::PrintDebugMessages(); debugbreak(); return ret; }, __VA_ARGS__) \
 	Ion::DX11::PrintDebugMessages(); \
 }
-#define dxcall(call, ...) dxcall_check_r(call, , __VA_ARGS__)
-
 #define dxcall_v(call, ...) \
 { \
 	Ion::DX11::PrepareDebugMessageQueue(); \
 	call; \
 	Ion::DX11::PrintDebugMessages(); \
 }
+#else
+#define dxcall_r(call, ret, ...) hResult = call
+#define dxcall_v(call, ...) call
+#endif
+
+/// Requires
+/// HRESULT hResult;
+/// in function scope.
+#define dxcall(call, ...) dxcall_r(call, , __VA_ARGS__)
+/// Requires
+/// HRESULT hResult;
+/// in function scope.
+/// Returns false on error.
+#define dxcall_f(call, ...) dxcall_r(call, false, __VA_ARGS__)
 
 struct ImDrawData;
 struct ImGuiViewport;

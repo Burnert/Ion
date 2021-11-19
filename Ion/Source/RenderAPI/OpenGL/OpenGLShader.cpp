@@ -18,7 +18,7 @@ namespace Ion
 		CleanupDeleteShaders();
 	}
 
-	void OpenGLShader::AddShaderSource(EShaderType type, String source)
+	void OpenGLShader::AddShaderSource(EShaderType type, const String& source)
 	{
 		TRACE_FUNCTION();
 

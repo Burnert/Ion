@@ -4,6 +4,7 @@
 
 #include "RenderAPI/RenderAPI.h"
 #include "RenderAPI/OpenGL/OpenGLVertexBuffer.h"
+#include "RenderAPI/DX11/DX11Buffer.h"
 
 namespace Ion
 {
@@ -13,9 +14,14 @@ namespace Ion
 		m_Attributes.reserve(initialAttributeCount * sizeof(VertexAttribute));
 	}
 
-	void VertexLayout::AddAttribute(EVertexAttributeType attributeType, uint8 elementCount, bool normalized)
+	void VertexLayout::AddAttribute(EVertexAttributeType attributeType, uint8 elementCount, bool bNormalized)
 	{
-		m_Attributes.push_back({ attributeType, elementCount, m_Offset, normalized });
+		AddAttribute(EVertexAttributeSemantic::Null, attributeType, elementCount, bNormalized);
+	}
+
+	void VertexLayout::AddAttribute(EVertexAttributeSemantic semantic, EVertexAttributeType attributeType, uint8 elementCount, bool bNormalized)
+	{
+		m_Attributes.push_back({ m_Offset, semantic, attributeType, elementCount, bNormalized });
 		m_Offset += elementCount * GetSizeOfAttributeType(attributeType);
 	}
 
@@ -25,6 +31,8 @@ namespace Ion
 		{
 		case ERenderAPI::OpenGL:
 			return MakeShared<OpenGLVertexBuffer>(vertexAttributes, count);
+		case ERenderAPI::DX11:
+			return MakeShared<DX11VertexBuffer>(vertexAttributes, count);
 		default:
 			return TShared<VertexBuffer>(nullptr);
 		}

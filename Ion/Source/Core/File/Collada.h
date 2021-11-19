@@ -1,6 +1,7 @@
 #pragma once
 
 #include "XML.h"
+#include "Renderer/VertexAttribute.h"
 
 namespace Ion
 {
@@ -40,6 +41,25 @@ namespace Ion
 
 			TArray<TriangleInput> m_TriangleInputs;
 			uint32 m_AttributeCount = 0;
+
+		public:
+			// @TODO: Create a TConstMap
+
+			inline static const THashMap<const char*, const EVertexAttributeSemantic> SemanticStringToEnum = {
+				{ "POSITION", EVertexAttributeSemantic::Position },
+				{ "NORMAL",   EVertexAttributeSemantic::Normal   },
+				{ "TEXCOORD", EVertexAttributeSemantic::TexCoord },
+			};
+
+			inline static bool IsSemanticTranslatable(const char* name)
+			{
+				return SemanticStringToEnum.find(name) != SemanticStringToEnum.end();
+			}
+
+			inline static EVertexAttributeSemantic TranslateSemantic(const char* name)
+			{
+				return SemanticStringToEnum.at(name);
+			}
 		};
 
 		class Vertex

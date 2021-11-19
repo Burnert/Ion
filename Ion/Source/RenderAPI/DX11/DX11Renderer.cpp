@@ -1,6 +1,8 @@
 #include "IonPCH.h"
 
 #include "DX11Renderer.h"
+#include "DX11Buffer.h"
+#include "DX11Shader.h"
 
 #include "Core/Platform/Windows/WindowsMacros.h"
 #include "Core/Platform/Windows/WindowsUtility.h"
@@ -37,6 +39,19 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
+		ID3D11DeviceContext* context = DX11::GetContext();
+
+		DX11VertexBuffer* vb = (DX11VertexBuffer*)primitive.VertexBuffer;
+		DX11IndexBuffer* ib = (DX11IndexBuffer*)primitive.IndexBuffer;
+		DX11Shader* shader = (DX11Shader*)primitive.Shader;
+
+		shader->Bind();
+		vb->Bind();
+		vb->BindLayout();
+		ib->Bind();
+
+		dxcall_v(context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
+		dxcall_v(context->DrawIndexed(ib->GetIndexCount(), 0, 0));
 	}
 
 	void DX11Renderer::RenderScene(const TShared<Scene>& scene)
@@ -73,26 +88,28 @@ namespace Ion
 
 	void DX11Renderer::SetViewportDimensions(const ViewportDimensions& dimensions) const
 	{
+		TRACE_FUNCTION();
+
 		HRESULT hResult = S_OK;
 
-		// @TODO: Test
 		D3D11_VIEWPORT viewport { };
 		viewport.TopLeftX = (float)dimensions.X;
 		viewport.TopLeftY = (float)dimensions.Y;
 		viewport.Width = (float)dimensions.Width;
 		viewport.Height = (float)dimensions.Height;
 
-		//DX11::s_Context->RSSetViewports(1, &viewport);
+		DX11::s_Context->RSSetViewports(1, &viewport);
 		DX11::ResizeBuffers(dimensions.Width, dimensions.Height);
 	}
 
 	ViewportDimensions DX11Renderer::GetViewportDimensions() const
 	{
-		// @TODO: Test
+		TRACE_FUNCTION();
+
 		D3D11_VIEWPORT viewport { };
 		uint32 nViewports = 0;
 
-		//DX11::s_Context->RSGetViewports(&nViewports, &viewport);
+		DX11::s_Context->RSGetViewports(&nViewports, &viewport);
 
 		ViewportDimensions dimensions { };
 		dimensions.X = (int32)viewport.TopLeftX;

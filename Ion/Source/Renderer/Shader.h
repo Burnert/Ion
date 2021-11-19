@@ -23,7 +23,7 @@ namespace Ion
 
 		virtual ~Shader() { }
 
-		virtual void AddShaderSource(EShaderType type, String source) = 0;
+		virtual void AddShaderSource(EShaderType type, const String& source) = 0;
 
 		virtual bool Compile() = 0;
 

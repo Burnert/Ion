@@ -15,6 +15,8 @@ namespace Ion
 #pragma warning(disable:6001)
 #pragma warning(disable:6387)
 
+		TRACE_FUNCTION();
+
 		WindowsWindow& windowsWindow = (WindowsWindow&)window;
 		HWND hwnd = (HWND)window->GetNativeHandle();
 
@@ -97,6 +99,8 @@ namespace Ion
 
 	void DX11::Shutdown()
 	{
+		TRACE_FUNCTION();
+
 		if (s_SwapChain)
 			s_SwapChain->SetFullscreenState(false, nullptr);
 
@@ -120,17 +124,23 @@ namespace Ion
 
 	void DX11::BeginFrame()
 	{
+		TRACE_FUNCTION();
+
 		dxcall_v(s_Context->OMSetRenderTargets(1, &s_RenderTarget, nullptr), "Cannot set render target.");
 	}
 
 	void DX11::EndFrame()
 	{
+		TRACE_FUNCTION();
+
 		HRESULT hResult;
 		dxcall(s_SwapChain->Present(s_SwapInterval, 0), "Cannot present frame.");
 	}
 
 	void DX11::ChangeDisplayMode(EDisplayMode mode, uint32 width, uint32 height)
 	{
+		TRACE_FUNCTION();
+
 		s_SwapChain->SetFullscreenState(mode == EDisplayMode::FullScreen, nullptr);
 
 		ResizeBuffers(width, height);
@@ -138,6 +148,8 @@ namespace Ion
 
 	DX11::MessageArray DX11::GetDebugMessages()
 	{
+		TRACE_FUNCTION();
+
 		if (!s_DebugInfoQueue)
 		{
 			debugbreak();
@@ -175,6 +187,8 @@ namespace Ion
 
 	void DX11::PrintDebugMessages()
 	{
+		TRACE_FUNCTION();
+
 		if (!s_DebugInfoQueue || !s_DebugInfoQueue->GetNumStoredMessages(DXGI_DEBUG_ALL))
 			return;
 
@@ -215,6 +229,8 @@ namespace Ion
 
 	void DX11::PrepareDebugMessageQueue()
 	{
+		TRACE_FUNCTION();
+
 		if (!s_DebugInfoQueue)
 			return;
 
@@ -223,6 +239,8 @@ namespace Ion
 
 	void DX11::SetDisplayVersion(const char* version)
 	{
+		TRACE_FUNCTION();
+
 		static char* directX = "DirectX ";
 		static size_t length = strlen(directX);
 		strcpy_s((s_DisplayName + length), 120 - length, version);
@@ -230,6 +248,8 @@ namespace Ion
 
 	void DX11::CreateRenderTarget()
 	{
+		TRACE_FUNCTION();
+
 		HRESULT hResult = S_OK;
 
 		ID3D11Texture2D* backBuffer = nullptr;
@@ -245,6 +265,8 @@ namespace Ion
 
 	void DX11::ResizeBuffers(uint32 width, uint32 height)
 	{
+		TRACE_FUNCTION();
+
 		HRESULT hResult = S_OK;
 
 		if (s_RenderTarget)
@@ -261,21 +283,29 @@ namespace Ion
 
 	void DX11::InitImGuiBackend()
 	{
+		TRACE_FUNCTION();
+
 		ImGui_ImplDX11_Init(s_Device, s_Context);
 	}
 
 	void DX11::ImGuiNewFrame()
 	{
+		TRACE_FUNCTION();
+
 		ImGui_ImplDX11_NewFrame();
 	}
 
 	void DX11::ImGuiRender(ImDrawData* drawData)
 	{
+		TRACE_FUNCTION();
+
 		ImGui_ImplDX11_RenderDrawData(drawData);
 	}
 
 	void DX11::ImGuiShutdown()
 	{
+		TRACE_FUNCTION();
+
 		ImGui_ImplDX11_Shutdown();
 	}
 

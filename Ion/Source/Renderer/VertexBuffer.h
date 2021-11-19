@@ -1,36 +1,17 @@
 #pragma once
 
+#include "VertexAttribute.h"
+
 namespace Ion
 {
-	enum class EVertexAttributeType
-	{
-		Null,
-		Byte,
-		UnsignedByte,
-		Short,
-		UnsignedShort,
-		Int,
-		UnsignedInt,
-		Float16,
-		Float,
-		Double,
-	};
-
-	struct VertexAttribute
-	{
-		EVertexAttributeType Type;
-		uint8 ElementCount;
-		uint64 Offset;
-		bool bNormalized = false;
-	};
-
 	class ION_API VertexLayout
 	{
 		friend class VertexBuffer;
 	public:
 		VertexLayout(uint32 initialAttributeCount);
 
-		void AddAttribute(EVertexAttributeType attributeType, uint8 elementCount, bool normalized = false);
+		void AddAttribute(EVertexAttributeType attributeType, uint8 elementCount, bool bNormalized = false);
+		void AddAttribute(EVertexAttributeSemantic semantic, EVertexAttributeType attributeType, uint8 elementCount, bool bNormalized = false);
 
 		FORCEINLINE uint32 GetStride() const { return (uint32)m_Offset; }
 

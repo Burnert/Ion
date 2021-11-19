@@ -482,9 +482,16 @@ namespace Ion
 		TShared<VertexLayout> layout = MakeShareable(new VertexLayout((uint32)m_TriangleInputs.size()));
 		for (const TriangleInput& input : m_TriangleInputs)
 		{
+			EVertexAttributeSemantic semantic = EVertexAttributeSemantic::Null;
+			if (IsSemanticTranslatable(input.Semantic))
+			{
+				semantic = TranslateSemantic(input.Semantic);
+			}
+
 			uint32 elementCount = input.Stride;
 			bool bNormalized = strcmp(input.Semantic, "NORMAL") == 0;
-			layout->AddAttribute(EVertexAttributeType::Float, elementCount, bNormalized);
+
+			layout->AddAttribute(semantic, EVertexAttributeType::Float, elementCount, bNormalized);
 		}
 		return layout;
 	}

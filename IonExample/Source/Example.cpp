@@ -17,6 +17,10 @@
 
 #include "Core/File/Collada.h"
 
+#include "RenderAPI/DX11/DX11.h"
+#include "RenderAPI/DX11/DX11Shader.h"
+#include "RenderAPI/DX11/DX11Buffer.h"
+
 // I'll think about this...
 using namespace Ion;
 
@@ -62,28 +66,58 @@ public:
 		scene->AddDrawableObject(mesh.get());
 	}
 
+	struct Triangle
+	{
+		TShared<VertexBuffer> VB;
+		TShared<IndexBuffer> IB;
+		TShared<Shader> Shader;
+	} m_Triangle;
+
 	virtual void OnInit() override
 	{
 #pragma warning(disable:6001)
 
 		String vertSrc;
 		String fragSrc;
+		String vertexSrcDx;
+		String pixelSrcDx;
 
 		FilePath shadersPath = GetCheckedEnginePath() + L"Shaders";
 
 		File::ReadToString(shadersPath + L"Basic.vert", vertSrc);
 		File::ReadToString(shadersPath + L"Basic.frag", fragSrc);
+		File::ReadToString(shadersPath + L"BasicVS.hlsl", vertexSrcDx);
+		File::ReadToString(shadersPath + L"BasicPS.hlsl", pixelSrcDx);
 
-#if 0
 		bool bResult;
 
-		TShared<Shader> shader = Shader::Create();
-		shader->AddShaderSource(EShaderType::Vertex, vertSrc);
-		shader->AddShaderSource(EShaderType::Pixel, fragSrc);
+		m_Triangle.Shader = Shader::Create();
+		m_Triangle.Shader->AddShaderSource(EShaderType::Vertex, vertexSrcDx);
+		m_Triangle.Shader->AddShaderSource(EShaderType::Pixel, pixelSrcDx);
 
-		bResult = shader->Compile();
+		bResult = m_Triangle.Shader->Compile();
 		ionassert(bResult);
 
+		float vertices[] = {
+			 0.0f,  0.5f, 0.0f,
+			 0.5f, -0.5f, 0.0f,
+			-0.5f, -0.5f, 0.0f,
+		};
+
+		uint32 indices[] = {
+			0, 1, 2
+		};
+
+		TShared<VertexLayout> layout = MakeShareable(new VertexLayout(1));
+		layout->AddAttribute(EVertexAttributeSemantic::Position, EVertexAttributeType::Float, 3, false);
+
+		m_Triangle.VB = VertexBuffer::Create(vertices, sizeof(vertices) / sizeof(float));
+		m_Triangle.VB->SetLayout(layout);
+		((DX11VertexBuffer*)m_Triangle.VB.get())->CreateDX11Layout(std::static_pointer_cast<DX11Shader>(m_Triangle.Shader));
+
+		m_Triangle.IB = IndexBuffer::Create(indices, sizeof(indices) / sizeof(TRemoveExtent<decltype(indices)>));
+
+#if 0
 		m_Camera = Camera::Create();
 		m_Camera->SetTransform(Math::Translate(Vector3(0.0f, 0.0f, 2.0f)));
 		m_Camera->SetFOV(Math::Radians(90.0f));
@@ -379,6 +413,12 @@ public:
 	{
 		GetRenderer()->Clear(Vector4(0.1f, 0.1f, 0.1f, 1.0f));
 		//GetRenderer()->RenderScene(m_Scene);
+		RPrimitiveRenderProxy triangle;
+		triangle.VertexBuffer = m_Triangle.VB.get();
+		triangle.IndexBuffer = m_Triangle.IB.get();
+		triangle.Shader = m_Triangle.Shader.get();
+
+		GetRenderer()->Draw(triangle, m_Scene);
 	}
 
 	virtual void OnShutdown() override

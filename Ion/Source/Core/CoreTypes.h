@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 // Legacy types
 
 using llong        = int64_t;
