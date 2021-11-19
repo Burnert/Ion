@@ -99,7 +99,7 @@ namespace Ion
 		ID3DBlob* blob = shader->GetVertexShaderByteCode();
 
 		dxcall(device->CreateInputLayout(m_IEDArray.data(), (uint32)m_IEDArray.size(), blob->GetBufferPointer(), blob->GetBufferSize(), &m_InputLayout),
-			"Cannot create Input Layout.");
+			"Could not create Input Layout.");
 	}
 
 	uint32 DX11VertexBuffer::GetVertexCount() const
@@ -190,5 +190,119 @@ namespace Ion
 	void DX11IndexBuffer::Unbind() const
 	{
 		dxcall_v(DX11::GetContext()->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0));
+	}
+
+	// -------------------------------------------------------------------
+	// DX11UniformBuffer -------------------------------------------------
+	// -------------------------------------------------------------------
+
+	DX11UniformBuffer::DX11UniformBuffer(void* data, size_t size) :
+		m_Buffer(nullptr)
+	{
+		TRACE_FUNCTION();
+
+		ionassert(data);
+		ionassert(size > 0);
+		ionassert(size <= std::numeric_limits<UINT>::max());
+
+		HRESULT hResult;
+
+		ID3D11Device* device = DX11::GetDevice();
+
+		D3D11_BUFFER_DESC bd { };
+		bd.ByteWidth = (uint32)size;
+		bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		bd.Usage = D3D11_USAGE_DYNAMIC;
+		bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+		D3D11_SUBRESOURCE_DATA sd { };
+		sd.pSysMem = data;
+
+		dxcall(device->CreateBuffer(&bd, &sd, &m_Buffer),
+			"Could not create Constant Buffer.");
+	}
+
+	DX11UniformBuffer::~DX11UniformBuffer()
+	{
+		TRACE_FUNCTION();
+
+		if (m_Buffer)
+			m_Buffer->Release();
+	}
+
+	void DX11UniformBuffer::SetFloat(const String& name, float value) const
+	{
+	}
+	void DX11UniformBuffer::SetFloat2(const String& name, const Vector2& value) const
+	{
+	}
+	void DX11UniformBuffer::SetFloat3(const String& name, const Vector3& value) const
+	{
+	}
+	void DX11UniformBuffer::SetFloat4(const String& name, const Vector4& value) const
+	{
+	}
+	void DX11UniformBuffer::SetInt(const String& name, int32 value) const
+	{
+	}
+	void DX11UniformBuffer::SetInt2(const String& name, const IVector2& value) const
+	{
+	}
+	void DX11UniformBuffer::SetInt3(const String& name, const IVector3& value) const
+	{
+	}
+	void DX11UniformBuffer::SetInt4(const String& name, const IVector4& value) const
+	{
+	}
+	void DX11UniformBuffer::SetUInt(const String& name, uint32 value) const
+	{
+	}
+	void DX11UniformBuffer::SetUInt2(const String& name, const UVector2& value) const
+	{
+	}
+	void DX11UniformBuffer::SetUInt3(const String& name, const UVector3& value) const
+	{
+	}
+	void DX11UniformBuffer::SetUInt4(const String& name, const UVector4& value) const
+	{
+	}
+	void DX11UniformBuffer::SetMatrix2(const String& name, const Matrix2& value) const
+	{
+	}
+	void DX11UniformBuffer::SetMatrix2x3(const String& name, const Matrix2x3& value) const
+	{
+	}
+	void DX11UniformBuffer::SetMatrix2x4(const String& name, const Matrix2x4& value) const
+	{
+	}
+	void DX11UniformBuffer::SetMatrix3(const String& name, const Matrix3& value) const
+	{
+	}
+	void DX11UniformBuffer::SetMatrix3x2(const String& name, const Matrix3x2& value) const
+	{
+	}
+	void DX11UniformBuffer::SetMatrix3x4(const String& name, const Matrix3x4& value) const
+	{
+	}
+	void DX11UniformBuffer::SetMatrix4(const String& name, const Matrix4& value) const
+	{
+	}
+	void DX11UniformBuffer::SetMatrix4x2(const String& name, const Matrix4x2& value) const
+	{
+	}
+	void DX11UniformBuffer::SetMatrix4x3(const String& name, const Matrix4x3& value) const
+	{
+	}
+
+	void DX11UniformBuffer::Bind() const
+	{
+		TRACE_FUNCTION();
+
+		ionassert(m_Buffer);
+
+		ID3D11DeviceContext* context = DX11::GetContext();
+
+		context->VSSetConstantBuffers(0, 1, &m_Buffer);
+		context->PSSetConstantBuffers(0, 1, &m_Buffer);
 	}
 }

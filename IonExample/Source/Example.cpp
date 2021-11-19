@@ -66,10 +66,16 @@ public:
 		scene->AddDrawableObject(mesh.get());
 	}
 
+	struct TriangleUniforms
+	{
+		Vector4 Color;
+	};
+
 	struct Triangle
 	{
 		TShared<VertexBuffer> VB;
 		TShared<IndexBuffer> IB;
+		TShared<UniformBuffer> UB;
 		TShared<Shader> Shader;
 	} m_Triangle;
 
@@ -116,6 +122,11 @@ public:
 		((DX11VertexBuffer*)m_Triangle.VB.get())->CreateDX11Layout(std::static_pointer_cast<DX11Shader>(m_Triangle.Shader));
 
 		m_Triangle.IB = IndexBuffer::Create(indices, sizeof(indices) / sizeof(TRemoveExtent<decltype(indices)>));
+
+		TriangleUniforms uniforms { };
+		uniforms.Color = Vector4(1.0f, 0.5f, 0.3f, 1.0f);
+
+		m_Triangle.UB = UniformBuffer::Create(&uniforms, sizeof(uniforms));
 
 #if 0
 		m_Camera = Camera::Create();
@@ -416,6 +427,7 @@ public:
 		RPrimitiveRenderProxy triangle;
 		triangle.VertexBuffer = m_Triangle.VB.get();
 		triangle.IndexBuffer = m_Triangle.IB.get();
+		triangle.UniformBuffer = m_Triangle.UB.get();
 		triangle.Shader = m_Triangle.Shader.get();
 
 		GetRenderer()->Draw(triangle, m_Scene);

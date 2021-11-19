@@ -13,6 +13,7 @@ namespace Ion
 
 	class VertexBuffer;
 	class IndexBuffer;
+	class UniformBuffer;
 	class Material;
 	class Shader;
 
@@ -20,6 +21,7 @@ namespace Ion
 	{
 		const VertexBuffer* VertexBuffer;
 		const IndexBuffer* IndexBuffer;
+		const UniformBuffer* UniformBuffer;
 		const Material* Material;
 		const Shader* Shader;
 		Matrix4 Transform;

@@ -5,6 +5,11 @@ struct VSOut
 	//float4 TexCoord : TEXCOORD;
 };
 
+cbuffer Constants
+{
+	float4 Color;
+};
+
 float4 main(float4 pos : POSITION/*, float4 normal : NORMAL, float4 texcoord : TEXCOORD*/) : SV_POSITION
 {
 	VSOut data;

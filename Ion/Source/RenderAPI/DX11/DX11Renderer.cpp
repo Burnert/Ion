@@ -43,12 +43,14 @@ namespace Ion
 
 		DX11VertexBuffer* vb = (DX11VertexBuffer*)primitive.VertexBuffer;
 		DX11IndexBuffer* ib = (DX11IndexBuffer*)primitive.IndexBuffer;
+		DX11UniformBuffer* ub = (DX11UniformBuffer*)primitive.UniformBuffer;
 		DX11Shader* shader = (DX11Shader*)primitive.Shader;
 
 		shader->Bind();
 		vb->Bind();
 		vb->BindLayout();
 		ib->Bind();
+		ub->Bind();
 
 		dxcall_v(context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
 		dxcall_v(context->DrawIndexed(ib->GetIndexCount(), 0, 0));
