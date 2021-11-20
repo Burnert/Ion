@@ -67,7 +67,7 @@ namespace Ion
 
 		m_Renderer = Renderer::Create();
 		m_Renderer->Init();
-		m_Renderer->SetVSyncEnabled(false);
+		m_Renderer->SetVSyncEnabled(true);
 
 		InitImGui();
 

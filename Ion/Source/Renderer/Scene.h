@@ -1,15 +1,20 @@
 #pragma once
 
 #include "Core/Core.h"
+#include "RendererCore.h"
 #include "Camera.h"
 #include "Light.h"
 
 namespace Ion
 {
-	class IDrawable;
-	class Camera;
-	class Light;
-	class DirectionalLight;
+	struct UNIFORMBUFFER SceneUniforms
+	{
+		Matrix4 ViewMatrix;
+		Matrix4 ProjectionMatrix;
+		Matrix4 ViewProjectionMatrix;
+
+		Vector3 CameraLocation;
+	};
 
 	class VertexBuffer;
 	class IndexBuffer;
@@ -26,6 +31,11 @@ namespace Ion
 		const Shader* Shader;
 		Matrix4 Transform;
 	};
+
+	class IDrawable;
+	class Camera;
+	class Light;
+	class DirectionalLight;
 
 	class ION_API Scene
 	{
@@ -68,12 +78,7 @@ namespace Ion
 		FORCEINLINE bool HasDirectionalLight() const { return m_ActiveDirectionalLight; }
 
 	protected:
-		Scene() :
-			m_AmbientLightColor(0.0f),
-			m_ActiveDirectionalLight(nullptr),
-			m_RenderCamera({ }),
-			m_RenderDirLight({ })
-		{ }
+		Scene();
 
 	private:
 		THashSet<IDrawable*> m_DrawableObjects;
@@ -84,11 +89,17 @@ namespace Ion
 		DirectionalLight* m_ActiveDirectionalLight;
 		THashSet<Light*> m_Lights;
 
+		TShared<UniformBuffer> m_SceneUniformBuffer;
+
 		// Render Thread: -------------------------------------
 
 		TArray<RPrimitiveRenderProxy> m_RenderPrimitives;
 		TArray<RLightRenderProxy> m_RenderLights;
 		RLightRenderProxy m_RenderDirLight;
 		RCameraRenderProxy m_RenderCamera;
+
+		friend class Renderer;
+		friend class OpenGLRenderer;
+		friend class DX11Renderer;
 	};
 }

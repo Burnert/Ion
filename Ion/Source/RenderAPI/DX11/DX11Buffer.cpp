@@ -17,6 +17,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
+		ionassertnd(vertexAttributes);
 		ionassert(count <= std::numeric_limits<uint64>::max() / 4);
 		ionassert(count * sizeof(float) <= std::numeric_limits<UINT>::max());
 
@@ -145,6 +146,8 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
+		ionassertnd(indices);
+
 		HRESULT hResult = S_OK;
 
 		ID3D11Device* device = DX11::GetDevice();
@@ -196,18 +199,25 @@ namespace Ion
 	// DX11UniformBuffer -------------------------------------------------
 	// -------------------------------------------------------------------
 
-	DX11UniformBuffer::DX11UniformBuffer(void* data, size_t size) :
+#pragma warning(disable:6387)
+
+	DX11UniformBuffer::DX11UniformBuffer(void* initialData, size_t size) :
+		m_Data(nullptr),
+		m_DataSize(size),
 		m_Buffer(nullptr)
 	{
 		TRACE_FUNCTION();
 
-		ionassert(data);
-		ionassert(size > 0);
+		ionassertnd(initialData);
 		ionassert(size <= std::numeric_limits<UINT>::max());
 
 		HRESULT hResult;
 
 		ID3D11Device* device = DX11::GetDevice();
+
+		// Align to 16 byte boundaries for a faster memcpy to a mapped buffer.
+		m_Data = _aligned_malloc(size, 16);
+		memcpy(m_Data, initialData, size);
 
 		D3D11_BUFFER_DESC bd { };
 		bd.ByteWidth = (uint32)size;
@@ -216,10 +226,19 @@ namespace Ion
 		bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
 		D3D11_SUBRESOURCE_DATA sd { };
-		sd.pSysMem = data;
+		sd.pSysMem = m_Data;
 
 		dxcall(device->CreateBuffer(&bd, &sd, &m_Buffer),
 			"Could not create Constant Buffer.");
+	}
+
+	DX11UniformBuffer::DX11UniformBuffer(void* data, size_t size, const UniformDataMap& uniforms) :
+		UniformBuffer(uniforms),
+		m_Data(nullptr),
+		m_DataSize(size),
+		m_Buffer(nullptr)
+	{
+		// @TODO: yes
 	}
 
 	DX11UniformBuffer::~DX11UniformBuffer()
@@ -228,6 +247,8 @@ namespace Ion
 
 		if (m_Buffer)
 			m_Buffer->Release();
+
+		_aligned_free(m_Data);
 	}
 
 	void DX11UniformBuffer::SetFloat(const String& name, float value) const
@@ -294,7 +315,7 @@ namespace Ion
 	{
 	}
 
-	void DX11UniformBuffer::Bind() const
+	void DX11UniformBuffer::Bind(uint32 slot) const
 	{
 		TRACE_FUNCTION();
 
@@ -302,7 +323,28 @@ namespace Ion
 
 		ID3D11DeviceContext* context = DX11::GetContext();
 
-		context->VSSetConstantBuffers(0, 1, &m_Buffer);
-		context->PSSetConstantBuffers(0, 1, &m_Buffer);
+		context->VSSetConstantBuffers(slot, 1, &m_Buffer);
+		context->PSSetConstantBuffers(slot, 1, &m_Buffer);
+	}
+
+	void* DX11UniformBuffer::GetDataPtr() const
+	{
+		return m_Data;
+	}
+
+	void DX11UniformBuffer::UpdateData() const
+	{
+		TRACE_FUNCTION();
+
+		ionassert(m_Buffer);
+
+		HRESULT hResult;
+
+		ID3D11DeviceContext* context = DX11::GetContext();
+
+		D3D11_MAPPED_SUBRESOURCE msd { };
+		dxcall(context->Map(m_Buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &msd));
+		memcpy(msd.pData, m_Data, m_DataSize);
+		dxcall_v(context->Unmap(m_Buffer, 0));
 	}
 }

@@ -69,7 +69,7 @@ public:
 	struct TriangleUniforms
 	{
 		Vector4 Color;
-	};
+	} m_TriangleUniforms;
 
 	struct Triangle
 	{
@@ -114,21 +114,38 @@ public:
 			0, 1, 2
 		};
 
+		float quad[] = {
+			-0.5f,  0.5f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f,
+			 0.5f,  0.5f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
+			 0.5f, -0.5f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f,
+			-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
+		};
+
+		uint32 quadIndices[] = {
+			0, 1, 2,
+			2, 3, 0,
+		};
+
 		TShared<VertexLayout> layout = MakeShareable(new VertexLayout(1));
 		layout->AddAttribute(EVertexAttributeSemantic::Position, EVertexAttributeType::Float, 3, false);
+		layout->AddAttribute(EVertexAttributeSemantic::Normal, EVertexAttributeType::Float, 3, true);
+		layout->AddAttribute(EVertexAttributeSemantic::TexCoord, EVertexAttributeType::Float, 2, false);
 
-		m_Triangle.VB = VertexBuffer::Create(vertices, sizeof(vertices) / sizeof(float));
+		m_Triangle.VB = VertexBuffer::Create(quad, sizeof(quad) / sizeof(float));
 		m_Triangle.VB->SetLayout(layout);
 		((DX11VertexBuffer*)m_Triangle.VB.get())->CreateDX11Layout(std::static_pointer_cast<DX11Shader>(m_Triangle.Shader));
 
-		m_Triangle.IB = IndexBuffer::Create(indices, sizeof(indices) / sizeof(TRemoveExtent<decltype(indices)>));
+		m_Triangle.IB = IndexBuffer::Create(quadIndices, sizeof(quadIndices) / sizeof(uint32));
 
-		TriangleUniforms uniforms { };
-		uniforms.Color = Vector4(1.0f, 0.5f, 0.3f, 1.0f);
+		ZeroMemory(&m_TriangleUniforms, sizeof(m_TriangleUniforms));
+		m_TriangleUniforms.Color = Vector4(1.0f, 0.5f, 0.3f, 1.0f);
 
-		m_Triangle.UB = UniformBuffer::Create(&uniforms, sizeof(uniforms));
+		UniformBufferFactory ubFactory;
+		ubFactory.Add("Color", EUniformType::Float4);
+		//ubFactory.Construct(m_Triangle.UB);
 
-#if 0
+		m_Triangle.UB = MakeShareable(UniformBuffer::Create(&m_TriangleUniforms, sizeof(m_TriangleUniforms)));
+
 		m_Camera = Camera::Create();
 		m_Camera->SetTransform(Math::Translate(Vector3(0.0f, 0.0f, 2.0f)));
 		m_Camera->SetFOV(Math::Radians(90.0f));
@@ -137,7 +154,7 @@ public:
 
 		m_Scene = Scene::Create();
 		m_Scene->SetActiveCamera(m_Camera);
-
+#if 0
 		m_AuxCamera = Camera::Create();
 		m_AuxCamera->SetTransform(Math::Translate(Vector3(0.0f, 0.0f, 4.0f)));
 		m_AuxCamera->SetFOV(Math::Radians(66.0f));
@@ -245,26 +262,6 @@ public:
 
 	virtual void OnUpdate(float deltaTime) override
 	{
-#if 0
-		TShared<Material> meshMaterial = m_MeshCollada->GetMaterial().lock();
-		TShared<Shader> meshShader = meshMaterial->GetShader();
-
-		static float c_Angle = 0.0f;
-		static Vector4 c_Tint(1.0f, 0.0f, 1.0f, 1.0f);
-
-		// Perspective projection
-		WindowDimensions dimensions = GetWindow()->GetDimensions();
-		float aspectRatio = dimensions.GetAspectRatio();
-		m_Camera->SetAspectRatio(aspectRatio);
-		m_AuxCamera->SetAspectRatio(aspectRatio);
-
-		m_Scene->SetAmbientLightColor(m_AmbientLightColor);
-
-		m_DirectionalLightRotation = Quaternion(Math::Radians(m_DirectionalLightAngles));
-		m_DirectionalLight->m_LightDirection = Math::Rotate(m_DirectionalLightRotation, Vector3(0.0f, 0.0f, -1.0f));
-		m_DirectionalLight->m_Color = m_DirectionalLightColor;
-		m_DirectionalLight->m_Intensity = m_DirectionalLightIntensity;
-
 		float cameraMoveSpeed = 5.0f;
 
 		if (GetInputManager()->IsMouseButtonPressed(Mouse::Right))
@@ -296,6 +293,29 @@ public:
 		}
 
 		m_Camera->SetTransform(m_CameraTransform.GetMatrix());
+		const Vector3& Location = m_Camera->GetLocation();
+
+		float& r = m_Triangle.UB->Data<TriangleUniforms>()->Color.r;
+		r = glm::mod(r + deltaTime, 1.0f);
+
+		// Update the aspect ratio when the viewport size changes
+		WindowDimensions dimensions = GetWindow()->GetDimensions();
+		float aspectRatio = dimensions.GetAspectRatio();
+		m_Camera->SetAspectRatio(aspectRatio);
+		//m_AuxCamera->SetAspectRatio(aspectRatio);
+#if 0
+		TShared<Material> meshMaterial = m_MeshCollada->GetMaterial().lock();
+		TShared<Shader> meshShader = meshMaterial->GetShader();
+
+		static float c_Angle = 0.0f;
+		static Vector4 c_Tint(1.0f, 0.0f, 1.0f, 1.0f);
+
+		m_Scene->SetAmbientLightColor(m_AmbientLightColor);
+
+		m_DirectionalLightRotation = Quaternion(Math::Radians(m_DirectionalLightAngles));
+		m_DirectionalLight->m_LightDirection = Math::Rotate(m_DirectionalLightRotation, Vector3(0.0f, 0.0f, -1.0f));
+		m_DirectionalLight->m_Color = m_DirectionalLightColor;
+		m_DirectionalLight->m_Intensity = m_DirectionalLightIntensity;
 
 		m_MeshRotation.y = std::fmodf(m_MeshRotation.y + deltaTime * 90, 360);
 		m_MeshTransform = { m_MeshLocation, m_MeshRotation, m_MeshScale };
@@ -305,9 +325,8 @@ public:
 		c_Tint.y = (((c_Tint.y + deltaTime) >= 2.0f) ? 0.0f : (c_Tint.y + deltaTime));
 
 		m_AuxCamera->SetTransform(Math::Translate(m_AuxCameraLocation));
-
-		m_Scene->UpdateRenderData();
 #endif
+		m_Scene->UpdateRenderData();
 
 		// ImGui:
 
@@ -423,7 +442,7 @@ public:
 	virtual void OnRender() override
 	{
 		GetRenderer()->Clear(Vector4(0.1f, 0.1f, 0.1f, 1.0f));
-		//GetRenderer()->RenderScene(m_Scene);
+		GetRenderer()->RenderScene(m_Scene);
 		RPrimitiveRenderProxy triangle;
 		triangle.VertexBuffer = m_Triangle.VB.get();
 		triangle.IndexBuffer = m_Triangle.IB.get();

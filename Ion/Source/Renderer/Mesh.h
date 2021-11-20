@@ -1,11 +1,19 @@
 #pragma once
 
+#include "RendererCore.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "Material.h"
 
 namespace Ion
 {
+	struct UNIFORMBUFFER MeshUniforms
+	{
+		Matrix4 ModelViewProjectionMatrix;
+		Matrix4 TransformMatrix;
+		Matrix4 InverseTransposeMatrix;
+	};
+
 	class ION_API Mesh : public IDrawable
 	{
 	public:

@@ -4,12 +4,22 @@
 #include "Drawable.h"
 #include "Material.h"
 #include "Light.h"
+#include "UniformBuffer.h"
 
 namespace Ion
 {
 	TShared<Scene> Scene::Create()
 	{
 		return MakeShareable(new Scene);
+	}
+
+	Scene::Scene() :
+		m_AmbientLightColor(0.0f),
+		m_ActiveDirectionalLight(nullptr),
+		m_RenderCamera({ }),
+		m_RenderDirLight({ })
+	{
+		m_SceneUniformBuffer = MakeShareable(UniformBuffer::Create(SceneUniforms()));
 	}
 
 	void Scene::SetActiveCamera(const TShared<Camera>& camera)
@@ -91,5 +101,11 @@ namespace Ion
 
 		if (m_RenderLights.capacity() > m_RenderLights.size() * 2)
 			m_RenderLights.shrink_to_fit();
+
+		SceneUniforms* uniforms = m_SceneUniformBuffer->Data<SceneUniforms>();
+		uniforms->ViewMatrix = m_RenderCamera.ViewMatrix;
+		uniforms->ProjectionMatrix = m_RenderCamera.ProjectionMatrix;
+		uniforms->ViewProjectionMatrix = m_RenderCamera.ViewProjectionMatrix;
+		uniforms->CameraLocation = m_RenderCamera.Location;
 	}
 }

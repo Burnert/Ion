@@ -25,10 +25,10 @@ namespace Ion
 #if ION_DEBUG
 		// Init Debug Layer
 
-		HMODULE hDxgiDebug = LoadLibrary(L"Dxgidebug.dll");
-		win_check(hDxgiDebug, "Could not load module Dxgidebug.dll.");
+		s_hDxgiDebugModule = LoadLibrary(L"Dxgidebug.dll");
+		win_check(s_hDxgiDebugModule, "Could not load module Dxgidebug.dll.");
 
-		DXGIGetDebugInterface = (DXGIGetDebugInterfaceProc)GetProcAddress(hDxgiDebug, "DXGIGetDebugInterface");
+		DXGIGetDebugInterface = (DXGIGetDebugInterfaceProc)GetProcAddress(s_hDxgiDebugModule, "DXGIGetDebugInterface");
 		win_check(DXGIGetDebugInterface, "Cannot load DXGIGetDebugInterface from Dxgidebug.dll.");
 
 		dxcall(DXGIGetDebugInterface(IID_PPV_ARGS(&s_DebugInfoQueue)), "Cannot get the Debug Interface.");
@@ -49,11 +49,13 @@ namespace Ion
 		scd.OutputWindow = hwnd;
 		scd.Windowed = true;
 		scd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
-		scd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+		scd.Flags = 0;
 
 		D3D_FEATURE_LEVEL targetFeatureLevel[] = {
 			D3D_FEATURE_LEVEL_11_1,
 			D3D_FEATURE_LEVEL_11_0,
+			D3D_FEATURE_LEVEL_10_1,
+			D3D_FEATURE_LEVEL_10_0,
 		};
 
 		uint32 flags = 0;
@@ -94,7 +96,7 @@ namespace Ion
 		factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER);
 		factory->Release();
 
-		// @TODO: Add DirectX version logging.
+		LOG_INFO("Renderer: DirectX {0}", GetFeatureLevelString());
 	}
 
 	void DX11::Shutdown()
@@ -118,8 +120,10 @@ namespace Ion
 		if (s_RenderTarget)
 			s_RenderTarget->Release();
 
+#if ION_DEBUG
 		if (s_DebugInfoQueue)
 			s_DebugInfoQueue->Release();
+#endif
 	}
 
 	void DX11::BeginFrame()
@@ -148,6 +152,7 @@ namespace Ion
 
 	DX11::MessageArray DX11::GetDebugMessages()
 	{
+#if ION_DEBUG
 		TRACE_FUNCTION();
 
 		if (!s_DebugInfoQueue)
@@ -183,10 +188,14 @@ namespace Ion
 		s_DebugInfoQueue->ClearStoredMessages(DXGI_DEBUG_ALL);
 
 		return messageArray;
+#else
+		return MessageArray();
+#endif
 	}
 
 	void DX11::PrintDebugMessages()
 	{
+#if ION_DEBUG
 		TRACE_FUNCTION();
 
 		if (!s_DebugInfoQueue || !s_DebugInfoQueue->GetNumStoredMessages(DXGI_DEBUG_ALL))
@@ -225,16 +234,19 @@ namespace Ion
 				break;
 			}
 		}
+#endif
 	}
 
 	void DX11::PrepareDebugMessageQueue()
 	{
+#if ION_DEBUG
 		TRACE_FUNCTION();
 
 		if (!s_DebugInfoQueue)
 			return;
 
 		s_DebugInfoQueue->ClearStoredMessages(DXGI_DEBUG_ALL);
+#endif
 	}
 
 	void DX11::SetDisplayVersion(const char* version)
@@ -312,10 +324,6 @@ namespace Ion
 	bool DX11::s_Initialized = false;
 	D3D_FEATURE_LEVEL DX11::s_FeatureLevel = D3D_FEATURE_LEVEL_1_0_CORE;
 
-	DX11::DXGIGetDebugInterfaceProc DX11::DXGIGetDebugInterface = nullptr;
-
-	IDXGIInfoQueue* DX11::s_DebugInfoQueue = nullptr;
-
 	char DX11::s_DisplayName[120] = "DirectX ";
 
 	ID3D11Device* DX11::s_Device = nullptr;
@@ -324,4 +332,10 @@ namespace Ion
 	ID3D11RenderTargetView* DX11::s_RenderTarget = nullptr;
 
 	uint32 DX11::s_SwapInterval = 0;
+
+#if ION_DEBUG
+	HMODULE DX11::s_hDxgiDebugModule = NULL;
+	DX11::DXGIGetDebugInterfaceProc DX11::DXGIGetDebugInterface = nullptr;
+	IDXGIInfoQueue* DX11::s_DebugInfoQueue = nullptr;
+#endif
 }

@@ -68,12 +68,6 @@ namespace Ion
 
 		static void ChangeDisplayMode(EDisplayMode mode, uint32 width, uint32 height);
 
-		static FORCEINLINE const char* GetVendor() { return 0; }
-		static FORCEINLINE const char* GetRendererName() { return 0; }
-		static FORCEINLINE const char* GetVersion() { return 0; }
-		static FORCEINLINE const char* GetLanguageVersion() { return 0; }
-		static FORCEINLINE const char* GetExtensions() { return 0; }
-
 		static FORCEINLINE const char* GetFeatureLevelString()
 		{
 			return D3DFeatureLevelToString(s_FeatureLevel);
@@ -171,11 +165,14 @@ namespace Ion
 		static uint32 s_SwapInterval;
 
 		// Debug
+#if ION_DEBUG
+		static HMODULE s_hDxgiDebugModule;
 
 		using DXGIGetDebugInterfaceProc = HRESULT(*)(REFIID, void**);
 		static DXGIGetDebugInterfaceProc DXGIGetDebugInterface;
 
 		static IDXGIInfoQueue* s_DebugInfoQueue;
+#endif
 
 		friend class DX11Renderer;
 	};

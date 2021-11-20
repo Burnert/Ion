@@ -50,6 +50,7 @@ namespace Ion
 		vb->Bind();
 		vb->BindLayout();
 		ib->Bind();
+		ub->UpdateData();
 		ub->Bind();
 
 		dxcall_v(context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
@@ -61,6 +62,9 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		m_CurrentScene = scene;
+
+		scene->m_SceneUniformBuffer->UpdateData();
+		scene->m_SceneUniformBuffer->Bind(1);
 
 		for (const RPrimitiveRenderProxy& primitive : scene->GetScenePrimitives())
 		{

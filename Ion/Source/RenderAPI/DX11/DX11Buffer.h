@@ -152,7 +152,6 @@ namespace Ion
 	class ION_API DX11UniformBuffer : public UniformBuffer
 	{
 	public:
-		DX11UniformBuffer(void* data, size_t size);
 		virtual ~DX11UniformBuffer() override;
 
 		// @TODO: I don't know about these setters below
@@ -179,11 +178,21 @@ namespace Ion
 		virtual void SetMatrix4x2(const String& name, const Matrix4x2& value) const override;
 		virtual void SetMatrix4x3(const String& name, const Matrix4x3& value) const override;
 
-		virtual void Bind() const override;
+		virtual void Bind(uint32 slot = 0) const override;
+
+	protected:
+		DX11UniformBuffer(void* initialData, size_t size);
+		DX11UniformBuffer(void* data, size_t size, const UniformDataMap& uniforms);
+
+		virtual void* GetDataPtr() const override;
+		virtual void UpdateData() const override;
 
 	private:
+		void* m_Data;
+		size_t m_DataSize;
 		ID3D11Buffer* m_Buffer;
 
 		friend class DX11Renderer;
+		friend class UniformBuffer;
 	};
 }

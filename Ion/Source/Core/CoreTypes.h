@@ -70,3 +70,9 @@ using TArray       = std::vector<T, Allocator>;
 
 template<typename T>
 using TFunction    = std::function<T>;
+
+#if ION_DEBUG
+#define TypeInfo(name) std::type_info name
+#else
+#define TypeInfo(name)
+#endif

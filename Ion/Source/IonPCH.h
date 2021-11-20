@@ -23,6 +23,10 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#if ION_DEBUG
+#include <typeinfo>
+#endif
+
 #ifdef ION_PLATFORM_WINDOWS
 #define NOMINMAX
 #include <Windows.h>
