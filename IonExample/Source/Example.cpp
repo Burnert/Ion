@@ -319,19 +319,18 @@ public:
 		float aspectRatio = dimensions.GetAspectRatio();
 		m_Camera->SetAspectRatio(aspectRatio);
 		//m_AuxCamera->SetAspectRatio(aspectRatio);
+
+		m_Scene->SetAmbientLightColor(m_AmbientLightColor);
+		m_DirectionalLightRotation = Quaternion(Math::Radians(m_DirectionalLightAngles));
+		m_DirectionalLight->m_LightDirection = Math::Rotate(m_DirectionalLightRotation, Vector3(0.0f, 0.0f, -1.0f));
+		m_DirectionalLight->m_Color = m_DirectionalLightColor;
+		m_DirectionalLight->m_Intensity = m_DirectionalLightIntensity;
 #if 0
 		TShared<Material> meshMaterial = m_MeshCollada->GetMaterial().lock();
 		TShared<Shader> meshShader = meshMaterial->GetShader();
 
 		static float c_Angle = 0.0f;
 		static Vector4 c_Tint(1.0f, 0.0f, 1.0f, 1.0f);
-
-		m_Scene->SetAmbientLightColor(m_AmbientLightColor);
-
-		m_DirectionalLightRotation = Quaternion(Math::Radians(m_DirectionalLightAngles));
-		m_DirectionalLight->m_LightDirection = Math::Rotate(m_DirectionalLightRotation, Vector3(0.0f, 0.0f, -1.0f));
-		m_DirectionalLight->m_Color = m_DirectionalLightColor;
-		m_DirectionalLight->m_Intensity = m_DirectionalLightIntensity;
 
 		m_MeshRotation.y = std::fmodf(m_MeshRotation.y + deltaTime * 90, 360);
 		m_MeshTransform = { m_MeshLocation, m_MeshRotation, m_MeshScale };

@@ -5,6 +5,8 @@
 #include "Camera.h"
 #include "Light.h"
 
+#define MAX_LIGHTS 100
+
 namespace Ion
 {
 	struct UNIFORMBUFFER SceneUniforms
@@ -12,8 +14,14 @@ namespace Ion
 		Matrix4 ViewMatrix;
 		Matrix4 ProjectionMatrix;
 		Matrix4 ViewProjectionMatrix;
+		
+		LightUniforms Lights[MAX_LIGHTS];
+		LightUniforms DirLight;
+		Vector4 AmbientLightColor;
 
 		Vector3 CameraLocation;
+
+		uint32 LightNum;
 	};
 
 	class VertexBuffer;

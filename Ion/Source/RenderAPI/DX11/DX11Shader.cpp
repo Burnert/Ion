@@ -61,9 +61,10 @@ namespace Ion
 			hResult = D3DCompile(
 				shader.Source.c_str(),
 				shader.Source.length(),
-				nullptr, nullptr, &includeHandler,
-				"main",
-				ShaderTypeToTarget(shader.Type),
+				nullptr, nullptr,
+				&includeHandler,
+				ShaderTypeToEntryPoint(shader.Type),
+				FormatShaderTarget(shader.Type),
 				compileFlags, 0,
 				&shader.ShaderBlob,
 				&errorMessagesBlob);

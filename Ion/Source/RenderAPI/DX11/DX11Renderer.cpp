@@ -81,12 +81,46 @@ namespace Ion
 
 		m_CurrentScene = scene;
 
+		// Set global matrices and other scene data
 		SceneUniforms& uniforms = scene->m_SceneUniformBuffer->DataRef<SceneUniforms>();
 		uniforms.ViewMatrix = scene->m_RenderCamera.ViewMatrix;
 		uniforms.ProjectionMatrix = scene->m_RenderCamera.ProjectionMatrix;
 		uniforms.ViewProjectionMatrix = scene->m_RenderCamera.ViewProjectionMatrix;
 		uniforms.CameraLocation = scene->m_RenderCamera.Location;
 
+		// Set lights
+		const RLightRenderProxy& dirLight = scene->GetRenderDirLight();
+		const TArray<RLightRenderProxy>& lights = scene->GetRenderLights();
+		uint32 lightNum = scene->GetLightNumber();
+
+		if (scene->HasDirectionalLight())
+		{
+			uniforms.DirLight.Direction = Vector4(dirLight.Direction, 0.0f);
+			uniforms.DirLight.Color = Vector4(dirLight.Color, 1.0f);
+			uniforms.DirLight.Intensity = dirLight.Intensity;
+		}
+		else
+		{
+			uniforms.DirLight.Intensity = 0.0f;
+		}
+
+		uniforms.AmbientLightColor = scene->GetAmbientLightColor();
+		uniforms.LightNum = lightNum;
+
+		uint32 lightIndex = 0;
+		for (const RLightRenderProxy& light : lights)
+		{
+			LightUniforms& lightUniforms = uniforms.Lights[lightIndex];
+
+			lightUniforms.Location = Vector4(light.Location, 1.0f);
+			lightUniforms.Color = Vector4(light.Color, 1.0f);
+			lightUniforms.Intensity = light.Intensity;
+			lightUniforms.Falloff = light.Falloff;
+
+			lightIndex++;
+		}
+
+		// Update Constant Buffers
 		scene->m_SceneUniformBuffer->UpdateData();
 		scene->m_SceneUniformBuffer->Bind(0);
 

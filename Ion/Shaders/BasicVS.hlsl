@@ -1,6 +1,6 @@
 #include "ShaderCommon.hlsl"
 
-Pixel main(Vertex vertex)
+Pixel VSMain(Vertex vertex)
 {
 	Pixel pixel;
 

@@ -20,6 +20,15 @@ namespace Ion
 		ELightType Type;
 	};
 
+	struct UNIFORMBUFFER LightUniforms
+	{
+		Vector4 Location;
+		Vector4 Color;
+		Vector4 Direction;
+		float Intensity;
+		float Falloff;
+	};
+
 	class ION_API Light
 	{
 		friend class Renderer;

@@ -2,17 +2,11 @@
 
 #define MAX_LIGHTS 100
 
-struct DirectionalLight
-{
-	float4 Direction;
-	float4 Color;
-	float Intensity;
-};
-
 struct Light
 {
 	float4 Location;
 	float4 Color;
+	float4 Direction;
 	float Intensity;
 	float Falloff;
 };
@@ -26,9 +20,12 @@ cbuffer SceneConstants : register(b0)
 	float4x4 ViewProjectionMatrix;
 
 	Light SceneLights[MAX_LIGHTS];
-	DirectionalLight SceneDirectionalLight;
+	Light SceneDirectionalLight;
+	float4 SceneAmbientLightColor;
 
 	float3 CameraLocation;
+
+	uint SceneLightNum;
 };
 
 cbuffer MeshConstants : register(b1)

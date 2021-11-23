@@ -143,6 +143,7 @@ namespace Ion
 
 		SetDisplayVersion(D3DFeatureLevelToString(s_FeatureLevel));
 		LOG_INFO("Renderer: DirectX {0}", GetFeatureLevelString());
+		LOG_INFO("Shader Model {0}", GetShaderModelString());
 	}
 
 	void DX11::Shutdown()
