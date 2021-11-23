@@ -68,6 +68,7 @@ namespace Ion
 			RPrimitiveRenderProxy primitiveProxy;
 			primitiveProxy.VertexBuffer = drawable->GetVertexBufferRaw();
 			primitiveProxy.IndexBuffer = drawable->GetIndexBufferRaw();
+			primitiveProxy.UniformBuffer = drawable->GetUniformBufferRaw();
 			primitiveProxy.Material = drawable->GetMaterialRaw();
 			primitiveProxy.Shader = primitiveProxy.Material->GetShaderRaw();
 			primitiveProxy.Transform = drawable->GetTransformMatrix();
@@ -101,11 +102,5 @@ namespace Ion
 
 		if (m_RenderLights.capacity() > m_RenderLights.size() * 2)
 			m_RenderLights.shrink_to_fit();
-
-		SceneUniforms* uniforms = m_SceneUniformBuffer->Data<SceneUniforms>();
-		uniforms->ViewMatrix = m_RenderCamera.ViewMatrix;
-		uniforms->ProjectionMatrix = m_RenderCamera.ProjectionMatrix;
-		uniforms->ViewProjectionMatrix = m_RenderCamera.ViewProjectionMatrix;
-		uniforms->CameraLocation = m_RenderCamera.Location;
 	}
 }

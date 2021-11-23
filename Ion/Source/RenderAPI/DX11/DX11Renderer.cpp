@@ -5,6 +5,8 @@
 #include "DX11Shader.h"
 #include "DX11Texture.h"
 
+#include "Renderer/Scene.h"
+
 #include "Core/Platform/Windows/WindowsMacros.h"
 #include "Core/Platform/Windows/WindowsUtility.h"
 
@@ -42,19 +44,33 @@ namespace Ion
 
 		ID3D11DeviceContext* context = DX11::GetContext();
 
-		DX11VertexBuffer* vb = (DX11VertexBuffer*)primitive.VertexBuffer;
-		DX11IndexBuffer* ib = (DX11IndexBuffer*)primitive.IndexBuffer;
-		DX11UniformBuffer* ub = (DX11UniformBuffer*)primitive.UniformBuffer;
-		DX11Shader* shader = (DX11Shader*)primitive.Shader;
+		const Material* material = primitive.Material;
+		const DX11VertexBuffer* vb = (DX11VertexBuffer*)primitive.VertexBuffer;
+		const DX11IndexBuffer* ib = (DX11IndexBuffer*)primitive.IndexBuffer;
+		const DX11UniformBuffer* ub = (DX11UniformBuffer*)primitive.UniformBuffer;
+		const DX11Shader* shader = (DX11Shader*)primitive.Shader;
 
 		shader->Bind();
 		vb->Bind();
 		vb->BindLayout();
 		ib->Bind();
+
+		const Matrix4& viewProjectionMatrix = targetScene->m_RenderCamera.ViewProjectionMatrix;
+		const Matrix4& modelMatrix = primitive.Transform;
+
+		MeshUniforms& uniformData = ub->DataRef<MeshUniforms>();
+		uniformData.TransformMatrix = modelMatrix;
+		uniformData.InverseTransposeMatrix = Math::InverseTranspose(modelMatrix);
+		uniformData.ModelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
+
 		ub->UpdateData();
-		ub->Bind();
+		ub->Bind(2);
+
+		material->BindTextures();
+		//material->UpdateShaderUniforms();
 
 		dxcall_v(context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
+		context->RSSetState(DX11::GetRasterizerState());
 		dxcall_v(context->DrawIndexed(ib->GetIndexCount(), 0, 0));
 	}
 
@@ -63,6 +79,12 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		m_CurrentScene = scene;
+
+		SceneUniforms& uniforms = scene->m_SceneUniformBuffer->DataRef<SceneUniforms>();
+		uniforms.ViewMatrix = scene->m_RenderCamera.ViewMatrix;
+		uniforms.ProjectionMatrix = scene->m_RenderCamera.ProjectionMatrix;
+		uniforms.ViewProjectionMatrix = scene->m_RenderCamera.ViewProjectionMatrix;
+		uniforms.CameraLocation = scene->m_RenderCamera.Location;
 
 		scene->m_SceneUniformBuffer->UpdateData();
 		scene->m_SceneUniformBuffer->Bind(1);

@@ -45,8 +45,8 @@ namespace Ion
 		public:
 			// @TODO: Create a TConstMap
 
-			inline static const THashMap<const char*, const EVertexAttributeSemantic> SemanticStringToEnum = {
-				{ "POSITION", EVertexAttributeSemantic::Position },
+			inline static const THashMap<String, const EVertexAttributeSemantic> SemanticStringToEnum = {
+				{ "VERTEX",   EVertexAttributeSemantic::Position },
 				{ "NORMAL",   EVertexAttributeSemantic::Normal   },
 				{ "TEXCOORD", EVertexAttributeSemantic::TexCoord },
 			};

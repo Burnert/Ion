@@ -14,6 +14,8 @@ namespace Ion
 		Matrix4 InverseTransposeMatrix;
 	};
 
+	class UniformBuffer;
+
 	class ION_API Mesh : public IDrawable
 	{
 	public:
@@ -32,10 +34,13 @@ namespace Ion
 		const TShared<IndexBuffer>& GetIndexBuffer() const;
 		const TWeak<Material>& GetMaterial() const;
 
+		MeshUniforms& GetUniformsDataRef();
+
 		// IDrawable:
 
 		virtual const VertexBuffer* GetVertexBufferRaw() const override;
 		virtual const IndexBuffer* GetIndexBufferRaw() const override;
+		virtual const UniformBuffer* GetUniformBufferRaw() const override;
 		virtual const Material* GetMaterialRaw() const override;
 		virtual const Matrix4& GetTransformMatrix() const override;
 
@@ -47,6 +52,7 @@ namespace Ion
 	private:
 		TShared<VertexBuffer> m_VertexBuffer;
 		TShared<IndexBuffer> m_IndexBuffer;
+		TShared<UniformBuffer> m_UniformBuffer;
 		TWeak<Material> m_Material;
 
 		uint32 m_VertexCount;

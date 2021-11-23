@@ -32,7 +32,8 @@ Pixel main(Vertex vertex)
 {
 	Pixel pixel;
 
-	pixel.Position = mul(ViewProjectionMatrix, float4(vertex.Position.xyz, 1.0));
+	float4x4 mvp = mul(ViewProjectionMatrix, TransformMatrix);
+	pixel.Position = mul(ModelViewProjectionMatrix, vertex.Position);
 	pixel.Normal = vertex.Normal;
 	pixel.TexCoord = vertex.TexCoord;
 

@@ -45,6 +45,7 @@ public:
 		const ColladaData& data = model->GetData();
 		TShared<VertexBuffer> vb = VertexBuffer::Create(data.VertexAttributes, data.VertexAttributeCount);
 		vb->SetLayout(data.Layout);
+		((DX11VertexBuffer*)vb.get())->CreateDX11Layout(std::static_pointer_cast<DX11Shader>(shader));
 		TShared<IndexBuffer> ib = IndexBuffer::Create(data.Indices, (uint32)data.IndexCount);
 
 		File texFile(texturePath);
@@ -160,6 +161,13 @@ public:
 
 		m_Scene = Scene::Create();
 		m_Scene->SetActiveCamera(m_Camera);
+
+		m_Shader = Shader::Create();
+		m_Shader->AddShaderSource(EShaderType::Vertex, vertexSrcDx);
+		m_Shader->AddShaderSource(EShaderType::Pixel, pixelSrcDx);
+
+		bResult = m_Shader->Compile();
+		ionassert(bResult);
 #if 0
 		m_AuxCamera = Camera::Create();
 		m_AuxCamera->SetTransform(Math::Translate(Vector3(0.0f, 0.0f, 4.0f)));
@@ -231,29 +239,30 @@ public:
 
 		m_Scene->AddDrawableObject(m_MeshCollada.get());
 
+#endif
 		// 4Pak
-		InitExampleModel(m_Mesh4Pak, m_Material4Pak, m_Texture4Pak, shader, m_Scene, L"Assets/models/4pak.dae", L"Assets/textures/4pak.png",
+		InitExampleModel(m_Mesh4Pak, m_Material4Pak, m_Texture4Pak, m_Shader, m_Scene, L"Assets/models/4pak.dae", L"Assets/textures/4pak.png",
 			Math::Translate(Vector3(2.0f, 1.0f, 0.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
 
 		// Piwsko
-		InitExampleModel(m_MeshPiwsko, m_MaterialPiwsko, m_TexturePiwsko, shader, m_Scene, L"Assets/models/piwsko.dae", L"Assets/textures/piwsko.png",
+		InitExampleModel(m_MeshPiwsko, m_MaterialPiwsko, m_TexturePiwsko, m_Shader, m_Scene, L"Assets/models/piwsko.dae", L"Assets/textures/piwsko.png",
 			Math::Translate(Vector3(-2.0f, 1.0f, 0.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
 
 		// Oscypek
-		InitExampleModel(m_MeshOscypek, m_MaterialOscypek, m_TextureOscypek, shader, m_Scene, L"Assets/models/oscypek.dae", L"Assets/textures/oscypek.png",
+		InitExampleModel(m_MeshOscypek, m_MaterialOscypek, m_TextureOscypek, m_Shader, m_Scene, L"Assets/models/oscypek.dae", L"Assets/textures/oscypek.png",
 			Math::Translate(Vector3(-1.0f, 1.0f, 1.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
 
 		// Ciupaga
-		InitExampleModel(m_MeshCiupaga, m_MaterialCiupaga, m_TextureCiupaga, shader, m_Scene, L"Assets/models/ciupaga.dae", L"Assets/textures/ciupaga.png",
+		InitExampleModel(m_MeshCiupaga, m_MaterialCiupaga, m_TextureCiupaga, m_Shader, m_Scene, L"Assets/models/ciupaga.dae", L"Assets/textures/ciupaga.png",
 			Math::Translate(Vector3(1.0f, 1.0f, 1.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 90.0f, 0.0f)))));
 
 		// Slovak
-		InitExampleModel(m_MeshSlovak, m_MaterialSlovak, m_TextureSlovak, shader, m_Scene, L"Assets/models/slovak.dae", L"Assets/textures/slovak.png",
+		InitExampleModel(m_MeshSlovak, m_MaterialSlovak, m_TextureSlovak, m_Shader, m_Scene, L"Assets/models/slovak.dae", L"Assets/textures/slovak.png",
 			Math::Translate(Vector3(1.0f, 0.0f, -2.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
 
 		// Kula
-		InitExampleModel(m_MeshStress, m_MaterialStress, m_TextureStress, shader, m_Scene, L"spherestresstest.dae", L"Assets/test.png",
-			Math::Translate(Vector3(-1.0f, 0.0f, -2.0f))* Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
+		//InitExampleModel(m_MeshStress, m_MaterialStress, m_TextureStress, m_Shader, m_Scene, L"spherestresstest.dae", L"Assets/test.png",
+		//	Math::Translate(Vector3(-1.0f, 0.0f, -2.0f))* Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
 
 		FileOld* dirTest = FileOld::Create();
 		dirTest->SetFilename(L"Assets");
@@ -263,7 +272,7 @@ public:
 		{
 			LOG_INFO(L"{0}, {1}, {2}, {3}", info.Filename, info.FullPath, info.Size, info.bDirectory ? L"Dir" : L"File");
 		}
-#endif
+
 	}
 
 	virtual void OnUpdate(float deltaTime) override
@@ -449,14 +458,15 @@ public:
 	{
 		GetRenderer()->Clear(Vector4(0.1f, 0.1f, 0.1f, 1.0f));
 		GetRenderer()->RenderScene(m_Scene);
-		RPrimitiveRenderProxy triangle;
-		triangle.VertexBuffer = m_Triangle.VB.get();
-		triangle.IndexBuffer = m_Triangle.IB.get();
-		triangle.UniformBuffer = m_Triangle.UB.get();
-		triangle.Shader = m_Triangle.Shader.get();
-		m_Triangle.Texture->Bind();
 
-		GetRenderer()->Draw(triangle, m_Scene);
+		//RPrimitiveRenderProxy triangle;
+		//triangle.VertexBuffer = m_Triangle.VB.get();
+		//triangle.IndexBuffer = m_Triangle.IB.get();
+		//triangle.UniformBuffer = m_Triangle.UB.get();
+		//triangle.Shader = m_Triangle.Shader.get();
+		//m_Triangle.Texture->Bind();
+
+		//GetRenderer()->Draw(triangle, m_Scene);
 	}
 
 	virtual void OnShutdown() override
@@ -526,6 +536,7 @@ private:
 	TShared<Texture> m_TextureCollada;
 	TShared<DirectionalLight> m_DirectionalLight;
 	TShared<Scene> m_Scene;
+	TShared<Shader> m_Shader;
 
 	TShared<Mesh> m_Mesh4Pak;
 	TShared<Material> m_Material4Pak;

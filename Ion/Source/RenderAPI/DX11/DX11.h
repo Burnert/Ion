@@ -98,6 +98,11 @@ namespace Ion
 			return s_RenderTarget;
 		}
 
+		static inline ID3D11RasterizerState* GetRasterizerState()
+		{
+			return s_RasterizerState;
+		}
+
 		static const char* GetDisplayName()
 		{
 			return s_DisplayName;
@@ -161,6 +166,7 @@ namespace Ion
 		static ID3D11DeviceContext* s_Context;
 		static IDXGISwapChain* s_SwapChain;
 		static ID3D11RenderTargetView* s_RenderTarget;
+		static ID3D11RasterizerState* s_RasterizerState;
 
 		static uint32 s_SwapInterval;
 

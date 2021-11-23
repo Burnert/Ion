@@ -59,9 +59,18 @@ namespace Ion
 	public:
 		static UniformBuffer* Create(void* initialData, size_t size);
 
+		/* Creates a UniformBuffer with specified struct data. */
 		template<typename T>
 		static UniformBuffer* Create(T& initialData)
 		{
+			return Create(&initialData, sizeof(T));
+		}
+
+		/* Creates a UniformBuffer with a specified struct type. */
+		template<typename T>
+		static UniformBuffer* Create()
+		{
+			T initialData { };
 			return Create(&initialData, sizeof(T));
 		}
 
@@ -126,6 +135,12 @@ namespace Ion
 		T* Data() const
 		{
 			return (T*)GetDataPtr();
+		}
+
+		template<typename T>
+		T& DataRef() const
+		{
+			return *(T*)GetDataPtr();
 		}
 
 	protected:

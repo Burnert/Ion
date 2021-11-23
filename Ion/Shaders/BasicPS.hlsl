@@ -31,5 +31,5 @@ struct Pixel
 
 float4 main(Pixel pixel) : SV_TARGET
 {
-	return g_Color * g_Texture.Sample(g_Sampler, pixel.TexCoord.xy);
+	return g_Texture.Sample(g_Sampler, pixel.TexCoord.xy);
 }

@@ -33,6 +33,7 @@ namespace Ion
 
 		dxcall(DXGIGetDebugInterface(IID_PPV_ARGS(&s_DebugInfoQueue)), "Cannot get the Debug Interface.");
 #endif
+		// Create Device and Swap Chain
 
 		DXGI_SWAP_CHAIN_DESC scd { };
 		scd.BufferCount = 2;
@@ -78,9 +79,9 @@ namespace Ion
 				&s_Context),
 			"Cannot create D3D Device and Swap Chain.");
 
-		SetDisplayVersion(D3DFeatureLevelToString(s_FeatureLevel));
-
 		CreateRenderTarget();
+
+		// Set Viewports
 
 		WindowDimensions dimensions = window->GetDimensions();
 
@@ -89,13 +90,34 @@ namespace Ion
 		viewport.TopLeftY = 0.0f;
 		viewport.Width = (float)dimensions.Width;
 		viewport.Height = (float)dimensions.Height;
-		s_Context->RSSetViewports(1, &viewport);
+		dxcall_v(s_Context->RSSetViewports(1, &viewport));
+
+		// Create Rasterizer State
+
+		D3D11_RASTERIZER_DESC rd { };
+		rd.FillMode = D3D11_FILL_SOLID;
+		rd.CullMode = D3D11_CULL_BACK;
+		rd.FrontCounterClockwise = true;
+		rd.DepthClipEnable = true;
+
+		dxcall(s_Device->CreateRasterizerState(&rd, &s_RasterizerState));
+
+		dxcall_v(s_Context->RSSetState(s_RasterizerState));
+
+		// Create Depth / Stencil Buffer
+
+		// @TODO: ^
+
+		// Disable Alt+Enter Fullscreen
 
 		IDXGIFactory1* factory = nullptr;
 		dxcall(s_SwapChain->GetParent(IID_PPV_ARGS(&factory)), "Cannot get the Swap Chain factory.");
-		factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER);
+		dxcall(factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
 		factory->Release();
 
+		// -------------------------------------------------------
+
+		SetDisplayVersion(D3DFeatureLevelToString(s_FeatureLevel));
 		LOG_INFO("Renderer: DirectX {0}", GetFeatureLevelString());
 	}
 
@@ -119,6 +141,9 @@ namespace Ion
 
 		if (s_RenderTarget)
 			s_RenderTarget->Release();
+
+		if (s_RasterizerState)
+			s_RasterizerState->Release();
 
 #if ION_DEBUG
 		if (s_DebugInfoQueue)
@@ -330,6 +355,7 @@ namespace Ion
 	ID3D11DeviceContext* DX11::s_Context = nullptr;
 	IDXGISwapChain* DX11::s_SwapChain = nullptr;
 	ID3D11RenderTargetView* DX11::s_RenderTarget = nullptr;
+	ID3D11RasterizerState* DX11::s_RasterizerState = nullptr;
 
 	uint32 DX11::s_SwapInterval = 0;
 

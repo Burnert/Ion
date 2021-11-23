@@ -107,7 +107,7 @@ namespace Ion
 
 	bool DX11Shader::HasUniform(const String& name) const
 	{
-		return false;
+		return true;
 	}
 	void DX11Shader::SetUniform1f(const String& name, float value) const
 	{
