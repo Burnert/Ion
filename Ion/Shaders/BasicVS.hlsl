@@ -1,4 +1,4 @@
-cbuffer SceneConstants : register(b1)
+cbuffer SceneConstants : register(b0)
 {
 	float4x4 ViewMatrix;
 	float4x4 ProjectionMatrix;
@@ -7,7 +7,7 @@ cbuffer SceneConstants : register(b1)
 	float3 CameraLocation;
 };
 
-cbuffer MeshConstants : register(b2)
+cbuffer MeshConstants : register(b1)
 {
 	float4x4 ModelViewProjectionMatrix;
 	float4x4 TransformMatrix;

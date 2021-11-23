@@ -35,7 +35,10 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		DX11::s_Context->ClearRenderTargetView(DX11::s_RenderTarget, (float*)&color);
+		ID3D11DeviceContext* context = DX11::GetContext();
+
+		dxcall_v(context->ClearRenderTargetView(DX11::s_RenderTarget, (float*)&color));
+		dxcall_v(context->ClearDepthStencilView(DX11::s_DepthStencil, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0));
 	}
 
 	void DX11Renderer::Draw(const RPrimitiveRenderProxy& primitive, const TShared<Scene>& targetScene) const
@@ -64,13 +67,11 @@ namespace Ion
 		uniformData.ModelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
 
 		ub->UpdateData();
-		ub->Bind(2);
+		ub->Bind(1);
 
-		material->BindTextures();
+		if (material) material->BindTextures();
 		//material->UpdateShaderUniforms();
 
-		dxcall_v(context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
-		context->RSSetState(DX11::GetRasterizerState());
 		dxcall_v(context->DrawIndexed(ib->GetIndexCount(), 0, 0));
 	}
 
@@ -87,7 +88,7 @@ namespace Ion
 		uniforms.CameraLocation = scene->m_RenderCamera.Location;
 
 		scene->m_SceneUniformBuffer->UpdateData();
-		scene->m_SceneUniformBuffer->Bind(1);
+		scene->m_SceneUniformBuffer->Bind(0);
 
 		for (const RPrimitiveRenderProxy& primitive : scene->GetScenePrimitives())
 		{
@@ -126,6 +127,8 @@ namespace Ion
 		viewport.TopLeftY = (float)dimensions.Y;
 		viewport.Width = (float)dimensions.Width;
 		viewport.Height = (float)dimensions.Height;
+		viewport.MinDepth = 0.0f;
+		viewport.MaxDepth = 1.0f;
 
 		DX11::s_Context->RSSetViewports(1, &viewport);
 		DX11::ResizeBuffers(dimensions.Width, dimensions.Height);

@@ -18,11 +18,8 @@ namespace Ion
 
 		IterateShaders([](DXShader& shader)
 		{
-			if (shader.ShaderPtr)
-				((IUnknown*)shader.ShaderPtr)->Release();
-
-			if (shader.ShaderBlob)
-				shader.ShaderBlob->Release();
+			COMRelease(shader.ShaderPtr);
+			COMRelease(shader.ShaderBlob);
 		});
 	}
 

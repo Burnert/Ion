@@ -108,8 +108,6 @@ namespace Ion
 			return s_DisplayName;
 		}
 
-		//static void FilterDebugMessages();
-
 		static void SetSwapInterval(uint32 interval)
 		{
 			s_SwapInterval = interval;
@@ -147,6 +145,7 @@ namespace Ion
 		static void SetDisplayVersion(const char* version);
 
 		static void CreateRenderTarget();
+		static void CreateDepthStencil();
 		static void ResizeBuffers(uint32 width, uint32 height);
 
 	private:
@@ -166,7 +165,12 @@ namespace Ion
 		static ID3D11DeviceContext* s_Context;
 		static IDXGISwapChain* s_SwapChain;
 		static ID3D11RenderTargetView* s_RenderTarget;
+		static ID3D11DepthStencilState* s_DepthStencilState;
+		static ID3D11DepthStencilView* s_DepthStencil;
 		static ID3D11RasterizerState* s_RasterizerState;
+
+		static ID3D11Texture2D* s_BackBufferTexture;
+		static ID3D11Texture2D* s_DepthStencilTexture;
 
 		static uint32 s_SwapInterval;
 

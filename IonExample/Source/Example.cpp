@@ -62,15 +62,16 @@ public:
 		mesh->SetVertexBuffer(vb);
 		mesh->SetIndexBuffer(ib);
 		mesh->SetMaterial(material);
-		mesh->SetTransform(transform);
+		mesh->SetTransform(Math::Scale(Vector3(1.0f)) * transform);
 
 		scene->AddDrawableObject(mesh.get());
 	}
 
-	struct TriangleUniforms
-	{
-		Vector4 Color;
-	} m_TriangleUniforms;
+	//struct UNIFORMBUFFER TriangleUniforms
+	//{
+	//	Vector4 Color;
+	//} m_TriangleUniforms;
+	MeshUniforms m_TriangleUniforms;
 
 	struct Triangle
 	{
@@ -117,15 +118,15 @@ public:
 		};
 
 		float quad[] = {
-			-0.5f,  0.5f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f,
-			 0.5f,  0.5f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
-			 0.5f, -0.5f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f,
-			-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
+			-0.5f,  0.5f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f,
+			 0.5f,  0.5f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
+			 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f,
+			-0.5f, -0.5f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
 		};
 
 		uint32 quadIndices[] = {
-			0, 1, 2,
-			2, 3, 0,
+			0, 2, 1,
+			2, 0, 3,
 		};
 
 		TShared<VertexLayout> layout = MakeShareable(new VertexLayout(1));
@@ -140,13 +141,13 @@ public:
 		m_Triangle.IB = IndexBuffer::Create(quadIndices, sizeof(quadIndices) / sizeof(uint32));
 
 		ZeroMemory(&m_TriangleUniforms, sizeof(m_TriangleUniforms));
-		m_TriangleUniforms.Color = Vector4(1.0f, 0.5f, 0.3f, 1.0f);
+		//m_TriangleUniforms.Color = Vector4(1.0f, 0.5f, 0.3f, 1.0f);
 
 		UniformBufferFactory ubFactory;
 		ubFactory.Add("Color", EUniformType::Float4);
 		//ubFactory.Construct(m_Triangle.UB);
 
-		m_Triangle.UB = MakeShareable(UniformBuffer::Create(&m_TriangleUniforms, sizeof(m_TriangleUniforms)));
+		m_Triangle.UB = MakeShareable(UniformBuffer::Create(m_TriangleUniforms));
 
 		File fImage(L"Assets/test.png");
 		Image* tImage = new Image;
@@ -310,8 +311,8 @@ public:
 		m_Camera->SetTransform(m_CameraTransform.GetMatrix());
 		const Vector3& Location = m_Camera->GetLocation();
 
-		float& r = m_Triangle.UB->Data<TriangleUniforms>()->Color.r;
-		r = glm::mod(r + deltaTime, 1.0f);
+		//float& r = m_Triangle.UB->Data<TriangleUniforms>()->Color.r;
+		//r = glm::mod(r + deltaTime, 1.0f);
 
 		// Update the aspect ratio when the viewport size changes
 		WindowDimensions dimensions = GetWindow()->GetDimensions();
@@ -459,11 +460,12 @@ public:
 		GetRenderer()->Clear(Vector4(0.1f, 0.1f, 0.1f, 1.0f));
 		GetRenderer()->RenderScene(m_Scene);
 
-		//RPrimitiveRenderProxy triangle;
+		//RPrimitiveRenderProxy triangle { };
 		//triangle.VertexBuffer = m_Triangle.VB.get();
 		//triangle.IndexBuffer = m_Triangle.IB.get();
 		//triangle.UniformBuffer = m_Triangle.UB.get();
 		//triangle.Shader = m_Triangle.Shader.get();
+		//triangle.Transform = Matrix4(1.0f);
 		//m_Triangle.Texture->Bind();
 
 		//GetRenderer()->Draw(triangle, m_Scene);

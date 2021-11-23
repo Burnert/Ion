@@ -81,17 +81,6 @@ namespace Ion
 
 		CreateRenderTarget();
 
-		// Set Viewports
-
-		WindowDimensions dimensions = window->GetDimensions();
-
-		D3D11_VIEWPORT viewport { };
-		viewport.TopLeftX = 0.0f;
-		viewport.TopLeftY = 0.0f;
-		viewport.Width = (float)dimensions.Width;
-		viewport.Height = (float)dimensions.Height;
-		dxcall_v(s_Context->RSSetViewports(1, &viewport));
-
 		// Create Rasterizer State
 
 		D3D11_RASTERIZER_DESC rd { };
@@ -101,21 +90,56 @@ namespace Ion
 		rd.DepthClipEnable = true;
 
 		dxcall(s_Device->CreateRasterizerState(&rd, &s_RasterizerState));
-
 		dxcall_v(s_Context->RSSetState(s_RasterizerState));
 
 		// Create Depth / Stencil Buffer
 
-		// @TODO: ^
+		D3D11_DEPTH_STENCIL_DESC dsd { };
+		dsd.DepthEnable = true;
+		dsd.DepthFunc = D3D11_COMPARISON_LESS;
+		dsd.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+		dsd.StencilEnable = true;
+		dsd.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
+		dsd.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
+		dsd.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+		dsd.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		dsd.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+		dsd.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+		dsd.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+		dsd.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		dsd.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+		dsd.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+
+		dxcall(s_Device->CreateDepthStencilState(&dsd, &s_DepthStencilState));
+		dxcall_v(s_Context->OMSetDepthStencilState(s_DepthStencilState, 1));
+
+		CreateDepthStencil();
+
+		// Set Viewports
+
+		WindowDimensions dimensions = window->GetDimensions();
+
+		D3D11_VIEWPORT viewport { };
+		viewport.TopLeftX = 0.0f;
+		viewport.TopLeftY = 0.0f;
+		viewport.Width = (float)dimensions.Width;
+		viewport.Height = (float)dimensions.Height;
+		viewport.MinDepth = 0.0f;
+		viewport.MaxDepth = 1.0f;
+		dxcall_v(s_Context->RSSetViewports(1, &viewport));
 
 		// Disable Alt+Enter Fullscreen
 
 		IDXGIFactory1* factory = nullptr;
+
 		dxcall(s_SwapChain->GetParent(IID_PPV_ARGS(&factory)), "Cannot get the Swap Chain factory.");
 		dxcall(factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
+
 		factory->Release();
 
 		// -------------------------------------------------------
+
+		dxcall_v(s_Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
 
 		SetDisplayVersion(D3DFeatureLevelToString(s_FeatureLevel));
 		LOG_INFO("Renderer: DirectX {0}", GetFeatureLevelString());
@@ -130,24 +154,17 @@ namespace Ion
 
 		// Free the D3D objects
 
-		if (s_Device)
-			s_Device->Release();
-
-		if (s_Context)
-			s_Context->Release();
-
-		if (s_SwapChain)
-			s_SwapChain->Release();
-
-		if (s_RenderTarget)
-			s_RenderTarget->Release();
-
-		if (s_RasterizerState)
-			s_RasterizerState->Release();
-
+		COMRelease(s_Device);
+		COMRelease(s_Context);
+		COMRelease(s_SwapChain);
+		COMRelease(s_RenderTarget);
+		COMRelease(s_DepthStencilState);
+		COMRelease(s_DepthStencil);
+		COMRelease(s_RasterizerState);
+		COMRelease(s_DepthStencilTexture);
+		COMRelease(s_BackBufferTexture);
 #if ION_DEBUG
-		if (s_DebugInfoQueue)
-			s_DebugInfoQueue->Release();
+		COMRelease(s_DebugInfoQueue);
 #endif
 	}
 
@@ -155,7 +172,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		dxcall_v(s_Context->OMSetRenderTargets(1, &s_RenderTarget, nullptr), "Cannot set render target.");
+		dxcall_v(s_Context->OMSetRenderTargets(1, &s_RenderTarget, s_DepthStencil), "Cannot set render target.");
 	}
 
 	void DX11::EndFrame()
@@ -170,7 +187,9 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		s_SwapChain->SetFullscreenState(mode == EDisplayMode::FullScreen, nullptr);
+		HRESULT hResult;
+
+		dxcall(s_SwapChain->SetFullscreenState(mode == EDisplayMode::FullScreen, nullptr));
 
 		ResizeBuffers(width, height);
 	}
@@ -287,17 +306,45 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		HRESULT hResult = S_OK;
+		HRESULT hResult;
 
-		ID3D11Texture2D* backBuffer = nullptr;
-
-		dxcall(s_SwapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer)),
+		dxcall(s_SwapChain->GetBuffer(0, IID_PPV_ARGS(&s_BackBufferTexture)),
 			"Cannot get buffer.");
 
-		dxcall(s_Device->CreateRenderTargetView(backBuffer, nullptr, &s_RenderTarget),
+		dxcall(s_Device->CreateRenderTargetView(s_BackBufferTexture, nullptr, &s_RenderTarget),
 			"Cannot create Render Target from back buffer.");
+	}
 
-		backBuffer->Release();
+	void DX11::CreateDepthStencil()
+	{
+		TRACE_FUNCTION();
+
+		HRESULT hResult;
+
+		D3D11_TEXTURE2D_DESC backBufferDesc { };
+		s_BackBufferTexture->GetDesc(&backBufferDesc);
+
+		D3D11_TEXTURE2D_DESC depthDesc { };
+		depthDesc.Format = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+		depthDesc.Width = backBufferDesc.Width;
+		depthDesc.Height = backBufferDesc.Height;
+		depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+		depthDesc.Usage = D3D11_USAGE_DEFAULT;
+		depthDesc.SampleDesc.Count = 1;
+		depthDesc.SampleDesc.Quality = 0;
+		depthDesc.CPUAccessFlags = 0;
+		depthDesc.MiscFlags = 0;
+		depthDesc.MipLevels = 1;
+		depthDesc.ArraySize = 1;
+
+		dxcall(s_Device->CreateTexture2D(&depthDesc, nullptr, &s_DepthStencilTexture));
+
+		D3D11_DEPTH_STENCIL_VIEW_DESC dsvd { };
+		dsvd.Format = depthDesc.Format;
+		dsvd.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+		dsvd.Texture2D.MipSlice = 0;
+
+		dxcall(s_Device->CreateDepthStencilView(s_DepthStencilTexture, &dsvd, &s_DepthStencil));
 	}
 
 	void DX11::ResizeBuffers(uint32 width, uint32 height)
@@ -306,16 +353,16 @@ namespace Ion
 
 		HRESULT hResult = S_OK;
 
-		if (s_RenderTarget)
-		{
-			s_RenderTarget->Release();
-			s_RenderTarget = nullptr;
-		}
+		COMReset(s_RenderTarget);
+		COMReset(s_DepthStencil);
+		COMReset(s_BackBufferTexture);
+		COMReset(s_DepthStencilTexture);
 
 		dxcall(s_SwapChain->ResizeBuffers(2, width, height, DXGI_FORMAT_UNKNOWN, 0),
 			"Cannot resize buffers.");
 
 		CreateRenderTarget();
+		CreateDepthStencil();
 	}
 
 	void DX11::InitImGuiBackend()
@@ -355,7 +402,12 @@ namespace Ion
 	ID3D11DeviceContext* DX11::s_Context = nullptr;
 	IDXGISwapChain* DX11::s_SwapChain = nullptr;
 	ID3D11RenderTargetView* DX11::s_RenderTarget = nullptr;
+	ID3D11DepthStencilState* DX11::s_DepthStencilState = nullptr;
+	ID3D11DepthStencilView* DX11::s_DepthStencil = nullptr;
 	ID3D11RasterizerState* DX11::s_RasterizerState = nullptr;
+
+	ID3D11Texture2D* DX11::s_DepthStencilTexture = nullptr;
+	ID3D11Texture2D* DX11::s_BackBufferTexture = nullptr;
 
 	uint32 DX11::s_SwapInterval = 0;
 

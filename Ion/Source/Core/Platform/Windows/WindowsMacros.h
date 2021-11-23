@@ -42,3 +42,6 @@ if (FAILED((hr))) \
 	ionlocation(); \
 	{ onfailed } \
 }
+
+#define COMRelease(ptr) if (ptr)   ((IUnknown*)ptr)->Release()
+#define COMReset(ptr)   if (ptr) { ((IUnknown*)ptr)->Release(); ptr = nullptr; }

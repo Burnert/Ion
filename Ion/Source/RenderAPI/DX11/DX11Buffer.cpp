@@ -54,11 +54,8 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		if (m_Buffer)
-			m_Buffer->Release();
-
-		if (m_InputLayout)
-			m_InputLayout->Release();
+		COMRelease(m_Buffer);
+		COMRelease(m_InputLayout);
 	}
 
 	void DX11VertexBuffer::SetLayout(const TShared<VertexLayout>& layout)
@@ -171,8 +168,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		if (m_Buffer)
-			m_Buffer->Release();
+		COMRelease(m_Buffer);
 	}
 
 	uint32 DX11IndexBuffer::GetIndexCount() const
@@ -245,8 +241,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		if (m_Buffer)
-			m_Buffer->Release();
+		COMRelease(m_Buffer);
 
 		_aligned_free(m_Data);
 	}

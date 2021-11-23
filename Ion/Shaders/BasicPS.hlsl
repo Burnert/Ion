@@ -1,12 +1,7 @@
 Texture2D g_Texture;
 SamplerState g_Sampler;
 
-cbuffer TestCBuffer : register(b0)
-{
-	float4 g_Color;
-};
-
-cbuffer SceneConstants : register(b1)
+cbuffer SceneConstants : register(b0)
 {
 	float4x4 ViewMatrix;
 	float4x4 ProjectionMatrix;
@@ -15,7 +10,7 @@ cbuffer SceneConstants : register(b1)
 	float3 CameraLocation;
 };
 
-cbuffer MeshConstants : register(b2)
+cbuffer MeshConstants : register(b1)
 {
 	float4x4 ModelViewProjectionMatrix;
 	float4x4 TransformMatrix;
@@ -29,7 +24,16 @@ struct Pixel
 	float4 TexCoord : TEXCOORD;
 };
 
-float4 main(Pixel pixel) : SV_TARGET
+struct PSOutData
 {
-	return g_Texture.Sample(g_Sampler, pixel.TexCoord.xy);
+	float4 Target : SV_TARGET;
+};
+
+PSOutData main(Pixel pixel)
+{
+	PSOutData data;
+
+	data.Target = g_Texture.Sample(g_Sampler, pixel.TexCoord.xy);
+
+	return data;
 }

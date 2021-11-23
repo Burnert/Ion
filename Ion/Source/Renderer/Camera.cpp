@@ -71,7 +71,7 @@ namespace Ion
 		m_FOV(90.0f),
 		m_AspectRatio(16.0f / 9.0f),
 		m_NearClip(0.1f),
-		m_FarClip(100.0f),
+		m_FarClip(1000.0f),
 		m_bDirty(false)
 	{ }
 }

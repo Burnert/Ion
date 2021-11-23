@@ -8,14 +8,9 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		if (m_Texture)
-			m_Texture->Release();
-
-		if (m_SRV)
-			m_SRV->Release();
-
-		if (m_SamplerState)
-			m_SamplerState->Release();
+		COMRelease(m_Texture);
+		COMRelease(m_SRV);
+		COMRelease(m_SamplerState);
 	}
 
 	void DX11Texture::Bind(uint32 slot) const
