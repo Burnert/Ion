@@ -1,6 +1,9 @@
-cbuffer GlobalCBuffer : register(b0)
+Texture2D g_Texture;
+SamplerState g_Sampler;
+
+cbuffer TestCBuffer : register(b0)
 {
-	float4 GColor;
+	float4 g_Color;
 };
 
 cbuffer SceneConstants : register(b1)
@@ -19,7 +22,14 @@ cbuffer MeshConstants : register(b2)
 	float4x4 InverseTransposeMatrix;
 };
 
-float4 main(float4 position : SV_POSITION/*, float4 normal : NORMAL, float4 texcoord : TEXCOORD*/) : SV_TARGET
+struct Pixel
 {
-	return GColor;
+	float4 Position : SV_POSITION;
+	float4 Normal : NORMAL;
+	float4 TexCoord : TEXCOORD;
+};
+
+float4 main(Pixel pixel) : SV_TARGET
+{
+	return g_Color * g_Texture.Sample(g_Sampler, pixel.TexCoord.xy);
 }

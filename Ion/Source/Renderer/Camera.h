@@ -67,6 +67,7 @@ namespace Ion
 		void UpdateMatrixCache() const;
 
 	private:
+		// @TODO: Bad memory layout...
 		Vector3 m_CameraLocation;
 		Matrix4 m_CameraTransform;
 

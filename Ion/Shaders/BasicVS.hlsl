@@ -1,15 +1,3 @@
-struct VSOut
-{
-	float4 Position : SV_POSITION;
-	//float4 Normal : NORMAL;
-	//float4 TexCoord : TEXCOORD;
-};
-
-cbuffer GlobalCBuffer : register(b0)
-{
-	float4 GColor;
-};
-
 cbuffer SceneConstants : register(b1)
 {
 	float4x4 ViewMatrix;
@@ -26,13 +14,27 @@ cbuffer MeshConstants : register(b2)
 	float4x4 InverseTransposeMatrix;
 };
 
-float4 main(float4 pos : POSITION/*, float4 normal : NORMAL, float4 texcoord : TEXCOORD*/) : SV_POSITION
+struct Vertex
 {
-	VSOut data;
+	float4 Position : POSITION;
+	float4 Normal : NORMAL;
+	float4 TexCoord : TEXCOORD;
+};
 
-	data.Position = mul(ViewProjectionMatrix, float4(pos.xyz, 1.0));
-	//data.Normal = normal;
-	//data.TexCoord = texcoord;
+struct Pixel
+{
+	float4 Position : SV_POSITION;
+	float4 Normal : NORMAL;
+	float4 TexCoord : TEXCOORD;
+};
 
-	return data.Position;
+Pixel main(Vertex vertex)
+{
+	Pixel pixel;
+
+	pixel.Position = mul(ViewProjectionMatrix, float4(vertex.Position.xyz, 1.0));
+	pixel.Normal = vertex.Normal;
+	pixel.TexCoord = vertex.TexCoord;
+
+	return pixel;
 }

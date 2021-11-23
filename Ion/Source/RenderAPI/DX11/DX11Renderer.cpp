@@ -3,6 +3,7 @@
 #include "DX11Renderer.h"
 #include "DX11Buffer.h"
 #include "DX11Shader.h"
+#include "DX11Texture.h"
 
 #include "Core/Platform/Windows/WindowsMacros.h"
 #include "Core/Platform/Windows/WindowsUtility.h"

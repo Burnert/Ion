@@ -58,7 +58,7 @@ namespace Ion
 			m_ViewMatrix = Math::AffineInverse(m_CameraTransform);
 			m_ProjectionMatrix = Math::Perspective(m_FOV, m_AspectRatio, m_NearClip, m_FarClip);
 
-			m_ViewProjectionMatrix = Matrix4(1.0f) * m_ProjectionMatrix * m_ViewMatrix;
+			m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
 		}
 	}
 

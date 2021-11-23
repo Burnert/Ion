@@ -3,7 +3,9 @@
 #include "Core/File/Image.h"
 #include "Texture.h"
 
+#include "RenderAPI/RenderAPI.h"
 #include "RenderAPI/OpenGL/OpenGLTexture.h"
+#include "RenderAPI/DX11/DX11Texture.h"
 
 namespace Ion
 {
@@ -14,7 +16,15 @@ namespace Ion
 
 	TShared<Texture> Texture::Create(Image* image)
 	{
-		return MakeShareable(new OpenGLTexture(image));
+		switch (RenderAPI::GetCurrent())
+		{
+		case ERenderAPI::OpenGL:
+			return MakeShareable(new OpenGLTexture(image));
+		case ERenderAPI::DX11:
+			return MakeShareable(new DX11Texture(image));
+		default:
+			return TShared<Texture>(nullptr);
+		}
 	}
 
 	Texture::~Texture()

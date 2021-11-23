@@ -22,7 +22,8 @@ namespace Ion
 
 	Image::~Image()
 	{
-		stbi_image_free(m_PixelData);
+		if (m_PixelData)
+			stbi_image_free(m_PixelData);
 	}
 
 	Image::Image(const Image& other)

@@ -77,6 +77,7 @@ public:
 		TShared<IndexBuffer> IB;
 		TShared<UniformBuffer> UB;
 		TShared<Shader> Shader;
+		TShared<Texture> Texture;
 	} m_Triangle;
 
 	virtual void OnInit() override
@@ -145,6 +146,11 @@ public:
 		//ubFactory.Construct(m_Triangle.UB);
 
 		m_Triangle.UB = MakeShareable(UniformBuffer::Create(&m_TriangleUniforms, sizeof(m_TriangleUniforms)));
+
+		File fImage(L"Assets/test.png");
+		Image* tImage = new Image;
+		tImage->Load(fImage);
+		m_Triangle.Texture = Texture::Create(tImage);
 
 		m_Camera = Camera::Create();
 		m_Camera->SetTransform(Math::Translate(Vector3(0.0f, 0.0f, 2.0f)));
@@ -448,6 +454,7 @@ public:
 		triangle.IndexBuffer = m_Triangle.IB.get();
 		triangle.UniformBuffer = m_Triangle.UB.get();
 		triangle.Shader = m_Triangle.Shader.get();
+		m_Triangle.Texture->Bind();
 
 		GetRenderer()->Draw(triangle, m_Scene);
 	}
