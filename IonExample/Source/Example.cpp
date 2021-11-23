@@ -169,7 +169,6 @@ public:
 
 		bResult = m_Shader->Compile();
 		ionassert(bResult);
-#if 0
 		m_AuxCamera = Camera::Create();
 		m_AuxCamera->SetTransform(Math::Translate(Vector3(0.0f, 0.0f, 4.0f)));
 		m_AuxCamera->SetFOV(Math::Radians(66.0f));
@@ -200,6 +199,7 @@ public:
 
 		// @TODO: Create an asset manager for textures, meshes and other files that can be imported
 
+#if 0
 		String collada;
 		File::ReadToString(L"char.dae", collada);
 

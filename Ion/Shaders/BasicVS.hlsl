@@ -1,41 +1,15 @@
-cbuffer SceneConstants : register(b0)
-{
-	float4x4 ViewMatrix;
-	float4x4 ProjectionMatrix;
-	float4x4 ViewProjectionMatrix;
-
-	float3 CameraLocation;
-};
-
-cbuffer MeshConstants : register(b1)
-{
-	float4x4 ModelViewProjectionMatrix;
-	float4x4 TransformMatrix;
-	float4x4 InverseTransposeMatrix;
-};
-
-struct Vertex
-{
-	float4 Position : POSITION;
-	float4 Normal : NORMAL;
-	float4 TexCoord : TEXCOORD;
-};
-
-struct Pixel
-{
-	float4 Position : SV_POSITION;
-	float4 Normal : NORMAL;
-	float4 TexCoord : TEXCOORD;
-};
+#include "ShaderCommon.hlsl"
 
 Pixel main(Vertex vertex)
 {
 	Pixel pixel;
 
-	float4x4 mvp = mul(ViewProjectionMatrix, TransformMatrix);
-	pixel.Position = mul(ModelViewProjectionMatrix, vertex.Position);
+	pixel.Location = mul(ModelViewProjectionMatrix, vertex.Location);
 	pixel.Normal = vertex.Normal;
 	pixel.TexCoord = vertex.TexCoord;
+
+	pixel.LocationWS = mul(TransformMatrix, vertex.Location);
+	pixel.NormalWS = mul(InverseTransposeMatrix, vertex.Normal);
 
 	return pixel;
 }

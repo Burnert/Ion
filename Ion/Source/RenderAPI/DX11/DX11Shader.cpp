@@ -1,6 +1,7 @@
 #include "IonPCH.h"
 
 #include "DX11Shader.h"
+#include "DX11Include.h"
 #include <d3dcompiler.h>
 
 #pragma comment(lib, "d3dcompiler.lib")
@@ -42,6 +43,8 @@ namespace Ion
 
 		ionassert(!m_bCompiled, "Shader has already been compiled.");
 
+		DX11Include includeHandler;
+
 		for (auto& entry : m_Shaders)
 		{
 			DXShader& shader = entry.second;
@@ -58,7 +61,7 @@ namespace Ion
 			hResult = D3DCompile(
 				shader.Source.c_str(),
 				shader.Source.length(),
-				nullptr, nullptr, nullptr,
+				nullptr, nullptr, &includeHandler,
 				"main",
 				ShaderTypeToTarget(shader.Type),
 				compileFlags, 0,
