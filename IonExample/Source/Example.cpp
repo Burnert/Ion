@@ -21,6 +21,8 @@
 #include "RenderAPI/DX11/DX11Shader.h"
 #include "RenderAPI/DX11/DX11Buffer.h"
 
+#include "RenderAPI/RenderAPI.h"
+
 // I'll think about this...
 using namespace Ion;
 
@@ -45,7 +47,11 @@ public:
 		const ColladaData& data = model->GetData();
 		TShared<VertexBuffer> vb = VertexBuffer::Create(data.VertexAttributes, data.VertexAttributeCount);
 		vb->SetLayout(data.Layout);
-		((DX11VertexBuffer*)vb.get())->CreateDX11Layout(std::static_pointer_cast<DX11Shader>(shader));
+		{
+			DX11VertexBuffer* dx11VB = dynamic_cast<DX11VertexBuffer*>(vb.get());
+			if (dx11VB)
+				dx11VB->CreateDX11Layout(std::static_pointer_cast<DX11Shader>(shader));
+		}
 		TShared<IndexBuffer> ib = IndexBuffer::Create(data.Indices, (uint32)data.IndexCount);
 
 		File texFile(texturePath);
@@ -86,23 +92,27 @@ public:
 	{
 #pragma warning(disable:6001)
 
-		String vertSrc;
-		String fragSrc;
-		String vertexSrcDx;
-		String pixelSrcDx;
+		String vertexSrc;
+		String pixelSrc;
 
 		FilePath shadersPath = GetCheckedEnginePath() + L"Shaders";
 
-		File::ReadToString(shadersPath + L"Basic.vert", vertSrc);
-		File::ReadToString(shadersPath + L"Basic.frag", fragSrc);
-		File::ReadToString(shadersPath + L"BasicVS.hlsl", vertexSrcDx);
-		File::ReadToString(shadersPath + L"BasicPS.hlsl", pixelSrcDx);
+		if (RenderAPI::GetCurrent() == ERenderAPI::DX11)
+		{
+			File::ReadToString(shadersPath + L"BasicVS.hlsl", vertexSrc);
+			File::ReadToString(shadersPath + L"BasicPS.hlsl", pixelSrc);
+		}
+		else
+		{
+			File::ReadToString(shadersPath + L"Basic.vert", vertexSrc);
+			File::ReadToString(shadersPath + L"Basic.frag", pixelSrc);
+		}
 
 		bool bResult;
 
 		m_Triangle.Shader = Shader::Create();
-		m_Triangle.Shader->AddShaderSource(EShaderType::Vertex, vertexSrcDx);
-		m_Triangle.Shader->AddShaderSource(EShaderType::Pixel, pixelSrcDx);
+		m_Triangle.Shader->AddShaderSource(EShaderType::Vertex, vertexSrc);
+		m_Triangle.Shader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
 		bResult = m_Triangle.Shader->Compile();
 		ionassert(bResult);
@@ -136,7 +146,11 @@ public:
 
 		m_Triangle.VB = VertexBuffer::Create(quad, sizeof(quad) / sizeof(float));
 		m_Triangle.VB->SetLayout(layout);
-		((DX11VertexBuffer*)m_Triangle.VB.get())->CreateDX11Layout(std::static_pointer_cast<DX11Shader>(m_Triangle.Shader));
+		{
+			DX11VertexBuffer* dx11VB = dynamic_cast<DX11VertexBuffer*>(m_Triangle.VB.get());
+			if (dx11VB)
+				dx11VB->CreateDX11Layout(std::static_pointer_cast<DX11Shader>(m_Triangle.Shader));
+		}
 
 		m_Triangle.IB = IndexBuffer::Create(quadIndices, sizeof(quadIndices) / sizeof(uint32));
 
@@ -164,8 +178,8 @@ public:
 		m_Scene->SetActiveCamera(m_Camera);
 
 		m_Shader = Shader::Create();
-		m_Shader->AddShaderSource(EShaderType::Vertex, vertexSrcDx);
-		m_Shader->AddShaderSource(EShaderType::Pixel, pixelSrcDx);
+		m_Shader->AddShaderSource(EShaderType::Vertex, vertexSrc);
+		m_Shader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
 		bResult = m_Shader->Compile();
 		ionassert(bResult);
