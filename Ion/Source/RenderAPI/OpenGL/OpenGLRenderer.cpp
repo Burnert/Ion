@@ -4,7 +4,9 @@
 
 #include "OpenGLVertexBuffer.h"
 #include "OpenGLIndexBuffer.h"
+#include "OpenGLUniformBuffer.h"
 #include "OpenGLShader.h"
+#include "OpenGLTexture.h"
 
 namespace Ion
 {
@@ -66,73 +68,41 @@ namespace Ion
 		const Material* material = primitive.Material;
 		const OpenGLVertexBuffer* vertexBuffer = (OpenGLVertexBuffer*)primitive.VertexBuffer;
 		const OpenGLIndexBuffer* indexBuffer = (OpenGLIndexBuffer*)primitive.IndexBuffer;
+		const OpenGLUniformBuffer* uniformBuffer = (OpenGLUniformBuffer*)primitive.UniformBuffer;
 		const OpenGLShader* shader = (OpenGLShader*)primitive.Shader;
-
-		const RLightRenderProxy& dirLight = scene->GetRenderDirLight();
-		const TArray<RLightRenderProxy>& lights = scene->GetRenderLights();
-		uint32 lightNum = scene->GetLightNumber();
 
 		vertexBuffer->Bind();
 		vertexBuffer->BindLayout();
 		indexBuffer->Bind();
 		shader->Bind();
 
-		material->BindTextures();
-		material->UpdateShaderUniforms();
+		if (material)
+		{
+			material->BindTextures();
+			//material->UpdateShaderUniforms();
+			material->ForEachTexture([shader](const TShared<Texture> texture, uint32 slot)
+			{
+				char uniformName[20];
+				sprintf_s(uniformName, "g_Samplers[%u]", slot);
+				shader->SetUniform1i(uniformName, slot);
+			});
+		}
 
 		// Calculate the Model View Projection Matrix based on the current scene camera
 		const RCameraRenderProxy& activeCamera = m_CurrentScene->GetCameraRenderProxy();
 		Vector3 cameraLocation = activeCamera.Location;
 		Vector3 cameraDirection = activeCamera.Forward;
 
-		// Setup matrices
-
-		const Matrix4& modelMatrix = primitive.Transform;
 		const Matrix4& viewProjectionMatrix = activeCamera.ViewProjectionMatrix;
-		const Matrix4& modelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
-		const Matrix4& viewMatrix = activeCamera.ViewMatrix;
-		const Matrix4& projectionMatrix = activeCamera.ProjectionMatrix;
-		const Matrix4 inverseTranspose = Math::InverseTranspose(modelMatrix);
+		const Matrix4& modelMatrix = primitive.Transform;
 
-		// Set global uniforms
-		// @TODO: Make a uniform buffer with these
+		MeshUniforms& uniformData = uniformBuffer->DataRef<MeshUniforms>();
+		uniformData.TransformMatrix = modelMatrix;
+		uniformData.InverseTransposeMatrix = Math::InverseTranspose(modelMatrix);
+		uniformData.ModelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
 
-		shader->SetUniformMatrix4f("u_MVP", modelViewProjectionMatrix);
-		shader->SetUniformMatrix4f("u_ModelMatrix", modelMatrix);
-		shader->SetUniformMatrix4f("u_ViewMatrix", viewMatrix);
-		shader->SetUniformMatrix4f("u_ProjectionMatrix", projectionMatrix);
-		shader->SetUniformMatrix4f("u_ViewProjectionMatrix", viewProjectionMatrix);
-		shader->SetUniformMatrix4f("u_InverseTranspose", inverseTranspose);
-		shader->SetUniform3f("u_CameraLocation", cameraLocation);
-		shader->SetUniform3f("u_CameraDirection", cameraDirection);
-		if (scene->HasDirectionalLight())
-		{
-			shader->SetUniform3f("u_DirectionalLight.Direction", dirLight.Direction);
-			shader->SetUniform3f("u_DirectionalLight.Color", dirLight.Color);
-			shader->SetUniform1f("u_DirectionalLight.Intensity", dirLight.Intensity);
-		}
-		else
-		{
-			shader->SetUniform1f("u_DirectionalLight.Intensity", 0.0f);
-		}
-		shader->SetUniform4f("u_AmbientLightColor", scene->GetAmbientLightColor());
-		shader->SetUniform1ui("u_LightNum", lightNum);
-		uint32 lightIndex = 0;
-		for (const RLightRenderProxy& light : lights)
-		{
-			char uniformName[100];
-
-			sprintf_s(uniformName, "u_Lights[%u].%s", lightIndex, "Location");
-			shader->SetUniform3f(uniformName, light.Location);
-			sprintf_s(uniformName, "u_Lights[%u].%s", lightIndex, "Color");
-			shader->SetUniform3f(uniformName, light.Color);
-			sprintf_s(uniformName, "u_Lights[%u].%s", lightIndex, "Intensity");
-			shader->SetUniform1f(uniformName, light.Intensity);
-			sprintf_s(uniformName, "u_Lights[%u].%s", lightIndex, "Falloff");
-			shader->SetUniform1f(uniformName, light.Falloff);
-			
-			lightIndex++;
-		}
+		uniformBuffer->UpdateData();
+		uniformBuffer->Bind(1);
 
 		uint32 indexCount = indexBuffer->GetIndexCount();
 		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
@@ -143,6 +113,49 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		m_CurrentScene = scene;
+
+		// Set global matrices and other scene data
+		SceneUniforms& uniforms = scene->m_SceneUniformBuffer->DataRef<SceneUniforms>();
+		uniforms.ViewMatrix = scene->m_RenderCamera.ViewMatrix;
+		uniforms.ProjectionMatrix = scene->m_RenderCamera.ProjectionMatrix;
+		uniforms.ViewProjectionMatrix = scene->m_RenderCamera.ViewProjectionMatrix;
+		uniforms.CameraLocation = scene->m_RenderCamera.Location;
+
+		// Set lights
+		const RLightRenderProxy& dirLight = scene->GetRenderDirLight();
+		const TArray<RLightRenderProxy>& lights = scene->GetRenderLights();
+		uint32 lightNum = scene->GetLightNumber();
+
+		if (scene->HasDirectionalLight())
+		{
+			uniforms.DirLight.Direction = Vector4(dirLight.Direction, 0.0f);
+			uniforms.DirLight.Color = Vector4(dirLight.Color, 1.0f);
+			uniforms.DirLight.Intensity = dirLight.Intensity;
+		}
+		else
+		{
+			uniforms.DirLight.Intensity = 0.0f;
+		}
+
+		uniforms.AmbientLightColor = scene->GetAmbientLightColor();
+		uniforms.LightNum = lightNum;
+
+		uint32 lightIndex = 0;
+		for (const RLightRenderProxy& light : lights)
+		{
+			LightUniforms& lightUniforms = uniforms.Lights[lightIndex];
+
+			lightUniforms.Location = Vector4(light.Location, 1.0f);
+			lightUniforms.Color = Vector4(light.Color, 1.0f);
+			lightUniforms.Intensity = light.Intensity;
+			lightUniforms.Falloff = light.Falloff;
+
+			lightIndex++;
+		}
+
+		// Update Constant Buffers
+		scene->m_SceneUniformBuffer->UpdateData();
+		scene->m_SceneUniformBuffer->Bind(0);
 
 		for (const RPrimitiveRenderProxy& primitive : scene->GetScenePrimitives())
 		{

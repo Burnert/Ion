@@ -17,6 +17,7 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		glBindTextureUnit(slot, m_ID);
+		m_BoundSlot = slot;
 	}
 
 	void OpenGLTexture::Unbind() const
@@ -26,13 +27,15 @@ namespace Ion
 	}
 
 	OpenGLTexture::OpenGLTexture(FileOld* file)
-		: Texture(file)
+		: Texture(file),
+		m_BoundSlot(-1)
 	{
 		CreateTexture();
 	}
 
 	OpenGLTexture::OpenGLTexture(Image* image)
-		: Texture(image)
+		: Texture(image),
+		m_BoundSlot(-1)
 	{
 		CreateTexture();
 	}

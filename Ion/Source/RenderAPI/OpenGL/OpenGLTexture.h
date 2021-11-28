@@ -7,12 +7,13 @@ namespace Ion
 {
 	class ION_API OpenGLTexture : public Texture
 	{
-		friend class Texture;
 	public:
 		virtual ~OpenGLTexture() override;
 
 		virtual void Bind(uint32 slot = 0) const override;
 		virtual void Unbind() const override;
+
+		int32 GetBoundSlot() const { return m_BoundSlot; }
 
 	protected:
 		OpenGLTexture(FileOld* file);
@@ -23,5 +24,9 @@ namespace Ion
 
 	private:
 		uint32 m_ID;
+		mutable int32 m_BoundSlot;
+
+		friend class Texture;
+		friend class OpenGLRenderer;
 	};
 }

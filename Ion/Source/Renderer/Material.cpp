@@ -57,7 +57,7 @@ namespace Ion
 				m_TextureParameters.insert(param);
 
 				char samplerUniformName[20];
-				sprintf_s(samplerUniformName, "u_Samplers[%u]", param->m_ReservedSlot);
+				sprintf_s(samplerUniformName, "g_Samplers[%u]", param->m_ReservedSlot);
 				LinkParameterToUniform(name, samplerUniformName);
 			}
 			break;

@@ -221,6 +221,15 @@ namespace Ion
 				TIsSameV<Type, TShared<Texture>>  && type == EMaterialParameterType::Texture2D;
 		}
 
+		template<typename Lambda>
+		void ForEachTexture(Lambda func) const
+		{
+			for (TMaterialParameter<TShared<Texture>>* const& textureParam : m_TextureParameters)
+			{
+				func(textureParam->m_Texture.lock(), textureParam->m_ReservedSlot);
+			}
+		}
+
 	protected:
 		Material();
 

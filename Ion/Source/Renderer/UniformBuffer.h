@@ -104,29 +104,29 @@ namespace Ion
 		{
 			switch (type)
 			{
-			case Ion::EUniformType::Null:       return 0;
-			case Ion::EUniformType::Float:      return sizeof(float);
-			case Ion::EUniformType::Float2:     return sizeof(Vector2);
-			case Ion::EUniformType::Float3:     return sizeof(Vector3);
-			case Ion::EUniformType::Float4:     return sizeof(Vector4);
-			case Ion::EUniformType::Int:        return sizeof(int32);
-			case Ion::EUniformType::Int2:       return sizeof(IVector2);
-			case Ion::EUniformType::Int3:       return sizeof(IVector3);
-			case Ion::EUniformType::Int4:       return sizeof(IVector4);
-			case Ion::EUniformType::UInt:       return sizeof(uint32);
-			case Ion::EUniformType::UInt2:      return sizeof(UVector2);
-			case Ion::EUniformType::UInt3:      return sizeof(UVector3);
-			case Ion::EUniformType::UInt4:      return sizeof(UVector4);
-			case Ion::EUniformType::Matrix2:    return sizeof(Matrix2);
-			case Ion::EUniformType::Matrix2x3:  return sizeof(Matrix2x3);
-			case Ion::EUniformType::Matrix2x4:  return sizeof(Matrix2x4);
-			case Ion::EUniformType::Matrix3:    return sizeof(Matrix3);
-			case Ion::EUniformType::Matrix3x2:  return sizeof(Matrix3x2);
-			case Ion::EUniformType::Matrix3x4:  return sizeof(Matrix3x4);
-			case Ion::EUniformType::Matrix4:    return sizeof(Matrix4);
-			case Ion::EUniformType::Matrix4x2:  return sizeof(Matrix4x2);
-			case Ion::EUniformType::Matrix4x3:  return sizeof(Matrix4x3);
-			default:                            return 0;
+			case EUniformType::Null:       return 0;
+			case EUniformType::Float:      return sizeof(float);
+			case EUniformType::Float2:     return sizeof(Vector2);
+			case EUniformType::Float3:     return sizeof(Vector3);
+			case EUniformType::Float4:     return sizeof(Vector4);
+			case EUniformType::Int:        return sizeof(int32);
+			case EUniformType::Int2:       return sizeof(IVector2);
+			case EUniformType::Int3:       return sizeof(IVector3);
+			case EUniformType::Int4:       return sizeof(IVector4);
+			case EUniformType::UInt:       return sizeof(uint32);
+			case EUniformType::UInt2:      return sizeof(UVector2);
+			case EUniformType::UInt3:      return sizeof(UVector3);
+			case EUniformType::UInt4:      return sizeof(UVector4);
+			case EUniformType::Matrix2:    return sizeof(Matrix2);
+			case EUniformType::Matrix2x3:  return sizeof(Matrix2x3);
+			case EUniformType::Matrix2x4:  return sizeof(Matrix2x4);
+			case EUniformType::Matrix3:    return sizeof(Matrix3);
+			case EUniformType::Matrix3x2:  return sizeof(Matrix3x2);
+			case EUniformType::Matrix3x4:  return sizeof(Matrix3x4);
+			case EUniformType::Matrix4:    return sizeof(Matrix4);
+			case EUniformType::Matrix4x2:  return sizeof(Matrix4x2);
+			case EUniformType::Matrix4x3:  return sizeof(Matrix4x3);
+			default:                       return 0;
 			}
 		}
 

@@ -3,6 +3,7 @@
 #include "UniformBuffer.h"
 #include "RenderAPI/RenderAPI.h"
 #include "RenderAPI/DX11/DX11Buffer.h"
+#include "RenderAPI/OpenGL/OpenGLUniformBuffer.h"
 
 namespace Ion
 {
@@ -12,6 +13,8 @@ namespace Ion
 		{
 		case ERenderAPI::DX11:
 			return new DX11UniformBuffer(initialData, size);
+		case ERenderAPI::OpenGL:
+			return new OpenGLUniformBuffer(initialData, size);
 		default:
 			return nullptr;
 		}
