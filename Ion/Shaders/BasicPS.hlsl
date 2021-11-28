@@ -12,7 +12,7 @@ struct LightingData
 	float3 Specular;
 };
 
-float g_SpecularIntensity = 0.5f;
+static const float g_SpecularIntensity = 0.5f;
 
 float CalculateSpecularIntensity(float3 lightDirection, float shininess, float falloff = 1.0f)
 {
