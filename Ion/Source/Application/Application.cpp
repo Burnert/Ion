@@ -63,7 +63,7 @@ namespace Ion
 		m_Window->Initialize();
 
 		// Current thread will render graphics in this window.
-		RenderAPI::Init(ERenderAPI::DX11, m_Window.get());
+		RenderAPI::Init(ERenderAPI::OpenGL, m_Window.get());
 
 		m_Renderer = Renderer::Create();
 		m_Renderer->Init();

@@ -1,10 +1,72 @@
 #pragma once
 
 #include "OpenGL.h"
+#include "Renderer/VertexBuffer.h"
+#include "Renderer/IndexBuffer.h"
 #include "Renderer/UniformBuffer.h"
 
 namespace Ion
 {
+	class ION_API OpenGLVertexBuffer : public VertexBuffer
+	{
+		friend class OpenGLRenderer;
+	public:
+		OpenGLVertexBuffer(float* vertexAttributes, uint64 count);
+		virtual ~OpenGLVertexBuffer() override;
+
+		virtual void SetLayout(const TShared<VertexLayout>& layout) override;
+
+		virtual uint32 GetVertexCount() const override;
+
+		static constexpr FORCEINLINE uint32 VertexAttributeTypeToGLType(EVertexAttributeType type)
+		{
+			switch (type)
+			{
+			case EVertexAttributeType::Byte:           return GL_BYTE;
+			case EVertexAttributeType::UnsignedByte:   return GL_UNSIGNED_BYTE;
+			case EVertexAttributeType::Short:          return GL_SHORT;
+			case EVertexAttributeType::UnsignedShort:  return GL_UNSIGNED_SHORT;
+			case EVertexAttributeType::Int:            return GL_INT;
+			case EVertexAttributeType::UnsignedInt:    return GL_UNSIGNED_INT;
+			case EVertexAttributeType::Float16:        return GL_HALF_FLOAT;
+			case EVertexAttributeType::Float:          return GL_FLOAT;
+			case EVertexAttributeType::Double:         return GL_DOUBLE;
+			default:                                   return 0;
+			}
+		}
+
+	protected:
+		virtual void Bind() const override;
+		virtual void Unbind() const override;
+
+		void BindLayout() const;
+
+	private:
+		uint32 m_ID;
+		uint32 m_VertexCount;
+		TShared<VertexLayout> m_VertexLayout;
+	};
+
+	class ION_API OpenGLIndexBuffer : public IndexBuffer
+	{
+		friend class OpenGLRenderer;
+	public:
+		OpenGLIndexBuffer(uint32* indices, uint32 count);
+		virtual ~OpenGLIndexBuffer() override;
+
+		virtual uint32 GetIndexCount() const override;
+		virtual uint32 GetTriangleCount() const override;
+
+	protected:
+		virtual void Bind() const override;
+		virtual void Unbind() const override;
+
+	private:
+		uint32 m_ID;
+		uint32 m_Count;
+		uint32 m_TriangleCount;
+	};
+
 	class ION_API OpenGLUniformBuffer : public UniformBuffer
 	{
 	public:

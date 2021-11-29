@@ -2,9 +2,7 @@
 
 #include "OpenGLRenderer.h"
 
-#include "OpenGLVertexBuffer.h"
-#include "OpenGLIndexBuffer.h"
-#include "OpenGLUniformBuffer.h"
+#include "OpenGLBuffer.h"
 #include "OpenGLShader.h"
 #include "OpenGLTexture.h"
 

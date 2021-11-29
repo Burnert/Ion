@@ -2,35 +2,9 @@
 
 #include "UniformBuffer.h"
 #include "RenderAPI/RenderAPI.h"
-#include "RenderAPI/DX11/DX11Buffer.h"
-#include "RenderAPI/OpenGL/OpenGLUniformBuffer.h"
 
 namespace Ion
 {
-	UniformBuffer* UniformBuffer::Create(void* initialData, size_t size)
-	{
-		switch (RenderAPI::GetCurrent())
-		{
-		case ERenderAPI::DX11:
-			return new DX11UniformBuffer(initialData, size);
-		case ERenderAPI::OpenGL:
-			return new OpenGLUniformBuffer(initialData, size);
-		default:
-			return nullptr;
-		}
-	}
-
-	UniformBuffer* UniformBuffer::Create(void* data, size_t size, const UniformDataMap& uniforms)
-	{
-		switch (RenderAPI::GetCurrent())
-		{
-		case ERenderAPI::DX11:
-			return new DX11UniformBuffer(data, size, uniforms);
-		default:
-			return nullptr;
-		}
-	}
-
 	UniformBuffer::UniformBuffer(const UniformDataMap& uniforms) :
 		m_Uniforms(MakeUnique<const UniformDataMap>(uniforms))
 	{ }
