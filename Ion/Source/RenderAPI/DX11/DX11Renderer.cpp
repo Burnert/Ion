@@ -188,11 +188,28 @@ namespace Ion
 
 	void DX11Renderer::SetPolygonDrawMode(EPolygonDrawMode drawMode) const
 	{
+		HRESULT hResult;
 
+		ID3D11RasterizerState* rasterizerState = DX11::GetRasterizerState();
+
+		D3D11_RASTERIZER_DESC rd{ };
+		dxcall_v(rasterizerState->GetDesc(&rd));
+
+		rd.FillMode = drawMode == EPolygonDrawMode::Lines ? D3D11_FILL_WIREFRAME : D3D11_FILL_SOLID;
+
+		COMReset(DX11::s_RasterizerState);
+
+		dxcall(DX11::GetDevice()->CreateRasterizerState(&rd, &DX11::s_RasterizerState));
+		dxcall_v(DX11::GetContext()->RSSetState(DX11::s_RasterizerState));
 	}
 
 	EPolygonDrawMode DX11Renderer::GetPolygonDrawMode() const
 	{
-		return EPolygonDrawMode();
+		ID3D11RasterizerState* rasterizerState = DX11::GetRasterizerState();
+
+		D3D11_RASTERIZER_DESC rd { };
+		dxcall_v(rasterizerState->GetDesc(&rd));
+
+		return rd.FillMode == D3D11_FILL_WIREFRAME ? EPolygonDrawMode::Lines : EPolygonDrawMode::Fill;
 	}
 }
