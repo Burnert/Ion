@@ -95,7 +95,7 @@ namespace Ion
 
 		static inline ID3D11RenderTargetView* GetRenderTarget()
 		{
-			return s_RenderTarget;
+			return s_RTV;
 		}
 
 		static inline ID3D11RasterizerState* GetRasterizerState()
@@ -163,7 +163,7 @@ namespace Ion
 		static void SetDisplayVersion(const char* version);
 
 		static void CreateRenderTarget();
-		static void CreateDepthStencil();
+		static void CreateDepthStencil(uint32 width, uint32 height);
 		static void ResizeBuffers(uint32 width, uint32 height);
 
 	private:
@@ -182,13 +182,10 @@ namespace Ion
 		static ID3D11Device* s_Device;
 		static ID3D11DeviceContext* s_Context;
 		static IDXGISwapChain* s_SwapChain;
-		static ID3D11RenderTargetView* s_RenderTarget;
+		static ID3D11RenderTargetView* s_RTV;
 		static ID3D11DepthStencilState* s_DepthStencilState;
-		static ID3D11DepthStencilView* s_DepthStencil;
+		static ID3D11DepthStencilView* s_DSV;
 		static ID3D11RasterizerState* s_RasterizerState;
-
-		static ID3D11Texture2D* s_BackBufferTexture;
-		static ID3D11Texture2D* s_DepthStencilTexture;
 
 		static uint32 s_SwapInterval;
 

@@ -49,7 +49,7 @@ namespace Ion
 		scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 		scd.OutputWindow = hwnd;
 		scd.Windowed = true;
-		scd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+		scd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 		scd.Flags = 0;
 
 		D3D_FEATURE_LEVEL targetFeatureLevel[] = {
@@ -113,7 +113,8 @@ namespace Ion
 		dxcall(s_Device->CreateDepthStencilState(&dsd, &s_DepthStencilState));
 		dxcall_v(s_Context->OMSetDepthStencilState(s_DepthStencilState, 1));
 
-		CreateDepthStencil();
+		s_SwapChain->GetDesc(&scd);
+		CreateDepthStencil(scd.BufferDesc.Width, scd.BufferDesc.Height);
 
 		// Set Viewports
 
@@ -158,12 +159,10 @@ namespace Ion
 		COMRelease(s_Device);
 		COMRelease(s_Context);
 		COMRelease(s_SwapChain);
-		COMRelease(s_RenderTarget);
+		COMRelease(s_RTV);
 		COMRelease(s_DepthStencilState);
-		COMRelease(s_DepthStencil);
+		COMRelease(s_DSV);
 		COMRelease(s_RasterizerState);
-		COMRelease(s_DepthStencilTexture);
-		COMRelease(s_BackBufferTexture);
 #if ION_DEBUG
 		COMRelease(s_DebugInfoQueue);
 #endif
@@ -173,7 +172,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		dxcall_v(s_Context->OMSetRenderTargets(1, &s_RenderTarget, s_DepthStencil), "Cannot set render target.");
+		dxcall_v(s_Context->OMSetRenderTargets(1, &s_RTV, s_DSV), "Cannot set render target.");
 	}
 
 	void DX11::EndFrame()
@@ -309,26 +308,27 @@ namespace Ion
 
 		HRESULT hResult;
 
-		dxcall(s_SwapChain->GetBuffer(0, IID_PPV_ARGS(&s_BackBufferTexture)),
+		ID3D11Texture2D* backBuffer;
+
+		dxcall(s_SwapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer)),
 			"Cannot get buffer.");
 
-		dxcall(s_Device->CreateRenderTargetView(s_BackBufferTexture, nullptr, &s_RenderTarget),
+		dxcall(s_Device->CreateRenderTargetView(backBuffer, nullptr, &s_RTV),
 			"Cannot create Render Target from back buffer.");
+
+		backBuffer->Release();
 	}
 
-	void DX11::CreateDepthStencil()
+	void DX11::CreateDepthStencil(uint32 width, uint32 height)
 	{
 		TRACE_FUNCTION();
 
 		HRESULT hResult;
 
-		D3D11_TEXTURE2D_DESC backBufferDesc { };
-		s_BackBufferTexture->GetDesc(&backBufferDesc);
-
 		D3D11_TEXTURE2D_DESC depthDesc { };
 		depthDesc.Format = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
-		depthDesc.Width = backBufferDesc.Width;
-		depthDesc.Height = backBufferDesc.Height;
+		depthDesc.Width = width;
+		depthDesc.Height = height;
 		depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 		depthDesc.Usage = D3D11_USAGE_DEFAULT;
 		depthDesc.SampleDesc.Count = 1;
@@ -338,14 +338,18 @@ namespace Ion
 		depthDesc.MipLevels = 1;
 		depthDesc.ArraySize = 1;
 
-		dxcall(s_Device->CreateTexture2D(&depthDesc, nullptr, &s_DepthStencilTexture));
+		ID3D11Texture2D* depthStencil;
+
+		dxcall(s_Device->CreateTexture2D(&depthDesc, nullptr, &depthStencil));
 
 		D3D11_DEPTH_STENCIL_VIEW_DESC dsvd { };
 		dsvd.Format = depthDesc.Format;
 		dsvd.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 		dsvd.Texture2D.MipSlice = 0;
 
-		dxcall(s_Device->CreateDepthStencilView(s_DepthStencilTexture, &dsvd, &s_DepthStencil));
+		dxcall(s_Device->CreateDepthStencilView(depthStencil, &dsvd, &s_DSV));
+
+		depthStencil->Release();
 	}
 
 	void DX11::ResizeBuffers(uint32 width, uint32 height)
@@ -354,16 +358,14 @@ namespace Ion
 
 		HRESULT hResult = S_OK;
 
-		COMReset(s_RenderTarget);
-		COMReset(s_DepthStencil);
-		COMReset(s_BackBufferTexture);
-		COMReset(s_DepthStencilTexture);
+		COMReset(s_RTV);
+		COMReset(s_DSV);
 
 		dxcall(s_SwapChain->ResizeBuffers(2, width, height, DXGI_FORMAT_UNKNOWN, 0),
 			"Cannot resize buffers.");
 
 		CreateRenderTarget();
-		CreateDepthStencil();
+		CreateDepthStencil(width, height);
 	}
 
 	void DX11::InitImGuiBackend()
@@ -402,13 +404,10 @@ namespace Ion
 	ID3D11Device* DX11::s_Device = nullptr;
 	ID3D11DeviceContext* DX11::s_Context = nullptr;
 	IDXGISwapChain* DX11::s_SwapChain = nullptr;
-	ID3D11RenderTargetView* DX11::s_RenderTarget = nullptr;
+	ID3D11RenderTargetView* DX11::s_RTV = nullptr;
 	ID3D11DepthStencilState* DX11::s_DepthStencilState = nullptr;
-	ID3D11DepthStencilView* DX11::s_DepthStencil = nullptr;
+	ID3D11DepthStencilView* DX11::s_DSV = nullptr;
 	ID3D11RasterizerState* DX11::s_RasterizerState = nullptr;
-
-	ID3D11Texture2D* DX11::s_DepthStencilTexture = nullptr;
-	ID3D11Texture2D* DX11::s_BackBufferTexture = nullptr;
 
 	uint32 DX11::s_SwapInterval = 0;
 

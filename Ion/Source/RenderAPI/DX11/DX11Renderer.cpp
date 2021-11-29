@@ -37,8 +37,8 @@ namespace Ion
 
 		ID3D11DeviceContext* context = DX11::GetContext();
 
-		dxcall_v(context->ClearRenderTargetView(DX11::s_RenderTarget, (float*)&color));
-		dxcall_v(context->ClearDepthStencilView(DX11::s_DepthStencil, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0));
+		dxcall_v(context->ClearRenderTargetView(DX11::s_RTV, (float*)&color));
+		dxcall_v(context->ClearDepthStencilView(DX11::s_DSV, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0));
 	}
 
 	void DX11Renderer::Draw(const RPrimitiveRenderProxy& primitive, const TShared<Scene>& targetScene) const
