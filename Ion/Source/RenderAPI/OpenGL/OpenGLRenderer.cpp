@@ -52,16 +52,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		TShared<Scene> scene;
-		if (targetScene)
-		{
-			scene = targetScene;
-		}
-		else
-		{
-			ionassert(m_CurrentScene, "Cannot render before setting the current scene if the target scene is not specified.");
-			scene = m_CurrentScene;
-		}
+		ionassert(targetScene);
 
 		const Material* material = primitive.Material;
 		const OpenGLVertexBuffer* vertexBuffer = (OpenGLVertexBuffer*)primitive.VertexBuffer;
@@ -87,9 +78,7 @@ namespace Ion
 		}
 
 		// Calculate the Model View Projection Matrix based on the current scene camera
-		const RCameraRenderProxy& activeCamera = m_CurrentScene->GetCameraRenderProxy();
-		Vector3 cameraLocation = activeCamera.Location;
-		Vector3 cameraDirection = activeCamera.Forward;
+		const RCameraRenderProxy& activeCamera = targetScene->GetCameraRenderProxy();
 
 		const Matrix4& viewProjectionMatrix = activeCamera.ViewProjectionMatrix;
 		const Matrix4& modelMatrix = primitive.Transform;

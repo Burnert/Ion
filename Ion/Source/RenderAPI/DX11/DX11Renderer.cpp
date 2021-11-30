@@ -45,6 +45,8 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
+		ionassert(targetScene);
+
 		ID3D11DeviceContext* context = DX11::GetContext();
 
 		const Material* material = primitive.Material;
@@ -69,7 +71,8 @@ namespace Ion
 		ub->UpdateData();
 		ub->Bind(1);
 
-		if (material) material->BindTextures();
+		if (material) 
+			material->BindTextures();
 		//material->UpdateShaderUniforms();
 
 		dxcall_v(context->DrawIndexed(ib->GetIndexCount(), 0, 0));
