@@ -68,8 +68,25 @@ using THashMap     = std::unordered_map<T, U, Hasher, std::equal_to<T>, Allocato
 template<typename T, typename Allocator = std::allocator<T>>
 using TArray       = std::vector<T, Allocator>;
 
+template<typename T, typename Container = std::deque<T>>
+using TQueue       = std::queue<T, Container>;
+
 template<typename T>
 using TFunction    = std::function<T>;
+
+// Thread
+
+using Thread = std::thread;
+using Mutex = std::mutex;
+using ConditionVariable = std::condition_variable;
+using LockGuard = std::lock_guard<Mutex>;
+using ScopedLock = std::scoped_lock<Mutex>;
+using UniqueLock = std::unique_lock<Mutex>;
+
+template<typename T>
+using TAtomic = std::atomic<T>;
+
+// Debug
 
 #if ION_DEBUG
 #define TypeInfo(name) std::type_info name

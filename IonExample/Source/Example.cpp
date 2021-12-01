@@ -43,6 +43,9 @@ public:
 		String collada;
 		File::ReadToString(meshPath, collada);
 
+		// Doesn't work yet
+		//AssetReference& meshAsset = AssetManager::Get()->CreateAsset(EAssetType::Mesh, FilePath(meshPath));
+
 		TUnique<ColladaDocument> model = MakeUnique<ColladaDocument>(collada);
 		const ColladaData& data = model->GetData();
 		TShared<VertexBuffer> vb = VertexBuffer::Create(data.VertexAttributes, data.VertexAttributeCount);
@@ -54,10 +57,13 @@ public:
 		}
 		TShared<IndexBuffer> ib = IndexBuffer::Create(data.Indices, (uint32)data.IndexCount);
 
-		File texFile(texturePath);
-		Image* image = new Image;
-		ionassertnd(image->Load(texFile));
-		texture = Texture::Create(image);
+		//File texFile(texturePath);
+		//Image* image = new Image;
+		//ionassertnd(image->Load(texFile));
+
+		AssetReference& textureAsset = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(texturePath));
+
+		//texture = Texture::Create(image);
 
 		material = Material::Create();
 		material->SetShader(shader);
@@ -255,29 +261,32 @@ public:
 		m_Scene->AddDrawableObject(m_MeshCollada.get());
 
 #endif
-		// 4Pak
-		InitExampleModel(m_Mesh4Pak, m_Material4Pak, m_Texture4Pak, m_Shader, m_Scene, L"Assets/models/4pak.dae", L"Assets/textures/4pak.png",
-			Math::Translate(Vector3(2.0f, 1.0f, 0.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
+		for (int32 i = 0; i < 5; ++i) {
+			LOG_WARN("Init {0}", i);
+			// 4Pak
+			InitExampleModel(m_Mesh4Pak, m_Material4Pak, m_Texture4Pak, m_Shader, m_Scene, L"Assets/models/4pak.dae", L"Assets/textures/4pak.png",
+				Math::Translate(Vector3(2.0f, 1.0f, 0.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
 
-		// Piwsko
-		InitExampleModel(m_MeshPiwsko, m_MaterialPiwsko, m_TexturePiwsko, m_Shader, m_Scene, L"Assets/models/piwsko.dae", L"Assets/textures/piwsko.png",
-			Math::Translate(Vector3(-2.0f, 1.0f, 0.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
+			// Piwsko
+			InitExampleModel(m_MeshPiwsko, m_MaterialPiwsko, m_TexturePiwsko, m_Shader, m_Scene, L"Assets/models/piwsko.dae", L"Assets/textures/piwsko.png",
+				Math::Translate(Vector3(-2.0f, 1.0f, 0.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
 
-		// Oscypek
-		InitExampleModel(m_MeshOscypek, m_MaterialOscypek, m_TextureOscypek, m_Shader, m_Scene, L"Assets/models/oscypek.dae", L"Assets/textures/oscypek.png",
-			Math::Translate(Vector3(-1.0f, 1.0f, 1.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
+			// Oscypek
+			InitExampleModel(m_MeshOscypek, m_MaterialOscypek, m_TextureOscypek, m_Shader, m_Scene, L"Assets/models/oscypek.dae", L"Assets/textures/oscypek.png",
+				Math::Translate(Vector3(-1.0f, 1.0f, 1.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
 
-		// Ciupaga
-		InitExampleModel(m_MeshCiupaga, m_MaterialCiupaga, m_TextureCiupaga, m_Shader, m_Scene, L"Assets/models/ciupaga.dae", L"Assets/textures/ciupaga.png",
-			Math::Translate(Vector3(1.0f, 1.0f, 1.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 90.0f, 0.0f)))));
+			// Ciupaga
+			InitExampleModel(m_MeshCiupaga, m_MaterialCiupaga, m_TextureCiupaga, m_Shader, m_Scene, L"Assets/models/ciupaga.dae", L"Assets/textures/ciupaga.png",
+				Math::Translate(Vector3(1.0f, 1.0f, 1.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 90.0f, 0.0f)))));
 
-		// Slovak
-		InitExampleModel(m_MeshSlovak, m_MaterialSlovak, m_TextureSlovak, m_Shader, m_Scene, L"Assets/models/slovak.dae", L"Assets/textures/slovak.png",
-			Math::Translate(Vector3(1.0f, 0.0f, -2.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
+			// Slovak
+			InitExampleModel(m_MeshSlovak, m_MaterialSlovak, m_TextureSlovak, m_Shader, m_Scene, L"Assets/models/slovak.dae", L"Assets/textures/slovak.png",
+				Math::Translate(Vector3(1.0f, 0.0f, -2.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
 
-		// Kula
-		//InitExampleModel(m_MeshStress, m_MaterialStress, m_TextureStress, m_Shader, m_Scene, L"spherestresstest.dae", L"Assets/test.png",
-		//	Math::Translate(Vector3(-1.0f, 0.0f, -2.0f))* Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
+			// Kula
+			//InitExampleModel(m_MeshStress, m_MaterialStress, m_TextureStress, m_Shader, m_Scene, L"spherestresstest_uv.dae", L"Assets/test_4k.png",
+			//	Math::Translate(Vector3(-1.0f, 0.0f, -2.0f))* Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
+		}
 
 		FileOld* dirTest = FileOld::Create();
 		dirTest->SetFilename(L"Assets");

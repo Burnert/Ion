@@ -499,6 +499,7 @@ namespace Ion
 	public:
 		static constexpr const uint64 MaxPathLength = 2000;
 
+		FilePath();
 		FilePath(const WString& path, EFilePathValidation validation = EFilePathValidation::Unchecked);
 		FilePath(const FilePath& path, EFilePathValidation validation);
 

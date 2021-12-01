@@ -87,3 +87,8 @@ using TRemoveExtent = std::remove_extent_t<T>;
 
 template<typename T>
 using TRemoveAllExtents = std::remove_all_extents_t<T>;
+
+// Numeric Limits
+
+template<typename T>
+using TNumericLimits = std::numeric_limits<T>;

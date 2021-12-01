@@ -4,6 +4,7 @@
 #include "Core/Event/InputEvent.h"
 #include "Core/Event/WindowEvent.h"
 #include "Core/Layer/LayerStack.h"
+#include "Core/Asset/AssetManager.h"
 
 #include "Application/Window/GenericWindow.h"
 
@@ -197,6 +198,8 @@ namespace Ion
 		TShared<InputManager> m_InputManager;
 
 		TShared<Renderer> m_Renderer;
+
+		TUnique<AssetManager> m_AssetManager;
 
 		EventDispatcher<ApplicationEventFunctions, Application> m_EventDispatcher;
 		TUnique<EventQueue<EventHandler>> m_EventQueue;

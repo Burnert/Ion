@@ -36,6 +36,7 @@ namespace Ion
 		m_EventDispatcher(this),
 		m_EventQueue(MakeUnique<EventQueue<EventHandler>>()),
 		m_LayerStack(MakeUnique<LayerStack>()),
+		m_AssetManager(AssetManager::Get()),
 		m_MainThreadId(std::this_thread::get_id()),
 		m_bRunning(true)
 	{
@@ -68,6 +69,8 @@ namespace Ion
 		m_Renderer = Renderer::Create();
 		m_Renderer->Init();
 		m_Renderer->SetVSyncEnabled(true);
+
+		m_AssetManager->Init();
 
 		InitImGui();
 

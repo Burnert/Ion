@@ -186,6 +186,11 @@ namespace Ion
 	// FilePath: -------------------------------------------
 	// -----------------------------------------------------
 
+	FilePath::FilePath() :
+		m_bChecked(false)
+	{
+	}
+
 	FilePath::FilePath(const WString& path, EFilePathValidation validation) :
 		m_bChecked((bool)validation)
 	{

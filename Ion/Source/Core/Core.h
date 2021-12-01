@@ -23,6 +23,7 @@
 #include "Core/Event/Event.h"
 #include "Core/StringUtils.h"
 #include "Core/StringConverter.h"
+#include "Core/Asset/AssetCore.h"
 #include "Core/File/File.h"
 #include "Core/File/Image.h"
 #include "Core/Input/Input.h"

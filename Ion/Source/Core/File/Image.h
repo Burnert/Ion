@@ -24,6 +24,8 @@ namespace Ion
 		FORCEINLINE int32 GetHeight() const { return m_Height; }
 		FORCEINLINE int32 GetChannelNum() const { return m_Channels; }
 
+		FORCEINLINE size_t GetPixelDataSize() const { return m_Width * m_Height * m_Channels; }
+
 	private:
 		uint8* m_PixelData;
 		int32 m_Width;

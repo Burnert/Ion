@@ -5,6 +5,8 @@
 #include <memory>
 #include <functional>
 #include <thread>
+#include <mutex>
+#include <condition_variable>
 #include <utility>
 #include <chrono>
 #include <algorithm>
@@ -18,6 +20,7 @@
 #include <vector>
 #include <list>
 #include <deque>
+#include <queue>
 #include <map>
 #include <set>
 #include <unordered_map>

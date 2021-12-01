@@ -87,6 +87,13 @@ namespace Ion
 
 	namespace Math
 	{
+		FORCEINLINE constexpr bool IsPowerOfTwo(uint64 value)
+		{
+			return value && !(value & (value - 1));
+		}
+
+		// GLM Wrappers ----------------------------------------------------------
+
 		// Matrix
 
 		FORCEINLINE Matrix4 Translate(const Vector3& v)
