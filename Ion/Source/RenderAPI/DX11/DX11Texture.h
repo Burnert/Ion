@@ -16,9 +16,10 @@ namespace Ion
 
 	protected:
 		DX11Texture(Image* image);
+		DX11Texture(AssetHandle asset);
 
 	private:
-		void CreateTexture();
+		void CreateTexture(const void* const pixelData, uint32 width, uint32 height);
 
 	private:
 		uint32 m_ID;

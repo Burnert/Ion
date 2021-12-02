@@ -68,7 +68,7 @@ namespace Ion
 
 		m_Renderer = Renderer::Create();
 		m_Renderer->Init();
-		m_Renderer->SetVSyncEnabled(true);
+		m_Renderer->SetVSyncEnabled(false);
 
 		m_AssetManager->Init();
 
@@ -97,6 +97,8 @@ namespace Ion
 		OnShutdown();
 		TRACE_END(0);
 
+		m_AssetManager->Shutdown();
+
 		RenderAPI::Shutdown();
 	}
 
@@ -118,6 +120,8 @@ namespace Ion
 
 		// @TODO: This is broken and kills CPU
 		//UpdateWindowTitle(deltaTime);
+
+		m_AssetManager->Update();
 		
 		m_LayerStack->OnUpdate(deltaTime);
 

@@ -349,6 +349,26 @@ namespace Ion
 		return newPath;
 	}
 
+	bool FilePath::operator==(const FilePath& path) const
+	{
+		return m_PathName == path.m_PathName;
+	}
+
+	bool FilePath::operator==(const WString& path) const
+	{
+		return m_PathName == path;
+	}
+
+	bool FilePath::operator!=(const FilePath& path) const
+	{
+		return m_PathName != path.m_PathName;
+	}
+
+	bool FilePath::operator!=(const WString& path) const
+	{
+		return m_PathName == path;
+	}
+
 	TArray<WString> FilePath::SplitPathName(const WString& path)
 	{
 #pragma warning(disable:6255)

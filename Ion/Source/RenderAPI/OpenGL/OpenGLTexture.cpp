@@ -30,29 +30,32 @@ namespace Ion
 		: Texture(file),
 		m_BoundSlot(-1)
 	{
-		CreateTexture();
+		//CreateTexture();
 	}
 
 	OpenGLTexture::OpenGLTexture(Image* image)
 		: Texture(image),
 		m_BoundSlot(-1)
 	{
-		CreateTexture();
+		CreateTexture(image->GetPixelData(), image->GetWidth(), image->GetHeight());
 	}
 
-	void OpenGLTexture::CreateTexture()
+	OpenGLTexture::OpenGLTexture(AssetHandle asset) :
+		Texture(asset)
+	{
+		const AssetTypes::TextureDesc* desc = asset->GetDescription<EAssetType::Texture>();
+		CreateTexture(asset->Data.Ptr, desc->Width, desc->Height);
+	}
+
+	void OpenGLTexture::CreateTexture(const void* const pixelData, uint32 width, uint32 height)
 	{
 		TRACE_FUNCTION();
 
-		ionassert(m_TextureImage->IsLoaded(), "Image has not been initialized yet.");
+		ionassert(m_TextureAsset->IsLoaded(), "Texture has not been loaded yet.");
 
 		TRACE_BEGIN(0, "OpenGLTexture - glCreateTextures");
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_ID);
 		TRACE_END(0);
-
-		int32 width = m_TextureImage->GetWidth();
-		int32 height = m_TextureImage->GetHeight();
-		const uint8* pixelData = m_TextureImage->GetPixelData();
 
 		TRACE_BEGIN(1, "OpenGLTexture - glTextureStorage2D");
 		glTextureStorage2D(m_ID, 1, GL_RGBA8, width, height);

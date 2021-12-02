@@ -50,6 +50,11 @@ using TBool = std::bool_constant<val>;
 template<typename T, typename... Types>
 inline constexpr bool TIsAnyOfV = std::_Is_any_of_v<T, Types...>;
 
+// IsNoneOf
+
+template<typename T, typename... Types>
+inline constexpr bool TIsNoneOfV = !TIsAnyOfV<T, Types...>;
+
 // Disjunction (OR)
 
 template<typename... T>

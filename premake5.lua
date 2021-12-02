@@ -37,6 +37,7 @@ project "Ion"
 	files {
 		"%{prj.name}/Source/**.h",
 		"%{prj.name}/Source/**.cpp",
+		"%{prj.name}/Source/**.inl",
 	}
 
 	includedirs {
@@ -98,6 +99,7 @@ project "IonExample"
 	files {
 		"%{prj.name}/Source/**.h",
 		"%{prj.name}/Source/**.cpp",
+		"%{prj.name}/Source/**.inl",
 	}
 
 	includedirs {

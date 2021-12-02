@@ -37,33 +37,29 @@ public:
 	}
 
 	static void InitExampleModel(TShared<Mesh>& mesh, TShared<Material>& material, TShared<Texture>& texture, 
-		const TShared<Shader>& shader, TShared<Scene>& scene, const wchar* meshPath, const wchar* texturePath,
+		const TShared<Shader>& shader, TShared<Scene>& scene, const AssetHandle meshAsset, const AssetHandle textureAsset,
 		const Matrix4& transform)
 	{
-		String collada;
-		File::ReadToString(meshPath, collada);
+		// Mesh
 
-		// Doesn't work yet
-		//AssetReference& meshAsset = AssetManager::Get()->CreateAsset(EAssetType::Mesh, FilePath(meshPath));
+		const AssetTypes::MeshDesc* meshDesc = meshAsset->GetDescription<EAssetType::Mesh>();
+		float* vertexAttributesPtr = (float*)((uint8*)meshAsset->Data.Ptr + meshDesc->VerticesOffset);
+		uint32* indicesPtr = (uint32*)((uint8*)meshAsset->Data.Ptr + meshDesc->IndicesOffset);
 
-		TUnique<ColladaDocument> model = MakeUnique<ColladaDocument>(collada);
-		const ColladaData& data = model->GetData();
-		TShared<VertexBuffer> vb = VertexBuffer::Create(data.VertexAttributes, data.VertexAttributeCount);
-		vb->SetLayout(data.Layout);
+		TShared<VertexBuffer> vb = VertexBuffer::Create(vertexAttributesPtr, meshDesc->VertexCount);
+		vb->SetLayout(meshDesc->VertexLayout);
 		{
 			DX11VertexBuffer* dx11VB = dynamic_cast<DX11VertexBuffer*>(vb.get());
 			if (dx11VB)
 				dx11VB->CreateDX11Layout(std::static_pointer_cast<DX11Shader>(shader));
 		}
-		TShared<IndexBuffer> ib = IndexBuffer::Create(data.Indices, (uint32)data.IndexCount);
+		TShared<IndexBuffer> ib = IndexBuffer::Create(indicesPtr, (uint32)meshDesc->IndexCount);
+		
+		// Texure
 
-		//File texFile(texturePath);
-		//Image* image = new Image;
-		//ionassertnd(image->Load(texFile));
+		texture = Texture::Create(textureAsset);
 
-		AssetReference& textureAsset = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(texturePath));
-
-		//texture = Texture::Create(image);
+		// Other
 
 		material = Material::Create();
 		material->SetShader(shader);
@@ -77,6 +73,97 @@ public:
 		mesh->SetTransform(Math::Scale(Vector3(1.0f)) * transform);
 
 		scene->AddDrawableObject(mesh.get());
+	}
+
+	void CreateExampleAssets()
+	{
+		m_Asset4PakMesh       = AssetManager::Get()->CreateAsset(EAssetType::Mesh,    FilePath(L"Assets/models/4pak.dae"));
+		m_Asset4PakTexture    = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/4pak.png"));
+		m_AssetPiwskoMesh     = AssetManager::Get()->CreateAsset(EAssetType::Mesh,    FilePath(L"Assets/models/piwsko.dae"));
+		m_AssetPiwskoTexture  = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/piwsko.png"));
+		m_AssetOscypekMesh    = AssetManager::Get()->CreateAsset(EAssetType::Mesh,    FilePath(L"Assets/models/oscypek.dae"));
+		m_AssetOscypekTexture = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/oscypek.png"));
+		m_AssetCiupagaMesh    = AssetManager::Get()->CreateAsset(EAssetType::Mesh,    FilePath(L"Assets/models/ciupaga.dae"));
+		m_AssetCiupagaTexture = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/ciupaga.png"));
+		m_AssetSlovakMesh     = AssetManager::Get()->CreateAsset(EAssetType::Mesh,    FilePath(L"Assets/models/slovak.dae"));
+		m_AssetSlovakTexture  = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/slovak.png"));
+		m_AssetStressMesh     = AssetManager::Get()->CreateAsset(EAssetType::Mesh,    FilePath(L"spherestresstest_uv.dae"));
+		m_AssetStressTexture  = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(L"Assets/test_4k.png"));
+	}
+
+	void LoadExampleAssets()
+	{
+		m_Asset4PakMesh->LoadAssetData(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<0>(); });
+		m_Asset4PakTexture->LoadAssetData(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<0>(); });
+		m_AssetPiwskoMesh->LoadAssetData(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<1>(); });
+		m_AssetPiwskoTexture->LoadAssetData(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<1>(); });
+		m_AssetOscypekMesh->LoadAssetData(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<2>(); });
+		m_AssetOscypekTexture->LoadAssetData(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<2>(); });
+		m_AssetCiupagaMesh->LoadAssetData(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<3>(); });
+		m_AssetCiupagaTexture->LoadAssetData(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<3>(); });
+		m_AssetSlovakMesh->LoadAssetData(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<4>(); });
+		m_AssetSlovakTexture->LoadAssetData(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<4>(); });
+		m_AssetStressMesh->LoadAssetData(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<5>(); });
+		m_AssetStressTexture->LoadAssetData(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<5>(); });
+	}
+
+	template<uint32 N>
+	void InitModelIfReady()
+	{
+		if constexpr (N == 0)
+		{
+			if (!(m_Asset4PakMesh->IsLoaded() && m_Asset4PakTexture->IsLoaded()) || m_Mesh4Pak) return;
+			// 4Pak
+			InitExampleModel(m_Mesh4Pak, m_Material4Pak, m_Texture4Pak, m_Shader, m_Scene, m_Asset4PakMesh, m_Asset4PakTexture,
+				Math::Translate(Vector3(2.0f, 1.0f, 0.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
+		}
+		if constexpr (N == 1)
+		{
+			if (!(m_AssetPiwskoMesh->IsLoaded() && m_AssetPiwskoTexture->IsLoaded()) || m_MeshPiwsko) return;
+			// Piwsko
+			InitExampleModel(m_MeshPiwsko, m_MaterialPiwsko, m_TexturePiwsko, m_Shader, m_Scene, m_AssetPiwskoMesh, m_AssetPiwskoTexture,
+				Math::Translate(Vector3(-2.0f, 1.0f, 0.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
+		}
+		if constexpr (N == 2)
+		{
+			if (!(m_AssetOscypekMesh->IsLoaded() && m_AssetOscypekTexture->IsLoaded()) || m_MeshOscypek) return;
+			// Oscypek
+			InitExampleModel(m_MeshOscypek, m_MaterialOscypek, m_TextureOscypek, m_Shader, m_Scene, m_AssetOscypekMesh, m_AssetOscypekTexture,
+				Math::Translate(Vector3(-1.0f, 1.0f, 1.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
+		}
+		if constexpr (N == 3)
+		{
+			if (!(m_AssetCiupagaMesh->IsLoaded() && m_AssetCiupagaTexture->IsLoaded()) || m_MeshCiupaga) return;
+			// Ciupaga
+			InitExampleModel(m_MeshCiupaga, m_MaterialCiupaga, m_TextureCiupaga, m_Shader, m_Scene, m_AssetCiupagaMesh, m_AssetCiupagaTexture,
+				Math::Translate(Vector3(1.0f, 1.0f, 1.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 90.0f, 0.0f)))));
+		}
+		if constexpr (N == 4)
+		{
+			if (!(m_AssetSlovakMesh->IsLoaded() && m_AssetSlovakTexture->IsLoaded()) || m_MeshSlovak) return;
+			// Slovak
+			InitExampleModel(m_MeshSlovak, m_MaterialSlovak, m_TextureSlovak, m_Shader, m_Scene, m_AssetSlovakMesh, m_AssetSlovakTexture,
+				Math::Translate(Vector3(1.0f, 0.0f, -2.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
+		}
+		if constexpr (N == 5)
+		{
+			if (!(m_AssetStressMesh->IsLoaded() && m_AssetStressTexture->IsLoaded()) || m_MeshStress) return;
+			// Kula
+			InitExampleModel(m_MeshStress, m_MaterialStress, m_TextureStress, m_Shader, m_Scene, m_AssetStressMesh, m_AssetStressTexture,
+				Math::Translate(Vector3(-1.0f, 0.0f, -2.0f))* Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
+		}
 	}
 
 	//struct UNIFORMBUFFER TriangleUniforms
@@ -98,6 +185,9 @@ public:
 	{
 #pragma warning(disable:6001)
 
+		CreateExampleAssets();
+		LoadExampleAssets();
+
 		String vertexSrc;
 		String pixelSrc;
 
@@ -116,63 +206,63 @@ public:
 
 		bool bResult;
 
-		m_Triangle.Shader = Shader::Create();
-		m_Triangle.Shader->AddShaderSource(EShaderType::Vertex, vertexSrc);
-		m_Triangle.Shader->AddShaderSource(EShaderType::Pixel, pixelSrc);
+		//m_Triangle.Shader = Shader::Create();
+		//m_Triangle.Shader->AddShaderSource(EShaderType::Vertex, vertexSrc);
+		//m_Triangle.Shader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
-		bResult = m_Triangle.Shader->Compile();
-		ionassert(bResult);
+		//bResult = m_Triangle.Shader->Compile();
+		//ionassert(bResult);
 
-		float vertices[] = {
-			 0.0f,  0.5f, 0.0f,
-			 0.5f, -0.5f, 0.0f,
-			-0.5f, -0.5f, 0.0f,
-		};
+		//float vertices[] = {
+		//	 0.0f,  0.5f, 0.0f,
+		//	 0.5f, -0.5f, 0.0f,
+		//	-0.5f, -0.5f, 0.0f,
+		//};
 
-		uint32 indices[] = {
-			0, 1, 2
-		};
+		//uint32 indices[] = {
+		//	0, 1, 2
+		//};
 
-		float quad[] = {
-			-0.5f,  0.5f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f,
-			 0.5f,  0.5f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
-			 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f,
-			-0.5f, -0.5f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
-		};
+		//float quad[] = {
+		//	-0.5f,  0.5f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f,
+		//	 0.5f,  0.5f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
+		//	 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f,
+		//	-0.5f, -0.5f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
+		//};
 
-		uint32 quadIndices[] = {
-			0, 2, 1,
-			2, 0, 3,
-		};
+		//uint32 quadIndices[] = {
+		//	0, 2, 1,
+		//	2, 0, 3,
+		//};
 
-		TShared<VertexLayout> layout = MakeShareable(new VertexLayout(1));
-		layout->AddAttribute(EVertexAttributeSemantic::Position, EVertexAttributeType::Float, 3, false);
-		layout->AddAttribute(EVertexAttributeSemantic::Normal, EVertexAttributeType::Float, 3, true);
-		layout->AddAttribute(EVertexAttributeSemantic::TexCoord, EVertexAttributeType::Float, 2, false);
+		//TShared<VertexLayout> layout = MakeShareable(new VertexLayout(1));
+		//layout->AddAttribute(EVertexAttributeSemantic::Position, EVertexAttributeType::Float, 3, false);
+		//layout->AddAttribute(EVertexAttributeSemantic::Normal, EVertexAttributeType::Float, 3, true);
+		//layout->AddAttribute(EVertexAttributeSemantic::TexCoord, EVertexAttributeType::Float, 2, false);
 
-		m_Triangle.VB = VertexBuffer::Create(quad, sizeof(quad) / sizeof(float));
-		m_Triangle.VB->SetLayout(layout);
-		{
-			DX11VertexBuffer* dx11VB = dynamic_cast<DX11VertexBuffer*>(m_Triangle.VB.get());
-			if (dx11VB)
-				dx11VB->CreateDX11Layout(std::static_pointer_cast<DX11Shader>(m_Triangle.Shader));
-		}
+		//m_Triangle.VB = VertexBuffer::Create(quad, sizeof(quad) / sizeof(float));
+		//m_Triangle.VB->SetLayout(layout);
+		//{
+		//	DX11VertexBuffer* dx11VB = dynamic_cast<DX11VertexBuffer*>(m_Triangle.VB.get());
+		//	if (dx11VB)
+		//		dx11VB->CreateDX11Layout(std::static_pointer_cast<DX11Shader>(m_Triangle.Shader));
+		//}
 
-		m_Triangle.IB = IndexBuffer::Create(quadIndices, sizeof(quadIndices) / sizeof(uint32));
+		//m_Triangle.IB = IndexBuffer::Create(quadIndices, sizeof(quadIndices) / sizeof(uint32));
 
-		ZeroMemory(&m_TriangleUniforms, sizeof(m_TriangleUniforms));
-		//m_TriangleUniforms.Color = Vector4(1.0f, 0.5f, 0.3f, 1.0f);
+		//ZeroMemory(&m_TriangleUniforms, sizeof(m_TriangleUniforms));
+		////m_TriangleUniforms.Color = Vector4(1.0f, 0.5f, 0.3f, 1.0f);
 
-		UniformBufferFactory ubFactory;
-		ubFactory.Add("Color", EUniformType::Float4);
-		//ubFactory.Construct(m_Triangle.UB);
+		//UniformBufferFactory ubFactory;
+		//ubFactory.Add("Color", EUniformType::Float4);
+		////ubFactory.Construct(m_Triangle.UB);
 
-		m_Triangle.UB = MakeShareable(UniformBuffer::Create(m_TriangleUniforms));
+		//m_Triangle.UB = MakeShareable(UniformBuffer::Create(m_TriangleUniforms));
 
-		File fImage(L"Assets/test.png");
-		Image* tImage = new Image;
-		tImage->Load(fImage);
-		m_Triangle.Texture = Texture::Create(tImage);
+		//File fImage(L"Assets/test.png");
+		//Image* tImage = new Image;
+		//tImage->Load(fImage);
+		//m_Triangle.Texture = Texture::Create(tImage);
 
 		m_Camera = Camera::Create();
 		m_Camera->SetTransform(Math::Translate(Vector3(0.0f, 0.0f, 2.0f)));
@@ -261,42 +351,20 @@ public:
 		m_Scene->AddDrawableObject(m_MeshCollada.get());
 
 #endif
-		for (int32 i = 0; i < 5; ++i) {
-			LOG_WARN("Init {0}", i);
-			// 4Pak
-			InitExampleModel(m_Mesh4Pak, m_Material4Pak, m_Texture4Pak, m_Shader, m_Scene, L"Assets/models/4pak.dae", L"Assets/textures/4pak.png",
-				Math::Translate(Vector3(2.0f, 1.0f, 0.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
+		//for (int32 i = 0; i < 5; ++i) {
+			//LOG_WARN("Init {0}", i);
+		//}
+		// 
+		//FileOld* dirTest = FileOld::Create();
+		//dirTest->SetFilename(L"Assets");
+		//ionassert(dirTest->IsDirectory());
+		//std::vector<FileInfo> files = dirTest->GetFilesInDirectory();
+		//for (FileInfo& info : files)
+		//{
+		//	LOG_INFO(L"{0}, {1}, {2}, {3}", info.Filename, info.FullPath, info.Size, info.bDirectory ? L"Dir" : L"File");
+		//}
 
-			// Piwsko
-			InitExampleModel(m_MeshPiwsko, m_MaterialPiwsko, m_TexturePiwsko, m_Shader, m_Scene, L"Assets/models/piwsko.dae", L"Assets/textures/piwsko.png",
-				Math::Translate(Vector3(-2.0f, 1.0f, 0.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
-
-			// Oscypek
-			InitExampleModel(m_MeshOscypek, m_MaterialOscypek, m_TextureOscypek, m_Shader, m_Scene, L"Assets/models/oscypek.dae", L"Assets/textures/oscypek.png",
-				Math::Translate(Vector3(-1.0f, 1.0f, 1.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
-
-			// Ciupaga
-			InitExampleModel(m_MeshCiupaga, m_MaterialCiupaga, m_TextureCiupaga, m_Shader, m_Scene, L"Assets/models/ciupaga.dae", L"Assets/textures/ciupaga.png",
-				Math::Translate(Vector3(1.0f, 1.0f, 1.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 90.0f, 0.0f)))));
-
-			// Slovak
-			InitExampleModel(m_MeshSlovak, m_MaterialSlovak, m_TextureSlovak, m_Shader, m_Scene, L"Assets/models/slovak.dae", L"Assets/textures/slovak.png",
-				Math::Translate(Vector3(1.0f, 0.0f, -2.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
-
-			// Kula
-			//InitExampleModel(m_MeshStress, m_MaterialStress, m_TextureStress, m_Shader, m_Scene, L"spherestresstest_uv.dae", L"Assets/test_4k.png",
-			//	Math::Translate(Vector3(-1.0f, 0.0f, -2.0f))* Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
-		}
-
-		FileOld* dirTest = FileOld::Create();
-		dirTest->SetFilename(L"Assets");
-		ionassert(dirTest->IsDirectory());
-		std::vector<FileInfo> files = dirTest->GetFilesInDirectory();
-		for (FileInfo& info : files)
-		{
-			LOG_INFO(L"{0}, {1}, {2}, {3}", info.Filename, info.FullPath, info.Size, info.bDirectory ? L"Dir" : L"File");
-		}
-
+		LOG_DEBUG("Model Init finished.");
 	}
 
 	virtual void OnUpdate(float deltaTime) override
@@ -585,6 +653,19 @@ private:
 	TShared<Mesh> m_MeshStress;
 	TShared<Material> m_MaterialStress;
 	TShared<Texture> m_TextureStress;
+
+	AssetHandle m_Asset4PakTexture;
+	AssetHandle m_Asset4PakMesh;
+	AssetHandle m_AssetPiwskoTexture;
+	AssetHandle m_AssetPiwskoMesh;
+	AssetHandle m_AssetCiupagaTexture;
+	AssetHandle m_AssetCiupagaMesh;
+	AssetHandle m_AssetOscypekTexture;
+	AssetHandle m_AssetOscypekMesh;
+	AssetHandle m_AssetSlovakTexture;
+	AssetHandle m_AssetSlovakMesh;
+	AssetHandle m_AssetStressTexture;
+	AssetHandle m_AssetStressMesh;
 
 	Vector4 m_CameraLocation = { 0.0f, 0.0f, 2.0f, 1.0f };
 	Vector3 m_CameraRotation = { 0.0f, 0.0f, 0.0f };

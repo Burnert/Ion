@@ -29,6 +29,8 @@
 #define debugbreak() __debugbreak()
 #define debugbreakd() DEBUG(__debugbreak())
 
+#define checked_call(func, ...) if (func) func(__VA_ARGS__)
+
 #if ION_PLATFORM_WINDOWS
 	#define PLATFORM_SUPPORTS_OPENGL 1
 	#define PLATFORM_SUPPORTS_DX11 1

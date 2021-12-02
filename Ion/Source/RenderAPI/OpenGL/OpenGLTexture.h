@@ -18,9 +18,10 @@ namespace Ion
 	protected:
 		OpenGLTexture(FileOld* file);
 		OpenGLTexture(Image* image);
+		OpenGLTexture(AssetHandle asset);
 
 	private:
-		void CreateTexture();
+		void CreateTexture(const void* const pixelData, uint32 width, uint32 height);
 
 	private:
 		uint32 m_ID;

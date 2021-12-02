@@ -609,6 +609,12 @@ namespace Ion
 		FilePath operator+(const FilePath& path) const;
 		FilePath operator+(const WString& directory) const;
 
+		bool operator==(const FilePath& path) const;
+		bool operator==(const WString& path) const;
+
+		bool operator!=(const FilePath& path) const;
+		bool operator!=(const WString& path) const;
+
 		inline operator WString() const
 		{
 			return ToString();

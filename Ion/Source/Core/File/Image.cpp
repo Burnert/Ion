@@ -107,6 +107,7 @@ namespace Ion
 		// Load pixel data with no desired channel number
 		m_PixelData = stbi_load_from_memory(data, (int32)fileSize, &m_Width, &m_Height, &m_Channels, 4);
 		_FAIL_M(m_PixelData, L"Cannot load pixel data from '{0}'.", file.GetFullPath());
+		m_Channels = 4;
 
 		delete[] data;
 		file.Close();

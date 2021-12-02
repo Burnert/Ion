@@ -4,8 +4,8 @@ namespace Ion
 {
 	struct TextureDimensions
 	{
-		int32 Width;
-		int32 Height;
+		uint32 Width;
+		uint32 Height;
 	};
 
 	class ION_API Texture
@@ -13,6 +13,7 @@ namespace Ion
 	public:
 		static TShared<Texture> Create(FileOld* file);
 		static TShared<Texture> Create(Image* image);
+		static TShared<Texture> Create(AssetHandle asset);
 
 		virtual ~Texture();
 
@@ -21,29 +22,34 @@ namespace Ion
 
 		FORCEINLINE TextureDimensions GetTextureDimensions() const
 		{
-			ionassert(m_TextureImage, "Texture image is not set!");
+			ionassert(m_TextureAsset.IsValid(), "Texture asset is invalid.");
+
+			const AssetTypes::TextureDesc* desc = m_TextureAsset->GetDescription<EAssetType::Texture>();
+
 			return TextureDimensions {
-				m_TextureImage->GetWidth(),
-				m_TextureImage->GetHeight(),
+				desc->Width,
+				desc->Height,
 			};
 		}
 
 		FORCEINLINE const uint8* GetPixelData() const
 		{
-			ionassert(m_TextureImage, "Texture image is not set!");
-			return m_TextureImage->GetPixelData();
+			ionassert(m_TextureAsset.IsValid(), "Texture asset is invalid.");
+
+			return (uint8*)m_TextureAsset->Data.Ptr;
 		}
 
 		FORCEINLINE const Image* GetImage() const
 		{
-			return m_TextureImage;
+			return nullptr;
 		}
 
 	protected:
 		Texture(FileOld* file);
 		Texture(Image* image);
+		Texture(AssetHandle asset);
 
 	protected:
-		Image* m_TextureImage;
+		AssetHandle m_TextureAsset;
 	};
 }

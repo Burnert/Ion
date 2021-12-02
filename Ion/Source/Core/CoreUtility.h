@@ -54,6 +54,17 @@ NODISCARD constexpr inline TEnableIfT<TIsIntegralV<T>, T> BooleanToBitmask(bool 
 
 // Memory :
 
+template<typename SizeT, typename AlignT>
+NODISCARD constexpr FORCEINLINE SizeT AlignAs(SizeT size, AlignT align)
+{
+	static_assert(TIsNoneOfV<SizeT, bool>);
+	static_assert(TIsIntegralV<SizeT>);
+	static_assert(TIsNoneOfV<AlignT, bool>);
+	static_assert(TIsIntegralV<AlignT>);
+
+	return ((size + align - 1) / align) * align;
+}
+
 template<typename T, typename... Types>
 NODISCARD constexpr FORCEINLINE TShared<T> MakeShared(Types&&... args)
 {
@@ -80,20 +91,20 @@ NODISCARD constexpr FORCEINLINE TRemoveRef<T>&& Move(T&& arg) noexcept
 
 // Common:
 
-template<typename T, T... Elements>
-struct StaticArray;
-
-template<typename T>
-struct StaticArray<T> { };
-
-template<typename T, T First, T... Rest>
-struct StaticArray<T, First, Rest...>
-{
-	using Type = T;
-
-	constexpr static Type Element = First;
-	constexpr static StaticArray<T, Rest...> OtherElements = StaticArray<T, Rest...>();
-};
+//template<typename T, T... Elements>
+//struct StaticArray;
+//
+//template<typename T>
+//struct StaticArray<T> { };
+//
+//template<typename T, T First, T... Rest>
+//struct StaticArray<T, First, Rest...>
+//{
+//	using Type = T;
+//
+//	constexpr static Type Element = First;
+//	constexpr static StaticArray<T, Rest...> OtherElements = StaticArray<T, Rest...>();
+//};
 
 template<typename T, typename U, uint64 Size>
 NODISCARD inline constexpr bool IsAnyOf(T&& item, const U(&elements)[Size])

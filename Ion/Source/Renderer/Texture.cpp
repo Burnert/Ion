@@ -27,25 +27,43 @@ namespace Ion
 		}
 	}
 
+	TShared<Texture> Texture::Create(AssetHandle asset)
+	{
+		switch (RenderAPI::GetCurrent())
+		{
+			case ERenderAPI::OpenGL:
+				return MakeShareable(new OpenGLTexture(asset));
+			case ERenderAPI::DX11:
+				return MakeShareable(new DX11Texture(asset));
+			default:
+				return TShared<Texture>(nullptr);
+		}
+	}
+
 	Texture::~Texture()
 	{
-		if (m_TextureImage)
-		{
-			delete m_TextureImage;
-		}
+		//if (m_TextureImage)
+		//{
+		//	delete m_TextureImage;
+		//}
 	}
 
 	Texture::Texture(FileOld* file)
 	{
 		TRACE_FUNCTION();
 
-		m_TextureImage = new Image();
-		bool bLoaded = (bool)m_TextureImage->Load(file);
-		ionassert(bLoaded, "The specified file could not be loaded!");
+		//m_TextureImage = new Image();
+		//bool bLoaded = (bool)m_TextureImage->Load(file);
+		//ionassert(bLoaded, "The specified file could not be loaded!");
 	}
 
 	Texture::Texture(Image* image)
 	{
-		m_TextureImage = image;
+		//m_TextureImage = image;
+	}
+
+	Texture::Texture(AssetHandle asset) :
+		m_TextureAsset(asset)
+	{
 	}
 }

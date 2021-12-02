@@ -34,14 +34,21 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		CreateTexture();
+		CreateTexture(image->GetPixelData(), image->GetWidth(), image->GetHeight());
 	}
 
-	void DX11Texture::CreateTexture()
+	DX11Texture::DX11Texture(AssetHandle asset) :
+		Texture(asset)
+	{
+		const AssetTypes::TextureDesc* desc = asset->GetDescription<EAssetType::Texture>();
+		CreateTexture(asset->Data.Ptr, desc->Width, desc->Height);
+	}
+
+	void DX11Texture::CreateTexture(const void* const pixelData, uint32 width, uint32 height)
 	{
 		TRACE_FUNCTION();
 
-		ionassert(m_TextureImage->IsLoaded(), "Image has not been initialized yet.");
+		ionassert(m_TextureAsset->IsLoaded(), "Texture has not been loaded yet.");
 
 		HRESULT hResult;
 
@@ -50,8 +57,8 @@ namespace Ion
 		// Create Texture2D
 
 		D3D11_TEXTURE2D_DESC tex2DDesc { };
-		tex2DDesc.Width = m_TextureImage->GetWidth();
-		tex2DDesc.Height = m_TextureImage->GetHeight();
+		tex2DDesc.Width = width;
+		tex2DDesc.Height = height;
 		tex2DDesc.MipLevels = 1;
 		tex2DDesc.ArraySize = 1;
 		tex2DDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -61,10 +68,10 @@ namespace Ion
 		tex2DDesc.SampleDesc.Count = 1;
 		tex2DDesc.MiscFlags = 0;/*D3D11_RESOURCE_MISC_GENERATE_MIPS*/
 
-		uint32 lineSize = m_TextureImage->GetWidth() * 4;
+		uint32 lineSize = width * 4;
 
 		D3D11_SUBRESOURCE_DATA subData { };
-		subData.pSysMem = m_TextureImage->GetPixelData();
+		subData.pSysMem = pixelData;
 		subData.SysMemPitch = lineSize;
 
 		dxcall(device->CreateTexture2D(&tex2DDesc, &subData, &m_Texture));

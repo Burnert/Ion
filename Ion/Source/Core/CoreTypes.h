@@ -68,6 +68,9 @@ using THashMap     = std::unordered_map<T, U, Hasher, std::equal_to<T>, Allocato
 template<typename T, typename Allocator = std::allocator<T>>
 using TArray       = std::vector<T, Allocator>;
 
+template<typename T, size_t Size>
+using TFixedArray  = std::array<T, Size>;
+
 template<typename T, typename Container = std::deque<T>>
 using TQueue       = std::queue<T, Container>;
 

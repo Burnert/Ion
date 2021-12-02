@@ -67,7 +67,7 @@ namespace Ion
 		uint8* current = (uint8*)m_Data + m_NextOffset;
 
 		// Round up to m_Alignment
-		size_t offsetToNext = ((size + m_Alignment - 1) / m_Alignment) * m_Alignment;
+		size_t offsetToNext = AlignAs(size, m_Alignment);
 		m_NextOffset += offsetToNext;
 
 		// @TODO: Reallocate if the offset goes out of the buffer
