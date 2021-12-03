@@ -74,7 +74,7 @@ namespace Ion
 
 		inline bool IsAssetLoaded(AssetHandle handle) const
 		{
-			return (bool)handle->Data.Ptr;
+			return (bool)handle.GetRef().Data.Ptr;
 		}
 
 		inline bool IsHandleValid(AssetHandle handle) const

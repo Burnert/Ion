@@ -23,57 +23,6 @@ namespace Ion
 	AssetID CreateAssetID();
 
 	// -------------------------------------------------------------------------------
-	// Asset Handle ------------------------------------------------------------------
-	// -------------------------------------------------------------------------------
-
-	class ION_API AssetHandle
-	{
-	public:
-		AssetHandle() :
-			ID(INVALID_ASSET_HANDLE_ID)
-		{ }
-
-		bool IsValid() const;
-
-		bool operator==(AssetHandle& other) const
-		{
-			return ID == other.ID;
-		}
-
-		bool operator!=(AssetHandle& other) const
-		{
-			return ID != other.ID;
-		}
-
-		// @TODO: Somehow don't let the user change the fields
-		// of AssetReference but let them call non-const functions
-
-		// Returns an AssetReference this handle points to by calling AssetManager
-		AssetReference& GetRef();
-		// Returns an AssetReference this handle points to by calling AssetManager
-		const AssetReference& GetRef() const;
-
-		// Returns an AssetReference this handle points to by calling AssetManager
-		AssetReference* operator->()
-		{
-			return &GetRef();
-		}
-		// Returns an AssetReference this handle points to by calling AssetManager
-		const AssetReference* operator->() const
-		{
-			return &GetRef();
-		}
-
-	private:
-		AssetID ID;
-		constexpr explicit AssetHandle(AssetID id) :
-			ID(id)
-		{ }
-
-		friend class AssetManager;
-	};
-
-	// -------------------------------------------------------------------------------
 	// Asset Types -------------------------------------------------------------------
 	// -------------------------------------------------------------------------------
 
@@ -104,6 +53,11 @@ namespace Ion
 			uint8 NumChannels;
 			uint8 BytesPerChannel;
 		};
+
+		static constexpr size_t LargestDescSize = std::max({ 
+			sizeof(MeshDesc),
+			sizeof(TextureDesc)
+		});
 	}
 
 	template<EAssetType Type>
@@ -167,7 +121,7 @@ namespace Ion
 
 		AssetEvents Events;
 
-		void* Description;
+		uint8 Description[AssetTypes::LargestDescSize];
 		EAssetType Type;
 
 		template<EAssetType Type>
@@ -188,11 +142,6 @@ namespace Ion
 			AssetManager::Get()->LoadAssetData(*this, callback);
 		}
 
-		bool IsLoaded() const
-		{
-			return Data.Ptr;
-		}
-
 		AssetReference(const AssetReference&) = delete;
 		AssetReference& operator=(const AssetReference&) = delete;
 
@@ -202,5 +151,64 @@ namespace Ion
 	private:
 		friend class AssetManager;
 		friend class AssetWorker;
+	};
+
+	// -------------------------------------------------------------------------------
+	// Asset Handle ------------------------------------------------------------------
+	// -------------------------------------------------------------------------------
+
+	class ION_API AssetHandle
+	{
+	public:
+		AssetHandle() :
+			ID(INVALID_ASSET_HANDLE_ID)
+		{
+		}
+
+		bool IsValid() const;
+		bool IsLoaded() const;
+
+		inline EAssetType GetType() const
+		{
+			return (*this).GetRef().Type;
+		}
+
+		inline bool operator==(AssetHandle& other) const
+		{
+			return ID == other.ID;
+		}
+
+		inline bool operator!=(AssetHandle& other) const
+		{
+			return ID != other.ID;
+		}
+
+		// @TODO: Somehow don't let the user change the fields
+		// of AssetReference but let them call non-const functions
+
+		// Returns an AssetReference this handle points to by calling AssetManager
+		AssetReference& GetRef();
+		// Returns an AssetReference this handle points to by calling AssetManager
+		const AssetReference& GetRef() const;
+
+		// Returns an AssetReference this handle points to by calling AssetManager
+		inline AssetReference* operator->()
+		{
+			return &GetRef();
+		}
+		// Returns an AssetReference this handle points to by calling AssetManager
+		inline const AssetReference* operator->() const
+		{
+			return &GetRef();
+		}
+
+	private:
+		AssetID ID;
+		constexpr explicit AssetHandle(AssetID id) :
+			ID(id)
+		{
+		}
+
+		friend class AssetManager;
 	};
 }

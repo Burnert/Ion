@@ -14,12 +14,6 @@ namespace Ion
 		asset.Location = location;
 		asset.Type = Type;
 
-		void* desc = new DescType;
-		size_t descSize = sizeof(DescType);
-
-		asset.Description = desc;
-		memset(asset.Description, 0, descSize);
-
 		AssetReference& assetRef = m_Assets.emplace(asset.ID, Move(asset)).first->second;
 
 		return AssetHandle(assetRef.ID);
@@ -30,7 +24,7 @@ namespace Ion
 	{
 		ref.Events.OnAssetLoaded = callback;
 
-		if (!ref.IsLoaded())
+		if (!ref.Data.Ptr)
 		{
 			ScheduleAssetLoadWork(ref);
 		}

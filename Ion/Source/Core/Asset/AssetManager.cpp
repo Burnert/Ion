@@ -27,6 +27,11 @@ namespace Ion
 		return AssetManager::Get()->IsHandleValid(*this);
 	}
 
+	bool AssetHandle::IsLoaded() const
+	{
+		return AssetManager::Get()->IsAssetLoaded(*this);
+	}
+
 	// AssetManager -------------------------------------------------
 
 	void AssetManager::Init()
@@ -103,7 +108,7 @@ if constexpr (TIsSameV<TRemoveRef<decltype(msg)>, Type>)
 			}
 			default:
 			{
-				ionassertnd("Unsupported asset type!");
+				LOG_ERROR("Unsupported asset type!");
 				return INVALID_ASSET_HANDLE;
 			}
 		}
@@ -113,14 +118,15 @@ if constexpr (TIsSameV<TRemoveRef<decltype(msg)>, Type>)
 	{
 		TRACE_FUNCTION();
 
-		ionassert(m_Assets.find(handle.ID) != m_Assets.end());
+		if (m_Assets.find(handle.ID) == m_Assets.end())
+		{
+			LOG_WARN("Asset {0} does not exist.", handle.ID);
+			return;
+		}
 
 		AssetReference& ref = m_Assets.at(handle.ID);
 
 		UnloadAsset(ref);
-
-		if (ref.Description)
-			delete ref.Description;
 
 		m_Assets.erase(handle.ID);
 	}
