@@ -3,7 +3,7 @@
 #include "AssetCore.h"
 #include "AssetMemory.h"
 
-#define ASSET_WORKER_COUNT 1
+#define ASSET_WORKER_COUNT 4
 #define DEFAULT_MESH_POOL_SIZE (1 << 28)    // 256 MB
 #define DEFAULT_TEXTURE_POOL_SIZE (1 << 29) // 512 MB
 
@@ -67,34 +67,34 @@ namespace Ion
 		AssetHandle CreateAsset(EAssetType type, FilePath location);
 		void DeleteAsset(AssetHandle handle);
 
-		template<typename Lambda>
-		void LoadAssetData(AssetReference& ref, Lambda callback);
-
-		AssetReference* GetAssetReference(AssetHandle handle);
+		const AssetReference* GetAssetReference(AssetHandle handle) const;
 
 		inline bool IsAssetLoaded(AssetHandle handle) const
 		{
-			return (bool)handle.GetRef().Data.Ptr;
+			return (bool)GetAssetReference(handle)->Data.Ptr;
 		}
 
 		inline bool IsHandleValid(AssetHandle handle) const
 		{
-			return handle.ID != INVALID_ASSET_HANDLE_ID &&
-				m_Assets.find(handle.ID) != m_Assets.end();
+			return handle.m_ID != INVALID_ASSET_ID &&
+				m_Assets.find(handle.m_ID) != m_Assets.end();
 		}
 
 		template<typename ForEach>
 		void IterateMessages(ForEach forEach);
 
 		template<EAssetType Type>
-		size_t GetAssetAlignment() { }
+		size_t GetAssetAlignment() const { }
 
-		template<> size_t GetAssetAlignment<EAssetType::Mesh>();
-		template<> size_t GetAssetAlignment<EAssetType::Texture>();
+		template<> size_t GetAssetAlignment<EAssetType::Mesh>() const;
+		template<> size_t GetAssetAlignment<EAssetType::Texture>() const;
 
 		~AssetManager() { }
 
 	protected:
+		AssetReference* GetAssetReference(AssetHandle handle);
+		void LoadAssetData(AssetReference& ref);
+
 		template<EAssetType Type>
 		void* AllocateAssetData(size_t size) { }
 
@@ -106,7 +106,10 @@ namespace Ion
 		void UnloadAsset(AssetReference& ref);
 
 		template<typename T>
-		void AddMessage(T* message);
+		void AddMessage(T& message);
+
+		template<typename T>
+		static void _DispatchMessage(T& message); // underscore because there's a Windows macro called DispatchMessage
 
 	private:
 		AssetMemoryPool m_MeshAssetPool;
@@ -126,6 +129,7 @@ namespace Ion
 		AssetManager();
 
 		friend class AssetWorker;
+		friend class AssetInterface;
 		friend class Application;
 	};
 }

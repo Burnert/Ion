@@ -16,24 +16,7 @@ namespace Ion
 
 		AssetReference& assetRef = m_Assets.emplace(asset.ID, Move(asset)).first->second;
 
-		return AssetHandle(assetRef.ID);
-	}
-
-	template<typename Lambda>
-	inline void AssetManager::LoadAssetData(AssetReference& ref, Lambda callback)
-	{
-		ref.Events.OnAssetLoaded = callback;
-
-		if (!ref.Data.Ptr)
-		{
-			ScheduleAssetLoadWork(ref);
-		}
-		else
-		{
-			OnAssetLoadedMessage message { };
-			message.RefPtr = &ref;
-			ref.Events.OnAssetLoaded(message);
-		}
+		return AssetHandle(assetRef.ID, &assetRef);
 	}
 
 	template<typename ForEach>
@@ -64,13 +47,28 @@ namespace Ion
 	}
 
 	template<typename T>
-	inline void AssetManager::AddMessage(T* message)
+	inline void AssetManager::AddMessage(T& message)
 	{
 		static_assert(TIsAnyOfV<T, ASSET_MESSAGE_TYPES>);
 		{
 			UniqueLock lock(m_MessageQueueMutex);
-			m_MessageQueue.push(*(AssetMessageBuffer*)message);
+			m_MessageQueue.emplace(Move((AssetMessageBuffer&)message));
 		}
+	}
+
+	template<typename T>
+	inline static void AssetManager::_DispatchMessage(T& message) { }
+	
+	template<>
+	inline static void AssetManager::_DispatchMessage(OnAssetLoadedMessage& message)
+	{
+		checked_call(message.RefPtr->Events.OnAssetLoaded, message);
+	}
+
+	template<>
+	inline static void AssetManager::_DispatchMessage(OnAssetLoadErrorMessage& message)
+	{
+		checked_call(message.RefPtr->Events.OnAssetLoadError, message);
 	}
 
 	// AssetManager::AllocateAssetData -----------------------------------------------
@@ -94,13 +92,13 @@ namespace Ion
 	// AssetManager::GetAssetAlignment -----------------------------------------------
 
 	template<>
-	inline size_t AssetManager::GetAssetAlignment<EAssetType::Mesh>()
+	inline size_t AssetManager::GetAssetAlignment<EAssetType::Mesh>() const
 	{
 		return m_MeshAssetPool.m_Alignment;
 	}
 
 	template<>
-	inline size_t AssetManager::GetAssetAlignment<EAssetType::Texture>()
+	inline size_t AssetManager::GetAssetAlignment<EAssetType::Texture>() const
 	{
 		return m_TextureAssetPool.m_Alignment;
 	}

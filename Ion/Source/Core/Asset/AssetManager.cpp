@@ -12,16 +12,6 @@ namespace Ion
 	AssetID g_CurrentAssetID = 0;
 	AssetID CreateAssetID() { return g_CurrentAssetID++; }
 
-	AssetReference& AssetHandle::GetRef()
-	{
-		return *AssetManager::Get()->GetAssetReference(*this);
-	}
-
-	const AssetReference& AssetHandle::GetRef() const
-	{
-		return *AssetManager::Get()->GetAssetReference(*this);
-	}
-
 	bool AssetHandle::IsValid() const
 	{
 		return AssetManager::Get()->IsHandleValid(*this);
@@ -30,6 +20,19 @@ namespace Ion
 	bool AssetHandle::IsLoaded() const
 	{
 		return AssetManager::Get()->IsAssetLoaded(*this);
+	}
+
+	AssetReference::AssetReference() :
+		Data(AssetData()),
+		ID(INVALID_ASSET_ID),
+		Type(EAssetType::Null)
+	{
+		memset(Description, 0, sizeof(Description));
+	}
+
+	void AssetInterface::LoadAssetData()
+	{
+		AssetManager::Get()->LoadAssetData(*m_RefPtr);
 	}
 
 	// AssetManager -------------------------------------------------
@@ -61,12 +64,10 @@ if constexpr (TIsSameV<TRemoveRef<decltype(msg)>, Type>)
 	{
 		IterateMessages([](auto& msg)
 		{
+			_DispatchMessage(msg);
 			IF_ASSET_MESSAGE_TYPE(msg, OnAssetLoadedMessage)
 			{
-				OnAssetLoadedMessage& message = msg;
-				AssetReference* refPtr = message.RefPtr;
-
-				checked_call(refPtr->Events.OnAssetLoaded, message);
+				
 			}
 		});
 	}
@@ -118,29 +119,59 @@ if constexpr (TIsSameV<TRemoveRef<decltype(msg)>, Type>)
 	{
 		TRACE_FUNCTION();
 
-		if (m_Assets.find(handle.ID) == m_Assets.end())
+		if (m_Assets.find(handle.m_ID) == m_Assets.end())
 		{
-			LOG_WARN("Asset {0} does not exist.", handle.ID);
+			LOG_WARN("Asset {0} does not exist.", handle.m_ID);
 			return;
 		}
 
-		AssetReference& ref = m_Assets.at(handle.ID);
+		AssetReference& ref = m_Assets.at(handle.m_ID);
 
 		UnloadAsset(ref);
 
-		m_Assets.erase(handle.ID);
+		m_Assets.erase(handle.m_ID);
+	}
+
+	inline void AssetManager::LoadAssetData(AssetReference& ref)
+	{
+		if (!ref.Data.Ptr)
+		{
+			ScheduleAssetLoadWork(ref);
+		}
+		else
+		{
+			if (ref.Events.OnAssetLoaded)
+			{
+				OnAssetLoadedMessage message { };
+				message.RefPtr = &ref;
+
+				ref.Events.OnAssetLoaded(message);
+			}
+		}
 	}
 
 	AssetReference* AssetManager::GetAssetReference(AssetHandle handle)
 	{
 		TRACE_FUNCTION();
 
-		if (m_Assets.find(handle.ID) == m_Assets.end())
+		if (m_Assets.find(handle.m_ID) == m_Assets.end())
 		{
 			LOG_ERROR("Invalid AssetHandle!");
 			return nullptr;
 		}
-		return &m_Assets.at(handle.ID);
+		return &m_Assets.at(handle.m_ID);
+	}
+
+	const AssetReference* AssetManager::GetAssetReference(AssetHandle handle) const
+	{
+		TRACE_FUNCTION();
+
+		if (m_Assets.find(handle.m_ID) == m_Assets.end())
+		{
+			LOG_ERROR("Invalid AssetHandle!");
+			return nullptr;
+		}
+		return &m_Assets.at(handle.m_ID);
 	}
 
 	void AssetManager::ScheduleAssetLoadWork(AssetReference& ref)
@@ -151,17 +182,20 @@ if constexpr (TIsSameV<TRemoveRef<decltype(msg)>, Type>)
 		work.RefPtr = &ref;
 		work.OnLoad = [this](AssetReference& ref)
 		{
-			LOG_INFO(L"Loaded asset {0}", ref.Location.ToString());
+			LOG_INFO(L"Loaded asset \"{0}\"", ref.Location.ToString());
 			
-			// @TODO: Tell the main thread the asset is loaded
-
 			OnAssetLoadedMessage message { };
 			message.RefPtr = &ref;
-			AddMessage(&message);
+			AddMessage(message);
 		};
-		work.OnError = [](AssetReference& ref)
+		work.OnError = [this](AssetReference& ref)
 		{
-			LOG_ERROR(L"Could not load asset {0}", ref.Location.ToString());
+			LOG_ERROR(L"Could not load asset \"{0}\"", ref.Location.ToString());
+
+			OnAssetLoadErrorMessage message { };
+			message.RefPtr = &ref;
+			message.ErrorMessage = ""; // @TODO: Add error message output
+			AddMessage(message);
 		};
 		{
 			UniqueLock lock(m_WorkQueueMutex);

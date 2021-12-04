@@ -89,6 +89,18 @@ NODISCARD constexpr FORCEINLINE TRemoveRef<T>&& Move(T&& arg) noexcept
 	return static_cast<TRemoveRef<T>&&>(arg);
 }
 
+template<typename T1, typename T2>
+NODISCARD FORCEINLINE TShared<T1> TStaticCast(const TShared<T2>& other) noexcept
+{
+	return std::static_pointer_cast<T1>(other);
+}
+
+template<typename T1, typename T2>
+NODISCARD FORCEINLINE TShared<T1> TStaticCast(TShared<T2>&& other) noexcept
+{
+	return std::static_pointer_cast<T1>(other);
+}
+
 // Common:
 
 //template<typename T, T... Elements>

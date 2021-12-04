@@ -2,13 +2,6 @@
 
 #include "Core/File/File.h"
 
-#define INVALID_ASSET_HANDLE_ID TNumericLimits<uint64>::max()
-#define INVALID_ASSET_HANDLE AssetHandle(INVALID_ASSET_HANDLE_ID)
-
-#define AMB_STRUCT alignas(16) // Asset message buffer struct specifier
-#define ASSET_MESSAGE_TYPES \
-AssetMessageBuffer, OnAssetLoadedMessage
-
 namespace Ion
 {
 	// Fwd decl
@@ -37,6 +30,11 @@ namespace Ion
 
 	namespace AssetTypes
 	{
+		struct TextDesc
+		{
+
+		};
+
 		struct MeshDesc
 		{
 			uint64 VerticesOffset;
@@ -54,7 +52,12 @@ namespace Ion
 			uint8 BytesPerChannel;
 		};
 
-		static constexpr size_t LargestDescSize = std::max({ 
+		struct SoundDesc
+		{
+
+		};
+
+		static constexpr size_t LargestDescSize = std::max({
 			sizeof(MeshDesc),
 			sizeof(TextureDesc)
 		});
@@ -63,9 +66,13 @@ namespace Ion
 	template<EAssetType Type>
 	struct TAssetDescType { };
 	template<>
+	struct TAssetDescType<EAssetType::Text>    { using DescType = AssetTypes::TextDesc; };
+	template<>
 	struct TAssetDescType<EAssetType::Mesh>    { using DescType = AssetTypes::MeshDesc; };
 	template<>
 	struct TAssetDescType<EAssetType::Texture> { using DescType = AssetTypes::TextureDesc; };
+	template<>
+	struct TAssetDescType<EAssetType::Sound>   { using DescType = AssetTypes::SoundDesc; };
 
 	template<EAssetType Type>
 	using TAssetDescTypeT = typename TAssetDescType<Type>::DescType;
@@ -74,10 +81,13 @@ namespace Ion
 	// Asset Messages / Events ------------------------------------------------------------------
 	// ------------------------------------------------------------------------------------------
 
+#define AMB_STRUCT alignas(16) // Asset message buffer struct specifier
+
 	enum class EAssetMessageType : uint8
 	{
 		Null = 0,
-		OnAssetLoaded
+		OnAssetLoaded,
+		OnAssetLoadError,
 	};
 
 	struct AMB_STRUCT AssetMessageBuffer
@@ -93,11 +103,23 @@ namespace Ion
 		AssetReference* RefPtr;
 	};
 
-	using OnAssetLoadedEvent = TFunction<void(const OnAssetLoadedMessage&)>;
+	struct AMB_STRUCT OnAssetLoadErrorMessage
+	{
+		EAssetMessageType Type = EAssetMessageType::OnAssetLoadError;
+		AssetReference* RefPtr;
+		const char* ErrorMessage;
+	};
+
+#define ASSET_MESSAGE_TYPES \
+	AssetMessageBuffer, OnAssetLoadedMessage, OnAssetLoadErrorMessage
+
+	using OnAssetLoadedEvent    = TFunction<void(const OnAssetLoadedMessage&)>;
+	using OnAssetLoadErrorEvent = TFunction<void(const OnAssetLoadErrorMessage&)>;
 
 	struct AssetEvents
 	{
 		OnAssetLoadedEvent OnAssetLoaded;
+		OnAssetLoadErrorEvent OnAssetLoadError;
 	};
 
 	// -------------------------------------------------------------------------------------------
@@ -110,7 +132,7 @@ namespace Ion
 		uint64 Size;
 	};
 
-	class AssetReference
+	class ION_API AssetReference
 	{
 	public:
 		AssetID ID;
@@ -125,21 +147,20 @@ namespace Ion
 		EAssetType Type;
 
 		template<EAssetType Type>
-		const TAssetDescTypeT<Type>* GetDescription() const
+		inline const TAssetDescTypeT<Type>* GetDescription() const
 		{
 			return (const TAssetDescTypeT<Type>*)Description;
 		}
 
 		template<EAssetType Type>
-		TAssetDescTypeT<Type>* GetDescription()
+		inline TAssetDescTypeT<Type>* GetDescription()
 		{
 			return (TAssetDescTypeT<Type>*)Description;
 		}
 
-		template<typename Lambda>
-		void LoadAssetData(Lambda callback)
+		inline bool IsLoaded() const
 		{
-			AssetManager::Get()->LoadAssetData(*this, callback);
+			return (bool)Data.Ptr;
 		}
 
 		AssetReference(const AssetReference&) = delete;
@@ -149,19 +170,90 @@ namespace Ion
 		AssetReference& operator=(AssetReference&&) noexcept = default;
 
 	private:
+		AssetReference();
+
 		friend class AssetManager;
 		friend class AssetWorker;
 	};
 
 	// -------------------------------------------------------------------------------
+	// Asset Interface ---------------------------------------------------------------
+	// -------------------------------------------------------------------------------
+
+	class ION_API AssetInterface
+	{
+	public:
+		template<typename Lambda>
+		void AssignEvent(Lambda callback);
+
+		void LoadAssetData();
+
+		inline bool IsLoaded() const
+		{
+			return (bool)m_RefPtr->IsLoaded();
+		}
+
+		inline EAssetType GetType() const
+		{
+			return m_RefPtr->Type;
+		}
+
+		inline void* Data() const
+		{
+			return m_RefPtr->Data.Ptr;
+		}
+
+		inline size_t DataSize() const
+		{
+			return m_RefPtr->Data.Size;
+		}
+
+		template<EAssetType Type>
+		inline const TAssetDescTypeT<Type>* GetDescription() const
+		{
+			return m_RefPtr->GetDescription<Type>();
+		}
+
+		template<EAssetType Type>
+		inline TAssetDescTypeT<Type>* GetDescription()
+		{
+			return m_RefPtr->GetDescription<Type>();
+		}
+
+	private:
+		AssetInterface() = delete;
+		constexpr explicit AssetInterface(AssetReference* refPtr) :
+			m_RefPtr(refPtr)
+		{ }
+
+		AssetReference* m_RefPtr;
+
+		friend class AssetHandle;
+		friend class AssetManager;
+	};
+
+	template<typename Lambda>
+	inline void AssetInterface::AssignEvent(Lambda callback)
+	{
+		if constexpr (TIsConvertibleV<Lambda, OnAssetLoadedEvent>)
+		{
+			m_RefPtr->Events.OnAssetLoaded = callback;
+		}
+	}
+
+	// -------------------------------------------------------------------------------
 	// Asset Handle ------------------------------------------------------------------
 	// -------------------------------------------------------------------------------
+
+#define INVALID_ASSET_ID TNumericLimits<uint64>::max()
+#define INVALID_ASSET_HANDLE AssetHandle(INVALID_ASSET_ID, nullptr)
 
 	class ION_API AssetHandle
 	{
 	public:
 		AssetHandle() :
-			ID(INVALID_ASSET_HANDLE_ID)
+			m_ID(INVALID_ASSET_ID),
+			m_Interface(AssetInterface(nullptr))
 		{
 		}
 
@@ -170,42 +262,52 @@ namespace Ion
 
 		inline EAssetType GetType() const
 		{
-			return (*this).GetRef().Type;
+			return (*this).GetInterface().GetType();
 		}
 
 		inline bool operator==(AssetHandle& other) const
 		{
-			return ID == other.ID;
+			return m_ID == other.m_ID;
 		}
 
 		inline bool operator!=(AssetHandle& other) const
 		{
-			return ID != other.ID;
+			return m_ID != other.m_ID;
 		}
 
 		// @TODO: Somehow don't let the user change the fields
 		// of AssetReference but let them call non-const functions
 
-		// Returns an AssetReference this handle points to by calling AssetManager
-		AssetReference& GetRef();
-		// Returns an AssetReference this handle points to by calling AssetManager
-		const AssetReference& GetRef() const;
-
-		// Returns an AssetReference this handle points to by calling AssetManager
-		inline AssetReference* operator->()
+		// Returns an AssetInterface used to communicate with AssetManager through the handle
+		inline AssetInterface& GetInterface()
 		{
-			return &GetRef();
+			ionassert(IsValid(), "Tried to access interface of invalid handle.");
+			return m_Interface;
 		}
-		// Returns an AssetReference this handle points to by calling AssetManager
-		inline const AssetReference* operator->() const
+		// Returns an AssetInterface used to communicate with AssetManager through the handle
+		inline const AssetInterface& GetInterface() const
 		{
-			return &GetRef();
+			ionassert(IsValid(), "Tried to access interface of invalid handle.");
+			return m_Interface;
+		}
+
+		// Returns an AssetInterface used to communicate with AssetManager through the handle
+		inline AssetInterface* operator->()
+		{
+			return &GetInterface();
+		}
+		// Returns an AssetInterface used to communicate with AssetManager through the handle
+		inline const AssetInterface* operator->() const
+		{
+			return &GetInterface();
 		}
 
 	private:
-		AssetID ID;
-		constexpr explicit AssetHandle(AssetID id) :
-			ID(id)
+		AssetID m_ID;
+		AssetInterface m_Interface;
+		constexpr explicit AssetHandle(AssetID id, AssetReference* refPtr) :
+			m_ID(id),
+			m_Interface(AssetInterface(refPtr))
 		{
 		}
 

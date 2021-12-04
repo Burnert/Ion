@@ -40,6 +40,14 @@ using TIsSame = std::is_same<T, U>;
 template<typename T, typename U>
 inline constexpr bool TIsSameV = std::is_same_v<T, U>;
 
+// IsConvertible
+
+template<typename FromT, typename ToT>
+using TIsConvertible = std::is_convertible<FromT, ToT>;
+
+template<typename FromT, typename ToT>
+inline constexpr bool TIsConvertibleV = std::is_convertible_v<FromT, ToT>;
+
 // BoolConstant
 
 template<bool val>

@@ -36,7 +36,7 @@ namespace Ion
 		{
 			ionassert(m_TextureAsset.IsValid(), "Texture asset is invalid.");
 
-			return (uint8*)m_TextureAsset->Data.Ptr;
+			return (uint8*)m_TextureAsset->Data();
 		}
 
 		FORCEINLINE const Image* GetImage() const

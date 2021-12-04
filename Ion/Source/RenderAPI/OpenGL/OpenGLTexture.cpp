@@ -44,7 +44,7 @@ namespace Ion
 		Texture(asset)
 	{
 		const AssetTypes::TextureDesc* desc = asset->GetDescription<EAssetType::Texture>();
-		CreateTexture(asset->Data.Ptr, desc->Width, desc->Height);
+		CreateTexture(asset->Data(), desc->Width, desc->Height);
 	}
 
 	void OpenGLTexture::CreateTexture(const void* const pixelData, uint32 width, uint32 height)

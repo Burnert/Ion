@@ -51,15 +51,15 @@ public:
 		// Mesh
 
 		const AssetTypes::MeshDesc* meshDesc = data.MeshAsset->GetDescription<EAssetType::Mesh>();
-		float* vertexAttributesPtr = (float*)((uint8*)data.MeshAsset->Data.Ptr + meshDesc->VerticesOffset);
-		uint32* indicesPtr = (uint32*)((uint8*)data.MeshAsset->Data.Ptr + meshDesc->IndicesOffset);
+		float* vertexAttributesPtr = (float*)((uint8*)data.MeshAsset->Data() + meshDesc->VerticesOffset);
+		uint32* indicesPtr = (uint32*)((uint8*)data.MeshAsset->Data() + meshDesc->IndicesOffset);
 
 		TShared<VertexBuffer> vb = VertexBuffer::Create(vertexAttributesPtr, meshDesc->VertexCount);
 		vb->SetLayout(meshDesc->VertexLayout);
 		{
 			DX11VertexBuffer* dx11VB = dynamic_cast<DX11VertexBuffer*>(vb.get());
 			if (dx11VB)
-				dx11VB->CreateDX11Layout(std::static_pointer_cast<DX11Shader>(shader));
+				dx11VB->CreateDX11Layout(TStaticCast<DX11Shader>(shader));
 		}
 		TShared<IndexBuffer> ib = IndexBuffer::Create(indicesPtr, (uint32)meshDesc->IndexCount);
 		
@@ -97,34 +97,47 @@ public:
 		m_Slovak.TextureAsset  = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/slovak.png"));
 		m_Stress.MeshAsset     = AssetManager::Get()->CreateAsset(EAssetType::Mesh,    FilePath(L"spherestresstest_uv.dae"));
 		m_Stress.TextureAsset  = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(L"Assets/test_4k.png"));
+
+		m_4Pak.MeshAsset->AssignEvent(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<0>(m_4Pak); });
+		m_4Pak.TextureAsset->AssignEvent(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<0>(m_4Pak); });
+		m_Piwsko.MeshAsset->AssignEvent(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<1>(m_Piwsko); });
+		m_Piwsko.TextureAsset->AssignEvent(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<1>(m_Piwsko); });
+		m_Oscypek.MeshAsset->AssignEvent(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<2>(m_Oscypek); });
+		m_Oscypek.TextureAsset->AssignEvent(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<2>(m_Oscypek); });
+		m_Ciupaga.MeshAsset->AssignEvent(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<3>(m_Ciupaga); });
+		m_Ciupaga.TextureAsset->AssignEvent(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<3>(m_Ciupaga); });
+		m_Slovak.MeshAsset->AssignEvent(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<4>(m_Slovak); });
+		m_Slovak.TextureAsset->AssignEvent(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<4>(m_Slovak); });
+		m_Stress.MeshAsset->AssignEvent(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<5>(m_Stress); });
+		m_Stress.TextureAsset->AssignEvent(
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady<5>(m_Stress); });
 	}
 
 	void LoadExampleAssets()
 	{
-		m_4Pak.MeshAsset->LoadAssetData(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<0>(m_4Pak); });
-		m_4Pak.TextureAsset->LoadAssetData(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<0>(m_4Pak); });
-		m_Piwsko.MeshAsset->LoadAssetData(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<1>(m_Piwsko); });
-		m_Piwsko.TextureAsset->LoadAssetData(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<1>(m_Piwsko); });
-		m_Oscypek.MeshAsset->LoadAssetData(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<2>(m_Oscypek); });
-		m_Oscypek.TextureAsset->LoadAssetData(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<2>(m_Oscypek); });
-		m_Ciupaga.MeshAsset->LoadAssetData(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<3>(m_Ciupaga); });
-		m_Ciupaga.TextureAsset->LoadAssetData(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<3>(m_Ciupaga); });
-		m_Slovak.MeshAsset->LoadAssetData(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<4>(m_Slovak); });
-		m_Slovak.TextureAsset->LoadAssetData(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<4>(m_Slovak); });
-		m_Stress.MeshAsset->LoadAssetData(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<5>(m_Stress); });
-		m_Stress.TextureAsset->LoadAssetData(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<5>(m_Stress); });
+		m_4Pak.MeshAsset->LoadAssetData();
+		m_4Pak.TextureAsset->LoadAssetData();
+		m_Piwsko.MeshAsset->LoadAssetData();
+		m_Piwsko.TextureAsset->LoadAssetData();
+		m_Oscypek.MeshAsset->LoadAssetData();
+		m_Oscypek.TextureAsset->LoadAssetData();
+		m_Ciupaga.MeshAsset->LoadAssetData();
+		m_Ciupaga.TextureAsset->LoadAssetData();
+		m_Slovak.MeshAsset->LoadAssetData();
+		m_Slovak.TextureAsset->LoadAssetData();
+		m_Stress.MeshAsset->LoadAssetData();
+		m_Stress.TextureAsset->LoadAssetData();
 	}
 
 	template<uint32 N>
@@ -170,10 +183,6 @@ public:
 		}
 	}
 
-	//struct UNIFORMBUFFER TriangleUniforms
-	//{
-	//	Vector4 Color;
-	//} m_TriangleUniforms;
 	MeshUniforms m_TriangleUniforms;
 
 	struct Triangle
