@@ -57,10 +57,19 @@ namespace Ion
 
 		};
 
-		static constexpr size_t LargestDescSize = std::max({
-			sizeof(MeshDesc),
-			sizeof(TextureDesc)
-		});
+		using TAssetDescriptionTypes = TTypePack<
+			TextDesc,
+			MeshDesc,
+			TextureDesc,
+			SoundDesc
+		>;
+
+		static constexpr size_t LargestDescSize = TTypeSizeHelper<TAssetDescriptionTypes>::Max;
+
+		struct DescBuffer
+		{
+			uint8 _Buf[LargestDescSize] = { 0 };
+		};
 	}
 
 	template<EAssetType Type>
@@ -81,7 +90,7 @@ namespace Ion
 	// Asset Messages / Events ------------------------------------------------------------------
 	// ------------------------------------------------------------------------------------------
 
-#define AMB_STRUCT alignas(16) // Asset message buffer struct specifier
+#define AMB_struct struct alignas(16) // Asset message buffer struct specifier
 
 	enum class EAssetMessageType : uint8
 	{
@@ -90,28 +99,30 @@ namespace Ion
 		OnAssetLoadError,
 	};
 
-	struct AMB_STRUCT AssetMessageBuffer
-	{
-		EAssetMessageType Type;
-	private:
-		uint8 _Padding[31];
-	};
-
-	struct AMB_STRUCT OnAssetLoadedMessage
+	AMB_struct OnAssetLoadedMessage
 	{
 		EAssetMessageType Type = EAssetMessageType::OnAssetLoaded;
 		AssetReference* RefPtr;
 	};
 
-	struct AMB_STRUCT OnAssetLoadErrorMessage
+	AMB_struct OnAssetLoadErrorMessage
 	{
 		EAssetMessageType Type = EAssetMessageType::OnAssetLoadError;
 		AssetReference* RefPtr;
 		const char* ErrorMessage;
 	};
 
-#define ASSET_MESSAGE_TYPES \
-	AssetMessageBuffer, OnAssetLoadedMessage, OnAssetLoadErrorMessage
+	using TAssetMessageTypes = TTypePack<
+		OnAssetLoadedMessage,
+		OnAssetLoadErrorMessage
+	>;
+
+	AMB_struct AssetMessageBuffer
+	{
+		EAssetMessageType Type;
+	private:
+		uint8 _Padding[TTypeSizeHelper<TAssetMessageTypes>::Max - 1];
+	};
 
 	using OnAssetLoadedEvent    = TFunction<void(const OnAssetLoadedMessage&)>;
 	using OnAssetLoadErrorEvent = TFunction<void(const OnAssetLoadErrorMessage&)>;
@@ -143,19 +154,19 @@ namespace Ion
 
 		AssetEvents Events;
 
-		uint8 Description[AssetTypes::LargestDescSize];
+		AssetTypes::DescBuffer Description;
 		EAssetType Type;
 
 		template<EAssetType Type>
 		inline const TAssetDescTypeT<Type>* GetDescription() const
 		{
-			return (const TAssetDescTypeT<Type>*)Description;
+			return (const TAssetDescTypeT<Type>*)Description._Buf;
 		}
 
 		template<EAssetType Type>
 		inline TAssetDescTypeT<Type>* GetDescription()
 		{
-			return (TAssetDescTypeT<Type>*)Description;
+			return (TAssetDescTypeT<Type>*)Description._Buf;
 		}
 
 		inline bool IsLoaded() const

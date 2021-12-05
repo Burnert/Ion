@@ -49,7 +49,7 @@ namespace Ion
 	template<typename T>
 	inline void AssetManager::AddMessage(T& message)
 	{
-		static_assert(TIsAnyOfV<T, ASSET_MESSAGE_TYPES>);
+		static_assert(TIsAnyOfV<T, TAssetMessageTypes>);
 		{
 			UniqueLock lock(m_MessageQueueMutex);
 			m_MessageQueue.emplace(Move((AssetMessageBuffer&)message));

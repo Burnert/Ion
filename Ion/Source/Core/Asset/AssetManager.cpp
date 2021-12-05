@@ -27,7 +27,7 @@ namespace Ion
 		ID(INVALID_ASSET_ID),
 		Type(EAssetType::Null)
 	{
-		memset(Description, 0, sizeof(Description));
+		//memset(Description, 0, sizeof(Description));
 	}
 
 	void AssetInterface::LoadAssetData()
@@ -65,10 +65,6 @@ if constexpr (TIsSameV<TRemoveRef<decltype(msg)>, Type>)
 		IterateMessages([](auto& msg)
 		{
 			_DispatchMessage(msg);
-			IF_ASSET_MESSAGE_TYPE(msg, OnAssetLoadedMessage)
-			{
-				
-			}
 		});
 	}
 

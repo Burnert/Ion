@@ -1,5 +1,51 @@
 #pragma once
 
+// @TODO: Implement all of these my way in Templates.h instead of taking them from stdlib
+
+// BoolConstant
+
+template<bool val>
+using TBool = std::bool_constant<val>;
+
+// If
+
+template<bool Test, typename TrueT, typename FalseT>
+using TIf = std::conditional_t<Test, TrueT, FalseT>;
+
+// IsAnyOf
+
+template<typename T, typename... Types>
+inline constexpr bool TIsAnyOfV = std::_Is_any_of_v<T, Types...>;
+
+// IsNoneOf
+
+template<typename T, typename... Types>
+inline constexpr bool TIsNoneOfV = !TIsAnyOfV<T, Types...>;
+
+// Disjunction (OR)
+
+template<typename... T>
+using TOr = std::disjunction<T...>;
+
+template<typename... T>
+inline constexpr bool TOrV = std::disjunction_v<T...>;
+
+// Conjunction (AND)
+
+template<typename... T>
+using TAnd = std::conjunction<T...>;
+
+template<typename... T>
+inline constexpr bool TAndV = std::conjunction_v<T...>;
+
+// Negation (NOT)
+
+template<typename T>
+using TNot = std::negation<T>;
+
+template<typename T>
+inline constexpr bool TNotV = std::negation_v<T>;
+
 // EnableIf
 
 template<bool Test, typename T = void>
@@ -40,6 +86,14 @@ using TIsSame = std::is_same<T, U>;
 template<typename T, typename U>
 inline constexpr bool TIsSameV = std::is_same_v<T, U>;
 
+// IsDifferent
+
+template<typename T, typename U>
+using TIsDifferent = TNot<TIsSame<T, U>>;
+
+template<typename T, typename U>
+inline constexpr bool TIsDifferentV = TIsDifferent<T, U>::value;
+
 // IsConvertible
 
 template<typename FromT, typename ToT>
@@ -47,45 +101,6 @@ using TIsConvertible = std::is_convertible<FromT, ToT>;
 
 template<typename FromT, typename ToT>
 inline constexpr bool TIsConvertibleV = std::is_convertible_v<FromT, ToT>;
-
-// BoolConstant
-
-template<bool val>
-using TBool = std::bool_constant<val>;
-
-// IsAnyOf
-
-template<typename T, typename... Types>
-inline constexpr bool TIsAnyOfV = std::_Is_any_of_v<T, Types...>;
-
-// IsNoneOf
-
-template<typename T, typename... Types>
-inline constexpr bool TIsNoneOfV = !TIsAnyOfV<T, Types...>;
-
-// Disjunction (OR)
-
-template<typename... T>
-using TOr = std::disjunction<T...>;
-
-template<typename... T>
-inline constexpr bool TOrV = std::disjunction_v<T...>;
-
-// Conjunction (AND)
-
-template<typename... T>
-using TAnd = std::conjunction<T...>;
-
-template<typename... T>
-inline constexpr bool TAndV = std::conjunction_v<T...>;
-
-// Negation (NOT)
-
-template<typename T>
-using TNot = std::negation<T>;
-
-template<typename T>
-inline constexpr bool TNotV = std::negation_v<T>;
 
 // Remove *
 
