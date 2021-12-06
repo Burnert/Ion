@@ -20,10 +20,21 @@ struct TNull { };
 
 // Value stored as a type
 
+template<auto... V>
+struct TValue;
+
 template<auto V>
-struct TValue
+struct TValue<V>
 {
+	using Type = decltype(V);
+
 	static constexpr auto Value = V;
+};
+
+template<>
+struct TValue<>
+{
+	using Type = TNull;
 };
 
 // Type Pack --------------------------------------------------------------
@@ -45,6 +56,23 @@ struct TTypePack<Type, Rest...>
 	using RestTypes = TTypePack<Rest...>;
 };
 
+// Value Pack --------------------------------------------------------------
+
+template<auto... Values>
+struct TValuePack;
+
+template<>
+struct TValuePack<> { };
+
+template<auto V, auto... VRest>
+struct TValuePack<V, VRest...>
+{
+	using This = TValue<V>;
+	using Rest = TValuePack<VRest...>;
+
+	static constexpr auto ThisValue = This::Value;
+};
+
 //template<typename T, typename... Types>
 //struct TIsAnyOf { };
 //
@@ -55,126 +83,165 @@ struct TTypePack<Type, Rest...>
 //};
 
 template<typename T, typename... Types>
-inline constexpr bool TIsAnyOfV<T, TTypePack<Types...>> = TOrV<TIsSame<T, Types>...>;
+inline constexpr bool TIsAnyOfV<T, TTypePack<Types...>> = TIsAnyOfV<T, Types...>;
 
 template<typename T, typename... Types>
 inline constexpr bool TIsNoneOfV<T, TTypePack<Types...>> = !TIsAnyOfV<T, TTypePack<Types...>>;
 
+// Template Max Helpers ----------------------------------------------------------
+
+namespace _THelpers
+{
+	template<auto V1, auto V2, typename EnableT = void>
+	struct _TMax_2Val;
+
+	template<auto V1, auto V2>
+	struct _TMax_2Val<V1, V2, typename TEnableIfT<_IsGreaterThan(V1, V2)>>
+	{
+		static constexpr auto Value = V1;
+	};
+
+	template<auto V1, auto V2>
+	struct _TMax_2Val<V1, V2, typename TEnableIfT<!_IsGreaterThan(V1, V2)>>
+	{
+		static constexpr auto Value = V2;
+	};
+}
+
 // Template Max ----------------------------------------------------------
 
-template<auto V1, auto V2, typename EnableT = void>
-struct TMax { };
+template<auto... Values>
+struct TMax;
 
-template<auto V1, auto V2>
-struct TMax<V1, V2, typename TEnableIfT<_IsGreaterThan(V1, V2)>>
+template<>
+struct TMax<> { };
+
+template<auto V>
+struct TMax<V>
 {
-	static constexpr auto Value = V1;
+	static constexpr auto Value = V;
 };
 
 template<auto V1, auto V2>
-struct TMax<V1, V2, typename TEnableIfT<!_IsGreaterThan(V1, V2)>>
+struct TMax<V1, V2>
 {
-	static constexpr auto Value = V2;
+	static constexpr auto Value = _THelpers::_TMax_2Val<V1, V2>::Value;
 };
+
+template<auto V, auto... VRest>
+struct TMax<V, VRest...>
+{
+	static constexpr auto Value = _THelpers::_TMax_2Val<V, TMax<VRest...>::Value>::Value;
+};
+
+template<auto... Values>
+inline constexpr auto TMaxV = TMax<Values...>::Value;
+
+// Template Max Of Value Pack ----------------------------------------------------------
+
+template<typename PackT>
+struct TMaxPack;
+
+template<auto... Values>
+struct TMaxPack<TValuePack<Values...>>
+{
+	static constexpr auto Value = TMax<Values...>::Value;
+};
+
+template<typename PackT>
+inline constexpr auto TMaxPackV = TMaxPack<PackT>::Value;
+
+// Template Min Helpers ----------------------------------------------------------
+
+namespace _THelpers
+{
+	template<auto V1, auto V2, typename EnableT = void>
+	struct _TMin_2Val;
+
+	template<auto V1, auto V2>
+	struct _TMin_2Val<V1, V2, typename TEnableIfT<_IsLessThan(V1, V2)>>
+	{
+		static constexpr auto Value = V1;
+	};
+
+	template<auto V1, auto V2>
+	struct _TMin_2Val<V1, V2, typename TEnableIfT<!_IsLessThan(V1, V2)>>
+	{
+		static constexpr auto Value = V2;
+	};
+}
 
 // Template Min ----------------------------------------------------------
 
-template<auto V1, auto V2, typename EnableT = void>
-struct TMin { };
-
-template<auto V1, auto V2>
-struct TMin<V1, V2, typename TEnableIfT<_IsLessThan(V1, V2)>>
-{
-	static constexpr auto Value = V1;
-};
-
-template<auto V1, auto V2>
-struct TMin<V1, V2, typename TEnableIfT<!_IsLessThan(V1, V2)>>
-{
-	static constexpr auto Value = V2;
-};
-
-// Template MaxOfAll ----------------------------------------------------------
-
 template<auto... Values>
-struct TMaxOfAll { };
+struct TMin;
 
 template<>
-struct TMaxOfAll<>
-{
-	using Type = TNull;
+struct TMin<> { };
 
-	static constexpr auto Value = 0;
+template<auto V>
+struct TMin<V>
+{
+	static constexpr auto Value = V;
+};
+
+template<auto V1, auto V2>
+struct TMin<V1, V2>
+{
+	static constexpr auto Value = _THelpers::_TMin_2Val<V1, V2>::Value;
 };
 
 template<auto V, auto... VRest>
-struct TMaxOfAll<V, VRest...>
+struct TMin<V, VRest...>
 {
-	using Type = decltype(V);
-	using MaxRest = TMaxOfAll<VRest...>;
-
-	static constexpr auto Value =
-		TIf<TIsDifferentV<MaxRest::Type, TNull>,
-			TMax<V, MaxRest::Value>,
-			TValue<V>
-		>::Value;
+	static constexpr auto Value = _THelpers::_TMin_2Val<V, TMin<VRest...>::Value>::Value;
 };
-
-// Template MinOfAll ----------------------------------------------------------
 
 template<auto... Values>
-struct TMinOfAll { };
+inline constexpr auto TMinV = TMin<Values...>::Value;
 
-template<>
-struct TMinOfAll<>
+// Template Min Of Value Pack ----------------------------------------------------------
+
+template<typename PackT>
+struct TMinPack;
+
+template<auto... Values>
+struct TMinPack<TValuePack<Values...>>
 {
-	using Type = TNull;
-
-	static constexpr auto Value = 0;
+	static constexpr auto Value = TMin<Values...>::Value;
 };
 
-template<auto V, auto... VRest>
-struct TMinOfAll<V, VRest...>
-{
-	using Type = decltype(V);
-	using MinRest = TMinOfAll<VRest...>;
+template<typename PackT>
+inline constexpr auto TMinPackV = TMinPack<PackT>::Value;
 
-	static constexpr auto Value =
-		TIf<TIsDifferentV<MinRest::Type, TNull>,
-			TMin<V, MinRest::Value>,
-			TValue<V>
-		>::Value;
-};
-
-// Size Of Multiple Types Helper ----------------------------------------------------------
+// Type Size Helper ----------------------------------------------------------
 
 template<typename... Types>
-struct TTypeSizeHelper { };
+struct TTypeSize;
 
 template<>
-struct TTypeSizeHelper<>
+struct TTypeSize<> { };
+
+template<typename T>
+struct TTypeSize<T>
 {
-	static constexpr size_t Max = 0;
-	static constexpr size_t Min = TNumericLimits<size_t>::max();
+	static constexpr size_t Max = sizeof(T);
+	static constexpr size_t Min = sizeof(T);
 };
 
 template<typename Type, typename... Rest>
-struct TTypeSizeHelper<Type, Rest...>
+struct TTypeSize<Type, Rest...>
 {
-	using SizeRest = TTypeSizeHelper<Rest...>;
+	using SizeRest = TTypeSize<Rest...>;
 	
 	static constexpr size_t Max = TMax<sizeof(Type), SizeRest::Max>::Value;
 	static constexpr size_t Min = TMin<sizeof(Type), SizeRest::Min>::Value;
 };
 
-// TTypeSizeHelper specialization for TTypePack -----------------------------------------
-// @TODO: Write why this works, because it's pretty ingenious,
-// and it'll work for every template based on the same concept as this one
+// TTypeSize specialization for TTypePack -----------------------------------------
 
 template<>
-struct TTypeSizeHelper<TTypePack<>> : public TTypeSizeHelper<> { };
+struct TTypeSize<TTypePack<>> : public TTypeSize<> { };
 
 template<typename... Types>
-struct TTypeSizeHelper<TTypePack<Types...>> : public TTypeSizeHelper<
-	typename TTypePack<Types...>::ThisType, 
-	typename TTypePack<Types...>::RestTypes> { };
+struct TTypeSize<TTypePack<Types...>> : public TTypeSize<Types...> { };

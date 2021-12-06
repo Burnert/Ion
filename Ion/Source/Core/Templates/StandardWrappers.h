@@ -46,6 +46,11 @@ using TNot = std::negation<T>;
 template<typename T>
 inline constexpr bool TNotV = std::negation_v<T>;
 
+// Initializer list
+
+template<typename T>
+using TInitializerList = std::initializer_list<T>;
+
 // EnableIf
 
 template<bool Test, typename T = void>

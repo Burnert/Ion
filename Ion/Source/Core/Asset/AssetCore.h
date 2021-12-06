@@ -64,7 +64,7 @@ namespace Ion
 			SoundDesc
 		>;
 
-		static constexpr size_t LargestDescSize = TTypeSizeHelper<TAssetDescriptionTypes>::Max;
+		inline constexpr size_t LargestDescSize = TTypeSize<TAssetDescriptionTypes>::Max;
 
 		struct DescBuffer
 		{
@@ -72,19 +72,19 @@ namespace Ion
 		};
 	}
 
-	template<EAssetType Type>
-	struct TAssetDescType { };
+	template<EAssetType V>
+	struct TAssetDescType;
 	template<>
-	struct TAssetDescType<EAssetType::Text>    { using DescType = AssetTypes::TextDesc; };
+	struct TAssetDescType<EAssetType::Text>    { using Type = AssetTypes::TextDesc; };
 	template<>
-	struct TAssetDescType<EAssetType::Mesh>    { using DescType = AssetTypes::MeshDesc; };
+	struct TAssetDescType<EAssetType::Mesh>    { using Type = AssetTypes::MeshDesc; };
 	template<>
-	struct TAssetDescType<EAssetType::Texture> { using DescType = AssetTypes::TextureDesc; };
+	struct TAssetDescType<EAssetType::Texture> { using Type = AssetTypes::TextureDesc; };
 	template<>
-	struct TAssetDescType<EAssetType::Sound>   { using DescType = AssetTypes::SoundDesc; };
+	struct TAssetDescType<EAssetType::Sound>   { using Type = AssetTypes::SoundDesc; };
 
-	template<EAssetType Type>
-	using TAssetDescTypeT = typename TAssetDescType<Type>::DescType;
+	template<EAssetType V>
+	using TAssetDescTypeT = typename TAssetDescType<V>::Type;
 
 	// ------------------------------------------------------------------------------------------
 	// Asset Messages / Events ------------------------------------------------------------------
@@ -121,7 +121,7 @@ namespace Ion
 	{
 		EAssetMessageType Type;
 	private:
-		uint8 _Padding[TTypeSizeHelper<TAssetMessageTypes>::Max - 1];
+		uint8 _Padding[TTypeSize<TAssetMessageTypes>::Max - 1];
 	};
 
 	using OnAssetLoadedEvent    = TFunction<void(const OnAssetLoadedMessage&)>;
