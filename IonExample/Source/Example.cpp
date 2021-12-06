@@ -36,17 +36,33 @@ public:
 		ION_LOG_DEBUG("IonExample constructed.");
 	}
 
+	enum class EExampleModelName : uint8
+	{
+		FourPak,
+		Piwsko,
+		Oscypek,
+		Ciupaga,
+		Slovak,
+		Stress
+	};
+
+	template<EExampleModelName Type>
 	struct ExampleModelData
 	{
+		static constexpr EExampleModelName ModelType = Type;
+
 		TShared<Mesh> Mesh;
 		TShared<Material> Material;
 		TShared<Texture> Texture;
 
 		AssetHandle MeshAsset;
 		AssetHandle TextureAsset;
+
+		String Name;
 	};
 
-	static void InitExampleModel(ExampleModelData& data, const TShared<Shader>& shader, TShared<Scene>& scene, const Matrix4& transform)
+	template<EExampleModelName Type>
+	static void InitExampleModel(ExampleModelData<Type>& data, const TShared<Shader>& shader, TShared<Scene>& scene, const Matrix4& transform)
 	{
 		// Mesh
 
@@ -85,43 +101,59 @@ public:
 
 	void CreateExampleAssets()
 	{
+		m_4Pak.Name            = "4Pak";
 		m_4Pak.MeshAsset       = AssetManager::Get()->CreateAsset(EAssetType::Mesh,    FilePath(L"Assets/models/4pak.dae"));
 		m_4Pak.TextureAsset    = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/4pak.png"));
+
+		m_Piwsko.Name          = "Piwsko";
 		m_Piwsko.MeshAsset     = AssetManager::Get()->CreateAsset(EAssetType::Mesh,    FilePath(L"Assets/models/piwsko.dae"));
 		m_Piwsko.TextureAsset  = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/piwsko.png"));
+
+		m_Oscypek.Name         = "Oscypek";
 		m_Oscypek.MeshAsset    = AssetManager::Get()->CreateAsset(EAssetType::Mesh,    FilePath(L"Assets/models/oscypek.dae"));
 		m_Oscypek.TextureAsset = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/oscypek.png"));
+
+		m_Ciupaga.Name         = "Ciupaga";
 		m_Ciupaga.MeshAsset    = AssetManager::Get()->CreateAsset(EAssetType::Mesh,    FilePath(L"Assets/models/ciupaga.dae"));
 		m_Ciupaga.TextureAsset = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/ciupaga.png"));
+
+		m_Slovak.Name          = "Slovak";
 		m_Slovak.MeshAsset     = AssetManager::Get()->CreateAsset(EAssetType::Mesh,    FilePath(L"Assets/models/slovak.dae"));
 		m_Slovak.TextureAsset  = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/slovak.png"));
+
+		m_Stress.Name          = "Stress";
 		m_Stress.MeshAsset     = AssetManager::Get()->CreateAsset(EAssetType::Mesh,    FilePath(L"spherestresstest_uv.dae"));
 		m_Stress.TextureAsset  = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(L"Assets/test_4k.png"));
 
 		m_4Pak.MeshAsset->AssignEvent(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<0>(m_4Pak); });
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_4Pak); });
 		m_4Pak.TextureAsset->AssignEvent(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<0>(m_4Pak); });
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_4Pak); });
+
 		m_Piwsko.MeshAsset->AssignEvent(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<1>(m_Piwsko); });
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Piwsko); });
 		m_Piwsko.TextureAsset->AssignEvent(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<1>(m_Piwsko); });
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Piwsko); });
+
 		m_Oscypek.MeshAsset->AssignEvent(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<2>(m_Oscypek); });
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Oscypek); });
 		m_Oscypek.TextureAsset->AssignEvent(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<2>(m_Oscypek); });
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Oscypek); });
+
 		m_Ciupaga.MeshAsset->AssignEvent(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<3>(m_Ciupaga); });
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Ciupaga); });
 		m_Ciupaga.TextureAsset->AssignEvent(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<3>(m_Ciupaga); });
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Ciupaga); });
+
 		m_Slovak.MeshAsset->AssignEvent(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<4>(m_Slovak); });
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Slovak); });
 		m_Slovak.TextureAsset->AssignEvent(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<4>(m_Slovak); });
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Slovak); });
+
 		m_Stress.MeshAsset->AssignEvent(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<5>(m_Stress); });
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Stress); });
 		m_Stress.TextureAsset->AssignEvent(
-			[this](const OnAssetLoadedMessage&) { InitModelIfReady<5>(m_Stress); });
+			[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Stress); });
 	}
 
 	void LoadExampleAssets()
@@ -140,46 +172,102 @@ public:
 		m_Stress.TextureAsset->LoadAssetData();
 	}
 
-	template<uint32 N>
-	void InitModelIfReady(ExampleModelData& data)
+	// Template:
+
+	//if constexpr (N == EExampleModelName::FourPak)
+	//{
+
+	//}
+	//if constexpr (N == EExampleModelName::Piwsko)
+	//{
+
+	//}
+	//if constexpr (N == EExampleModelName::Oscypek)
+	//{
+
+	//}
+	//if constexpr (N == EExampleModelName::Ciupaga)
+	//{
+
+	//}
+	//if constexpr (N == EExampleModelName::Slovak)
+	//{
+
+	//}
+	//if constexpr (N == EExampleModelName::Stress)
+	//{
+
+	//}
+
+	template<EExampleModelName N>
+	void InitModelIfReady(ExampleModelData<N>& data)
 	{
 		if (!(data.MeshAsset.IsLoaded() && data.TextureAsset.IsLoaded()) || data.Mesh) return;
 
-		if constexpr (N == 0)
+		if constexpr (N == EExampleModelName::FourPak)
 		{
 			// 4Pak
 			InitExampleModel(data, m_Shader, m_Scene,
 				Math::Translate(Vector3(2.0f, 1.0f, 0.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
 		}
-		if constexpr (N == 1)
+		if constexpr (N == EExampleModelName::Piwsko)
 		{
 			// Piwsko
 			InitExampleModel(data, m_Shader, m_Scene,
 				Math::Translate(Vector3(-2.0f, 1.0f, 0.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
 		}
-		if constexpr (N == 2)
+		if constexpr (N == EExampleModelName::Oscypek)
 		{
 			// Oscypek
 			InitExampleModel(data, m_Shader, m_Scene,
 				Math::Translate(Vector3(-1.0f, 1.0f, 1.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 0.0f, 0.0f)))));
 		}
-		if constexpr (N == 3)
+		if constexpr (N == EExampleModelName::Ciupaga)
 		{
 			// Ciupaga
 			InitExampleModel(data, m_Shader, m_Scene,
 				Math::Translate(Vector3(1.0f, 1.0f, 1.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 90.0f, 0.0f)))));
 		}
-		if constexpr (N == 4)
+		if constexpr (N == EExampleModelName::Slovak)
 		{
 			// Slovak
 			InitExampleModel(data, m_Shader, m_Scene,
 				Math::Translate(Vector3(1.0f, 0.0f, -2.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
 		}
-		if constexpr (N == 5)
+		if constexpr (N == EExampleModelName::Stress)
 		{
 			// Kula
 			InitExampleModel(data, m_Shader, m_Scene,
 				Math::Translate(Vector3(-1.0f, 0.0f, -2.0f))* Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
+		}
+	}
+
+	template<EExampleModelName N>
+	void DeleteModel()
+	{
+		if constexpr (N == EExampleModelName::FourPak)
+		{
+			
+		}
+		if constexpr (N == EExampleModelName::Piwsko)
+		{
+			
+		}
+		if constexpr (N == EExampleModelName::Oscypek)
+		{
+		
+		}
+		if constexpr (N == EExampleModelName::Ciupaga)
+		{
+			
+		}
+		if constexpr (N == EExampleModelName::Slovak)
+		{
+			
+		}
+		if constexpr (N == EExampleModelName::Stress)
+		{
+			
 		}
 	}
 
@@ -193,6 +281,25 @@ public:
 		TShared<Shader> Shader;
 		TShared<Texture> Texture;
 	} m_Triangle;
+
+	template<EExampleModelName Type>
+	void ImGuiExampleModelOps(ExampleModelData<Type>& model)
+	{
+		ImGui::PushID(model.Name.c_str());
+		ImGui::SameLine(80);
+		if (ImGui::Button("Load"))
+		{
+			model.MeshAsset->LoadAssetData();
+			model.TextureAsset->LoadAssetData();
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Unload"))
+		{
+			model.MeshAsset->UnloadAssetData();
+			model.TextureAsset->UnloadAssetData();
+		}
+		ImGui::PopID();
+	}
 
 	virtual void OnInit() override
 	{
@@ -518,6 +625,34 @@ public:
 			}
 			ImGui::End();
 
+			ImGui::Begin("Asset Manager");
+			{
+				if (ImGui::Button("Print Mesh Pool"))
+				{
+					AssetManager::Get()->PrintAssetPool<EAssetType::Mesh>();
+				}
+				if (ImGui::Button("Print Texture Pool"))
+				{
+					AssetManager::Get()->PrintAssetPool<EAssetType::Texture>();
+				}
+
+				ImGui::Separator();
+
+				ImGui::Text("4Pak");
+				ImGuiExampleModelOps(m_4Pak);
+				ImGui::Text("Piwsko");
+				ImGuiExampleModelOps(m_Piwsko);
+				ImGui::Text("Oscypek");
+				ImGuiExampleModelOps(m_Oscypek);
+				ImGui::Text("Ciupaga");
+				ImGuiExampleModelOps(m_Ciupaga);
+				ImGui::Text("Slovak");
+				ImGuiExampleModelOps(m_Slovak);
+				ImGui::Text("Stress");
+				ImGuiExampleModelOps(m_Stress);
+			}
+			ImGui::End();
+
 			ImGui::Begin("Renderer Settings");
 			{
 				static const char* currentDrawMode = m_DrawModes[0];
@@ -643,12 +778,12 @@ private:
 	TShared<Scene> m_Scene;
 	TShared<Shader> m_Shader;
 
-	ExampleModelData m_4Pak;
-	ExampleModelData m_Piwsko;
-	ExampleModelData m_Ciupaga;
-	ExampleModelData m_Oscypek;
-	ExampleModelData m_Slovak;
-	ExampleModelData m_Stress;
+	ExampleModelData<EExampleModelName::FourPak> m_4Pak;
+	ExampleModelData<EExampleModelName::Piwsko>  m_Piwsko;
+	ExampleModelData<EExampleModelName::Oscypek> m_Oscypek;
+	ExampleModelData<EExampleModelName::Ciupaga> m_Ciupaga;
+	ExampleModelData<EExampleModelName::Slovak>  m_Slovak;
+	ExampleModelData<EExampleModelName::Stress>  m_Stress;
 
 	Vector4 m_CameraLocation = { 0.0f, 0.0f, 2.0f, 1.0f };
 	Vector3 m_CameraRotation = { 0.0f, 0.0f, 0.0f };

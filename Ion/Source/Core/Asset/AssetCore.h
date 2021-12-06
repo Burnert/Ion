@@ -97,6 +97,8 @@ namespace Ion
 		Null = 0,
 		OnAssetLoaded,
 		OnAssetLoadError,
+		OnAssetUnloaded,
+		OnAssetRealloc,
 	};
 
 	AMB_struct OnAssetLoadedMessage
@@ -112,9 +114,24 @@ namespace Ion
 		const char* ErrorMessage;
 	};
 
+	AMB_struct OnAssetUnloadedMessage
+	{
+		EAssetMessageType Type = EAssetMessageType::OnAssetUnloaded;
+		AssetReference* RefPtr;
+	};
+
+	AMB_struct OnAssetReallocMessage
+	{
+		EAssetMessageType Type = EAssetMessageType::OnAssetRealloc;
+		AssetReference* RefPtr;
+		void* NewLocation;
+	};
+
 	using TAssetMessageTypes = TTypePack<
 		OnAssetLoadedMessage,
-		OnAssetLoadErrorMessage
+		OnAssetLoadErrorMessage,
+		OnAssetUnloadedMessage,
+		OnAssetReallocMessage
 	>;
 
 	AMB_struct AssetMessageBuffer
@@ -126,11 +143,15 @@ namespace Ion
 
 	using OnAssetLoadedEvent    = TFunction<void(const OnAssetLoadedMessage&)>;
 	using OnAssetLoadErrorEvent = TFunction<void(const OnAssetLoadErrorMessage&)>;
+	using OnAssetUnloadedEvent = TFunction<void(const OnAssetUnloadedMessage&)>;
+	using OnAssetReallocEvent = TFunction<void(const OnAssetReallocMessage&)>;
 
 	struct AssetEvents
 	{
 		OnAssetLoadedEvent OnAssetLoaded;
 		OnAssetLoadErrorEvent OnAssetLoadError;
+		OnAssetUnloadedEvent OnAssetUnloaded;
+		OnAssetReallocEvent OnAssetRealloc;
 	};
 
 	// -------------------------------------------------------------------------------------------
@@ -198,6 +219,7 @@ namespace Ion
 		void AssignEvent(Lambda callback);
 
 		void LoadAssetData();
+		void UnloadAssetData();
 
 		inline bool IsLoaded() const
 		{
@@ -249,6 +271,18 @@ namespace Ion
 		if constexpr (TIsConvertibleV<Lambda, OnAssetLoadedEvent>)
 		{
 			m_RefPtr->Events.OnAssetLoaded = callback;
+		}
+		if constexpr (TIsConvertibleV<Lambda, OnAssetLoadErrorEvent>)
+		{
+			m_RefPtr->Events.OnAssetLoadError = callback;
+		}
+		if constexpr (TIsConvertibleV<Lambda, OnAssetUnloadedEvent>)
+		{
+			m_RefPtr->Events.OnAssetUnloaded = callback;
+		}
+		if constexpr (TIsConvertibleV<Lambda, OnAssetReallocEvent>)
+		{
+			m_RefPtr->Events.OnAssetRealloc = callback;
 		}
 	}
 

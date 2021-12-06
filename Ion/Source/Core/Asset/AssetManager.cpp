@@ -35,6 +35,11 @@ namespace Ion
 		AssetManager::Get()->LoadAssetData(*m_RefPtr);
 	}
 
+	void AssetInterface::UnloadAssetData()
+	{
+		AssetManager::Get()->UnloadAssetData(*m_RefPtr);
+	}
+
 	// AssetManager -------------------------------------------------
 
 	void AssetManager::Init()
@@ -57,11 +62,10 @@ namespace Ion
 		}
 	}
 
-#define IF_ASSET_MESSAGE_TYPE(msg, Type) \
-if constexpr (TIsSameV<TRemoveRef<decltype(msg)>, Type>)
-
 	void AssetManager::Update()
 	{
+		TRACE_FUNCTION();
+
 		IterateMessages([](auto& msg)
 		{
 			_DispatchMessage(msg);
@@ -123,13 +127,15 @@ if constexpr (TIsSameV<TRemoveRef<decltype(msg)>, Type>)
 
 		AssetReference& ref = m_Assets.at(handle.m_ID);
 
-		UnloadAsset(ref);
+		UnloadAssetData(ref);
 
 		m_Assets.erase(handle.m_ID);
 	}
 
 	inline void AssetManager::LoadAssetData(AssetReference& ref)
 	{
+		TRACE_FUNCTION();
+
 		if (!ref.Data.Ptr)
 		{
 			ScheduleAssetLoadWork(ref);
@@ -144,6 +150,33 @@ if constexpr (TIsSameV<TRemoveRef<decltype(msg)>, Type>)
 				ref.Events.OnAssetLoaded(message);
 			}
 		}
+	}
+
+	void AssetManager::UnloadAssetData(AssetReference& ref)
+	{
+		TRACE_FUNCTION();
+
+		if (!ref.Data.Ptr)
+		{
+			return;
+		}
+
+		switch (ref.Type)
+		{
+			case EAssetType::Mesh:
+			{
+				m_MeshAssetPool.Free(ref.Data.Ptr);
+				break;
+			}
+			case EAssetType::Texture:
+			{
+				m_TextureAssetPool.Free(ref.Data.Ptr);
+				break;
+			}
+		}
+
+		ref.Data.Ptr = nullptr;
+		ref.Data.Size = 0;
 	}
 
 	AssetReference* AssetManager::GetAssetReference(AssetHandle handle)
@@ -174,7 +207,7 @@ if constexpr (TIsSameV<TRemoveRef<decltype(msg)>, Type>)
 	{
 		TRACE_FUNCTION();
 
-		AssetWorkerWork work { };
+		AssetWorkerLoadWork work { };
 		work.RefPtr = &ref;
 		work.OnLoad = [this](AssetReference& ref)
 		{
@@ -198,30 +231,6 @@ if constexpr (TIsSameV<TRemoveRef<decltype(msg)>, Type>)
 			m_WorkQueue.emplace(Move(work));
 		}
 		m_WorkQueueCV.notify_one();
-	}
-
-	void AssetManager::UnloadAsset(AssetReference& ref)
-	{
-		TRACE_FUNCTION();
-
-		if (!ref.Data.Ptr)
-		{
-			return;
-		}
-
-		switch (ref.Type)
-		{
-			case EAssetType::Mesh:
-			{
-				m_MeshAssetPool.Free(ref.Data.Ptr);
-				break;
-			}
-			case EAssetType::Texture:
-			{
-				m_TextureAssetPool.Free(ref.Data.Ptr);
-				break;
-			}
-		}
 	}
 
 	AssetManager::AssetManager()
@@ -252,13 +261,15 @@ if constexpr (TIsSameV<TRemoveRef<decltype(msg)>, Type>)
 		m_bExit = true;
 	}
 
+	// Worker Thread:
+
 	void AssetWorker::WorkerProc()
 	{
 		SetThreadDescription(GetCurrentThread(), L"AssetWorker");
 
 		AssetManager::WorkerQueue& queue = AssetManager::Get()->m_WorkQueue;
 
-		AssetWorkerWork work;
+		AssetWorkerLoadWork work;
 
 		while (true)
 		{
@@ -387,4 +398,5 @@ if constexpr (TIsSameV<TRemoveRef<decltype(msg)>, Type>)
 
 		return true;
 	}
+	// End of Worker Thread
 }

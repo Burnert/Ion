@@ -71,7 +71,32 @@ namespace Ion
 		checked_call(message.RefPtr->Events.OnAssetLoadError, message);
 	}
 
-	// AssetManager::AllocateAssetData -----------------------------------------------
+	template<EAssetType Type>
+	inline TShared<AssetMemoryPoolDebugInfo> AssetManager::GetAssetPoolDebugInfo() const
+	{
+		const AssetMemoryPool& poolRef = this->*TAssetPoolFromType<Type>::Ref;
+
+		return poolRef.GetDebugInfo();
+	}
+
+	template<EAssetType Type>
+	struct _TAssetPoolNameFromType;
+	template<> struct _TAssetPoolNameFromType<EAssetType::Mesh>    { static constexpr const char* Name = "Mesh"; };
+	template<> struct _TAssetPoolNameFromType<EAssetType::Texture> { static constexpr const char* Name = "Texture"; };
+
+	template<EAssetType Type>
+	inline void AssetManager::PrintAssetPool() const
+	{
+		TRACE_FUNCTION();
+
+		const AssetMemoryPool& poolRef = this->*TAssetPoolFromType<Type>::Ref;
+
+		LOG_DEBUG("Asset Memory - {0} Pool Data:", _TAssetPoolNameFromType<Type>::Name);
+
+		poolRef.PrintDebugInfo();
+	}
+
+	// AssetManager::AllocateAssetData specializations -----------------------------------------------
 
 	template<>
 	inline void* AssetManager::AllocateAssetData<EAssetType::Mesh>(size_t size)
@@ -89,7 +114,7 @@ namespace Ion
 		return m_TextureAssetPool.Alloc(size);
 	}
 
-	// AssetManager::GetAssetAlignment -----------------------------------------------
+	// AssetManager::GetAssetAlignment specializations -----------------------------------------------
 
 	template<>
 	inline size_t AssetManager::GetAssetAlignment<EAssetType::Mesh>() const

@@ -11,7 +11,7 @@ namespace Ion
 {
 	class AssetManager;
 
-	struct AssetWorkerWork
+	struct AssetWorkerLoadWork
 	{
 		AssetReference* RefPtr;
 		TFunction<void(AssetReference&)> OnLoad;
@@ -46,7 +46,7 @@ namespace Ion
 	class ION_API AssetManager
 	{
 	public:
-		using WorkerQueue = TQueue<AssetWorkerWork>;
+		using WorkerQueue = TQueue<AssetWorkerLoadWork>;
 		using MessageQueue = TQueue<AssetMessageBuffer>;
 
 		inline static AssetManager* Get()
@@ -89,11 +89,19 @@ namespace Ion
 		template<> size_t GetAssetAlignment<EAssetType::Mesh>() const;
 		template<> size_t GetAssetAlignment<EAssetType::Texture>() const;
 
+		template<EAssetType Type>
+		void PrintAssetPool() const;
+
+		template<EAssetType Type>
+		TShared<AssetMemoryPoolDebugInfo> GetAssetPoolDebugInfo() const;
+
 		~AssetManager() { }
 
 	protected:
 		AssetReference* GetAssetReference(AssetHandle handle);
+
 		void LoadAssetData(AssetReference& ref);
+		void UnloadAssetData(AssetReference& ref);
 
 		template<EAssetType Type>
 		void* AllocateAssetData(size_t size) { }
@@ -103,7 +111,6 @@ namespace Ion
 
 	private:
 		void ScheduleAssetLoadWork(AssetReference& ref);
-		void UnloadAsset(AssetReference& ref);
 
 		template<typename T>
 		void AddMessage(T& message);
@@ -131,6 +138,16 @@ namespace Ion
 		friend class AssetWorker;
 		friend class AssetInterface;
 		friend class Application;
+
+		template<EAssetType Type>
+		friend struct TAssetPoolFromType;
 	};
+
+	template<EAssetType Type>
+	struct TAssetPoolFromType;
+	template<>
+	struct TAssetPoolFromType<EAssetType::Mesh>    { static constexpr AssetMemoryPool AssetManager::* Ref = &AssetManager::m_MeshAssetPool; };
+	template<>
+	struct TAssetPoolFromType<EAssetType::Texture> { static constexpr AssetMemoryPool AssetManager::* Ref = &AssetManager::m_TextureAssetPool; };
 }
 #include "AssetManager.inl"
