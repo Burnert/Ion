@@ -78,8 +78,8 @@ namespace Ion
 	private:
 		AssetMemoryPool();
 
-		THashMap<void*, AssetAllocData> m_AllocData;
-		TArray<AssetAllocData> m_SequentialAllocData;
+		TArray<AssetAllocData> m_AllocData;
+		THashMap<void*, size_t> m_AllocDataByPtr;
 
 		MEMORY_BLOCK_FIELD_NAMED(m_PoolBlock, m_Data, m_Size);
 		uint8* m_CurrentPtr;
@@ -112,7 +112,7 @@ namespace Ion
 		// Find non-contiguous memory blocks
 		void* expectedPtr = m_Data;
 		AssetAllocData* previousAllocData = nullptr;
-		for (AssetAllocData& allocData : m_SequentialAllocData)
+		for (AssetAllocData& allocData : m_AllocData)
 		{
 			// Memory is non-contiguous if the next data block
 			// does not start at the end of the previous one
@@ -151,7 +151,7 @@ namespace Ion
 			// (Could be shorter but this is more readable)
 			if (!bNext)
 			{ // If there's no another NC memory, move all the blocks
-				AssetAllocData& lastAllocData = m_SequentialAllocData.back();
+				AssetAllocData& lastAllocData = m_AllocData.back();
 				uint8* endOfChunk = (uint8*)lastAllocData.Block.End();
 				blocksSize = endOfChunk - source;
 			}
@@ -167,21 +167,20 @@ namespace Ion
 			ptrdiff_t offsetAfterMove = destination - source;
 
 			// Update the alloc data
-			for (auto allocDataIt = m_SequentialAllocData.begin() + right->SequentialIndex;
+			for (auto allocDataIt = m_AllocData.begin() + right->SequentialIndex;
 				allocDataIt != (bNext ? (
-					m_SequentialAllocData.begin() + nextIt->LeftAllocDataPtr->SequentialIndex + 1) :
-					m_SequentialAllocData.end());
+					m_AllocData.begin() + nextIt->LeftAllocDataPtr->SequentialIndex + 1) :
+					m_AllocData.end());
 				++allocDataIt)
 			{
 				uint8* oldPtr = (uint8*)allocDataIt->Ptr;
 				uint8* movedPtr = (uint8*)allocDataIt->Ptr + offsetAfterMove;
 
-				auto allocNode = m_AllocData.extract(allocDataIt->Ptr);
-				allocNode.mapped().Ptr = movedPtr;
-				allocNode.key() = movedPtr;
-				m_AllocData.insert(Move(allocNode));
-
 				allocDataIt->Ptr = movedPtr;
+
+				auto allocNode = m_AllocDataByPtr.extract(oldPtr);
+				allocNode.key() = movedPtr;
+				m_AllocDataByPtr.insert(Move(allocNode));
 
 				onItemRealloc(oldPtr, movedPtr);
 			}
@@ -197,6 +196,6 @@ namespace Ion
 			blocksIt = nextIt;
 		}
 		// Update the next alloc pointer after all of that
-		m_CurrentPtr = (uint8*)m_SequentialAllocData.back().Block.End();
+		m_CurrentPtr = (uint8*)m_AllocData.back().Block.End();
 	}
 }

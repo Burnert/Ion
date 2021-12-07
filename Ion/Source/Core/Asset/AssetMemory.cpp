@@ -88,10 +88,10 @@ namespace Ion
 		AssetAllocData allocData { };
 		allocData.Ptr = allocPtr;
 		allocData.Size = alignedSize;
-		allocData.SequentialIndex = m_SequentialAllocData.size();
+		allocData.SequentialIndex = m_AllocData.size();
 
-		m_AllocData.emplace(allocPtr, Move(allocData));
-		m_SequentialAllocData.emplace_back(Move(allocData));
+		m_AllocDataByPtr.emplace(allocPtr, allocData.SequentialIndex);
+		m_AllocData.emplace_back(Move(allocData));
 
 		return allocPtr;
 	}
@@ -105,25 +105,26 @@ namespace Ion
 
 		UniqueLock lock(m_PoolMutex);
 
-		auto& it = m_AllocData.find(data);
-		ionassertnd(it != m_AllocData.end());
+		auto& it = m_AllocDataByPtr.find(data);
+		ionassertnd(it != m_AllocDataByPtr.end());
 
-		AssetAllocData& allocData = it->second;
+		size_t deleteIndex = it->second;
+
+		AssetAllocData& allocData = m_AllocData[deleteIndex];
 		m_UsedBytes -= allocData.Size;
-		size_t deleteIndex = allocData.SequentialIndex;
 
-		m_SequentialAllocData.erase(m_SequentialAllocData.begin() + deleteIndex);
-		m_AllocData.erase(it);
+		m_AllocData.erase(m_AllocData.begin() + deleteIndex);
+		m_AllocDataByPtr.erase(it);
 
 		// Fix indices
-		for (auto seqIt = m_SequentialAllocData.begin() + deleteIndex; seqIt != m_SequentialAllocData.end(); ++seqIt)
+		for (auto seqIt = m_AllocData.begin() + deleteIndex; seqIt != m_AllocData.end(); ++seqIt)
 		{
 			seqIt->SequentialIndex--;
-			m_AllocData[seqIt->Ptr].SequentialIndex--;
+			m_AllocDataByPtr[seqIt->Ptr]--;
 		}
 
 		// Set the current pointer to the first free spot
-		m_CurrentPtr = !m_SequentialAllocData.empty() ? (uint8*)m_SequentialAllocData.back().Block.End() : (uint8*)m_Data;
+		m_CurrentPtr = !m_AllocData.empty() ? (uint8*)m_AllocData.back().Block.End() : (uint8*)m_Data;
 	}
 
 	TShared<AssetMemoryPoolDebugInfo> AssetMemoryPool::GetDebugInfo() const
@@ -139,7 +140,7 @@ namespace Ion
 		info->AllocCount = m_AllocData.size();
 		info->BytesFree = GetFreeBytes();
 		info->BytesUsed = GetUsedBytes();
-		info->AllocData = m_SequentialAllocData;
+		info->AllocData = m_AllocData;
 		return info;
 	}
 
