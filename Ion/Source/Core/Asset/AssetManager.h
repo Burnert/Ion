@@ -28,10 +28,9 @@ namespace Ion
 		// Lock the WorkQueue before calling
 		void Exit();
 
-		void WorkerProc();
-
 		// Worker Thread Functions ------------------------------------------------
 
+		void WorkerProc();
 		bool LoadAsset(AssetReference* refPtr);
 
 	private:

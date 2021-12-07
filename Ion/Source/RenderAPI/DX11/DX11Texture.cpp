@@ -48,7 +48,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		ionassert(m_TextureAsset.IsLoaded(), "Texture has not been loaded yet.");
+		ionassert(m_TextureAsset->IsLoaded(), "Texture has not been loaded yet.");
 
 		HRESULT hResult;
 

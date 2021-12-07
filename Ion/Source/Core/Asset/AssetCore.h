@@ -180,6 +180,14 @@ namespace Ion
 
 		AssetTypes::DescBuffer Description;
 		EAssetType Type;
+		union
+		{
+			uint8 PackedFlags;
+			struct
+			{
+				uint8 bScheduledLoad : 1;
+			};
+		};
 
 		template<EAssetType Type>
 		inline const TAssetDescTypeT<Type>* GetDescription() const
@@ -196,6 +204,11 @@ namespace Ion
 		inline bool IsLoaded() const
 		{
 			return (bool)Data.Ptr;
+		}
+
+		inline bool IsLoading() const
+		{
+			return bScheduledLoad;
 		}
 
 		AssetReference(const AssetReference&) = delete;
@@ -227,6 +240,11 @@ namespace Ion
 		inline bool IsLoaded() const
 		{
 			return (bool)m_RefPtr->IsLoaded();
+		}
+
+		inline bool IsLoading() const
+		{
+			return (bool)m_RefPtr->IsLoading();
 		}
 
 		inline EAssetType GetType() const
@@ -268,25 +286,17 @@ namespace Ion
 		friend class AssetManager;
 	};
 
+#define _ASSIGN_EVENT_CALLBACK(e) \
+	if constexpr (TIsConvertibleV<Lambda, e##Event>) \
+		m_RefPtr->Events.e = callback
+
 	template<typename Lambda>
 	inline void AssetInterface::AssignEvent(Lambda callback)
 	{
-		if constexpr (TIsConvertibleV<Lambda, OnAssetLoadedEvent>)
-		{
-			m_RefPtr->Events.OnAssetLoaded = callback;
-		}
-		if constexpr (TIsConvertibleV<Lambda, OnAssetLoadErrorEvent>)
-		{
-			m_RefPtr->Events.OnAssetLoadError = callback;
-		}
-		if constexpr (TIsConvertibleV<Lambda, OnAssetUnloadedEvent>)
-		{
-			m_RefPtr->Events.OnAssetUnloaded = callback;
-		}
-		if constexpr (TIsConvertibleV<Lambda, OnAssetReallocEvent>)
-		{
-			m_RefPtr->Events.OnAssetRealloc = callback;
-		}
+		_ASSIGN_EVENT_CALLBACK(OnAssetLoaded);
+		_ASSIGN_EVENT_CALLBACK(OnAssetLoadError);
+		_ASSIGN_EVENT_CALLBACK(OnAssetUnloaded);
+		_ASSIGN_EVENT_CALLBACK(OnAssetRealloc);
 	}
 
 	// -------------------------------------------------------------------------------
@@ -306,12 +316,6 @@ namespace Ion
 		}
 
 		bool IsValid() const;
-		bool IsLoaded() const;
-
-		inline EAssetType GetType() const
-		{
-			return (*this).GetInterface().GetType();
-		}
 
 		inline bool operator==(AssetHandle& other) const
 		{
@@ -322,9 +326,6 @@ namespace Ion
 		{
 			return m_ID != other.m_ID;
 		}
-
-		// @TODO: Somehow don't let the user change the fields
-		// of AssetReference but let them call non-const functions
 
 		// Returns an AssetInterface used to communicate with AssetManager through the handle
 		inline AssetInterface& GetInterface()

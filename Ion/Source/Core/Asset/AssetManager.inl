@@ -90,8 +90,10 @@ namespace Ion
 
 	template<EAssetType Type>
 	struct _TAssetPoolNameFromType;
+	template<> struct _TAssetPoolNameFromType<EAssetType::Text>    { static constexpr const char* Name = "Text"; };
 	template<> struct _TAssetPoolNameFromType<EAssetType::Mesh>    { static constexpr const char* Name = "Mesh"; };
 	template<> struct _TAssetPoolNameFromType<EAssetType::Texture> { static constexpr const char* Name = "Texture"; };
+	template<> struct _TAssetPoolNameFromType<EAssetType::Sound>   { static constexpr const char* Name = "Sound"; };
 
 	template<EAssetType Type>
 	inline void AssetManager::PrintAssetPool() const

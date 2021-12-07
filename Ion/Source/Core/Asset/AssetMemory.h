@@ -69,16 +69,29 @@ namespace Ion
 		~AssetMemoryPool() { }
 
 	private:
+		inline size_t GetCurrentOffset() const
+		{
+			return m_CurrentPtr - m_Data;
+		}
+
+	private:
 		AssetMemoryPool();
 
 		THashMap<void*, AssetAllocData> m_AllocData;
 		TArray<AssetAllocData> m_SequentialAllocData;
 
-		void* m_Data;
-		size_t m_Size;
+		union
+		{
+			MemoryBlockDescriptor m_PoolBlock;
+			struct
+			{
+				uint8* m_Data;
+				size_t m_Size;
+			};
+		};
 		size_t m_Alignment;
 
-		size_t m_NextOffset;
+		uint8* m_CurrentPtr;
 
 		size_t m_UsedBytes;
 
@@ -98,6 +111,9 @@ namespace Ion
 			AssetAllocData* LeftAllocDataPtr;
 			AssetAllocData* RightAllocDataPtr;
 		};
+
+		if (m_AllocData.empty())
+			return;
 
 		TDeque<_NonContiguousMemoryBlock> nonContiguousBlocks;
 
@@ -189,6 +205,6 @@ namespace Ion
 			blocksIt = nextIt;
 		}
 		// Update the next alloc pointer after all of that
-		m_NextOffset = (uint8*)m_SequentialAllocData.back().Block.End() - (uint8*)m_Data;
+		m_CurrentPtr = (uint8*)m_SequentialAllocData.back().Block.End();
 	}
 }

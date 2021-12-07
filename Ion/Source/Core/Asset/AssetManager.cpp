@@ -15,15 +15,11 @@ namespace Ion
 		return AssetManager::Get()->IsHandleValid(*this);
 	}
 
-	bool AssetHandle::IsLoaded() const
-	{
-		return AssetManager::Get()->IsAssetLoaded(*this);
-	}
-
 	AssetReference::AssetReference() :
 		Data(AssetData()),
 		ID(INVALID_ASSET_ID),
-		Type(EAssetType::Null)
+		Type(EAssetType::Null),
+		PackedFlags(0)
 	{
 		//memset(Description, 0, sizeof(Description));
 	}
@@ -134,8 +130,9 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		if (!ref.IsLoaded())
+		if (!ref.IsLoaded() && !ref.IsLoading())
 		{
+			ref.bScheduledLoad = true;
 			ScheduleAssetLoadWork(ref);
 		}
 	}
@@ -231,6 +228,7 @@ namespace Ion
 	void AssetManager::OnAssetLoaded(OnAssetLoadedMessage& message)
 	{
 		m_LoadedAssets.emplace(message.PoolLocation, message.RefPtr);
+		message.RefPtr->bScheduledLoad = false;
 	}
 
 	void AssetManager::OnAssetUnloaded(OnAssetUnloadedMessage& message)

@@ -202,7 +202,7 @@ public:
 	template<EExampleModelName N>
 	void InitModelIfReady(ExampleModelData<N>& data)
 	{
-		if (!(data.MeshAsset.IsLoaded() && data.TextureAsset.IsLoaded()) || data.Mesh) return;
+		if (!(data.MeshAsset->IsLoaded() && data.TextureAsset->IsLoaded()) || data.Mesh) return;
 
 		if constexpr (N == EExampleModelName::FourPak)
 		{
@@ -287,10 +287,10 @@ public:
 	{
 		ImGui::PushID(model.Name.c_str());
 
-		if (model.MeshAsset.IsLoaded())
-			ImGui::Text(model.Name.c_str());
-		else
+		if (!model.MeshAsset->IsLoaded() && !model.MeshAsset->IsLoading())
 			ImGui::TextDisabled(model.Name.c_str());
+		else
+			ImGui::TextColored(model.MeshAsset->IsLoading() ? ImVec4(1.0f, 1.0f, 0.2f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f), model.Name.c_str());
 
 		ImGui::SameLine(70);
 		if (ImGui::Button("Load"))

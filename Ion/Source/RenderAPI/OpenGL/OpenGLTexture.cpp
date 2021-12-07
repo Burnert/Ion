@@ -51,7 +51,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		ionassert(m_TextureAsset.IsLoaded(), "Texture has not been loaded yet.");
+		ionassert(m_TextureAsset->IsLoaded(), "Texture has not been loaded yet.");
 
 		TRACE_BEGIN(0, "OpenGLTexture - glCreateTextures");
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_ID);

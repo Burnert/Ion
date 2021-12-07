@@ -7,10 +7,9 @@
 namespace Ion
 {
 	AssetMemoryPool::AssetMemoryPool() :
-		m_Data(nullptr),
-		m_Size(0),
+		m_PoolBlock({ 0 }),
 		m_Alignment(0),
-		m_NextOffset(0),
+		m_CurrentPtr(nullptr),
 		m_UsedBytes(0)
 	{ }
 
@@ -22,10 +21,10 @@ namespace Ion
 		ionassert(size);
 		ionassert(Math::IsPowerOfTwo(alignment));
 
-		m_Data = _aligned_malloc(size, alignment);
+		m_Data = (uint8*)_aligned_malloc(size, alignment);
 		m_Size = size;
 		m_Alignment = alignment;
-		m_NextOffset = 0;
+		m_CurrentPtr = m_Data;
 	}
 
 	void AssetMemoryPool::FreePool()
@@ -38,7 +37,7 @@ namespace Ion
 		m_Data = nullptr;
 		m_Size = 0;
 		m_Alignment = 0;
-		m_NextOffset = 0;
+		m_CurrentPtr = nullptr;
 		m_UsedBytes = 0;
 	}
 
@@ -48,9 +47,9 @@ namespace Ion
 
 		ionassert(m_Data);
 		ionassert(newSize);
-		ionassert(newSize > m_NextOffset);
+		ionassert(newSize > GetCurrentOffset());
 
-		void* data = _aligned_malloc(newSize, m_Alignment);
+		uint8* data = (uint8*)_aligned_malloc(newSize, m_Alignment);
 		size_t size = Math::Min(m_Size, newSize);
 		memcpy(data, m_Data, size);
 
@@ -66,22 +65,22 @@ namespace Ion
 		ionassert(m_Data);
 		ionassert(size);
 
-		uint8* current;
+		uint8* allocPtr;
 		{
 			UniqueLock lock(m_PoolMutex);
 
 			ionassertnd(size <= GetFreeBytes());
 
-			current = (uint8*)m_Data + m_NextOffset;
+			allocPtr = m_CurrentPtr;
 
 			// Round up to m_Alignment
 			size_t alignedSize = AlignAs(size, m_Alignment);
 
-			m_NextOffset += alignedSize;
+			m_CurrentPtr += alignedSize;
 			m_UsedBytes += alignedSize;
 
 			// @TODO: Reallocate if the offset goes out of the buffer
-			if (m_NextOffset > m_Size)
+			if (m_CurrentPtr > m_PoolBlock.End())
 			{
 				ionassertnd(false);
 				return nullptr;
@@ -89,14 +88,14 @@ namespace Ion
 
 			// Save the sub-block
 			AssetAllocData allocData { };
-			allocData.Ptr = current;
+			allocData.Ptr = allocPtr;
 			allocData.Size = alignedSize;
 			allocData.SequentialIndex = m_SequentialAllocData.size();
 
-			m_AllocData.emplace(current, Move(allocData));
+			m_AllocData.emplace(allocPtr, Move(allocData));
 			m_SequentialAllocData.emplace_back(Move(allocData));
 		}
-		return current;
+		return allocPtr;
 	}
 
 	void AssetMemoryPool::Free(void* data)
@@ -124,6 +123,9 @@ namespace Ion
 				seqIt->SequentialIndex--;
 				m_AllocData[seqIt->Ptr].SequentialIndex--;
 			}
+
+			// Set the current pointer to the first free spot
+			m_CurrentPtr = !m_SequentialAllocData.empty() ? (uint8*)m_SequentialAllocData.back().Block.End() : m_Data;
 		}
 	}
 
