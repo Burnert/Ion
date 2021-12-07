@@ -255,7 +255,7 @@ public:
 		}
 		if constexpr (N == EExampleModelName::Oscypek)
 		{
-		
+			
 		}
 		if constexpr (N == EExampleModelName::Ciupaga)
 		{
@@ -286,13 +286,18 @@ public:
 	void ImGuiExampleModelOps(ExampleModelData<Type>& model)
 	{
 		ImGui::PushID(model.Name.c_str());
-		ImGui::SameLine(80);
+
+		if (model.MeshAsset.IsLoaded())
+			ImGui::Text(model.Name.c_str());
+		else
+			ImGui::TextDisabled(model.Name.c_str());
+
+		ImGui::SameLine(70);
 		if (ImGui::Button("Load"))
 		{
 			model.MeshAsset->LoadAssetData();
 			model.TextureAsset->LoadAssetData();
-		}
-		ImGui::SameLine();
+		} ImGui::SameLine();
 		if (ImGui::Button("Unload"))
 		{
 			model.MeshAsset->UnloadAssetData();
@@ -627,28 +632,37 @@ public:
 
 			ImGui::Begin("Asset Manager");
 			{
-				if (ImGui::Button("Print Mesh Pool"))
+				ImGui::Text("Mesh Pool");
+				ImGui::SameLine(150);
+				if (ImGui::Button("Print##Mesh"))
 				{
 					AssetManager::Get()->PrintAssetPool<EAssetType::Mesh>();
 				}
-				if (ImGui::Button("Print Texture Pool"))
+				ImGui::SameLine();
+				if (ImGui::Button("Defragment##Mesh"))
+				{
+					AssetManager::Get()->DefragmentAssetPool<EAssetType::Mesh>();
+				}
+
+				ImGui::Text("Texture Pool");
+				ImGui::SameLine(150);
+				if (ImGui::Button("Print##Texture"))
 				{
 					AssetManager::Get()->PrintAssetPool<EAssetType::Texture>();
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Defragment##Texture"))
+				{
+					AssetManager::Get()->DefragmentAssetPool<EAssetType::Texture>();
 				}
 
 				ImGui::Separator();
 
-				ImGui::Text("4Pak");
 				ImGuiExampleModelOps(m_4Pak);
-				ImGui::Text("Piwsko");
 				ImGuiExampleModelOps(m_Piwsko);
-				ImGui::Text("Oscypek");
 				ImGuiExampleModelOps(m_Oscypek);
-				ImGui::Text("Ciupaga");
 				ImGuiExampleModelOps(m_Ciupaga);
-				ImGui::Text("Slovak");
 				ImGuiExampleModelOps(m_Slovak);
-				ImGui::Text("Stress");
 				ImGuiExampleModelOps(m_Stress);
 			}
 			ImGui::End();

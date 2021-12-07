@@ -111,22 +111,19 @@ namespace Ion
 			auto& it = m_AllocData.find(data);
 			ionassertnd(it != m_AllocData.end());
 
-			AssetAllocData& allocData = (*it).second;
-
+			AssetAllocData& allocData = it->second;
 			m_UsedBytes -= allocData.Size;
+			size_t deleteIndex = allocData.SequentialIndex;
 
-			m_SequentialAllocData.erase(m_SequentialAllocData.begin() + allocData.SequentialIndex);
+			m_SequentialAllocData.erase(m_SequentialAllocData.begin() + deleteIndex);
+			m_AllocData.erase(it);
 
 			// Fix indices
-			for (auto it = m_SequentialAllocData.begin() + allocData.SequentialIndex; it != m_SequentialAllocData.end(); it++)
+			for (auto seqIt = m_SequentialAllocData.begin() + deleteIndex; seqIt != m_SequentialAllocData.end(); ++seqIt)
 			{
-				(*it).SequentialIndex--;
-				m_AllocData[(*it).Ptr].SequentialIndex--;
+				seqIt->SequentialIndex--;
+				m_AllocData[seqIt->Ptr].SequentialIndex--;
 			}
-
-			m_AllocData.erase(data);
-
-			Defragment();
 		}
 	}
 
@@ -171,19 +168,9 @@ namespace Ion
 			}
 			expectedPtr = (uint8*)allocData.Ptr + allocData.Size;
 
-			LOG_DEBUG("Index: {0:<8d} | Ptr: [{1}] | Size: {2:20d} B ({3:.2f} MB)",
+			LOG_DEBUG("{0:<8d} | Ptr: [{1}] | Size: {2:20d} B ({3:.2f} MB)",
 				allocData.SequentialIndex, allocData.Ptr, allocData.Size, allocData.Size / (float)(1 << 20));
 		}
 		LOG_DEBUG("----------------------------------------------------------------------------------");
-	}
-
-	void AssetMemoryPool::Defragment()
-	{
-		TRACE_FUNCTION();
-
-		for (AssetAllocData& allocData : m_SequentialAllocData)
-		{
-
-		}
 	}
 }

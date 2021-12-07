@@ -1,7 +1,6 @@
 #pragma once
 
 #include "AssetCore.h"
-#include "AssetMemory.h"
 
 #define ASSET_WORKER_COUNT 4
 #define DEFAULT_MESH_POOL_SIZE (1 << 28)    // 256 MB
@@ -90,6 +89,9 @@ namespace Ion
 		template<> size_t GetAssetAlignment<EAssetType::Texture>() const;
 
 		template<EAssetType Type>
+		void DefragmentAssetPool();
+
+		template<EAssetType Type>
 		void PrintAssetPool() const;
 
 		template<EAssetType Type>
@@ -118,11 +120,16 @@ namespace Ion
 		template<typename T>
 		static void _DispatchMessage(T& message); // underscore because there's a Windows macro called DispatchMessage
 
+		void OnAssetLoaded(OnAssetLoadedMessage& message);
+		void OnAssetUnloaded(OnAssetUnloadedMessage& message);
+		void OnAssetRealloc(OnAssetReallocMessage& message);
+
 	private:
 		AssetMemoryPool m_MeshAssetPool;
 		AssetMemoryPool m_TextureAssetPool;
 
 		THashMap<AssetID, AssetReference> m_Assets;
+		THashMap<void*, AssetReference*> m_LoadedAssets;
 
 		MessageQueue m_MessageQueue;
 		Mutex m_MessageQueueMutex;
@@ -149,5 +156,6 @@ namespace Ion
 	struct TAssetPoolFromType<EAssetType::Mesh>    { static constexpr AssetMemoryPool AssetManager::* Ref = &AssetManager::m_MeshAssetPool; };
 	template<>
 	struct TAssetPoolFromType<EAssetType::Texture> { static constexpr AssetMemoryPool AssetManager::* Ref = &AssetManager::m_TextureAssetPool; };
+	#define _GetAssetPoolFromType(arg) this->*TAssetPoolFromType<arg>::Ref
 }
 #include "AssetManager.inl"

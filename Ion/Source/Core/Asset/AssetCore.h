@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/File/File.h"
+#include "AssetMemory.h"
 
 namespace Ion
 {
@@ -105,6 +106,7 @@ namespace Ion
 	{
 		EAssetMessageType Type = EAssetMessageType::OnAssetLoaded;
 		AssetReference* RefPtr;
+		void* PoolLocation;
 	};
 
 	AMB_struct OnAssetLoadErrorMessage
@@ -118,13 +120,15 @@ namespace Ion
 	{
 		EAssetMessageType Type = EAssetMessageType::OnAssetUnloaded;
 		AssetReference* RefPtr;
+		void* LastPoolLocation;
 	};
 
 	AMB_struct OnAssetReallocMessage
 	{
 		EAssetMessageType Type = EAssetMessageType::OnAssetRealloc;
 		AssetReference* RefPtr;
-		void* NewLocation;
+		void* OldPoolLocation;
+		void* NewPoolLocation;
 	};
 
 	using TAssetMessageTypes = TTypePack<
@@ -143,8 +147,8 @@ namespace Ion
 
 	using OnAssetLoadedEvent    = TFunction<void(const OnAssetLoadedMessage&)>;
 	using OnAssetLoadErrorEvent = TFunction<void(const OnAssetLoadErrorMessage&)>;
-	using OnAssetUnloadedEvent = TFunction<void(const OnAssetUnloadedMessage&)>;
-	using OnAssetReallocEvent = TFunction<void(const OnAssetReallocMessage&)>;
+	using OnAssetUnloadedEvent  = TFunction<void(const OnAssetUnloadedMessage&)>;
+	using OnAssetReallocEvent   = TFunction<void(const OnAssetReallocMessage&)>;
 
 	struct AssetEvents
 	{
@@ -160,8 +164,7 @@ namespace Ion
 
 	struct AssetData
 	{
-		void* Ptr;
-		uint64 Size;
+		MEMORY_BLOCK_FIELD;
 	};
 
 	class ION_API AssetReference

@@ -19,6 +19,11 @@ namespace Ion
 		return AssetHandle(assetRef.ID, &assetRef);
 	}
 
+#define _DISPATCH_MESSAGE_CASE(type) \
+	case EAssetMessageType::##type: \
+		forEach(*(type##Message*)&buffer); \
+		break
+
 	template<typename ForEach>
 	inline void AssetManager::IterateMessages(ForEach forEach)
 	{
@@ -35,11 +40,10 @@ namespace Ion
 
 			switch (buffer.Type)
 			{
-				case EAssetMessageType::OnAssetLoaded:
-				{
-					forEach(*(OnAssetLoadedMessage*)&buffer);
-					break;
-				}
+				_DISPATCH_MESSAGE_CASE(OnAssetLoaded);
+				_DISPATCH_MESSAGE_CASE(OnAssetLoadError);
+				_DISPATCH_MESSAGE_CASE(OnAssetUnloaded);
+				_DISPATCH_MESSAGE_CASE(OnAssetRealloc);
 			}
 
 			lock.lock();
@@ -56,25 +60,30 @@ namespace Ion
 		}
 	}
 
-	template<typename T>
-	inline static void AssetManager::_DispatchMessage(T& message) { }
-	
-	template<>
-	inline static void AssetManager::_DispatchMessage(OnAssetLoadedMessage& message)
+	template<EAssetType Type>
+	void AssetManager::DefragmentAssetPool()
 	{
-		checked_call(message.RefPtr->Events.OnAssetLoaded, message);
-	}
+		TRACE_FUNCTION();
 
-	template<>
-	inline static void AssetManager::_DispatchMessage(OnAssetLoadErrorMessage& message)
-	{
-		checked_call(message.RefPtr->Events.OnAssetLoadError, message);
+		AssetMemoryPool& poolRef = _GetAssetPoolFromType(Type);
+
+		poolRef.DefragmentPool([this](void* oldLocation, void* newLocation)
+		{ // For each asset reallocation
+			OnAssetReallocMessage message { };
+			message.OldPoolLocation = oldLocation;
+			message.NewPoolLocation = newLocation;
+			message.RefPtr = m_LoadedAssets.at(oldLocation);
+
+			_DispatchMessage(message);
+		});
 	}
 
 	template<EAssetType Type>
 	inline TShared<AssetMemoryPoolDebugInfo> AssetManager::GetAssetPoolDebugInfo() const
 	{
-		const AssetMemoryPool& poolRef = this->*TAssetPoolFromType<Type>::Ref;
+		TRACE_FUNCTION();
+
+		const AssetMemoryPool& poolRef = _GetAssetPoolFromType(Type);
 
 		return poolRef.GetDebugInfo();
 	}
@@ -89,11 +98,46 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		const AssetMemoryPool& poolRef = this->*TAssetPoolFromType<Type>::Ref;
+		const AssetMemoryPool& poolRef = _GetAssetPoolFromType(Type);
 
-		LOG_DEBUG("Asset Memory - {0} Pool Data:", _TAssetPoolNameFromType<Type>::Name);
+		LOG_INFO("Asset Memory - {0} Pool Data:", _TAssetPoolNameFromType<Type>::Name);
 
 		poolRef.PrintDebugInfo();
+	}
+
+	// AssetManager::_DispatchMessage specializations -----------------------------------------------
+
+	template<typename T>
+	inline static void AssetManager::_DispatchMessage(T& message) { }
+
+	template<>
+	inline static void AssetManager::_DispatchMessage(OnAssetLoadedMessage& message)
+	{
+		AssetManager::Get()->OnAssetLoaded(message);
+
+		checked_call(message.RefPtr->Events.OnAssetLoaded, message);
+	}
+
+	template<>
+	inline static void AssetManager::_DispatchMessage(OnAssetLoadErrorMessage& message)
+	{
+		checked_call(message.RefPtr->Events.OnAssetLoadError, message);
+	}
+
+	template<>
+	inline static void AssetManager::_DispatchMessage(OnAssetUnloadedMessage& message)
+	{
+		AssetManager::Get()->OnAssetUnloaded(message);
+
+		checked_call(message.RefPtr->Events.OnAssetUnloaded, message);
+	}
+
+	template<>
+	inline static void AssetManager::_DispatchMessage(OnAssetReallocMessage& message)
+	{
+		AssetManager::Get()->OnAssetRealloc(message);
+
+		checked_call(message.RefPtr->Events.OnAssetRealloc, message);
 	}
 
 	// AssetManager::AllocateAssetData specializations -----------------------------------------------

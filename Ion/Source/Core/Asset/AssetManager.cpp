@@ -3,8 +3,6 @@
 #include "AssetManager.h"
 #include "Core/File/Collada.h"
 
-#define SLEEP_FOREVER() std::this_thread::sleep_for(std::chrono::hours(TNumericLimits<uint64>::max()))
-
 namespace Ion
 {
 	// AssetCore definitions ----------------------------------------
@@ -136,19 +134,9 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		if (!ref.Data.Ptr)
+		if (!ref.IsLoaded())
 		{
 			ScheduleAssetLoadWork(ref);
-		}
-		else
-		{
-			if (ref.Events.OnAssetLoaded)
-			{
-				OnAssetLoadedMessage message { };
-				message.RefPtr = &ref;
-
-				ref.Events.OnAssetLoaded(message);
-			}
 		}
 	}
 
@@ -175,8 +163,14 @@ namespace Ion
 			}
 		}
 
+		OnAssetUnloadedMessage message { };
+		message.RefPtr = &ref;
+		message.LastPoolLocation = ref.Data.Ptr;
+
 		ref.Data.Ptr = nullptr;
 		ref.Data.Size = 0;
+
+		_DispatchMessage(message);
 	}
 
 	AssetReference* AssetManager::GetAssetReference(AssetHandle handle)
@@ -215,6 +209,7 @@ namespace Ion
 			
 			OnAssetLoadedMessage message { };
 			message.RefPtr = &ref;
+			message.PoolLocation = ref.Data.Ptr;
 			AddMessage(message);
 		};
 		work.OnError = [this](AssetReference& ref)
@@ -231,6 +226,24 @@ namespace Ion
 			m_WorkQueue.emplace(Move(work));
 		}
 		m_WorkQueueCV.notify_one();
+	}
+
+	void AssetManager::OnAssetLoaded(OnAssetLoadedMessage& message)
+	{
+		m_LoadedAssets.emplace(message.PoolLocation, message.RefPtr);
+	}
+
+	void AssetManager::OnAssetUnloaded(OnAssetUnloadedMessage& message)
+	{
+		m_LoadedAssets.erase(message.LastPoolLocation);
+	}
+
+	void AssetManager::OnAssetRealloc(OnAssetReallocMessage& message)
+	{
+		auto node = m_LoadedAssets.extract(message.OldPoolLocation);
+		node.mapped()->Data.Ptr = message.NewPoolLocation;
+		node.key() = message.NewPoolLocation;
+		m_LoadedAssets.insert(Move(node));
 	}
 
 	AssetManager::AssetManager()
