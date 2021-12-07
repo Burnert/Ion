@@ -49,7 +49,7 @@ namespace Ion
 			m_TextureAssetPool.AllocatePool(DEFAULT_TEXTURE_POOL_SIZE, DEFAULT_ASSET_ALIGNMENT);
 		}
 
-		for (AssetWorker& worker : m_WorkerThreads)
+		for (AssetWorker& worker : m_AssetWorkers)
 		{
 			worker = AssetWorker(this);
 			worker.Start();
@@ -70,14 +70,13 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		for (AssetWorker& worker : m_WorkerThreads)
+		for (AssetWorker& worker : m_AssetWorkers)
 		{
-			UniqueLock lock(m_WorkQueueMutex);
 			worker.Exit();
 		}
 		m_WorkQueueCV.notify_all();
 
-		for (AssetWorker& worker : m_WorkerThreads)
+		for (AssetWorker& worker : m_AssetWorkers)
 		{
 			if (worker.m_WorkerThread.joinable())
 				worker.m_WorkerThread.join();
@@ -244,7 +243,8 @@ namespace Ion
 		m_LoadedAssets.insert(Move(node));
 	}
 
-	AssetManager::AssetManager()
+	AssetManager::AssetManager() :
+		m_AssetWorkers(ASSET_WORKER_COUNT)
 	{
 	}
 
@@ -269,6 +269,7 @@ namespace Ion
 
 	void AssetWorker::Exit()
 	{
+		UniqueLock lock(m_Owner->m_WorkQueueMutex);
 		m_bExit = true;
 	}
 
@@ -278,7 +279,7 @@ namespace Ion
 	{
 		SetThreadDescription(GetCurrentThread(), L"AssetWorker");
 
-		AssetManager::WorkerQueue& queue = AssetManager::Get()->m_WorkQueue;
+		AssetManager::WorkerQueue& queue = m_Owner->m_WorkQueue;
 
 		AssetWorkerLoadWork work;
 

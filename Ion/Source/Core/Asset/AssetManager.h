@@ -3,7 +3,7 @@
 #include "AssetCore.h"
 
 #define ASSET_WORKER_COUNT 4
-#define DEFAULT_MESH_POOL_SIZE (1 << 28)    // 256 MB
+#define DEFAULT_MESH_POOL_SIZE    (1 << 28) // 256 MB
 #define DEFAULT_TEXTURE_POOL_SIZE (1 << 29) // 512 MB
 
 namespace Ion
@@ -82,10 +82,10 @@ namespace Ion
 		void IterateMessages(ForEach forEach);
 
 		template<EAssetType Type>
-		size_t GetAssetAlignment() const { }
+		size_t GetAssetAlignment() const;
 
-		template<> size_t GetAssetAlignment<EAssetType::Mesh>() const;
-		template<> size_t GetAssetAlignment<EAssetType::Texture>() const;
+		//template<> size_t GetAssetAlignment<EAssetType::Mesh>() const;
+		//template<> size_t GetAssetAlignment<EAssetType::Texture>() const;
 
 		template<EAssetType Type>
 		void DefragmentAssetPool();
@@ -105,10 +105,10 @@ namespace Ion
 		void UnloadAssetData(AssetReference& ref);
 
 		template<EAssetType Type>
-		void* AllocateAssetData(size_t size) { }
+		void* AllocateAssetData(size_t size);
 
-		template<> void* AllocateAssetData<EAssetType::Mesh>(size_t size);
-		template<> void* AllocateAssetData<EAssetType::Texture>(size_t size);
+		//template<> void* AllocateAssetData<EAssetType::Mesh>(size_t size);
+		//template<> void* AllocateAssetData<EAssetType::Texture>(size_t size);
 
 	private:
 		void ScheduleAssetLoadWork(AssetReference& ref);
@@ -133,7 +133,7 @@ namespace Ion
 		MessageQueue m_MessageQueue;
 		Mutex m_MessageQueueMutex;
 
-		TFixedArray<AssetWorker, ASSET_WORKER_COUNT> m_WorkerThreads;
+		TArray<AssetWorker> m_AssetWorkers;
 
 		WorkerQueue m_WorkQueue;
 		Mutex m_WorkQueueMutex;

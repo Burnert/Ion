@@ -18,14 +18,15 @@ namespace Ion
 		}
 	};
 
-#define MEMORY_BLOCK_FIELD \
+#define MEMORY_BLOCK_FIELD_NAMED(blockName, ptrName, sizeName) \
 	union { \
-		MemoryBlockDescriptor Block; \
+		MemoryBlockDescriptor blockName; \
 		struct { \
-			void* Ptr; \
-			size_t Size; \
+			void* ptrName; \
+			size_t sizeName; \
 		}; \
 	}
+#define MEMORY_BLOCK_FIELD MEMORY_BLOCK_FIELD_NAMED(Block, Ptr, Size);
 
 	struct AssetAllocData
 	{
@@ -71,7 +72,7 @@ namespace Ion
 	private:
 		inline size_t GetCurrentOffset() const
 		{
-			return m_CurrentPtr - m_Data;
+			return m_CurrentPtr - (uint8*)m_Data;
 		}
 
 	private:
@@ -80,19 +81,10 @@ namespace Ion
 		THashMap<void*, AssetAllocData> m_AllocData;
 		TArray<AssetAllocData> m_SequentialAllocData;
 
-		union
-		{
-			MemoryBlockDescriptor m_PoolBlock;
-			struct
-			{
-				uint8* m_Data;
-				size_t m_Size;
-			};
-		};
-		size_t m_Alignment;
-
+		MEMORY_BLOCK_FIELD_NAMED(m_PoolBlock, m_Data, m_Size);
 		uint8* m_CurrentPtr;
 
+		size_t m_Alignment;
 		size_t m_UsedBytes;
 
 		mutable Mutex m_PoolMutex;
@@ -169,7 +161,7 @@ namespace Ion
 				blocksSize = nextNCMem - source;
 			}
 
-			// Move the alloc blocks to the start of the noncontiguous memory
+			// Move the alloc blocks to the start of the NC memory
 			memmove(destination, source, blocksSize);
 
 			ptrdiff_t offsetAfterMove = destination - source;
@@ -196,7 +188,7 @@ namespace Ion
 
 			if (nextIt != nonContiguousBlocks.end())
 			{
-				// Shift and join the noncontiguous block
+				// Shift and join the NC block
 				nextIt->Block.Ptr = destination + blocksSize;
 				nextIt->Block.Size += blocksIt->Block.Size;
 				nonContiguousBlocks.erase(blocksIt);

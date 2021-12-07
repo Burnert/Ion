@@ -91,7 +91,16 @@ namespace Ion
 	// Asset Messages / Events ------------------------------------------------------------------
 	// ------------------------------------------------------------------------------------------
 
-#define AMB_struct struct alignas(16) // Asset message buffer struct specifier
+	// ------------------------------------------------------------------------------------------
+	// When adding new message / event, there are multiple things to take care of
+	// 1. Add it to this section
+	// 2. Add AssetManager::_DispatchMessage specialization in AssetManager.inl
+	// 3. Handle message dispatch in message queue
+	//    - Add _DISPATCH_MESSAGE_CASE(); to AssetManager::IterateMessages in AssetManager.inl
+	// 4. Add _ASSIGN_EVENT_CALLBACK(); to AssetInterface::AssignEvent below in this file
+	// ------------------------------------------------------------------------------------------
+
+#define ASSET_MESSAGE_BUFFER alignas(16) // Asset message buffer struct specifier
 
 	enum class EAssetMessageType : uint8
 	{
@@ -102,28 +111,28 @@ namespace Ion
 		OnAssetRealloc,
 	};
 
-	AMB_struct OnAssetLoadedMessage
+	struct ASSET_MESSAGE_BUFFER OnAssetLoadedMessage
 	{
 		EAssetMessageType Type = EAssetMessageType::OnAssetLoaded;
 		AssetReference* RefPtr;
 		void* PoolLocation;
 	};
 
-	AMB_struct OnAssetLoadErrorMessage
+	struct ASSET_MESSAGE_BUFFER OnAssetLoadErrorMessage
 	{
 		EAssetMessageType Type = EAssetMessageType::OnAssetLoadError;
 		AssetReference* RefPtr;
 		const char* ErrorMessage;
 	};
 
-	AMB_struct OnAssetUnloadedMessage
+	struct ASSET_MESSAGE_BUFFER OnAssetUnloadedMessage
 	{
 		EAssetMessageType Type = EAssetMessageType::OnAssetUnloaded;
 		AssetReference* RefPtr;
 		void* LastPoolLocation;
 	};
 
-	AMB_struct OnAssetReallocMessage
+	struct ASSET_MESSAGE_BUFFER OnAssetReallocMessage
 	{
 		EAssetMessageType Type = EAssetMessageType::OnAssetRealloc;
 		AssetReference* RefPtr;
@@ -138,7 +147,7 @@ namespace Ion
 		OnAssetReallocMessage
 	>;
 
-	AMB_struct AssetMessageBuffer
+	struct ASSET_MESSAGE_BUFFER AssetMessageBuffer
 	{
 		EAssetMessageType Type;
 	private:

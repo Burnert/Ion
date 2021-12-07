@@ -29,10 +29,10 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		UniqueLock lock(m_MessageQueueMutex);
-
 		while (!m_MessageQueue.empty())
 		{
+			UniqueLock lock(m_MessageQueueMutex);
+
 			AssetMessageBuffer& buffer = m_MessageQueue.front();
 			m_MessageQueue.pop();
 
@@ -45,8 +45,6 @@ namespace Ion
 				_DISPATCH_MESSAGE_CASE(OnAssetUnloaded);
 				_DISPATCH_MESSAGE_CASE(OnAssetRealloc);
 			}
-
-			lock.lock();
 		}
 	}
 
@@ -54,10 +52,9 @@ namespace Ion
 	inline void AssetManager::AddMessage(T& message)
 	{
 		static_assert(TIsAnyOfV<T, TAssetMessageTypes>);
-		{
-			UniqueLock lock(m_MessageQueueMutex);
-			m_MessageQueue.emplace(Move((AssetMessageBuffer&)message));
-		}
+
+		UniqueLock lock(m_MessageQueueMutex);
+		m_MessageQueue.emplace(Move((AssetMessageBuffer&)message));
 	}
 
 	template<EAssetType Type>
@@ -144,6 +141,9 @@ namespace Ion
 
 	// AssetManager::AllocateAssetData specializations -----------------------------------------------
 
+	template<EAssetType Type>
+	inline void* AssetManager::AllocateAssetData(size_t size) { }
+
 	template<>
 	inline void* AssetManager::AllocateAssetData<EAssetType::Mesh>(size_t size)
 	{
@@ -161,6 +161,9 @@ namespace Ion
 	}
 
 	// AssetManager::GetAssetAlignment specializations -----------------------------------------------
+
+	template<EAssetType Type>
+	inline size_t AssetManager::GetAssetAlignment() const { }
 
 	template<>
 	inline size_t AssetManager::GetAssetAlignment<EAssetType::Mesh>() const
