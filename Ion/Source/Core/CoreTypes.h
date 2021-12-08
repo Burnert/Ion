@@ -60,25 +60,28 @@ using TWeak        = std::weak_ptr<T>;
 // @TODO: Implement simplified versions of these in the future, also the pointers and String above ^^
 
 template<typename T, typename Hasher = std::hash<T>, typename Allocator = std::allocator<T>>
-using THashSet     = std::unordered_set<T, Hasher, std::equal_to<T>, Allocator>;
+using THashSet = std::unordered_set<T, Hasher, std::equal_to<T>, Allocator>;
 
 template<typename T, typename U, typename Hasher = std::hash<T>, typename Allocator = std::allocator<std::pair<const T, U>>>
-using THashMap     = std::unordered_map<T, U, Hasher, std::equal_to<T>, Allocator>;
+using THashMap = std::unordered_map<T, U, Hasher, std::equal_to<T>, Allocator>;
 
 template<typename T, typename Allocator = std::allocator<T>>
-using TArray       = std::vector<T, Allocator>;
+using TArray = std::vector<T, Allocator>;
 
 template<typename T, typename Allocator = std::allocator<T>>
-using TDeque       = std::deque<T, Allocator>;
+using TDeque = std::deque<T, Allocator>;
 
 template<typename T, size_t Size>
-using TFixedArray  = std::array<T, Size>;
+using TFixedArray = std::array<T, Size>;
 
-template<typename T, typename Container = std::deque<T>>
-using TQueue       = std::queue<T, Container>;
+template<typename T, typename Container = TDeque<T>>
+using TQueue = std::queue<T, Container>;
+
+template<typename T, typename Container = TArray<T>, typename Compare = std::less<T>>
+using TPriorityQueue = std::priority_queue<T, Container, Compare>;
 
 template<typename T>
-using TFunction    = std::function<T>;
+using TFunction = std::function<T>;
 
 // Thread
 
@@ -88,6 +91,10 @@ using ConditionVariable = std::condition_variable;
 using LockGuard = std::lock_guard<Mutex>;
 using ScopedLock = std::scoped_lock<Mutex>;
 using UniqueLock = std::unique_lock<Mutex>;
+namespace LockProp
+{
+	inline constexpr std::defer_lock_t DeferLock = std::defer_lock;
+}
 
 template<typename T>
 using TAtomic = std::atomic<T>;

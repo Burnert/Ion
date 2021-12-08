@@ -21,6 +21,8 @@ namespace Ion
 		ionassert(size);
 		ionassert(Math::IsPowerOfTwo(alignment));
 
+		size = AlignAs(size, alignment);
+
 		m_Data = _aligned_malloc(size, alignment);
 		m_Size = size;
 		m_Alignment = alignment;
@@ -41,23 +43,6 @@ namespace Ion
 		m_UsedBytes = 0;
 	}
 
-	void AssetMemoryPool::ReallocPool(size_t newSize)
-	{
-		TRACE_FUNCTION();
-
-		ionassert(m_Data);
-		ionassert(newSize);
-		ionassert(newSize > GetCurrentOffset());
-
-		void* data = _aligned_malloc(newSize, m_Alignment);
-		size_t size = Math::Min(m_Size, newSize);
-		memcpy(data, m_Data, size);
-
-		_aligned_free(m_Data);
-		m_Size = newSize;
-		m_Data = data;
-	}
-
 	void* AssetMemoryPool::Alloc(size_t size)
 	{
 		TRACE_FUNCTION();
@@ -67,22 +52,19 @@ namespace Ion
 
 		UniqueLock lock(m_PoolMutex);
 
-		ionassertnd(size <= GetFreeBytes());
+		if (size > GetFreeBytes())
+			return nullptr;
 
 		uint8* allocPtr = m_CurrentPtr;
 
 		// Round up to m_Alignment
 		size_t alignedSize = AlignAs(size, m_Alignment);
 
+		if (allocPtr + alignedSize > m_PoolBlock.End())
+			return nullptr;
+
 		m_CurrentPtr += alignedSize;
 		m_UsedBytes += alignedSize;
-
-		// @TODO: Reallocate if the offset goes out of the buffer
-		if (m_CurrentPtr > m_PoolBlock.End())
-		{
-			ionassertnd(false);
-			return nullptr;
-		}
 
 		// Save the sub-block
 		AssetAllocData allocData { };
@@ -125,6 +107,34 @@ namespace Ion
 
 		// Set the current pointer to the first free spot
 		m_CurrentPtr = !m_AllocData.empty() ? (uint8*)m_AllocData.back().Block.End() : (uint8*)m_Data;
+	}
+
+	bool AssetMemoryPool::IsFragmented() const
+	{
+		TRACE_FUNCTION();
+
+		ionassert(m_Data);
+
+		UniqueLock lock(m_PoolMutex);
+
+		void* expectedPtr = m_Data;
+		for (const AssetAllocData& allocData : m_AllocData)
+		{
+			// Memory is non-contiguous if the next data block
+			// does not start at the end of the previous one
+			if (allocData.Ptr != expectedPtr)
+			{
+				return true;
+			}
+			expectedPtr = allocData.Block.End();
+		}
+		return false;
+	}
+
+	bool AssetMemoryPool::CanAlloc(size_t size) const
+	{
+		UniqueLock lock(m_PoolMutex);
+		return size <= GetFreeBytes();
 	}
 
 	TShared<AssetMemoryPoolDebugInfo> AssetMemoryPool::GetDebugInfo() const

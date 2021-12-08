@@ -29,6 +29,18 @@ namespace Ion
 		Sound
 	};
 
+	FORCEINLINE constexpr const char* AssetTypeToString(EAssetType type)
+	{
+		switch (type)
+		{
+			case EAssetType::Text:    return "Text";
+			case EAssetType::Mesh:    return "Mesh";
+			case EAssetType::Texture: return "Texture";
+			case EAssetType::Sound:   return "Sound";
+		}
+		return "";
+	}
+
 	namespace AssetTypes
 	{
 		struct TextDesc
@@ -92,21 +104,22 @@ namespace Ion
 	// ------------------------------------------------------------------------------------------
 
 	// ------------------------------------------------------------------------------------------
-	// When adding new message / event, there are multiple things to take care of
-	// 1. Add it to this section
-	// 2. Add AssetManager::_DispatchMessage specialization in AssetManager.inl
-	// 3. Handle message dispatch in message queue
-	//    - Add _DISPATCH_MESSAGE_CASE(); to AssetManager::IterateMessages in AssetManager.inl
-	// 4. Add _ASSIGN_EVENT_CALLBACK(); to AssetInterface::AssignEvent below in this file
+	// When adding new message / event, there are a few things to take care of
+	// 1. Add a new message to this section based on what is already in here
+	// 2. Handle message dispatch in the message queue
+	//    - Add _HANDLE_MESSAGE_CASE() macro to AssetManager::IterateMessages in AssetManager.inl
+	//    - Add _DISPATCH_MESSAGE() or _DISPATCH_MESSAGE_SELF() macro to AssetManager::_DispatchMessage in AssetManager.inl
+	// 3. Add _ASSIGN_MSG_EVENT_CALLBACK() macro to AssetInterface::AssignEvent below in this file
 	// ------------------------------------------------------------------------------------------
 
-#define ASSET_MESSAGE_BUFFER alignas(16) // Asset message buffer struct specifier
+#define ASSET_MESSAGE_BUFFER alignas(8) // Asset message buffer struct specifier
 
 	enum class EAssetMessageType : uint8
-	{
+	{ // Messages with a lower index will be handled first
 		Null = 0,
 		OnAssetLoaded,
 		OnAssetLoadError,
+		OnAssetAllocError,
 		OnAssetUnloaded,
 		OnAssetRealloc,
 	};
@@ -123,6 +136,14 @@ namespace Ion
 		EAssetMessageType Type = EAssetMessageType::OnAssetLoadError;
 		AssetReference* RefPtr;
 		const char* ErrorMessage;
+	};
+
+	struct ASSET_MESSAGE_BUFFER OnAssetAllocErrorMessage
+	{
+		EAssetMessageType Type = EAssetMessageType::OnAssetAllocError;
+		EAssetType AssetType;
+		AssetReference* RefPtr;
+		AllocError_Details ErrorDetails;
 	};
 
 	struct ASSET_MESSAGE_BUFFER OnAssetUnloadedMessage
@@ -143,6 +164,7 @@ namespace Ion
 	using TAssetMessageTypes = TTypePack<
 		OnAssetLoadedMessage,
 		OnAssetLoadErrorMessage,
+		OnAssetAllocErrorMessage,
 		OnAssetUnloadedMessage,
 		OnAssetReallocMessage
 	>;
@@ -152,17 +174,25 @@ namespace Ion
 		EAssetMessageType Type;
 	private:
 		uint8 _Padding[TTypeSize<TAssetMessageTypes>::Max - 1];
+
+	public:
+		friend bool operator>(const AssetMessageBuffer& left, const AssetMessageBuffer& right)
+		{
+			return left.Type > right.Type;
+		}
 	};
 
-	using OnAssetLoadedEvent    = TFunction<void(const OnAssetLoadedMessage&)>;
-	using OnAssetLoadErrorEvent = TFunction<void(const OnAssetLoadErrorMessage&)>;
-	using OnAssetUnloadedEvent  = TFunction<void(const OnAssetUnloadedMessage&)>;
-	using OnAssetReallocEvent   = TFunction<void(const OnAssetReallocMessage&)>;
+	using OnAssetLoadedEvent     = TFunction<void(const OnAssetLoadedMessage&)>;
+	using OnAssetLoadErrorEvent  = TFunction<void(const OnAssetLoadErrorMessage&)>;
+	using OnAssetAllocErrorEvent = TFunction<void(const OnAssetAllocErrorMessage&)>;
+	using OnAssetUnloadedEvent   = TFunction<void(const OnAssetUnloadedMessage&)>;
+	using OnAssetReallocEvent    = TFunction<void(const OnAssetReallocMessage&)>;
 
 	struct AssetEvents
 	{
 		OnAssetLoadedEvent OnAssetLoaded;
 		OnAssetLoadErrorEvent OnAssetLoadError;
+		OnAssetAllocErrorEvent OnAssetAllocError;
 		OnAssetUnloadedEvent OnAssetUnloaded;
 		OnAssetReallocEvent OnAssetRealloc;
 	};
@@ -176,6 +206,10 @@ namespace Ion
 		MEMORY_BLOCK_FIELD;
 	};
 
+	using TAssetReferenceErrorDataTypes = TTypePack<
+		AllocError_Details
+	>;
+
 	class ION_API AssetReference
 	{
 	public:
@@ -188,6 +222,9 @@ namespace Ion
 		AssetEvents Events;
 
 		AssetTypes::DescBuffer Description;
+		
+		uint8 ErrorData[TTypeSize<TAssetReferenceErrorDataTypes>::Max];
+
 		EAssetType Type;
 		union
 		{
@@ -195,6 +232,7 @@ namespace Ion
 			struct
 			{
 				uint8 bScheduledLoad : 1;
+				uint8 bAllocError : 1;
 			};
 		};
 
@@ -228,6 +266,8 @@ namespace Ion
 
 	private:
 		AssetReference();
+
+		void CopyErrorData(const MemoryBlockDescriptor& data);
 
 		friend class AssetManager;
 		friend class AssetWorker;
@@ -295,17 +335,20 @@ namespace Ion
 		friend class AssetManager;
 	};
 
-#define _ASSIGN_EVENT_CALLBACK(e) \
+	// For external use ---------------------------------------
+
+#define _ASSIGN_MSG_EVENT_CALLBACK(e) \
 	if constexpr (TIsConvertibleV<Lambda, e##Event>) \
 		m_RefPtr->Events.e = callback
 
 	template<typename Lambda>
 	inline void AssetInterface::AssignEvent(Lambda callback)
 	{
-		_ASSIGN_EVENT_CALLBACK(OnAssetLoaded);
-		_ASSIGN_EVENT_CALLBACK(OnAssetLoadError);
-		_ASSIGN_EVENT_CALLBACK(OnAssetUnloaded);
-		_ASSIGN_EVENT_CALLBACK(OnAssetRealloc);
+		_ASSIGN_MSG_EVENT_CALLBACK(OnAssetLoaded);
+		_ASSIGN_MSG_EVENT_CALLBACK(OnAssetLoadError);
+		_ASSIGN_MSG_EVENT_CALLBACK(OnAssetAllocError);
+		_ASSIGN_MSG_EVENT_CALLBACK(OnAssetUnloaded);
+		_ASSIGN_MSG_EVENT_CALLBACK(OnAssetRealloc);
 	}
 
 	// -------------------------------------------------------------------------------

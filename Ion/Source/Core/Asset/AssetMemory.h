@@ -34,6 +34,23 @@ namespace Ion
 		size_t SequentialIndex;
 	};
 
+#define MEMORY_ALLOC_ERROR_FLAGS \
+	union { \
+		uint8 Flags; \
+		struct { \
+			uint8 bPoolOutOfMemory : 1; \
+			uint8 bPoolFragmented : 1; \
+			uint8 bAllocSizeGreaterThanPoolSize : 1; \
+			uint8 bOtherAllocError : 1; \
+		}; \
+	}
+
+	struct AllocError_Details
+	{
+		size_t FailedAllocSize;
+		MEMORY_ALLOC_ERROR_FLAGS;
+	};
+
 	struct AssetMemoryPoolDebugInfo
 	{
 		void* PoolPtr;
@@ -47,14 +64,24 @@ namespace Ion
 	class ION_API AssetMemoryPool
 	{
 	public:
+		using AllocDataArray = TArray<AssetAllocData>;
+		using AllocDataByPtrMap = THashMap<void*, size_t>;
+
 		void AllocatePool(size_t size, size_t alignment);
 		void FreePool();
-		void ReallocPool(size_t newSize);
+		template<typename Lambda>
+		void ReallocPool(size_t newSize, Lambda onItemRealloc);
 		template<typename Lambda>
 		void DefragmentPool(Lambda onItemRealloc);
 
 		void* Alloc(size_t size);
 		void Free(void* data);
+
+		bool IsFragmented() const;
+
+		bool CanAlloc(size_t size) const;
+
+		size_t GetSize() const { return m_Size; }
 
 		size_t GetUsedBytes() const { return m_UsedBytes; }
 		size_t GetFreeBytes() const { return m_Size - m_UsedBytes; }
@@ -75,11 +102,14 @@ namespace Ion
 			return m_CurrentPtr - (uint8*)m_Data;
 		}
 
+		template<typename Lambda>
+		void UpdateAllocData(ptrdiff_t offset, AllocDataArray::iterator start, AllocDataArray::iterator end, Lambda onItemRealloc);
+
 	private:
 		AssetMemoryPool();
 
-		TArray<AssetAllocData> m_AllocData;
-		THashMap<void*, size_t> m_AllocDataByPtr;
+		AllocDataArray m_AllocData;
+		AllocDataByPtrMap m_AllocDataByPtr;
 
 		MEMORY_BLOCK_FIELD_NAMED(m_PoolBlock, m_Data, m_Size);
 		uint8* m_CurrentPtr;
@@ -92,10 +122,62 @@ namespace Ion
 		friend class AssetManager;
 	};
 
+	using TOnBlockReallocCallback = TFunction<void(void*, void*)>;
+
+	template<typename Lambda>
+	inline void AssetMemoryPool::UpdateAllocData(ptrdiff_t offset, AllocDataArray::iterator start, AllocDataArray::iterator end, Lambda onItemRealloc)
+	{
+		for (auto allocDataIt = start; allocDataIt != end; ++allocDataIt)
+		{
+			uint8* oldPtr = (uint8*)allocDataIt->Ptr;
+			uint8* movedPtr = (uint8*)allocDataIt->Ptr + offset;
+
+			allocDataIt->Ptr = movedPtr;
+
+			auto allocNode = m_AllocDataByPtr.extract(oldPtr);
+			allocNode.key() = movedPtr;
+			m_AllocDataByPtr.insert(Move(allocNode));
+
+			if constexpr (TIsConvertibleV<Lambda, TOnBlockReallocCallback>)
+				onItemRealloc(oldPtr, movedPtr);
+		}
+	}
+
+	template<typename Lambda>
+	inline void AssetMemoryPool::ReallocPool(size_t newSize, Lambda onItemRealloc)
+	{
+		TRACE_FUNCTION();
+
+		ionassert(m_Data);
+		ionassert(newSize);
+
+		UniqueLock lock(m_PoolMutex);
+
+		ionassert(newSize > GetCurrentOffset());
+
+		newSize = AlignAs(newSize, m_Alignment);
+
+		void* data = _aligned_malloc(newSize, m_Alignment);
+		size_t size = Math::Min(m_Size, newSize);
+		memcpy(data, m_Data, size);
+
+		ptrdiff_t offsetAfterMove = (uint8*)data - (uint8*)m_Data;
+
+		_aligned_free(m_Data);
+		m_Size = newSize;
+		m_Data = data;
+		m_CurrentPtr += offsetAfterMove;
+
+		UpdateAllocData(offsetAfterMove, m_AllocData.begin(), m_AllocData.end(), onItemRealloc);
+	}
+
 	template<typename Lambda>
 	inline void AssetMemoryPool::DefragmentPool(Lambda onItemRealloc)
 	{
 		TRACE_FUNCTION();
+
+		if (!IsFragmented())
+			return;
 
 		struct _NonContiguousMemoryBlock
 		{
@@ -167,23 +249,10 @@ namespace Ion
 			ptrdiff_t offsetAfterMove = destination - source;
 
 			// Update the alloc data
-			for (auto allocDataIt = m_AllocData.begin() + right->SequentialIndex;
-				allocDataIt != (bNext ? (
-					m_AllocData.begin() + nextIt->LeftAllocDataPtr->SequentialIndex + 1) :
-					m_AllocData.end());
-				++allocDataIt)
-			{
-				uint8* oldPtr = (uint8*)allocDataIt->Ptr;
-				uint8* movedPtr = (uint8*)allocDataIt->Ptr + offsetAfterMove;
-
-				allocDataIt->Ptr = movedPtr;
-
-				auto allocNode = m_AllocDataByPtr.extract(oldPtr);
-				allocNode.key() = movedPtr;
-				m_AllocDataByPtr.insert(Move(allocNode));
-
-				onItemRealloc(oldPtr, movedPtr);
-			}
+			UpdateAllocData(offsetAfterMove,
+				m_AllocData.begin() + right->SequentialIndex,
+				bNext ? (m_AllocData.begin() + nextIt->LeftAllocDataPtr->SequentialIndex + 1) : m_AllocData.end(),
+				onItemRealloc);
 
 			if (nextIt != nonContiguousBlocks.end())
 			{

@@ -43,7 +43,8 @@ public:
 		Oscypek,
 		Ciupaga,
 		Slovak,
-		Stress
+		Stress,
+		BigSphere,
 	};
 
 	template<EExampleModelName Type>
@@ -125,6 +126,10 @@ public:
 		m_Stress.MeshAsset     = AssetManager::Get()->CreateAsset(EAssetType::Mesh,    FilePath(L"spherestresstest_uv.dae"));
 		m_Stress.TextureAsset  = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(L"Assets/test_4k.png"));
 
+		//m_BigSphere.Name = "BigSphere";
+		//m_BigSphere.MeshAsset = AssetManager::Get()->CreateAsset(EAssetType::Mesh, FilePath(L"Assets/big_sphere.dae"));
+		//m_BigSphere.TextureAsset = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(L"Assets/test_4k.png"));
+
 		m_4Pak.MeshAsset->AssignEvent(
 			[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_4Pak); });
 		m_4Pak.TextureAsset->AssignEvent(
@@ -154,22 +159,30 @@ public:
 			[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Stress); });
 		m_Stress.TextureAsset->AssignEvent(
 			[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Stress); });
+
+		//m_BigSphere.MeshAsset->AssignEvent(
+		//	[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_BigSphere); });
+		//m_BigSphere.TextureAsset->AssignEvent(
+		//	[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_BigSphere); });
 	}
 
 	void LoadExampleAssets()
 	{
-		m_4Pak.MeshAsset->LoadAssetData();
-		m_4Pak.TextureAsset->LoadAssetData();
-		m_Piwsko.MeshAsset->LoadAssetData();
-		m_Piwsko.TextureAsset->LoadAssetData();
-		m_Oscypek.MeshAsset->LoadAssetData();
-		m_Oscypek.TextureAsset->LoadAssetData();
-		m_Ciupaga.MeshAsset->LoadAssetData();
-		m_Ciupaga.TextureAsset->LoadAssetData();
-		m_Slovak.MeshAsset->LoadAssetData();
-		m_Slovak.TextureAsset->LoadAssetData();
-		m_Stress.MeshAsset->LoadAssetData();
-		m_Stress.TextureAsset->LoadAssetData();
+		//m_4Pak.MeshAsset->LoadAssetData();
+		//m_4Pak.TextureAsset->LoadAssetData();
+		//m_Piwsko.MeshAsset->LoadAssetData();
+		//m_Piwsko.TextureAsset->LoadAssetData();
+		//m_Oscypek.MeshAsset->LoadAssetData();
+		//m_Oscypek.TextureAsset->LoadAssetData();
+		//m_Ciupaga.MeshAsset->LoadAssetData();
+		//m_Ciupaga.TextureAsset->LoadAssetData();
+		//m_Slovak.MeshAsset->LoadAssetData();
+		//m_Slovak.TextureAsset->LoadAssetData();
+		//m_Stress.MeshAsset->LoadAssetData();
+		//m_Stress.TextureAsset->LoadAssetData();
+
+		// @FIXME: There once was a bug where one of the assets went into the wrong memory pool (I think?).
+		// No idea what could cause it, I can't seem to reproduce it.
 	}
 
 	// Template:
@@ -240,6 +253,12 @@ public:
 			InitExampleModel(data, m_Shader, m_Scene,
 				Math::Translate(Vector3(-1.0f, 0.0f, -2.0f))* Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
 		}
+		//if constexpr (N == EExampleModelName::BigSphere)
+		//{
+		//	// Kula
+		//	InitExampleModel(data, m_Shader, m_Scene,
+		//		Math::Translate(Vector3(0.0f, 5.0f, -2.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 180.0f, 0.0f)))));
+		//}
 	}
 
 	template<EExampleModelName N>
@@ -304,6 +323,28 @@ public:
 			model.TextureAsset->UnloadAssetData();
 		}
 		ImGui::PopID();
+	}
+
+	template<EAssetType Type>
+	void ImGuiAssetMemoryPoolControls()
+	{
+		const AssetMemoryPool& poolRef = GetAssetPoolFromType(AssetManager::Get(), Type);
+
+		ImGui::PushID(AssetTypeToString(Type));
+		ImGui::Text("%s Pool", AssetTypeToString(Type));
+		ImGui::SameLine(100);
+		if (ImGui::Button("Print"))
+		{
+			AssetManager::Get()->PrintAssetPool<Type>();
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Defragment"))
+		{
+			AssetManager::Get()->DefragmentAssetPool<Type>();
+		}
+		ImGui::SameLine();
+		ImGui::Text("Size: %.2f MB", poolRef.GetSize() / (float)(1 << 20));
+		ImGui::PopID(); 
 	}
 
 	virtual void OnInit() override
@@ -632,29 +673,8 @@ public:
 
 			ImGui::Begin("Asset Manager");
 			{
-				ImGui::Text("Mesh Pool");
-				ImGui::SameLine(150);
-				if (ImGui::Button("Print##Mesh"))
-				{
-					AssetManager::Get()->PrintAssetPool<EAssetType::Mesh>();
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("Defragment##Mesh"))
-				{
-					AssetManager::Get()->DefragmentAssetPool<EAssetType::Mesh>();
-				}
-
-				ImGui::Text("Texture Pool");
-				ImGui::SameLine(150);
-				if (ImGui::Button("Print##Texture"))
-				{
-					AssetManager::Get()->PrintAssetPool<EAssetType::Texture>();
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("Defragment##Texture"))
-				{
-					AssetManager::Get()->DefragmentAssetPool<EAssetType::Texture>();
-				}
+				ImGuiAssetMemoryPoolControls<EAssetType::Mesh>();
+				ImGuiAssetMemoryPoolControls<EAssetType::Texture>();
 
 				ImGui::Separator();
 
@@ -664,6 +684,7 @@ public:
 				ImGuiExampleModelOps(m_Ciupaga);
 				ImGuiExampleModelOps(m_Slovak);
 				ImGuiExampleModelOps(m_Stress);
+				//ImGuiExampleModelOps(m_BigSphere);
 			}
 			ImGui::End();
 
@@ -798,6 +819,7 @@ private:
 	ExampleModelData<EExampleModelName::Ciupaga> m_Ciupaga;
 	ExampleModelData<EExampleModelName::Slovak>  m_Slovak;
 	ExampleModelData<EExampleModelName::Stress>  m_Stress;
+	//ExampleModelData<EExampleModelName::BigSphere> m_BigSphere;
 
 	Vector4 m_CameraLocation = { 0.0f, 0.0f, 2.0f, 1.0f };
 	Vector3 m_CameraRotation = { 0.0f, 0.0f, 0.0f };

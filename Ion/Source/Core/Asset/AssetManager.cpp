@@ -21,7 +21,13 @@ namespace Ion
 		Type(EAssetType::Null),
 		PackedFlags(0)
 	{
+		memset(ErrorData, 0, sizeof(ErrorData));
 		//memset(Description, 0, sizeof(Description));
+	}
+
+	void AssetReference::CopyErrorData(const MemoryBlockDescriptor& data)
+	{
+		memcpy(ErrorData, data.Ptr, data.Size);
 	}
 
 	void AssetInterface::LoadAssetData()
@@ -59,6 +65,8 @@ namespace Ion
 	void AssetManager::Update()
 	{
 		TRACE_FUNCTION();
+
+		ResolveErrors();
 
 		IterateMessages([](auto& msg)
 		{
@@ -132,7 +140,7 @@ namespace Ion
 		if (!ref.IsLoaded() && !ref.IsLoading())
 		{
 			ref.bScheduledLoad = true;
-			ScheduleAssetLoadWork(ref);
+			ScheduleLoadWork(ref);
 		}
 	}
 
@@ -169,6 +177,26 @@ namespace Ion
 		_DispatchMessage(message);
 	}
 
+	AssetMemoryPool* AssetManager::GetAssetMemoryPool(EAssetType type)
+	{
+		switch (type)
+		{
+			case EAssetType::Mesh:    return &m_MeshAssetPool;
+			case EAssetType::Texture: return &m_TextureAssetPool;
+		}
+		return nullptr;
+	}
+
+	void AssetManager::HandleAssetRealloc(void* oldLocation, void* newLocation)
+	{
+		OnAssetReallocMessage message { };
+		message.OldPoolLocation = oldLocation;
+		message.NewPoolLocation = newLocation;
+		message.RefPtr = m_LoadedAssets.at(oldLocation);
+
+		_DispatchMessage(message);
+	}
+
 	AssetReference* AssetManager::GetAssetReference(AssetHandle handle)
 	{
 		TRACE_FUNCTION();
@@ -193,7 +221,7 @@ namespace Ion
 		return &m_Assets.at(handle.m_ID);
 	}
 
-	void AssetManager::ScheduleAssetLoadWork(AssetReference& ref)
+	void AssetManager::ScheduleLoadWork(AssetReference& ref)
 	{
 		TRACE_FUNCTION();
 
@@ -201,14 +229,14 @@ namespace Ion
 		work.RefPtr = &ref;
 		work.OnLoad = [this](AssetReference& ref)
 		{
-			LOG_INFO(L"Loaded asset \"{0}\"", ref.Location.ToString());
+			LOG_TRACE(L"Loaded asset \"{0}\"", ref.Location.ToString());
 			
 			OnAssetLoadedMessage message { };
 			message.RefPtr = &ref;
 			message.PoolLocation = ref.Data.Ptr;
 			AddMessage(message);
 		};
-		work.OnError = [this](AssetReference& ref)
+		work.OnLoadError = [this](AssetReference& ref)
 		{
 			LOG_ERROR(L"Could not load asset \"{0}\"", ref.Location.ToString());
 
@@ -217,17 +245,32 @@ namespace Ion
 			message.ErrorMessage = ""; // @TODO: Add error message output
 			AddMessage(message);
 		};
+		work.OnAllocError = [this](AssetReference& ref, AllocError_Details& details)
 		{
-			UniqueLock lock(m_WorkQueueMutex);
-			m_WorkQueue.emplace(Move(work));
-		}
-		m_WorkQueueCV.notify_one();
+			LOG_WARN(L"Could not allocate asset \"{0}\"", ref.Location.ToString());
+
+			OnAssetAllocErrorMessage message { };
+			message.RefPtr = &ref;
+			message.AssetType = ref.Type;
+			message.ErrorDetails = details;
+			AddMessage(message);
+		};
+		ScheduleAssetWorkerWork(work);
 	}
 
 	void AssetManager::OnAssetLoaded(OnAssetLoadedMessage& message)
 	{
 		m_LoadedAssets.emplace(message.PoolLocation, message.RefPtr);
 		message.RefPtr->bScheduledLoad = false;
+	}
+
+	void AssetManager::OnAssetAllocError(OnAssetAllocErrorMessage& message)
+	{
+		// Mark the asset to resolve the error later
+		message.RefPtr->CopyErrorData(MemoryBlockDescriptor { &message.ErrorDetails, sizeof(message.ErrorDetails) });
+		message.RefPtr->bAllocError = true;
+
+		m_ErrorAssets.push_back(message.RefPtr);
 	}
 
 	void AssetManager::OnAssetUnloaded(OnAssetUnloadedMessage& message)
@@ -241,6 +284,88 @@ namespace Ion
 		node.mapped()->Data.Ptr = message.NewPoolLocation;
 		node.key() = message.NewPoolLocation;
 		m_LoadedAssets.insert(Move(node));
+	}
+
+	void AssetManager::ResolveErrors()
+	{
+		if (m_ErrorAssets.empty())
+			return;
+
+		// Resolve errors only if the workers don't have any work
+		// and there are no messages left
+		// @TODO: There's probably a better solution, like forcing the workers
+		// to finish their work and making them wait for the resolution to finish
+		{
+			UniqueLock lock(m_WorkQueueMutex);
+			if (!m_WorkQueue.empty())
+				return;
+			for (AssetWorker& worker : m_AssetWorkers)
+			{
+				if (worker.m_CurrentWork != EAssetWorkerWorkType::Null)
+					return;
+			}
+		}{
+			UniqueLock lock(m_MessageQueueMutex);
+			if (!m_MessageQueue.empty())
+				return;
+		}
+		
+		TArray<AssetReference*> resolvedAssets;
+
+		for (AssetReference* refPtr : m_ErrorAssets)
+		{
+			// Try to load again the assets which failed to allocate
+			if (refPtr->bAllocError)
+			{
+				AllocError_Details errorDetails = *(AllocError_Details*)refPtr->ErrorData;
+
+				LOG_TRACE(L"Resolving Asset Alloc Error (\"{0}\")", refPtr->Location.ToString());
+
+				ResolveAllocError(*refPtr, errorDetails);
+				refPtr->bAllocError = false;
+
+				resolvedAssets.push_back(refPtr);
+			}
+		}
+
+		m_ErrorAssets.clear();
+
+		for (AssetReference* refPtr : resolvedAssets)
+		{
+			ScheduleLoadWork(*refPtr);
+		}
+	}
+
+	void AssetManager::ResolveAllocError(AssetReference& ref, AllocError_Details& details)
+	{
+		AssetMemoryPool& poolRef = *GetAssetMemoryPool(ref.Type);
+
+		auto onItemReallocFunc = [this](void* oldLocation, void* newLocation)
+		{
+			HandleAssetRealloc(oldLocation, newLocation);
+		};
+
+		if (!poolRef.CanAlloc(details.FailedAllocSize))
+		{
+			if (details.bPoolOutOfMemory)
+			{
+				// @TODO: Set some limit to how large the pool can be
+				size_t newPoolSize = details.bAllocSizeGreaterThanPoolSize ?
+					// Align to 64 KB
+					// Assume there will be more assets of this size
+					AlignAs(details.FailedAllocSize * 4, (1 << 16)) :
+					// If just out of memory, resize to twice the size
+					poolRef.GetSize() * 2;
+
+				LOG_INFO("Reallocating {0} Pool - New Size: {1} B", AssetTypeToString(ref.Type), newPoolSize);
+				poolRef.ReallocPool(newPoolSize, onItemReallocFunc);
+			}
+		}
+
+		if (details.bPoolFragmented)
+		{
+			poolRef.DefragmentPool(onItemReallocFunc);
+		}
 	}
 
 	AssetManager::AssetManager() :
@@ -257,7 +382,8 @@ namespace Ion
 
 	AssetWorker::AssetWorker(AssetManager* owner) :
 		m_Owner(owner),
-		m_bExit(false)
+		m_bExit(false),
+		m_CurrentWork(EAssetWorkerWorkType::Null)
 	{
 	}
 
@@ -279,14 +405,16 @@ namespace Ion
 	{
 		SetThreadDescription(GetCurrentThread(), L"AssetWorker");
 
-		AssetManager::WorkerQueue& queue = m_Owner->m_WorkQueue;
+		AssetManager::WorkQueue& queue = m_Owner->m_WorkQueue;
 
-		AssetWorkerLoadWork work;
+		TShared<AssetWorkerWorkBase> work;
 
 		while (true)
 		{
 			{
 				UniqueLock lock(m_Owner->m_WorkQueueMutex);
+
+				m_CurrentWork = EAssetWorkerWorkType::Null;
 
 				// Wait for work
 				m_Owner->m_WorkQueueCV.wait(lock, [this, &queue]
@@ -300,26 +428,48 @@ namespace Ion
 				}
 
 				// Move the work data
-				work = Move(queue.front());
+				work = queue.front();
 				queue.pop();
+
+				m_CurrentWork = work->GetType();
 			}
 
-			if (LoadAsset(work.RefPtr))
-			{
-				work.OnLoad(*work.RefPtr);
-			}
-			else
-			{
-				work.OnError(*work.RefPtr);
-			}
+			DispatchWork(work);
+			work.reset();
 		}
 	}
 
-#define HANDLE_LOAD_ERROR(x) if (!(x)) return false
+#define _DISPATCH_WORK_CASE(name) \
+	case EAssetWorkerWorkType::name: \
+		Do##name##Work(TStaticCast<AssetWorker##name##Work>(work)); break
 
-	bool AssetWorker::LoadAsset(AssetReference* refPtr)
+	void AssetWorker::DispatchWork(const TShared<AssetWorkerWorkBase>& work)
 	{
+		switch (work->GetType())
+		{
+			_DISPATCH_WORK_CASE(Load);
+			_DISPATCH_WORK_CASE(Realloc);
+		}
+	}
+
+#define HANDLE_LOAD_ERROR(x) \
+	if (!(x)) { \
+		work->OnLoadError(*refPtr); \
+		return; \
+	}
+
+#define HANDLE_ALLOC_ERROR(x, errorDetails) \
+	if (!(x)) { \
+		work->OnAllocError(*refPtr, errorDetails); \
+		return; \
+	}
+
+	void AssetWorker::DoLoadWork(const TShared<AssetWorkerLoadWork>& work)
+	{
+		LOG_TRACE(L"Loading asset \"{0}\"...", work->RefPtr->Location.ToString());
+
 		bool bResult;
+		AssetReference* refPtr = work->RefPtr;
 
 		File file(refPtr->Location);
 
@@ -363,9 +513,9 @@ namespace Ion
 				poolBlockSize = vertexBlockSize + indexBlockSize;
 				size_t& indexBlockOffset = vertexBlockSize;
 
-				poolBlockPtr = m_Owner->AllocateAssetData<EAssetType::Mesh>(poolBlockSize);
-
-				HANDLE_LOAD_ERROR(poolBlockPtr);
+				AllocError_Details errorDetails { };
+				poolBlockPtr = AllocateAssetData<EAssetType::Mesh>(poolBlockSize, errorDetails);
+				HANDLE_ALLOC_ERROR(poolBlockPtr, errorDetails);
 
 				desc.VerticesOffset = 0;
 				desc.IndicesOffset = indexBlockOffset;
@@ -392,23 +542,33 @@ namespace Ion
 
 				poolBlockSize = image.GetPixelDataSize();
 
-				poolBlockPtr = m_Owner->AllocateAssetData<EAssetType::Texture>(poolBlockSize);
-
-				HANDLE_LOAD_ERROR(poolBlockPtr);
+				AllocError_Details errorDetails { };
+				poolBlockPtr = AllocateAssetData<EAssetType::Texture>(poolBlockSize, errorDetails);
+				HANDLE_ALLOC_ERROR(poolBlockPtr, errorDetails);
 
 				memcpy(poolBlockPtr, pixelData, poolBlockSize);
 
 				break;
 			}
 			default:
-				// @TODO: Print thread id
-				LOG_WARN("Unknown asset type in worker thread ({0})", 0);
+			{
+				std::stringstream ss;
+				ss << std::this_thread::get_id();
+				LOG_WARN("Unknown asset type in worker thread (TID: {0})", ss.str());
+
+				HANDLE_LOAD_ERROR(false);
+			}
 		}
 
 		refPtr->Data.Ptr = poolBlockPtr;
 		refPtr->Data.Size = poolBlockSize;
 
-		return true;
+		work->OnLoad(*refPtr);
+	}
+
+	void AssetWorker::DoReallocWork(const TShared<AssetWorkerReallocWork>& work)
+	{
+
 	}
 	// End of Worker Thread
 }
