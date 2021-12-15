@@ -29,14 +29,19 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		UniqueLock lock(m_MessageQueueMutex);
-
-		while (!m_MessageQueue.empty())
+		MessageQueue messages;
 		{
-			AssetMessageBuffer buffer = m_MessageQueue.top();
-			m_MessageQueue.pop();
+			// Retrieve the messages first, so new ones can be added
+			// while the current ones are processing
+			UniqueLock lock(m_MessageQueueMutex);
+			m_MessageQueue.swap(messages);
+		}
 
-			lock.unlock();
+		while (!messages.empty())
+		{
+			AssetMessageBuffer buffer = messages.top();
+
+			messages.pop();
 
 			switch (buffer.Type)
 			{
@@ -46,14 +51,15 @@ namespace Ion
 				_HANDLE_MESSAGE_CASE(OnAssetUnloaded);
 				_HANDLE_MESSAGE_CASE(OnAssetRealloc);
 			}
-
-			lock.lock();
 		}
 	}
 
 	template<typename T>
 	inline void AssetManager::ScheduleAssetWorkerWork(T& work)
 	{
+		TRACE_FUNCTION();
+
+		static_assert(TIsBaseOfV<AssetWorkerWorkBase, T>);
 		{
 			UniqueLock lock(m_WorkQueueMutex);
 			m_WorkQueue.emplace(MakeShared<T>(work));
@@ -64,6 +70,8 @@ namespace Ion
 	template<typename T>
 	inline void AssetManager::AddMessage(T& message)
 	{
+		TRACE_FUNCTION();
+
 		static_assert(TIsAnyOfV<T, TAssetMessageTypes>);
 
 		UniqueLock lock(m_MessageQueueMutex);
@@ -83,19 +91,21 @@ namespace Ion
 	template<typename T>
 	inline static void AssetManager::_DispatchMessage(T& message)
 	{
+		TRACE_FUNCTION();
+
 		_DISPATCH_MESSAGE_SELF(OnAssetLoaded);
+		_DISPATCH_MESSAGE     (OnAssetLoadError);
 		_DISPATCH_MESSAGE_SELF(OnAssetAllocError);
 		_DISPATCH_MESSAGE_SELF(OnAssetUnloaded);
 		_DISPATCH_MESSAGE_SELF(OnAssetRealloc);
-		_DISPATCH_MESSAGE(OnAssetLoadError);
 	}
 
 	template<EAssetType Type>
-	void AssetManager::DefragmentAssetPool()
+	inline void AssetManager::DefragmentAssetPool()
 	{
 		TRACE_FUNCTION();
 
-		AssetMemoryPool& poolRef = This_GetAssetPoolFromType(Type);
+		AssetMemoryPool& poolRef = GetAssetPool<Type>();
 
 		poolRef.DefragmentPool([this](void* oldLocation, void* newLocation)
 		{ // For each asset reallocation
@@ -104,9 +114,21 @@ namespace Ion
 	}
 
 	template<EAssetType Type>
+	inline AssetMemoryPool& AssetManager::GetAssetPool()
+	{
+		return this->*TAssetPoolFromType<Type>::Ref;
+	}
+
+	template<EAssetType Type>
+	inline const AssetMemoryPool& AssetManager::GetAssetPool() const
+	{
+		return this->*TAssetPoolFromType<Type>::Ref;
+	}
+
+	template<EAssetType Type>
 	inline size_t AssetManager::GetAssetAlignment() const
 	{
-		const AssetMemoryPool& poolRef = This_GetAssetPoolFromType(Type);
+		const AssetMemoryPool& poolRef = GetAssetPool<Type>();
 		return poolRef.m_Alignment;
 	}
 
@@ -115,7 +137,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		const AssetMemoryPool& poolRef = This_GetAssetPoolFromType(Type);
+		const AssetMemoryPool& poolRef = GetAssetPool<Type>();
 
 		return poolRef.GetDebugInfo();
 	}
@@ -125,7 +147,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		const AssetMemoryPool& poolRef = This_GetAssetPoolFromType(Type);
+		const AssetMemoryPool& poolRef = GetAssetPool<Type>();
 
 		LOG_INFO("Asset Memory - {0} Pool Data:", AssetTypeToString(Type));
 
@@ -139,7 +161,9 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		AssetMemoryPool& poolRef = GetAssetPoolFromType(m_Owner, Type);
+		AssetMemoryPool& poolRef = AssetManager::Get()->GetAssetPool<Type>();
+
+		bool bPoolFragmented = poolRef.IsFragmented();
 
 		if (size > poolRef.GetSize())
 		{
@@ -150,7 +174,7 @@ namespace Ion
 			outErrorData.FailedAllocSize = size;
 			outErrorData.bPoolOutOfMemory = true;
 			outErrorData.bAllocSizeGreaterThanPoolSize = true;
-			outErrorData.bPoolFragmented = poolRef.IsFragmented();
+			outErrorData.bPoolFragmented = bPoolFragmented;
 			return nullptr;
 		}
 
@@ -158,15 +182,14 @@ namespace Ion
 		{
 			outErrorData.FailedAllocSize = size;
 			outErrorData.bPoolOutOfMemory = true;
-			outErrorData.bPoolFragmented = poolRef.IsFragmented();
+			outErrorData.bPoolFragmented = bPoolFragmented;
 			return nullptr;
 		}
 
-		void* ptr = poolRef.Alloc(size);
-		if (ptr)
+		if (void* ptr = poolRef.Alloc(size))
 			return ptr;
 
-		if (poolRef.IsFragmented())
+		if (bPoolFragmented)
 		{
 			outErrorData.FailedAllocSize = size;
 			outErrorData.bPoolFragmented = true;

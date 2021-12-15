@@ -107,6 +107,11 @@ using TIsConvertible = std::is_convertible<FromT, ToT>;
 template<typename FromT, typename ToT>
 inline constexpr bool TIsConvertibleV = std::is_convertible_v<FromT, ToT>;
 
+// IsFunction
+
+template<typename T>
+inline constexpr bool TIsFunctionV = std::is_function_v<T>;
+
 // Remove *
 
 template<typename T>

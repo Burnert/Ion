@@ -168,18 +168,18 @@ public:
 
 	void LoadExampleAssets()
 	{
-		//m_4Pak.MeshAsset->LoadAssetData();
-		//m_4Pak.TextureAsset->LoadAssetData();
-		//m_Piwsko.MeshAsset->LoadAssetData();
-		//m_Piwsko.TextureAsset->LoadAssetData();
-		//m_Oscypek.MeshAsset->LoadAssetData();
-		//m_Oscypek.TextureAsset->LoadAssetData();
-		//m_Ciupaga.MeshAsset->LoadAssetData();
-		//m_Ciupaga.TextureAsset->LoadAssetData();
-		//m_Slovak.MeshAsset->LoadAssetData();
-		//m_Slovak.TextureAsset->LoadAssetData();
-		//m_Stress.MeshAsset->LoadAssetData();
-		//m_Stress.TextureAsset->LoadAssetData();
+		m_4Pak.MeshAsset->LoadAssetData();
+		m_4Pak.TextureAsset->LoadAssetData();
+		m_Piwsko.MeshAsset->LoadAssetData();
+		m_Piwsko.TextureAsset->LoadAssetData();
+		m_Oscypek.MeshAsset->LoadAssetData();
+		m_Oscypek.TextureAsset->LoadAssetData();
+		m_Ciupaga.MeshAsset->LoadAssetData();
+		m_Ciupaga.TextureAsset->LoadAssetData();
+		m_Slovak.MeshAsset->LoadAssetData();
+		m_Slovak.TextureAsset->LoadAssetData();
+		m_Stress.MeshAsset->LoadAssetData();
+		m_Stress.TextureAsset->LoadAssetData();
 
 		// @FIXME: There once was a bug where one of the assets went into the wrong memory pool (I think?).
 		// No idea what could cause it, I can't seem to reproduce it.
@@ -328,8 +328,6 @@ public:
 	template<EAssetType Type>
 	void ImGuiAssetMemoryPoolControls()
 	{
-		const AssetMemoryPool& poolRef = GetAssetPoolFromType(AssetManager::Get(), Type);
-
 		ImGui::PushID(AssetTypeToString(Type));
 		ImGui::Text("%s Pool", AssetTypeToString(Type));
 		ImGui::SameLine(100);
@@ -343,8 +341,8 @@ public:
 			AssetManager::Get()->DefragmentAssetPool<Type>();
 		}
 		ImGui::SameLine();
-		ImGui::Text("Size: %.2f MB", poolRef.GetSize() / (float)(1 << 20));
-		ImGui::PopID(); 
+		ImGui::Text("Size: %.2f MB", AssetManager::Get()->GetAssetPool<Type>().GetSize() / (float)(1 << 20));
+		ImGui::PopID();
 	}
 
 	virtual void OnInit() override

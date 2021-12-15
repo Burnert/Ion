@@ -23,6 +23,7 @@ namespace Ion
 	{
 		EAssetWorkerWorkType GetType() const
 		{
+			// The first field of the Work object must be an EAssetWorkerWorkType
 			return *(EAssetWorkerWorkType*)this;
 		}
 	};
@@ -58,11 +59,9 @@ namespace Ion
 	{
 	public:
 		AssetWorker();
-		AssetWorker(AssetManager* owner);
 
 	private:
 		void Start();
-		// Lock the WorkQueue before calling
 		void Exit();
 
 		// Worker Thread Functions ------------------------------------------------
@@ -72,12 +71,15 @@ namespace Ion
 		void DoLoadWork(const TShared<AssetWorkerLoadWork>& work);
 		void DoReallocWork(const TShared<AssetWorkerReallocWork>& work);
 
+		// Load Work related
+
+		bool LoadMesh(File& file, const TShared<AssetWorkerLoadWork>& work, void** outDataPtr, size_t* outDataSize);
+		bool LoadTexture(File& file, const TShared<AssetWorkerLoadWork>& work, void** outDataPtr, size_t* outDataSize);
 		template<EAssetType Type>
 		void* AllocateAssetData(size_t size, AllocError_Details& outErrorData);
 
 	private:
 		Thread m_WorkerThread;
-		AssetManager* m_Owner;
 		bool m_bExit;
 		EAssetWorkerWorkType m_CurrentWork;
 
@@ -112,7 +114,7 @@ namespace Ion
 
 		inline bool IsAssetLoaded(AssetHandle handle) const
 		{
-			return (bool)GetAssetReference(handle)->Data.Ptr;
+			return GetAssetReference(handle)->IsLoaded();
 		}
 
 		inline bool IsHandleValid(AssetHandle handle) const
@@ -131,6 +133,12 @@ namespace Ion
 		void DefragmentAssetPool();
 
 		template<EAssetType Type>
+		AssetMemoryPool& GetAssetPool();
+
+		template<EAssetType Type>
+		const AssetMemoryPool& GetAssetPool() const;
+
+		template<EAssetType Type>
 		void PrintAssetPool() const;
 
 		template<EAssetType Type>
@@ -138,7 +146,7 @@ namespace Ion
 
 		~AssetManager() { }
 
-	protected:
+	private:
 		AssetReference* GetAssetReference(AssetHandle handle);
 
 		void LoadAssetData(AssetReference& ref);
@@ -149,15 +157,25 @@ namespace Ion
 	private:
 		void HandleAssetRealloc(void* oldLocation, void* newLocation);
 
+		// Worker related
+
 		template<typename T>
 		void ScheduleAssetWorkerWork(T& work);
 		void ScheduleLoadWork(AssetReference& ref);
+
+		// Not thread-safe, lock m_WorkQueueMutex before use
+		bool IsAnyWorkerWorking() const;
+		void WaitForWorkers() const;
+
+		// End of Worker related
 
 		template<typename T>
 		void AddMessage(T& message);
 
 		template<typename T>
 		static void _DispatchMessage(T& message); // underscore because there's a Windows macro called DispatchMessage
+
+		void DispatchMessages();
 
 		void OnAssetLoaded(OnAssetLoadedMessage& message);
 		void OnAssetAllocError(OnAssetAllocErrorMessage& message);
@@ -176,13 +194,14 @@ namespace Ion
 		TArray<AssetReference*> m_ErrorAssets;
 
 		MessageQueue m_MessageQueue;
-		Mutex m_MessageQueueMutex;
+		mutable Mutex m_MessageQueueMutex;
 
 		TArray<AssetWorker> m_AssetWorkers;
 
 		WorkQueue m_WorkQueue;
-		Mutex m_WorkQueueMutex;
-		ConditionVariable m_WorkQueueCV;
+		mutable Mutex m_WorkQueueMutex;
+		mutable ConditionVariable m_WorkQueueCV;
+		mutable ConditionVariable m_WaitForWorkersCV;
 
 		AssetManager();
 
@@ -200,7 +219,5 @@ namespace Ion
 	struct TAssetPoolFromType<EAssetType::Mesh>    { static constexpr AssetMemoryPool AssetManager::* Ref = &AssetManager::m_MeshAssetPool; };
 	template<>
 	struct TAssetPoolFromType<EAssetType::Texture> { static constexpr AssetMemoryPool AssetManager::* Ref = &AssetManager::m_TextureAssetPool; };
-	#define This_GetAssetPoolFromType(arg) this->*TAssetPoolFromType<arg>::Ref
-	#define GetAssetPoolFromType(obj, arg) obj->*TAssetPoolFromType<arg>::Ref
 }
 #include "AssetManager.inl"

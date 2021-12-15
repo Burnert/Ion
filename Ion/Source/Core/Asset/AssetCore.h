@@ -206,7 +206,7 @@ namespace Ion
 		MEMORY_BLOCK_FIELD;
 	};
 
-	using TAssetReferenceErrorDataTypes = TTypePack<
+	using AssetReferenceErrorDataTypes = TTypePack<
 		AllocError_Details
 	>;
 
@@ -214,17 +214,11 @@ namespace Ion
 	{
 	public:
 		AssetID ID;
-
 		FilePath Location;
-
 		AssetData Data;
-
 		AssetEvents Events;
-
 		AssetTypes::DescBuffer Description;
-		
-		uint8 ErrorData[TTypeSize<TAssetReferenceErrorDataTypes>::Max];
-
+		uint8 ErrorData[TTypeSize<AssetReferenceErrorDataTypes>::Max];
 		EAssetType Type;
 		union
 		{
@@ -267,7 +261,7 @@ namespace Ion
 	private:
 		AssetReference();
 
-		void CopyErrorData(const MemoryBlockDescriptor& data);
+		void SetErrorData(const MemoryBlockDescriptor& data);
 
 		friend class AssetManager;
 		friend class AssetWorker;
@@ -337,18 +331,18 @@ namespace Ion
 
 	// For external use ---------------------------------------
 
-#define _ASSIGN_MSG_EVENT_CALLBACK(e) \
+#define _ASSIGN_ASSET_MSG_EVENT_CALLBACK(e) \
 	if constexpr (TIsConvertibleV<Lambda, e##Event>) \
 		m_RefPtr->Events.e = callback
 
 	template<typename Lambda>
 	inline void AssetInterface::AssignEvent(Lambda callback)
 	{
-		_ASSIGN_MSG_EVENT_CALLBACK(OnAssetLoaded);
-		_ASSIGN_MSG_EVENT_CALLBACK(OnAssetLoadError);
-		_ASSIGN_MSG_EVENT_CALLBACK(OnAssetAllocError);
-		_ASSIGN_MSG_EVENT_CALLBACK(OnAssetUnloaded);
-		_ASSIGN_MSG_EVENT_CALLBACK(OnAssetRealloc);
+		_ASSIGN_ASSET_MSG_EVENT_CALLBACK(OnAssetLoaded);
+		_ASSIGN_ASSET_MSG_EVENT_CALLBACK(OnAssetLoadError);
+		_ASSIGN_ASSET_MSG_EVENT_CALLBACK(OnAssetAllocError);
+		_ASSIGN_ASSET_MSG_EVENT_CALLBACK(OnAssetUnloaded);
+		_ASSIGN_ASSET_MSG_EVENT_CALLBACK(OnAssetRealloc);
 	}
 
 	// -------------------------------------------------------------------------------

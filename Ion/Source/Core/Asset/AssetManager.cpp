@@ -22,10 +22,9 @@ namespace Ion
 		PackedFlags(0)
 	{
 		memset(ErrorData, 0, sizeof(ErrorData));
-		//memset(Description, 0, sizeof(Description));
 	}
 
-	void AssetReference::CopyErrorData(const MemoryBlockDescriptor& data)
+	void AssetReference::SetErrorData(const MemoryBlockDescriptor& data)
 	{
 		memcpy(ErrorData, data.Ptr, data.Size);
 	}
@@ -57,7 +56,6 @@ namespace Ion
 
 		for (AssetWorker& worker : m_AssetWorkers)
 		{
-			worker = AssetWorker(this);
 			worker.Start();
 		}
 	}
@@ -66,12 +64,9 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		ResolveErrors();
+		DispatchMessages();
 
-		IterateMessages([](auto& msg)
-		{
-			_DispatchMessage(msg);
-		});
+		ResolveErrors();
 	}
 
 	void AssetManager::Shutdown()
@@ -148,24 +143,15 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
+		AssetMemoryPool* poolPtr = GetAssetMemoryPool(ref.Type);
+		ionassert(poolPtr);
+
 		if (!ref.Data.Ptr)
 		{
 			return;
 		}
 
-		switch (ref.Type)
-		{
-			case EAssetType::Mesh:
-			{
-				m_MeshAssetPool.Free(ref.Data.Ptr);
-				break;
-			}
-			case EAssetType::Texture:
-			{
-				m_TextureAssetPool.Free(ref.Data.Ptr);
-				break;
-			}
-		}
+		poolPtr->Free(ref.Data.Ptr);
 
 		OnAssetUnloadedMessage message { };
 		message.RefPtr = &ref;
@@ -184,11 +170,14 @@ namespace Ion
 			case EAssetType::Mesh:    return &m_MeshAssetPool;
 			case EAssetType::Texture: return &m_TextureAssetPool;
 		}
+		ionassertnd(false, "An Asset Memory Pool of that type does not exist.");
 		return nullptr;
 	}
 
 	void AssetManager::HandleAssetRealloc(void* oldLocation, void* newLocation)
 	{
+		TRACE_FUNCTION();
+
 		OnAssetReallocMessage message { };
 		message.OldPoolLocation = oldLocation;
 		message.NewPoolLocation = newLocation;
@@ -258,16 +247,55 @@ namespace Ion
 		ScheduleAssetWorkerWork(work);
 	}
 
+	// Not thread-safe, lock m_WorkQueueMutex before use
+	bool AssetManager::IsAnyWorkerWorking() const
+	{
+		TRACE_FUNCTION();
+
+		for (const AssetWorker& worker : m_AssetWorkers)
+		{
+			if (worker.m_CurrentWork != EAssetWorkerWorkType::Null)
+				return true;
+		}
+		return false;
+	}
+
+	void AssetManager::WaitForWorkers() const
+	{
+		TRACE_FUNCTION();
+
+		UniqueLock lock(m_WorkQueueMutex);
+
+		m_WaitForWorkersCV.wait(lock, [this]
+		{
+			return !IsAnyWorkerWorking();
+		});
+	}
+
+	void AssetManager::DispatchMessages()
+	{
+		TRACE_FUNCTION();
+
+		IterateMessages([](auto& msg)
+		{
+			_DispatchMessage(msg);
+		});
+	}
+
 	void AssetManager::OnAssetLoaded(OnAssetLoadedMessage& message)
 	{
+		TRACE_FUNCTION();
+
 		m_LoadedAssets.emplace(message.PoolLocation, message.RefPtr);
 		message.RefPtr->bScheduledLoad = false;
 	}
 
 	void AssetManager::OnAssetAllocError(OnAssetAllocErrorMessage& message)
 	{
+		TRACE_FUNCTION();
+
 		// Mark the asset to resolve the error later
-		message.RefPtr->CopyErrorData(MemoryBlockDescriptor { &message.ErrorDetails, sizeof(message.ErrorDetails) });
+		message.RefPtr->SetErrorData(MemoryBlockDescriptor { &message.ErrorDetails, sizeof(message.ErrorDetails) });
 		message.RefPtr->bAllocError = true;
 
 		m_ErrorAssets.push_back(message.RefPtr);
@@ -275,11 +303,15 @@ namespace Ion
 
 	void AssetManager::OnAssetUnloaded(OnAssetUnloadedMessage& message)
 	{
+		TRACE_FUNCTION();
+
 		m_LoadedAssets.erase(message.LastPoolLocation);
 	}
 
 	void AssetManager::OnAssetRealloc(OnAssetReallocMessage& message)
 	{
+		TRACE_FUNCTION();
+
 		auto node = m_LoadedAssets.extract(message.OldPoolLocation);
 		node.mapped()->Data.Ptr = message.NewPoolLocation;
 		node.key() = message.NewPoolLocation;
@@ -288,56 +320,75 @@ namespace Ion
 
 	void AssetManager::ResolveErrors()
 	{
+		TRACE_FUNCTION();
+
 		if (m_ErrorAssets.empty())
 			return;
 
-		// Resolve errors only if the workers don't have any work
-		// and there are no messages left
-		// @TODO: There's probably a better solution, like forcing the workers
-		// to finish their work and making them wait for the resolution to finish
+		WorkQueue currentWork;
 		{
-			UniqueLock lock(m_WorkQueueMutex);
-			if (!m_WorkQueue.empty())
-				return;
-			for (AssetWorker& worker : m_AssetWorkers)
+			TRACE_SCOPE("AssetManager::ResolveErrors - Wait");
+			// Temporarily remove any scheduled work and wait
+			// for the workers to finish their remaining jobs
 			{
-				if (worker.m_CurrentWork != EAssetWorkerWorkType::Null)
-					return;
+				UniqueLock lock(m_WorkQueueMutex);
+				m_WorkQueue.swap(currentWork);
 			}
-		}{
-			UniqueLock lock(m_MessageQueueMutex);
-			if (!m_MessageQueue.empty())
-				return;
-		}
-		
-		TArray<AssetReference*> resolvedAssets;
-
-		for (AssetReference* refPtr : m_ErrorAssets)
-		{
-			// Try to load again the assets which failed to allocate
-			if (refPtr->bAllocError)
+			WaitForWorkers();
+			// Handle any messages that were generated, before continuing
 			{
-				AllocError_Details errorDetails = *(AllocError_Details*)refPtr->ErrorData;
+				UniqueLock lock(m_MessageQueueMutex);
 
-				LOG_TRACE(L"Resolving Asset Alloc Error (\"{0}\")", refPtr->Location.ToString());
-
-				ResolveAllocError(*refPtr, errorDetails);
-				refPtr->bAllocError = false;
-
-				resolvedAssets.push_back(refPtr);
+				if (!m_MessageQueue.empty())
+				{
+					lock.unlock();
+					DispatchMessages();
+				}
 			}
 		}
-
-		m_ErrorAssets.clear();
-
-		for (AssetReference* refPtr : resolvedAssets)
 		{
-			ScheduleLoadWork(*refPtr);
+			TRACE_SCOPE("AssetManager::ResolveErrors - Resolve");
+
+			TArray<AssetReference*> resolvedAssets;
+			resolvedAssets.reserve(m_ErrorAssets.size());
+
+			for (AssetReference* refPtr : m_ErrorAssets)
+			{
+				// Try to load again the assets which failed to allocate
+				if (refPtr->bAllocError)
+				{
+					LOG_TRACE(L"Resolving Asset Alloc Error (\"{0}\")", refPtr->Location.ToString());
+
+					AllocError_Details errorDetails = *(AllocError_Details*)refPtr->ErrorData;
+
+					ResolveAllocError(*refPtr, errorDetails);
+					refPtr->bAllocError = false;
+
+					resolvedAssets.push_back(refPtr);
+				}
+			}
+
+			m_ErrorAssets.clear();
+
+			// Add the work back to the queue
+			{
+				UniqueLock lock(m_WorkQueueMutex);
+				m_WorkQueue.swap(currentWork);
+			}
+			m_WorkQueueCV.notify_all();
+
+			// Schedule another load for the resolved assets
+			for (AssetReference* refPtr : resolvedAssets)
+			{
+				ScheduleLoadWork(*refPtr);
+			}
 		}
 	}
 
 	void AssetManager::ResolveAllocError(AssetReference& ref, AllocError_Details& details)
 	{
+		TRACE_FUNCTION();
+
 		AssetMemoryPool& poolRef = *GetAssetMemoryPool(ref.Type);
 
 		auto onItemReallocFunc = [this](void* oldLocation, void* newLocation)
@@ -345,21 +396,19 @@ namespace Ion
 			HandleAssetRealloc(oldLocation, newLocation);
 		};
 
-		if (!poolRef.CanAlloc(details.FailedAllocSize))
+		if (details.bPoolOutOfMemory &&
+			!poolRef.CanAlloc(details.FailedAllocSize))
 		{
-			if (details.bPoolOutOfMemory)
-			{
-				// @TODO: Set some limit to how large the pool can be
-				size_t newPoolSize = details.bAllocSizeGreaterThanPoolSize ?
-					// Align to 64 KB
-					// Assume there will be more assets of this size
-					AlignAs(details.FailedAllocSize * 4, (1 << 16)) :
-					// If just out of memory, resize to twice the size
-					poolRef.GetSize() * 2;
+			// @TODO: Set some limit to how large the pool can be
+			size_t newPoolSize = details.bAllocSizeGreaterThanPoolSize ?
+				// Align to 64 KB
+				// Assume there will be more assets of this size
+				AlignAs(details.FailedAllocSize * 4, (1 << 16)) :
+				// If just out of memory, resize to twice the size
+				poolRef.GetSize() * 2;
 
-				LOG_INFO("Reallocating {0} Pool - New Size: {1} B", AssetTypeToString(ref.Type), newPoolSize);
-				poolRef.ReallocPool(newPoolSize, onItemReallocFunc);
-			}
+			LOG_INFO("Reallocating {0} Pool - New Size: {1} B", AssetTypeToString(ref.Type), newPoolSize);
+			poolRef.ReallocPool(newPoolSize, onItemReallocFunc);
 		}
 
 		if (details.bPoolFragmented)
@@ -376,12 +425,6 @@ namespace Ion
 	// AssetWorker ---------------------------------------------------
 
 	AssetWorker::AssetWorker() :
-		AssetWorker(nullptr)
-	{
-	}
-
-	AssetWorker::AssetWorker(AssetManager* owner) :
-		m_Owner(owner),
 		m_bExit(false),
 		m_CurrentWork(EAssetWorkerWorkType::Null)
 	{
@@ -389,13 +432,12 @@ namespace Ion
 
 	void AssetWorker::Start()
 	{
-		ionassertnd(m_Owner);
 		m_WorkerThread = Thread(&AssetWorker::WorkerProc, this);
 	}
 
 	void AssetWorker::Exit()
 	{
-		UniqueLock lock(m_Owner->m_WorkQueueMutex);
+		UniqueLock lock(AssetManager::Get()->m_WorkQueueMutex);
 		m_bExit = true;
 	}
 
@@ -405,19 +447,19 @@ namespace Ion
 	{
 		SetThreadDescription(GetCurrentThread(), L"AssetWorker");
 
-		AssetManager::WorkQueue& queue = m_Owner->m_WorkQueue;
+		AssetManager::WorkQueue& queue = AssetManager::Get()->m_WorkQueue;
 
 		TShared<AssetWorkerWorkBase> work;
 
 		while (true)
 		{
 			{
-				UniqueLock lock(m_Owner->m_WorkQueueMutex);
+				UniqueLock lock(AssetManager::Get()->m_WorkQueueMutex);
 
 				m_CurrentWork = EAssetWorkerWorkType::Null;
 
 				// Wait for work
-				m_Owner->m_WorkQueueCV.wait(lock, [this, &queue]
+				AssetManager::Get()->m_WorkQueueCV.wait(lock, [this, &queue]
 				{
 					return queue.size() || m_bExit;
 				});
@@ -436,6 +478,8 @@ namespace Ion
 
 			DispatchWork(work);
 			work.reset();
+
+			AssetManager::Get()->m_WaitForWorkersCV.notify_one();
 		}
 	}
 
@@ -454,21 +498,20 @@ namespace Ion
 
 #define HANDLE_LOAD_ERROR(x) \
 	if (!(x)) { \
-		work->OnLoadError(*refPtr); \
-		return; \
+		work->OnLoadError(*work->RefPtr); \
+		return false; \
 	}
 
 #define HANDLE_ALLOC_ERROR(x, errorDetails) \
 	if (!(x)) { \
-		work->OnAllocError(*refPtr, errorDetails); \
-		return; \
+		work->OnAllocError(*work->RefPtr, errorDetails); \
+		return false; \
 	}
 
 	void AssetWorker::DoLoadWork(const TShared<AssetWorkerLoadWork>& work)
 	{
 		LOG_TRACE(L"Loading asset \"{0}\"...", work->RefPtr->Location.ToString());
 
-		bool bResult;
 		AssetReference* refPtr = work->RefPtr;
 
 		File file(refPtr->Location);
@@ -480,74 +523,14 @@ namespace Ion
 		{
 			case EAssetType::Mesh:
 			{
-				// @TODO: Same as textures
-
-				String collada;
-				bResult = file.Open(EFileMode::Read);
-
-				HANDLE_LOAD_ERROR(bResult);
-
-				bResult = file.Read(collada);
-
-				HANDLE_LOAD_ERROR(bResult);
-
-				file.Close();
-
-				TUnique<ColladaDocument> mesh = MakeUnique<ColladaDocument>(collada);
-				const ColladaData& meshData = mesh->GetData();
-
-				size_t vertexTypeSize = sizeof(TRemovePtr<decltype(meshData.VertexAttributes)>);
-				size_t indexTypeSize  = sizeof(TRemovePtr<decltype(meshData.Indices)>);
-
-				uint64 vertexCount = meshData.VertexAttributeCount;
-				uint64 indexCount = meshData.IndexCount;
-
-				AssetTypes::MeshDesc& desc = *(refPtr->GetDescription<EAssetType::Mesh>());
-				desc.VertexCount = vertexCount;
-				desc.IndexCount = indexCount;
-				desc.VertexLayout = meshData.Layout;
-
-				size_t alignment = m_Owner->GetAssetAlignment<EAssetType::Mesh>();
-				size_t vertexBlockSize = AlignAs(vertexCount * vertexTypeSize, alignment);
-				size_t indexBlockSize  = AlignAs(indexCount * indexTypeSize, alignment);
-				poolBlockSize = vertexBlockSize + indexBlockSize;
-				size_t& indexBlockOffset = vertexBlockSize;
-
-				AllocError_Details errorDetails { };
-				poolBlockPtr = AllocateAssetData<EAssetType::Mesh>(poolBlockSize, errorDetails);
-				HANDLE_ALLOC_ERROR(poolBlockPtr, errorDetails);
-
-				desc.VerticesOffset = 0;
-				desc.IndicesOffset = indexBlockOffset;
-
-				memcpy(poolBlockPtr, meshData.VertexAttributes, vertexTypeSize * vertexCount);
-				memcpy((uint8*)poolBlockPtr + indexBlockOffset, meshData.Indices, indexTypeSize * indexCount);
-
+				if (!LoadMesh(file, work, &poolBlockPtr, &poolBlockSize))
+					return;
 				break;
 			}
 			case EAssetType::Texture:
 			{
-				// @TODO: This will have to use an optimized texture format instead of plain pixel data
-
-				Image image;
-				const uint8* pixelData = image.Load(file);
-
-				HANDLE_LOAD_ERROR(pixelData);
-
-				AssetTypes::TextureDesc& desc = *(refPtr->GetDescription<EAssetType::Texture>());
-				desc.Width = image.GetWidth();
-				desc.Height = image.GetHeight();
-				desc.NumChannels = image.GetChannelNum();
-				desc.BytesPerChannel = 1;
-
-				poolBlockSize = image.GetPixelDataSize();
-
-				AllocError_Details errorDetails { };
-				poolBlockPtr = AllocateAssetData<EAssetType::Texture>(poolBlockSize, errorDetails);
-				HANDLE_ALLOC_ERROR(poolBlockPtr, errorDetails);
-
-				memcpy(poolBlockPtr, pixelData, poolBlockSize);
-
+				if (!LoadTexture(file, work, &poolBlockPtr, &poolBlockSize))
+					return;
 				break;
 			}
 			default:
@@ -555,8 +538,9 @@ namespace Ion
 				std::stringstream ss;
 				ss << std::this_thread::get_id();
 				LOG_WARN("Unknown asset type in worker thread (TID: {0})", ss.str());
-
-				HANDLE_LOAD_ERROR(false);
+				
+				work->OnLoadError(*refPtr);
+				return;
 			}
 		}
 
@@ -570,5 +554,88 @@ namespace Ion
 	{
 
 	}
+
+	bool AssetWorker::LoadMesh(File& file, const TShared<AssetWorkerLoadWork>& work, void** outDataPtr, size_t* outDataSize)
+	{
+		// @TODO: Same as textures
+
+		void* poolBlockPtr;
+		size_t poolBlockSize;
+
+		String collada;
+
+		HANDLE_LOAD_ERROR(file.Open(EFileMode::Read));
+		HANDLE_LOAD_ERROR(file.Read(collada));
+
+		file.Close();
+
+		TUnique<ColladaDocument> mesh = MakeUnique<ColladaDocument>(collada);
+		const ColladaData& meshData = mesh->GetData();
+
+		size_t vertexTypeSize = sizeof(TRemovePtr<decltype(meshData.VertexAttributes)>);
+		size_t indexTypeSize = sizeof(TRemovePtr<decltype(meshData.Indices)>);
+
+		uint64 vertexCount = meshData.VertexAttributeCount;
+		uint64 indexCount = meshData.IndexCount;
+
+		AssetTypes::MeshDesc& desc = *(work->RefPtr->GetDescription<EAssetType::Mesh>());
+		desc.VertexCount = vertexCount;
+		desc.IndexCount = indexCount;
+		desc.VertexLayout = meshData.Layout;
+
+		size_t alignment = AssetManager::Get()->GetAssetAlignment<EAssetType::Mesh>();
+		size_t vertexBlockSize = AlignAs(vertexCount * vertexTypeSize, alignment);
+		size_t indexBlockSize = AlignAs(indexCount * indexTypeSize, alignment);
+		poolBlockSize = vertexBlockSize + indexBlockSize;
+		size_t& indexBlockOffset = vertexBlockSize;
+
+		AllocError_Details errorDetails { };
+		poolBlockPtr = AllocateAssetData<EAssetType::Mesh>(poolBlockSize, errorDetails);
+		HANDLE_ALLOC_ERROR(poolBlockPtr, errorDetails);
+
+		desc.VerticesOffset = 0;
+		desc.IndicesOffset = indexBlockOffset;
+
+		memcpy(poolBlockPtr, meshData.VertexAttributes, vertexTypeSize * vertexCount);
+		memcpy((uint8*)poolBlockPtr + indexBlockOffset, meshData.Indices, indexTypeSize * indexCount);
+
+		*outDataPtr = poolBlockPtr;
+		*outDataSize = poolBlockSize;
+
+		return true;
+	}
+
+	bool AssetWorker::LoadTexture(File& file, const TShared<AssetWorkerLoadWork>& work, void** outDataPtr, size_t* outDataSize)
+	{
+		// @TODO: This will have to use an optimized texture format instead of plain pixel data
+
+		void* poolBlockPtr;
+		size_t poolBlockSize;
+
+		Image image;
+		const uint8* pixelData = image.Load(file);
+
+		HANDLE_LOAD_ERROR(pixelData);
+
+		AssetTypes::TextureDesc& desc = *(work->RefPtr->GetDescription<EAssetType::Texture>());
+		desc.Width = image.GetWidth();
+		desc.Height = image.GetHeight();
+		desc.NumChannels = image.GetChannelNum();
+		desc.BytesPerChannel = 1;
+
+		poolBlockSize = image.GetPixelDataSize();
+
+		AllocError_Details errorDetails { };
+		poolBlockPtr = AllocateAssetData<EAssetType::Texture>(poolBlockSize, errorDetails);
+		HANDLE_ALLOC_ERROR(poolBlockPtr, errorDetails);
+
+		memcpy(poolBlockPtr, pixelData, poolBlockSize);
+
+		*outDataPtr = poolBlockPtr;
+		*outDataSize = poolBlockSize;
+
+		return true;
+	}
+
 	// End of Worker Thread
 }
