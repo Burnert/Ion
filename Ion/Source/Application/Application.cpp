@@ -36,7 +36,6 @@ namespace Ion
 		m_EventDispatcher(this),
 		m_EventQueue(MakeUnique<EventQueue<EventHandler>>()),
 		m_LayerStack(MakeUnique<LayerStack>()),
-		m_AssetManager(AssetManager::Get()),
 		m_MainThreadId(std::this_thread::get_id()),
 		m_bRunning(true)
 	{
@@ -70,7 +69,7 @@ namespace Ion
 		m_Renderer->Init();
 		m_Renderer->SetVSyncEnabled(false);
 
-		m_AssetManager->Init();
+		AssetManager::Init();
 
 		InitImGui();
 
@@ -97,7 +96,7 @@ namespace Ion
 		OnShutdown();
 		TRACE_END(0);
 
-		m_AssetManager->Shutdown();
+		AssetManager::Shutdown();
 
 		RenderAPI::Shutdown();
 	}
@@ -121,7 +120,7 @@ namespace Ion
 		// @TODO: This is broken and kills CPU
 		//UpdateWindowTitle(deltaTime);
 
-		m_AssetManager->Update();
+		AssetManager::Update();
 		
 		m_LayerStack->OnUpdate(deltaTime);
 

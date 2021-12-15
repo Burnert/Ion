@@ -103,28 +103,28 @@ public:
 	void CreateExampleAssets()
 	{
 		m_4Pak.Name            = "4Pak";
-		m_4Pak.MeshAsset       = AssetManager::Get()->CreateAsset(EAssetType::Mesh,    FilePath(L"Assets/models/4pak.dae"));
-		m_4Pak.TextureAsset    = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/4pak.png"));
+		m_4Pak.MeshAsset       = AssetManager::CreateAsset(EAssetType::Mesh,    FilePath(L"Assets/models/4pak.dae"));
+		m_4Pak.TextureAsset    = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/4pak.png"));
 
 		m_Piwsko.Name          = "Piwsko";
-		m_Piwsko.MeshAsset     = AssetManager::Get()->CreateAsset(EAssetType::Mesh,    FilePath(L"Assets/models/piwsko.dae"));
-		m_Piwsko.TextureAsset  = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/piwsko.png"));
+		m_Piwsko.MeshAsset     = AssetManager::CreateAsset(EAssetType::Mesh,    FilePath(L"Assets/models/piwsko.dae"));
+		m_Piwsko.TextureAsset  = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/piwsko.png"));
 
 		m_Oscypek.Name         = "Oscypek";
-		m_Oscypek.MeshAsset    = AssetManager::Get()->CreateAsset(EAssetType::Mesh,    FilePath(L"Assets/models/oscypek.dae"));
-		m_Oscypek.TextureAsset = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/oscypek.png"));
+		m_Oscypek.MeshAsset    = AssetManager::CreateAsset(EAssetType::Mesh,    FilePath(L"Assets/models/oscypek.dae"));
+		m_Oscypek.TextureAsset = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/oscypek.png"));
 
 		m_Ciupaga.Name         = "Ciupaga";
-		m_Ciupaga.MeshAsset    = AssetManager::Get()->CreateAsset(EAssetType::Mesh,    FilePath(L"Assets/models/ciupaga.dae"));
-		m_Ciupaga.TextureAsset = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/ciupaga.png"));
+		m_Ciupaga.MeshAsset    = AssetManager::CreateAsset(EAssetType::Mesh,    FilePath(L"Assets/models/ciupaga.dae"));
+		m_Ciupaga.TextureAsset = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/ciupaga.png"));
 
 		m_Slovak.Name          = "Slovak";
-		m_Slovak.MeshAsset     = AssetManager::Get()->CreateAsset(EAssetType::Mesh,    FilePath(L"Assets/models/slovak.dae"));
-		m_Slovak.TextureAsset  = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/slovak.png"));
+		m_Slovak.MeshAsset     = AssetManager::CreateAsset(EAssetType::Mesh,    FilePath(L"Assets/models/slovak.dae"));
+		m_Slovak.TextureAsset  = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/slovak.png"));
 
 		m_Stress.Name          = "Stress";
-		m_Stress.MeshAsset     = AssetManager::Get()->CreateAsset(EAssetType::Mesh,    FilePath(L"spherestresstest_uv.dae"));
-		m_Stress.TextureAsset  = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(L"Assets/test_4k.png"));
+		m_Stress.MeshAsset     = AssetManager::CreateAsset(EAssetType::Mesh,    FilePath(L"spherestresstest_uv.dae"));
+		m_Stress.TextureAsset  = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/test_4k.png"));
 
 		//m_BigSphere.Name = "BigSphere";
 		//m_BigSphere.MeshAsset = AssetManager::Get()->CreateAsset(EAssetType::Mesh, FilePath(L"Assets/big_sphere.dae"));
@@ -333,15 +333,15 @@ public:
 		ImGui::SameLine(100);
 		if (ImGui::Button("Print"))
 		{
-			AssetManager::Get()->PrintAssetPool<Type>();
+			AssetManager::PrintAssetPool<Type>();
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Defragment"))
 		{
-			AssetManager::Get()->DefragmentAssetPool<Type>();
+			AssetManager::DefragmentAssetPool<Type>();
 		}
 		ImGui::SameLine();
-		ImGui::Text("Size: %.2f MB", AssetManager::Get()->GetAssetPool<Type>().GetSize() / (float)(1 << 20));
+		ImGui::Text("Size: %.2f MB", AssetManager::GetAssetMemoryPool<Type>().GetSize() / (float)(1 << 20));
 		ImGui::PopID();
 	}
 

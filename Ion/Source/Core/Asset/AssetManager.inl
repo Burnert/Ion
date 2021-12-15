@@ -62,7 +62,7 @@ namespace Ion
 		static_assert(TIsBaseOfV<AssetWorkerWorkBase, T>);
 		{
 			UniqueLock lock(m_WorkQueueMutex);
-			m_WorkQueue.emplace(MakeShared<T>(work));
+			m_WorkQueue.emplace(MakeShared<T>(Move(work)));
 		}
 		m_WorkQueueCV.notify_one();
 	}
@@ -84,7 +84,7 @@ namespace Ion
 	}
 #define _DISPATCH_MESSAGE_SELF(name) \
 	if constexpr (TIsSameV<T, name##Message>) { \
-		AssetManager::Get()->name(message); \
+		AssetManager::name(message); \
 		checked_call(message.RefPtr->Events.name, message); \
 	}
 
@@ -105,49 +105,46 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		AssetMemoryPool& poolRef = GetAssetPool<Type>();
+		AssetMemoryPool& poolRef = GetAssetMemoryPool<Type>();
 
-		poolRef.DefragmentPool([this](void* oldLocation, void* newLocation)
+		poolRef.DefragmentPool([](void* oldLocation, void* newLocation)
 		{ // For each asset reallocation
 			HandleAssetRealloc(oldLocation, newLocation);
 		});
 	}
 
 	template<EAssetType Type>
-	inline AssetMemoryPool& AssetManager::GetAssetPool()
+	AssetMemoryPool& AssetManager::GetAssetMemoryPool()
 	{
-		return this->*TAssetPoolFromType<Type>::Ref;
+		if constexpr (Type == EAssetType::Mesh)
+			return GetMeshAssetMemoryPool();
+		if constexpr (Type == EAssetType::Texture)
+			return GetTextureAssetMemoryPool();
 	}
 
 	template<EAssetType Type>
-	inline const AssetMemoryPool& AssetManager::GetAssetPool() const
+	inline size_t AssetManager::GetAssetAlignment()
 	{
-		return this->*TAssetPoolFromType<Type>::Ref;
-	}
-
-	template<EAssetType Type>
-	inline size_t AssetManager::GetAssetAlignment() const
-	{
-		const AssetMemoryPool& poolRef = GetAssetPool<Type>();
+		const AssetMemoryPool& poolRef = GetAssetMemoryPool<Type>();
 		return poolRef.m_Alignment;
 	}
 
 	template<EAssetType Type>
-	inline TShared<AssetMemoryPoolDebugInfo> AssetManager::GetAssetPoolDebugInfo() const
+	inline TShared<AssetMemoryPoolDebugInfo> AssetManager::GetAssetPoolDebugInfo()
 	{
 		TRACE_FUNCTION();
 
-		const AssetMemoryPool& poolRef = GetAssetPool<Type>();
+		const AssetMemoryPool& poolRef = GetAssetMemoryPool<Type>();
 
 		return poolRef.GetDebugInfo();
 	}
 
 	template<EAssetType Type>
-	inline void AssetManager::PrintAssetPool() const
+	inline void AssetManager::PrintAssetPool()
 	{
 		TRACE_FUNCTION();
 
-		const AssetMemoryPool& poolRef = GetAssetPool<Type>();
+		const AssetMemoryPool& poolRef = GetAssetMemoryPool<Type>();
 
 		LOG_INFO("Asset Memory - {0} Pool Data:", AssetTypeToString(Type));
 
@@ -161,7 +158,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		AssetMemoryPool& poolRef = AssetManager::Get()->GetAssetPool<Type>();
+		AssetMemoryPool& poolRef = AssetManager::TAssetPoolFromType<Type>;
 
 		bool bPoolFragmented = poolRef.IsFragmented();
 

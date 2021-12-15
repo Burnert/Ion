@@ -199,8 +199,6 @@ namespace Ion
 
 		TShared<Renderer> m_Renderer;
 
-		TUnique<AssetManager> m_AssetManager;
-
 		EventDispatcher<ApplicationEventFunctions, Application> m_EventDispatcher;
 		TUnique<EventQueue<EventHandler>> m_EventQueue;
 		TUnique<LayerStack> m_LayerStack;

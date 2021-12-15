@@ -92,132 +92,128 @@ namespace Ion
 		using WorkQueue = TQueue<TShared<AssetWorkerWorkBase>>;
 		using MessageQueue = TPriorityQueue<AssetMessageBuffer, TArray<AssetMessageBuffer>, std::greater<AssetMessageBuffer>>;
 
-		inline static AssetManager* Get()
-		{
-			static AssetManager* c_Instance = new AssetManager;
-			return c_Instance;
-		}
-
-		AssetManager(const AssetManager&) = delete;
-		AssetManager& operator=(const AssetManager&) = delete;
-
-		void Init();
-		void Update();
-		void Shutdown();
+		static void Init();
+		static void Update();
+		static void Shutdown();
 
 		template<EAssetType Type>
-		AssetHandle CreateAsset(FilePath location);
-		AssetHandle CreateAsset(EAssetType type, FilePath location);
-		void DeleteAsset(AssetHandle handle);
+		static AssetHandle CreateAsset(FilePath location);
+		static AssetHandle CreateAsset(EAssetType type, FilePath location);
+		static void DeleteAsset(AssetHandle handle);
 
-		const AssetReference* GetAssetReference(AssetHandle handle) const;
+		//static const AssetReference* GetAssetReference(AssetHandle handle);
 
-		inline bool IsAssetLoaded(AssetHandle handle) const
+		static inline bool IsAssetLoaded(AssetHandle handle)
 		{
 			return GetAssetReference(handle)->IsLoaded();
 		}
 
-		inline bool IsHandleValid(AssetHandle handle) const
+		static inline bool IsHandleValid(AssetHandle handle)
 		{
 			return handle.m_ID != INVALID_ASSET_ID &&
 				m_Assets.find(handle.m_ID) != m_Assets.end();
 		}
 
 		template<typename ForEach>
-		void IterateMessages(ForEach forEach);
+		static void IterateMessages(ForEach forEach);
 
 		template<EAssetType Type>
-		size_t GetAssetAlignment() const;
+		static size_t GetAssetAlignment();
 
 		template<EAssetType Type>
-		void DefragmentAssetPool();
+		static void DefragmentAssetPool();
+
+		// This whole thing with the getters is a temporary solution
+		// @TODO: Switch to static linking for god's sake...
+		static AssetMemoryPool& GetMeshAssetMemoryPool();
+		static AssetMemoryPool& GetTextureAssetMemoryPool();
+		template<EAssetType Type>
+		static AssetMemoryPool& GetAssetMemoryPool();
 
 		template<EAssetType Type>
-		AssetMemoryPool& GetAssetPool();
+		static void PrintAssetPool();
 
 		template<EAssetType Type>
-		const AssetMemoryPool& GetAssetPool() const;
+		static TShared<AssetMemoryPoolDebugInfo> GetAssetPoolDebugInfo();
 
-		template<EAssetType Type>
-		void PrintAssetPool() const;
-
-		template<EAssetType Type>
-		TShared<AssetMemoryPoolDebugInfo> GetAssetPoolDebugInfo() const;
-
-		~AssetManager() { }
+		// Static class
+		AssetManager() = delete;
+		~AssetManager() = delete;
 
 	private:
-		AssetReference* GetAssetReference(AssetHandle handle);
+		static AssetReference* GetAssetReference(AssetHandle handle);
 
-		void LoadAssetData(AssetReference& ref);
-		void UnloadAssetData(AssetReference& ref);
+		static void LoadAssetData(AssetReference& ref);
+		static void UnloadAssetData(AssetReference& ref);
 
-		AssetMemoryPool* GetAssetMemoryPool(EAssetType type);
+		static AssetMemoryPool* GetAssetMemoryPool(EAssetType type);
 
 	private:
-		void HandleAssetRealloc(void* oldLocation, void* newLocation);
+		static void HandleAssetRealloc(void* oldLocation, void* newLocation);
 
 		// Worker related
 
 		template<typename T>
-		void ScheduleAssetWorkerWork(T& work);
-		void ScheduleLoadWork(AssetReference& ref);
+		static void ScheduleAssetWorkerWork(T& work);
+		static void ScheduleLoadWork(AssetReference& ref);
 
 		// Not thread-safe, lock m_WorkQueueMutex before use
-		bool IsAnyWorkerWorking() const;
-		void WaitForWorkers() const;
+		static bool IsAnyWorkerWorking();
+		static void WaitForWorkers();
 
 		// End of Worker related
 
 		template<typename T>
-		void AddMessage(T& message);
+		static void AddMessage(T& message);
 
 		template<typename T>
 		static void _DispatchMessage(T& message); // underscore because there's a Windows macro called DispatchMessage
 
-		void DispatchMessages();
+		static void DispatchMessages();
 
-		void OnAssetLoaded(OnAssetLoadedMessage& message);
-		void OnAssetAllocError(OnAssetAllocErrorMessage& message);
-		void OnAssetUnloaded(OnAssetUnloadedMessage& message);
-		void OnAssetRealloc(OnAssetReallocMessage& message);
+		static void OnAssetLoaded(OnAssetLoadedMessage& message);
+		static void OnAssetAllocError(OnAssetAllocErrorMessage& message);
+		static void OnAssetUnloaded(OnAssetUnloadedMessage& message);
+		static void OnAssetRealloc(OnAssetReallocMessage& message);
 
-		void ResolveErrors();
-		void ResolveAllocError(AssetReference& ref, AllocError_Details& details);
+		static void ResolveErrors();
+		static void ResolveAllocError(AssetReference& ref, AllocError_Details& details);
 
 	private:
-		AssetMemoryPool m_MeshAssetPool;
-		AssetMemoryPool m_TextureAssetPool;
+		static AssetMemoryPool m_MeshAssetPool;
+		static AssetMemoryPool m_TextureAssetPool;
 
-		THashMap<AssetID, AssetReference> m_Assets;
-		THashMap<void*, AssetReference*> m_LoadedAssets;
-		TArray<AssetReference*> m_ErrorAssets;
+		static THashMap<AssetID, AssetReference> m_Assets;
+		static THashMap<void*, AssetReference*> m_LoadedAssets;
+		static TArray<AssetReference*> m_ErrorAssets;
 
-		MessageQueue m_MessageQueue;
-		mutable Mutex m_MessageQueueMutex;
+		static MessageQueue m_MessageQueue;
+		static Mutex m_MessageQueueMutex;
 
-		TArray<AssetWorker> m_AssetWorkers;
+		static TArray<AssetWorker> m_AssetWorkers;
 
-		WorkQueue m_WorkQueue;
-		mutable Mutex m_WorkQueueMutex;
-		mutable ConditionVariable m_WorkQueueCV;
-		mutable ConditionVariable m_WaitForWorkersCV;
-
-		AssetManager();
+		static WorkQueue m_WorkQueue;
+		static Mutex m_WorkQueueMutex;
+		static ConditionVariable m_WorkQueueCV;
+		static ConditionVariable m_WaitForWorkersCV;
 
 		friend class AssetWorker;
 		friend class AssetInterface;
 		friend class Application;
 
 		template<EAssetType Type>
-		friend struct TAssetPoolFromType;
-	};
+		friend struct _TAssetPoolFromType;
 
-	template<EAssetType Type>
-	struct TAssetPoolFromType;
-	template<>
-	struct TAssetPoolFromType<EAssetType::Mesh>    { static constexpr AssetMemoryPool AssetManager::* Ref = &AssetManager::m_MeshAssetPool; };
-	template<>
-	struct TAssetPoolFromType<EAssetType::Texture> { static constexpr AssetMemoryPool AssetManager::* Ref = &AssetManager::m_TextureAssetPool; };
+	public:
+		template<EAssetType Type>
+		struct _TAssetPoolFromType;
+		template<>
+		struct _TAssetPoolFromType<EAssetType::Mesh>    { static inline constexpr AssetMemoryPool& Ref = m_MeshAssetPool; };
+		template<>
+		struct _TAssetPoolFromType<EAssetType::Texture> { static inline constexpr AssetMemoryPool& Ref = m_TextureAssetPool; };
+
+		template<EAssetType Type>
+		static inline constexpr AssetMemoryPool& TAssetPoolFromType = _TAssetPoolFromType<Type>::Ref;
+	};
 }
 #include "AssetManager.inl"

@@ -12,7 +12,7 @@ namespace Ion
 
 	bool AssetHandle::IsValid() const
 	{
-		return AssetManager::Get()->IsHandleValid(*this);
+		return AssetManager::IsHandleValid(*this);
 	}
 
 	AssetReference::AssetReference() :
@@ -31,12 +31,12 @@ namespace Ion
 
 	void AssetInterface::LoadAssetData()
 	{
-		AssetManager::Get()->LoadAssetData(*m_RefPtr);
+		AssetManager::LoadAssetData(*m_RefPtr);
 	}
 
 	void AssetInterface::UnloadAssetData()
 	{
-		AssetManager::Get()->UnloadAssetData(*m_RefPtr);
+		AssetManager::UnloadAssetData(*m_RefPtr);
 	}
 
 	// AssetManager -------------------------------------------------
@@ -186,19 +186,17 @@ namespace Ion
 		_DispatchMessage(message);
 	}
 
-	AssetReference* AssetManager::GetAssetReference(AssetHandle handle)
+	AssetMemoryPool& AssetManager::GetMeshAssetMemoryPool()
 	{
-		TRACE_FUNCTION();
-
-		if (m_Assets.find(handle.m_ID) == m_Assets.end())
-		{
-			LOG_ERROR("Invalid AssetHandle!");
-			return nullptr;
-		}
-		return &m_Assets.at(handle.m_ID);
+		return m_MeshAssetPool;
 	}
 
-	const AssetReference* AssetManager::GetAssetReference(AssetHandle handle) const
+	AssetMemoryPool& AssetManager::GetTextureAssetMemoryPool()
+	{
+		return m_TextureAssetPool;
+	}
+
+	AssetReference* AssetManager::GetAssetReference(AssetHandle handle)
 	{
 		TRACE_FUNCTION();
 
@@ -216,7 +214,7 @@ namespace Ion
 
 		AssetWorkerLoadWork work { };
 		work.RefPtr = &ref;
-		work.OnLoad = [this](AssetReference& ref)
+		work.OnLoad = [](AssetReference& ref)
 		{
 			LOG_TRACE(L"Loaded asset \"{0}\"", ref.Location.ToString());
 			
@@ -225,7 +223,7 @@ namespace Ion
 			message.PoolLocation = ref.Data.Ptr;
 			AddMessage(message);
 		};
-		work.OnLoadError = [this](AssetReference& ref)
+		work.OnLoadError = [](AssetReference& ref)
 		{
 			LOG_ERROR(L"Could not load asset \"{0}\"", ref.Location.ToString());
 
@@ -234,7 +232,7 @@ namespace Ion
 			message.ErrorMessage = ""; // @TODO: Add error message output
 			AddMessage(message);
 		};
-		work.OnAllocError = [this](AssetReference& ref, AllocError_Details& details)
+		work.OnAllocError = [](AssetReference& ref, AllocError_Details& details)
 		{
 			LOG_WARN(L"Could not allocate asset \"{0}\"", ref.Location.ToString());
 
@@ -248,7 +246,7 @@ namespace Ion
 	}
 
 	// Not thread-safe, lock m_WorkQueueMutex before use
-	bool AssetManager::IsAnyWorkerWorking() const
+	bool AssetManager::IsAnyWorkerWorking()
 	{
 		TRACE_FUNCTION();
 
@@ -260,13 +258,13 @@ namespace Ion
 		return false;
 	}
 
-	void AssetManager::WaitForWorkers() const
+	void AssetManager::WaitForWorkers()
 	{
 		TRACE_FUNCTION();
 
 		UniqueLock lock(m_WorkQueueMutex);
 
-		m_WaitForWorkersCV.wait(lock, [this]
+		m_WaitForWorkersCV.wait(lock, []
 		{
 			return !IsAnyWorkerWorking();
 		});
@@ -391,7 +389,7 @@ namespace Ion
 
 		AssetMemoryPool& poolRef = *GetAssetMemoryPool(ref.Type);
 
-		auto onItemReallocFunc = [this](void* oldLocation, void* newLocation)
+		auto onItemReallocFunc = [](void* oldLocation, void* newLocation)
 		{
 			HandleAssetRealloc(oldLocation, newLocation);
 		};
@@ -417,10 +415,22 @@ namespace Ion
 		}
 	}
 
-	AssetManager::AssetManager() :
-		m_AssetWorkers(ASSET_WORKER_COUNT)
-	{
-	}
+	AssetMemoryPool AssetManager::m_MeshAssetPool;
+	AssetMemoryPool AssetManager::m_TextureAssetPool;
+
+	THashMap<AssetID, AssetReference> AssetManager::m_Assets;
+	THashMap<void*, AssetReference*> AssetManager::m_LoadedAssets;
+	TArray<AssetReference*> AssetManager::m_ErrorAssets;
+
+	AssetManager::MessageQueue AssetManager::m_MessageQueue;
+	Mutex AssetManager::m_MessageQueueMutex;
+
+	TArray<AssetWorker> AssetManager::m_AssetWorkers(ASSET_WORKER_COUNT);
+
+	AssetManager::WorkQueue AssetManager::m_WorkQueue;
+	Mutex AssetManager::m_WorkQueueMutex;
+	ConditionVariable AssetManager::m_WorkQueueCV;
+	ConditionVariable AssetManager::m_WaitForWorkersCV;
 
 	// AssetWorker ---------------------------------------------------
 
@@ -437,7 +447,7 @@ namespace Ion
 
 	void AssetWorker::Exit()
 	{
-		UniqueLock lock(AssetManager::Get()->m_WorkQueueMutex);
+		UniqueLock lock(AssetManager::m_WorkQueueMutex);
 		m_bExit = true;
 	}
 
@@ -447,19 +457,19 @@ namespace Ion
 	{
 		SetThreadDescription(GetCurrentThread(), L"AssetWorker");
 
-		AssetManager::WorkQueue& queue = AssetManager::Get()->m_WorkQueue;
+		AssetManager::WorkQueue& queue = AssetManager::m_WorkQueue;
 
 		TShared<AssetWorkerWorkBase> work;
 
 		while (true)
 		{
 			{
-				UniqueLock lock(AssetManager::Get()->m_WorkQueueMutex);
+				UniqueLock lock(AssetManager::m_WorkQueueMutex);
 
 				m_CurrentWork = EAssetWorkerWorkType::Null;
 
 				// Wait for work
-				AssetManager::Get()->m_WorkQueueCV.wait(lock, [this, &queue]
+				AssetManager::m_WorkQueueCV.wait(lock, [this, &queue]
 				{
 					return queue.size() || m_bExit;
 				});
@@ -479,7 +489,7 @@ namespace Ion
 			DispatchWork(work);
 			work.reset();
 
-			AssetManager::Get()->m_WaitForWorkersCV.notify_one();
+			AssetManager::m_WaitForWorkersCV.notify_one();
 		}
 	}
 
@@ -583,7 +593,7 @@ namespace Ion
 		desc.IndexCount = indexCount;
 		desc.VertexLayout = meshData.Layout;
 
-		size_t alignment = AssetManager::Get()->GetAssetAlignment<EAssetType::Mesh>();
+		size_t alignment = AssetManager::GetAssetAlignment<EAssetType::Mesh>();
 		size_t vertexBlockSize = AlignAs(vertexCount * vertexTypeSize, alignment);
 		size_t indexBlockSize = AlignAs(indexCount * indexTypeSize, alignment);
 		poolBlockSize = vertexBlockSize + indexBlockSize;
