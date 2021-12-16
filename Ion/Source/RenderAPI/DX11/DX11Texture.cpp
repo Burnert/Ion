@@ -40,7 +40,7 @@ namespace Ion
 	DX11Texture::DX11Texture(AssetHandle asset) :
 		Texture(asset)
 	{
-		const AssetTypes::TextureDesc* desc = asset->GetDescription<EAssetType::Texture>();
+		const AssetDescription::Texture* desc = asset->GetDescription<EAssetType::Texture>();
 		CreateTexture(asset->Data(), desc->Width, desc->Height);
 	}
 

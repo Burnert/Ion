@@ -588,7 +588,7 @@ namespace Ion
 		uint64 vertexCount = meshData.VertexAttributeCount;
 		uint64 indexCount = meshData.IndexCount;
 
-		AssetTypes::MeshDesc& desc = *(work->RefPtr->GetDescription<EAssetType::Mesh>());
+		AssetDescription::Mesh& desc = *(work->RefPtr->GetDescription<EAssetType::Mesh>());
 		desc.VertexCount = vertexCount;
 		desc.IndexCount = indexCount;
 		desc.VertexLayout = meshData.Layout;
@@ -627,7 +627,7 @@ namespace Ion
 
 		HANDLE_LOAD_ERROR(pixelData);
 
-		AssetTypes::TextureDesc& desc = *(work->RefPtr->GetDescription<EAssetType::Texture>());
+		AssetDescription::Texture& desc = *(work->RefPtr->GetDescription<EAssetType::Texture>());
 		desc.Width = image.GetWidth();
 		desc.Height = image.GetHeight();
 		desc.NumChannels = image.GetChannelNum();

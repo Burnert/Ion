@@ -67,7 +67,7 @@ public:
 	{
 		// Mesh
 
-		const AssetTypes::MeshDesc* meshDesc = data.MeshAsset->GetDescription<EAssetType::Mesh>();
+		const AssetDescription::Mesh* meshDesc = data.MeshAsset->GetDescription<EAssetType::Mesh>();
 		float* vertexAttributesPtr = (float*)((uint8*)data.MeshAsset->Data() + meshDesc->VerticesOffset);
 		uint32* indicesPtr = (uint32*)((uint8*)data.MeshAsset->Data() + meshDesc->IndicesOffset);
 

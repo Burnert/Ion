@@ -24,7 +24,7 @@ namespace Ion
 		{
 			ionassert(m_TextureAsset.IsValid(), "Texture asset is invalid.");
 
-			const AssetTypes::TextureDesc* desc = m_TextureAsset->GetDescription<EAssetType::Texture>();
+			const AssetDescription::Texture* desc = m_TextureAsset->GetDescription<EAssetType::Texture>();
 
 			return TextureDimensions {
 				desc->Width,
