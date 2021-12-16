@@ -53,23 +53,24 @@ namespace Ion
 
 		ionassert(m_TextureAsset->IsLoaded(), "Texture has not been loaded yet.");
 
-		TRACE_BEGIN(0, "OpenGLTexture - glCreateTextures");
-		glCreateTextures(GL_TEXTURE_2D, 1, &m_ID);
-		TRACE_END(0);
+		{
+			TRACE_SCOPE("OpenGLTexture - glGenTextures | glBindTexture");
+			glGenTextures(1, &m_ID);
+			glBindTexture(GL_TEXTURE_2D, m_ID);
+		}
 
-		TRACE_BEGIN(1, "OpenGLTexture - glTextureStorage2D");
-		glTextureStorage2D(m_ID, 1, GL_RGBA8, width, height);
-		TRACE_END(1);
+		{
+			TRACE_SCOPE("OpenGLTexture - glTexImage2D");
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixelData);
+		}
 
-		glTextureParameteri(m_ID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTextureParameteri(m_ID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, 1.0f); // For visualization
 
-		TRACE_BEGIN(2, "OpenGLTexture - glTextureSubImage2D");
-		glTextureSubImage2D(m_ID, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixelData);
-		TRACE_END(2);
-
-		TRACE_BEGIN(3, "OpenGLTexture - glGenerateTextureMipmap");
-		glGenerateTextureMipmap(m_ID);
-		TRACE_END(3);
+		{
+			TRACE_SCOPE("OpenGLTexture - glGenerateMipmap");
+			glGenerateMipmap(GL_TEXTURE_2D);
+		}
 	}
 }
