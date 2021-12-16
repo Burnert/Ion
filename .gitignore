@@ -376,3 +376,4 @@ IonExample/**/*.txt
 IonExample/**/*.src
 IonExample/*.ini
 IonExample/*.jpg
+IonExample/Assets/big_sphere.dae
