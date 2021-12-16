@@ -41,14 +41,14 @@ namespace Ion
 		return "";
 	}
 
-	namespace AssetTypes
+	namespace AssetDescription
 	{
-		struct TextDesc
+		struct Text
 		{
 
 		};
 
-		struct MeshDesc
+		struct Mesh
 		{
 			uint64 VerticesOffset;
 			uint64 IndicesOffset;
@@ -57,7 +57,7 @@ namespace Ion
 			TShared<VertexLayout> VertexLayout;
 		};
 
-		struct TextureDesc
+		struct Texture
 		{
 			uint32 Width;
 			uint32 Height;
@@ -65,16 +65,16 @@ namespace Ion
 			uint8 BytesPerChannel;
 		};
 
-		struct SoundDesc
+		struct Sound
 		{
 
 		};
 
 		using TAssetDescriptionTypes = TTypePack<
-			TextDesc,
-			MeshDesc,
-			TextureDesc,
-			SoundDesc
+			Text,
+			Mesh,
+			Texture,
+			Sound
 		>;
 
 		inline constexpr size_t LargestDescSize = TTypeSize<TAssetDescriptionTypes>::Max;
@@ -88,13 +88,13 @@ namespace Ion
 	template<EAssetType V>
 	struct TAssetDescType;
 	template<>
-	struct TAssetDescType<EAssetType::Text>    { using Type = AssetTypes::TextDesc; };
+	struct TAssetDescType<EAssetType::Text>    { using Type = AssetDescription::Text; };
 	template<>
-	struct TAssetDescType<EAssetType::Mesh>    { using Type = AssetTypes::MeshDesc; };
+	struct TAssetDescType<EAssetType::Mesh>    { using Type = AssetDescription::Mesh; };
 	template<>
-	struct TAssetDescType<EAssetType::Texture> { using Type = AssetTypes::TextureDesc; };
+	struct TAssetDescType<EAssetType::Texture> { using Type = AssetDescription::Texture; };
 	template<>
-	struct TAssetDescType<EAssetType::Sound>   { using Type = AssetTypes::SoundDesc; };
+	struct TAssetDescType<EAssetType::Sound>   { using Type = AssetDescription::Sound; };
 
 	template<EAssetType V>
 	using TAssetDescTypeT = typename TAssetDescType<V>::Type;
@@ -217,7 +217,7 @@ namespace Ion
 		FilePath Location;
 		AssetData Data;
 		AssetEvents Events;
-		AssetTypes::DescBuffer Description;
+		AssetDescription::DescBuffer Description;
 		uint8 ErrorData[TTypeSize<AssetReferenceErrorDataTypes>::Max];
 		EAssetType Type;
 		union
