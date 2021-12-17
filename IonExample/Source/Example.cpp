@@ -23,9 +23,6 @@
 
 #include "RenderAPI/RenderAPI.h"
 
-// I'll think about this...
-using namespace Ion;
-
 class IonExample : public IonApplication
 {
 public:

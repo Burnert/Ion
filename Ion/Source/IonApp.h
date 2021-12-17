@@ -9,3 +9,8 @@ using IonApplication = Ion::WindowsApplication;
 
 // Entry point ----------------
 #include "Application/EntryPoint.h"
+
+// Define before including the file
+#ifndef DISABLE_USING_NAMESPACE_ION
+using namespace Ion;
+#endif
