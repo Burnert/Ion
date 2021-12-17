@@ -52,6 +52,3 @@ namespace Ion
 		//static float s_LastFrameTime;
 	};
 }
-
-// Platform specific type of the Application class
-using IonApplication = Ion::WindowsApplication;

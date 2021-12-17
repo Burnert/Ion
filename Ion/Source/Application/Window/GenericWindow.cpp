@@ -4,8 +4,6 @@
 #include "Core/CoreTypes.h"
 #include "Core/Logging/Logger.h"
 
-#include "Application/Application.h"
-
 namespace Ion
 {
 	GenericWindow::GenericWindow() :

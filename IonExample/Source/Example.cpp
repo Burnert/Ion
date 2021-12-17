@@ -11,7 +11,7 @@
 
 #include "IonPCH.h"
 
-#include "Ion.h"
+#include "IonApp.h"
 #include "Renderer/Renderer.h"
 #include "UserInterface/ImGui.h"
 
@@ -355,7 +355,7 @@ public:
 		String vertexSrc;
 		String pixelSrc;
 
-		FilePath shadersPath = GetCheckedEnginePath() + L"Shaders";
+		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
 
 		if (RenderAPI::GetCurrent() == ERenderAPI::DX11)
 		{

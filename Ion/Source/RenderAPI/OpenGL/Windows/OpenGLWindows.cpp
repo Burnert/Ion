@@ -1,13 +1,14 @@
 #include "IonPCH.h"
 
 #include "OpenGLWindows.h"
-#include "Core/Platform/Windows/WindowsUtility.h"
-#include "Application/Platform/Windows/WindowsApplication.h"
-#include "Application/Platform/Windows/WindowsWindow.h"
-
 #include "glad/glad_wgl.h"
 
+#include "Core/Platform/Windows/WindowsUtility.h"
+#include "Application/Platform/Windows/WindowsWindow.h"
+
 #include "UserInterface/ImGui.h"
+
+#pragma comment(lib, "opengl32.lib")
 
 namespace Ion
 {

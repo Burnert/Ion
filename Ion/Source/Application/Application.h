@@ -7,6 +7,7 @@
 #include "Core/Asset/AssetManager.h"
 
 #include "Application/Window/GenericWindow.h"
+#include "Application/EnginePath.h"
 
 struct ImDrawData;
 
@@ -34,10 +35,6 @@ namespace Ion
 		friend GenericWindow;
 	public:
 		using EventPtr = TShared<Event>;
-
-		/* Gets the engine path with path validation */
-		static FilePath GetCheckedEnginePath() { return FilePath(s_EnginePath, EFilePathValidation::Checked); }
-		static const FilePath& GetEnginePath() { return s_EnginePath; }
 
 		virtual ~Application();
 
@@ -209,7 +206,6 @@ namespace Ion
 
 		template<typename T>
 		friend void ParseCommandLineArgs(int32 argc, T* argv[]);
-		static FilePath s_EnginePath;
 	};
 
 	Application* CreateApplication();
@@ -228,11 +224,11 @@ namespace Ion
 			{
 				if constexpr (TIsSameV<T, char>)
 				{
-					Application::s_EnginePath.Set(StringConverter::StringToWString(nextArg));
+					EnginePath::SetEnginePath(StringConverter::StringToWString(nextArg));
 				}
 				else
 				{
-					Application::s_EnginePath.Set(nextArg);
+					EnginePath::SetEnginePath(nextArg);
 				}
 				i++;
 			}

@@ -2,10 +2,6 @@
 
 #include "RenderAPI/OpenGL/OpenGL.h"
 
-#include "glad/glad.h"
-
-#pragma comment(lib, "opengl32.lib")
-
 namespace Ion
 {
 	struct ImGuiViewportDataOpenGLWin32

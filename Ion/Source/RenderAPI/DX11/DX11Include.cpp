@@ -1,6 +1,6 @@
 #include "IonPCH.h"
 
-#include "Application/Application.h"
+#include "Application/EnginePath.h"
 #include "DX11Include.h"
 
 namespace Ion
@@ -14,7 +14,7 @@ namespace Ion
 		switch (IncludeType)
 		{
 		case D3D_INCLUDE_LOCAL:
-			includePath = Application::GetCheckedEnginePath() + L"Shaders";
+			includePath = EnginePath::GetShadersPath();
 			break;
 		// case D3D_INCLUDE_SYSTEM:
 			// @TODO: Add system includes
