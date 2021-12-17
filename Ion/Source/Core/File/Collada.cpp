@@ -1,7 +1,7 @@
 #include "IonPCH.h"
 
 #include "Collada.h"
-#include "Renderer/VertexBuffer.h"
+#include "Renderer/VertexLayout.h"
 
 namespace Ion
 {
