@@ -14,7 +14,8 @@ namespace Ion
 
 		virtual ~VertexBuffer() { }
 
-		virtual void SetLayout(const TShared<VertexLayout>& layout, const TShared<Shader>& shader) = 0;
+		virtual void SetLayout(const TShared<VertexLayout>& layout) = 0;
+		virtual void SetLayoutShader(const TShared<Shader>& shader) = 0;
 
 		virtual uint32 GetVertexCount() const = 0;
 

@@ -13,7 +13,8 @@ namespace Ion
 		DX11VertexBuffer(float* vertexAttributes, uint64 count);
 		virtual ~DX11VertexBuffer() override;
 
-		virtual void SetLayout(const TShared<VertexLayout>& layout, const TShared<Shader>& shader) override;
+		virtual void SetLayout(const TShared<VertexLayout>& layout) override;
+		virtual void SetLayoutShader(const TShared<Shader>& shader) override;
 
 		void CreateDX11Layout(const TShared<class DX11Shader>& shader);
 

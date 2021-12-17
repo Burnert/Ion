@@ -10,12 +10,42 @@ namespace Ion
 		return MakeShareable(new Mesh);
 	}
 
+	TShared<Mesh> Mesh::Create(AssetHandle& asset)
+	{
+		return MakeShareable(new Mesh(asset));
+	}
+
 	Mesh::Mesh() :
 		m_VertexCount(0),
 		m_TriangleCount(0),
-		m_TransformMatrix(Matrix4(1.0f))
+		m_TransformMatrix(Matrix4(1.0f)),
+		m_UniformBuffer(MakeShareable(UniformBuffer::Create<MeshUniforms>()))
 	{
-		m_UniformBuffer = MakeShareable(UniformBuffer::Create<MeshUniforms>());
+	}
+
+	Mesh::Mesh(AssetHandle& asset) :
+		Mesh()
+	{
+		LoadFromAsset(asset);
+	}
+
+	bool Mesh::LoadFromAsset(AssetHandle& asset)
+	{
+		if (!asset.IsValid() || !asset->IsLoaded())
+			return false;
+
+		m_MeshAsset = asset;
+
+		const AssetDescription::Mesh* meshDesc = m_MeshAsset->GetDescription<EAssetType::Mesh>();
+		float* vertexAttributesPtr = (float*)((uint8*)m_MeshAsset->Data() + meshDesc->VerticesOffset);
+		uint32* indicesPtr = (uint32*)((uint8*)m_MeshAsset->Data() + meshDesc->IndicesOffset);
+
+		SetVertexBuffer(VertexBuffer::Create(vertexAttributesPtr, meshDesc->VertexCount));
+		SetIndexBuffer(IndexBuffer::Create(indicesPtr, (uint32)meshDesc->IndexCount));
+
+		m_VertexBuffer->SetLayout(meshDesc->VertexLayout);
+
+		return true;
 	}
 
 	void Mesh::SetTransform(const Matrix4& transform)
@@ -38,6 +68,7 @@ namespace Ion
 	void Mesh::SetMaterial(const TShared<Material>& material)
 	{
 		m_Material = material;
+		m_VertexBuffer->SetLayoutShader(material->GetShader());
 	}
 
 	const TShared<VertexBuffer>& Mesh::GetVertexBuffer() const

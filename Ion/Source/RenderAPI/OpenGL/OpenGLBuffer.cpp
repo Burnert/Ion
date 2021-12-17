@@ -27,9 +27,14 @@ namespace Ion
 		glDeleteBuffers(1, &m_ID);
 	}
 
-	void OpenGLVertexBuffer::SetLayout(const TShared<VertexLayout>& layout, const TShared<Shader>& shader)
+	void OpenGLVertexBuffer::SetLayout(const TShared<VertexLayout>& layout)
 	{
 		m_VertexLayout = layout;
+	}
+
+	void OpenGLVertexBuffer::SetLayoutShader(const TShared<Shader>& shader)
+	{
+
 	}
 
 	uint32 OpenGLVertexBuffer::GetVertexCount() const

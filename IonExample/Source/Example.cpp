@@ -62,32 +62,19 @@ public:
 	template<EExampleModelName Type>
 	static void InitExampleModel(ExampleModelData<Type>& data, const TShared<Shader>& shader, TShared<Scene>& scene, const Matrix4& transform)
 	{
-		// Mesh
-
-		const AssetDescription::Mesh* meshDesc = data.MeshAsset->GetDescription<EAssetType::Mesh>();
-		float* vertexAttributesPtr = (float*)((uint8*)data.MeshAsset->Data() + meshDesc->VerticesOffset);
-		uint32* indicesPtr = (uint32*)((uint8*)data.MeshAsset->Data() + meshDesc->IndicesOffset);
-
-		TShared<VertexBuffer> vb = VertexBuffer::Create(vertexAttributesPtr, meshDesc->VertexCount);
-		vb->SetLayout(meshDesc->VertexLayout, shader);
-		TShared<IndexBuffer> ib = IndexBuffer::Create(indicesPtr, (uint32)meshDesc->IndexCount);
-		
 		// Texure
-
 		data.Texture = Texture::Create(data.TextureAsset);
 
-		// Other
-
+		// Material
 		data.Material = Material::Create();
 		data.Material->SetShader(shader);
 		data.Material->CreateParameter("Texture", EMaterialParameterType::Texture2D);
 		data.Material->SetParameter("Texture", data.Texture);
 
-		data.Mesh = Mesh::Create();
-		data.Mesh->SetVertexBuffer(vb);
-		data.Mesh->SetIndexBuffer(ib);
+		// Mesh
+		data.Mesh = Mesh::Create(data.MeshAsset);
 		data.Mesh->SetMaterial(data.Material);
-		data.Mesh->SetTransform(Math::Scale(Vector3(1.0f)) * transform);
+		data.Mesh->SetTransform(transform);
 
 		scene->AddDrawableObject(data.Mesh.get());
 	}

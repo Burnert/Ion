@@ -58,7 +58,7 @@ namespace Ion
 		COMRelease(m_InputLayout);
 	}
 
-	void DX11VertexBuffer::SetLayout(const TShared<VertexLayout>& layout, const TShared<Shader>& shader)
+	void DX11VertexBuffer::SetLayout(const TShared<VertexLayout>& layout)
 	{
 		TRACE_FUNCTION();
 
@@ -81,7 +81,10 @@ namespace Ion
 
 			m_IEDArray.emplace_back(ied);
 		}
+	}
 
+	void DX11VertexBuffer::SetLayoutShader(const TShared<Shader>& shader)
+	{
 		CreateDX11Layout(TStaticCast<DX11Shader>(shader));
 	}
 

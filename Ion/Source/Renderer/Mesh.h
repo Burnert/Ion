@@ -20,6 +20,7 @@ namespace Ion
 	{
 	public:
 		static TShared<Mesh> Create();
+		static TShared<Mesh> Create(AssetHandle& asset);
 
 		virtual ~Mesh() { }
 
@@ -46,10 +47,15 @@ namespace Ion
 
 		// End of IDrawable
 
-	protected:
+	private:
 		Mesh();
+		Mesh(AssetHandle& asset);
+
+		bool LoadFromAsset(AssetHandle& asset);
 
 	private:
+		AssetHandle m_MeshAsset;
+
 		TShared<VertexBuffer> m_VertexBuffer;
 		TShared<IndexBuffer> m_IndexBuffer;
 		TShared<UniformBuffer> m_UniformBuffer;
