@@ -14,7 +14,7 @@ namespace Ion
 		OpenGLVertexBuffer(float* vertexAttributes, uint64 count);
 		virtual ~OpenGLVertexBuffer() override;
 
-		virtual void SetLayout(const TShared<VertexLayout>& layout) override;
+		virtual void SetLayout(const TShared<VertexLayout>& layout, const TShared<Shader>& shader) override;
 
 		virtual uint32 GetVertexCount() const override;
 

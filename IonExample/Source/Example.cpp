@@ -69,12 +69,7 @@ public:
 		uint32* indicesPtr = (uint32*)((uint8*)data.MeshAsset->Data() + meshDesc->IndicesOffset);
 
 		TShared<VertexBuffer> vb = VertexBuffer::Create(vertexAttributesPtr, meshDesc->VertexCount);
-		vb->SetLayout(meshDesc->VertexLayout);
-		{
-			DX11VertexBuffer* dx11VB = dynamic_cast<DX11VertexBuffer*>(vb.get());
-			if (dx11VB)
-				dx11VB->CreateDX11Layout(TStaticCast<DX11Shader>(shader));
-		}
+		vb->SetLayout(meshDesc->VertexLayout, shader);
 		TShared<IndexBuffer> ib = IndexBuffer::Create(indicesPtr, (uint32)meshDesc->IndexCount);
 		
 		// Texure
