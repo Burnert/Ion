@@ -4,7 +4,12 @@
 
 static int32 MainShared()
 {
-	Ion::Application* application = Ion::CreateApplication();
+	using namespace Ion;
+#if ION_ENABLE_TRACING
+	DebugTracing::Init();
+#endif
+
+	Application* application = CreateApplication();
 	application->Start();
 
 	TRACE_SESSION_BEGIN("Shutdown");
@@ -16,6 +21,10 @@ static int32 MainShared()
 #ifdef ION_DEBUG
 	ION_LOG_DEBUG("Press Enter to close.");
 	getchar();
+#endif
+
+#if ION_ENABLE_TRACING
+	DebugTracing::Shutdown();
 #endif
 
 	return 0;

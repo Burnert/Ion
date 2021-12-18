@@ -13,38 +13,42 @@ namespace Ion
 	{
 		QueryPerformanceFrequency((LARGE_INTEGER*)&g_PerformanceFrequency);
 		QueryPerformanceCounter((LARGE_INTEGER*)&g_InitTime);
-
-		s_SessionDumpFile = FileOld::Create();
 	}
 
 	void DebugTracing::Shutdown()
-	{
-		s_SessionDumpFile->Close();
-		delete s_SessionDumpFile;
+	{ // @TODO: worker.join() here
 	}
 
 	int64 DebugTracing::TimestampToMicroseconds(int64 timestamp)
 	{
-		return (timestamp * 1000000) / g_PerformanceFrequency;
+		return (int64)(((double)(timestamp * 1000000)) / (double)g_PerformanceFrequency);
 	}
 
 	DebugTracing::ScopedTracer::ScopedTracer(const char* name) :
 		m_Name(name),
 		m_bRunning(IsSessionRecording()),
-		m_StartTime(-1)
+		m_StartTime(-1),
+		m_bInternal(false)
 	{
-		ionassert(HasSessionStarted());
+		if (!HasSessionStarted())
+			return;
+
 		if (m_bRunning)
 		{
-			int64 startTime;
-			QueryPerformanceCounter((LARGE_INTEGER*)&startTime);
-			m_StartTime = startTime - g_InitTime;
+			m_StartTime = GetTimestamp();
+
+			CacheStart();
 		}
 	}
 
 	DebugTracing::ScopedTracer::~ScopedTracer()
 	{
-		ionassert(HasSessionStarted());
+		if (m_bInternal)
+			return;
+
+		if (!HasSessionStarted())
+			return;
+
 		// If m_StartTime is -1 it means that recording was started after the ScopedTracer was created
 		if (!m_bRunning || m_StartTime == -1)
 		{
@@ -52,11 +56,29 @@ namespace Ion
 		}
 		m_bRunning = false;
 
-		int64 endTime;
-		QueryPerformanceCounter((LARGE_INTEGER*)&endTime);
-		endTime -= g_InitTime;
-		float duration = (float)((endTime - m_StartTime) * 1000000 / g_PerformanceFrequency);
+		int64 endTime = GetTimestamp();
+		double duration = ((double)((endTime - m_StartTime) * 1000000)) / (double)g_PerformanceFrequency;
+
 		CacheResult(endTime, duration);
+	}
+
+	int64 DebugTracing::ScopedTracer::GetTimestamp()
+	{
+		int64 time;
+		QueryPerformanceCounter((LARGE_INTEGER*)&time);
+		return time - g_InitTime;
+	}
+
+	DebugTracing::ScopedTracer::ScopedTracer() :
+		m_Name(nullptr),
+		m_bRunning(true),
+		m_StartTime(-1),
+		m_bInternal(true)
+	{
+		if (!HasSessionStarted())
+			return;
+
+		m_StartTime = GetTimestamp();
 	}
 }
 

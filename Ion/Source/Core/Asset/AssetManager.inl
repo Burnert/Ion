@@ -39,6 +39,8 @@ namespace Ion
 
 		while (!messages.empty())
 		{
+			TRACE_SCOPE("AssetManager::IterateMessages - Iterate Message");
+
 			AssetMessageBuffer buffer = messages.top();
 
 			messages.pop();

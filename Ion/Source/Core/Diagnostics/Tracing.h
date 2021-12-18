@@ -16,13 +16,27 @@ namespace Ion
 	class ION_API DebugTracing
 	{
 	public:
+		struct TraceStart
+		{
+			const char* Name;
+			int64 Timestamp;
+			int32 PID;
+			int32 TID;
+		};
 		struct TraceResult
 		{
 			const char* Name;
 			int64 Timestamp;
 			int64 EndTimestamp;
-			float Duration;
+			double Duration;
+			int32 PID;
+			int32 TID;
 		};
+
+		using TraceResultsArray = TArray<TraceResult>;
+		using TraceStartMap = THashMap<String, TraceStart>;
+		using NamedTraceResultsMap = THashMap<String, TraceResult*>;
+		using ThreadNameCache = THashMap<int32, String>;
 
 		class ION_API ScopedTracer
 		{
@@ -31,13 +45,22 @@ namespace Ion
 			ScopedTracer(const char* name);
 			~ScopedTracer();
 
+			int64 GetTimestamp();
+
 		protected:
-			void CacheResult(int64 endTime, float duration);
+			void CacheStart();
+			void CacheResult(int64 endTime, double duration);
+
+			// Internal
+			ScopedTracer();
 
 		private:
 			const char* m_Name;
 			int64 m_StartTime;
 			bool m_bRunning;
+			bool m_bInternal;
+
+			friend class DebugTracing;
 		};
 
 		static void Init();
@@ -45,23 +68,31 @@ namespace Ion
 
 		static void BeginSession(const char* name);
 		static void EndSession();
-		inline static bool HasSessionStarted() { return (bool)s_CurrentSessionName; }
-		inline static const char* GetCurrentSessionName() { return s_CurrentSessionName; }
+		static bool HasSessionStarted();
+		static const char* GetCurrentSessionName();
 
 		static void StartSessionRecording();
 		static void StopSessionRecording();
-		inline static bool IsSessionRecording() { return s_bSessionRecording; }
+		static bool IsSessionRecording();
 
-		static void DumpResults();
+		static void DumpResults(bool bEndSession = false);
 
 		static int64 TimestampToMicroseconds(int64 timestamp);
 
 	private:
+		static void WriteBeginEvent(const char* name, int64 timestamp, int32 pid, const char* threadDesc, String& outString);
+		static void WriteEndEvent(int64 timestamp, int32 pid, const char* threadDesc, String& outString);
+
+	private:
+		static TraceResultsArray s_TraceResults;
+		static TraceStartMap s_TraceStarts;
+		static NamedTraceResultsMap s_NamedTraceResults;
+		static ThreadNameCache s_ThreadNameCache;
+		static TUnique<File> s_SessionDumpFile;
+		static Mutex s_ResultsMutex;
+		static Mutex s_SessionMutex;
 		static const char* s_CurrentSessionName;
 		static bool s_bSessionRecording;
-		static TArray<TraceResult> s_TraceResults;
-		static THashMap<String, TraceResult*> s_NamedTraceResults;
-		static FileOld* s_SessionDumpFile;
 	};
 }
 

@@ -5,6 +5,8 @@ namespace Ion
 	template<typename Lambda>
 	inline void AssetMemoryPool::UpdateAllocData(ptrdiff_t offset, AllocDataArray::iterator start, AllocDataArray::iterator end, Lambda onItemRealloc)
 	{
+		TRACE_FUNCTION();
+
 		for (auto allocDataIt = start; allocDataIt != end; ++allocDataIt)
 		{
 			uint8* oldPtr = (uint8*)allocDataIt->Ptr;

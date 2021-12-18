@@ -66,3 +66,15 @@ template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<Ion::
 template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<Ion::Matrix4>()   { return "FloatMatrix4"; }
 template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<Ion::Matrix4x2>() { return "FloatMatrix4x2"; }
 template<> NODISCARD FORCEINLINE static constexpr const char* TypeToString<Ion::Matrix4x3>() { return "FloatMatrix4x3"; }
+
+template<typename T>
+NODISCARD FORCEINLINE constexpr String ToString(T value)
+{
+	return std::to_string(value);
+}
+
+template<typename T>
+NODISCARD FORCEINLINE constexpr WString ToWString(T value)
+{
+	return std::to_wstring(value);
+}

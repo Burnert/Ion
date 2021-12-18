@@ -15,7 +15,7 @@
 #define ION_RELEASE_TRACING 1
 /* Disables tracing on all configurations
  * Default: 0 */
-#define ION_NO_TRACING 1
+#define ION_NO_TRACING 0
 /* Specifies a maximum number of cached results.
  * Once this number is reached the tracer dumps the cached results
  * to file and clears the cache.

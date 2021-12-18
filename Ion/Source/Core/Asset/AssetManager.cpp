@@ -26,16 +26,22 @@ namespace Ion
 
 	void AssetReference::SetErrorData(const MemoryBlockDescriptor& data)
 	{
+		TRACE_FUNCTION();
+
 		memcpy(ErrorData, data.Ptr, data.Size);
 	}
 
 	void AssetInterface::LoadAssetData()
 	{
+		TRACE_FUNCTION();
+
 		AssetManager::LoadAssetData(*m_RefPtr);
 	}
 
 	void AssetInterface::UnloadAssetData()
 	{
+		TRACE_FUNCTION();
+
 		AssetManager::UnloadAssetData(*m_RefPtr);
 	}
 
@@ -216,6 +222,8 @@ namespace Ion
 		work.RefPtr = &ref;
 		work.OnLoad = [](AssetReference& ref)
 		{
+			TRACE_SCOPE("AssetManager::ScheduleLoadWork - OnLoad");
+
 			LOG_TRACE(L"Loaded asset \"{0}\"", ref.Location.ToString());
 			
 			OnAssetLoadedMessage message { };
@@ -225,6 +233,8 @@ namespace Ion
 		};
 		work.OnLoadError = [](AssetReference& ref)
 		{
+			TRACE_SCOPE("AssetManager::ScheduleLoadWork - OnLoadError");
+
 			LOG_ERROR(L"Could not load asset \"{0}\"", ref.Location.ToString());
 
 			OnAssetLoadErrorMessage message { };
@@ -234,6 +244,8 @@ namespace Ion
 		};
 		work.OnAllocError = [](AssetReference& ref, AllocError_Details& details)
 		{
+			TRACE_SCOPE("AssetManager::ScheduleLoadWork - OnAllocError");
+
 			LOG_WARN(L"Could not allocate asset \"{0}\"", ref.Location.ToString());
 
 			OnAssetAllocErrorMessage message { };
@@ -455,6 +467,8 @@ namespace Ion
 
 	void AssetWorker::WorkerProc()
 	{
+		TRACE_FUNCTION();
+
 		SetThreadDescription(GetCurrentThread(), L"AssetWorker");
 
 		AssetManager::WorkQueue& queue = AssetManager::m_WorkQueue;
@@ -467,12 +481,14 @@ namespace Ion
 				UniqueLock lock(AssetManager::m_WorkQueueMutex);
 
 				m_CurrentWork = EAssetWorkerWorkType::Null;
-
-				// Wait for work
-				AssetManager::m_WorkQueueCV.wait(lock, [this, &queue]
 				{
-					return queue.size() || m_bExit;
-				});
+					TRACE_SCOPE("AssetWorker::WorkerProc - Wait for work");
+					// Wait for work
+					AssetManager::m_WorkQueueCV.wait(lock, [this, &queue]
+					{
+						return queue.size() || m_bExit;
+					});
+				}
 
 				if (m_bExit)
 				{
@@ -485,6 +501,7 @@ namespace Ion
 
 				m_CurrentWork = work->GetType();
 			}
+			TRACE_SCOPE("AssetWorker::WorkerProc - Work loop");
 
 			DispatchWork(work);
 			work.reset();
@@ -499,6 +516,8 @@ namespace Ion
 
 	void AssetWorker::DispatchWork(const TShared<AssetWorkerWorkBase>& work)
 	{
+		TRACE_FUNCTION();
+
 		switch (work->GetType())
 		{
 			_DISPATCH_WORK_CASE(Load);
@@ -520,6 +539,8 @@ namespace Ion
 
 	void AssetWorker::DoLoadWork(const TShared<AssetWorkerLoadWork>& work)
 	{
+		TRACE_FUNCTION();
+
 		LOG_TRACE(L"Loading asset \"{0}\"...", work->RefPtr->Location.ToString());
 
 		AssetReference* refPtr = work->RefPtr;
@@ -567,6 +588,8 @@ namespace Ion
 
 	bool AssetWorker::LoadMesh(File& file, const TShared<AssetWorkerLoadWork>& work, void** outDataPtr, size_t* outDataSize)
 	{
+		TRACE_FUNCTION();
+
 		// @TODO: Same as textures
 
 		void* poolBlockPtr;
@@ -617,6 +640,8 @@ namespace Ion
 
 	bool AssetWorker::LoadTexture(File& file, const TShared<AssetWorkerLoadWork>& work, void** outDataPtr, size_t* outDataSize)
 	{
+		TRACE_FUNCTION();
+
 		// @TODO: This will have to use an optimized texture format instead of plain pixel data
 
 		void* poolBlockPtr;

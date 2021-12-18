@@ -24,111 +24,124 @@ namespace Ion
 
 #if ION_DEBUG
 		// Init Debug Layer
+		{
+			TRACE_SCOPE("DX11::Init - Init Debug Layer");
 
-		s_hDxgiDebugModule = LoadLibrary(L"Dxgidebug.dll");
-		win_check(s_hDxgiDebugModule, "Could not load module Dxgidebug.dll.");
+			s_hDxgiDebugModule = LoadLibrary(L"Dxgidebug.dll");
+			win_check(s_hDxgiDebugModule, "Could not load module Dxgidebug.dll.");
 
-		DXGIGetDebugInterface = (DXGIGetDebugInterfaceProc)GetProcAddress(s_hDxgiDebugModule, "DXGIGetDebugInterface");
-		win_check(DXGIGetDebugInterface, "Cannot load DXGIGetDebugInterface from Dxgidebug.dll.");
+			DXGIGetDebugInterface = (DXGIGetDebugInterfaceProc)GetProcAddress(s_hDxgiDebugModule, "DXGIGetDebugInterface");
+			win_check(DXGIGetDebugInterface, "Cannot load DXGIGetDebugInterface from Dxgidebug.dll.");
 
-		dxcall(DXGIGetDebugInterface(IID_PPV_ARGS(&s_DebugInfoQueue)), "Cannot get the Debug Interface.");
+			dxcall(DXGIGetDebugInterface(IID_PPV_ARGS(&s_DebugInfoQueue)), "Cannot get the Debug Interface.");
+		}
 #endif
 		// Create Device and Swap Chain
-
 		DXGI_SWAP_CHAIN_DESC scd { };
-		scd.BufferCount = 2;
-		scd.BufferDesc.Width = 0;
-		scd.BufferDesc.Height = 0;
-		scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		scd.BufferDesc.RefreshRate.Numerator = 0;
-		scd.BufferDesc.RefreshRate.Denominator = 0;
-		scd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-		scd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-		scd.SampleDesc.Count = 1;
-		scd.SampleDesc.Quality = 0;
-		scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-		scd.OutputWindow = hwnd;
-		scd.Windowed = true;
-		scd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-		scd.Flags = 0;
+		{
+			TRACE_SCOPE("DX11::Init - Create Device and Swap Chain");
 
-		D3D_FEATURE_LEVEL targetFeatureLevel[] = {
-			D3D_FEATURE_LEVEL_11_1,
-			D3D_FEATURE_LEVEL_11_0,
-			D3D_FEATURE_LEVEL_10_1,
-			D3D_FEATURE_LEVEL_10_0,
-		};
+			scd.BufferCount = 2;
+			scd.BufferDesc.Width = 0;
+			scd.BufferDesc.Height = 0;
+			scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+			scd.BufferDesc.RefreshRate.Numerator = 0;
+			scd.BufferDesc.RefreshRate.Denominator = 0;
+			scd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+			scd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
+			scd.SampleDesc.Count = 1;
+			scd.SampleDesc.Quality = 0;
+			scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+			scd.OutputWindow = hwnd;
+			scd.Windowed = true;
+			scd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+			scd.Flags = 0;
 
-		uint32 flags = 0;
+			D3D_FEATURE_LEVEL targetFeatureLevel[] = {
+				D3D_FEATURE_LEVEL_11_1,
+				D3D_FEATURE_LEVEL_11_0,
+				D3D_FEATURE_LEVEL_10_1,
+				D3D_FEATURE_LEVEL_10_0,
+			};
+
+			uint32 flags = 0;
 #if ION_DEBUG
-		flags |= D3D11_CREATE_DEVICE_DEBUG /*| D3D11_CREATE_DEVICE_DEBUGGABLE*/;
+			flags |= D3D11_CREATE_DEVICE_DEBUG /*| D3D11_CREATE_DEVICE_DEBUGGABLE*/;
 #endif
 
-		dxcall(
-			D3D11CreateDeviceAndSwapChain(nullptr,
-				D3D_DRIVER_TYPE_HARDWARE,
-				NULL,
-				flags,
-				targetFeatureLevel,
-				2,
-				D3D11_SDK_VERSION,
-				&scd,
-				&s_SwapChain,
-				&s_Device,
-				&s_FeatureLevel,
-				&s_Context),
-			"Cannot create D3D Device and Swap Chain.");
+			dxcall(
+				D3D11CreateDeviceAndSwapChain(nullptr,
+					D3D_DRIVER_TYPE_HARDWARE,
+					NULL,
+					flags,
+					targetFeatureLevel,
+					2,
+					D3D11_SDK_VERSION,
+					&scd,
+					&s_SwapChain,
+					&s_Device,
+					&s_FeatureLevel,
+					&s_Context),
+				"Cannot create D3D Device and Swap Chain.");
+		}
+		// Create Render Target
 
 		CreateRenderTarget();
 
 		// Create Rasterizer State
+		{
+			TRACE_SCOPE("DX11::Init - Create Rasterizer State");
 
-		D3D11_RASTERIZER_DESC rd { };
-		rd.FillMode = D3D11_FILL_SOLID;
-		rd.CullMode = D3D11_CULL_BACK;
-		rd.FrontCounterClockwise = true;
-		rd.DepthClipEnable = true;
+			D3D11_RASTERIZER_DESC rd { };
+			rd.FillMode = D3D11_FILL_SOLID;
+			rd.CullMode = D3D11_CULL_BACK;
+			rd.FrontCounterClockwise = true;
+			rd.DepthClipEnable = true;
 
-		dxcall(s_Device->CreateRasterizerState(&rd, &s_RasterizerState));
-		dxcall_v(s_Context->RSSetState(s_RasterizerState));
-
+			dxcall(s_Device->CreateRasterizerState(&rd, &s_RasterizerState));
+			dxcall_v(s_Context->RSSetState(s_RasterizerState));
+		}
 		// Create Depth / Stencil Buffer
+		{
+			TRACE_SCOPE("DX11::Init - Create Depth / Stencil Buffer");
 
-		D3D11_DEPTH_STENCIL_DESC dsd { };
-		dsd.DepthEnable = true;
-		dsd.DepthFunc = D3D11_COMPARISON_LESS;
-		dsd.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-		dsd.StencilEnable = true;
-		dsd.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
-		dsd.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
-		dsd.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-		dsd.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-		dsd.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-		dsd.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
-		dsd.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-		dsd.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-		dsd.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-		dsd.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+			D3D11_DEPTH_STENCIL_DESC dsd { };
+			dsd.DepthEnable = true;
+			dsd.DepthFunc = D3D11_COMPARISON_LESS;
+			dsd.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+			dsd.StencilEnable = true;
+			dsd.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
+			dsd.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
+			dsd.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+			dsd.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+			dsd.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+			dsd.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+			dsd.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+			dsd.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+			dsd.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+			dsd.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
 
-		dxcall(s_Device->CreateDepthStencilState(&dsd, &s_DepthStencilState));
-		dxcall_v(s_Context->OMSetDepthStencilState(s_DepthStencilState, 1));
+			dxcall(s_Device->CreateDepthStencilState(&dsd, &s_DepthStencilState));
+			dxcall_v(s_Context->OMSetDepthStencilState(s_DepthStencilState, 1));
 
-		s_SwapChain->GetDesc(&scd);
-		CreateDepthStencil(scd.BufferDesc.Width, scd.BufferDesc.Height);
-
+			s_SwapChain->GetDesc(&scd);
+			CreateDepthStencil(scd.BufferDesc.Width, scd.BufferDesc.Height);
+		}
 		// Set Viewports
+		{
+			TRACE_SCOPE("DX11::Init - Set Viewports");
 
-		WindowDimensions dimensions = window->GetDimensions();
+			WindowDimensions dimensions = window->GetDimensions();
 
-		D3D11_VIEWPORT viewport { };
-		viewport.TopLeftX = 0.0f;
-		viewport.TopLeftY = 0.0f;
-		viewport.Width = (float)dimensions.Width;
-		viewport.Height = (float)dimensions.Height;
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
-		dxcall_v(s_Context->RSSetViewports(1, &viewport));
-
+			D3D11_VIEWPORT viewport { };
+			viewport.TopLeftX = 0.0f;
+			viewport.TopLeftY = 0.0f;
+			viewport.Width = (float)dimensions.Width;
+			viewport.Height = (float)dimensions.Height;
+			viewport.MinDepth = 0.0f;
+			viewport.MaxDepth = 1.0f;
+			dxcall_v(s_Context->RSSetViewports(1, &viewport));
+		}
 		// Disable Alt+Enter Fullscreen
 
 		IDXGIFactory1* factory = nullptr;

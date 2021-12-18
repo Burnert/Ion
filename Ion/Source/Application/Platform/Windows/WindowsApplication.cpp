@@ -18,10 +18,7 @@ namespace Ion
 
 	void WindowsApplication::Start()
 	{
-#if ION_ENABLE_TRACING
-		DebugTracing::Init();
-#endif
-
+		SetThreadDescription(GetCurrentThread(), L"MainThread");
 		// Init
 		TRACE_SESSION_BEGIN("Init");
 		TRACE_RECORD_START();
