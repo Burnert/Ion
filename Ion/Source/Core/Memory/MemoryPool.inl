@@ -1,9 +1,7 @@
-#pragma once
-
 namespace Ion
 {
 	template<typename Lambda>
-	inline void AssetMemoryPool::UpdateAllocData(ptrdiff_t offset, AllocDataArray::iterator start, AllocDataArray::iterator end, Lambda onItemRealloc)
+	inline void MemoryPool::UpdateAllocData(ptrdiff_t offset, AllocDataArray::iterator start, AllocDataArray::iterator end, Lambda onBlockRealloc)
 	{
 		TRACE_FUNCTION();
 
@@ -19,12 +17,12 @@ namespace Ion
 			m_AllocDataByPtr.insert(Move(allocNode));
 
 			if constexpr (TIsConvertibleV<Lambda, OnBlockReallocCallback>)
-				onItemRealloc(oldPtr, movedPtr);
+				onBlockRealloc(oldPtr, movedPtr);
 		}
 	}
 
 	template<typename Lambda>
-	inline void AssetMemoryPool::ReallocPool(size_t newSize, Lambda onItemRealloc)
+	inline void MemoryPool::ReallocPool(size_t newSize, Lambda onBlockRealloc)
 	{
 		TRACE_FUNCTION();
 
@@ -48,11 +46,11 @@ namespace Ion
 		m_Data = data;
 		m_CurrentPtr += offsetAfterMove;
 
-		UpdateAllocData(offsetAfterMove, m_AllocData.begin(), m_AllocData.end(), onItemRealloc);
+		UpdateAllocData(offsetAfterMove, m_AllocData.begin(), m_AllocData.end(), onBlockRealloc);
 	}
 
 	template<typename Lambda>
-	inline void AssetMemoryPool::DefragmentPool(Lambda onItemRealloc)
+	inline void MemoryPool::DefragmentPool(Lambda onBlockRealloc)
 	{
 		TRACE_FUNCTION();
 
@@ -61,9 +59,9 @@ namespace Ion
 
 		struct _NonContiguousMemoryBlock
 		{
-			MemoryBlockDescriptor Block;
-			AssetAllocData* LeftAllocDataPtr;
-			AssetAllocData* RightAllocDataPtr;
+			MemoryBlock Block;
+			MemoryPoolAllocData* LeftAllocDataPtr;
+			MemoryPoolAllocData* RightAllocDataPtr;
 		};
 
 		if (m_AllocData.empty())
@@ -73,8 +71,8 @@ namespace Ion
 
 		// Find non-contiguous memory blocks
 		void* expectedPtr = m_Data;
-		AssetAllocData* previousAllocData = nullptr;
-		for (AssetAllocData& allocData : m_AllocData)
+		MemoryPoolAllocData* previousAllocData = nullptr;
+		for (MemoryPoolAllocData& allocData : m_AllocData)
 		{
 			// Memory is non-contiguous if the next data block
 			// does not start at the end of the previous one
@@ -103,7 +101,7 @@ namespace Ion
 			auto nextIt = blocksIt + 1;
 			bool bNext = nextIt != nonContiguousBlocks.end();
 
-			AssetAllocData* right = blocksIt->RightAllocDataPtr;
+			MemoryPoolAllocData* right = blocksIt->RightAllocDataPtr;
 
 			uint8* destination = (uint8*)blocksIt->Block.Ptr;
 			uint8* source = (uint8*)right->Ptr;
@@ -113,7 +111,7 @@ namespace Ion
 			// (Could be shorter but this is more readable)
 			if (!bNext)
 			{ // If there's no another NC memory, move all the blocks
-				AssetAllocData& lastAllocData = m_AllocData.back();
+				MemoryPoolAllocData& lastAllocData = m_AllocData.back();
 				uint8* endOfChunk = (uint8*)lastAllocData.Block.End();
 				blocksSize = endOfChunk - source;
 			}
@@ -132,7 +130,7 @@ namespace Ion
 			UpdateAllocData(offsetAfterMove,
 				m_AllocData.begin() + right->SequentialIndex,
 				bNext ? (m_AllocData.begin() + nextIt->LeftAllocDataPtr->SequentialIndex + 1) : m_AllocData.end(),
-				onItemRealloc);
+				onBlockRealloc);
 
 			if (nextIt != nonContiguousBlocks.end())
 			{
@@ -146,5 +144,11 @@ namespace Ion
 		}
 		// Update the next alloc pointer after all of that
 		m_CurrentPtr = (uint8*)m_AllocData.back().Block.End();
+	}
+
+	template<typename T>
+	T MemoryPool::GetErrorDetails() const
+	{
+		return *(T*)m_ErrorDetails;
 	}
 }

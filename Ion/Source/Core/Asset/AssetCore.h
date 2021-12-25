@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core/File/File.h"
-#include "AssetMemory.h"
+#include "Core/Memory/MemoryCore.h"
 
 namespace Ion
 {
@@ -143,7 +143,7 @@ namespace Ion
 		EAssetMessageType Type = EAssetMessageType::OnAssetAllocError;
 		EAssetType AssetType;
 		AssetReference* RefPtr;
-		AllocError_Details ErrorDetails;
+		Memory::AllocError_Details ErrorDetails;
 	};
 
 	struct ASSET_MESSAGE_BUFFER OnAssetUnloadedMessage
@@ -203,11 +203,11 @@ namespace Ion
 
 	struct AssetData
 	{
-		MEMORY_BLOCK_FIELD;
+		MEMORYBLOCK_FIELD;
 	};
 
 	using AssetReferenceErrorDataTypes = TTypePack<
-		AllocError_Details
+		Memory::AllocError_Details
 	>;
 
 	class ION_API AssetReference
@@ -261,7 +261,7 @@ namespace Ion
 	private:
 		AssetReference();
 
-		void SetErrorData(const MemoryBlockDescriptor& data);
+		void SetErrorData(const MemoryBlock& data);
 
 		friend class AssetManager;
 		friend class AssetWorker;

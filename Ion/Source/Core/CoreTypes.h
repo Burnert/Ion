@@ -94,6 +94,7 @@ using UniqueLock = std::unique_lock<Mutex>;
 namespace LockProp
 {
 	inline constexpr std::defer_lock_t DeferLock = std::defer_lock;
+	inline constexpr std::try_to_lock_t TryToLock = std::try_to_lock;
 }
 
 template<typename T>

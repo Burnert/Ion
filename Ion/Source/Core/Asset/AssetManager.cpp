@@ -24,7 +24,7 @@ namespace Ion
 		memset(ErrorData, 0, sizeof(ErrorData));
 	}
 
-	void AssetReference::SetErrorData(const MemoryBlockDescriptor& data)
+	void AssetReference::SetErrorData(const MemoryBlock& data)
 	{
 		TRACE_FUNCTION();
 
@@ -53,11 +53,11 @@ namespace Ion
 
 		{
 			TRACE_SCOPE("Allocate Mesh Asset Pool");
-			m_MeshAssetPool.AllocatePool(DEFAULT_MESH_POOL_SIZE, DEFAULT_ASSET_ALIGNMENT);
+			m_MeshAssetPool.AllocPool(DEFAULT_MESH_POOL_SIZE, DEFAULT_ASSET_ALIGNMENT);
 		}
 		{
 			TRACE_SCOPE("Allocate Texture Asset Pool");
-			m_TextureAssetPool.AllocatePool(DEFAULT_TEXTURE_POOL_SIZE, DEFAULT_ASSET_ALIGNMENT);
+			m_TextureAssetPool.AllocPool(DEFAULT_TEXTURE_POOL_SIZE, DEFAULT_ASSET_ALIGNMENT);
 		}
 
 		for (AssetWorker& worker : m_AssetWorkers)
@@ -149,7 +149,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		AssetMemoryPool* poolPtr = GetAssetMemoryPool(ref.Type);
+		MemoryPool* poolPtr = GetAssetMemoryPool(ref.Type);
 		ionassert(poolPtr);
 
 		if (!ref.Data.Ptr)
@@ -169,7 +169,7 @@ namespace Ion
 		_DispatchMessage(message);
 	}
 
-	AssetMemoryPool* AssetManager::GetAssetMemoryPool(EAssetType type)
+	MemoryPool* AssetManager::GetAssetMemoryPool(EAssetType type)
 	{
 		switch (type)
 		{
@@ -192,12 +192,12 @@ namespace Ion
 		_DispatchMessage(message);
 	}
 
-	AssetMemoryPool& AssetManager::GetMeshAssetMemoryPool()
+	MemoryPool& AssetManager::GetMeshAssetMemoryPool()
 	{
 		return m_MeshAssetPool;
 	}
 
-	AssetMemoryPool& AssetManager::GetTextureAssetMemoryPool()
+	MemoryPool& AssetManager::GetTextureAssetMemoryPool()
 	{
 		return m_TextureAssetPool;
 	}
@@ -242,7 +242,7 @@ namespace Ion
 			message.ErrorMessage = ""; // @TODO: Add error message output
 			AddMessage(message);
 		};
-		work.OnAllocError = [](AssetReference& ref, AllocError_Details& details)
+		work.OnAllocError = [](AssetReference& ref, Memory::AllocError_Details& details)
 		{
 			TRACE_SCOPE("AssetManager::ScheduleLoadWork - OnAllocError");
 
@@ -305,7 +305,7 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		// Mark the asset to resolve the error later
-		message.RefPtr->SetErrorData(MemoryBlockDescriptor { &message.ErrorDetails, sizeof(message.ErrorDetails) });
+		message.RefPtr->SetErrorData(MemoryBlock { &message.ErrorDetails, sizeof(message.ErrorDetails) });
 		message.RefPtr->bAllocError = true;
 
 		m_ErrorAssets.push_back(message.RefPtr);
@@ -369,7 +369,7 @@ namespace Ion
 				{
 					LOG_TRACE(L"Resolving Asset Alloc Error (\"{0}\")", refPtr->Location.ToString());
 
-					AllocError_Details errorDetails = *(AllocError_Details*)refPtr->ErrorData;
+					Memory::AllocError_Details errorDetails = *(Memory::AllocError_Details*)refPtr->ErrorData;
 
 					ResolveAllocError(*refPtr, errorDetails);
 					refPtr->bAllocError = false;
@@ -395,11 +395,11 @@ namespace Ion
 		}
 	}
 
-	void AssetManager::ResolveAllocError(AssetReference& ref, AllocError_Details& details)
+	void AssetManager::ResolveAllocError(AssetReference& ref, Memory::AllocError_Details& details)
 	{
 		TRACE_FUNCTION();
 
-		AssetMemoryPool& poolRef = *GetAssetMemoryPool(ref.Type);
+		MemoryPool& poolRef = *GetAssetMemoryPool(ref.Type);
 
 		auto onItemReallocFunc = [](void* oldLocation, void* newLocation)
 		{
@@ -427,8 +427,8 @@ namespace Ion
 		}
 	}
 
-	AssetMemoryPool AssetManager::m_MeshAssetPool;
-	AssetMemoryPool AssetManager::m_TextureAssetPool;
+	MemoryPool AssetManager::m_MeshAssetPool;
+	MemoryPool AssetManager::m_TextureAssetPool;
 
 	THashMap<AssetID, AssetReference> AssetManager::m_Assets;
 	THashMap<void*, AssetReference*> AssetManager::m_LoadedAssets;
@@ -622,7 +622,7 @@ namespace Ion
 		poolBlockSize = vertexBlockSize + indexBlockSize;
 		size_t& indexBlockOffset = vertexBlockSize;
 
-		AllocError_Details errorDetails { };
+		Memory::AllocError_Details errorDetails { };
 		poolBlockPtr = AllocateAssetData<EAssetType::Mesh>(poolBlockSize, errorDetails);
 		HANDLE_ALLOC_ERROR(poolBlockPtr, errorDetails);
 
@@ -660,7 +660,7 @@ namespace Ion
 
 		poolBlockSize = image.GetPixelDataSize();
 
-		AllocError_Details errorDetails { };
+		Memory::AllocError_Details errorDetails { };
 		poolBlockPtr = AllocateAssetData<EAssetType::Texture>(poolBlockSize, errorDetails);
 		HANDLE_ALLOC_ERROR(poolBlockPtr, errorDetails);
 

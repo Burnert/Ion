@@ -107,7 +107,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		AssetMemoryPool& poolRef = GetAssetMemoryPool<Type>();
+		MemoryPool& poolRef = GetAssetMemoryPool<Type>();
 
 		poolRef.DefragmentPool([](void* oldLocation, void* newLocation)
 		{ // For each asset reallocation
@@ -116,7 +116,7 @@ namespace Ion
 	}
 
 	template<EAssetType Type>
-	AssetMemoryPool& AssetManager::GetAssetMemoryPool()
+	MemoryPool& AssetManager::GetAssetMemoryPool()
 	{
 		if constexpr (Type == EAssetType::Mesh)
 			return GetMeshAssetMemoryPool();
@@ -127,16 +127,16 @@ namespace Ion
 	template<EAssetType Type>
 	inline size_t AssetManager::GetAssetAlignment()
 	{
-		const AssetMemoryPool& poolRef = GetAssetMemoryPool<Type>();
-		return poolRef.m_Alignment;
+		const MemoryPool& poolRef = GetAssetMemoryPool<Type>();
+		return poolRef.GetAlignment();
 	}
 
 	template<EAssetType Type>
-	inline TShared<AssetMemoryPoolDebugInfo> AssetManager::GetAssetPoolDebugInfo()
+	inline TShared<MemoryPoolDebugInfo> AssetManager::GetAssetPoolDebugInfo()
 	{
 		TRACE_FUNCTION();
 
-		const AssetMemoryPool& poolRef = GetAssetMemoryPool<Type>();
+		const MemoryPool& poolRef = GetAssetMemoryPool<Type>();
 
 		return poolRef.GetDebugInfo();
 	}
@@ -146,7 +146,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		const AssetMemoryPool& poolRef = GetAssetMemoryPool<Type>();
+		const MemoryPool& poolRef = GetAssetMemoryPool<Type>();
 
 		LOG_INFO("Asset Memory - {0} Pool Data:", AssetTypeToString(Type));
 
@@ -156,47 +156,21 @@ namespace Ion
 	// AssetWorker --------------------------------------------------------------------------------
 
 	template<EAssetType Type>
-	inline void* AssetWorker::AllocateAssetData(size_t size, AllocError_Details& outErrorData)
+	inline void* AssetWorker::AllocateAssetData(size_t size, Memory::AllocError_Details& outErrorData)
 	{
 		TRACE_FUNCTION();
 
-		AssetMemoryPool& poolRef = AssetManager::TAssetPoolFromType<Type>;
-
-		bool bPoolFragmented = poolRef.IsFragmented();
-
-		if (size > poolRef.GetSize())
-		{
-			LOG_WARN("Tried to allocate an asset larger than the entire memory pool.\n"
-			"Pool Size = {0} B | Asset Size = {1} B\n"
-			"If there is a need for large assets, try allocating a bigger pool beforehand.", poolRef.GetSize(), size);
-
-			outErrorData.FailedAllocSize = size;
-			outErrorData.bPoolOutOfMemory = true;
-			outErrorData.bAllocSizeGreaterThanPoolSize = true;
-			outErrorData.bPoolFragmented = bPoolFragmented;
-			return nullptr;
-		}
-
-		if (size > poolRef.GetFreeBytes())
-		{
-			outErrorData.FailedAllocSize = size;
-			outErrorData.bPoolOutOfMemory = true;
-			outErrorData.bPoolFragmented = bPoolFragmented;
-			return nullptr;
-		}
+		MemoryPool& poolRef = AssetManager::TAssetPoolFromType<Type>;
 
 		if (void* ptr = poolRef.Alloc(size))
 			return ptr;
 
-		if (bPoolFragmented)
+		EMemoryPoolError error = poolRef.GetLastError();
+		if (error == EMemoryPoolError::AllocError)
 		{
-			outErrorData.FailedAllocSize = size;
-			outErrorData.bPoolFragmented = true;
-			return nullptr;
+			outErrorData = poolRef.GetErrorDetails<Memory::AllocError_Details>();
 		}
 
-		outErrorData.FailedAllocSize = size;
-		outErrorData.bOtherAllocError = true;
 		return nullptr;
 	}
 }

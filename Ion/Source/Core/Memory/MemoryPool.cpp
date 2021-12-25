@@ -1,19 +1,18 @@
 #include "IonPCH.h"
 
-#include "AssetMemory.h"
-
-#pragma warning(disable:6387)
+#include "MemoryPool.h"
 
 namespace Ion
 {
-	AssetMemoryPool::AssetMemoryPool() :
+	MemoryPool::MemoryPool() :
 		m_PoolBlock({ 0 }),
 		m_Alignment(0),
 		m_CurrentPtr(nullptr),
 		m_UsedBytes(0)
-	{ }
+	{
+	}
 
-	void AssetMemoryPool::AllocatePool(size_t size, size_t alignment)
+	void MemoryPool::AllocPool(size_t size, size_t alignment)
 	{
 		TRACE_FUNCTION();
 
@@ -29,7 +28,7 @@ namespace Ion
 		m_CurrentPtr = (uint8*)m_Data;
 	}
 
-	void AssetMemoryPool::FreePool()
+	void MemoryPool::FreePool()
 	{
 		TRACE_FUNCTION();
 
@@ -37,37 +36,68 @@ namespace Ion
 
 		_aligned_free(m_Data);
 		m_Data = nullptr;
+		m_CurrentPtr = nullptr;
 		m_Size = 0;
 		m_Alignment = 0;
-		m_CurrentPtr = nullptr;
 		m_UsedBytes = 0;
 	}
 
-	void* AssetMemoryPool::Alloc(size_t size)
+	void* MemoryPool::Alloc(size_t size)
 	{
 		TRACE_FUNCTION();
 
 		ionassert(m_Data);
 		ionassert(size);
 
-		UniqueLock lock(m_PoolMutex);
-
-		if (size > GetFreeBytes())
-			return nullptr;
-
-		uint8* allocPtr = m_CurrentPtr;
+		Memory::AllocError_Details& errorDetails = *(Memory::AllocError_Details*)m_ErrorDetails;
 
 		// Round up to m_Alignment
 		size_t alignedSize = AlignAs(size, m_Alignment);
 
-		if (allocPtr + alignedSize > m_PoolBlock.End())
+		if (alignedSize > m_Size)
+		{
+			m_LastErrorType = EMemoryPoolError::AllocError;
+
+			LOG_WARN("Tried to allocate a block larger than the entire memory pool.\n"
+				"Pool Size = {0} B | Block Size (after alignment) = {1} B\n"
+				"If there is a need for large blocks, try allocating a bigger pool beforehand.", m_Size, size);
+
+			errorDetails.FailedAllocSize = size;
+			errorDetails.bPoolOutOfMemory = true;
+			errorDetails.bAllocSizeGreaterThanPoolSize = true;
+			errorDetails.bPoolFragmented = _IsFragmented();
 			return nullptr;
+		}
+
+		UniqueLock lock(m_PoolMutex);
+
+		if (alignedSize > m_Size - m_UsedBytes)
+		{
+			m_LastErrorType = EMemoryPoolError::AllocError;
+
+			errorDetails.FailedAllocSize = size;
+			errorDetails.bPoolOutOfMemory = true;
+			errorDetails.bPoolFragmented = _IsFragmented();
+			return nullptr;
+		}
+
+		uint8* allocPtr = m_CurrentPtr;
+
+		if (allocPtr + alignedSize > m_PoolBlock.End())
+		{
+			m_LastErrorType = EMemoryPoolError::AllocError;
+
+			errorDetails.FailedAllocSize = size;
+			// The pool must be fragmented, if the block should fit but it doesn't.
+			errorDetails.bPoolFragmented = true;
+			return nullptr;
+		}
 
 		m_CurrentPtr += alignedSize;
 		m_UsedBytes += alignedSize;
 
 		// Save the sub-block
-		AssetAllocData allocData { };
+		MemoryPoolAllocData allocData { };
 		allocData.Ptr = allocPtr;
 		allocData.Size = alignedSize;
 		allocData.SequentialIndex = m_AllocData.size();
@@ -78,7 +108,7 @@ namespace Ion
 		return allocPtr;
 	}
 
-	void AssetMemoryPool::Free(void* data)
+	void MemoryPool::Free(void* data)
 	{
 		TRACE_FUNCTION();
 
@@ -92,7 +122,7 @@ namespace Ion
 
 		size_t deleteIndex = it->second;
 
-		AssetAllocData& allocData = m_AllocData[deleteIndex];
+		MemoryPoolAllocData& allocData = m_AllocData[deleteIndex];
 		m_UsedBytes -= allocData.Size;
 
 		m_AllocData.erase(m_AllocData.begin() + deleteIndex);
@@ -109,16 +139,14 @@ namespace Ion
 		m_CurrentPtr = !m_AllocData.empty() ? (uint8*)m_AllocData.back().Block.End() : (uint8*)m_Data;
 	}
 
-	bool AssetMemoryPool::IsFragmented() const
+	bool MemoryPool::_IsFragmented() const
 	{
 		TRACE_FUNCTION();
 
 		ionassert(m_Data);
 
-		UniqueLock lock(m_PoolMutex);
-
 		void* expectedPtr = m_Data;
-		for (const AssetAllocData& allocData : m_AllocData)
+		for (const MemoryPoolAllocData& allocData : m_AllocData)
 		{
 			// Memory is non-contiguous if the next data block
 			// does not start at the end of the previous one
@@ -131,17 +159,25 @@ namespace Ion
 		return false;
 	}
 
-	bool AssetMemoryPool::CanAlloc(size_t size) const
-	{
-		UniqueLock lock(m_PoolMutex);
-		return size <= GetFreeBytes();
-	}
-
-	TShared<AssetMemoryPoolDebugInfo> AssetMemoryPool::GetDebugInfo() const
+	bool MemoryPool::IsFragmented() const
 	{
 		TRACE_FUNCTION();
 
-		TShared<AssetMemoryPoolDebugInfo> info = MakeShared<AssetMemoryPoolDebugInfo>();
+		UniqueLock lock(m_PoolMutex);
+		return _IsFragmented();
+	}
+
+	bool MemoryPool::CanAlloc(size_t size) const
+	{
+		UniqueLock lock(m_PoolMutex);
+		return AlignAs(size, m_Alignment) <= GetFreeBytes();
+	}
+
+	TShared<MemoryPoolDebugInfo> MemoryPool::GetDebugInfo() const
+	{
+		TRACE_FUNCTION();
+
+		TShared<MemoryPoolDebugInfo> info = MakeShared<MemoryPoolDebugInfo>();
 
 		UniqueLock lock(m_PoolMutex);
 
@@ -154,11 +190,11 @@ namespace Ion
 		return info;
 	}
 
-	void AssetMemoryPool::PrintDebugInfo() const
+	void MemoryPool::PrintDebugInfo() const
 	{
 		TRACE_FUNCTION();
 
-		TShared<AssetMemoryPoolDebugInfo> info = GetDebugInfo();
+		TShared<MemoryPoolDebugInfo> info = GetDebugInfo();
 
 		LOG_DEBUG("Used: {0} B ({1:.2f} MB) | Free: {2} B ({3:.2f} MB) | Alloc count: {4}",
 			info->BytesUsed, info->BytesUsed / (float)(1 << 20),
@@ -168,7 +204,7 @@ namespace Ion
 
 		void* expectedPtr = info->PoolPtr;
 
-		for (const AssetAllocData& allocData : info->AllocData)
+		for (const MemoryPoolAllocData& allocData : info->AllocData)
 		{
 			if (allocData.Ptr != expectedPtr)
 			{

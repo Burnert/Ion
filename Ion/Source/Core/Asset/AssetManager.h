@@ -1,8 +1,14 @@
 #pragma once
 
 #include "AssetCore.h"
+#include "Core/Memory/MemoryPool.h"
 
 #define ASSET_WORKER_COUNT 4
+
+#define DEFAULT_ASSET_ALIGNMENT   64 // Cache line size for concurrent use
+
+// @TODO: Make these be in an engine config file
+
 #define DEFAULT_MESH_POOL_SIZE    (1 << 5)//(1 << 28) // 256 MB
 #define DEFAULT_TEXTURE_POOL_SIZE (1 << 5)//(1 << 29) // 512 MB
 
@@ -30,7 +36,7 @@ namespace Ion
 
 	using AssetWork_OnLoadEvent       = TFunction<void(AssetReference&)>;
 	using AssetWork_OnLoadErrorEvent  = TFunction<void(AssetReference&)>;
-	using AssetWork_OnAllocErrorEvent = TFunction<void(AssetReference&, AllocError_Details&)>;
+	using AssetWork_OnAllocErrorEvent = TFunction<void(AssetReference&, Memory::AllocError_Details&)>;
 
 	struct ASSET_WORK AssetWorkerLoadWork : public AssetWorkerWorkBase
 	{
@@ -51,7 +57,7 @@ namespace Ion
 
 		AssetWork_OnReallocEvent OnRealloc;
 
-		AssetMemoryPool* PoolPtr;
+		MemoryPool* PoolPtr;
 		EAssetType AssetPoolType;
 	};
 
@@ -76,7 +82,7 @@ namespace Ion
 		bool LoadMesh(File& file, const TShared<AssetWorkerLoadWork>& work, void** outDataPtr, size_t* outDataSize);
 		bool LoadTexture(File& file, const TShared<AssetWorkerLoadWork>& work, void** outDataPtr, size_t* outDataSize);
 		template<EAssetType Type>
-		void* AllocateAssetData(size_t size, AllocError_Details& outErrorData);
+		void* AllocateAssetData(size_t size, Memory::AllocError_Details& outErrorData);
 
 	private:
 		Thread m_WorkerThread;
@@ -125,16 +131,16 @@ namespace Ion
 
 		// This whole thing with the getters is a temporary solution
 		// @TODO: Switch to static linking for god's sake...
-		static AssetMemoryPool& GetMeshAssetMemoryPool();
-		static AssetMemoryPool& GetTextureAssetMemoryPool();
+		static MemoryPool& GetMeshAssetMemoryPool();
+		static MemoryPool& GetTextureAssetMemoryPool();
 		template<EAssetType Type>
-		static AssetMemoryPool& GetAssetMemoryPool();
+		static MemoryPool& GetAssetMemoryPool();
 
 		template<EAssetType Type>
 		static void PrintAssetPool();
 
 		template<EAssetType Type>
-		static TShared<AssetMemoryPoolDebugInfo> GetAssetPoolDebugInfo();
+		static TShared<MemoryPoolDebugInfo> GetAssetPoolDebugInfo();
 
 		// Static class
 		AssetManager() = delete;
@@ -146,7 +152,7 @@ namespace Ion
 		static void LoadAssetData(AssetReference& ref);
 		static void UnloadAssetData(AssetReference& ref);
 
-		static AssetMemoryPool* GetAssetMemoryPool(EAssetType type);
+		static MemoryPool* GetAssetMemoryPool(EAssetType type);
 
 	private:
 		static void HandleAssetRealloc(void* oldLocation, void* newLocation);
@@ -177,11 +183,11 @@ namespace Ion
 		static void OnAssetRealloc(OnAssetReallocMessage& message);
 
 		static void ResolveErrors();
-		static void ResolveAllocError(AssetReference& ref, AllocError_Details& details);
+		static void ResolveAllocError(AssetReference& ref, Memory::AllocError_Details& details);
 
 	private:
-		static AssetMemoryPool m_MeshAssetPool;
-		static AssetMemoryPool m_TextureAssetPool;
+		static MemoryPool m_MeshAssetPool;
+		static MemoryPool m_TextureAssetPool;
 
 		static THashMap<AssetID, AssetReference> m_Assets;
 		static THashMap<void*, AssetReference*> m_LoadedAssets;
@@ -208,12 +214,12 @@ namespace Ion
 		template<EAssetType Type>
 		struct _TAssetPoolFromType;
 		template<>
-		struct _TAssetPoolFromType<EAssetType::Mesh>    { static inline constexpr AssetMemoryPool& Ref = m_MeshAssetPool; };
+		struct _TAssetPoolFromType<EAssetType::Mesh>    { static inline constexpr MemoryPool& Ref = m_MeshAssetPool; };
 		template<>
-		struct _TAssetPoolFromType<EAssetType::Texture> { static inline constexpr AssetMemoryPool& Ref = m_TextureAssetPool; };
+		struct _TAssetPoolFromType<EAssetType::Texture> { static inline constexpr MemoryPool& Ref = m_TextureAssetPool; };
 
 		template<EAssetType Type>
-		static inline constexpr AssetMemoryPool& TAssetPoolFromType = _TAssetPoolFromType<Type>::Ref;
+		static inline constexpr MemoryPool& TAssetPoolFromType = _TAssetPoolFromType<Type>::Ref;
 	};
 }
 #include "AssetManager.inl"
