@@ -14,6 +14,13 @@
 
 namespace Ion
 {
+	struct ScreenTextureRenderData
+	{
+		TShared<Shader> Shader;
+		TShared<VertexBuffer> VertexBuffer;
+		TShared<IndexBuffer> IndexBuffer;
+	};
+
 	class ION_API Renderer
 	{
 	public:
@@ -27,6 +34,7 @@ namespace Ion
 		virtual void Clear(const Vector4& color) const = 0;
 
 		virtual void Draw(const RPrimitiveRenderProxy& primitive, const TShared<Scene>& targetScene = nullptr) const = 0;
+		virtual void DrawScreenTexture(const TShared<Texture>& texture) const = 0;
 
 		virtual void SetCurrentScene(const TShared<Scene>& scene) = 0;
 		virtual const TShared<Scene>& GetCurrentScene() const = 0;
@@ -42,7 +50,18 @@ namespace Ion
 		virtual void SetPolygonDrawMode(EPolygonDrawMode drawMode) const = 0;
 		virtual EPolygonDrawMode GetPolygonDrawMode() const = 0;
 
+		virtual void SetRenderTarget(const TShared<Texture>& targetTexture) = 0;
+
 	protected:
 		Renderer() { }
+
+		void InitScreenTextureRendering();
+		void BindScreenTexturePrimitives() const;
+
+	private:
+		void CreateScreenTexturePrimitives();
+
+	private:
+		ScreenTextureRenderData m_ScreenTextureRenderData;
 	};
 }

@@ -17,16 +17,45 @@ namespace Ion
 		m_PixelData(nullptr),
 		m_Width(0),
 		m_Height(0),
-		m_Channels(0)
+		m_Channels(0),
+		m_bNonOwning(false)
 	{ }
+
+	Image::Image(uint8* pixelData, int32 width, int32 height, int32 channels, bool bCopy) :
+		m_Width(width),
+		m_Height(height),
+		m_Channels(channels),
+		m_bNonOwning(!bCopy)
+	{
+		ionassert(pixelData);
+		ionassert(width > 0);
+		ionassert(height > 0);
+		ionassert(channels > 0);
+
+		if (bCopy)
+		{
+			// Copy the pixel data
+			uint64 pixelDataSize = (uint64)m_Width * (uint64)m_Height * (uint64)m_Channels;
+			m_PixelData = (uint8*)malloc(pixelDataSize);
+			memcpy_s(m_PixelData, pixelDataSize, pixelData, pixelDataSize);
+		}
+		else
+		{
+			m_PixelData = pixelData;
+		}
+	}
 
 	Image::~Image()
 	{
-		if (m_PixelData)
+		if (!m_bNonOwning && m_PixelData)
 			stbi_image_free(m_PixelData);
 	}
 
-	Image::Image(const Image& other)
+	Image::Image(const Image& other) :
+		m_Width(other.m_Width),
+		m_Height(other.m_Height),
+		m_Channels(other.m_Channels),
+		m_bNonOwning(false)
 	{
 		m_Width = other.m_Width;
 		m_Height = other.m_Height;
@@ -38,14 +67,16 @@ namespace Ion
 		memcpy_s(m_PixelData, pixelDataSize, other.m_PixelData, pixelDataSize);
 	}
 
-	Image::Image(Image&& other) noexcept
+	Image::Image(Image&& other) noexcept :
+		m_Width(other.m_Width),
+		m_Height(other.m_Height),
+		m_Channels(other.m_Channels),
+		m_bNonOwning(other.m_bNonOwning)
 	{
-		m_Width = other.m_Width;
-		m_Height = other.m_Height;
-		m_Channels = other.m_Channels;
 		other.m_Width = 0;
 		other.m_Height = 0;
 		other.m_Channels = 0;
+		other.m_bNonOwning = false;
 
 		// Move the pixel data
 		m_PixelData = other.m_PixelData;
@@ -55,6 +86,12 @@ namespace Ion
 	const uint8* Image::Load(FileOld* file)
 	{
 		TRACE_FUNCTION();
+
+		if (m_PixelData)
+		{
+			LOG_ERROR("Image has already been loaded.");
+			return nullptr;
+		}
 
 		_FAIL_M(file->Exists(), L"Cannot load image from '{0}'.\nThe file does not exist.", file->GetFilename());
 
@@ -88,6 +125,12 @@ namespace Ion
 	const uint8* Image::Load(File& file)
 	{
 		TRACE_FUNCTION();
+
+		if (m_PixelData)
+		{
+			LOG_ERROR("Image has already been loaded.");
+			return nullptr;
+		}
 
 		_FAIL_M(file.Exists(), L"Cannot load image from '{0}'.\nThe file does not exist.", file.GetFullPath());
 

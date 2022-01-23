@@ -62,8 +62,17 @@ public:
 	template<EExampleModelName Type>
 	static void InitExampleModel(ExampleModelData<Type>& data, const TShared<Shader>& shader, TShared<Scene>& scene, const Matrix4& transform)
 	{
-		// Texure
-		data.Texture = Texture::Create(data.TextureAsset);
+		// Texture
+		AssetDescription::Texture* texAssetDesc = data.TextureAsset->GetDescription<EAssetType::Texture>();
+		TextureDescription texDesc { };
+		texDesc.Dimensions.Width = texAssetDesc->Width;
+		texDesc.Dimensions.Height = texAssetDesc->Height;
+		texDesc.bGenerateMips = true;
+		texDesc.bUseAsRenderTarget = true;
+		data.Texture = Texture::Create(texDesc);
+
+		Image texImage((uint8*)data.TextureAsset->Data(), texAssetDesc->Width, texAssetDesc->Height, texAssetDesc->NumChannels);
+		data.Texture->UpdateSubresource(&texImage);
 
 		// Material
 		data.Material = Material::Create();
@@ -407,6 +416,8 @@ public:
 		//tImage->Load(fImage);
 		//m_Triangle.Texture = Texture::Create(tImage);
 
+		CreateRenderTargetTexture(*(TextureDimensions*)&GetWindow()->GetDimensions());
+
 		m_Camera = Camera::Create();
 		m_Camera->SetTransform(Math::Translate(Vector3(0.0f, 0.0f, 2.0f)));
 		m_Camera->SetFOV(Math::Radians(90.0f));
@@ -614,8 +625,8 @@ public:
 					{
 						Image* textureImage = new Image;
 						ionassertnd(textureImage->Load(textureFile));
-						m_TextureCollada = Texture::Create(textureImage);
-						m_MeshCollada->GetMaterial().lock()->SetParameter("Texture", m_TextureCollada);
+						m_TextureCollada->UpdateSubresource(textureImage);
+						//m_MeshCollada->GetMaterial().lock()->SetParameter("Texture", m_TextureCollada);
 					}
 					delete textureFile;
 				}
@@ -707,18 +718,16 @@ public:
 
 	virtual void OnRender() override
 	{
+		// @TODO: Resize the render target on window resize
+		GetRenderer()->SetRenderTarget(m_RenderTarget);
+
 		GetRenderer()->Clear(Vector4(0.1f, 0.1f, 0.1f, 1.0f));
 		GetRenderer()->RenderScene(m_Scene);
 
-		//RPrimitiveRenderProxy triangle { };
-		//triangle.VertexBuffer = m_Triangle.VB.get();
-		//triangle.IndexBuffer = m_Triangle.IB.get();
-		//triangle.UniformBuffer = m_Triangle.UB.get();
-		//triangle.Shader = m_Triangle.Shader.get();
-		//triangle.Transform = Matrix4(1.0f);
-		//m_Triangle.Texture->Bind();
+		GetRenderer()->SetRenderTarget(nullptr);
 
-		//GetRenderer()->Draw(triangle, m_Scene);
+		GetRenderer()->Clear(Vector4(0.0f, 0.0f, 0.0f, 1.0f));
+		GetRenderer()->DrawScreenTexture(m_RenderTarget);
 	}
 
 	virtual void OnShutdown() override
@@ -773,11 +782,25 @@ public:
 		}
 	}
 
+	void OnWindowResizeEvent(const WindowResizeEvent& event)
+	{
+		CreateRenderTargetTexture(TextureDimensions { event.GetWidth(), event.GetHeight() });
+	}
+
+	void CreateRenderTargetTexture(TextureDimensions dimensions)
+	{
+		TextureDescription renderTargetDesc { };
+		renderTargetDesc.Dimensions = dimensions;
+		renderTargetDesc.bUseAsRenderTarget = true;
+		m_RenderTarget = Texture::Create(renderTargetDesc);
+	}
+
 	using ExampleEventFunctions = TEventFunctionPack <
 		TMemberEventFunction<IonExample, KeyPressedEvent, &OnKeyPressedEvent>,
 		TMemberEventFunction<IonExample, RawInputMouseMovedEvent, &OnRawInputMouseMovedEvent>,
 		TMemberEventFunction<IonExample, MouseButtonPressedEvent, &OnMouseButtonPressedEvent>,
-		TMemberEventFunction<IonExample, MouseButtonReleasedEvent, &OnMouseButtonReleasedEvent>
+		TMemberEventFunction<IonExample, MouseButtonReleasedEvent, &OnMouseButtonReleasedEvent>,
+		TMemberEventFunction<IonExample, WindowResizeEvent, &OnWindowResizeEvent>
 	>;
 
 private:
@@ -797,6 +820,8 @@ private:
 	ExampleModelData<EExampleModelName::Slovak>  m_Slovak;
 	ExampleModelData<EExampleModelName::Stress>  m_Stress;
 	//ExampleModelData<EExampleModelName::BigSphere> m_BigSphere;
+
+	TShared<Texture> m_RenderTarget;
 
 	Vector4 m_CameraLocation = { 0.0f, 0.0f, 2.0f, 1.0f };
 	Vector3 m_CameraRotation = { 0.0f, 0.0f, 0.0f };

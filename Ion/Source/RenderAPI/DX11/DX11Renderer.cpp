@@ -10,10 +10,13 @@
 #include "Core/Platform/Windows/WindowsMacros.h"
 #include "Core/Platform/Windows/WindowsUtility.h"
 
+#include "Application/EnginePath.h"
+
 namespace Ion
 {
 	DX11Renderer::DX11Renderer() :
-		m_CurrentScene({ })
+		m_CurrentScene({ }),
+		m_CurrentRenderTarget(nullptr)
 	{
 	}
 
@@ -23,7 +26,7 @@ namespace Ion
 
 	void DX11Renderer::Init()
 	{
-
+		InitScreenTextureRendering();
 	}
 
 	void DX11Renderer::Clear() const
@@ -37,7 +40,7 @@ namespace Ion
 
 		ID3D11DeviceContext* context = DX11::GetContext();
 
-		dxcall_v(context->ClearRenderTargetView(DX11::s_RTV, (float*)&color));
+		dxcall_v(context->ClearRenderTargetView(m_CurrentRenderTarget, (float*)&color));
 		dxcall_v(context->ClearDepthStencilView(DX11::s_DSV, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0));
 	}
 
@@ -76,6 +79,19 @@ namespace Ion
 		//material->UpdateShaderUniforms();
 
 		dxcall_v(context->DrawIndexed(ib->GetIndexCount(), 0, 0));
+	}
+
+	void DX11Renderer::DrawScreenTexture(const TShared<Texture>& texture) const
+	{
+		TRACE_FUNCTION();
+
+		ID3D11DeviceContext* context = DX11::GetContext();
+
+		BindScreenTexturePrimitives();
+		texture->Bind(0);
+
+		// Index count is always 6 (2 triangles)
+		dxcall_v(context->DrawIndexed(6, 0, 0));
 	}
 
 	void DX11Renderer::RenderScene(const TShared<Scene>& scene)
@@ -214,5 +230,16 @@ namespace Ion
 		dxcall_v(rasterizerState->GetDesc(&rd));
 
 		return rd.FillMode == D3D11_FILL_WIREFRAME ? EPolygonDrawMode::Lines : EPolygonDrawMode::Fill;
+	}
+
+	void DX11Renderer::SetRenderTarget(const TShared<Texture>& targetTexture)
+	{
+		// @TODO: Add optional DSV to the render target texture
+
+		m_CurrentRenderTarget = targetTexture ?
+			((DX11Texture*)targetTexture.get())->m_RTV :
+			DX11::GetRenderTarget();
+
+		DX11::GetContext()->OMSetRenderTargets(1, &m_CurrentRenderTarget, DX11::GetDepthStencilView());
 	}
 }

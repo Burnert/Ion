@@ -38,9 +38,8 @@ namespace Ion
 
 	protected:
 		virtual void Bind() const override;
+		virtual void BindLayout() const override;
 		virtual void Unbind() const override;
-
-		void BindLayout() const;
 
 	private:
 		uint32 m_ID;

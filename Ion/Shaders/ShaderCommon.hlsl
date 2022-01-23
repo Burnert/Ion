@@ -53,3 +53,15 @@ struct Pixel
 	float4 LocationWS : Pixel_LocationWS;
 	float4 NormalWS   : Pixel_NormalWS;
 };
+
+struct BasicVertex
+{
+	float4 Location : POSITION;
+	float4 TexCoord : TEXCOORD;
+};
+
+struct BasicPixel
+{
+	float4 Location : SV_POSITION;
+	float4 TexCoord : TEXCOORD;
+};

@@ -9,61 +9,25 @@
 
 namespace Ion
 {
-	TShared<Texture> Texture::Create(FileOld* file)
-	{
-		return MakeShareable(new OpenGLTexture(file));
-	}
-
-	TShared<Texture> Texture::Create(Image* image)
-	{
-		switch (RenderAPI::GetCurrent())
-		{
-		case ERenderAPI::OpenGL:
-			return MakeShareable(new OpenGLTexture(image));
-		case ERenderAPI::DX11:
-			return MakeShareable(new DX11Texture(image));
-		default:
-			return TShared<Texture>(nullptr);
-		}
-	}
-
-	TShared<Texture> Texture::Create(AssetHandle asset)
+	TShared<Texture> Texture::Create(const TextureDescription& desc)
 	{
 		switch (RenderAPI::GetCurrent())
 		{
 			case ERenderAPI::OpenGL:
-				return MakeShareable(new OpenGLTexture(asset));
+				return MakeShareable(new OpenGLTexture(desc));
 			case ERenderAPI::DX11:
-				return MakeShareable(new DX11Texture(asset));
+				return MakeShareable(new DX11Texture(desc));
 			default:
-				return TShared<Texture>(nullptr);
+				return TShared<Texture>();
 		}
 	}
 
+	Texture::Texture(const TextureDescription& desc)
+		: m_Description(desc)
+	{
+	}
+
 	Texture::~Texture()
-	{
-		//if (m_TextureImage)
-		//{
-		//	delete m_TextureImage;
-		//}
-	}
-
-	Texture::Texture(FileOld* file)
-	{
-		TRACE_FUNCTION();
-
-		//m_TextureImage = new Image();
-		//bool bLoaded = (bool)m_TextureImage->Load(file);
-		//ionassert(bLoaded, "The specified file could not be loaded!");
-	}
-
-	Texture::Texture(Image* image)
-	{
-		//m_TextureImage = image;
-	}
-
-	Texture::Texture(AssetHandle asset) :
-		m_TextureAsset(asset)
 	{
 	}
 }

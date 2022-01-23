@@ -10,18 +10,50 @@ namespace Ion
 	public:
 		virtual ~OpenGLTexture() override;
 
+		virtual void SetDimensions(TextureDimensions dimensions) override;
+		virtual void UpdateSubresource(Image* image) override;
+
 		virtual void Bind(uint32 slot = 0) const override;
 		virtual void Unbind() const override;
 
 		int32 GetBoundSlot() const { return m_BoundSlot; }
 
+		inline static constexpr GLint SelectGLFilterType(ETextureFilteringMethod filter, bool bMips, ETextureFilteringMethod mipFilter)
+		{
+			switch (filter)
+			{
+				case ETextureFilteringMethod::Linear:
+				{
+					if (!bMips) return GL_LINEAR;
+
+					switch (mipFilter)
+					{
+						case ETextureFilteringMethod::Linear:  return GL_LINEAR_MIPMAP_LINEAR;
+						case ETextureFilteringMethod::Nearest: return GL_LINEAR_MIPMAP_NEAREST;
+					}
+					break;
+				}
+				case ETextureFilteringMethod::Nearest:
+				{
+					if (!bMips) return GL_NEAREST;
+
+					switch (mipFilter)
+					{
+						case ETextureFilteringMethod::Linear:  return GL_NEAREST_MIPMAP_LINEAR;
+						case ETextureFilteringMethod::Nearest: return GL_NEAREST_MIPMAP_NEAREST;
+					}
+					break;
+				}
+			}
+			return GL_NEAREST;
+		}
+
 	protected:
-		OpenGLTexture(FileOld* file);
-		OpenGLTexture(Image* image);
-		OpenGLTexture(AssetHandle asset);
+		OpenGLTexture(const TextureDescription& desc);
 
 	private:
-		void CreateTexture(const void* const pixelData, uint32 width, uint32 height);
+		void CreateTexture(const TextureDescription& desc);
+		void ReleaseTexture();
 
 	private:
 		uint32 m_ID;

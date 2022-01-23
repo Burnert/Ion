@@ -8,9 +8,48 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		COMRelease(m_Texture);
-		COMRelease(m_SRV);
-		COMRelease(m_SamplerState);
+		ReleaseTexture();
+	}
+
+	void DX11Texture::SetDimensions(TextureDimensions dimensions)
+	{
+		//ionassert(dimensions.Width <= 16384 && dimensions.Height <= 16384, "Textures larger than 16K are unsupported.");
+
+
+	}
+
+	void DX11Texture::UpdateSubresource(Image* image)
+	{
+		TRACE_FUNCTION();
+
+		if (!image->IsLoaded())
+		{
+			LOG_ERROR("Cannot Update Subresource of Texture. Image has not been loaded.");
+			return;
+		}
+
+		ID3D11DeviceContext* context = DX11::GetContext();
+
+		// Dimensions are different
+		if (image->GetWidth() != m_Description.Dimensions.Width ||
+			image->GetHeight() != m_Description.Dimensions.Height)
+		{
+			LOG_WARN("Image dimensions do not match texture dimensions.");
+			//ReleaseTexture();
+			//CreateTexture(image->GetPixelData(), image->GetWidth(), image->GetHeight());
+			return;
+		}
+
+		uint32 lineSize = image->GetWidth() * 4;
+
+		// Update Subresource
+		dxcall_v(context->UpdateSubresource(m_Texture, 0, nullptr, image->GetPixelData(), lineSize, 0));
+
+		if (m_Description.bGenerateMips)
+		{
+			// Generate mipmaps
+			dxcall_v(context->GenerateMips(m_SRV));
+		}
 	}
 
 	void DX11Texture::Bind(uint32 slot) const
@@ -29,47 +68,47 @@ namespace Ion
 		dxcall_v(DX11::GetContext()->PSSetSamplers(0, 0, nullptr));
 	}
 
-	DX11Texture::DX11Texture(Image* image) :
-		Texture(image)
+	DX11Texture::DX11Texture(const TextureDescription& desc) :
+		Texture(desc),
+		m_Texture(nullptr),
+		m_SRV(nullptr),
+		m_SamplerState(nullptr)
 	{
-		TRACE_FUNCTION();
-
-		CreateTexture(image->GetPixelData(), image->GetWidth(), image->GetHeight());
+		CreateTexture(desc);
 	}
 
-	DX11Texture::DX11Texture(AssetHandle asset) :
-		Texture(asset)
-	{
-		const AssetDescription::Texture* desc = asset->GetDescription<EAssetType::Texture>();
-		CreateTexture(asset->Data(), desc->Width, desc->Height);
-	}
-
-	void DX11Texture::CreateTexture(const void* const pixelData, uint32 width, uint32 height)
+	void DX11Texture::CreateTexture(const TextureDescription& desc)
 	{
 		TRACE_FUNCTION();
-
-		ionassert(m_TextureAsset->IsLoaded(), "Texture has not been loaded yet.");
 
 		HRESULT hResult;
 
 		ID3D11Device* device = DX11::GetDevice();
 		ID3D11DeviceContext* context = DX11::GetContext();
 
-		uint32 lineSize = width * 4;
+		uint32 lineSize = desc.Dimensions.Width * 4;
 
 		// Create Texture2D
 
 		D3D11_TEXTURE2D_DESC tex2DDesc { };
-		tex2DDesc.Width = width;
-		tex2DDesc.Height = height;
+		tex2DDesc.Width = desc.Dimensions.Width;
+		tex2DDesc.Height = desc.Dimensions.Height;
 		tex2DDesc.MipLevels = 0;
 		tex2DDesc.ArraySize = 1;
 		tex2DDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		tex2DDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-		tex2DDesc.Usage = D3D11_USAGE_DEFAULT;
-		tex2DDesc.CPUAccessFlags = 0;
+		tex2DDesc.Usage = UsageToDX11Usage(desc.Usage);
 		tex2DDesc.SampleDesc.Count = 1;
-		tex2DDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+
+		tex2DDesc.BindFlags =
+			D3D11_BIND_SHADER_RESOURCE |
+			~(desc.bUseAsRenderTarget - 1) & D3D11_BIND_RENDER_TARGET;
+
+		tex2DDesc.CPUAccessFlags = 
+			~(desc.bAllowCPUReadAccess  - 1) & D3D11_CPU_ACCESS_READ |
+			~(desc.bAllowCPUWriteAccess - 1) & D3D11_CPU_ACCESS_WRITE;
+
+		tex2DDesc.MiscFlags =
+			~(desc.bGenerateMips - 1) & D3D11_RESOURCE_MISC_GENERATE_MIPS;
 
 		dxcall(device->CreateTexture2D(&tex2DDesc, nullptr, &m_Texture));
 
@@ -82,27 +121,40 @@ namespace Ion
 
 		dxcall(device->CreateShaderResourceView(m_Texture, &srvDesc, &m_SRV));
 
-		// Update Subresource
+		// Create RTV (Render Target View)
 
-		dxcall_v(context->UpdateSubresource(m_Texture, 0, nullptr, pixelData, lineSize, 0));
+		if (desc.bUseAsRenderTarget)
+		{
+			D3D11_RENDER_TARGET_VIEW_DESC rtvDesc { };
+			rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+			rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+			rtvDesc.Texture2D.MipSlice = 0;
 
-		// Generate mipmaps
-
-		dxcall_v(context->GenerateMips(m_SRV));
+			dxcall(device->CreateRenderTargetView(m_Texture, &rtvDesc, &m_RTV));
+		}
 
 		// Create Sampler State
 
 		D3D11_SAMPLER_DESC samplerDesc { };
-		samplerDesc.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
-		samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-		samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-		samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+		samplerDesc.Filter = SelectDX11Filter(desc.MinFilter, desc.MagFilter, desc.MipFilter);
+		samplerDesc.AddressU = WrapModeToDX11AddressMode(desc.UWrapMode);
+		samplerDesc.AddressV = WrapModeToDX11AddressMode(desc.VWrapMode);
+		samplerDesc.AddressW = WrapModeToDX11AddressMode(desc.WWrapMode);
 		samplerDesc.MaxAnisotropy = 1;
 		samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-		samplerDesc.MipLODBias = 1; // For visualization
+		samplerDesc.MipLODBias = desc.LODBias; // For visualization
 		samplerDesc.MinLOD = -D3D11_FLOAT32_MAX;
 		samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
 		dxcall(device->CreateSamplerState(&samplerDesc, &m_SamplerState));
+	}
+
+	void DX11Texture::ReleaseTexture()
+	{
+		TRACE_FUNCTION();
+
+		COMRelease(m_Texture);
+		COMRelease(m_SRV);
+		COMRelease(m_SamplerState);
 	}
 }

@@ -98,6 +98,11 @@ namespace Ion
 			return s_RTV;
 		}
 
+		static inline ID3D11DepthStencilView* GetDepthStencilView()
+		{
+			return s_DSV;
+		}
+
 		static inline ID3D11RasterizerState* GetRasterizerState()
 		{
 			return s_RasterizerState;

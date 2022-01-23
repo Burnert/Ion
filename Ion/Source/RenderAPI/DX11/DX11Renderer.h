@@ -5,6 +5,10 @@
 
 namespace Ion
 {
+	class DX11Shader;
+	class DX11VertexBuffer;
+	class DX11IndexBuffer;
+
 	class ION_API DX11Renderer : public Renderer
 	{
 	public:
@@ -17,6 +21,7 @@ namespace Ion
 		virtual void Clear(const Vector4& color) const override;
 
 		virtual void Draw(const RPrimitiveRenderProxy& primitive, const TShared<Scene>& targetScene = nullptr) const override;
+		virtual void DrawScreenTexture(const TShared<Texture>& texture) const override;
 
 		virtual void RenderScene(const TShared<Scene>& scene) override;
 
@@ -32,28 +37,11 @@ namespace Ion
 		virtual void SetPolygonDrawMode(EPolygonDrawMode drawMode) const override;
 		virtual EPolygonDrawMode GetPolygonDrawMode() const override;
 
-		//FORCEINLINE static uint32 PolygonDrawModeToGLPolygonMode(EPolygonDrawMode drawMode)
-		//{
-		//	switch (drawMode)
-		//	{
-		//	case EPolygonDrawMode::Fill:    return GL_FILL;
-		//	case EPolygonDrawMode::Lines:   return GL_LINE;
-		//	case EPolygonDrawMode::Points:  return GL_POINT;
-		//	default:                        return 0;
-		//	}
-		//}
-		//FORCEINLINE static EPolygonDrawMode GLPolygonModeToPolygonDrawMode(int32 polygonMode)
-		//{
-		//	switch (polygonMode)
-		//	{
-		//	case GL_FILL:   return EPolygonDrawMode::Fill;
-		//	case GL_LINE:   return EPolygonDrawMode::Lines;
-		//	case GL_POINT:  return EPolygonDrawMode::Points;
-		//	default:        return (EPolygonDrawMode)-1;
-		//	}
-		//}
+		virtual void SetRenderTarget(const TShared<Texture>& targetTexture) override;
 
 	private:
 		TShared<Scene> m_CurrentScene;
+
+		ID3D11RenderTargetView* m_CurrentRenderTarget;
 	};
 }

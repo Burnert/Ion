@@ -479,8 +479,6 @@ namespace Ion
 		{
 			{
 				UniqueLock lock(AssetManager::m_WorkQueueMutex);
-
-				m_CurrentWork = EAssetWorkerWorkType::Null;
 				{
 					TRACE_SCOPE("AssetWorker::WorkerProc - Wait for work");
 					// Wait for work
@@ -505,7 +503,10 @@ namespace Ion
 
 			DispatchWork(work);
 			work.reset();
-
+			{
+				UniqueLock lock(AssetManager::m_WorkQueueMutex);
+				m_CurrentWork = EAssetWorkerWorkType::Null;
+			}
 			AssetManager::m_WaitForWorkersCV.notify_one();
 		}
 	}

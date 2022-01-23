@@ -17,6 +17,7 @@ namespace Ion
 		virtual void Clear(const Vector4& color) const override;
 
 		virtual void Draw(const RPrimitiveRenderProxy& primitive, const TShared<Scene>& targetScene = nullptr) const override;
+		virtual void DrawScreenTexture(const TShared<Texture>& texture) const override;
 
 		virtual void RenderScene(const TShared<Scene>& scene) override;
 
@@ -31,6 +32,8 @@ namespace Ion
 
 		virtual void SetPolygonDrawMode(EPolygonDrawMode drawMode) const override;
 		virtual EPolygonDrawMode GetPolygonDrawMode() const override;
+
+		virtual void SetRenderTarget(const TShared<Texture>& targetTexture) override;
 
 		FORCEINLINE static uint32 PolygonDrawModeToGLPolygonMode(EPolygonDrawMode drawMode)
 		{

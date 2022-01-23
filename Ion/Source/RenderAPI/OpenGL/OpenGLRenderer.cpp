@@ -95,6 +95,10 @@ namespace Ion
 		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
 	}
 
+	void OpenGLRenderer::DrawScreenTexture(const TShared<Texture>& texture) const
+	{
+	}
+
 	void OpenGLRenderer::RenderScene(const TShared<Scene>& scene)
 	{
 		TRACE_FUNCTION();
@@ -211,5 +215,9 @@ namespace Ion
 		int32 polygonMode;
 		glGetIntegerv(GL_POLYGON_MODE, &polygonMode);
 		return GLPolygonModeToPolygonDrawMode(polygonMode);
+	}
+
+	void OpenGLRenderer::SetRenderTarget(const TShared<Texture>& targetTexture)
+	{
 	}
 }

@@ -8,6 +8,7 @@ namespace Ion
 	{
 	public:
 		Image();
+		Image(uint8* pixelData, int32 width, int32 height, int32 channels, bool bCopy = false);
 		~Image();
 
 		Image(const Image& other);
@@ -31,5 +32,6 @@ namespace Ion
 		int32 m_Width;
 		int32 m_Height;
 		int32 m_Channels;
+		bool m_bNonOwning;
 	};
 }

@@ -8,8 +8,40 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		glDeleteTextures(1, &m_ID);
-		m_ID = 0;
+		ReleaseTexture();
+	}
+
+	void OpenGLTexture::SetDimensions(TextureDimensions dimensions)
+	{
+
+	}
+
+	void OpenGLTexture::UpdateSubresource(Image* image)
+	{
+		TRACE_FUNCTION();
+
+		if (!image->IsLoaded())
+		{
+			LOG_ERROR("Cannot Update Subresource of Texture. Image has not been loaded.");
+			return;
+		}
+
+		// Dimensions are different
+		if (image->GetWidth() != m_Description.Dimensions.Width ||
+			image->GetHeight() != m_Description.Dimensions.Height)
+		{
+			LOG_WARN("Image dimensions do not match texture dimensions.");
+			//ReleaseTexture();
+			//CreateTexture(image->GetPixelData(), image->GetWidth(), image->GetHeight());
+			return;
+		}
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->GetWidth(), image->GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, image->GetPixelData());
+
+		if (m_Description.bGenerateMips)
+		{
+			glGenerateMipmap(GL_TEXTURE_2D);
+		}
 	}
 
 	void OpenGLTexture::Bind(uint32 slot) const
@@ -26,32 +58,17 @@ namespace Ion
 		// @TODO: Implement a texture manager with some indication which slots are bound by which textures
 	}
 
-	OpenGLTexture::OpenGLTexture(FileOld* file)
-		: Texture(file),
-		m_BoundSlot(-1)
+	OpenGLTexture::OpenGLTexture(const TextureDescription& desc) :
+		Texture(desc),
+		m_BoundSlot(-1),
+		m_ID((uint32)-1)
 	{
-		//CreateTexture();
+		CreateTexture(desc);
 	}
 
-	OpenGLTexture::OpenGLTexture(Image* image)
-		: Texture(image),
-		m_BoundSlot(-1)
-	{
-		CreateTexture(image->GetPixelData(), image->GetWidth(), image->GetHeight());
-	}
-
-	OpenGLTexture::OpenGLTexture(AssetHandle asset) :
-		Texture(asset)
-	{
-		const AssetDescription::Texture* desc = asset->GetDescription<EAssetType::Texture>();
-		CreateTexture(asset->Data(), desc->Width, desc->Height);
-	}
-
-	void OpenGLTexture::CreateTexture(const void* const pixelData, uint32 width, uint32 height)
+	void OpenGLTexture::CreateTexture(const TextureDescription& desc)
 	{
 		TRACE_FUNCTION();
-
-		ionassert(m_TextureAsset->IsLoaded(), "Texture has not been loaded yet.");
 
 		{
 			TRACE_SCOPE("OpenGLTexture - glGenTextures | glBindTexture");
@@ -59,18 +76,28 @@ namespace Ion
 			glBindTexture(GL_TEXTURE_2D, m_ID);
 		}
 
-		{
-			TRACE_SCOPE("OpenGLTexture - glTexImage2D");
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixelData);
-		}
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA, desc.Dimensions.Width, desc.Dimensions.Height);
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, 1.0f); // For visualization
+		//{
+		//	TRACE_SCOPE("OpenGLTexture - glTexImage2D");
+		//	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixelData);
+		//}
 
-		{
-			TRACE_SCOPE("OpenGLTexture - glGenerateMipmap");
-			glGenerateMipmap(GL_TEXTURE_2D);
-		}
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, SelectGLFilterType(desc.MinFilter, desc.bGenerateMips, desc.MipFilter));
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, SelectGLFilterType(desc.MagFilter, desc.bGenerateMips, desc.MipFilter));
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, desc.LODBias);
+
+		//{
+		//	TRACE_SCOPE("OpenGLTexture - glGenerateMipmap");
+		//	glGenerateMipmap(GL_TEXTURE_2D);
+		//}
+	}
+
+	void OpenGLTexture::ReleaseTexture()
+	{
+		TRACE_FUNCTION();
+
+		glDeleteTextures(1, &m_ID);
+		m_ID = 0;
 	}
 }
