@@ -333,9 +333,35 @@ public:
 		ImGui::PopID();
 	}
 
+	void BenchmarkMemory()
+	{
+		MemoryPool pool;
+		pool.AllocPool(1 << 30, 64); // 1GB
+
+		DebugTimer timer1;
+		for (int i = 0; i < 100; ++i)
+		{
+			void* ptr = malloc(1 << 22);
+		}
+		timer1.Stop();
+		timer1.PrintTimer("malloc     (100 * 4MB)", EDebugTimerTimeUnit::Millisecond);
+
+		DebugTimer timer2;
+		for (int i = 0; i < 100; ++i)
+		{
+			void* ptr = pool.Alloc(1 << 22);
+		}
+		timer2.Stop();
+		timer2.PrintTimer("pool alloc (100 * 4MB)", EDebugTimerTimeUnit::Millisecond);
+
+		pool.FreePool();
+	}
+
 	virtual void OnInit() override
 	{
 #pragma warning(disable:6001)
+
+		BenchmarkMemory();
 
 		CreateExampleAssets();
 		LoadExampleAssets();
@@ -416,7 +442,8 @@ public:
 		//tImage->Load(fImage);
 		//m_Triangle.Texture = Texture::Create(tImage);
 
-		CreateRenderTargetTexture(*(TextureDimensions*)&GetWindow()->GetDimensions());
+		WindowDimensions windowDimensions = GetWindow()->GetDimensions();
+		CreateRenderTargetTexture(TextureDimensions { (uint32)windowDimensions.Width, (uint32)windowDimensions.Height });
 
 		m_Camera = Camera::Create();
 		m_Camera->SetTransform(Math::Translate(Vector3(0.0f, 0.0f, 2.0f)));

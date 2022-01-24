@@ -8,6 +8,7 @@ static int32 MainShared()
 #if ION_ENABLE_TRACING
 	DebugTracing::Init();
 #endif
+	DebugTimer::InitPlatform();
 
 	Application* application = CreateApplication();
 	application->Start();
@@ -20,7 +21,7 @@ static int32 MainShared()
 
 #ifdef ION_DEBUG
 	ION_LOG_DEBUG("Press Enter to close.");
-	getchar();
+	(void)getchar();
 #endif
 
 #if ION_ENABLE_TRACING
