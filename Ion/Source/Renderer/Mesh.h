@@ -20,7 +20,6 @@ namespace Ion
 	{
 	public:
 		static TShared<Mesh> Create();
-		static TShared<Mesh> Create(AssetHandle& asset);
 
 		virtual ~Mesh() { }
 
@@ -37,6 +36,8 @@ namespace Ion
 
 		MeshUniforms& GetUniformsDataRef();
 
+		bool LoadFromAsset(AssetHandle& asset);
+
 		// IDrawable:
 
 		virtual const VertexBuffer* GetVertexBufferRaw() const override;
@@ -49,13 +50,8 @@ namespace Ion
 
 	private:
 		Mesh();
-		Mesh(AssetHandle& asset);
-
-		bool LoadFromAsset(AssetHandle& asset);
 
 	private:
-		AssetHandle m_MeshAsset;
-
 		TShared<VertexBuffer> m_VertexBuffer;
 		TShared<IndexBuffer> m_IndexBuffer;
 		TShared<UniformBuffer> m_UniformBuffer;

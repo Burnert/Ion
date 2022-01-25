@@ -81,7 +81,8 @@ public:
 		data.Material->SetParameter("Texture", data.Texture);
 
 		// Mesh
-		data.Mesh = Mesh::Create(data.MeshAsset);
+		data.Mesh = Mesh::Create();
+		data.Mesh->LoadFromAsset(data.MeshAsset);
 		data.Mesh->SetMaterial(data.Material);
 		data.Mesh->SetTransform(transform);
 
