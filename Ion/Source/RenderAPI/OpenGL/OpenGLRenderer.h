@@ -56,7 +56,14 @@ namespace Ion
 			}
 		}
 
+		inline uint32 GetCurrentRenderTarget() const
+		{
+			return m_CurrentRenderTarget;
+		}
+
 	private:
 		TShared<Scene> m_CurrentScene;
+
+		uint32 m_CurrentRenderTarget;
 	};
 }

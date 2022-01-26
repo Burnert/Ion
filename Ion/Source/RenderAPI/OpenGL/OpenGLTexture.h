@@ -57,6 +57,7 @@ namespace Ion
 
 	private:
 		uint32 m_ID;
+		uint32 m_FramebufferID;
 		mutable int32 m_BoundSlot;
 
 		friend class Texture;

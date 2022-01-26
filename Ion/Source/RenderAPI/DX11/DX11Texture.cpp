@@ -72,7 +72,10 @@ namespace Ion
 		Texture(desc),
 		m_Texture(nullptr),
 		m_SRV(nullptr),
-		m_SamplerState(nullptr)
+		m_RTV(nullptr),
+		m_SamplerState(nullptr),
+		m_DepthStencilTexture(nullptr),
+		m_DSV(nullptr)
 	{
 		CreateTexture(desc);
 	}
@@ -147,6 +150,47 @@ namespace Ion
 		samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
 		dxcall(device->CreateSamplerState(&samplerDesc, &m_SamplerState));
+
+		// Create Depth Stencil
+
+		if (desc.bUseAsRenderTarget && desc.bCreateDepthStencilAttachment)
+		{
+			CreateDepthStencilTexture(desc);
+		}
+	}
+
+	void DX11Texture::CreateDepthStencilTexture(const TextureDescription& desc)
+	{
+		TRACE_FUNCTION();
+
+		HRESULT hResult;
+
+		ID3D11Device* device = DX11::GetDevice();
+
+		D3D11_TEXTURE2D_DESC depthDesc { };
+		depthDesc.Format = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+		depthDesc.Width = desc.Dimensions.Width;
+		depthDesc.Height = desc.Dimensions.Height;
+		depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+		depthDesc.Usage = UsageToDX11Usage(desc.Usage);
+		depthDesc.SampleDesc.Count = 1;
+		depthDesc.SampleDesc.Quality = 0;
+		depthDesc.MiscFlags = 0;
+		depthDesc.MipLevels = 1;
+		depthDesc.ArraySize = 1;
+
+		depthDesc.CPUAccessFlags =
+			~(desc.bAllowCPUReadAccess  - 1) & D3D11_CPU_ACCESS_READ |
+			~(desc.bAllowCPUWriteAccess - 1) & D3D11_CPU_ACCESS_WRITE;
+
+		dxcall(device->CreateTexture2D(&depthDesc, nullptr, &m_DepthStencilTexture));
+
+		D3D11_DEPTH_STENCIL_VIEW_DESC dsvd { };
+		dsvd.Format = depthDesc.Format;
+		dsvd.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+		dsvd.Texture2D.MipSlice = 0;
+
+		dxcall(device->CreateDepthStencilView(m_DepthStencilTexture, &dsvd, &m_DSV));
 	}
 
 	void DX11Texture::ReleaseTexture()
@@ -156,5 +200,8 @@ namespace Ion
 		COMRelease(m_Texture);
 		COMRelease(m_SRV);
 		COMRelease(m_SamplerState);
+
+		COMRelease(m_DepthStencilTexture);
+		COMRelease(m_DSV);
 	}
 }

@@ -31,6 +31,7 @@ namespace Ion
 
 		UniqueLock lock(m_PoolMutex);
 
+		// @TODO: FIX: Sometimes this newSize is equal to the current offset.
 		ionassert(newSize > GetCurrentOffset());
 
 		newSize = AlignAs(newSize, m_Alignment);

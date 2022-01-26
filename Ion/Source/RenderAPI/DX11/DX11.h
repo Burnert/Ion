@@ -93,7 +93,7 @@ namespace Ion
 			return s_SwapChain;
 		}
 
-		static inline ID3D11RenderTargetView* GetRenderTarget()
+		static inline ID3D11RenderTargetView* GetRenderTargetView()
 		{
 			return s_RTV;
 		}

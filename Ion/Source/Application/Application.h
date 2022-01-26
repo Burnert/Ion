@@ -53,7 +53,7 @@ namespace Ion
 
 		static Application* Get();
 
-		FORCEINLINE static const TShared<Renderer>& GetRenderer()
+		FORCEINLINE static Renderer* GetRenderer()
 		{
 			return Get()->m_Renderer;
 		}
@@ -184,17 +184,19 @@ namespace Ion
 
 		void InitImGui() const;
 		void ShutdownImGui() const;
+	protected:
 		virtual void InitImGuiBackend(const TShared<GenericWindow>& window) const { }
 		virtual void ImGuiNewFramePlatform() const { }
 		virtual void ImGuiRenderPlatform(ImDrawData* drawData) const { }
 		virtual void ImGuiShutdownPlatform() const { }
 
+	private:
 		bool m_bRunning;
 
 		TShared<GenericWindow> m_Window;
 		TShared<InputManager> m_InputManager;
 
-		TShared<Renderer> m_Renderer;
+		Renderer* m_Renderer;
 
 		EventDispatcher<ApplicationEventFunctions, Application> m_EventDispatcher;
 		TUnique<EventQueue<EventHandler>> m_EventQueue;

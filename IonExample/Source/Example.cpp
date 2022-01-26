@@ -362,7 +362,7 @@ public:
 	{
 #pragma warning(disable:6001)
 
-		BenchmarkMemory();
+		//BenchmarkMemory();
 
 		CreateExampleAssets();
 		LoadExampleAssets();
@@ -820,6 +820,7 @@ public:
 		TextureDescription renderTargetDesc { };
 		renderTargetDesc.Dimensions = dimensions;
 		renderTargetDesc.bUseAsRenderTarget = true;
+		renderTargetDesc.bCreateDepthStencilAttachment = true;
 		m_RenderTarget = Texture::Create(renderTargetDesc);
 	}
 

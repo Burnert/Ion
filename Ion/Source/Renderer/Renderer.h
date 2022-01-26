@@ -24,7 +24,12 @@ namespace Ion
 	class ION_API Renderer
 	{
 	public:
-		static TShared<Renderer> Create();
+		static Renderer* Create();
+		inline static Renderer* Get()
+		{
+			ionassert(s_Instance);
+			return s_Instance;
+		}
 
 		virtual ~Renderer() { };
 
@@ -63,5 +68,7 @@ namespace Ion
 
 	private:
 		ScreenTextureRenderData m_ScreenTextureRenderData;
+
+		static Renderer* s_Instance;
 	};
 }

@@ -1,6 +1,7 @@
 #include "IonPCH.h"
 
 #include "OpenGLTexture.h"
+#include "OpenGLRenderer.h"
 
 namespace Ion
 {
@@ -9,6 +10,11 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		ReleaseTexture();
+
+		if (m_FramebufferID != (uint32)-1)
+		{
+			glDeleteFramebuffers(1, &m_FramebufferID);
+		}
 	}
 
 	void OpenGLTexture::SetDimensions(TextureDimensions dimensions)
@@ -61,7 +67,8 @@ namespace Ion
 	OpenGLTexture::OpenGLTexture(const TextureDescription& desc) :
 		Texture(desc),
 		m_BoundSlot(-1),
-		m_ID((uint32)-1)
+		m_ID((uint32)-1),
+		m_FramebufferID((uint32)-1)
 	{
 		CreateTexture(desc);
 	}
@@ -76,7 +83,8 @@ namespace Ion
 			glBindTexture(GL_TEXTURE_2D, m_ID);
 		}
 
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA, desc.Dimensions.Width, desc.Dimensions.Height);
+		//glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA, desc.Dimensions.Width, desc.Dimensions.Height);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, desc.Dimensions.Width, desc.Dimensions.Height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 
 		//{
 		//	TRACE_SCOPE("OpenGLTexture - glTexImage2D");
@@ -91,6 +99,25 @@ namespace Ion
 		//	TRACE_SCOPE("OpenGLTexture - glGenerateMipmap");
 		//	glGenerateMipmap(GL_TEXTURE_2D);
 		//}
+
+		if (desc.bUseAsRenderTarget)
+		{
+			TRACE_SCOPE("OpenGLTexture - Generate framebuffers");
+
+			uint32 currentFramebuffer = ((OpenGLRenderer*)Renderer::Get())->GetCurrentRenderTarget();
+
+			glGenFramebuffers(1, &m_FramebufferID);
+			glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferID);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ID, 0);
+
+			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			{
+				LOG_ERROR("Framebuffer is not complete.");
+				debugbreak();
+			}
+
+			glBindFramebuffer(GL_FRAMEBUFFER, currentFramebuffer);
+		}
 	}
 
 	void OpenGLTexture::ReleaseTexture()

@@ -9,8 +9,8 @@
 
 // @TODO: Make these be in an engine config file
 
-#define DEFAULT_MESH_POOL_SIZE    (1 << 5)//(1 << 28) // 256 MB
-#define DEFAULT_TEXTURE_POOL_SIZE (1 << 5)//(1 << 29) // 512 MB
+#define DEFAULT_MESH_POOL_SIZE    (1 << 27) // 128 MB
+#define DEFAULT_TEXTURE_POOL_SIZE (1 << 29) // 512 MB
 
 namespace Ion
 {

@@ -102,6 +102,7 @@ namespace Ion
 
 	private:
 		void CreateTexture(const TextureDescription& desc);
+		void CreateDepthStencilTexture(const TextureDescription& desc);
 		void ReleaseTexture();
 
 	private:
@@ -109,6 +110,9 @@ namespace Ion
 		ID3D11ShaderResourceView* m_SRV;
 		ID3D11RenderTargetView* m_RTV;
 		ID3D11SamplerState* m_SamplerState;
+
+		ID3D11Texture2D* m_DepthStencilTexture;
+		ID3D11DepthStencilView* m_DSV;
 
 		friend class Texture;
 		friend class DX11Renderer;

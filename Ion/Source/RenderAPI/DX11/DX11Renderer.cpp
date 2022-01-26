@@ -16,7 +16,8 @@ namespace Ion
 {
 	DX11Renderer::DX11Renderer() :
 		m_CurrentScene({ }),
-		m_CurrentRenderTarget(nullptr)
+		m_CurrentRTV(nullptr),
+		m_CurrentDSV(nullptr)
 	{
 	}
 
@@ -40,8 +41,8 @@ namespace Ion
 
 		ID3D11DeviceContext* context = DX11::GetContext();
 
-		dxcall_v(context->ClearRenderTargetView(m_CurrentRenderTarget, (float*)&color));
-		dxcall_v(context->ClearDepthStencilView(DX11::s_DSV, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0));
+		dxcall_v(context->ClearRenderTargetView(m_CurrentRTV, (float*)&color));
+		dxcall_v(context->ClearDepthStencilView(m_CurrentDSV, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0));
 	}
 
 	void DX11Renderer::Draw(const RPrimitiveRenderProxy& primitive, const TShared<Scene>& targetScene) const
@@ -234,12 +235,23 @@ namespace Ion
 
 	void DX11Renderer::SetRenderTarget(const TShared<Texture>& targetTexture)
 	{
-		// @TODO: Add optional DSV to the render target texture
+		ionassert(!targetTexture || targetTexture->GetDescription().bUseAsRenderTarget);
 
-		m_CurrentRenderTarget = targetTexture ?
-			((DX11Texture*)targetTexture.get())->m_RTV :
-			DX11::GetRenderTarget();
+		if (targetTexture)
+		{
+			DX11Texture* dx11Texture = (DX11Texture*)targetTexture.get();
 
-		DX11::GetContext()->OMSetRenderTargets(1, &m_CurrentRenderTarget, DX11::GetDepthStencilView());
+			m_CurrentRTV = dx11Texture->m_RTV;
+			m_CurrentDSV = targetTexture->HasDepthStencilAttachment() ?
+				dx11Texture->m_DSV :
+				DX11::GetDepthStencilView();
+		}
+		else
+		{
+			m_CurrentRTV = DX11::GetRenderTargetView();
+			m_CurrentDSV = DX11::GetDepthStencilView();
+		}
+
+		DX11::GetContext()->OMSetRenderTargets(1, &m_CurrentRTV, m_CurrentDSV);
 	}
 }

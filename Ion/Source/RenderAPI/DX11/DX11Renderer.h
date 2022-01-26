@@ -42,6 +42,7 @@ namespace Ion
 	private:
 		TShared<Scene> m_CurrentScene;
 
-		ID3D11RenderTargetView* m_CurrentRenderTarget;
+		ID3D11RenderTargetView* m_CurrentRTV;
+		ID3D11DepthStencilView* m_CurrentDSV;
 	};
 }

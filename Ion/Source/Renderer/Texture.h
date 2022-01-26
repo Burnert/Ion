@@ -40,6 +40,7 @@ namespace Ion
 			{
 				uint32 bGenerateMips : 1;
 				uint32 bUseAsRenderTarget : 1;
+				uint32 bCreateDepthStencilAttachment : 1;
 				uint32 bAllowCPUReadAccess : 1;
 				uint32 bAllowCPUWriteAccess : 1;
 			};
@@ -74,6 +75,16 @@ namespace Ion
 		FORCEINLINE const TextureDescription& GetDescription() const
 		{
 			return m_Description;
+		}
+
+		FORCEINLINE bool IsRenderTarget() const
+		{
+			return m_Description.bUseAsRenderTarget;
+		}
+
+		FORCEINLINE bool HasDepthStencilAttachment() const
+		{
+			return m_Description.bUseAsRenderTarget && m_Description.bCreateDepthStencilAttachment;
 		}
 
 	protected:

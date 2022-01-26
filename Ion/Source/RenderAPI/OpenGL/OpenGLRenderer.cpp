@@ -9,7 +9,8 @@
 namespace Ion
 {
 	OpenGLRenderer::OpenGLRenderer()
-		: m_CurrentScene({ })
+		: m_CurrentScene({ }),
+		m_CurrentRenderTarget(0)
 	{ }
 
 	OpenGLRenderer::~OpenGLRenderer()
@@ -33,6 +34,8 @@ namespace Ion
 		uint32 vao;
 		glCreateVertexArrays(1, &vao);
 		glBindVertexArray(vao);
+
+		InitScreenTextureRendering();
 	}
 
 	void OpenGLRenderer::Clear() const
@@ -97,6 +100,13 @@ namespace Ion
 
 	void OpenGLRenderer::DrawScreenTexture(const TShared<Texture>& texture) const
 	{
+		TRACE_FUNCTION();
+
+		BindScreenTexturePrimitives();
+		texture->Bind(0);
+
+		// Index count is always 6 (2 triangles)
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 	}
 
 	void OpenGLRenderer::RenderScene(const TShared<Scene>& scene)
@@ -219,5 +229,10 @@ namespace Ion
 
 	void OpenGLRenderer::SetRenderTarget(const TShared<Texture>& targetTexture)
 	{
+		ionassert(!targetTexture || targetTexture->GetDescription().bUseAsRenderTarget);
+
+		m_CurrentRenderTarget = targetTexture ?
+			((OpenGLTexture*)targetTexture.get())->m_FramebufferID : 0;
+		glBindFramebuffer(GL_FRAMEBUFFER, m_CurrentRenderTarget);
 	}
 }

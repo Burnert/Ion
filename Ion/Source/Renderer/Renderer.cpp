@@ -10,17 +10,29 @@
 
 namespace Ion
 {
-	TShared<Renderer> Renderer::Create()
+	Renderer* Renderer::Create()
 	{
+		ionassert(!s_Instance);
+
 		switch (RenderAPI::GetCurrent())
 		{
-		case ERenderAPI::OpenGL:
-			return MakeShared<OpenGLRenderer>();
-		case ERenderAPI::DX11:
-			return MakeShared<DX11Renderer>();
-		default:
-			return TShared<Renderer>(nullptr);
+			case ERenderAPI::OpenGL:
+			{
+				s_Instance = new OpenGLRenderer;
+				break;
+			}
+			case ERenderAPI::DX11:
+			{
+				s_Instance = new DX11Renderer;
+				break;
+			}
+			default:
+			{
+				s_Instance = nullptr;
+				break;
+			}
 		}
+		return s_Instance;
 	}
 
 	void Renderer::CreateScreenTexturePrimitives()
@@ -29,8 +41,16 @@ namespace Ion
 
 		String vertexSrc;
 		String pixelSrc;
-		File::ReadToString(EnginePath::GetCheckedShadersPath() + L"TextureRenderVS.hlsl", vertexSrc);
-		File::ReadToString(EnginePath::GetCheckedShadersPath() + L"TextureRenderPS.hlsl", pixelSrc);
+		if (RenderAPI::GetCurrent() == ERenderAPI::DX11)
+		{
+			File::ReadToString(EnginePath::GetCheckedShadersPath() + L"TextureRenderVS.hlsl", vertexSrc);
+			File::ReadToString(EnginePath::GetCheckedShadersPath() + L"TextureRenderPS.hlsl", pixelSrc);
+		}
+		else
+		{
+			File::ReadToString(EnginePath::GetCheckedShadersPath() + L"TextureRender.vert", vertexSrc);
+			File::ReadToString(EnginePath::GetCheckedShadersPath() + L"TextureRender.frag", pixelSrc);
+		}
 
 		m_ScreenTextureRenderData.Shader = Shader::Create();
 		m_ScreenTextureRenderData.Shader->AddShaderSource(EShaderType::Vertex, vertexSrc);
@@ -76,4 +96,6 @@ namespace Ion
 		m_ScreenTextureRenderData.VertexBuffer->BindLayout();
 		m_ScreenTextureRenderData.IndexBuffer->Bind();
 	}
+
+	Renderer* Renderer::s_Instance;
 }
