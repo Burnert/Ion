@@ -124,18 +124,6 @@ namespace Ion
 
 		dxcall(device->CreateShaderResourceView(m_Texture, &srvDesc, &m_SRV));
 
-		// Create RTV (Render Target View)
-
-		if (desc.bUseAsRenderTarget)
-		{
-			D3D11_RENDER_TARGET_VIEW_DESC rtvDesc { };
-			rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-			rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-			rtvDesc.Texture2D.MipSlice = 0;
-
-			dxcall(device->CreateRenderTargetView(m_Texture, &rtvDesc, &m_RTV));
-		}
-
 		// Create Sampler State
 
 		D3D11_SAMPLER_DESC samplerDesc { };
@@ -151,11 +139,23 @@ namespace Ion
 
 		dxcall(device->CreateSamplerState(&samplerDesc, &m_SamplerState));
 
-		// Create Depth Stencil
+		// Create RTV (Render Target View)
 
-		if (desc.bUseAsRenderTarget && desc.bCreateDepthStencilAttachment)
+		if (desc.bUseAsRenderTarget)
 		{
-			CreateDepthStencilTexture(desc);
+			D3D11_RENDER_TARGET_VIEW_DESC rtvDesc { };
+			rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+			rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+			rtvDesc.Texture2D.MipSlice = 0;
+
+			dxcall(device->CreateRenderTargetView(m_Texture, &rtvDesc, &m_RTV));
+
+			// Create Depth Stencil
+
+			if (desc.bCreateDepthStencilAttachment)
+			{
+				CreateDepthStencilTexture(desc);
+			}
 		}
 	}
 
@@ -168,7 +168,7 @@ namespace Ion
 		ID3D11Device* device = DX11::GetDevice();
 
 		D3D11_TEXTURE2D_DESC depthDesc { };
-		depthDesc.Format = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+		depthDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 		depthDesc.Width = desc.Dimensions.Width;
 		depthDesc.Height = desc.Dimensions.Height;
 		depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
