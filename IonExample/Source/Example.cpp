@@ -336,24 +336,30 @@ public:
 
 	void BenchmarkMemory()
 	{
+		char name[100];
+		int iters = 100;
+		size_t size = 1 << 21;
+
 		MemoryPool pool;
 		pool.AllocPool(1 << 30, 64); // 1GB
 
 		DebugTimer timer1;
-		for (int i = 0; i < 100; ++i)
+		for (int i = 0; i < iters; ++i)
 		{
-			void* ptr = malloc(1 << 22);
+			void* ptr = malloc(size);
 		}
 		timer1.Stop();
-		timer1.PrintTimer("malloc     (100 * 4MB)", EDebugTimerTimeUnit::Millisecond);
+		sprintf_s(name, "malloc     (%d * %zuB)", iters, size);
+		timer1.PrintTimer(name, EDebugTimerTimeUnit::Millisecond);
 
 		DebugTimer timer2;
-		for (int i = 0; i < 100; ++i)
+		for (int i = 0; i < iters; ++i)
 		{
-			void* ptr = pool.Alloc(1 << 22);
+			void* ptr = pool.Alloc(size);
 		}
 		timer2.Stop();
-		timer2.PrintTimer("pool alloc (100 * 4MB)", EDebugTimerTimeUnit::Millisecond);
+		sprintf_s(name, "pool alloc (%d * %zuB)", iters, size);
+		timer2.PrintTimer(name, EDebugTimerTimeUnit::Millisecond);
 
 		pool.FreePool();
 	}
