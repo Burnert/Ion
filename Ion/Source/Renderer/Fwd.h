@@ -1,0 +1,47 @@
+#pragma once
+
+namespace Ion
+{
+	// Camera.h
+	struct RCameraRenderProxy;
+	class Camera;
+	// Drawable.h
+	class IDrawable;
+	// IndexBuffer.h
+	class IndexBuffer;
+	// Light.h
+	struct RLightRenderProxy;
+	struct LightUniforms;
+	class Light;
+	class DirectionalLight;
+	// Material.h
+	class Material;
+	// Mesh.h
+	struct MeshUniforms;
+	class Mesh;
+	// Renderer.h
+	struct ScreenTextureRenderData;
+	class Renderer;
+	// RendererCore.h
+	struct ViewportDimensions;
+	// Scene.h
+	struct SceneUniforms;
+	struct RPrimitiveRenderProxy;
+	class Scene;
+	// Shader.h
+	struct ShaderInfo;
+	class Shader;
+	// Texture.h
+	struct TextureDimensions;
+	struct TextureDescription;
+	class Texture;
+	// UniformBuffer.h
+	struct UniformData;
+	class UniformBuffer;
+	// VertexAttribute.h
+	struct VertexAttribute;
+	// VertexBuffer.h
+	class VertexBuffer;
+	// VertexLayout.h
+	class VertexLayout;
+}

@@ -6,10 +6,6 @@
 
 namespace Ion
 {
-	class Texture;
-	class Scene;
-	class Camera;
-
 namespace Editor
 {
 	class EditorApplication : public IonApplication
