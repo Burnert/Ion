@@ -67,6 +67,8 @@ namespace Ion
 		virtual void Bind(uint32 slot = 0) const = 0;
 		virtual void Unbind() const = 0;
 
+		virtual void* GetNativeID() const = 0;
+
 		FORCEINLINE TextureDimensions GetDimensions() const
 		{
 			return m_Description.Dimensions;

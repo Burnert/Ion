@@ -57,17 +57,26 @@ namespace Ion
 
 		virtual void SetRenderTarget(const TShared<Texture>& targetTexture) = 0;
 
+		inline static TShared<Shader> GetBasicShader()
+		{
+			return Renderer::Get()->m_BasicShader;
+		}
+
 	protected:
 		Renderer() { }
 
 		void InitScreenTextureRendering();
 		void BindScreenTexturePrimitives() const;
 
+		void InitShaders();
+
 	private:
 		void CreateScreenTexturePrimitives();
 
 	private:
 		ScreenTextureRenderData m_ScreenTextureRenderData;
+		
+		TShared<Shader> m_BasicShader;
 
 		static Renderer* s_Instance;
 	};

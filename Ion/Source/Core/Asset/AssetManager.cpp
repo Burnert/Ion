@@ -19,14 +19,18 @@ namespace Ion
 		Data(AssetData()),
 		ID(INVALID_ASSET_ID),
 		Type(EAssetType::Null),
-		PackedFlags(0)
+		PackedFlags(0),
+		ErrorData()
 	{
-		memset(ErrorData, 0, sizeof(ErrorData));
 	}
 
 	void AssetReference::SetErrorData(const MemoryBlock& data)
 	{
 		TRACE_FUNCTION();
+
+		ionassert(data.Ptr);
+		ionassert(data.Size);
+		ionassert(data.Size <= sizeof(ErrorData));
 
 		memcpy(ErrorData, data.Ptr, data.Size);
 	}
@@ -35,12 +39,16 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
+		ionassert(m_RefPtr);
+
 		AssetManager::LoadAssetData(*m_RefPtr);
 	}
 
 	void AssetInterface::UnloadAssetData()
 	{
 		TRACE_FUNCTION();
+
+		ionassert(m_RefPtr);
 
 		AssetManager::UnloadAssetData(*m_RefPtr);
 	}

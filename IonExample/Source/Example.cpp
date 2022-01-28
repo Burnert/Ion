@@ -626,7 +626,7 @@ public:
 
 		if (m_bDrawImGui)
 		{
-			//ImGui::ShowDemoWindow();
+			ImGui::ShowDemoWindow();
 			//ImGui::ShowAboutWindow();
 			//ImGui::ShowFontSelector("Fonts");
 			//ImGui::ShowStyleEditor();
@@ -812,7 +812,6 @@ public:
 		{
 			GetWindow()->UnlockCursor();
 			GetWindow()->ShowCursor(true);
-			std::pair s(1, 4.0);
 		}
 	}
 

@@ -63,7 +63,7 @@ namespace Ion
 
 			if (m_Mode & EFileMode::CreateNew)
 			{
-				dwCreationDisposition = OPEN_ALWAYS;
+				dwCreationDisposition = (m_Mode & EFileMode::Reset) ? CREATE_ALWAYS : OPEN_ALWAYS;
 			}
 			else if (m_Mode & EFileMode::Reset)
 			{

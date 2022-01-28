@@ -358,6 +358,7 @@ Intermediate/
 
 # Debug files
 IonExample/Debug/**
+IonEditor/Debug/**
 
 # VS Code files
 .vscode/

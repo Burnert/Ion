@@ -16,6 +16,8 @@ namespace Ion
 		virtual void Bind(uint32 slot = 0) const override;
 		virtual void Unbind() const override;
 
+		virtual void* GetNativeID() const override;
+
 		inline static constexpr D3D11_USAGE UsageToDX11Usage(ETextureUsage usage)
 		{
 			switch (usage)

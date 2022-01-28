@@ -53,10 +53,7 @@ namespace Ion
 
 		static Application* Get();
 
-		FORCEINLINE static Renderer* GetRenderer()
-		{
-			return Get()->m_Renderer;
-		}
+		static Renderer* GetRenderer();
 
 		FORCEINLINE static const TShared<GenericWindow>& GetWindow()
 		{
@@ -148,6 +145,8 @@ namespace Ion
 		virtual void Update(float DeltaTime);
 		virtual void Render();
 
+		void SetApplicationTitle(const WString& title);
+
 	protected:
 
 		// To be overriden in client:
@@ -196,15 +195,14 @@ namespace Ion
 		TShared<GenericWindow> m_Window;
 		TShared<InputManager> m_InputManager;
 
-		Renderer* m_Renderer;
-
 		EventDispatcher<ApplicationEventFunctions, Application> m_EventDispatcher;
 		TUnique<EventQueue<EventHandler>> m_EventQueue;
 		TUnique<LayerStack> m_LayerStack;
 
 		std::thread::id m_MainThreadId;
 
-		WString m_BaseWindowTitle;
+		//WString m_BaseWindowTitle;
+		WString m_ApplicationTitle;
 
 		template<typename T>
 		friend void ParseCommandLineArgs(int32 argc, T* argv[]);

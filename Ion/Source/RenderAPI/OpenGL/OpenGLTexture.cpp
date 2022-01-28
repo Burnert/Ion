@@ -64,6 +64,11 @@ namespace Ion
 		// @TODO: Implement a texture manager with some indication which slots are bound by which textures
 	}
 
+	void* OpenGLTexture::GetNativeID() const
+	{
+		return (void*)(uint64)m_ID;
+	}
+
 	OpenGLTexture::OpenGLTexture(const TextureDescription& desc) :
 		Texture(desc),
 		m_BoundSlot(-1),

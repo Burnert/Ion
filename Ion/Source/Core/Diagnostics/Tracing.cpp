@@ -33,7 +33,7 @@ namespace Ion
 		swprintf_s(filename, L"Debug/Trace_XX-XX-XX_XX-XX-XXXX_%s.json", nameW);
 
 		UniqueLock lockResults(s_ResultsMutex);
-		s_SessionDumpFile = MakeUnique<File>(filename, EFileMode::Write | EFileMode::Reset);
+		s_SessionDumpFile = MakeUnique<File>(filename, EFileMode::Write | EFileMode::Reset | EFileMode::CreateNew);
 
 		//bResult = s_SessionDumpFile->Open(IO::FM_Write | IO::FM_Reset);
 		//ionassertnd(bResult, "Session dump file cannot be opened!");

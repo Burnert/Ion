@@ -12,6 +12,8 @@ namespace Ion
 {
 	Renderer* Renderer::Create()
 	{
+		TRACE_FUNCTION();
+
 		ionassert(!s_Instance);
 
 		switch (RenderAPI::GetCurrent())
@@ -37,6 +39,8 @@ namespace Ion
 
 	void Renderer::CreateScreenTexturePrimitives()
 	{
+		TRACE_FUNCTION();
+
 		// Setup quad shader
 
 		String vertexSrc;
@@ -86,15 +90,49 @@ namespace Ion
 
 	void Renderer::InitScreenTextureRendering()
 	{
+		TRACE_FUNCTION();
+
 		CreateScreenTexturePrimitives();
 	}
 
 	void Renderer::BindScreenTexturePrimitives() const
 	{
+		TRACE_FUNCTION();
+
 		m_ScreenTextureRenderData.Shader->Bind();
 		m_ScreenTextureRenderData.VertexBuffer->Bind();
 		m_ScreenTextureRenderData.VertexBuffer->BindLayout();
 		m_ScreenTextureRenderData.IndexBuffer->Bind();
+	}
+
+	void Renderer::InitShaders()
+	{
+		String vertexSrc;
+		String pixelSrc;
+
+		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
+
+		// @TODO: This needs a refactor
+		if (RenderAPI::GetCurrent() == ERenderAPI::DX11)
+		{
+			File::ReadToString(shadersPath + L"BasicVS.hlsl", vertexSrc);
+			File::ReadToString(shadersPath + L"BasicPS.hlsl", pixelSrc);
+		}
+		else
+		{
+			File::ReadToString(shadersPath + L"Basic.vert", vertexSrc);
+			File::ReadToString(shadersPath + L"Basic.frag", pixelSrc);
+		}
+
+		m_BasicShader = Shader::Create();
+		m_BasicShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
+		m_BasicShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
+
+		if (!m_BasicShader->Compile())
+		{
+			LOG_ERROR("Could not compile the Basic Shader.");
+			debugbreak();
+		}
 	}
 
 	Renderer* Renderer::s_Instance;

@@ -32,6 +32,11 @@ namespace Ion
 		return s_Instance;
 	}
 
+	Renderer* Application::GetRenderer()
+	{
+		return Renderer::Get();
+	}
+
 	Application::Application() :
 		m_EventDispatcher(this),
 		m_EventQueue(MakeUnique<EventQueue<EventHandler>>()),
@@ -65,9 +70,9 @@ namespace Ion
 		// Current thread will render graphics in this window.
 		RenderAPI::Init(ERenderAPI::DX11, m_Window.get());
 
-		m_Renderer = Renderer::Create();
-		m_Renderer->Init();
-		m_Renderer->SetVSyncEnabled(false);
+		Renderer* renderer = Renderer::Create();
+		renderer->Init();
+		renderer->SetVSyncEnabled(false);
 
 		AssetManager::Init();
 
@@ -76,6 +81,7 @@ namespace Ion
 		m_LayerStack->PushLayer<GameLayer>("GameLayer");
 		m_LayerStack->PushOverlayLayer<ImGuiLayer>("ImGui");
 
+		SetApplicationTitle(L"Ion");
 		SetupWindowTitle();
 		m_Window->Show();
 
@@ -143,23 +149,31 @@ namespace Ion
 		OnRender();
 		TRACE_END(0);
 
+		Renderer::Get()->SetRenderTarget(nullptr);
 		ImGuiRenderPlatform(ImGui::GetDrawData());
 
 		RenderAPI::EndFrame(*m_Window);
 	}
 
+	void Application::SetApplicationTitle(const WString& title)
+	{
+		m_ApplicationTitle = title;
+		SetupWindowTitle();
+	}
+
 	void Application::SetupWindowTitle()
 	{
-		m_BaseWindowTitle = TEXT("Ion - ");
-		m_BaseWindowTitle += StringConverter::StringToWString(RenderAPI::GetCurrentDisplayName());
-		m_Window->SetTitle(m_BaseWindowTitle);
+		WString title = m_ApplicationTitle;
+		title += L" - ";
+		title += StringConverter::StringToWString(RenderAPI::GetCurrentDisplayName());
+		m_Window->SetTitle(title);
 	}
 
 	void Application::UpdateWindowTitle(float deltaTime)
 	{
-		wchar fps[30];
-		swprintf_s(fps, L" (%.2f FPS)", 1.0f / deltaTime);
-		m_Window->SetTitle(m_BaseWindowTitle + fps);
+		//wchar fps[30];
+		//swprintf_s(fps, L" (%.2f FPS)", 1.0f / deltaTime);
+		//m_Window->SetTitle(m_BaseWindowTitle + fps);
 	}
 
 	/*
@@ -199,7 +213,7 @@ namespace Ion
 		int32 width = (int32)event.GetWidth();
 		int32 height = (int32)event.GetHeight();
 
-		m_Renderer->SetViewportDimensions(ViewportDimensions { 0, 0, width, height });
+		Renderer::Get()->SetViewportDimensions(ViewportDimensions { 0, 0, width, height });
 	}
 
 	void Application::OnWindowChangeDisplayModeEvent_Internal(const WindowChangeDisplayModeEvent& event)

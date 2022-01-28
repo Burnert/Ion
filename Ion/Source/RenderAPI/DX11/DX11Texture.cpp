@@ -68,6 +68,11 @@ namespace Ion
 		dxcall_v(DX11::GetContext()->PSSetSamplers(0, 0, nullptr));
 	}
 
+	void* DX11Texture::GetNativeID() const
+	{
+		return m_SRV;
+	}
+
 	DX11Texture::DX11Texture(const TextureDescription& desc) :
 		Texture(desc),
 		m_Texture(nullptr),

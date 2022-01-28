@@ -16,6 +16,8 @@ namespace Ion
 		virtual void Bind(uint32 slot = 0) const override;
 		virtual void Unbind() const override;
 
+		virtual void* GetNativeID() const override;
+
 		int32 GetBoundSlot() const { return m_BoundSlot; }
 
 		inline static constexpr GLint SelectGLFilterType(ETextureFilteringMethod filter, bool bMips, ETextureFilteringMethod mipFilter)

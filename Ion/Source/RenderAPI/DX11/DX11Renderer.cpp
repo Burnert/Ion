@@ -27,7 +27,10 @@ namespace Ion
 
 	void DX11Renderer::Init()
 	{
+		TRACE_FUNCTION();
+
 		InitScreenTextureRendering();
+		InitShaders();
 	}
 
 	void DX11Renderer::Clear() const
@@ -186,6 +189,8 @@ namespace Ion
 
 		DX11::s_Context->RSSetViewports(1, &viewport);
 		DX11::ResizeBuffers(dimensions.Width, dimensions.Height);
+
+		m_ViewportDimensions = dimensions;
 	}
 
 	ViewportDimensions DX11Renderer::GetViewportDimensions() const
@@ -252,6 +257,27 @@ namespace Ion
 			m_CurrentDSV = DX11::GetDepthStencilView();
 		}
 
-		DX11::GetContext()->OMSetRenderTargets(1, &m_CurrentRTV, m_CurrentDSV);
+		dxcall_v(DX11::GetContext()->OMSetRenderTargets(1, &m_CurrentRTV, m_CurrentDSV));
+
+		D3D11_VIEWPORT viewport { };
+		
+		viewport.MinDepth = 0.0f;
+		viewport.MaxDepth = 1.0f;
+		if (targetTexture)
+		{
+			TextureDimensions dimensions = targetTexture->GetDimensions();
+			viewport.TopLeftX = 0.0f;
+			viewport.TopLeftY = 0.0f;
+			viewport.Width = (float)dimensions.Width;
+			viewport.Height = (float)dimensions.Height;
+		}
+		else
+		{
+			viewport.TopLeftX = (float)m_ViewportDimensions.X;
+			viewport.TopLeftY = (float)m_ViewportDimensions.Y;
+			viewport.Width = (float)m_ViewportDimensions.Width;
+			viewport.Height = (float)m_ViewportDimensions.Height;
+		}
+		dxcall_v(DX11::s_Context->RSSetViewports(1, &viewport));
 	}
 }

@@ -44,5 +44,7 @@ namespace Ion
 
 		ID3D11RenderTargetView* m_CurrentRTV;
 		ID3D11DepthStencilView* m_CurrentDSV;
+
+		mutable ViewportDimensions m_ViewportDimensions;
 	};
 }
