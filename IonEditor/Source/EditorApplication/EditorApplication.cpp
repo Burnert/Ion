@@ -34,6 +34,8 @@ namespace Editor
 
 		GetLayerStack()->PushLayer<EditorLayer>("EditorLayer");
 
+		Renderer::Get()->SetVSyncEnabled(true);
+
 		m_Scene = Scene::Create();
 		m_EditorCamera = Camera::Create();
 
@@ -87,10 +89,13 @@ namespace Editor
 
 	void EditorApplication::CaptureViewport(bool bCapture)
 	{
-		m_bViewportCaptured = bCapture;
+		if (m_bViewportCaptured != bCapture)
+		{
+			m_bViewportCaptured = bCapture;
 
-		GetWindow()->ShowCursor(!bCapture);
-		GetWindow()->LockCursor(bCapture);
+			GetWindow()->ShowCursor(!bCapture);
+			GetWindow()->LockCursor(bCapture);
+		}
 	}
 
 	void EditorApplication::DriveEditorCameraRotation(float yawDelta, float pitchDelta)

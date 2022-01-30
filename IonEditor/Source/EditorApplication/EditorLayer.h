@@ -20,6 +20,9 @@ namespace Editor
 
 		void DrawEditorUI();
 		void DrawViewportWindow();
+		void DrawContentBrowser();
+		void DrawWorldTreePanel();
+		void DrawDetailsPanel();
 
 		bool IsMouseInViewportRect() const;
 		bool CanCaptureViewport() const;

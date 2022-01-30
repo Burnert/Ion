@@ -44,6 +44,8 @@ namespace Editor
 
 	void EditorLayer::DrawEditorUI()
 	{
+		// Dockspace
+
 		static bool c_bEditorDockspaceOpen = true;
 
 		ImGuiWindowFlags editorWindowFlags =
@@ -72,7 +74,12 @@ namespace Editor
 
 		ImGui::End();
 
+		// The rest
+
 		DrawViewportWindow();
+		DrawContentBrowser();
+		DrawWorldTreePanel();
+		DrawDetailsPanel();
 	}
 
 	void EditorLayer::DrawViewportWindow()
@@ -87,6 +94,9 @@ namespace Editor
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+
+		if (m_bViewportCaptured)
+			ImGui::SetNextWindowFocus();
 
 		char windowName[16];
 		sprintf_s(windowName, "Viewport##%i", /* ID */ 0);
@@ -106,10 +116,38 @@ namespace Editor
 		ImGui::End();
 	}
 
+	void EditorLayer::DrawContentBrowser()
+	{
+		static bool c_bOpen;
+
+		ImGui::Begin("Content Browser", &c_bOpen);
+
+		ImGui::End();
+	}
+
+	void EditorLayer::DrawWorldTreePanel()
+	{
+		static bool c_bOpen;
+
+		ImGui::Begin("World Tree", &c_bOpen);
+
+		ImGui::End();
+	}
+
+	void EditorLayer::DrawDetailsPanel()
+	{
+		static bool c_bOpen;
+
+		ImGui::Begin("Details", &c_bOpen);
+
+		ImGui::End();
+	}
+
 	bool EditorLayer::IsMouseInViewportRect() const
 	{
 		IVector2 cursorPos = InputManager::GetCursorPosition();
 		return
+			// @TODO: Get some IsPointInRect function goin' (like PtInRect)
 			cursorPos.x >= m_ViewportRect.x && cursorPos.x <= m_ViewportRect.z &&
 			cursorPos.y >= m_ViewportRect.y && cursorPos.y <= m_ViewportRect.w;
 	}
