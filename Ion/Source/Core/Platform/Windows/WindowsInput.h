@@ -7,10 +7,9 @@ namespace Ion
 {
 	class ION_API WindowsInputManager : public InputManager
 	{
-		friend class WindowsApplication;
-		friend class WindowsWindow;
-
 	protected:
+		virtual IVector2 GetCursorPosition_Internal() const override;
+
 		/* Translates a Windows key code to internal Ion key code.
 		   When the key code is invalid (0) it returns false. */
 		static bool TranslateWindowsKeyCode(uint32* keyCodePtr);
@@ -218,5 +217,8 @@ namespace Ion
 			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		};
+
+		friend class WindowsApplication;
+		friend class WindowsWindow;
 	};
 }

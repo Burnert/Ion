@@ -69,21 +69,24 @@ namespace Ion
 	class ION_API MouseMovedEvent : public Event
 	{
 	public:
-		MouseMovedEvent(float x, float y) :
-			m_X(x), m_Y(y)
+		MouseMovedEvent(float x, float y, int32 ssx, int32 ssy) :
+			m_X(x), m_Y(y), m_SSX(ssx), m_SSY(ssy)
 		{
 			m_CategoryFlags &= EC_Input | EC_Mouse;
 			m_Type = EEventType::MouseMoved;
-			SET_DEBUG_INFO_STRING("MouseMovedEvent: { X: %.2f, Y: %.2f }", m_X, m_Y);
+			SET_DEBUG_INFO_STRING("MouseMovedEvent: { X: %.2f, Y: %.2f, SSX: %.2i, SSY: %.2i }", m_X, m_Y, m_SSX, m_SSY);
 		}
 
 		STATIC_EVENT_TYPE_GETTER(EEventType::MouseMoved);
 
 		FORCEINLINE float GetX() const { return m_X; }
 		FORCEINLINE float GetY() const { return m_Y; }
+		FORCEINLINE int32 GetScreenX() const { return m_SSX; }
+		FORCEINLINE int32 GetScreenY() const { return m_SSY; }
 
 	private:
 		float m_X, m_Y;
+		int32 m_SSX, m_SSY;
 	};
 
 	class ION_API MouseScrolledEvent : public Event
@@ -171,7 +174,7 @@ namespace Ion
 	{
 	public:
 		RawInputMouseMovedEvent(float x, float y) :
-			MouseMovedEvent(x, y)
+			MouseMovedEvent(x, y, 0, 0)
 		{
 			m_CategoryFlags &= EC_RawInput;
 			m_Type = EEventType::RawInputMouseMoved;

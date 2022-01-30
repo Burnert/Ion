@@ -160,7 +160,7 @@ namespace Ion
 	using MouseButton = Mouse::Mouse;
 	using KeyCode = Key::Key;
 
-	enum class MouseInputType
+	enum class MouseInputType : uint8
 	{
 		Default = 1,
 		RawInput = 2,
@@ -172,15 +172,16 @@ namespace Ion
 
 	class MouseButtonPressedEvent;
 	class MouseButtonReleasedEvent;
+	class MouseMovedEvent;
 
 	class ION_API InputManager
 	{
-		friend class Application;
-
 	public:
 		static bool IsKeyPressed(KeyCode keyCode);
 		static bool IsKeyRepeated(KeyCode keyCode);
 		static bool IsMouseButtonPressed(MouseButton mouseButton);
+
+		static IVector2 GetCursorPosition() { return s_Instance->GetCursorPosition_Internal(); }
 
 		static TShared<InputManager> Create();
 
@@ -193,6 +194,7 @@ namespace Ion
 		// @TODO: you know what
 		static bool IsRawInputEnabled() { return true; }
 
+	protected:
 		void OnKeyPressedEvent(const KeyPressedEvent& event);
 		void OnKeyReleasedEvent(const KeyReleasedEvent& event);
 		void OnKeyRepeatedEvent(const KeyRepeatedEvent& event);
@@ -200,13 +202,7 @@ namespace Ion
 		void OnMouseButtonPressedEvent(const MouseButtonPressedEvent& event);
 		void OnMouseButtonReleasedEvent(const MouseButtonReleasedEvent& event);
 
-		using InputEventFunctions = TEventFunctionPack<
-			TMemberEventFunction<InputManager, KeyPressedEvent, &InputManager::OnKeyPressedEvent>,
-			TMemberEventFunction<InputManager, KeyReleasedEvent, &InputManager::OnKeyReleasedEvent>,
-			TMemberEventFunction<InputManager, KeyRepeatedEvent, &InputManager::OnKeyRepeatedEvent>,
-			TMemberEventFunction<InputManager, MouseButtonPressedEvent, &InputManager::OnMouseButtonPressedEvent>,
-			TMemberEventFunction<InputManager, MouseButtonReleasedEvent, &InputManager::OnMouseButtonReleasedEvent>
-		>;
+		virtual IVector2 GetCursorPosition_Internal() const = 0;
 
 	protected:
 		InputManager();
@@ -223,11 +219,20 @@ namespace Ion
 		}
 
 	private:
+		using InputEventFunctions = TEventFunctionPack<
+			TMemberEventFunction<InputManager, KeyPressedEvent,          &OnKeyPressedEvent>,
+			TMemberEventFunction<InputManager, KeyReleasedEvent,         &OnKeyReleasedEvent>,
+			TMemberEventFunction<InputManager, KeyRepeatedEvent,         &OnKeyRepeatedEvent>,
+			TMemberEventFunction<InputManager, MouseButtonPressedEvent,  &OnMouseButtonPressedEvent>,
+			TMemberEventFunction<InputManager, MouseButtonReleasedEvent, &OnMouseButtonReleasedEvent>
+		>;
 		EventDispatcher<InputEventFunctions, InputManager> m_EventDispatcher;
 
 		static TShared<InputManager> s_Instance;
 		uint8 m_InputStates[256];
 
 		MouseInputType m_MouseInputType;
+
+		friend class Application;
 	};
 }

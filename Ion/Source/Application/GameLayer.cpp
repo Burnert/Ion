@@ -20,8 +20,7 @@ namespace Ion
 	{
 	}
 
-	bool GameLayer::OnEvent(const Event& event)
+	void GameLayer::OnEvent(const Event& event)
 	{
-		return false;
 	}
 }

@@ -6,7 +6,6 @@ namespace Ion
 {
 	class ION_API Layer
 	{
-		friend class LayerStack;
 	public:
 		using LayerPtr = TShared<Layer>;
 
@@ -20,28 +19,35 @@ namespace Ion
 		FORCEINLINE const char* GetName() const { return m_Name; }
 
 	protected:
-		virtual void OnAttach();
-		virtual void OnDetach();
-
-		virtual void OnUpdate(float DeltaTime);
-		virtual void OnRender();
-
-		/* Return false in the implementation if the event could not be handled.
-		   The event will then be propagated down the layer stack.
-		   Else return true. */
-		virtual bool OnEvent(const Event& event);
+		/* Override */
+		virtual void OnAttach() { }
+		/* Override */
+		virtual void OnDetach() { }
+		/* Override */
+		virtual void OnUpdate(float DeltaTime) { }
+		/* Override */
+		virtual void OnRender() { }
+		/* Override */
+		virtual void OnEvent(const Event& event) { }
 
 		/* This function can be called only inside OnEvent's body.
 		   Call this if you want to propagate the event down the layer stack
 		   even if it was successfully handled. */
 		void PropagateEvent();
+		/* Call in OnEvent, if the event has been handled.
+		   If the function is not called, the event will be propagated down the layer stack. */
+		void EventHandled();
 
 	private:
-		static uint32 s_LayerCount;
+		// @TODO: Replace with a GUID
+		static uint32 s_LayerIDCounter;
 
-		uint32 m_ID;
 		const char* m_Name;
-		bool m_bEnabled = true;
-		bool m_bPropagateCurrentEvent = false;
+		uint32 m_ID;
+		bool m_bEnabled;
+		bool m_bPropagateCurrentEvent;
+		bool m_bCurrentEventHandled;
+
+		friend class LayerStack;
 	};
 }

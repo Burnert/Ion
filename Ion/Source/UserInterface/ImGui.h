@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Core/CoreApi.h"
-#include "Core/CoreMacros.h"
+#include "Core/Core.h"
 
 #define IMGUI_API ION_API
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
@@ -26,3 +25,28 @@
 #endif // PLATFORM_SUPPORTS_OPENGL
 
 #endif
+
+namespace ImGui
+{
+	inline bool WantKeyboard()
+	{
+		if (ImGui::GetCurrentContext())
+		{
+			ImGuiIO& imGuiIO = ImGui::GetIO();
+			return imGuiIO.WantCaptureKeyboard;
+		}
+		return false;
+	}
+
+	inline bool WantMouse()
+	{
+		if (ImGui::GetCurrentContext())
+		{
+			ImGuiIO& imGuiIO = ImGui::GetIO();
+			return imGuiIO.WantCaptureMouse;
+		}
+		return false;
+	}
+
+	IMGUI_API Ion::Vector4 GetWindowWorkRect();
+}

@@ -35,6 +35,7 @@ namespace Ion
 
 		virtual void Show() { }
 		virtual void Hide() { }
+		virtual void Maximize() { }
 
 		virtual void SetTitle(const WString& title) { }
 
@@ -57,6 +58,7 @@ namespace Ion
 		/* Locks the cursor in the current position.
 		   The cursor will not move at all. */
 		virtual void LockCursor() { }
+		virtual void LockCursor(bool bLock) { }
 		virtual void UnlockCursor() { }
 		FORCEINLINE bool IsCursorLocked() const { return m_bCursorLocked; }
 

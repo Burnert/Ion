@@ -78,8 +78,9 @@ namespace Ion
 
 		InitImGui();
 
-		m_LayerStack->PushLayer<GameLayer>("GameLayer");
-		m_LayerStack->PushOverlayLayer<ImGuiLayer>("ImGui");
+		// @TODO: This should be in the Runtime eventually
+		//m_LayerStack->PushLayer<GameLayer>("GameLayer");
+		//m_LayerStack->PushOverlayLayer<ImGuiLayer>("ImGui");
 
 		SetApplicationTitle(L"Ion");
 		SetupWindowTitle();
@@ -128,11 +129,11 @@ namespace Ion
 
 		AssetManager::Update();
 		
-		m_LayerStack->OnUpdate(deltaTime);
-
 		TRACE_BEGIN(0, "Application - Client::OnUpdate");
 		OnUpdate(deltaTime);
 		TRACE_END(0);
+
+		m_LayerStack->OnUpdate(deltaTime);
 	}
 
 	void Application::Render()
@@ -143,14 +144,17 @@ namespace Ion
 
 		RenderAPI::BeginFrame();
 
-		m_LayerStack->OnRender();
-
 		TRACE_BEGIN(0, "Application - Client::OnRender");
 		OnRender();
 		TRACE_END(0);
 
-		Renderer::Get()->SetRenderTarget(nullptr);
-		ImGuiRenderPlatform(ImGui::GetDrawData());
+		m_LayerStack->OnRender();
+
+		{
+			TRACE_SCOPE("Render ImGui");
+			Renderer::Get()->SetRenderTarget(nullptr);
+			ImGuiRenderPlatform(ImGui::GetDrawData());
+		}
 
 		RenderAPI::EndFrame(*m_Window);
 	}

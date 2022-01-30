@@ -19,7 +19,7 @@ namespace Ion
 		virtual void OnUpdate(float DeltaTime) override;
 		virtual void OnRender() override;
 
-		virtual bool OnEvent(const Event& event) override;
+		virtual void OnEvent(const Event& event) override;
 
 		using EventFunctions = TEventFunctionPack<>;
 

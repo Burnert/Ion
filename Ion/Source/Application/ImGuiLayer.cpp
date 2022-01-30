@@ -16,9 +16,8 @@ namespace Ion
 	{
 	}
 
-	bool ImGuiLayer::OnEvent(const Event& event)
+	void ImGuiLayer::OnEvent(const Event& event)
 	{
 		//m_EventDispatcher.Dispatch(event);
-		return false;
 	}
 }

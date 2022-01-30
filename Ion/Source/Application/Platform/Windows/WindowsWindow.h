@@ -27,6 +27,7 @@ namespace Ion
 
 		virtual void Show() override;
 		virtual void Hide() override;
+		virtual void Maximize() override;
 
 		virtual void SetTitle(const WString& title) override;
 
@@ -43,6 +44,7 @@ namespace Ion
 		virtual void ClipCursor() override;
 		virtual void LockCursor(IVector2 position) override;
 		virtual void LockCursor() override;
+		virtual void LockCursor(bool bLock) override;
 		virtual void UnlockCursor() override;
 
 		virtual void ShowCursor(bool bShow) override;

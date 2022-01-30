@@ -1,16 +1,16 @@
 #pragma once
 
-#define DISABLE_USING_NAMESPACE_ION
-#define DONT_PAUSE_ON_EXIT
-#include "IonApp.h"
+#include "Ion.h"
 
 namespace Ion
 {
 namespace Editor
 {
-	class EditorApplication : public IonApplication
+	class EDITOR_API EditorApplication : public IonApplication
 	{
 	public:
+		inline static EditorApplication* Get() { return s_Instance; }
+
 		EditorApplication();
 		virtual ~EditorApplication();
 
@@ -20,11 +20,10 @@ namespace Editor
 		virtual void OnShutdown() override;
 		virtual void OnEvent(const Event& event) override;
 
+		void CaptureViewport(bool bCapture);
+		void DriveEditorCameraRotation(float yawDelta, float pitchDelta);
+
 	protected:
-		void DrawEditorUI();
-
-		void DrawViewportWindow();
-
 		void OnWindowResizeEvent(const WindowResizeEvent& event);
 		void OnMouseButtonPressedEvent(const MouseButtonPressedEvent& event);
 		void OnMouseButtonReleasedEvent(const MouseButtonReleasedEvent& event);
@@ -35,12 +34,17 @@ namespace Editor
 		void ResizeViewportFramebuffer(const UVector2& size);
 		void TryResizeViewportFramebuffer();
 
+		void UpdateEditorCamera(float deltaTime);
+		void UpdateEditorCameraLocation(float deltaTime);
+
 	private:
+		static EditorApplication* s_Instance;
+
 		using EventFunctions = TEventFunctionPack<
-			TMemberEventFunction<EditorApplication, WindowResizeEvent,        &EditorApplication::OnWindowResizeEvent>,
-			TMemberEventFunction<EditorApplication, MouseButtonPressedEvent,  &EditorApplication::OnMouseButtonPressedEvent>,
-			TMemberEventFunction<EditorApplication, MouseButtonReleasedEvent, &EditorApplication::OnMouseButtonReleasedEvent>,
-			TMemberEventFunction<EditorApplication, RawInputMouseMovedEvent,  &EditorApplication::OnRawInputMouseMovedEvent>
+			TMemberEventFunction<EditorApplication, WindowResizeEvent,        &OnWindowResizeEvent>,
+			TMemberEventFunction<EditorApplication, MouseButtonPressedEvent,  &OnMouseButtonPressedEvent>,
+			TMemberEventFunction<EditorApplication, MouseButtonReleasedEvent, &OnMouseButtonReleasedEvent>,
+			TMemberEventFunction<EditorApplication, RawInputMouseMovedEvent,  &OnRawInputMouseMovedEvent>
 		>;
 		EventDispatcher<EventFunctions, EditorApplication> m_EventDispatcher;
 
@@ -49,12 +53,12 @@ namespace Editor
 
 		TShared<Scene> m_Scene;
 		TShared<Camera> m_EditorCamera;
-
 		Transform m_EditorCameraTransform;
+		float m_EditorCameraMoveSpeed;
 
-		bool m_bEditorCameraCaptured;
+		bool m_bViewportCaptured;
+
+		friend class EditorLayer;
 	};
 }
 }
-
-USE_APPLICATION_CLASS(Ion::Editor::EditorApplication);

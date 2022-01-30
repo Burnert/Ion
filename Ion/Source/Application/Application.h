@@ -65,6 +65,11 @@ namespace Ion
 			return Get()->m_InputManager;
 		}
 
+		FORCEINLINE static LayerStack* GetLayerStack()
+		{
+			return Get()->m_LayerStack.get();
+		}
+
 	protected:
 		Application();
 

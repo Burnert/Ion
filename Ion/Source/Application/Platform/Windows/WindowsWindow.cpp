@@ -101,44 +101,44 @@ namespace Ion
 
 		// Read ImGui input first and decide what to do
 		// @TODO: This is a quick fix so do something better in the future
-		if (ImGui::GetCurrentContext())
-		{
-			ImGuiIO& imGuiIO = ImGui::GetIO();
-			if (imGuiIO.WantCaptureKeyboard)
-			{
-				if (IsAnyOf(uMsg,
-					WM_KEYDOWN,
-					WM_SYSKEYDOWN,
-					WM_KEYUP,
-					WM_KEYUP,
-					WM_SYSKEYUP))
-				{
-					return 0;
-				}
-			}
-			if (imGuiIO.WantCaptureMouse)
-			{
-				if (IsAnyOf(uMsg, 
-					WM_LBUTTONUP,
-					WM_RBUTTONUP,
-					WM_MBUTTONUP,
-					WM_XBUTTONUP,
-					WM_LBUTTONDOWN,
-					WM_RBUTTONDOWN,
-					WM_MBUTTONDOWN,
-					WM_XBUTTONDOWN,
-					WM_LBUTTONDBLCLK,
-					WM_RBUTTONDBLCLK,
-					WM_MBUTTONDBLCLK,
-					WM_XBUTTONDBLCLK,
-					WM_MOUSEWHEEL,
-					WM_MOUSEMOVE,
-					WM_INPUT))
-				{
-					return 0;
-				}
-			}
-		}
+		//if (ImGui::GetCurrentContext())
+		//{
+		//	ImGuiIO& imGuiIO = ImGui::GetIO();
+		//	if (imGuiIO.WantCaptureKeyboard)
+		//	{
+		//		if (IsAnyOf(uMsg,
+		//			WM_KEYDOWN,
+		//			WM_SYSKEYDOWN,
+		//			WM_KEYUP,
+		//			WM_KEYUP,
+		//			WM_SYSKEYUP))
+		//		{
+		//			return 0;
+		//		}
+		//	}
+		//	if (imGuiIO.WantCaptureMouse)
+		//	{
+		//		if (IsAnyOf(uMsg, 
+		//			WM_LBUTTONUP,
+		//			WM_RBUTTONUP,
+		//			WM_MBUTTONUP,
+		//			WM_XBUTTONUP,
+		//			WM_LBUTTONDOWN,
+		//			WM_RBUTTONDOWN,
+		//			WM_MBUTTONDOWN,
+		//			WM_XBUTTONDOWN,
+		//			WM_LBUTTONDBLCLK,
+		//			WM_RBUTTONDBLCLK,
+		//			WM_MBUTTONDBLCLK,
+		//			WM_XBUTTONDBLCLK,
+		//			WM_MOUSEWHEEL,
+		//			WM_MOUSEMOVE,
+		//			WM_INPUT))
+		//		{
+		//			return 0;
+		//		}
+		//	}
+		//}
 
 		WindowsWindow& windowRef = *(WindowsWindow*)GetProp(hWnd, L"WinObj");
 
@@ -422,7 +422,10 @@ namespace Ion
 				float xNormalised = (float)xPos / clientRect.right;
 				float yNormalised = (float)yPos / clientRect.bottom;
 
-				MouseMovedEvent event(xNormalised, yNormalised);
+				int32 ssXPos = xPos + clientRect.left;
+				int32 ssYPos = yPos + clientRect.top;
+
+				MouseMovedEvent event((float)xNormalised, (float)yNormalised, ssXPos, ssYPos);
 				PostEvent(event);
 
 				return 0;
@@ -449,8 +452,8 @@ namespace Ion
 
 				uint32 size;
 				GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &size, sizeof(RAWINPUTHEADER));
-				uint8* buffer = new uint8[size];
-				if (buffer == NULL)
+				uint8* buffer = (uint8*)_alloca(size);
+				if (!buffer)
 					return 0;
 
 				if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, buffer, &size, sizeof(RAWINPUTHEADER)) != size)
@@ -542,8 +545,6 @@ namespace Ion
 						}
 					}
 				}
-
-				delete[] buffer;
 				return 0;
 			}
 		}
@@ -727,6 +728,23 @@ namespace Ion
 		}
 	}
 
+	void WindowsWindow::Maximize()
+	{
+		TRACE_FUNCTION();
+
+		if (m_WindowHandle == NULL)
+		{
+			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "maximize the window");
+			return;
+		}
+
+		if (m_bVisible)
+		{
+			int32 showWindowCmd = SW_MAXIMIZE;
+			ShowWindow(m_WindowHandle, showWindowCmd);
+		}
+	}
+
 	void WindowsWindow::SetTitle(const WString& title)
 	{
 		TRACE_FUNCTION();
@@ -896,6 +914,14 @@ namespace Ion
 		RECT rect = { cursorPos.x, cursorPos.y, cursorPos.x, cursorPos.y };
 		::ClipCursor(&rect);
 		m_bCursorLocked = true;
+	}
+
+	void WindowsWindow::LockCursor(bool bLock)
+	{
+		if (bLock)
+			LockCursor();
+		else
+			UnlockCursor();
 	}
 
 	void WindowsWindow::UnlockCursor()

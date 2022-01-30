@@ -5,36 +5,14 @@
 namespace Ion
 {
 	Layer::Layer(const char* name) :
-		m_ID(s_LayerCount++),
-		m_Name(name)
+		m_Name(name),
+		m_ID(s_LayerIDCounter++),
+		m_bEnabled(true),
+		m_bCurrentEventHandled(false),
+		m_bPropagateCurrentEvent(false)
 	{ }
 
 	Layer::~Layer() { }
-
-	void Layer::OnAttach()
-	{
-		//ION_LOG_ENGINE_DEBUG("Layer {0} Attached", m_Name);
-	}
-
-	void Layer::OnDetach()
-	{
-		//ION_LOG_ENGINE_DEBUG("Layer {0} Detached", m_Name);
-	}
-
-	void Layer::OnUpdate(float DeltaTime)
-	{
-		//ION_LOG_ENGINE_DEBUG("Layer {0} Update", m_Name);
-	}
-
-	void Layer::OnRender()
-	{
-		//ION_LOG_ENGINE_DEBUG("Layer {0} Render", m_Name);
-	}
-
-	bool Layer::OnEvent(const Event& event)
-	{
-		return false;
-	}
 
 	void Layer::PropagateEvent()
 	{
@@ -46,5 +24,5 @@ namespace Ion
 		m_bEnabled = bEnabled;
 	}
 
-	uint32 Layer::s_LayerCount = 0;
+	uint32 Layer::s_LayerIDCounter = 0;
 }
