@@ -46,15 +46,7 @@ namespace Editor
 
 		m_Scene->SetActiveCamera(m_EditorCamera);
 
-		CreateExampleModels();
-		for (ExampleModelData& model : g_ExampleModels)
-		{
-			model.SetOnInit([&]
-			{
-				m_Scene->AddDrawableObject(model.Mesh.get());
-			});
-		}
-		LoadExampleModels();
+		InitExample(m_Scene);
 	}
 
 	void EditorApplication::OnUpdate(float deltaTime)

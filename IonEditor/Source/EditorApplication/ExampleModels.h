@@ -29,6 +29,7 @@ namespace Editor
 		}
 	};
 	inline TArray<ExampleModelData> g_ExampleModels;
+	inline DirectionalLight* g_ExampleLight;
 
 	static void InitExampleModel(ExampleModelData& data)
 	{
@@ -101,6 +102,36 @@ namespace Editor
 			model.MeshAsset->LoadAssetData();
 			model.TextureAsset->LoadAssetData();
 		}
+	}
+
+	static void AddModelsToSceneOnInit(TShared<Scene> scene)
+	{
+		for(ExampleModelData& model : g_ExampleModels)
+		{
+			model.SetOnInit([&model, scene]
+			{
+				scene->AddDrawableObject(model.Mesh.get());
+			});
+		}
+	}
+
+	static void InitLights(TShared<Scene> scene)
+	{
+		scene->SetAmbientLightColor(Vector4(1.0f, 1.0f, 0.8f, 0.2f));
+
+		g_ExampleLight = new DirectionalLight;
+		g_ExampleLight->m_LightDirection = Math::Normalize(Vector3(1.0f, -1.0f, 1.0f));
+		g_ExampleLight->m_Color = Vector3(1.0f, 0.97f, 0.92f);
+		g_ExampleLight->m_Intensity = 1.0f;
+		scene->SetActiveDirectionalLight(g_ExampleLight);
+	}
+
+	static void InitExample(TShared<Scene> scene)
+	{
+		CreateExampleModels();
+		AddModelsToSceneOnInit(scene);
+		LoadExampleModels();
+		InitLights(scene);
 	}
 
 	inline void ExampleModelData::TryInit()
