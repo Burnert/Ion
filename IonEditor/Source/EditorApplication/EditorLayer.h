@@ -19,6 +19,7 @@ namespace Editor
 		virtual void OnEvent(const Event& event) override;
 
 		void DrawEditorUI();
+		void DrawMainMenuBar();
 		void DrawViewportWindow();
 		void DrawContentBrowser();
 		void DrawWorldTreePanel();
@@ -50,6 +51,11 @@ namespace Editor
 		Vector4 m_ViewportRect;
 		bool m_bViewportHovered;
 		bool m_bViewportCaptured;
+
+		bool m_bViewportOpen;
+		bool m_bContentBrowserOpen;
+		bool m_bWorldTreePanelOpen;
+		bool m_bDetailsPanelOpen;
 
 		friend class EditorApplication;
 	};

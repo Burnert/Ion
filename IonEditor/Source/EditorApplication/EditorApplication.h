@@ -23,6 +23,8 @@ namespace Editor
 		void CaptureViewport(bool bCapture);
 		void DriveEditorCameraRotation(float yawDelta, float pitchDelta);
 
+		static void ExitEditor();
+
 	protected:
 		void OnWindowResizeEvent(const WindowResizeEvent& event);
 		void OnMouseButtonPressedEvent(const MouseButtonPressedEvent& event);

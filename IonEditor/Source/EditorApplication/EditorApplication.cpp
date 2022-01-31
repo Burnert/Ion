@@ -104,6 +104,11 @@ namespace Editor
 		}
 	}
 
+	void EditorApplication::ExitEditor()
+	{
+		s_Instance->Exit();
+	}
+
 	void EditorApplication::OnWindowResizeEvent(const WindowResizeEvent& event)
 	{
 	}

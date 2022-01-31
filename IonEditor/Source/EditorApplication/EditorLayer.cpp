@@ -16,7 +16,11 @@ namespace Editor
 		m_EventDispatcher(this),
 		m_ViewportRect({ }),
 		m_bViewportHovered(false),
-		m_bViewportCaptured(false)
+		m_bViewportCaptured(false),
+		m_bViewportOpen(true),
+		m_bContentBrowserOpen(true),
+		m_bWorldTreePanelOpen(true),
+		m_bDetailsPanelOpen(true)
 	{
 	}
 
@@ -76,71 +80,123 @@ namespace Editor
 
 		// The rest
 
+		DrawMainMenuBar();
 		DrawViewportWindow();
 		DrawContentBrowser();
 		DrawWorldTreePanel();
 		DrawDetailsPanel();
 	}
 
+	void EditorLayer::DrawMainMenuBar()
+	{
+		if (ImGui::BeginMainMenuBar())
+		{
+			if (ImGui::BeginMenu("File"))
+			{
+				ImGui::MenuItem("New");
+				ImGui::MenuItem("Open");
+				ImGui::Separator();
+				if (ImGui::MenuItem("Exit"))
+				{
+					EditorApplication::ExitEditor();
+				}
+
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("Edit"))
+			{
+				ImGui::MenuItem("Undo");
+				ImGui::MenuItem("Redo");
+				ImGui::Separator();
+				ImGui::MenuItem("Cut");
+				ImGui::MenuItem("Copy");
+				ImGui::MenuItem("Paste");
+				ImGui::MenuItem("Delete");
+
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("View"))
+			{
+				ImGui::MenuItem("Viewport", nullptr, &m_bViewportOpen);
+				ImGui::MenuItem("Content Browser", nullptr, &m_bContentBrowserOpen);
+				ImGui::MenuItem("World Tree", nullptr, &m_bWorldTreePanelOpen);
+				ImGui::MenuItem("Details", nullptr, &m_bDetailsPanelOpen);
+
+				ImGui::EndMenu();
+			}
+
+			ImGui::EndMainMenuBar();
+		}
+	}
+
 	void EditorLayer::DrawViewportWindow()
 	{
-		static bool c_bOpen = true;
+		if (m_bViewportOpen)
+		{
+			ImGuiWindowFlags windowFlags =
+				ImGuiWindowFlags_NoScrollbar |
+				ImGuiWindowFlags_NoNavFocus |
+				ImGuiWindowFlags_NoBackground;
 
-		ImGuiWindowFlags windowFlags =
-			ImGuiWindowFlags_NoScrollbar |
-			ImGuiWindowFlags_NoNavFocus  |
-			ImGuiWindowFlags_NoBackground;
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+			if (m_bViewportCaptured)
+				ImGui::SetNextWindowFocus();
 
-		if (m_bViewportCaptured)
-			ImGui::SetNextWindowFocus();
+			char windowName[16];
+			sprintf_s(windowName, "Viewport##%i", /* ID */ 0);
+			if (!ImGui::Begin(windowName, &m_bViewportOpen, windowFlags))
+			{
+				ImGui::End();
+				ImGui::PopStyleVar(3);
+				return;
+			}
+			ImGui::PopStyleVar(3);
 
-		char windowName[16];
-		sprintf_s(windowName, "Viewport##%i", /* ID */ 0);
-		ImGui::Begin(windowName, &c_bOpen, windowFlags);
-		ImGui::PopStyleVar(3);
+			// Save the viewport rect for later
+			m_ViewportRect = ImGui::GetWindowWorkRect();
+			m_bViewportHovered = ImGui::IsWindowHovered();
 
-		// Save the viewport rect for later
-		m_ViewportRect = ImGui::GetWindowWorkRect();
-		m_bViewportHovered = ImGui::IsWindowHovered();
+			EditorApplication::Get()->m_ViewportSize = UVector2(m_ViewportRect.z - m_ViewportRect.x, m_ViewportRect.w - m_ViewportRect.y);
 
-		EditorApplication::Get()->m_ViewportSize = UVector2(m_ViewportRect.z - m_ViewportRect.x, m_ViewportRect.w - m_ViewportRect.y);
+			TShared<Texture> viewportTexture = EditorApplication::Get()->m_ViewportFramebuffer;
+			const TextureDimensions& viewportDimensions = viewportTexture->GetDimensions();
+			ImGui::Image(viewportTexture->GetNativeID(), ImVec2((float)viewportDimensions.Width, (float)viewportDimensions.Height));
 
-		TShared<Texture> viewportTexture = EditorApplication::Get()->m_ViewportFramebuffer;
-		const TextureDimensions& viewportDimensions = viewportTexture->GetDimensions();
-		ImGui::Image(viewportTexture->GetNativeID(), ImVec2((float)viewportDimensions.Width, (float)viewportDimensions.Height));
-
-		ImGui::End();
+			ImGui::End();
+		}
 	}
 
 	void EditorLayer::DrawContentBrowser()
 	{
-		static bool c_bOpen;
+		if (m_bContentBrowserOpen)
+		{
+			ImGui::Begin("Content Browser", &m_bContentBrowserOpen);
 
-		ImGui::Begin("Content Browser", &c_bOpen);
-
-		ImGui::End();
+			ImGui::End();
+		}
 	}
 
 	void EditorLayer::DrawWorldTreePanel()
 	{
-		static bool c_bOpen;
+		if (m_bWorldTreePanelOpen)
+		{
+			ImGui::Begin("World Tree", &m_bWorldTreePanelOpen);
 
-		ImGui::Begin("World Tree", &c_bOpen);
-
-		ImGui::End();
+			ImGui::End();
+		}
 	}
 
 	void EditorLayer::DrawDetailsPanel()
 	{
-		static bool c_bOpen;
+		if (m_bDetailsPanelOpen)
+		{
+			ImGui::Begin("Details", &m_bDetailsPanelOpen);
 
-		ImGui::Begin("Details", &c_bOpen);
-
-		ImGui::End();
+			ImGui::End();
+		}
 	}
 
 	bool EditorLayer::IsMouseInViewportRect() const

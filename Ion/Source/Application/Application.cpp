@@ -110,6 +110,8 @@ namespace Ion
 
 	void Application::Exit()
 	{
+		// @TODO: Exit
+		LOG_CRITICAL("TODO: Implement Exit!");
 	}
 
 	void Application::PollEvents()
