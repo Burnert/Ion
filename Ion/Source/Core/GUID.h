@@ -2,6 +2,8 @@
 
 namespace Ion
 {
+	using GUIDBytesArray = TFixedArray<uint8, 16>;
+
 	class ION_API GUID
 	{
 	public:
@@ -10,16 +12,20 @@ namespace Ion
 		GUID(const GUID& other);
 		GUID(GUID&& other) noexcept;
 
-		String ToString();
+		String ToString() const;
+
 		GUID& operator=(const GUID& other);
 		GUID& operator=(GUID&& other) noexcept;
-		bool operator==(const GUID& other);
-		bool operator!=(const GUID& other);
+		bool operator==(const GUID& other) const;
+		bool operator!=(const GUID& other) const;
+
+		void GetRawBytes(uint8(&outBytes)[16]) const;
+		GUIDBytesArray GetRawBytes() const;
 
 	private:
 		void PlatformGenerateGUID();
 		void PlatformGenerateGUIDFromString(const String& str);
-		String PlatformGUIDToString();
+		String PlatformGUIDToString() const;
 
 	private:
 		uint8 m_Bytes[16];
@@ -36,7 +42,6 @@ namespace Ion
 	{
 		PlatformGenerateGUIDFromString(guidStr);
 	}
-	
 
 	inline GUID::GUID(const GUID& other)
 	{
@@ -49,7 +54,7 @@ namespace Ion
 		memset(other.m_Bytes, 0, sizeof(other.m_Bytes));
 	}
 
-	inline String GUID::ToString()
+	inline String GUID::ToString() const
 	{
 		return PlatformGUIDToString();
 	}
@@ -67,7 +72,7 @@ namespace Ion
 		return *this;
 	}
 
-	inline bool GUID::operator==(const GUID& other)
+	inline bool GUID::operator==(const GUID& other) const
 	{
 		for (int32 i = 0; i < sizeof(GUID); ++i)
 		{
@@ -77,8 +82,21 @@ namespace Ion
 		return true;
 	}
 
-	inline bool GUID::operator!=(const GUID& other)
+	inline bool GUID::operator!=(const GUID& other) const
 	{
 		return !operator==(other);
+	}
+
+	inline void GUID::GetRawBytes(uint8(&outBytes)[16]) const
+	{
+		memcpy(outBytes, m_Bytes, sizeof(GUID));
+	}
+
+	inline GUIDBytesArray GUID::GetRawBytes() const
+	{
+		GUIDBytesArray bytes;
+		memcpy(bytes.data(), m_Bytes, sizeof(GUID));
+
+		return bytes;
 	}
 }

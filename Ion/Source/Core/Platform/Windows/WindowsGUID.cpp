@@ -88,7 +88,7 @@ namespace Ion
 		}
 	}
 
-	String GUID::PlatformGUIDToString()
+	String GUID::PlatformGUIDToString() const
 	{
 		UUID uuid;
 		ConvertBytesToWindowsUUID(m_Bytes, uuid);
