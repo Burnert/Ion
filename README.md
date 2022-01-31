@@ -27,6 +27,7 @@ echo Cloning branch %branchname%...
 git clone --recurse-submodules -b %branchname% "https://github.com/Burnert/Ion/"
 if errorlevel 1 goto lCloneError
 echo Repository has been cloned successfully.
+cd Ion
 goto lGenerateSln
 
 :lCloneError
@@ -35,10 +36,11 @@ pause
 goto lEnd
 
 :lGenerateSln
-cd Ion
-echo Generating Visual Studio 2019 solution...
-call GenerateVS2019.bat < nul
-echo Visual Studio 2019 solution has been generated successfully.
+set /p vsversion="Enter Visual Studio version (2019 or 2022): "
+if "%vsversion%" neq "2019" if "%vsversion%" neq "2022" goto lGenerateSln
+echo Generating Visual Studio %vsversion% solution...
+call GenerateVS%vsversion%.bat < nul
+echo Visual Studio %vsversion% solution has been generated successfully.
 
 :lChoice1
 set /p choice="Would you like to open the solution? [Y/N]: "
