@@ -13,6 +13,7 @@
 #include <optional>
 #include <type_traits>
 #include <filesystem>
+#include <random>
 
 #include <string>
 #include <sstream>

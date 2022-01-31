@@ -55,7 +55,11 @@ namespace Editor
 		data.Mesh = Mesh::Create();
 		data.Mesh->LoadFromAsset(data.MeshAsset);
 		data.Mesh->SetMaterial(data.Material);
-		data.Mesh->SetTransform(Math::Translate(Vector3(0.0f, 0.0f, -2.0f)) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 90.0f, 0.0f)))));
+		Vector3 location;
+		location.x = Random::Float(-2.0f, 2.0f);
+		location.y = Random::Float(-0.5f, 0.5f);
+		location.z = Random::Float(-2.0f, 2.0f);
+		data.Mesh->SetTransform(Math::Translate(location) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 90.0f, 0.0f)))));
 	}
 
 	static void CreateExampleModels()
