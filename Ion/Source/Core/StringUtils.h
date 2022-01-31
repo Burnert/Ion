@@ -78,3 +78,63 @@ NODISCARD FORCEINLINE constexpr WString ToWString(T value)
 {
 	return std::to_wstring(value);
 }
+
+// Hex conversion -------------------------------------------------------------------------
+
+NODISCARD FORCEINLINE constexpr char HexFrom4Bytes(uint8 bytes)
+{
+	ionassert(bytes < 16);
+	if (bytes >= 16)
+		return '\0';
+	if (bytes < 10)
+		return '0' + bytes;
+	else
+		return 'a' + (bytes - 10);
+}
+
+template<typename T>
+NODISCARD FORCEINLINE String ToHex(T value) { return ""; }
+template<> NODISCARD FORCEINLINE String ToHex(uint8 value)
+{
+	uint8 lsbits = value & 0x0F;
+	uint8 msbits = (value >> 4) & 0x0F;
+	String hex;
+	hex.reserve(2);
+	hex += HexFrom4Bytes(msbits);
+	hex += HexFrom4Bytes(lsbits);
+	return hex;
+}
+template<> NODISCARD FORCEINLINE String ToHex(int8 value) { return ToHex((uint8)value); }
+template<> NODISCARD FORCEINLINE String ToHex(uint16 value)
+{
+	uint8 lsb = value & 0xFF;
+	uint8 msb = (value >> 8) & 0xFF;
+	String hex;
+	hex.reserve(4);
+	hex += ToHex<uint8>(msb);
+	hex += ToHex<uint8>(lsb);
+	return hex;
+}
+template<> NODISCARD FORCEINLINE String ToHex(int16 value) { return ToHex((uint16)value); }
+template<> NODISCARD FORCEINLINE String ToHex(uint32 value)
+{
+	uint16 lsb = value & 0xFFFF;
+	uint16 msb = (value >> 16) & 0xFFFF;
+	String hex;
+	hex.reserve(8);
+	hex += ToHex<uint16>(msb);
+	hex += ToHex<uint16>(lsb);
+	return hex;
+}
+template<> NODISCARD FORCEINLINE String ToHex(int32 value) { return ToHex((uint32)value); }
+template<> NODISCARD FORCEINLINE String ToHex(uint64 value)
+{
+	uint32 lsb = value & 0xFFFFFFFF;
+	uint32 msb = (value >> 32) & 0xFFFFFFFF;
+	String hex;
+	hex.reserve(16);
+	hex += ToHex<uint32>(msb);
+	hex += ToHex<uint32>(lsb);
+	return hex;
+}
+template<> NODISCARD FORCEINLINE String ToHex(int64 value) { return ToHex((uint64)value); }

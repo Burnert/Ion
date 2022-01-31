@@ -27,10 +27,14 @@ using uint64 = uint64_t;
 
 
 using wchar        = wchar_t;
+#ifdef UNICODE
+using tchar        = wchar_t;
+#else
+using tchar        = char;
+#endif
 
 using String       = std::string;
 using WString      = std::wstring;
-
 #ifdef UNICODE
 using TString      = WString;
 #else

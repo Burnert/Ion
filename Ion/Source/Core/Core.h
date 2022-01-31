@@ -27,6 +27,7 @@
 #include "Core/Asset/AssetCore.h"
 #include "Core/File/File.h"
 #include "Core/File/Image.h"
+#include "Core/GUID.h"
 #include "Core/Input/Input.h"
 #include "Core/Layer/Layer.h"
 #include "Core/Logging/Logger.h"
