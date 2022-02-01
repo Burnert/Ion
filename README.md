@@ -16,7 +16,11 @@ You can also use this batch script:
 
 ```bat
 @echo off
-set /p branchname="Enter branch name to clone: "
+set /p branchname="Enter branch name to clone (press ENTER to clone master branch): "
+
+if "%branchname%" equ "" (
+	set branchname="master"
+)
 
 if exist Ion\ (
 	rmdir /s /q Ion
