@@ -92,6 +92,8 @@ namespace Ion
 		if (s_LastFrameTime == 0.0f)
 		{
 			s_LastFrameTime = time;
+			// Return 1/60s for the first time
+			return 1.0f / 60.0f;
 		}
 
 		float difference;

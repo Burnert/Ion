@@ -36,6 +36,13 @@ namespace Editor
 		void OnKeyPressedEvent(const KeyPressedEvent& event);
 		void OnKeyReleasedEvent(const KeyReleasedEvent& event);
 
+		void CreateViewportFramebuffer();
+		void ResizeViewportFramebuffer(const UVector2& size);
+		void TryResizeViewportFramebuffer();
+
+	public:
+		TShared<Texture>& GetViewportFramebuffer();
+
 	private:
 		using EventFunctions = TEventFunctionPack<
 			TMemberEventFunction<EditorLayer, MouseButtonPressedEvent,    &OnMouseButtonPressedEvent>,
@@ -48,6 +55,8 @@ namespace Editor
 		>;
 		EventDispatcher<EventFunctions, EditorLayer> m_EventDispatcher;
 
+		TShared<Texture> m_ViewportFramebuffer;
+		UVector2 m_ViewportSize;
 		Vector4 m_ViewportRect;
 		bool m_bViewportHovered;
 		bool m_bViewportCaptured;
@@ -59,5 +68,10 @@ namespace Editor
 
 		friend class EditorApplication;
 	};
+
+	inline TShared<Texture>& EditorLayer::GetViewportFramebuffer()
+	{
+		return m_ViewportFramebuffer;
+	}
 }
 }

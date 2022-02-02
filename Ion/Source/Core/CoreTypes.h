@@ -24,8 +24,6 @@ using uint16 = uint16_t;
 using uint32 = uint32_t;
 using uint64 = uint64_t;
 
-
-
 using wchar        = wchar_t;
 #ifdef UNICODE
 using tchar        = wchar_t;
@@ -62,6 +60,9 @@ using TWeak        = std::weak_ptr<T>;
 // Data structures
 
 // @TODO: Implement simplified versions of these in the future, also the pointers and String above ^^
+
+template<typename T>
+using THash = std::hash<T>;
 
 template<typename T, typename Hasher = std::hash<T>, typename Allocator = std::allocator<T>>
 using THashSet = std::unordered_set<T, Hasher, std::equal_to<T>, Allocator>;

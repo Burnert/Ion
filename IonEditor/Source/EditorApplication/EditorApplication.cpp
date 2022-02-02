@@ -7,22 +7,26 @@
 
 #include "ExampleModels.h"
 
+#include "Engine/Engine.h"
+#include "Engine/Components/MeshComponent.h"
+
 namespace Ion
 {
 namespace Editor
 {
+	// Constructed at the entry point
 	EditorApplication::EditorApplication() :
 		m_EventDispatcher(this),
-		m_ViewportSize({ }),
 		m_bViewportCaptured(false),
-		m_EditorCameraMoveSpeed(5.0f)
+		m_EditorCameraMoveSpeed(5.0f),
+		m_EditorMainWorld(nullptr),
+		m_Scene(nullptr)
 	{
 		s_Instance = this;
 	}
 
 	EditorApplication::~EditorApplication()
 	{
-
 	}
 
 	void EditorApplication::OnInit()
@@ -30,14 +34,19 @@ namespace Editor
 		SetApplicationTitle(L"Ion Editor");
 		GetWindow()->Maximize();
 
-		CreateViewportFramebuffer();
-
-		GetLayerStack()->PushLayer<EditorLayer>("EditorLayer");
+		m_EditorLayer = GetLayerStack()->PushLayer<EditorLayer>("EditorLayer");
 
 		Renderer::Get()->SetVSyncEnabled(true);
 
-		m_Scene = Scene::Create();
 		m_EditorCamera = Camera::Create();
+
+		WorldInitializer worldInitializer { };
+		m_EditorMainWorld = World::CreateWorld(worldInitializer);
+		m_EditorMainWorld->GetScene()->SetActiveCamera(m_EditorCamera);
+
+		g_Engine->RegisterWorld(m_EditorMainWorld);
+
+		m_Scene = new Scene;
 
 		m_EditorCameraTransform.SetLocation(Vector3(0.0f, 0.0f, 2.0f));
 		m_EditorCamera->SetFOV(Math::Radians(90.0f));
@@ -47,6 +56,18 @@ namespace Editor
 		m_Scene->SetActiveCamera(m_EditorCamera);
 
 		InitExample(m_Scene);
+
+		// Engine testing:
+
+		ComponentRegistry& registry = m_EditorMainWorld->GetComponentRegistry();
+		m_TestMeshComponent = registry.CreateComponent<MeshComponent>();
+		GetModelDeferred(g_ExampleModels[0], [&, this]
+		{
+			m_TestMeshComponent->SetMesh(g_ExampleModels[0].Mesh);
+		});
+		Entity* entity = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
+		entity->AddComponent(m_TestMeshComponent);
+		entity->SetTransform(Transform(Vector3(0.0f, 0.0f, 2.0f)));
 	}
 
 	void EditorApplication::OnUpdate(float deltaTime)
@@ -54,24 +75,14 @@ namespace Editor
 		UpdateEditorCamera(deltaTime);
 
 		m_Scene->UpdateRenderData();
-		TryResizeViewportFramebuffer();
 	}
 
 	void EditorApplication::OnRender()
 	{
-		Renderer* renderer = GetRenderer();
-
-		// Render to viewport
-
-		renderer->SetRenderTarget(m_ViewportFramebuffer);
-
-		renderer->Clear(Vector4(0.1f, 0.1f, 0.1f, 1.0f));
-		renderer->RenderScene(m_Scene);
 	}
 
 	void EditorApplication::OnShutdown()
 	{
-
 	}
 
 	void EditorApplication::OnEvent(const Event& event)
@@ -92,16 +103,20 @@ namespace Editor
 
 	void EditorApplication::DriveEditorCameraRotation(float yawDelta, float pitchDelta)
 	{
-		if (m_bViewportCaptured)
-		{
-			yawDelta *= 0.2f;
-			pitchDelta *= 0.2f;
+		yawDelta *= 0.2f;
+		pitchDelta *= 0.2f;
 
-			Rotator cameraRotation = m_EditorCameraTransform.GetRotation();
-			cameraRotation.SetPitch(Math::Clamp(cameraRotation.Pitch() - pitchDelta, -89.99f, 89.99f));
-			cameraRotation.SetYaw(cameraRotation.Yaw() - yawDelta);
-			m_EditorCameraTransform.SetRotation(cameraRotation);
-		}
+		Rotator cameraRotation = m_EditorCameraTransform.GetRotation();
+		cameraRotation.SetPitch(Math::Clamp(cameraRotation.Pitch() - pitchDelta, -89.99f, 89.99f));
+		cameraRotation.SetYaw(cameraRotation.Yaw() - yawDelta);
+		m_EditorCameraTransform.SetRotation(cameraRotation);
+	}
+
+	void EditorApplication::TestChangeMesh()
+	{
+		static int32 c_Index = 1;
+		if (c_Index == g_ExampleModels.size()) c_Index = 0;
+		m_TestMeshComponent->SetMesh(g_ExampleModels[c_Index++].Mesh);
 	}
 
 	void EditorApplication::ExitEditor()
@@ -123,43 +138,9 @@ namespace Editor
 
 	void EditorApplication::OnRawInputMouseMovedEvent(const RawInputMouseMovedEvent& event)
 	{
-	}
-
-	void EditorApplication::CreateViewportFramebuffer()
-	{
-		WindowDimensions windowDimensions = GetWindow()->GetDimensions();
-		
-		TextureDescription desc { };
-		desc.Dimensions.Width = windowDimensions.Width;
-		desc.Dimensions.Height = windowDimensions.Height;
-		desc.bUseAsRenderTarget = true;
-		desc.bCreateDepthStencilAttachment = true;
-
-		m_ViewportFramebuffer = Texture::Create(desc);
-	}
-	void EditorApplication::ResizeViewportFramebuffer(const UVector2& size)
-	{
-		if (!m_ViewportFramebuffer)
-			return;
-
-		TextureDescription desc = m_ViewportFramebuffer->GetDescription();
-		desc.Dimensions.Width = size.x;
-		desc.Dimensions.Height = size.y;
-
-		m_ViewportFramebuffer = Texture::Create(desc);
-	}
-
-	void EditorApplication::TryResizeViewportFramebuffer()
-	{
-		if (m_ViewportSize.x && m_ViewportSize.y)
+		if (m_bViewportCaptured)
 		{
-			TextureDimensions viewportDimensions = m_ViewportFramebuffer->GetDimensions();
-			if (m_ViewportSize != UVector2(viewportDimensions.Width, viewportDimensions.Height))
-			{
-				ResizeViewportFramebuffer(m_ViewportSize);
-
-				m_EditorCamera->SetAspectRatio((float)m_ViewportSize.x / (float)m_ViewportSize.y);
-			}
+			DriveEditorCameraRotation(event.GetX(), event.GetY());
 		}
 	}
 
@@ -169,6 +150,7 @@ namespace Editor
 		m_EditorCamera->SetTransform(m_EditorCameraTransform.GetMatrix());
 	}
 
+#pragma warning(disable:6031)
 	void EditorApplication::UpdateEditorCameraLocation(float deltaTime)
 	{
 		if (m_bViewportCaptured)

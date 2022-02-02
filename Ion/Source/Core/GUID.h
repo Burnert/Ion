@@ -6,18 +6,24 @@ namespace Ion
 
 	class ION_API GUID
 	{
+		struct ZeroInitializerT { };
 	public:
+		inline static constexpr ZeroInitializerT Zero = { };
+
 		GUID();
-		GUID(const String& guidStr);
+		explicit GUID(const String& guidStr);
+		GUID(GUID::ZeroInitializerT);
 		GUID(const GUID& other);
 		GUID(GUID&& other) noexcept;
 
 		String ToString() const;
+		bool IsZero() const;
 
 		GUID& operator=(const GUID& other);
 		GUID& operator=(GUID&& other) noexcept;
 		bool operator==(const GUID& other) const;
 		bool operator!=(const GUID& other) const;
+		operator bool() const;
 
 		void GetRawBytes(uint8(&outBytes)[16]) const;
 		GUIDBytesArray GetRawBytes() const;
@@ -31,6 +37,8 @@ namespace Ion
 		uint8 m_Bytes[16];
 	};
 
+	// Inline definitions
+
 	inline GUID::GUID() :
 		m_Bytes()
 	{
@@ -41,6 +49,11 @@ namespace Ion
 		m_Bytes()
 	{
 		PlatformGenerateGUIDFromString(guidStr);
+	}
+
+	inline GUID::GUID(GUID::ZeroInitializerT) :
+		m_Bytes()
+	{
 	}
 
 	inline GUID::GUID(const GUID& other)
@@ -59,6 +72,11 @@ namespace Ion
 		return PlatformGUIDToString();
 	}
 
+	inline bool GUID::IsZero() const
+	{
+		return !(((uint64*)m_Bytes)[0] | ((uint64*)m_Bytes)[1]);
+	}
+
 	inline GUID& GUID::operator=(const GUID& other)
 	{
 		memcpy(m_Bytes, other.m_Bytes, sizeof(GUID));
@@ -74,17 +92,24 @@ namespace Ion
 
 	inline bool GUID::operator==(const GUID& other) const
 	{
-		for (int32 i = 0; i < sizeof(GUID); ++i)
-		{
-			if (m_Bytes[i] != other.m_Bytes[i])
-				return false;
-		}
-		return true;
+		// Endianness doesn't matter here, because we're just comparing bytes
+		// and comparing two 64-bit numbers should be faster
+		// than comparing sixteen 8-bit numbers.
+		return
+			((uint64*)m_Bytes)[0] == ((uint64*)other.m_Bytes)[0] &&
+			((uint64*)m_Bytes)[1] == ((uint64*)other.m_Bytes)[1];
+		// (but it actually isn't when optimized...)
+		// (whatever, it looks cool)
 	}
 
 	inline bool GUID::operator!=(const GUID& other) const
 	{
 		return !operator==(other);
+	}
+
+	inline GUID::operator bool() const
+	{
+		return !IsZero();
 	}
 
 	inline void GUID::GetRawBytes(uint8(&outBytes)[16]) const
@@ -100,3 +125,17 @@ namespace Ion
 		return bytes;
 	}
 }
+
+template<>
+struct std::hash<Ion::GUID>
+{
+	size_t operator()(const Ion::GUID& guid) const noexcept {
+
+		uint8 bytes[16];
+		guid.GetRawBytes(bytes);
+		uint64 bytes64[2] = { *(uint64*)&bytes[0], *(uint64*)&bytes[8] };
+		size_t h1 = THash<uint64>()(bytes64[0]);
+		size_t h2 = THash<uint64>()(bytes64[1]);
+		return h1 ^ h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2);
+	}
+};

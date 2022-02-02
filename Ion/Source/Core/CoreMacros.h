@@ -4,6 +4,7 @@
 
 #define FORCEINLINE __forceinline
 #define NODISCARD [[nodiscard]]
+#define NOVTABLE __declspec(novtable)
 
 #define BITFLAG(x) (1 << (x))
 
@@ -30,6 +31,8 @@
 #define debugbreakd() DEBUG(__debugbreak())
 
 #define checked_call(func, ...) if (func) func(__VA_ARGS__)
+
+#define checked_delete(ptr) if (ptr) delete ptr
 
 #if ION_PLATFORM_WINDOWS
 	#define PLATFORM_SUPPORTS_OPENGL 1

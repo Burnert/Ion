@@ -22,25 +22,25 @@ namespace Ion
 
 		/* Creates and pushes a layer object with specified name and parameters into the layer stack */
 		template<typename LayerT, typename... Types>
-		LayerPtr PushLayer(const char* name, Types&&... args)
+		TShared<LayerT> PushLayer(const char* name, Types&&... args)
 		{
 			LayerPtr layer = MakeShared<LayerT>(name, args...);
 			layer->OnAttach();
 			LayerIterator layerIt = m_Layers.emplace(begin() + m_LayerInsertIndex, Move(layer));
 			m_LayerInsertIndex++;
 
-			return *layerIt;
+			return TStaticCast<LayerT>(*layerIt);
 		}
 
 		/* Creates and pushes a layer object (overlay) with specified name and parameters on top of other layers */
 		template<typename LayerT, typename... Types>
-		LayerPtr PushOverlayLayer(const char* name, Types&&... args)
+		TShared<LayerT> PushOverlayLayer(const char* name, Types&&... args)
 		{
 			LayerPtr overlay = MakeShared<LayerT>(name, args...);
 			overlay->OnAttach();
 			LayerPtr& layerPtr = m_Layers.emplace_back(Move(overlay));
 
-			return layerPtr;
+			return TStaticCast<LayerT>(layerPtr);
 		}
 
 		/* Removes a layer based on its name */

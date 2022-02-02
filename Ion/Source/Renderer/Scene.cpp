@@ -8,11 +8,6 @@
 
 namespace Ion
 {
-	TShared<Scene> Scene::Create()
-	{
-		return MakeShareable(new Scene);
-	}
-
 	Scene::Scene() :
 		m_AmbientLightColor(0.0f),
 		m_ActiveDirectionalLight(nullptr),

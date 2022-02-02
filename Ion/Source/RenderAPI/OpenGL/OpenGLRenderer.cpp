@@ -9,7 +9,7 @@
 namespace Ion
 {
 	OpenGLRenderer::OpenGLRenderer()
-		: m_CurrentScene({ }),
+		: m_CurrentScene(nullptr),
 		m_CurrentRenderTarget(0)
 	{ }
 
@@ -51,7 +51,7 @@ namespace Ion
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
-	void OpenGLRenderer::Draw(const RPrimitiveRenderProxy& primitive, const TShared<Scene>& targetScene) const
+	void OpenGLRenderer::Draw(const RPrimitiveRenderProxy& primitive, const Scene* targetScene) const
 	{
 		TRACE_FUNCTION();
 
@@ -109,7 +109,7 @@ namespace Ion
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 	}
 
-	void OpenGLRenderer::RenderScene(const TShared<Scene>& scene)
+	void OpenGLRenderer::RenderScene(const Scene* scene)
 	{
 		TRACE_FUNCTION();
 
@@ -164,12 +164,12 @@ namespace Ion
 		}
 	}
 
-	void OpenGLRenderer::SetCurrentScene(const TShared<Scene>& scene)
+	void OpenGLRenderer::SetCurrentScene(const Scene* scene)
 	{
 		m_CurrentScene = scene;
 	}
 
-	const TShared<Scene>& OpenGLRenderer::GetCurrentScene() const
+	const Scene* OpenGLRenderer::GetCurrentScene() const
 	{
 		return m_CurrentScene;
 	}

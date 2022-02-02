@@ -15,7 +15,7 @@
 namespace Ion
 {
 	DX11Renderer::DX11Renderer() :
-		m_CurrentScene({ }),
+		m_CurrentScene(nullptr),
 		m_CurrentRTV(nullptr),
 		m_CurrentDSV(nullptr)
 	{
@@ -48,7 +48,7 @@ namespace Ion
 		dxcall_v(context->ClearDepthStencilView(m_CurrentDSV, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0));
 	}
 
-	void DX11Renderer::Draw(const RPrimitiveRenderProxy& primitive, const TShared<Scene>& targetScene) const
+	void DX11Renderer::Draw(const RPrimitiveRenderProxy& primitive, const Scene* targetScene) const
 	{
 		TRACE_FUNCTION();
 
@@ -98,7 +98,7 @@ namespace Ion
 		dxcall_v(context->DrawIndexed(6, 0, 0));
 	}
 
-	void DX11Renderer::RenderScene(const TShared<Scene>& scene)
+	void DX11Renderer::RenderScene(const Scene* scene)
 	{
 		TRACE_FUNCTION();
 
@@ -153,12 +153,12 @@ namespace Ion
 		}
 	}
 
-	void DX11Renderer::SetCurrentScene(const TShared<Scene>& scene)
+	void DX11Renderer::SetCurrentScene(const Scene* scene)
 	{
 		m_CurrentScene = scene;
 	}
 
-	const TShared<Scene>& DX11Renderer::GetCurrentScene() const
+	const Scene* DX11Renderer::GetCurrentScene() const
 	{
 		return m_CurrentScene;
 	}

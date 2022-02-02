@@ -9,18 +9,12 @@
 #include "Core/Event/EventDispatcher.h"
 #include "Core/Input/Input.h"
 
-#include "glad/glad.h"
+#include "Engine/Engine.h"
 
 #include "RenderAPI/RenderAPI.h"
 #include "Renderer/Renderer.h"
 
 #include "UserInterface/ImGui.h"
-
-#include "RenderAPI/OpenGL/Windows/OpenGLWindows.h"
-#include "Platform/Windows/WindowsWindow.h"
-#include "RenderAPI/DX11/DX11.h"
-
-#include "Platform/Windows/WindowsApplication.h"
 
 namespace Ion
 {
@@ -67,6 +61,8 @@ namespace Ion
 		m_Window = GenericWindow::Create();
 		m_Window->Initialize();
 
+		g_Engine->Init();
+
 		// Current thread will render graphics in this window.
 		RenderAPI::Init(ERenderAPI::DX11, m_Window.get());
 
@@ -106,6 +102,8 @@ namespace Ion
 		AssetManager::Shutdown();
 
 		RenderAPI::Shutdown();
+
+		g_Engine->Shutdown();
 	}
 
 	void Application::Exit()
@@ -122,6 +120,8 @@ namespace Ion
 	void Application::Update(float deltaTime)
 	{
 		TRACE_FUNCTION();
+
+		g_Engine->Update(deltaTime);
 
 		ImGuiNewFramePlatform();
 		ImGui::NewFrame();
@@ -278,6 +278,8 @@ namespace Ion
 			Render();
 
 			m_EventQueue->ProcessEvents();
+
+			g_Engine->Update_SyncRenderingData(deltaTime);
 		}
 	}
 

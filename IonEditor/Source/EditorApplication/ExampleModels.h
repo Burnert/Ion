@@ -27,6 +27,10 @@ namespace Editor
 		{
 			m_OnInit = onInit;
 		}
+		bool IsLoaded() const
+		{
+			return m_bLoaded;
+		}
 	};
 	inline TArray<ExampleModelData> g_ExampleModels;
 	inline DirectionalLight* g_ExampleLight;
@@ -108,7 +112,7 @@ namespace Editor
 		}
 	}
 
-	static void AddModelsToSceneOnInit(TShared<Scene> scene)
+	static void AddModelsToSceneOnInit(Scene* scene)
 	{
 		for(ExampleModelData& model : g_ExampleModels)
 		{
@@ -119,7 +123,7 @@ namespace Editor
 		}
 	}
 
-	static void InitLights(TShared<Scene> scene)
+	static void InitLights(Scene* scene)
 	{
 		scene->SetAmbientLightColor(Vector4(1.0f, 1.0f, 0.8f, 0.2f));
 
@@ -130,12 +134,25 @@ namespace Editor
 		scene->SetActiveDirectionalLight(g_ExampleLight);
 	}
 
-	static void InitExample(TShared<Scene> scene)
+	static void InitExample(Scene* scene)
 	{
 		CreateExampleModels();
-		AddModelsToSceneOnInit(scene);
+		//AddModelsToSceneOnInit(scene);
 		LoadExampleModels();
 		InitLights(scene);
+	}
+
+	template<typename Lambda>
+	static void GetModelDeferred(ExampleModelData& model, Lambda onInit)
+	{
+		if (model.IsLoaded())
+		{
+			onInit();
+		}
+		else
+		{
+			model.SetOnInit(onInit);
+		}
 	}
 
 	inline void ExampleModelData::TryInit()
@@ -143,7 +160,7 @@ namespace Editor
 		if (!m_bLoaded && MeshAsset->IsLoaded() && TextureAsset->IsLoaded())
 		{
 			InitExampleModel(*this);
-			m_OnInit();
+			checked_call(m_OnInit);
 			m_bLoaded = true;
 		}
 	}

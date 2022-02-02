@@ -6,6 +6,8 @@ namespace Ion
 {
 namespace Editor
 {
+	class EditorLayer;
+
 	class EDITOR_API EditorApplication : public IonApplication
 	{
 	public:
@@ -23,6 +25,12 @@ namespace Editor
 		void CaptureViewport(bool bCapture);
 		void DriveEditorCameraRotation(float yawDelta, float pitchDelta);
 
+		World* GetEditorWorld() const;
+		TShared<Camera> GetEditorCamera() const;
+		Scene* GetScene() const { return m_Scene; }
+
+		void TestChangeMesh();
+
 		static void ExitEditor();
 
 	protected:
@@ -32,10 +40,6 @@ namespace Editor
 		void OnRawInputMouseMovedEvent(const RawInputMouseMovedEvent& event);
 
 	private:
-		void CreateViewportFramebuffer();
-		void ResizeViewportFramebuffer(const UVector2& size);
-		void TryResizeViewportFramebuffer();
-
 		void UpdateEditorCamera(float deltaTime);
 		void UpdateEditorCameraLocation(float deltaTime);
 
@@ -50,17 +54,30 @@ namespace Editor
 		>;
 		EventDispatcher<EventFunctions, EditorApplication> m_EventDispatcher;
 
-		TShared<Texture> m_ViewportFramebuffer;
-		UVector2 m_ViewportSize;
+		TShared<EditorLayer> m_EditorLayer;
 
-		TShared<Scene> m_Scene;
+		World* m_EditorMainWorld;
+
+		Scene* m_Scene;
 		TShared<Camera> m_EditorCamera;
 		Transform m_EditorCameraTransform;
 		float m_EditorCameraMoveSpeed;
 
 		bool m_bViewportCaptured;
 
+		MeshComponent* m_TestMeshComponent;
+
 		friend class EditorLayer;
 	};
+
+	inline World* EditorApplication::GetEditorWorld() const
+	{
+		return m_EditorMainWorld;
+	}
+
+	inline TShared<Camera> EditorApplication::GetEditorCamera() const
+	{
+		return m_EditorCamera;
+	}
 }
 }

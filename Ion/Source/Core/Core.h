@@ -37,4 +37,5 @@
 #include "Core/Templates/Templates.h"
 #include "Core/Diagnostics/Tracing.h"
 #include "Core/Diagnostics/DebugTime.h"
-#include "Renderer/Fwd.h"
+#include "Renderer/RendererFwd.h"
+#include "Engine/EngineFwd.h"

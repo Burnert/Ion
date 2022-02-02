@@ -45,12 +45,12 @@ namespace Ion
 	class Light;
 	class DirectionalLight;
 
+	class World;
+
 	class ION_API Scene
 	{
 	public:
 		const static uint32 MaxLights = 100;
-
-		static TShared<Scene> Create();
 
 		void SetActiveCamera(const TShared<Camera>& camera);
 		FORCEINLINE const TShared<Camera>& GetActiveCamera() const { return m_ActiveCamera; }
@@ -72,6 +72,7 @@ namespace Ion
 		bool RemoveDrawableObject(IDrawable* drawable);
 		FORCEINLINE const THashSet<IDrawable*>& GetDrawableObjects() const { return m_DrawableObjects; }
 
+		Scene();
 		~Scene() { }
 
 		void UpdateRenderData();
@@ -85,10 +86,9 @@ namespace Ion
 		
 		FORCEINLINE bool HasDirectionalLight() const { return m_ActiveDirectionalLight; }
 
-	protected:
-		Scene();
-
 	private:
+		World* m_OwningWorld;
+
 		THashSet<IDrawable*> m_DrawableObjects;
 
 		TShared<Camera> m_ActiveCamera;
@@ -109,5 +109,6 @@ namespace Ion
 		friend class Renderer;
 		friend class OpenGLRenderer;
 		friend class DX11Renderer;
+		friend class World;
 	};
 }

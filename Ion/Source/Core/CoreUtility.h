@@ -55,7 +55,7 @@ NODISCARD constexpr inline TEnableIfT<TIsIntegralV<T>, T> BooleanToBitmask(bool 
 // Memory :
 
 template<typename SizeT, typename AlignT>
-NODISCARD constexpr FORCEINLINE SizeT AlignAs(SizeT size, AlignT align)
+NODISCARD constexpr SizeT AlignAs(SizeT size, AlignT align)
 {
 	static_assert(TIsNoneOfV<SizeT, bool>);
 	static_assert(TIsIntegralV<SizeT>);
@@ -66,37 +66,52 @@ NODISCARD constexpr FORCEINLINE SizeT AlignAs(SizeT size, AlignT align)
 }
 
 template<typename T, typename... Types>
-NODISCARD constexpr FORCEINLINE TShared<T> MakeShared(Types&&... args)
+NODISCARD constexpr TShared<T> MakeShared(Types&&... args)
 {
 	return std::make_shared<T>(std::forward<Types>(args)...);
 }
 
 template<typename T>
-NODISCARD constexpr FORCEINLINE TShared<T> MakeShareable(T* ptr)
+NODISCARD constexpr TShared<T> MakeShareable(T* ptr)
 {
 	return TShared<T>(ptr);
 }
 
 template<typename T, typename... Types>
-NODISCARD constexpr FORCEINLINE TUnique<T> MakeUnique(Types&&... args)
+NODISCARD constexpr TUnique<T> MakeUnique(Types&&... args)
 {
 	return std::make_unique<T>(std::forward<Types>(args)...);
 }
 
 template<typename T>
-NODISCARD constexpr FORCEINLINE TRemoveRef<T>&& Move(T&& arg) noexcept
+NODISCARD constexpr TRemoveRef<T>&& Move(T&& arg) noexcept
 {
 	return static_cast<TRemoveRef<T>&&>(arg);
 }
 
+// forward an lvalue as either an lvalue or an rvalue
+template<typename T>
+NODISCARD constexpr T&& Forward(TRemoveRef<T>& arg) noexcept
+{
+	return static_cast<T&&>(arg);
+}
+
+// forward an rvalue as an rvalue
+template<typename T>
+NODISCARD constexpr T&& Forward(TRemoveRef<T>&& arg) noexcept
+{
+	static_assert(!std::is_lvalue_reference_v<T>, "bad forward call");
+	return static_cast<T&&>(arg);
+}
+
 template<typename T1, typename T2>
-NODISCARD FORCEINLINE TShared<T1> TStaticCast(const TShared<T2>& other) noexcept
+NODISCARD TShared<T1> TStaticCast(const TShared<T2>& other) noexcept
 {
 	return std::static_pointer_cast<T1>(other);
 }
 
 template<typename T1, typename T2>
-NODISCARD FORCEINLINE TShared<T1> TStaticCast(TShared<T2>&& other) noexcept
+NODISCARD TShared<T1> TStaticCast(TShared<T2>&& other) noexcept
 {
 	return std::static_pointer_cast<T1>(other);
 }

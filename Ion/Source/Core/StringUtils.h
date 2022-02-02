@@ -72,11 +72,21 @@ NODISCARD FORCEINLINE constexpr String ToString(T value)
 {
 	return std::to_string(value);
 }
+template<>
+NODISCARD FORCEINLINE String ToString(bool value)
+{
+	return BoolStr(value);
+}
 
 template<typename T>
 NODISCARD FORCEINLINE constexpr WString ToWString(T value)
 {
 	return std::to_wstring(value);
+}
+template<>
+NODISCARD FORCEINLINE WString ToWString(bool value)
+{
+	return BoolWStr(value);
 }
 
 // Hex conversion -------------------------------------------------------------------------

@@ -32,15 +32,15 @@ namespace Ion
 			RebuildMatrix();
 		}
 
-		inline Vector3 GetLocation() const { return m_Location; }
-		inline Rotator GetRotation() const { return m_Rotation; }
-		inline Vector3 GetScale() const { return m_Scale; }
+		inline const Vector3& GetLocation() const { return m_Location; }
+		inline const Rotator& GetRotation() const { return m_Rotation; }
+		inline const Vector3& GetScale() const    { return m_Scale; }
 
-		inline Matrix4 GetMatrix() const { return m_Matrix; }
+		inline const Matrix4& GetMatrix() const   { return m_Matrix; }
 
-		inline Vector3 GetForwardVector() const { return m_Rotation.Forward(); }
-		inline Vector3 GetRightVector() const { return m_Rotation.Right(); }
-		inline Vector3 GetUpVector() const { return m_Rotation.Up(); }
+		inline Vector3 GetForwardVector() const   { return m_Rotation.Forward(); }
+		inline Vector3 GetRightVector() const     { return m_Rotation.Right(); }
+		inline Vector3 GetUpVector() const        { return m_Rotation.Up(); }
 
 		// Transform operators
 

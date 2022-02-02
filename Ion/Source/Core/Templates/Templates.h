@@ -245,3 +245,22 @@ struct TTypeSize<TTypePack<>> : public TTypeSize<> { };
 
 template<typename... Types>
 struct TTypeSize<TTypePack<Types...>> : public TTypeSize<Types...> { };
+
+// -------------------------------------------------------------------------------------
+// - Has Function Test
+// -------------------------------------------------------------------------------------
+
+#define DECLARE_THASFUNCTION(funcname) \
+namespace _THelpers \
+{ \
+	template<typename ClassT> \
+	struct _THas##funcname \
+	{ \
+		template<typename T> static constexpr TBool<true>  Test(decltype(&T::##funcname)); \
+		template<typename T> static constexpr TBool<false> Test(...); \
+	public: \
+		static constexpr bool Value = decltype(Test<ClassT>(0))::value; \
+	}; \
+} \
+template<typename ClassT> \
+static constexpr bool THas##funcname = _THelpers::_THas##funcname<ClassT>::Value

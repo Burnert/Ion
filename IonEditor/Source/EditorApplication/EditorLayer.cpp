@@ -3,6 +3,8 @@
 #include "EditorLayer.h"
 #include "EditorApplication.h"
 
+#include "Engine/World.h"
+
 #include "Renderer/Renderer.h"
 
 #include "UserInterface/ImGui.h"
@@ -14,6 +16,7 @@ namespace Editor
 	EditorLayer::EditorLayer(const char* name) :
 		Layer(name),
 		m_EventDispatcher(this),
+		m_ViewportSize({ }),
 		m_ViewportRect({ }),
 		m_bViewportHovered(false),
 		m_bViewportCaptured(false),
@@ -26,6 +29,7 @@ namespace Editor
 
 	void EditorLayer::OnAttach()
 	{
+		CreateViewportFramebuffer();
 	}
 
 	void EditorLayer::OnDetach()
@@ -34,11 +38,21 @@ namespace Editor
 
 	void EditorLayer::OnUpdate(float DeltaTime)
 	{
+		TryResizeViewportFramebuffer();
 		DrawEditorUI();
 	}
 
 	void EditorLayer::OnRender()
 	{
+		Renderer* renderer = Renderer::Get();
+
+		// Render to viewport
+
+		renderer->SetRenderTarget(m_ViewportFramebuffer);
+
+		renderer->Clear(Vector4(0.1f, 0.1f, 0.1f, 1.0f));
+		//renderer->RenderScene(EditorApplication::Get()->GetScene());
+		renderer->RenderScene(EditorApplication::Get()->GetEditorWorld()->GetScene());
 	}
 
 	void EditorLayer::OnEvent(const Event& event)
@@ -159,11 +173,10 @@ namespace Editor
 			m_ViewportRect = ImGui::GetWindowWorkRect();
 			m_bViewportHovered = ImGui::IsWindowHovered();
 
-			EditorApplication::Get()->m_ViewportSize = UVector2(m_ViewportRect.z - m_ViewportRect.x, m_ViewportRect.w - m_ViewportRect.y);
+			m_ViewportSize = UVector2(m_ViewportRect.z - m_ViewportRect.x, m_ViewportRect.w - m_ViewportRect.y);
 
-			TShared<Texture> viewportTexture = EditorApplication::Get()->m_ViewportFramebuffer;
-			const TextureDimensions& viewportDimensions = viewportTexture->GetDimensions();
-			ImGui::Image(viewportTexture->GetNativeID(), ImVec2((float)viewportDimensions.Width, (float)viewportDimensions.Height));
+			const TextureDimensions& viewportDimensions = m_ViewportFramebuffer->GetDimensions();
+			ImGui::Image(m_ViewportFramebuffer->GetNativeID(), ImVec2((float)viewportDimensions.Width, (float)viewportDimensions.Height));
 
 			ImGui::End();
 		}
@@ -174,6 +187,17 @@ namespace Editor
 		if (m_bContentBrowserOpen)
 		{
 			ImGui::Begin("Content Browser", &m_bContentBrowserOpen);
+
+			ImGui::PushID("ContentBrowser");
+
+			ImGui::Text("Test");
+
+			if (ImGui::Button("Change Mesh"))
+			{
+				EditorApplication::Get()->TestChangeMesh();
+			}
+
+			ImGui::PopID();
 
 			ImGui::End();
 		}
@@ -241,10 +265,7 @@ namespace Editor
 
 	void EditorLayer::OnRawInputMouseMovedEvent(const RawInputMouseMovedEvent& event)
 	{
-		if (m_bViewportCaptured && InputManager::IsMouseButtonPressed(Mouse::Right))
-		{
-			EditorApplication::Get()->DriveEditorCameraRotation(event.GetX(), event.GetY());
-		}
+		
 	}
 
 	void EditorLayer::OnRawInputMouseScrolledEvent(const RawInputMouseScrolledEvent& event)
@@ -260,6 +281,45 @@ namespace Editor
 	void EditorLayer::OnKeyReleasedEvent(const KeyReleasedEvent& event)
 	{
 
+	}
+
+	void EditorLayer::CreateViewportFramebuffer()
+	{
+		WindowDimensions windowDimensions = EditorApplication::GetWindow()->GetDimensions();
+
+		TextureDescription desc{ };
+		desc.Dimensions.Width = windowDimensions.Width;
+		desc.Dimensions.Height = windowDimensions.Height;
+		desc.bUseAsRenderTarget = true;
+		desc.bCreateDepthStencilAttachment = true;
+
+		m_ViewportFramebuffer = Texture::Create(desc);
+	}
+	void EditorLayer::ResizeViewportFramebuffer(const UVector2& size)
+	{
+		// @TODO: This function probably shouldn't even be called, if the framebuffer is not set
+		if (!m_ViewportFramebuffer)
+			return;
+
+		TextureDescription desc = m_ViewportFramebuffer->GetDescription();
+		desc.Dimensions.Width = size.x;
+		desc.Dimensions.Height = size.y;
+
+		m_ViewportFramebuffer = Texture::Create(desc);
+	}
+
+	void EditorLayer::TryResizeViewportFramebuffer()
+	{
+		if (m_ViewportSize.x && m_ViewportSize.y)
+		{
+			TextureDimensions viewportDimensions = m_ViewportFramebuffer->GetDimensions();
+			if (m_ViewportSize != UVector2(viewportDimensions.Width, viewportDimensions.Height))
+			{
+				ResizeViewportFramebuffer(m_ViewportSize);
+
+				EditorApplication::Get()->GetEditorCamera()->SetAspectRatio((float)m_ViewportSize.x / (float)m_ViewportSize.y);
+			}
+		}
 	}
 }
 }
