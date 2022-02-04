@@ -2,16 +2,16 @@
 
 #include "MeshComponent.h"
 #include "Engine/World.h"
-#include "Renderer/Mesh.h"
-#include "Renderer/Scene.h"
+#include "Renderer/Renderer.h"
 
 namespace Ion
 {
 	DECLARE_ENTITY_COMPONENT_CLASS(MeshComponent)
 
-	ENTITY_COMPONENT_CALLBACK_ONCREATE_FUNC(MeshComponent)
-	ENTITY_COMPONENT_CALLBACK_ONDESTROY_FUNC(MeshComponent)
-	//ENTITY_COMPONENT_CALLBACK_TICK_FUNC(MeshComponent)
+	ENTITY_COMPONENT_STATIC_CALLBACK_ONCREATE_FUNC()
+	ENTITY_COMPONENT_STATIC_CALLBACK_ONDESTROY_FUNC()
+	ENTITY_COMPONENT_STATIC_CALLBACK_BUILDRENDERERDATA_FUNC()
+		//ENTITY_COMPONENT_STATIC_CALLBACK_TICK_FUNC()
 
 	MeshComponent::MeshComponent()
 	{
@@ -31,11 +31,25 @@ namespace Ion
 		LOG_INFO("MeshComponent::OnDestroy()");
 	}
 
-	void MeshComponent::Tick(float deltaTime)
+	void MeshComponent::BuildRendererData(RRendererData& data)
 	{
-		Component::Tick(deltaTime);
-		LOG_INFO("MeshComponent::Tick({0})", deltaTime);
+		Material* material = m_Mesh->GetMaterial().lock().get();
+
+		RPrimitiveRenderProxy mesh;
+		mesh.Transform     = m_SceneData.Transform.GetMatrix();
+		mesh.Material      = material;
+		mesh.Shader        = material->GetShader().get();
+		mesh.VertexBuffer  = m_Mesh->GetVertexBufferRaw();
+		mesh.IndexBuffer   = m_Mesh->GetIndexBufferRaw();
+		mesh.UniformBuffer = m_Mesh->GetUniformBufferRaw();
+		data.AddPrimitive(mesh);
 	}
+
+	//void MeshComponent::Tick(float deltaTime)
+	//{
+	//	Component::Tick(deltaTime);
+	//	LOG_INFO("MeshComponent::Tick({0})", deltaTime);
+	//}
 
 	void MeshComponent::SetMesh(const TShared<Mesh>& mesh)
 	{
@@ -46,11 +60,11 @@ namespace Ion
 		if (mesh != m_Mesh)
 		{
 			// TEMPORARY
-			mesh->SetTransform(m_Transform.GetMatrix());
+			mesh->SetTransform(m_SceneData.Transform.GetMatrix());
 
-			Scene* scene = GetWorldContext()->GetScene();
-			scene->RemoveDrawableObject(m_Mesh.get());
-			scene->AddDrawableObject(mesh.get());
+			//Scene* scene = GetWorldContext()->GetScene();
+			//scene->RemoveDrawableObject(m_Mesh.get());
+			//scene->AddDrawableObject(mesh.get());
 		}
 		m_Mesh = mesh;
 	}
@@ -62,51 +76,71 @@ namespace Ion
 
 	void MeshComponent::SetTransform(const Transform& transform)
 	{
-		m_Transform = transform;
+		m_SceneData.Transform = transform;
 		NotifyTransformUpdated();
 	}
 
 	const Transform& MeshComponent::GetTransform() const
 	{
-		return m_Transform;
+		return m_SceneData.Transform;
 	}
 
 	void MeshComponent::SetLocation(const Vector3& location)
 	{
-		m_Transform.SetLocation(location);
+		m_SceneData.Transform.SetLocation(location);
 		NotifyTransformUpdated();
 	}
 
 	const Vector3& MeshComponent::GetLocation() const
 	{
-		return m_Transform.GetLocation();
+		return m_SceneData.Transform.GetLocation();
 	}
 
 	void MeshComponent::SetRotation(const Rotator& rotation)
 	{
-		m_Transform.SetRotation(rotation);
+		m_SceneData.Transform.SetRotation(rotation);
 		NotifyTransformUpdated();
 	}
 
 	const Rotator& MeshComponent::GetRotation() const
 	{
-		return m_Transform.GetRotation();
+		return m_SceneData.Transform.GetRotation();
 	}
 
 	void MeshComponent::SetScale(const Vector3& scale)
 	{
-		m_Transform.SetScale(scale);
+		m_SceneData.Transform.SetScale(scale);
 		NotifyTransformUpdated();
 	}
 
 	const Vector3& MeshComponent::GetScale() const
 	{
-		return m_Transform.GetScale();
+		return m_SceneData.Transform.GetScale();
+	}
+
+	void MeshComponent::SetVisible(bool bVisible)
+	{
+		m_SceneData.bVisible = bVisible;
+	}
+
+	bool MeshComponent::IsVisible() const
+	{
+		return m_SceneData.bVisible;
+	}
+
+	void MeshComponent::SetVisibleInGame(bool bVisibleInGame)
+	{
+		m_SceneData.bVisibleInGame = bVisibleInGame;
+	}
+
+	bool MeshComponent::IsVisibleInGame() const
+	{
+		return m_SceneData.bVisibleInGame;
 	}
 
 	void MeshComponent::NotifyTransformUpdated()
 	{
 		// TEMPORARY
-		m_Mesh->SetTransform(m_Transform.GetMatrix());
+		m_Mesh->SetTransform(m_SceneData.Transform.GetMatrix());
 	}
 }

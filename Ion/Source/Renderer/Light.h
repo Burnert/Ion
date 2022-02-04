@@ -1,12 +1,14 @@
 #pragma once
 
 #include "Core/Core.h"
+#include "RendererCore.h"
 
 namespace Ion
 {
 	enum class ELightType : uint8
 	{
-		Point = 1,
+		Disabled    = 0,
+		Point       = 1,
 		Directional = 2,
 	};
 
@@ -31,10 +33,6 @@ namespace Ion
 
 	class ION_API Light
 	{
-		friend class Renderer;
-#if PLATFORM_SUPPORTS_OPENGL
-		friend class OpenGLRenderer;
-#endif
 	public:
 		void CopyRenderData(RLightRenderProxy& outRenderProxy)
 		{
@@ -49,14 +47,13 @@ namespace Ion
 		float m_Intensity;
 		float m_Falloff;
 		Vector3 m_Color;
+
+		friend class Renderer;
+		friend class OpenGLRenderer;
 	};
 
 	class ION_API DirectionalLight : public Light
 	{
-		friend class Renderer;
-#if PLATFORM_SUPPORTS_OPENGL
-		friend class OpenGLRenderer;
-#endif
 	public:
 		void CopyRenderData(RLightRenderProxy& outRenderProxy)
 		{
@@ -69,5 +66,8 @@ namespace Ion
 		}
 
 		Vector3 m_LightDirection;
+
+		friend class Renderer;
+		friend class OpenGLRenderer;
 	};
 }

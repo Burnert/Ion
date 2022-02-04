@@ -13,10 +13,10 @@ namespace Ion
 		void Shutdown();
 		void Update(float deltaTime);
 
-		void RegisterWorld(World* world);
-		void UnregisterWorld(World* world);
+		World* CreateWorld(const WorldInitializer& initializer);
+		void DestroyWorld(World* world);
 
-		void Update_SyncRenderingData(float deltaTime);
+		void BuildRendererData(float deltaTime);
 
 		float GetGlobalDeltaTime() const;
 

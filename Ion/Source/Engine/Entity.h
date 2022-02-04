@@ -2,8 +2,6 @@
 
 namespace Ion
 {
-	class World;
-
 	class ION_API Entity
 	{
 	public:
@@ -27,6 +25,9 @@ namespace Ion
 
 		void AddComponent(Component* component);
 		void RemoveComponent(Component* component);
+
+		void SetName(const String& name);
+		const String& GetName() const;
 
 		/* Returns the GUID of the Entity.
 		   A GUID is initiated at the creation of the Entity. */
@@ -53,13 +54,15 @@ namespace Ion
 
 	private:
 		GUID m_GUID;
+
 		World* m_WorldContext;
 
 		Transform m_Transform;
-
 		THashSet<Component*> m_Components;
 
 		bool m_bTickEnabled;
+
+		String m_Name;
 
 		friend class Engine;
 		friend class World;
@@ -115,6 +118,16 @@ namespace Ion
 	inline bool Entity::IsTickEnabled() const
 	{
 		return m_bTickEnabled;
+	}
+
+	inline void Entity::SetName(const String& name)
+	{
+		m_Name = name;
+	}
+
+	inline const String& Entity::GetName() const
+	{
+		return m_Name;
 	}
 
 	inline const GUID& Entity::GetGuid() const

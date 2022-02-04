@@ -14,6 +14,24 @@
 
 namespace Ion
 {
+	struct RRendererData
+	{
+		TArray<RPrimitiveRenderProxy> Primitives;
+		TArray<RLightRenderProxy> Lights;
+		RLightRenderProxy DirectionalLight;
+		Vector4 AmbientLightColor;
+
+		inline void AddLight(RLightRenderProxy& light)
+		{
+			Lights.push_back(light);
+		}
+
+		inline void AddPrimitive(RPrimitiveRenderProxy& primitive)
+		{
+			Primitives.push_back(primitive);
+		}
+	};
+
 	struct ScreenTextureRenderData
 	{
 		TShared<Shader> Shader;

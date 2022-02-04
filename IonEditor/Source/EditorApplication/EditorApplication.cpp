@@ -9,6 +9,8 @@
 
 #include "Engine/Engine.h"
 #include "Engine/Components/MeshComponent.h"
+#include "Engine/Components/LightComponent.h"
+#include "Engine/Components/DirectionalLightComponent.h"
 
 namespace Ion
 {
@@ -22,6 +24,7 @@ namespace Editor
 		m_EditorMainWorld(nullptr),
 		m_Scene(nullptr)
 	{
+		ionassert(!s_Instance);
 		s_Instance = this;
 	}
 
@@ -41,10 +44,8 @@ namespace Editor
 		m_EditorCamera = Camera::Create();
 
 		WorldInitializer worldInitializer { };
-		m_EditorMainWorld = World::CreateWorld(worldInitializer);
+		m_EditorMainWorld = g_Engine->CreateWorld(worldInitializer);
 		m_EditorMainWorld->GetScene()->SetActiveCamera(m_EditorCamera);
-
-		g_Engine->RegisterWorld(m_EditorMainWorld);
 
 		m_Scene = new Scene;
 
@@ -60,13 +61,28 @@ namespace Editor
 		// Engine testing:
 
 		ComponentRegistry& registry = m_EditorMainWorld->GetComponentRegistry();
+
 		m_TestMeshComponent = registry.CreateComponent<MeshComponent>();
 		GetModelDeferred(g_ExampleModels[0], [&, this]
 		{
 			m_TestMeshComponent->SetMesh(g_ExampleModels[0].Mesh);
 		});
+
+		m_TestLightComponent = registry.CreateComponent<LightComponent>();
+		m_TestLightComponent->SetLocation(Vector3(0.0f, 3.0f, 0.0f));
+		m_TestLightComponent->GetLightDataRef().LightColor = Vector3(1.0f, 1.0f, 0.0f);
+		m_TestLightComponent->GetLightDataRef().Intensity = 1.0f;
+		m_TestLightComponent->GetLightDataRef().Falloff = 5.0f;
+
+		m_TestDirLightComponent = registry.CreateComponent<DirectionalLightComponent>();
+		m_TestDirLightComponent->SetRotation(Rotator({ -60.0f, 0.0f, 0.0f }));
+		m_TestDirLightComponent->GetDirectionalLightDataRef().LightColor = Vector3(0.0f, 1.0f, 1.0f);
+		m_TestDirLightComponent->GetDirectionalLightDataRef().Intensity = 1.0f;
+
 		Entity* entity = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
 		entity->AddComponent(m_TestMeshComponent);
+		entity->AddComponent(m_TestLightComponent);
+		entity->AddComponent(m_TestDirLightComponent);
 		entity->SetTransform(Transform(Vector3(0.0f, 0.0f, 2.0f)));
 	}
 
@@ -83,6 +99,11 @@ namespace Editor
 
 	void EditorApplication::OnShutdown()
 	{
+		if (m_EditorMainWorld)
+		{
+			g_Engine->DestroyWorld(m_EditorMainWorld);
+			m_EditorMainWorld = nullptr;
+		}
 	}
 
 	void EditorApplication::OnEvent(const Event& event)
@@ -115,8 +136,8 @@ namespace Editor
 	void EditorApplication::TestChangeMesh()
 	{
 		static int32 c_Index = 1;
-		if (c_Index == g_ExampleModels.size()) c_Index = 0;
-		m_TestMeshComponent->SetMesh(g_ExampleModels[c_Index++].Mesh);
+		m_TestMeshComponent->SetMesh(g_ExampleModels[c_Index].Mesh);
+		c_Index = (c_Index + 1) % g_ExampleModels.size();
 	}
 
 	void EditorApplication::ExitEditor()

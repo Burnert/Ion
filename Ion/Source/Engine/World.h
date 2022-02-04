@@ -16,8 +16,10 @@ namespace Ion
 	public:
 		using EntityArray = TArray<Entity*>;
 
-		static World* CreateWorld(const WorldInitializer& initializer);
+	protected:
+		static World* Create(const WorldInitializer& initializer);
 
+	public:
 		void SetTickEnabled(bool bTick);
 
 		template<typename EntityT, typename... Args>
@@ -38,11 +40,12 @@ namespace Ion
 		void InitEntity(Entity* entity);
 
 	protected:
-		void Update_SyncRenderingData(float deltaTime);
+		void BuildRendererData(RRendererData& data, float deltaTime);
 		void TransferSceneRenderData();
 
-		void Init();
-		void Update(float deltaTime);
+		void OnInit();
+		void OnUpdate(float deltaTime);
+		void OnDestroy();
 
 	private:
 		World();

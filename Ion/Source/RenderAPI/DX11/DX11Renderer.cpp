@@ -114,9 +114,9 @@ namespace Ion
 		// Set lights
 		const RLightRenderProxy& dirLight = scene->GetRenderDirLight();
 		const TArray<RLightRenderProxy>& lights = scene->GetRenderLights();
-		uint32 lightNum = scene->GetLightNumber();
+		uint32 lightNum = (int32)scene->GetRenderLights().size();
 
-		if (scene->HasDirectionalLight())
+		if (dirLight.Type != ELightType::Disabled)
 		{
 			uniforms.DirLight.Direction = Vector4(dirLight.Direction, 0.0f);
 			uniforms.DirLight.Color = Vector4(dirLight.Color, 1.0f);
@@ -127,7 +127,7 @@ namespace Ion
 			uniforms.DirLight.Intensity = 0.0f;
 		}
 
-		uniforms.AmbientLightColor = scene->GetAmbientLightColor();
+		uniforms.AmbientLightColor = scene->m_RenderAmbientLight;
 		uniforms.LightNum = lightNum;
 
 		uint32 lightIndex = 0;

@@ -275,11 +275,13 @@ namespace Ion
 
 			float deltaTime = CalculateFrameTime();
 			Update(deltaTime);
+			// This will eventually need to be called after Update,
+			// but during the time the render thread is rendering
+			g_Engine->BuildRendererData(deltaTime);
+
 			Render();
 
 			m_EventQueue->ProcessEvents();
-
-			g_Engine->Update_SyncRenderingData(deltaTime);
 		}
 	}
 

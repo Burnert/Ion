@@ -10,8 +10,8 @@ namespace Ion
 		m_bTickEnabled(true),
 		m_WorldContext(nullptr),
 		m_OwningEntity(nullptr),
-		m_bIsSceneComponent(false),
-		m_bUpdateSceneData(false)
+		m_bIsSceneComponent(false)
+		//m_bUpdateSceneData(false)
 	{
 	}
 
@@ -20,15 +20,10 @@ namespace Ion
 		m_bTickEnabled = bTick;
 	}
 
-	bool Component::IsTickEnabled() const
-	{
-		return m_bTickEnabled;
-	}
-
 	void Component::InitAsSceneComponent()
 	{
 		m_bIsSceneComponent = true;
-		m_bUpdateSceneData = true;
+		//m_bUpdateSceneData = true;
 	}
 	
 	// ComponentRegistry
@@ -52,8 +47,17 @@ namespace Ion
 	{
 		for (auto& [id, container] : m_ComponentArrays)
 		{
-			ComponentCallbacks::TickFPtr func = ComponentCallbacks::GetTickFPtr(id);
+			ComponentStaticCallbacks::TickFPtr func = ComponentStaticCallbacks::GetTickFPtr(id);
 			checked_call(func, container, deltaTime);
+		}
+	}
+
+	void ComponentRegistry::BuildRendererData(RRendererData& data)
+	{
+		for (auto& [id, container] : m_ComponentArrays)
+		{
+			ComponentStaticCallbacks::BuildRendererDataFPtr func = ComponentStaticCallbacks::GetBuildRendererDataFPtr(id);
+			checked_call(func, container, data);
 		}
 	}
 

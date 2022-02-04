@@ -5,6 +5,7 @@
 #include "Material.h"
 #include "Light.h"
 #include "UniformBuffer.h"
+#include "Renderer/Renderer.h"
 
 namespace Ion
 {
@@ -53,7 +54,7 @@ namespace Ion
 		return (bool)m_DrawableObjects.erase(drawable);
 	}
 
-	void Scene::UpdateRenderData()
+	void Scene::UpdateRenderData() // @TODO: scrap all of this (the old way)
 	{
 		ionassert(m_ActiveCamera, "Cannot render without an active camera.");
 
@@ -87,6 +88,32 @@ namespace Ion
 		{
 			m_RenderDirLight = { };
 		}
+
+		m_ActiveCamera->CopyRenderData(m_RenderCamera);
+
+		// Shrink arrays
+
+		if (m_RenderPrimitives.capacity() > m_RenderPrimitives.size() * 2)
+			m_RenderPrimitives.shrink_to_fit();
+
+		if (m_RenderLights.capacity() > m_RenderLights.size() * 2)
+			m_RenderLights.shrink_to_fit();
+	}
+
+	void Scene::LoadSceneData(const RRendererData& data)
+	{
+		if (!m_ActiveCamera)
+			return;
+
+		m_RenderPrimitives = data.Primitives;
+		m_RenderLights = data.Lights;
+
+		if (data.DirectionalLight.Type != ELightType::Disabled)
+		{
+			m_RenderDirLight = data.DirectionalLight;
+		}
+
+		m_RenderAmbientLight = data.AmbientLightColor;
 
 		m_ActiveCamera->CopyRenderData(m_RenderCamera);
 

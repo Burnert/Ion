@@ -66,6 +66,8 @@ namespace Editor
 		bool m_bViewportCaptured;
 
 		MeshComponent* m_TestMeshComponent;
+		LightComponent* m_TestLightComponent;
+		DirectionalLightComponent* m_TestDirLightComponent;
 
 		friend class EditorLayer;
 	};

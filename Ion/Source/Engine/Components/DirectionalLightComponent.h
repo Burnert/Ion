@@ -1,24 +1,27 @@
 #pragma once
 
 #include "Component.h"
+#include "Renderer/Light.h"
 
 namespace Ion
 {
-	class ION_API MeshComponent : public Component
+	struct DirectionalLightComponentData
 	{
-		ENTITY_COMPONENT_CLASS_BODY()
+		Vector3 LightColor;
+		float Intensity;
+	};
+
+	class ION_API DirectionalLightComponent : public Component
+	{
+		ENTITY_COMPONENT_CLASS_BODY();
 
 		// Component Callback methods
 
 		void COMPCALLBACKFUNC OnCreate();
 		void COMPCALLBACKFUNC OnDestroy();
 		void COMPCALLBACKFUNC BuildRendererData(RRendererData& data);
-		//void Tick(float deltaTime);
 
 		// End of Component Callback methods
-
-		void SetMesh(const TShared<Mesh>& mesh);
-		TShared<Mesh> GetMesh() const;
 
 		void SetTransform(const Transform& transform);
 		const Transform& GetTransform() const;
@@ -38,13 +41,13 @@ namespace Ion
 		void SetVisibleInGame(bool bVisibleInGame);
 		bool IsVisibleInGame() const;
 
-	private:
-		void NotifyTransformUpdated();
+		DirectionalLightComponentData& GetDirectionalLightDataRef();
 
-		MeshComponent();
+	private:
+		DirectionalLightComponent();
 
 	private:
 		SceneComponentData m_SceneData;
-		TShared<Mesh> m_Mesh;
+		DirectionalLightComponentData m_DirectionalLightData;
 	};
 }

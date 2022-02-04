@@ -24,12 +24,6 @@ namespace Ion
 		uint32 LightNum;
 	};
 
-	class VertexBuffer;
-	class IndexBuffer;
-	class UniformBuffer;
-	class Material;
-	class Shader;
-
 	struct RPrimitiveRenderProxy
 	{
 		const VertexBuffer* VertexBuffer;
@@ -39,13 +33,6 @@ namespace Ion
 		const Shader* Shader;
 		Matrix4 Transform;
 	};
-
-	class IDrawable;
-	class Camera;
-	class Light;
-	class DirectionalLight;
-
-	class World;
 
 	class ION_API Scene
 	{
@@ -76,6 +63,7 @@ namespace Ion
 		~Scene() { }
 
 		void UpdateRenderData();
+		void LoadSceneData(const RRendererData& data);
 
 		// Render Thread: --------------------------------------------------------------------------
 
@@ -104,6 +92,7 @@ namespace Ion
 		TArray<RPrimitiveRenderProxy> m_RenderPrimitives;
 		TArray<RLightRenderProxy> m_RenderLights;
 		RLightRenderProxy m_RenderDirLight;
+		Vector4 m_RenderAmbientLight;
 		RCameraRenderProxy m_RenderCamera;
 
 		friend class Renderer;

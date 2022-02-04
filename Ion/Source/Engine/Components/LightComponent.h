@@ -1,10 +1,18 @@
 #pragma once
 
 #include "Component.h"
+#include "Renderer/Light.h"
 
 namespace Ion
 {
-	class ION_API MeshComponent : public Component
+	struct LightComponentData
+	{
+		Vector3 LightColor;
+		float Intensity;
+		float Falloff;
+	};
+
+	class ION_API LightComponent : public Component
 	{
 		ENTITY_COMPONENT_CLASS_BODY()
 
@@ -13,12 +21,8 @@ namespace Ion
 		void COMPCALLBACKFUNC OnCreate();
 		void COMPCALLBACKFUNC OnDestroy();
 		void COMPCALLBACKFUNC BuildRendererData(RRendererData& data);
-		//void Tick(float deltaTime);
 
 		// End of Component Callback methods
-
-		void SetMesh(const TShared<Mesh>& mesh);
-		TShared<Mesh> GetMesh() const;
 
 		void SetTransform(const Transform& transform);
 		const Transform& GetTransform() const;
@@ -38,13 +42,13 @@ namespace Ion
 		void SetVisibleInGame(bool bVisibleInGame);
 		bool IsVisibleInGame() const;
 
-	private:
-		void NotifyTransformUpdated();
+		LightComponentData& GetLightDataRef();
 
-		MeshComponent();
+	private:
+		LightComponent();
 
 	private:
 		SceneComponentData m_SceneData;
-		TShared<Mesh> m_Mesh;
+		LightComponentData m_LightData;
 	};
 }

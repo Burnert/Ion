@@ -4,9 +4,11 @@
 #include "Entity.h"
 #include "Renderer/Scene.h"
 
+#pragma warning(disable:6011)
+
 namespace Ion
 {
-	World* World::CreateWorld(const WorldInitializer& initializer)
+	World* World::Create(const WorldInitializer& initializer)
 	{
 		// @TODO: Who should own the world?
 		// Worlds have to be deleted at some point
@@ -18,18 +20,18 @@ namespace Ion
 			world->m_WorldGUID = initializer.WorldGuid;
 		}
 
-		world->Init();
+		world->OnInit();
 
 		return world;
 	}
 
-	void World::Init()
+	void World::OnInit()
 	{
 		m_Scene = new Scene;
 		m_Scene->m_OwningWorld = this;
 	}
 
-	void World::Update(float deltaTime)
+	void World::OnUpdate(float deltaTime)
 	{
 		if (!m_bTickWorld)
 			return;
@@ -42,14 +44,24 @@ namespace Ion
 		m_ComponentRegistry.Update(deltaTime);
 	}
 
+	void World::OnDestroy()
+	{
+		for (Entity* entity : m_Entities)
+		{
+			entity->OnDestroy();
+		}
+	}
+
 	void World::SetTickEnabled(bool bTick)
 	{
 		m_bTickWorld = bTick;
 	}
 
-	void World::Update_SyncRenderingData(float deltaTime)
+	void World::BuildRendererData(RRendererData& data, float deltaTime)
 	{
-		m_Scene->UpdateRenderData();
+		m_ComponentRegistry.BuildRendererData(data);
+
+		//m_Scene->UpdateRenderData();
 	}
 
 	void World::AddEntity(Entity* entity)
@@ -66,9 +78,9 @@ namespace Ion
 
 		EntityArray::iterator it = std::find(m_Entities.begin(), m_Entities.end(), entity);
 		Entity* ptr = *it;
+		m_Entities.erase(it);
 		// The world owns the entity, so it should delete it.
 		delete ptr;
-		m_Entities.erase(it);
 	}
 
 	void World::InitEntity(Entity* entity)
@@ -93,10 +105,7 @@ namespace Ion
 
 		for (Entity* entity : m_Entities)
 		{
-			ionassert(entity);
-
-			if (entity->m_WorldContext == this)
-				delete entity;
+			checked_delete(entity);
 		}
 	}
 

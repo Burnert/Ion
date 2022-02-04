@@ -20,6 +20,7 @@ namespace Ion
 	struct MeshUniforms;
 	class Mesh;
 	// Renderer.h
+	struct RRendererData;
 	struct ScreenTextureRenderData;
 	class Renderer;
 	// RendererCore.h
