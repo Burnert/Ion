@@ -22,7 +22,7 @@ namespace Editor
 		m_bViewportCaptured(false),
 		m_EditorCameraMoveSpeed(5.0f),
 		m_EditorMainWorld(nullptr),
-		m_Scene(nullptr)
+		m_SelectedEntity(nullptr)
 	{
 		ionassert(!s_Instance);
 		s_Instance = this;
@@ -47,16 +47,16 @@ namespace Editor
 		m_EditorMainWorld = g_Engine->CreateWorld(worldInitializer);
 		m_EditorMainWorld->GetScene()->SetActiveCamera(m_EditorCamera);
 
-		m_Scene = new Scene;
+		//m_Scene = new Scene;
 
 		m_EditorCameraTransform.SetLocation(Vector3(0.0f, 0.0f, 2.0f));
 		m_EditorCamera->SetFOV(Math::Radians(90.0f));
 		m_EditorCamera->SetNearClip(0.1f);
 		m_EditorCamera->SetFarClip(100.0f);
 
-		m_Scene->SetActiveCamera(m_EditorCamera);
+		//m_Scene->SetActiveCamera(m_EditorCamera);
 
-		InitExample(m_Scene);
+		InitExample(nullptr);
 
 		// Engine testing:
 
@@ -81,16 +81,23 @@ namespace Editor
 
 		Entity* entity = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
 		entity->AddComponent(m_TestMeshComponent);
-		entity->AddComponent(m_TestLightComponent);
-		entity->AddComponent(m_TestDirLightComponent);
 		entity->SetTransform(Transform(Vector3(0.0f, 0.0f, 2.0f)));
+		entity->SetName("Mesh");
+
+		Entity* lightEntity = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
+		lightEntity->AddComponent(m_TestLightComponent);
+		lightEntity->SetName("Light");
+
+		Entity* dirLightEntity = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
+		dirLightEntity->AddComponent(m_TestDirLightComponent);
+		dirLightEntity->SetName("Directional Light");
 	}
 
 	void EditorApplication::OnUpdate(float deltaTime)
 	{
 		UpdateEditorCamera(deltaTime);
 
-		m_Scene->UpdateRenderData();
+		//m_Scene->UpdateRenderData();
 	}
 
 	void EditorApplication::OnRender()
@@ -131,6 +138,16 @@ namespace Editor
 		cameraRotation.SetPitch(Math::Clamp(cameraRotation.Pitch() - pitchDelta, -89.99f, 89.99f));
 		cameraRotation.SetYaw(cameraRotation.Yaw() - yawDelta);
 		m_EditorCameraTransform.SetRotation(cameraRotation);
+	}
+
+	void EditorApplication::SetSelectedEntity(Entity* entity)
+	{
+		m_SelectedEntity = entity;
+	}
+
+	Scene* EditorApplication::GetEditorScene() const
+	{
+		return m_EditorMainWorld->GetScene();
 	}
 
 	void EditorApplication::TestChangeMesh()

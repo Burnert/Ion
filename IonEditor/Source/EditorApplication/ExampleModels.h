@@ -139,7 +139,8 @@ namespace Editor
 		CreateExampleModels();
 		//AddModelsToSceneOnInit(scene);
 		LoadExampleModels();
-		InitLights(scene);
+		if (scene)
+			InitLights(scene);
 	}
 
 	template<typename Lambda>

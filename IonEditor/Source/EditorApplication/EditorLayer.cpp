@@ -4,6 +4,7 @@
 #include "EditorApplication.h"
 
 #include "Engine/World.h"
+#include "Engine/Entity.h"
 
 #include "Renderer/Renderer.h"
 
@@ -51,8 +52,7 @@ namespace Editor
 		renderer->SetRenderTarget(m_ViewportFramebuffer);
 
 		renderer->Clear(Vector4(0.1f, 0.1f, 0.1f, 1.0f));
-		//renderer->RenderScene(EditorApplication::Get()->GetScene());
-		renderer->RenderScene(EditorApplication::Get()->GetEditorWorld()->GetScene());
+		renderer->RenderScene(EditorApplication::Get()->GetEditorScene());
 	}
 
 	void EditorLayer::OnEvent(const Event& event)
@@ -99,6 +99,8 @@ namespace Editor
 		DrawContentBrowser();
 		DrawWorldTreePanel();
 		DrawDetailsPanel();
+
+		ImGui::ShowDemoWindow();
 	}
 
 	void EditorLayer::DrawMainMenuBar()
@@ -207,9 +209,60 @@ namespace Editor
 	{
 		if (m_bWorldTreePanelOpen)
 		{
-			ImGui::Begin("World Tree", &m_bWorldTreePanelOpen);
+			World* editorWorld = EditorApplication::Get()->GetEditorWorld();
+			if (!editorWorld)
+				return;
 
+			const WorldTree& worldTree = editorWorld->GetWorldTree();
+			const WorldTreeNode& root = worldTree.GetRootNode();
+
+			ImGui::Begin("World Tree", &m_bWorldTreePanelOpen);
+			ImGui::PushID("WorldTree");
+
+			DrawWorldTreeNodeChildren(root);
+
+			ImGui::PopID();
 			ImGui::End();
+		}
+	}
+
+	void EditorLayer::DrawWorldTreeNodeChildren(const WorldTreeNode& parent)
+	{
+		int64 imguiNodeIndex = 0;
+		for (const WorldTreeNode& node : parent.GetChildren())
+		{
+			const Entity* entity = node.GetEntity();
+			const String& entityName = entity->GetName();
+			bool bHasChildren = node.HasChildren();
+
+			ImGuiTreeNodeFlags imguiNodeFlags = 
+				ImGuiTreeNodeFlags_OpenOnArrow       |
+				ImGuiTreeNodeFlags_OpenOnDoubleClick |
+				ImGuiTreeNodeFlags_SpanAvailWidth;
+			if (!bHasChildren)
+			{
+				imguiNodeFlags |=
+					ImGuiTreeNodeFlags_Leaf |
+					ImGuiTreeNodeFlags_NoTreePushOnOpen;
+			}
+			if (entity == EditorApplication::Get()->GetSelectedEntity())
+			{
+				imguiNodeFlags |= ImGuiTreeNodeFlags_Selected;
+			}
+
+			bool bImguiTreeNodeOpen = ImGui::TreeNodeEx((void*)imguiNodeIndex++, imguiNodeFlags, "%s", entityName.c_str());
+			if (ImGui::IsItemClicked()) // Select entity on click
+			{
+				EditorApplication::Get()->SetSelectedEntity(const_cast<Entity*>(entity));
+			}
+			if (bHasChildren && bImguiTreeNodeOpen)
+			{
+				if (node.HasChildren())
+				{ // Show entity children
+					DrawWorldTreeNodeChildren(node);
+				}
+				ImGui::TreePop();
+			}
 		}
 	}
 

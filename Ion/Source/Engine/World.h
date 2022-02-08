@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Components/Component.h"
+#include "WorldTree.h"
 
 namespace Ion
 {
@@ -27,6 +28,8 @@ namespace Ion
 
 		void AddEntity(Entity* entity);
 		void RemoveEntity(Entity* entity);
+
+		const WorldTree& GetWorldTree() const;
 
 		Scene* GetScene() const;
 
@@ -56,8 +59,9 @@ namespace Ion
 
 		ComponentRegistry m_ComponentRegistry;
 		EntityArray m_Entities; // World is the owner of the entities
+		WorldTree m_WorldTree;
 
-		Scene* m_Scene; // World is the owner
+		Scene* m_Scene; // World is the owner of the scene
 
 		bool m_bTickWorld;
 
@@ -73,6 +77,11 @@ namespace Ion
 		EntityT* entity = new EntityT(Forward<Args>(args)...);
 		AddEntity(entity);
 		return entity;
+	}
+
+	inline const WorldTree& World::GetWorldTree() const
+	{
+		return m_WorldTree;
 	}
 
 	inline Scene* World::GetScene() const

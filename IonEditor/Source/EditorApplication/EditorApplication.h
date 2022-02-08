@@ -25,9 +25,12 @@ namespace Editor
 		void CaptureViewport(bool bCapture);
 		void DriveEditorCameraRotation(float yawDelta, float pitchDelta);
 
+		void SetSelectedEntity(Entity* entity);
+		Entity* GetSelectedEntity();
+
 		World* GetEditorWorld() const;
 		TShared<Camera> GetEditorCamera() const;
-		Scene* GetScene() const { return m_Scene; }
+		Scene* GetEditorScene() const;
 
 		void TestChangeMesh();
 
@@ -57,8 +60,9 @@ namespace Editor
 		TShared<EditorLayer> m_EditorLayer;
 
 		World* m_EditorMainWorld;
+		Entity* m_SelectedEntity;
 
-		Scene* m_Scene;
+		//Scene* m_Scene;
 		TShared<Camera> m_EditorCamera;
 		Transform m_EditorCameraTransform;
 		float m_EditorCameraMoveSpeed;
@@ -71,6 +75,11 @@ namespace Editor
 
 		friend class EditorLayer;
 	};
+
+	inline Entity* EditorApplication::GetSelectedEntity()
+	{
+		return m_SelectedEntity;
+	}
 
 	inline World* EditorApplication::GetEditorWorld() const
 	{

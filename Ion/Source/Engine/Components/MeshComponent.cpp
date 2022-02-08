@@ -62,7 +62,7 @@ namespace Ion
 			// TEMPORARY
 			mesh->SetTransform(m_SceneData.Transform.GetMatrix());
 
-			//Scene* scene = GetWorldContext()->GetScene();
+			//Scene* scene = GetWorldContext()->GetEditorScene();
 			//scene->RemoveDrawableObject(m_Mesh.get());
 			//scene->AddDrawableObject(mesh.get());
 		}

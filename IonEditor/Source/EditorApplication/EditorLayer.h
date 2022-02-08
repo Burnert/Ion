@@ -23,7 +23,9 @@ namespace Editor
 		void DrawViewportWindow();
 		void DrawContentBrowser();
 		void DrawWorldTreePanel();
+		void DrawWorldTreeNodeChildren(const WorldTreeNode& parent);
 		void DrawDetailsPanel();
+
 
 		bool IsMouseInViewportRect() const;
 		bool CanCaptureViewport() const;

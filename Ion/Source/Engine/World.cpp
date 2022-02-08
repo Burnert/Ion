@@ -70,17 +70,22 @@ namespace Ion
 
 		InitEntity(entity);
 		m_Entities.push_back(entity);
+
+		// @TODO: Temporary
+		m_WorldTree.Add(entity);
 	}
 
 	void World::RemoveEntity(Entity* entity)
 	{
 		ionassert(entity);
 
-		EntityArray::iterator it = std::find(m_Entities.begin(), m_Entities.end(), entity);
-		Entity* ptr = *it;
+		auto it = std::find(m_Entities.begin(), m_Entities.end(), entity);
 		m_Entities.erase(it);
+
+		m_WorldTree.Remove(entity);
+
 		// The world owns the entity, so it should delete it.
-		delete ptr;
+		delete entity;
 	}
 
 	void World::InitEntity(Entity* entity)
