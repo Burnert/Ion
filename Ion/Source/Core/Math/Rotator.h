@@ -68,9 +68,10 @@ namespace Ion
 			RecalcQuaternion();
 		}
 
-		inline float Pitch() const { return m_Angles.x; }
-		inline float Yaw() const { return m_Angles.y; }
-		inline float Roll() const { return m_Angles.z; }
+		inline Vector3 Angles() const { return m_Angles; }
+		inline float Pitch() const    { return m_Angles.x; }
+		inline float Yaw() const      { return m_Angles.y; }
+		inline float Roll() const     { return m_Angles.z; }
 
 		inline Quaternion Quat() const { return m_Quaternion; }
 

@@ -2,7 +2,10 @@
 
 #include "MeshComponent.h"
 #include "Engine/World.h"
+#include "Engine/Entity.h"
 #include "Renderer/Renderer.h"
+
+#pragma warning(disable:26815)
 
 namespace Ion
 {
@@ -11,7 +14,7 @@ namespace Ion
 	ENTITY_COMPONENT_STATIC_CALLBACK_ONCREATE_FUNC()
 	ENTITY_COMPONENT_STATIC_CALLBACK_ONDESTROY_FUNC()
 	ENTITY_COMPONENT_STATIC_CALLBACK_BUILDRENDERERDATA_FUNC()
-		//ENTITY_COMPONENT_STATIC_CALLBACK_TICK_FUNC()
+	//ENTITY_COMPONENT_STATIC_CALLBACK_TICK_FUNC()
 
 	MeshComponent::MeshComponent()
 	{
@@ -34,9 +37,10 @@ namespace Ion
 	void MeshComponent::BuildRendererData(RRendererData& data)
 	{
 		Material* material = m_Mesh->GetMaterial().lock().get();
+		Transform worldTransform = GetWorldTransform();
 
 		RPrimitiveRenderProxy mesh;
-		mesh.Transform     = m_SceneData.Transform.GetMatrix();
+		mesh.Transform     = worldTransform.GetMatrix();
 		mesh.Material      = material;
 		mesh.Shader        = material->GetShader().get();
 		mesh.VertexBuffer  = m_Mesh->GetVertexBufferRaw();
@@ -60,7 +64,7 @@ namespace Ion
 		if (mesh != m_Mesh)
 		{
 			// TEMPORARY
-			mesh->SetTransform(m_SceneData.Transform.GetMatrix());
+			//mesh->SetTransform(m_SceneData.Transform.GetMatrix());
 
 			//Scene* scene = GetWorldContext()->GetEditorScene();
 			//scene->RemoveDrawableObject(m_Mesh.get());
@@ -72,75 +76,5 @@ namespace Ion
 	TShared<Mesh> MeshComponent::GetMesh() const
 	{
 		return m_Mesh;
-	}
-
-	void MeshComponent::SetTransform(const Transform& transform)
-	{
-		m_SceneData.Transform = transform;
-		NotifyTransformUpdated();
-	}
-
-	const Transform& MeshComponent::GetTransform() const
-	{
-		return m_SceneData.Transform;
-	}
-
-	void MeshComponent::SetLocation(const Vector3& location)
-	{
-		m_SceneData.Transform.SetLocation(location);
-		NotifyTransformUpdated();
-	}
-
-	const Vector3& MeshComponent::GetLocation() const
-	{
-		return m_SceneData.Transform.GetLocation();
-	}
-
-	void MeshComponent::SetRotation(const Rotator& rotation)
-	{
-		m_SceneData.Transform.SetRotation(rotation);
-		NotifyTransformUpdated();
-	}
-
-	const Rotator& MeshComponent::GetRotation() const
-	{
-		return m_SceneData.Transform.GetRotation();
-	}
-
-	void MeshComponent::SetScale(const Vector3& scale)
-	{
-		m_SceneData.Transform.SetScale(scale);
-		NotifyTransformUpdated();
-	}
-
-	const Vector3& MeshComponent::GetScale() const
-	{
-		return m_SceneData.Transform.GetScale();
-	}
-
-	void MeshComponent::SetVisible(bool bVisible)
-	{
-		m_SceneData.bVisible = bVisible;
-	}
-
-	bool MeshComponent::IsVisible() const
-	{
-		return m_SceneData.bVisible;
-	}
-
-	void MeshComponent::SetVisibleInGame(bool bVisibleInGame)
-	{
-		m_SceneData.bVisibleInGame = bVisibleInGame;
-	}
-
-	bool MeshComponent::IsVisibleInGame() const
-	{
-		return m_SceneData.bVisibleInGame;
-	}
-
-	void MeshComponent::NotifyTransformUpdated()
-	{
-		// TEMPORARY
-		m_Mesh->SetTransform(m_SceneData.Transform.GetMatrix());
 	}
 }

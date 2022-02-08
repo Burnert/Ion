@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Component.h"
+#include "SceneComponent.h"
 
 namespace Ion
 {
-	class ION_API MeshComponent : public Component
+	class ION_API MeshComponent final : public SceneComponent
 	{
 		ENTITY_COMPONENT_CLASS_BODY()
 
@@ -20,31 +20,17 @@ namespace Ion
 		void SetMesh(const TShared<Mesh>& mesh);
 		TShared<Mesh> GetMesh() const;
 
-		void SetTransform(const Transform& transform);
-		const Transform& GetTransform() const;
-
-		void SetLocation(const Vector3& location);
-		const Vector3& GetLocation() const;
-
-		void SetRotation(const Rotator& rotation);
-		const Rotator& GetRotation() const;
-
-		void SetScale(const Vector3& scale);
-		const Vector3& GetScale() const;
-
-		void SetVisible(bool bVisible);
-		bool IsVisible() const;
-
-		void SetVisibleInGame(bool bVisibleInGame);
-		bool IsVisibleInGame() const;
-
 	private:
-		void NotifyTransformUpdated();
-
 		MeshComponent();
 
 	private:
 		SceneComponentData m_SceneData;
 		TShared<Mesh> m_Mesh;
+	};
+
+	template<>
+	struct ComponentTypeDefaults<MeshComponent>
+	{
+		static constexpr const char* Name = "Mesh Component";
 	};
 }

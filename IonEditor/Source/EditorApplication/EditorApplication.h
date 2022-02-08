@@ -41,6 +41,7 @@ namespace Editor
 		void OnMouseButtonPressedEvent(const MouseButtonPressedEvent& event);
 		void OnMouseButtonReleasedEvent(const MouseButtonReleasedEvent& event);
 		void OnRawInputMouseMovedEvent(const RawInputMouseMovedEvent& event);
+		void OnKeyPressedEvent(const KeyPressedEvent& event);
 
 	private:
 		void UpdateEditorCamera(float deltaTime);
@@ -53,7 +54,8 @@ namespace Editor
 			TMemberEventFunction<EditorApplication, WindowResizeEvent,        &OnWindowResizeEvent>,
 			TMemberEventFunction<EditorApplication, MouseButtonPressedEvent,  &OnMouseButtonPressedEvent>,
 			TMemberEventFunction<EditorApplication, MouseButtonReleasedEvent, &OnMouseButtonReleasedEvent>,
-			TMemberEventFunction<EditorApplication, RawInputMouseMovedEvent,  &OnRawInputMouseMovedEvent>
+			TMemberEventFunction<EditorApplication, RawInputMouseMovedEvent,  &OnRawInputMouseMovedEvent>,
+			TMemberEventFunction<EditorApplication, KeyPressedEvent,          &OnKeyPressedEvent>
 		>;
 		EventDispatcher<EventFunctions, EditorApplication> m_EventDispatcher;
 

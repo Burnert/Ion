@@ -18,14 +18,25 @@ namespace Editor
 		virtual void OnRender() override;
 		virtual void OnEvent(const Event& event) override;
 
+		// UI drawing related functions:
+
 		void DrawEditorUI();
+
 		void DrawMainMenuBar();
+
 		void DrawViewportWindow();
+
 		void DrawContentBrowser();
+
 		void DrawWorldTreePanel();
 		void DrawWorldTreeNodeChildren(const WorldTreeNode& parent);
-		void DrawDetailsPanel();
 
+		void DrawDetailsPanel();
+		void DrawDetailsNameSection(Entity* entity);
+		void DrawDetailsComponentTreeSection(Entity* entity);
+		void DrawDetailsTransformSection(Entity* entity);
+
+		// End of UI drawing related functions
 
 		bool IsMouseInViewportRect() const;
 		bool CanCaptureViewport() const;

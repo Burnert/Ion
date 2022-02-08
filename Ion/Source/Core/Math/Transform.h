@@ -48,7 +48,7 @@ namespace Ion
 		{
 			m_Location += other.m_Location;
 			m_Rotation += other.m_Rotation;
-			m_Scale += other.m_Scale;
+			m_Scale *= other.m_Scale;
 			RebuildMatrix();
 
 			return *this;

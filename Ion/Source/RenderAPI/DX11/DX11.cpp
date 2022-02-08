@@ -54,7 +54,7 @@ namespace Ion
 			scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 			scd.OutputWindow = hwnd;
 			scd.Windowed = true;
-			scd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+			scd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 			scd.Flags = 0;
 
 			D3D_FEATURE_LEVEL targetFeatureLevel[] = {

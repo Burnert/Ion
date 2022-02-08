@@ -86,6 +86,12 @@ namespace _EntityPrivate \
 
 namespace Ion
 {
+	template<typename CompT>
+	struct ComponentTypeDefaults
+	{
+		static constexpr const char* Name = "Unknown Component";
+	};
+
 	using ComponentTypeID = uint16;
 
 	DECLARE_COMPONENT_CALLBACK(OnCreate)
@@ -118,6 +124,9 @@ namespace Ion
 
 		void SetName(const String& name);
 		const String& GetName() const;
+
+		/* Returns the Entity that owns the Component. */
+		Entity* GetOwner() const;
 
 		/* Returns the GUID of the Component.
 		   A GUID is initiated at the creation of the Component. */
@@ -158,6 +167,7 @@ namespace Ion
 		String m_Name;
 
 		friend class ComponentRegistry;
+		friend class Entity;
 	};
 
 	template<typename T>
@@ -228,6 +238,11 @@ namespace Ion
 		return m_Name;
 	}
 
+	inline Entity* Component::GetOwner() const
+	{
+		return m_OwningEntity;
+	}
+
 	inline const GUID& Component::GetGUID() const
 	{
 		return m_GUID;
@@ -270,6 +285,7 @@ namespace Ion
 
 		CompT* componentPtr = &(*it).second;
 		componentPtr->m_WorldContext = m_WorldContext;
+		componentPtr->m_Name = ComponentTypeDefaults<CompT>::Name;
 
 		if constexpr (THasOnCreate<CompT>)
 		{

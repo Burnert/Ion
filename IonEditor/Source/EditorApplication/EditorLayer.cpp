@@ -101,6 +101,7 @@ namespace Editor
 		DrawDetailsPanel();
 
 		ImGui::ShowDemoWindow();
+		ImGui::ShowMetricsWindow();
 	}
 
 	void EditorLayer::DrawMainMenuBar()
@@ -128,6 +129,11 @@ namespace Editor
 				ImGui::MenuItem("Copy");
 				ImGui::MenuItem("Paste");
 				ImGui::MenuItem("Delete");
+				ImGui::Separator();
+				if (ImGui::MenuItem("Deselect"))
+				{
+					EditorApplication::Get()->SetSelectedEntity(nullptr);
+				}
 
 				ImGui::EndMenu();
 			}
@@ -138,6 +144,15 @@ namespace Editor
 				ImGui::MenuItem("World Tree", nullptr, &m_bWorldTreePanelOpen);
 				ImGui::MenuItem("Details", nullptr, &m_bDetailsPanelOpen);
 
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("Misc"))
+			{
+				static bool c_bVSync = Renderer::Get()->IsVSyncEnabled();
+				if (ImGui::MenuItem("Enable VSync", nullptr, &c_bVSync))
+				{
+					Renderer::Get()->SetVSyncEnabled(c_bVSync);
+				}
 				ImGui::EndMenu();
 			}
 
@@ -209,19 +224,28 @@ namespace Editor
 	{
 		if (m_bWorldTreePanelOpen)
 		{
-			World* editorWorld = EditorApplication::Get()->GetEditorWorld();
-			if (!editorWorld)
-				return;
+			if (ImGui::Begin("World Tree", &m_bWorldTreePanelOpen))
+			{
+				if (ImGui::Button("Deselect"))
+				{
+					EditorApplication::Get()->SetSelectedEntity(nullptr);
+				}
 
-			const WorldTree& worldTree = editorWorld->GetWorldTree();
-			const WorldTreeNode& root = worldTree.GetRootNode();
+				ImGui::Separator();
 
-			ImGui::Begin("World Tree", &m_bWorldTreePanelOpen);
-			ImGui::PushID("WorldTree");
+				World* editorWorld = EditorApplication::Get()->GetEditorWorld();
+				if (editorWorld)
+				{
+					const WorldTree& worldTree = editorWorld->GetWorldTree();
+					const WorldTreeNode& root = worldTree.GetRootNode();
 
-			DrawWorldTreeNodeChildren(root);
+					ImGui::PushID("WorldTree");
 
-			ImGui::PopID();
+					DrawWorldTreeNodeChildren(root);
+
+					ImGui::PopID();
+				}
+			}
 			ImGui::End();
 		}
 	}
@@ -270,9 +294,94 @@ namespace Editor
 	{
 		if (m_bDetailsPanelOpen)
 		{
-			ImGui::Begin("Details", &m_bDetailsPanelOpen);
+			if (ImGui::Begin("Details", &m_bDetailsPanelOpen))
+			{
+				Entity* selectedEntity = EditorApplication::Get()->GetSelectedEntity();
+				if (selectedEntity)
+				{
+					ImGui::PushID("Details");
 
+					DrawDetailsNameSection(selectedEntity);
+
+					ImGui::Separator();
+
+					DrawDetailsComponentTreeSection(selectedEntity);
+					DrawDetailsTransformSection(selectedEntity);
+
+					ImGui::Separator();
+					ImGui::Spacing();
+					ImGui::Text("Component Details");
+					ImGui::Spacing();
+					ImGui::Separator();
+
+					ImGui::PopID();
+				}
+				else
+				{
+					ImGui::Text("No entity is currently selected.");
+				}
+			}
 			ImGui::End();
+		}
+	}
+
+	void EditorLayer::DrawDetailsNameSection(Entity* entity)
+	{
+		ImGui::PushID("Name");
+
+		ImGuiInputTextFlags imguiInputTextFlags =
+			ImGuiInputTextFlags_CharsNoBlank |
+			ImGuiInputTextFlags_EnterReturnsTrue;
+
+		char name[128] = { };
+		strcpy_s(name, entity->GetName().c_str());
+		if (ImGui::InputText("Entity Name", name, sizeof(name), imguiInputTextFlags))
+		{
+			entity->SetName(name);
+		}
+
+		ImGui::PopID();
+	}
+
+	void EditorLayer::DrawDetailsComponentTreeSection(Entity* entity)
+	{
+		if (ImGui::CollapsingHeader("Component Tree", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::BeginChild("ComponentTree", ImVec2(0, 100), true);
+			ImGui::PushID("ComponentTree");
+
+			ImGui::Text("WORK IN PROGRESS");
+			ImGui::Text("The entity has no components.");
+
+			ImGui::PopID();
+			ImGui::EndChild();
+		}
+	}
+
+	void EditorLayer::DrawDetailsTransformSection(Entity* entity)
+	{
+		if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID("Transform");
+
+			const Transform& currentTransform = entity->GetTransform();
+
+			Vector3 location       = currentTransform.GetLocation();
+			Vector3 rotationAngles = currentTransform.GetRotation().Angles();
+			Vector3 scale          = currentTransform.GetScale();
+
+			bool bChanged = false;
+			bChanged |= ImGui::DragFloat3("Location", (float*)&location,       0.0125f, 0.0f, 0.0f, "%.5f");
+			bChanged |= ImGui::DragFloat3("Rotation", (float*)&rotationAngles, 0.5f,    0.0f, 0.0f, "%.5f");
+			bChanged |= ImGui::DragFloat3("Scale",    (float*)&scale,          0.0125f, 0.0f, 0.0f, "%.5f");
+
+			if (bChanged)
+			{
+				Transform newTransform = { location, Rotator(rotationAngles), scale };
+				entity->SetTransform(newTransform);
+			}
+
+			ImGui::PopID();
 		}
 	}
 
@@ -313,27 +422,22 @@ namespace Editor
 
 	void EditorLayer::OnMouseDoubleClickEvent(const MouseDoubleClickEvent& event)
 	{
-
 	}
 
 	void EditorLayer::OnRawInputMouseMovedEvent(const RawInputMouseMovedEvent& event)
 	{
-		
 	}
 
 	void EditorLayer::OnRawInputMouseScrolledEvent(const RawInputMouseScrolledEvent& event)
 	{
-
 	}
 
 	void EditorLayer::OnKeyPressedEvent(const KeyPressedEvent& event)
 	{
-
 	}
 
 	void EditorLayer::OnKeyReleasedEvent(const KeyReleasedEvent& event)
 	{
-
 	}
 
 	void EditorLayer::CreateViewportFramebuffer()

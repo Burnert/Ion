@@ -69,28 +69,28 @@ namespace Editor
 		});
 
 		m_TestLightComponent = registry.CreateComponent<LightComponent>();
-		m_TestLightComponent->SetLocation(Vector3(0.0f, 3.0f, 0.0f));
 		m_TestLightComponent->GetLightDataRef().LightColor = Vector3(1.0f, 1.0f, 0.0f);
 		m_TestLightComponent->GetLightDataRef().Intensity = 1.0f;
 		m_TestLightComponent->GetLightDataRef().Falloff = 5.0f;
 
 		m_TestDirLightComponent = registry.CreateComponent<DirectionalLightComponent>();
-		m_TestDirLightComponent->SetRotation(Rotator({ -60.0f, 0.0f, 0.0f }));
 		m_TestDirLightComponent->GetDirectionalLightDataRef().LightColor = Vector3(0.0f, 1.0f, 1.0f);
 		m_TestDirLightComponent->GetDirectionalLightDataRef().Intensity = 1.0f;
 
 		Entity* entity = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
 		entity->AddComponent(m_TestMeshComponent);
-		entity->SetTransform(Transform(Vector3(0.0f, 0.0f, 2.0f)));
+		entity->SetTransform(Transform(Vector3(0.0f, -1.0f, 0.0f), Rotator(Vector3(-90.0f, 0.0f, 0.0f))));
 		entity->SetName("Mesh");
 
 		Entity* lightEntity = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
 		lightEntity->AddComponent(m_TestLightComponent);
+		lightEntity->SetLocation(Vector3(0.0f, 3.0f, 0.0f));
 		lightEntity->SetName("Light");
 
 		Entity* dirLightEntity = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
 		dirLightEntity->AddComponent(m_TestDirLightComponent);
-		dirLightEntity->SetName("Directional Light");
+		dirLightEntity->SetRotation(Rotator({ -60.0f, 0.0f, 0.0f }));
+		dirLightEntity->SetName("DirectionalLight");
 	}
 
 	void EditorApplication::OnUpdate(float deltaTime)
@@ -179,6 +179,18 @@ namespace Editor
 		if (m_bViewportCaptured)
 		{
 			DriveEditorCameraRotation(event.GetX(), event.GetY());
+		}
+	}
+
+	void EditorApplication::OnKeyPressedEvent(const KeyPressedEvent& event)
+	{
+		switch (event.GetActualKeyCode())
+		{
+			case Key::Escape:
+			{
+				SetSelectedEntity(nullptr);
+				break;
+			}
 		}
 	}
 
