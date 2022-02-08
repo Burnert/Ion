@@ -36,6 +36,9 @@ namespace Ion
 
 	void MeshComponent::BuildRendererData(RRendererData& data)
 	{
+		if (!m_Mesh)
+			return;
+
 		Material* material = m_Mesh->GetMaterial().lock().get();
 		Transform worldTransform = GetWorldTransform();
 

@@ -39,12 +39,16 @@ namespace Editor
 
 	void EditorLayer::OnUpdate(float DeltaTime)
 	{
+		TRACE_FUNCTION();
+
 		TryResizeViewportFramebuffer();
 		DrawEditorUI();
 	}
 
 	void EditorLayer::OnRender()
 	{
+		TRACE_FUNCTION();
+
 		Renderer* renderer = Renderer::Get();
 
 		// Render to viewport
@@ -62,6 +66,8 @@ namespace Editor
 
 	void EditorLayer::DrawEditorUI()
 	{
+		TRACE_FUNCTION();
+
 		// Dockspace
 
 		static bool c_bEditorDockspaceOpen = true;
@@ -106,6 +112,8 @@ namespace Editor
 
 	void EditorLayer::DrawMainMenuBar()
 	{
+		TRACE_FUNCTION();
+
 		if (ImGui::BeginMainMenuBar())
 		{
 			if (ImGui::BeginMenu("File"))
@@ -162,6 +170,8 @@ namespace Editor
 
 	void EditorLayer::DrawViewportWindow()
 	{
+		TRACE_FUNCTION();
+
 		if (m_bViewportOpen)
 		{
 			ImGuiWindowFlags windowFlags =
@@ -201,6 +211,8 @@ namespace Editor
 
 	void EditorLayer::DrawContentBrowser()
 	{
+		TRACE_FUNCTION();
+
 		if (m_bContentBrowserOpen)
 		{
 			ImGui::Begin("Content Browser", &m_bContentBrowserOpen);
@@ -222,6 +234,8 @@ namespace Editor
 
 	void EditorLayer::DrawWorldTreePanel()
 	{
+		TRACE_FUNCTION();
+
 		if (m_bWorldTreePanelOpen)
 		{
 			if (ImGui::Begin("World Tree", &m_bWorldTreePanelOpen))
@@ -252,6 +266,8 @@ namespace Editor
 
 	void EditorLayer::DrawWorldTreeNodeChildren(const WorldTreeNode& parent)
 	{
+		TRACE_FUNCTION();
+
 		int64 imguiNodeIndex = 0;
 		for (const WorldTreeNode& node : parent.GetChildren())
 		{
@@ -292,6 +308,8 @@ namespace Editor
 
 	void EditorLayer::DrawDetailsPanel()
 	{
+		TRACE_FUNCTION();
+
 		if (m_bDetailsPanelOpen)
 		{
 			if (ImGui::Begin("Details", &m_bDetailsPanelOpen))
@@ -327,6 +345,8 @@ namespace Editor
 
 	void EditorLayer::DrawDetailsNameSection(Entity* entity)
 	{
+		TRACE_FUNCTION();
+
 		ImGui::PushID("Name");
 
 		ImGuiInputTextFlags imguiInputTextFlags =
@@ -345,6 +365,8 @@ namespace Editor
 
 	void EditorLayer::DrawDetailsComponentTreeSection(Entity* entity)
 	{
+		TRACE_FUNCTION();
+
 		if (ImGui::CollapsingHeader("Component Tree", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			ImGui::BeginChild("ComponentTree", ImVec2(0, 100), true);
@@ -360,6 +382,8 @@ namespace Editor
 
 	void EditorLayer::DrawDetailsTransformSection(Entity* entity)
 	{
+		TRACE_FUNCTION();
+
 		if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			ImGui::PushID("Transform");
@@ -442,6 +466,8 @@ namespace Editor
 
 	void EditorLayer::CreateViewportFramebuffer()
 	{
+		TRACE_FUNCTION();
+
 		WindowDimensions windowDimensions = EditorApplication::GetWindow()->GetDimensions();
 
 		TextureDescription desc{ };
@@ -454,6 +480,8 @@ namespace Editor
 	}
 	void EditorLayer::ResizeViewportFramebuffer(const UVector2& size)
 	{
+		TRACE_FUNCTION();
+
 		// @TODO: This function probably shouldn't even be called, if the framebuffer is not set
 		if (!m_ViewportFramebuffer)
 			return;
@@ -467,6 +495,8 @@ namespace Editor
 
 	void EditorLayer::TryResizeViewportFramebuffer()
 	{
+		TRACE_FUNCTION();
+
 		if (m_ViewportSize.x && m_ViewportSize.y)
 		{
 			TextureDimensions viewportDimensions = m_ViewportFramebuffer->GetDimensions();

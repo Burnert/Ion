@@ -17,7 +17,8 @@ namespace Ion
 	DX11Renderer::DX11Renderer() :
 		m_CurrentScene(nullptr),
 		m_CurrentRTV(nullptr),
-		m_CurrentDSV(nullptr)
+		m_CurrentDSV(nullptr),
+		m_ViewportDimensions({ })
 	{
 	}
 

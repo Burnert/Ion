@@ -16,7 +16,7 @@ namespace Editor
 		String Name;
 
 	private:
-		TFunction<void()> m_OnInit;
+		TArray<TFunction<void()>> m_OnInit;
 
 		bool m_bLoaded = false;
 
@@ -25,7 +25,7 @@ namespace Editor
 		template<typename Lambda>
 		void SetOnInit(Lambda onInit)
 		{
-			m_OnInit = onInit;
+			m_OnInit.push_back(onInit);
 		}
 		bool IsLoaded() const
 		{
@@ -161,7 +161,10 @@ namespace Editor
 		if (!m_bLoaded && MeshAsset->IsLoaded() && TextureAsset->IsLoaded())
 		{
 			InitExampleModel(*this);
-			checked_call(m_OnInit);
+			for (auto& func : m_OnInit)
+			{
+				checked_call(func);
+			}
 			m_bLoaded = true;
 		}
 	}

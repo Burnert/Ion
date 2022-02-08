@@ -87,6 +87,10 @@ namespace Ion
 
 	namespace Math
 	{
+		constexpr double PI      = 3.14159265358979323846;
+		constexpr double TWO_PI  = PI * 2.0;
+		constexpr double HALF_PI = PI / 2.0;
+
 		FORCEINLINE constexpr bool IsPowerOfTwo(uint64 value)
 		{
 			return value && !(value & (value - 1));

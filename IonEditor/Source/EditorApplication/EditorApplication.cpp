@@ -32,8 +32,13 @@ namespace Editor
 	{
 	}
 
+	constexpr int32 g_nHarnasSqrt = 100;
+	static TArray<Entity*> g_HarnasArray;
+
 	void EditorApplication::OnInit()
 	{
+		TRACE_FUNCTION();
+
 		SetApplicationTitle(L"Ion Editor");
 		GetWindow()->Maximize();
 
@@ -74,7 +79,7 @@ namespace Editor
 		m_TestLightComponent->GetLightDataRef().Falloff = 5.0f;
 
 		m_TestDirLightComponent = registry.CreateComponent<DirectionalLightComponent>();
-		m_TestDirLightComponent->GetDirectionalLightDataRef().LightColor = Vector3(0.0f, 1.0f, 1.0f);
+		m_TestDirLightComponent->GetDirectionalLightDataRef().LightColor = Vector3(1.0f, 1.0f, 1.0f);
 		m_TestDirLightComponent->GetDirectionalLightDataRef().Intensity = 1.0f;
 
 		Entity* entity = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
@@ -91,21 +96,62 @@ namespace Editor
 		dirLightEntity->AddComponent(m_TestDirLightComponent);
 		dirLightEntity->SetRotation(Rotator({ -60.0f, 0.0f, 0.0f }));
 		dirLightEntity->SetName("DirectionalLight");
+
+		for (int32 i = 0; i < g_nHarnasSqrt * g_nHarnasSqrt; ++i)
+		{
+			MeshComponent* mesh = registry.CreateComponent<MeshComponent>();
+			GetModelDeferred(g_ExampleModels[1], [mesh]
+			{
+				mesh->SetMesh(g_ExampleModels[1].Mesh);
+			});
+			Entity* ent = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
+			ent->AddComponent(mesh);
+			float x = ((i % g_nHarnasSqrt)) * 0.2f - g_nHarnasSqrt * 0.1f;
+			float z = ((i / g_nHarnasSqrt)) * 0.2f - g_nHarnasSqrt * 0.1f;
+			ent->SetLocation(Vector3(x, -4.0f, z));
+			ent->SetRotation(Rotator(Vector3(-90.0f, 0.0f, 0.0f)));
+			ent->SetName(String("Harnas_") + ToString(i));
+			g_HarnasArray.push_back(ent);
+		}
 	}
 
 	void EditorApplication::OnUpdate(float deltaTime)
 	{
+		TRACE_FUNCTION();
+
 		UpdateEditorCamera(deltaTime);
+
+		static float c_Time = 0.0f;
+		c_Time += deltaTime;
+
+		int32 nHarnas = 0;
+		for (Entity* harnas : g_HarnasArray)
+		{
+			int32 x = nHarnas % g_nHarnasSqrt;
+			int32 y = nHarnas / g_nHarnasSqrt;
+
+			float wave = 0.0f;
+			wave += sinf(((float)x + c_Time * 10.0f) / (float)g_nHarnasSqrt * Math::TWO_PI * 2.0f);
+			wave += sinf(((float)y + c_Time * 10.0f) / (float)g_nHarnasSqrt * Math::TWO_PI * 2.0f);
+
+			Vector3 location = harnas->GetLocation();
+			location.y = wave;
+			harnas->SetLocation(location);
+			nHarnas++;
+		}
 
 		//m_Scene->UpdateRenderData();
 	}
 
 	void EditorApplication::OnRender()
 	{
+		TRACE_FUNCTION();
 	}
 
 	void EditorApplication::OnShutdown()
 	{
+		TRACE_FUNCTION();
+
 		if (m_EditorMainWorld)
 		{
 			g_Engine->DestroyWorld(m_EditorMainWorld);
@@ -115,6 +161,8 @@ namespace Editor
 
 	void EditorApplication::OnEvent(const Event& event)
 	{
+		TRACE_FUNCTION();
+
 		m_EventDispatcher.Dispatch(event);
 	}
 
