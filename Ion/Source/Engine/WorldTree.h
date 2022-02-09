@@ -73,6 +73,8 @@ namespace Ion
 
 	inline WorldTreeNode* WorldTreeNode::FindChild(Entity* entity)
 	{
+		TRACE_FUNCTION();
+
 		if (HasChildren())
 		{
 			// @TODO: Linear search will be kinda slow with a lot of entities
@@ -94,6 +96,8 @@ namespace Ion
 
 	inline void WorldTreeNode::AddChild(Entity* entity)
 	{
+		TRACE_FUNCTION();
+
 		WorldTreeNode node { };
 		node.m_Entity = entity;
 
@@ -102,6 +106,8 @@ namespace Ion
 
 	inline void WorldTreeNode::RemoveChild(Entity* entity)
 	{
+		TRACE_FUNCTION();
+
 		auto it = std::find_if(m_Children.begin(), m_Children.end(), [entity](WorldTreeNode& node)
 		{
 			return node.GetEntity() == entity;

@@ -7,14 +7,18 @@ namespace Ion
 {
 	Entity::Entity() :
 		m_WorldContext(nullptr),
-		m_bTickEnabled(true)
+		m_bTickEnabled(true),
+		m_bVisible(true),
+		m_bVisibleInGame(true)
 	{
 	}
 
 	Entity::Entity(const GUID& guid) :
 		m_GUID(guid),
 		m_WorldContext(nullptr),
-		m_bTickEnabled(true)
+		m_bTickEnabled(true),
+		m_bVisible(true),
+		m_bVisibleInGame(true)
 	{
 	}
 

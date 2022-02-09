@@ -20,6 +20,11 @@ namespace Ion
 		float Intensity;
 		float Falloff;
 		ELightType Type;
+
+		inline bool IsEnabled() const
+		{
+			return Type != ELightType::Disabled;
+		}
 	};
 
 	struct UNIFORMBUFFER LightUniforms

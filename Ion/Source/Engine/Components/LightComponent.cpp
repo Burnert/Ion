@@ -1,6 +1,7 @@
 #include "IonPCH.h"
 
 #include "LightComponent.h"
+#include "Engine/Entity.h"
 #include "Renderer/Renderer.h"
 
 namespace Ion
@@ -26,6 +27,9 @@ namespace Ion
 
 	void LightComponent::BuildRendererData(RRendererData& data)
 	{
+		if (!IsVisible() || !GetOwner()->IsVisible())
+			return;
+
 		Transform worldTransform = GetWorldTransform();
 
 		RLightRenderProxy light { };

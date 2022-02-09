@@ -54,16 +54,12 @@ namespace Ion
 
 	void DX11Texture::Bind(uint32 slot) const
 	{
-		TRACE_FUNCTION();
-
 		dxcall_v(DX11::GetContext()->PSSetShaderResources(slot, 1, &m_SRV));
 		dxcall_v(DX11::GetContext()->PSSetSamplers(slot, 1, &m_SamplerState));
 	}
 
 	void DX11Texture::Unbind() const
 	{
-		TRACE_FUNCTION();
-
 		dxcall_v(DX11::GetContext()->PSSetShaderResources(0, 0, nullptr));
 		dxcall_v(DX11::GetContext()->PSSetSamplers(0, 0, nullptr));
 	}

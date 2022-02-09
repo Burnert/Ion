@@ -7,10 +7,13 @@ namespace Ion
 {
 	void Engine::Init()
 	{
+		TRACE_FUNCTION();
 	}
 
 	void Engine::Shutdown()
 	{
+		TRACE_FUNCTION();
+
 		if (!m_RegisteredWorlds.empty())
 		{
 			// Copy, because DestroyWorld removes the World from the array.
@@ -25,6 +28,8 @@ namespace Ion
 
 	void Engine::Update(float deltaTime)
 	{
+		TRACE_FUNCTION();
+
 		// Set the global engine delta time
 		m_DeltaTime = deltaTime;
 
@@ -36,6 +41,8 @@ namespace Ion
 
 	World* Engine::CreateWorld(const WorldInitializer& initializer)
 	{
+		TRACE_FUNCTION();
+
 		World* world = World::Create(initializer);
 		if (!world)
 		{
@@ -49,6 +56,8 @@ namespace Ion
 
 	void Engine::DestroyWorld(World* world)
 	{
+		TRACE_FUNCTION();
+
 		ionassert(world);
 
 		auto it = std::find(m_RegisteredWorlds.begin(), m_RegisteredWorlds.end(), world);
@@ -60,6 +69,8 @@ namespace Ion
 
 	void Engine::BuildRendererData(float deltaTime)
 	{
+		TRACE_FUNCTION();
+
 		for (World* world : m_RegisteredWorlds)
 		{
 			Scene* scene = world->GetScene();

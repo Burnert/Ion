@@ -26,7 +26,10 @@ namespace Editor
 		void DriveEditorCameraRotation(float yawDelta, float pitchDelta);
 
 		void SetSelectedEntity(Entity* entity);
-		Entity* GetSelectedEntity();
+		Entity* GetSelectedEntity() const;
+
+		void SetSelectedComponent(Component* component);
+		Component* GetSelectedComponent() const;
 
 		World* GetEditorWorld() const;
 		TShared<Camera> GetEditorCamera() const;
@@ -63,6 +66,7 @@ namespace Editor
 
 		World* m_EditorMainWorld;
 		Entity* m_SelectedEntity;
+		Component* m_SelectedComponent;
 
 		//Scene* m_Scene;
 		TShared<Camera> m_EditorCamera;
@@ -78,9 +82,14 @@ namespace Editor
 		friend class EditorLayer;
 	};
 
-	inline Entity* EditorApplication::GetSelectedEntity()
+	inline Entity* EditorApplication::GetSelectedEntity() const
 	{
 		return m_SelectedEntity;
+	}
+
+	inline Component* EditorApplication::GetSelectedComponent() const
+	{
+		return m_SelectedComponent;
 	}
 
 	inline World* EditorApplication::GetEditorWorld() const

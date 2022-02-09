@@ -20,6 +20,12 @@ namespace Ion
 		void SetScale(const Vector3& scale);
 		const Vector3& GetScale() const;
 
+		void SetVisible(bool bVisible);
+		bool IsVisible() const;
+
+		void SetVisibleInGame(bool bVisibleInGame);
+		bool IsVisibleInGame() const;
+
 		void SetTickEnabled(bool bTick);
 		bool IsTickEnabled() const;
 
@@ -60,7 +66,9 @@ namespace Ion
 		Transform m_Transform;
 		THashSet<Component*> m_Components;
 
-		bool m_bTickEnabled;
+		uint8 m_bTickEnabled : 1;
+		uint8 m_bVisible : 1;
+		uint8 m_bVisibleInGame : 1;
 
 		String m_Name;
 
@@ -108,6 +116,26 @@ namespace Ion
 	inline const Vector3& Entity::GetScale() const
 	{
 		return m_Transform.GetScale();
+	}
+
+	inline void Entity::SetVisible(bool bVisible)
+	{
+		m_bVisible = bVisible;
+	}
+
+	inline bool Entity::IsVisible() const
+	{
+		return m_bVisible;
+	}
+
+	inline void Entity::SetVisibleInGame(bool bVisibleInGame)
+	{
+		m_bVisibleInGame = bVisibleInGame;
+	}
+
+	inline bool Entity::IsVisibleInGame() const
+	{
+		return m_bVisibleInGame;
 	}
 
 	inline void Entity::SetTickEnabled(bool bTick)

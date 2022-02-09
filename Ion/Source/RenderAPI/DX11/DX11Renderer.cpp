@@ -117,7 +117,7 @@ namespace Ion
 		const TArray<RLightRenderProxy>& lights = scene->GetRenderLights();
 		uint32 lightNum = (int32)scene->GetRenderLights().size();
 
-		if (dirLight.Type != ELightType::Disabled)
+		if (dirLight.IsEnabled())
 		{
 			uniforms.DirLight.Direction = Vector4(dirLight.Direction, 0.0f);
 			uniforms.DirLight.Color = Vector4(dirLight.Color, 1.0f);
@@ -148,9 +148,12 @@ namespace Ion
 		scene->m_SceneUniformBuffer->UpdateData();
 		scene->m_SceneUniformBuffer->Bind(0);
 
-		for (const RPrimitiveRenderProxy& primitive : scene->GetScenePrimitives())
 		{
-			Draw(primitive, scene);
+			TRACE_SCOPE("DX11Renderer::RenderScene - Draw Primitives");
+			for (const RPrimitiveRenderProxy& primitive : scene->GetScenePrimitives())
+			{
+				Draw(primitive, scene);
+			}
 		}
 	}
 

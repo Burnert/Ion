@@ -24,7 +24,8 @@ namespace Editor
 		m_bViewportOpen(true),
 		m_bContentBrowserOpen(true),
 		m_bWorldTreePanelOpen(true),
-		m_bDetailsPanelOpen(true)
+		m_bDetailsPanelOpen(true),
+		m_bDiagnosticsPanelOpen(false)
 	{
 	}
 
@@ -105,6 +106,7 @@ namespace Editor
 		DrawContentBrowser();
 		DrawWorldTreePanel();
 		DrawDetailsPanel();
+		DrawDiagnosticsPanel();
 
 		ImGui::ShowDemoWindow();
 		ImGui::ShowMetricsWindow();
@@ -156,6 +158,10 @@ namespace Editor
 			}
 			if (ImGui::BeginMenu("Misc"))
 			{
+				ImGui::MenuItem("Diagnostics", nullptr, &m_bDiagnosticsPanelOpen);
+
+				ImGui::Separator();
+
 				static bool c_bVSync = Renderer::Get()->IsVSyncEnabled();
 				if (ImGui::MenuItem("Enable VSync", nullptr, &c_bVSync))
 				{
@@ -317,6 +323,8 @@ namespace Editor
 				Entity* selectedEntity = EditorApplication::Get()->GetSelectedEntity();
 				if (selectedEntity)
 				{
+					Component* selectedComponent = EditorApplication::Get()->GetSelectedComponent();
+
 					ImGui::PushID("Details");
 
 					DrawDetailsNameSection(selectedEntity);
@@ -325,12 +333,16 @@ namespace Editor
 
 					DrawDetailsComponentTreeSection(selectedEntity);
 					DrawDetailsTransformSection(selectedEntity);
+					DrawDetailsRenderingSection(selectedEntity);
 
-					ImGui::Separator();
-					ImGui::Spacing();
-					ImGui::Text("Component Details");
-					ImGui::Spacing();
-					ImGui::Separator();
+					if (selectedComponent)
+					{
+						ImGui::Separator();
+						ImGui::Spacing();
+						ImGui::Text("Component Details");
+						ImGui::Spacing();
+						ImGui::Separator();
+					}
 
 					ImGui::PopID();
 				}
@@ -406,6 +418,51 @@ namespace Editor
 			}
 
 			ImGui::PopID();
+		}
+	}
+
+	void EditorLayer::DrawDetailsRenderingSection(Entity* entity)
+	{
+		TRACE_FUNCTION();
+
+		if (ImGui::CollapsingHeader("Rendering", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID("Rendering");
+
+			bool bVisible = entity->IsVisible();
+			bool bVisibleInGame = entity->IsVisibleInGame();
+
+			if (ImGui::Checkbox("Visible", &bVisible))
+			{
+				entity->SetVisible(bVisible);
+			}
+			if (ImGui::Checkbox("Visible in game", &bVisibleInGame))
+			{
+				entity->SetVisibleInGame(bVisibleInGame);
+			}
+
+			ImGui::PopID();
+		}
+	}
+
+	void EditorLayer::DrawDiagnosticsPanel()
+	{
+		TRACE_FUNCTION();
+
+		if (m_bDiagnosticsPanelOpen)
+		{
+			ImGui::Begin("Diagnostics", &m_bDiagnosticsPanelOpen);
+
+			if (ImGui::Button("Start Recording"))
+			{
+				TRACE_RECORD_START();
+			}
+			if (ImGui::Button("Stop Recording"))
+			{
+				TRACE_RECORD_STOP();
+			}
+
+			ImGui::End();
 		}
 	}
 

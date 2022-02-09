@@ -112,8 +112,6 @@ namespace Ion
 
 	void DX11VertexBuffer::Bind() const
 	{
-		TRACE_FUNCTION();
-
 		ionassert(m_VertexLayout, "Vertex Layout has not been set.");
 
 		ID3D11DeviceContext* context = DX11::GetContext();
@@ -125,15 +123,11 @@ namespace Ion
 
 	void DX11VertexBuffer::Unbind() const
 	{
-		TRACE_FUNCTION();
-
 		dxcall_v(DX11::GetContext()->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr));
 	}
 
 	void DX11VertexBuffer::BindLayout() const
 	{
-		TRACE_FUNCTION();
-
 		dxcall_v(DX11::GetContext()->IASetInputLayout(m_InputLayout));
 	}
 
@@ -253,8 +247,6 @@ namespace Ion
 
 	void DX11UniformBuffer::Bind(uint32 slot) const
 	{
-		TRACE_FUNCTION();
-
 		ionassert(m_Buffer);
 
 		ID3D11DeviceContext* context = DX11::GetContext();
@@ -270,7 +262,8 @@ namespace Ion
 
 	void DX11UniformBuffer::UpdateData() const
 	{
-		TRACE_FUNCTION();
+		// Might become useful
+		//TRACE_FUNCTION();
 
 		ionassert(m_Buffer);
 

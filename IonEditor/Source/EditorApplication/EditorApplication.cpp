@@ -22,7 +22,8 @@ namespace Editor
 		m_bViewportCaptured(false),
 		m_EditorCameraMoveSpeed(5.0f),
 		m_EditorMainWorld(nullptr),
-		m_SelectedEntity(nullptr)
+		m_SelectedEntity(nullptr),
+		m_SelectedComponent(nullptr)
 	{
 		ionassert(!s_Instance);
 		s_Instance = this;
@@ -131,8 +132,8 @@ namespace Editor
 			int32 y = nHarnas / g_nHarnasSqrt;
 
 			float wave = 0.0f;
-			wave += sinf(((float)x + c_Time * 10.0f) / (float)g_nHarnasSqrt * Math::TWO_PI * 2.0f);
-			wave += sinf(((float)y + c_Time * 10.0f) / (float)g_nHarnasSqrt * Math::TWO_PI * 2.0f);
+			wave += sinf(((float)x + c_Time * 10.0f) / g_nHarnasSqrt * (float)Math::TWO_PI * 2.0f);
+			wave += sinf(((float)y + c_Time * 10.0f) / g_nHarnasSqrt * (float)Math::TWO_PI * 2.0f);
 
 			Vector3 location = harnas->GetLocation();
 			location.y = wave;
@@ -191,6 +192,15 @@ namespace Editor
 	void EditorApplication::SetSelectedEntity(Entity* entity)
 	{
 		m_SelectedEntity = entity;
+		if (!entity)
+		{
+			SetSelectedComponent(nullptr);
+		}
+	}
+
+	void EditorApplication::SetSelectedComponent(Component* component)
+	{
+		m_SelectedComponent = component;
 	}
 
 	Scene* EditorApplication::GetEditorScene() const

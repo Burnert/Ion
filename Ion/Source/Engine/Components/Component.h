@@ -27,8 +27,11 @@ namespace ComponentStaticCallbacks \
 namespace _EntityPrivate \
 { \
 	using _##func##THashMap = THashMap<GUID, _ComponentClass_>; \
+	static char _##func##TracerName[256] = "ENTITY_COMPONENT_STATIC_CALLBACK_FUNC_HELPER_EX("#func") - "; \
+	static errno_t _Dummy_##func##TracerName = strcat_s(_##func##TracerName, ComponentTypeDefaults<_ComponentClass_>::Name); \
 	static auto _##func = [](void* containerPtr, __VA_ARGS__) \
 	{ \
+		TRACE_SCOPE(_##func##TracerName); \
 		if constexpr (THas##func<_ComponentClass_>) \
 		{ \
 			_##func##THashMap& container = *(_##func##THashMap*)containerPtr; \
@@ -104,6 +107,12 @@ namespace Ion
 		Transform Transform;
 		uint8 bVisible : 1;
 		uint8 bVisibleInGame : 1;
+
+		SceneComponentData() :
+			bVisible(true),
+			bVisibleInGame(true)
+		{
+		}
 	};
 
 	class ION_API Component

@@ -1,6 +1,7 @@
 #include "IonPCH.h"
 
 #include "DirectionalLightComponent.h"
+#include "Engine/Entity.h"
 #include "Renderer/Renderer.h"
 
 namespace Ion
@@ -26,6 +27,9 @@ namespace Ion
 
 	void DirectionalLightComponent::BuildRendererData(RRendererData& data)
 	{
+		if (!IsVisible() || !GetOwner()->IsVisible())
+			return;
+
 		// @TODO: If active dirlight:
 		Transform worldTransform = GetWorldTransform();
 

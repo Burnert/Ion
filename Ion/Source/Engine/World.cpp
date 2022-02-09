@@ -10,6 +10,8 @@ namespace Ion
 {
 	World* World::Create(const WorldInitializer& initializer)
 	{
+		TRACE_FUNCTION();
+
 		// @TODO: Who should own the world?
 		// Worlds have to be deleted at some point
 		World* world = new World;
@@ -27,12 +29,16 @@ namespace Ion
 
 	void World::OnInit()
 	{
+		TRACE_FUNCTION();
+
 		m_Scene = new Scene;
 		m_Scene->m_OwningWorld = this;
 	}
 
 	void World::OnUpdate(float deltaTime)
 	{
+		TRACE_FUNCTION();
+
 		if (!m_bTickWorld)
 			return;
 
@@ -46,6 +52,8 @@ namespace Ion
 
 	void World::OnDestroy()
 	{
+		TRACE_FUNCTION();
+
 		for (Entity* entity : m_Entities)
 		{
 			entity->OnDestroy();
@@ -59,6 +67,8 @@ namespace Ion
 
 	void World::BuildRendererData(RRendererData& data, float deltaTime)
 	{
+		TRACE_FUNCTION();
+
 		m_ComponentRegistry.BuildRendererData(data);
 
 		//m_Scene->UpdateRenderData();
@@ -66,6 +76,8 @@ namespace Ion
 
 	void World::AddEntity(Entity* entity)
 	{
+		TRACE_FUNCTION();
+
 		ionassert(entity);
 
 		InitEntity(entity);
@@ -77,6 +89,8 @@ namespace Ion
 
 	void World::RemoveEntity(Entity* entity)
 	{
+		TRACE_FUNCTION();
+
 		ionassert(entity);
 
 		auto it = std::find(m_Entities.begin(), m_Entities.end(), entity);
@@ -90,6 +104,8 @@ namespace Ion
 
 	void World::InitEntity(Entity* entity)
 	{
+		TRACE_FUNCTION();
+
 		ionassert(entity);
 
 		entity->m_WorldContext = this;
@@ -106,6 +122,8 @@ namespace Ion
 
 	World::~World()
 	{
+		TRACE_FUNCTION();
+
 		checked_delete(m_Scene);
 
 		for (Entity* entity : m_Entities)

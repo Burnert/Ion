@@ -24,25 +24,30 @@ namespace Ion
 
 	void MeshComponent::OnCreate()
 	{
-		Component::OnCreate();
-		LOG_INFO("MeshComponent::OnCreate()");
+		//Component::OnCreate();
+		//LOG_INFO("MeshComponent::OnCreate()");
 	}
 
 	void MeshComponent::OnDestroy()
 	{
-		Component::OnDestroy();
-		LOG_INFO("MeshComponent::OnDestroy()");
+		//Component::OnDestroy();
+		//LOG_INFO("MeshComponent::OnDestroy()");
 	}
 
 	void MeshComponent::BuildRendererData(RRendererData& data)
 	{
+		// @TODO: Takes 1.5-2ms for 10k components
+
 		if (!m_Mesh)
+			return;
+
+		if (!IsVisible() || !GetOwner()->IsVisible())
 			return;
 
 		Material* material = m_Mesh->GetMaterial().lock().get();
 		Transform worldTransform = GetWorldTransform();
 
-		RPrimitiveRenderProxy mesh;
+		RPrimitiveRenderProxy mesh { };
 		mesh.Transform     = worldTransform.GetMatrix();
 		mesh.Material      = material;
 		mesh.Shader        = material->GetShader().get();

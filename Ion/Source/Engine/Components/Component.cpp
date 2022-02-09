@@ -36,6 +36,8 @@ namespace Ion
 
 	ComponentRegistry::~ComponentRegistry()
 	{
+		TRACE_FUNCTION();
+
 		// Cleanup allocated structures
 		for (auto& [id, ptr] : m_ComponentArrays)
 		{
@@ -45,6 +47,8 @@ namespace Ion
 
 	void ComponentRegistry::Update(float deltaTime)
 	{
+		TRACE_FUNCTION();
+
 		for (auto& [id, container] : m_ComponentArrays)
 		{
 			ComponentStaticCallbacks::TickFPtr func = ComponentStaticCallbacks::GetTickFPtr(id);
@@ -54,6 +58,8 @@ namespace Ion
 
 	void ComponentRegistry::BuildRendererData(RRendererData& data)
 	{
+		TRACE_FUNCTION();
+
 		for (auto& [id, container] : m_ComponentArrays)
 		{
 			ComponentStaticCallbacks::BuildRendererDataFPtr func = ComponentStaticCallbacks::GetBuildRendererDataFPtr(id);

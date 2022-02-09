@@ -107,12 +107,7 @@ namespace Ion
 
 		m_RenderPrimitives = data.Primitives;
 		m_RenderLights = data.Lights;
-
-		if (data.DirectionalLight.Type != ELightType::Disabled)
-		{
-			m_RenderDirLight = data.DirectionalLight;
-		}
-
+		m_RenderDirLight = data.DirectionalLight;
 		m_RenderAmbientLight = data.AmbientLightColor;
 
 		m_ActiveCamera->CopyRenderData(m_RenderCamera);

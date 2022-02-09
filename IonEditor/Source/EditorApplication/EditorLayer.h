@@ -35,6 +35,9 @@ namespace Editor
 		void DrawDetailsNameSection(Entity* entity);
 		void DrawDetailsComponentTreeSection(Entity* entity);
 		void DrawDetailsTransformSection(Entity* entity);
+		void DrawDetailsRenderingSection(Entity* entity);
+
+		void DrawDiagnosticsPanel();
 
 		// End of UI drawing related functions
 
@@ -78,6 +81,8 @@ namespace Editor
 		bool m_bContentBrowserOpen;
 		bool m_bWorldTreePanelOpen;
 		bool m_bDetailsPanelOpen;
+
+		bool m_bDiagnosticsPanelOpen;
 
 		friend class EditorApplication;
 	};
