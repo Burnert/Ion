@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <memory>
+#include <new>
 #include <functional>
 #include <thread>
 #include <mutex>
@@ -20,6 +21,7 @@
 #include <array>
 #include <vector>
 #include <list>
+#include <forward_list>
 #include <deque>
 #include <queue>
 #include <map>

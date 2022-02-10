@@ -12,6 +12,8 @@
 #include "Engine/Components/LightComponent.h"
 #include "Engine/Components/DirectionalLightComponent.h"
 
+#include "Core/Memory/PoolAllocator.h"
+
 namespace Ion
 {
 namespace Editor
@@ -98,21 +100,29 @@ namespace Editor
 		dirLightEntity->SetRotation(Rotator({ -60.0f, 0.0f, 0.0f }));
 		dirLightEntity->SetName("DirectionalLight");
 
-		for (int32 i = 0; i < g_nHarnasSqrt * g_nHarnasSqrt; ++i)
+		if (0)
 		{
-			MeshComponent* mesh = registry.CreateComponent<MeshComponent>();
-			GetModelDeferred(g_ExampleModels[1], [mesh]
+			for (int32 i = 0; i < g_nHarnasSqrt * g_nHarnasSqrt; ++i)
 			{
-				mesh->SetMesh(g_ExampleModels[1].Mesh);
-			});
-			Entity* ent = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
-			ent->AddComponent(mesh);
-			float x = ((i % g_nHarnasSqrt)) * 0.2f - g_nHarnasSqrt * 0.1f;
-			float z = ((i / g_nHarnasSqrt)) * 0.2f - g_nHarnasSqrt * 0.1f;
-			ent->SetLocation(Vector3(x, -4.0f, z));
-			ent->SetRotation(Rotator(Vector3(-90.0f, 0.0f, 0.0f)));
-			ent->SetName(String("Harnas_") + ToString(i));
-			g_HarnasArray.push_back(ent);
+				MeshComponent* mesh = registry.CreateComponent<MeshComponent>();
+				GetModelDeferred(g_ExampleModels[1], [mesh]
+				{
+					mesh->SetMesh(g_ExampleModels[1].Mesh);
+				});
+				Entity* ent = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
+				ent->AddComponent(mesh);
+				float x = ((i % g_nHarnasSqrt)) * 0.2f - g_nHarnasSqrt * 0.1f;
+				float z = ((i / g_nHarnasSqrt)) * 0.2f - g_nHarnasSqrt * 0.1f;
+				ent->SetLocation(Vector3(x, -4.0f, z));
+				ent->SetRotation(Rotator(Vector3(-90.0f, 0.0f, 0.0f)));
+				ent->SetName(String("Harnas_") + ToString(i));
+				g_HarnasArray.push_back(ent);
+			}
+		}
+
+		if (1)
+		{
+			TestPoolAllocator();
 		}
 	}
 

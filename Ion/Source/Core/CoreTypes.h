@@ -41,12 +41,15 @@ using TString      = String;
 
 using StringView   = std::string_view;
 using WStringView  = std::wstring_view;
-
 #ifdef UNICODE
 using TStringView  = WStringView;
 #else
 using TStringView  = StringView;
 #endif
+
+// Memory
+
+using std::align_val_t;
 
 template<typename T>
 using TShared      = std::shared_ptr<T>;
@@ -72,6 +75,12 @@ using THashMap = std::unordered_map<T, U, Hasher, std::equal_to<T>, Allocator>;
 
 template<typename T, typename Allocator = std::allocator<T>>
 using TArray = std::vector<T, Allocator>;
+
+template<typename T, typename Allocator = std::allocator<T>>
+using TLinkedList = std::forward_list<T, Allocator>;
+
+template<typename T, typename Allocator = std::allocator<T>>
+using TDoubleLinkedList = std::list<T, Allocator>;
 
 template<typename T, typename Allocator = std::allocator<T>>
 using TDeque = std::deque<T, Allocator>;
