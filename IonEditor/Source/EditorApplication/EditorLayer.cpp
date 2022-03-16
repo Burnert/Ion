@@ -256,12 +256,9 @@ namespace Editor
 				World* editorWorld = EditorApplication::Get()->GetEditorWorld();
 				if (editorWorld)
 				{
-					const WorldTree& worldTree = editorWorld->GetWorldTree();
-					const WorldTreeNode& root = worldTree.GetRootNode();
-
 					ImGui::PushID("WorldTree");
 
-					DrawWorldTreeNodeChildren(root);
+					DrawWorldTreeNodes(editorWorld->GetWorldTree());
 
 					ImGui::PopID();
 				}
@@ -270,19 +267,32 @@ namespace Editor
 		}
 	}
 
-	void EditorLayer::DrawWorldTreeNodeChildren(const WorldTreeNode& parent)
+	void EditorLayer::DrawWorldTreeNodes(const WorldTree& worldTree)
+	{
+		TRACE_FUNCTION();
+
+		WorldTree::NodeRef root = worldTree.GetRootNode();
+		DrawWorldTreeNodeChildren(root);
+	}
+
+	void EditorLayer::DrawWorldTreeNodeChildren(WorldTree::NodeRef nodeRef)
 	{
 		TRACE_FUNCTION();
 
 		int64 imguiNodeIndex = 0;
-		for (const WorldTreeNode& node : parent.GetChildren())
+		for (WorldTree::Tree::NodeBaseType* child : nodeRef.GetChildren())
 		{
-			const Entity* entity = node.GetEntity();
-			const String& entityName = entity->GetName();
-			bool bHasChildren = node.HasChildren();
+			if (!child->IsElementNode())
+				return;
 
-			ImGuiTreeNodeFlags imguiNodeFlags = 
-				ImGuiTreeNodeFlags_OpenOnArrow       |
+			WorldTree::Tree::NodeType* node = (WorldTree::Tree::NodeType*)child;
+
+			const Entity* entity = node->Element;
+			const String& entityName = entity->GetName();
+			bool bHasChildren = node->HasChildren();
+
+			ImGuiTreeNodeFlags imguiNodeFlags =
+				ImGuiTreeNodeFlags_OpenOnArrow |
 				ImGuiTreeNodeFlags_OpenOnDoubleClick |
 				ImGuiTreeNodeFlags_SpanAvailWidth;
 			if (!bHasChildren)
@@ -303,10 +313,7 @@ namespace Editor
 			}
 			if (bHasChildren && bImguiTreeNodeOpen)
 			{
-				if (node.HasChildren())
-				{ // Show entity children
-					DrawWorldTreeNodeChildren(node);
-				}
+				DrawWorldTreeNodeChildren(WorldTree::NodeRef(child));
 				ImGui::TreePop();
 			}
 		}

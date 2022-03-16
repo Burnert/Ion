@@ -49,4 +49,10 @@ namespace Ion
 			Tick(deltaTime);
 		}
 	}
+
+	void Entity::AttachTo(Entity* parent)
+	{
+		m_Parent = parent;
+		m_WorldContext->AttachEntityToParent(this, parent);
+	}
 }

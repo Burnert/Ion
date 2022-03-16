@@ -18,7 +18,7 @@ struct alignas(Alignment) TPoolChunk
 {
 	using ThisType = TPoolChunk<T, Alignment>;
 
-	T Data[1];
+	uint8 Data[sizeof(T)];
 	/* The MS bit indicates if the chunk is allocated,
 	   the rest is the pointer to the next chunk.
 	   This is only possible, because pointers would not
@@ -38,6 +38,12 @@ struct alignas(Alignment) TPoolChunk
 	inline bool IsAllocated() const
 	{
 		return GET_POOL_META_ALLOC_FLAG(Meta);
+	}
+
+	TPoolChunk() :
+		Data(),
+		Meta(0)
+	{
 	}
 };
 
@@ -93,7 +99,7 @@ public:
 
 		m_NextChunkPtr = chunk->Next();
 
-		return chunk->Data;
+		return (T*)chunk->Data;
 	}
 
 	inline void Free(void* ptr)

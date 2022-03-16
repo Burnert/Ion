@@ -35,6 +35,8 @@ namespace Ion
 		void SetName(const String& name);
 		const String& GetName() const;
 
+		void AttachTo(Entity* parent);
+
 		/* Returns the GUID of the Entity.
 		   A GUID is initiated at the creation of the Entity. */
 		const GUID& GetGuid() const;
@@ -65,6 +67,7 @@ namespace Ion
 
 		Transform m_Transform;
 		THashSet<Component*> m_Components;
+		Entity* m_Parent;
 
 		uint8 m_bTickEnabled : 1;
 		uint8 m_bVisible : 1;

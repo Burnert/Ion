@@ -9,7 +9,6 @@ namespace Ion
 	struct WorldInitializer;
 	// WorldTree.h
 	class WorldTree;
-	class WorldTreeNode;
 	// Entity.h
 	class Entity;
 	// Components/Component.h

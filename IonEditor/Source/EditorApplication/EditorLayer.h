@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Engine/WorldTree.h"
+
 namespace Ion
 {
 namespace Editor
@@ -29,7 +31,8 @@ namespace Editor
 		void DrawContentBrowser();
 
 		void DrawWorldTreePanel();
-		void DrawWorldTreeNodeChildren(const WorldTreeNode& parent);
+		void DrawWorldTreeNodes(const WorldTree& worldTree);
+		void DrawWorldTreeNodeChildren(WorldTree::NodeRef node);
 
 		void DrawDetailsPanel();
 		void DrawDetailsNameSection(Entity* entity);

@@ -81,7 +81,8 @@ namespace Ion
 		ionassert(entity);
 
 		InitEntity(entity);
-		m_Entities.push_back(entity);
+		//m_Entities.push_back(entity);
+		m_Entities.insert(entity);
 
 		// @TODO: Temporary
 		m_WorldTree.Add(entity);
@@ -93,13 +94,19 @@ namespace Ion
 
 		ionassert(entity);
 
-		auto it = std::find(m_Entities.begin(), m_Entities.end(), entity);
-		m_Entities.erase(it);
+		//auto it = std::find(m_Entities.begin(), m_Entities.end(), entity);
+		//m_Entities.erase(it);
+		m_Entities.erase(entity);
 
 		m_WorldTree.Remove(entity);
 
 		// The world owns the entity, so it should delete it.
 		delete entity;
+	}
+
+	void World::AttachEntityToParent(Entity* entity, Entity* parent)
+	{
+		m_WorldTree.Reparent(entity, parent);
 	}
 
 	void World::InitEntity(Entity* entity)
@@ -130,6 +137,7 @@ namespace Ion
 		{
 			checked_delete(entity);
 		}
+		m_Entities.clear();
 	}
 
 	void World::TransferSceneRenderData()

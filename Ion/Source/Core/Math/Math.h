@@ -169,15 +169,15 @@ namespace Ion
 		// Common
 
 		template<typename T>
-		FORCEINLINE GLM_CONSTEXPR T Min(T x, T minVal)
+		FORCEINLINE GLM_CONSTEXPR T Min(T a, T b)
 		{
-			return glm::min(x, minVal);
+			return glm::min(a, b);
 		}
 
 		template<typename T>
-		FORCEINLINE GLM_CONSTEXPR T Max(T x, T maxVal)
+		FORCEINLINE GLM_CONSTEXPR T Max(T a, T b)
 		{
-			return glm::max(x, maxVal);
+			return glm::max(a, b);
 		}
 
 		template<typename T>

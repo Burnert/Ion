@@ -91,6 +91,9 @@ using TFixedArray = std::array<T, Size>;
 template<typename T, typename Container = TDeque<T>>
 using TQueue = std::queue<T, Container>;
 
+template<typename T, typename Container = TDeque<T>>
+using TStack = std::stack<T, Container>;
+
 template<typename T, typename Container = TArray<T>, typename Compare = std::less<T>>
 using TPriorityQueue = std::priority_queue<T, Container, Compare>;
 

@@ -16,6 +16,7 @@ namespace Ion
 	{
 	public:
 		using EntityArray = TArray<Entity*>;
+		using EntitySet = THashSet<Entity*>;
 
 	protected:
 		static World* Create(const WorldInitializer& initializer);
@@ -28,6 +29,8 @@ namespace Ion
 
 		void AddEntity(Entity* entity);
 		void RemoveEntity(Entity* entity);
+
+		void AttachEntityToParent(Entity* entity, Entity* parent);
 
 		const WorldTree& GetWorldTree() const;
 
@@ -58,7 +61,7 @@ namespace Ion
 		GUID m_WorldGUID;
 
 		ComponentRegistry m_ComponentRegistry;
-		EntityArray m_Entities; // World is the owner of the entities
+		EntitySet m_Entities; // World is the owner of the entities
 		WorldTree m_WorldTree;
 
 		Scene* m_Scene; // World is the owner of the scene

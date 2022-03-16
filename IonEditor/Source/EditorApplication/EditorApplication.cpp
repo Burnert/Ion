@@ -8,10 +8,12 @@
 #include "ExampleModels.h"
 
 #include "Engine/Engine.h"
+#include "Engine/WorldTree.h"
 #include "Engine/Components/MeshComponent.h"
 #include "Engine/Components/LightComponent.h"
 #include "Engine/Components/DirectionalLightComponent.h"
 
+#include "Core/Container/Tree.h"
 #include "Core/Memory/PoolAllocator.h"
 
 namespace Ion
@@ -92,13 +94,19 @@ namespace Editor
 
 		Entity* lightEntity = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
 		lightEntity->AddComponent(m_TestLightComponent);
-		lightEntity->SetLocation(Vector3(0.0f, 3.0f, 0.0f));
+		lightEntity->SetLocation(Vector3(0.0f, 1.0f, 0.0f));
 		lightEntity->SetName("Light");
 
 		Entity* dirLightEntity = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
 		dirLightEntity->AddComponent(m_TestDirLightComponent);
 		dirLightEntity->SetRotation(Rotator({ -60.0f, 0.0f, 0.0f }));
 		dirLightEntity->SetName("DirectionalLight");
+
+		lightEntity->AttachTo(entity);
+		// @TODO: Continue this attachment thing and the world tree (iterator)
+
+		const WorldTree& worldTree = m_EditorMainWorld->GetWorldTree();
+		worldTree.LogTree();
 
 		if (0)
 		{
@@ -121,6 +129,36 @@ namespace Editor
 		}
 
 		if (1)
+		{
+			using StringTree = TTree<String>;
+			StringTree tree;
+			StringTree::NodeRef root   = tree.GetRootNode();
+			StringTree::NodeRef node0  = tree.Insert("Node0");
+			StringTree::NodeRef node1  = tree.Insert("Node1");
+			StringTree::NodeRef node2  = tree.Insert("Node2", root);
+			StringTree::NodeRef node00 = tree.Insert("Node00", node0);
+			StringTree::NodeRef node01 = tree.Insert("Node01", node0);
+			StringTree::NodeRef node10 = tree.Insert("Node10", node1);
+			//node1.Element() = nullptr;
+			tree.LogTree();
+			tree.Remove(node0, true);
+			tree.LogTree();
+			tree.Remove(node00, true);
+			tree.LogTree();
+			tree.Remove(node1);
+			tree.LogTree();
+			StringTree::NodeRef node3  = tree.Insert("Node3");
+			StringTree::NodeRef node30 = tree.Insert("Node30", node3);
+			StringTree::NodeRef node31 = tree.Insert("Node31", node3);
+			StringTree::NodeRef node32 = tree.Insert(node3);
+			tree.LogTree();
+			String& n3Str = *node30.Element();
+			LOG_INFO(n3Str);
+			LOG_INFO(BoolStr(node32.IsElementNode()));
+			LOG_INFO(BoolStr(node31.IsElementNode()));
+		}
+		
+		if (0)
 		{
 			TestPoolAllocator();
 		}
