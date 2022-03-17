@@ -1,6 +1,8 @@
 #pragma once
 
-#include "Core/Container/Tree.h"
+#include "Core/Container/OldTree.h"
+
+// @TODO: I don't think this whole class is needed anymore
 
 namespace Ion
 {
@@ -32,7 +34,6 @@ namespace Ion
 
 		void LogTree() const;
 
-	private:
 		WorldTree();
 
 	private:

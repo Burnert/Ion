@@ -100,6 +100,9 @@ using TPriorityQueue = std::priority_queue<T, Container, Compare>;
 template<typename T>
 using TFunction = std::function<T>;
 
+template<typename T>
+using TOptional = std::optional<T>;
+
 // Thread
 
 using Thread = std::thread;

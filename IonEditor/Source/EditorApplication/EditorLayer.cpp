@@ -258,7 +258,7 @@ namespace Editor
 				{
 					ImGui::PushID("WorldTree");
 
-					DrawWorldTreeNodes(editorWorld->GetWorldTree());
+					DrawWorldTreeNodes();
 
 					ImGui::PopID();
 				}
@@ -267,29 +267,26 @@ namespace Editor
 		}
 	}
 
-	void EditorLayer::DrawWorldTreeNodes(const WorldTree& worldTree)
+	void EditorLayer::DrawWorldTreeNodes()
 	{
 		TRACE_FUNCTION();
 
-		WorldTree::NodeRef root = worldTree.GetRootNode();
-		DrawWorldTreeNodeChildren(root);
+		DrawWorldTreeNodeChildren(EditorApplication::Get()->GetEditorWorld()->GetWorldTreeRoot());
 	}
 
-	void EditorLayer::DrawWorldTreeNodeChildren(WorldTree::NodeRef nodeRef)
+	void EditorLayer::DrawWorldTreeNodeChildren(const WorldTreeNode& node)
 	{
 		TRACE_FUNCTION();
 
 		int64 imguiNodeIndex = 0;
-		for (WorldTree::Tree::NodeBaseType* child : nodeRef.GetChildren())
+		for (const WorldTreeNode* child : node.GetChildren())
 		{
-			if (!child->IsElementNode())
-				return;
+			const WorldTreeNodeData& nodeData = child->Element();
 
-			WorldTree::Tree::NodeType* node = (WorldTree::Tree::NodeType*)child;
-
-			const Entity* entity = node->Element;
-			const String& entityName = entity->GetName();
-			bool bHasChildren = node->HasChildren();
+			bool bIsFolder = nodeData.IsFolder();
+			bool bHasChildren = child->HasChildren();
+			String nodeName;
+			Entity* entity = nullptr;
 
 			ImGuiTreeNodeFlags imguiNodeFlags =
 				ImGuiTreeNodeFlags_OpenOnArrow |
@@ -301,19 +298,34 @@ namespace Editor
 					ImGuiTreeNodeFlags_Leaf |
 					ImGuiTreeNodeFlags_NoTreePushOnOpen;
 			}
-			if (entity == EditorApplication::Get()->GetSelectedEntity())
+
+			if (bIsFolder)
 			{
-				imguiNodeFlags |= ImGuiTreeNodeFlags_Selected;
+				nodeName = nodeData.AsFolder()->Name;
+			}
+			else
+			{
+				entity = nodeData.AsEntity();
+				nodeName = entity->GetName();
+
+				// Highlight the selected entity
+				if (entity == EditorApplication::Get()->GetSelectedEntity())
+				{
+					imguiNodeFlags |= ImGuiTreeNodeFlags_Selected;
+				}
 			}
 
-			bool bImguiTreeNodeOpen = ImGui::TreeNodeEx((void*)imguiNodeIndex++, imguiNodeFlags, "%s", entityName.c_str());
-			if (ImGui::IsItemClicked()) // Select entity on click
+			bool bImguiTreeNodeOpen = ImGui::TreeNodeEx((void*)imguiNodeIndex++, imguiNodeFlags, "%s", nodeName.c_str());
+
+			// Select entity on click
+			if (entity && ImGui::IsItemClicked())
 			{
 				EditorApplication::Get()->SetSelectedEntity(const_cast<Entity*>(entity));
 			}
+
 			if (bHasChildren && bImguiTreeNodeOpen)
 			{
-				DrawWorldTreeNodeChildren(WorldTree::NodeRef(child));
+				DrawWorldTreeNodeChildren(*child);
 				ImGui::TreePop();
 			}
 		}
@@ -369,7 +381,6 @@ namespace Editor
 		ImGui::PushID("Name");
 
 		ImGuiInputTextFlags imguiInputTextFlags =
-			ImGuiInputTextFlags_CharsNoBlank |
 			ImGuiInputTextFlags_EnterReturnsTrue;
 
 		char name[128] = { };

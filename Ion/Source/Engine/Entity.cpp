@@ -9,7 +9,8 @@ namespace Ion
 		m_WorldContext(nullptr),
 		m_bTickEnabled(true),
 		m_bVisible(true),
-		m_bVisibleInGame(true)
+		m_bVisibleInGame(true),
+		m_Parent(nullptr)
 	{
 	}
 
@@ -18,7 +19,8 @@ namespace Ion
 		m_WorldContext(nullptr),
 		m_bTickEnabled(true),
 		m_bVisible(true),
-		m_bVisibleInGame(true)
+		m_bVisibleInGame(true),
+		m_Parent(nullptr)
 	{
 	}
 
@@ -50,9 +52,31 @@ namespace Ion
 		}
 	}
 
+	void Entity::AddChild(Entity* child)
+	{
+		m_Children.push_back(child);
+	}
+
+	void Entity::RemoveChild(Entity* child)
+	{
+		auto it = std::find(m_Children.begin(), m_Children.end(), child);
+		if (it != m_Children.end())
+			m_Children.erase(it);
+	}
+
 	void Entity::AttachTo(Entity* parent)
 	{
+		// Update children in parents
+
+		if (m_Parent)
+			m_Parent->RemoveChild(this);
+
+		if (parent)
+			parent->AddChild(this);
+
+		// Parent can be null
 		m_Parent = parent;
-		m_WorldContext->AttachEntityToParent(this, parent);
+		
+		m_WorldContext->ReparentEntityInWorld(this, parent);
 	}
 }

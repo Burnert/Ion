@@ -17,7 +17,7 @@
 #include "Core/CoreMacros.h"
 #include "Core/CoreTypes.h"
 #include "Core/CoreUtility.h"
-//#include "Core/Container/Tree.h"
+#include "Core/Container/Tree.h"
 #include "Core/Math/Math.h"
 #include "Core/Math/Transform.h"
 #include "Core/Math/Rotator.h"

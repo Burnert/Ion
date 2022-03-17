@@ -11,6 +11,8 @@ namespace Editor
 	class EDITOR_API EditorLayer : public Layer
 	{
 	public:
+		using WorldTreeNode = TTreeNode<WorldTreeNodeData>;
+
 		EditorLayer(const char* name);
 
 	protected:
@@ -31,8 +33,8 @@ namespace Editor
 		void DrawContentBrowser();
 
 		void DrawWorldTreePanel();
-		void DrawWorldTreeNodes(const WorldTree& worldTree);
-		void DrawWorldTreeNodeChildren(WorldTree::NodeRef node);
+		void DrawWorldTreeNodes();
+		void DrawWorldTreeNodeChildren(const WorldTreeNode& node);
 
 		void DrawDetailsPanel();
 		void DrawDetailsNameSection(Entity* entity);
@@ -73,6 +75,8 @@ namespace Editor
 			TMemberEventFunction<EditorLayer, KeyReleasedEvent,           &OnKeyReleasedEvent>
 		>;
 		EventDispatcher<EventFunctions, EditorLayer> m_EventDispatcher;
+
+		//WorldTree m_WorldTree;
 
 		TShared<Texture> m_ViewportFramebuffer;
 		UVector2 m_ViewportSize;

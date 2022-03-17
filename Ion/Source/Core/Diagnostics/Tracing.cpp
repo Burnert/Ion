@@ -71,7 +71,9 @@ namespace Ion
 	void DebugTracing::StartSessionRecording()
 	{
 		ionassert(HasSessionStarted());
-		ionassert(!IsSessionRecording());
+
+		if (IsSessionRecording())
+			return;
 
 		UniqueLock lock(s_SessionMutex);
 		s_bSessionRecording = true;
@@ -80,7 +82,10 @@ namespace Ion
 	void DebugTracing::StopSessionRecording()
 	{
 		ionassert(HasSessionStarted());
-		ionassert(IsSessionRecording());
+
+		if (!IsSessionRecording())
+			return;
+
 		{
 			UniqueLock lock(s_SessionMutex);
 			s_bSessionRecording = false;

@@ -35,6 +35,9 @@ namespace Ion
 		void SetName(const String& name);
 		const String& GetName() const;
 
+		/* Returns null if the Entity is parented to the World root. */
+		Entity* GetParent() const;
+		/* If the parent paremeter is null, the Entity will be parented to the World root. */
 		void AttachTo(Entity* parent);
 
 		/* Returns the GUID of the Entity.
@@ -61,13 +64,20 @@ namespace Ion
 		virtual void OnDestroy() { }
 
 	private:
+		void AddChild(Entity* child);
+		void RemoveChild(Entity* child);
+
+	private:
 		GUID m_GUID;
 
 		World* m_WorldContext;
 
 		Transform m_Transform;
+
 		THashSet<Component*> m_Components;
+
 		Entity* m_Parent;
+		TArray<Entity*> m_Children;
 
 		uint8 m_bTickEnabled : 1;
 		uint8 m_bVisible : 1;
@@ -159,6 +169,11 @@ namespace Ion
 	inline const String& Entity::GetName() const
 	{
 		return m_Name;
+	}
+
+	inline Entity* Entity::GetParent() const
+	{
+		return m_Parent;
 	}
 
 	inline const GUID& Entity::GetGuid() const

@@ -253,8 +253,6 @@ namespace Ion
 	void DX11::PrintDebugMessages()
 	{
 #if ION_DEBUG
-		TRACE_FUNCTION();
-
 		if (!s_DebugInfoQueue || !s_DebugInfoQueue->GetNumStoredMessages(DXGI_DEBUG_ALL))
 			return;
 
@@ -297,8 +295,6 @@ namespace Ion
 	void DX11::PrepareDebugMessageQueue()
 	{
 #if ION_DEBUG
-		TRACE_FUNCTION();
-
 		if (!s_DebugInfoQueue)
 			return;
 

@@ -43,6 +43,11 @@ struct TMetaPointer
 		return m_MetaBits;
 	}
 
+	NODISCARD inline uint16 GetMetaBitsValue() const
+	{
+		return m_MetaBits;
+	}
+
 	template<size_t Flag>
 	inline void SetMetaFlag(bool bValue)
 	{
@@ -50,7 +55,7 @@ struct TMetaPointer
 
 		uint16 bit  = 1 << (15 - Flag);
 		uint16 mask = ~bit;
-		m_MetaBits  = (m_MetaBits & mask) | bit;
+		m_MetaBits  = (m_MetaBits & mask) | (bValue ? bit : 0);
 	}
 
 	template<size_t Flag>

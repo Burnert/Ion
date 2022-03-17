@@ -6,6 +6,74 @@
 namespace Ion
 {
 	class Entity;
+	class World;
+
+	struct WorldTreeFolder
+	{
+		String Name;
+	};
+
+	struct WorldTreeNodeData
+	{
+		inline Entity* AsEntity() const
+		{
+			return (Entity*)m_Pointer.Get();
+		}
+
+		inline WorldTreeFolder* AsFolder() const
+		{
+			return (WorldTreeFolder*)m_Pointer.Get();
+		}
+
+		inline bool IsFolder() const
+		{
+			return m_Pointer.GetMetaFlag<0>();
+		}
+
+		inline WorldTreeNodeData(Entity* entity) :
+			m_Pointer((uint8*)entity)
+		{
+			m_Pointer.SetMetaFlag<0>(false);
+		}
+
+		inline WorldTreeNodeData(WorldTreeFolder* folder) :
+			m_Pointer((uint8*)folder)
+		{
+			m_Pointer.SetMetaFlag<0>(true);
+		}
+
+		// Root node
+		inline WorldTreeNodeData() :
+			m_Pointer(nullptr)
+		{
+			m_Pointer.SetMetaFlag<0>(true);
+		}
+
+	private:
+		TMetaPointer<uint8> m_Pointer;
+	};
+
+	struct WorldTreeFindNodeByEntityPred
+	{
+		WorldTreeFindNodeByEntityPred(Entity* entity) : m_Entity(entity) { }
+
+		bool operator()(WorldTreeNodeData& nodeData)
+		{
+			if (nodeData.IsFolder())
+				return false;
+			return nodeData.AsEntity() == m_Entity;
+		}
+
+	private:
+		Entity* m_Entity;
+	};
+
+	enum class EWorldStructureChangedEventType
+	{
+		EntityAdded = 1,
+		EntityRemoved = 2,
+		EntityMoved = 3,
+	};
 
 	struct WorldInitializer
 	{
@@ -16,7 +84,10 @@ namespace Ion
 	{
 	public:
 		using EntityArray = TArray<Entity*>;
-		using EntitySet = THashSet<Entity*>;
+		using EntitySet   = THashSet<Entity*>;
+
+		using WorldTreeNodeFactory = TTreeNodeFactory<WorldTreeNodeData>;
+		using WorldTreeNode        = TTreeNode<WorldTreeNodeData>;
 
 	protected:
 		static World* Create(const WorldInitializer& initializer);
@@ -30,11 +101,11 @@ namespace Ion
 		void AddEntity(Entity* entity);
 		void RemoveEntity(Entity* entity);
 
-		void AttachEntityToParent(Entity* entity, Entity* parent);
-
-		const WorldTree& GetWorldTree() const;
+		void ReparentEntityInWorld(Entity* entity, Entity* parent);
 
 		Scene* GetScene() const;
+
+		WorldTreeNode& GetWorldTreeRoot();
 
 		ComponentRegistry& GetComponentRegistry();
 
@@ -57,12 +128,18 @@ namespace Ion
 		World();
 		~World();
 
+		void AddChildEntity(Entity* child);
+		void RemoveChildEntity(Entity* child);
+
 	private:
 		GUID m_WorldGUID;
 
 		ComponentRegistry m_ComponentRegistry;
 		EntitySet m_Entities; // World is the owner of the entities
-		WorldTree m_WorldTree;
+		EntityArray m_ChildEntities;
+
+		WorldTreeNodeFactory m_WorldTreeNodeFactory;
+		WorldTreeNode m_WorldTreeRoot;
 
 		Scene* m_Scene; // World is the owner of the scene
 
@@ -80,11 +157,6 @@ namespace Ion
 		EntityT* entity = new EntityT(Forward<Args>(args)...);
 		AddEntity(entity);
 		return entity;
-	}
-
-	inline const WorldTree& World::GetWorldTree() const
-	{
-		return m_WorldTree;
 	}
 
 	inline Scene* World::GetScene() const

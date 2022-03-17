@@ -13,6 +13,7 @@
 #include "Engine/Components/LightComponent.h"
 #include "Engine/Components/DirectionalLightComponent.h"
 
+#include "Core/Container/OldTree.h"
 #include "Core/Container/Tree.h"
 #include "Core/Memory/PoolAllocator.h"
 
@@ -105,10 +106,10 @@ namespace Editor
 		lightEntity->AttachTo(entity);
 		// @TODO: Continue this attachment thing and the world tree (iterator)
 
-		const WorldTree& worldTree = m_EditorMainWorld->GetWorldTree();
-		worldTree.LogTree();
+		//const WorldTree& worldTree = m_EditorMainWorld->GetWorldTree();
+		//worldTree.LogTree();
 
-		if (0)
+		if (1)
 		{
 			for (int32 i = 0; i < g_nHarnasSqrt * g_nHarnasSqrt; ++i)
 			{
@@ -128,7 +129,7 @@ namespace Editor
 			}
 		}
 
-		if (1)
+		if (0)
 		{
 			using StringTree = TTree<String>;
 			StringTree tree;
@@ -156,6 +157,22 @@ namespace Editor
 			LOG_INFO(n3Str);
 			LOG_INFO(BoolStr(node32.IsElementNode()));
 			LOG_INFO(BoolStr(node31.IsElementNode()));
+		}
+
+		if (1)
+		{
+			TTreeNodeFactory<String> nodeFactory;
+			TTreeNode<String>& root = nodeFactory.Create("Root");
+			TTreeNode<String>& child0 = root.Insert(nodeFactory.Create("Child0"));
+			TTreeNode<String>& child1 = root.Insert(nodeFactory.Create("Child1"));
+			TTreeNode<String>& child2 = root.Insert(nodeFactory.Create("Child2"));
+			TTreeNode<String>& child3 = root.Insert(nodeFactory.Create("Child3"));
+			TTreeNode<String>& child4 = root.Insert(nodeFactory.Create("Child4"));
+			TTreeNode<String>& child5 = root.Insert(nodeFactory.Create("Child5"), 2);
+			nodeFactory.Destroy(root.Remove(child3));
+			child0.Insert(root.Remove(child5));
+			root.SwapNodes(0, 2);
+			root.SortNodes(std::less<String>());
 		}
 		
 		if (0)

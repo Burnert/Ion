@@ -6,6 +6,9 @@ namespace Ion
 	class Engine;
 	// World.h
 	class World;
+	struct WorldTreeFolder;
+	struct WorldTreeNodeData;
+	struct WorldTreeFindNodeByEntityPred;
 	struct WorldInitializer;
 	// WorldTree.h
 	class WorldTree;
