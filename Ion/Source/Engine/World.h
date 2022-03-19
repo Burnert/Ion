@@ -95,17 +95,28 @@ namespace Ion
 	public:
 		void SetTickEnabled(bool bTick);
 
+		/* Instantiates an entity of type EntityT and adds it to the world. */
 		template<typename EntityT, typename... Args>
 		EntityT* SpawnEntityOfClass(Args&&... args);
+		/* Instantiates an entity of type EntityT, adds it to the world and parents it to the specified entity. */
+		template<typename EntityT, typename... Args>
+		EntityT* SpawnAndAttachEntityOfClass(Entity* attachTo, Args&&... args);
 
 		void AddEntity(Entity* entity);
+		void AddEntity(Entity* entity, Entity* attachTo);
 		void RemoveEntity(Entity* entity);
+		bool DoesOwnEntity(Entity* entity) const;
 
 		void ReparentEntityInWorld(Entity* entity, Entity* parent);
 
 		Scene* GetScene() const;
 
 		WorldTreeNode& GetWorldTreeRoot();
+		/* Returns nullptr if the node does not exist. */
+		WorldTreeNode* FindWorldTreeNode(Entity* entity) const;
+		WorldTreeNode& InsertWorldTreeNode(Entity* entity);
+		WorldTreeNode& InsertWorldTreeNode(Entity* entity, WorldTreeNode& parent);
+		void RemoveWorldTreeNode(Entity* entity);
 
 		ComponentRegistry& GetComponentRegistry();
 
@@ -140,6 +151,7 @@ namespace Ion
 
 		WorldTreeNodeFactory m_WorldTreeNodeFactory;
 		WorldTreeNode m_WorldTreeRoot;
+		THashMap<Entity*, WorldTreeNode*> m_EntityToWorldTreeNodeMap;
 
 		Scene* m_Scene; // World is the owner of the scene
 
@@ -156,6 +168,14 @@ namespace Ion
 		// @TODO: Use some sort of an allocator here
 		EntityT* entity = new EntityT(Forward<Args>(args)...);
 		AddEntity(entity);
+		return entity;
+	}
+
+	template<typename EntityT, typename ...Args>
+	inline EntityT* World::SpawnAndAttachEntityOfClass(Entity* attachTo, Args&& ...args)
+	{
+		EntityT* entity = new EntityT(Forward<Args>(args)...);
+		AddEntity(entity, attachTo);
 		return entity;
 	}
 

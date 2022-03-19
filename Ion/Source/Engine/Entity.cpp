@@ -66,6 +66,14 @@ namespace Ion
 
 	void Entity::AttachTo(Entity* parent)
 	{
+		if (m_Parent == parent)
+		{
+			LOG_WARN("The entity is already attached to {0} ({{{1}}}).",
+				m_Parent->GetName(),
+				m_Parent->GetGuid().ToString());
+			return;
+		}
+
 		// Update children in parents
 
 		if (m_Parent)

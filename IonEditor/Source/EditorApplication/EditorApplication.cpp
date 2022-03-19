@@ -93,7 +93,7 @@ namespace Editor
 		entity->SetTransform(Transform(Vector3(0.0f, -1.0f, 0.0f), Rotator(Vector3(-90.0f, 0.0f, 0.0f))));
 		entity->SetName("Mesh");
 
-		Entity* lightEntity = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
+		Entity* lightEntity = m_EditorMainWorld->SpawnAndAttachEntityOfClass<Entity>(entity);
 		lightEntity->AddComponent(m_TestLightComponent);
 		lightEntity->SetLocation(Vector3(0.0f, 1.0f, 0.0f));
 		lightEntity->SetName("Light");
@@ -103,13 +103,10 @@ namespace Editor
 		dirLightEntity->SetRotation(Rotator({ -60.0f, 0.0f, 0.0f }));
 		dirLightEntity->SetName("DirectionalLight");
 
-		lightEntity->AttachTo(entity);
-		// @TODO: Continue this attachment thing and the world tree (iterator)
-
 		//const WorldTree& worldTree = m_EditorMainWorld->GetWorldTree();
 		//worldTree.LogTree();
 
-		if (1)
+		if (0)
 		{
 			for (int32 i = 0; i < g_nHarnasSqrt * g_nHarnasSqrt; ++i)
 			{

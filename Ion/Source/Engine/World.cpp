@@ -79,14 +79,40 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		ionassert(entity);
-		ionassert(m_Entities.find(entity) == m_Entities.end(), "Entity already exists in the world.");
+		ionassert(!DoesOwnEntity(entity), "Entity already exists in the world.");
 
 		InitEntity(entity);
 
+		// Insert the entity to collections
 		m_Entities.insert(entity);
 		AddChildEntity(entity);
+		InsertWorldTreeNode(entity);
+	}
 
-		m_WorldTreeRoot.Insert(m_WorldTreeNodeFactory.Create(WorldTreeNodeData(entity)));
+	void World::AddEntity(Entity* entity, Entity* attachTo)
+	{
+		TRACE_FUNCTION();
+
+		if (!attachTo)
+			AddEntity(entity);
+
+		ionassert(entity);
+		ionassert(!DoesOwnEntity(entity), "Entity already exists in the world.");
+
+		WorldTreeNode* parentNode = FindWorldTreeNode(attachTo);
+		ionassertnd(parentNode, "Entity to attach to doesn't exist in the world.");
+
+		Entity* parent = parentNode->Get().AsEntity();
+
+		InitEntity(entity);
+
+		// Insert the entity to collections
+		m_Entities.insert(entity);
+		InsertWorldTreeNode(entity, *parentNode);
+
+		// Update entities
+		parent->AddChild(entity);
+		entity->m_Parent = parent;
 	}
 
 	void World::RemoveEntity(Entity* entity)
@@ -94,32 +120,36 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		ionassert(entity);
-		ionassert(m_Entities.find(entity) != m_Entities.end(), "Entity doesn't exist in the world.");
+		ionassert(DoesOwnEntity(entity), "Entity doesn't exist in the world.");
 
 		m_Entities.erase(entity);
 		RemoveChildEntity(entity);
 
-		WorldTreeNode* node = m_WorldTreeRoot.FindNodeRecursiveDF(WorldTreeFindNodeByEntityPred(entity));
-		ionassertnd(node, "The entity was not in the world tree.");
-
-		m_WorldTreeNodeFactory.Destroy(node->RemoveFromParent());
+		RemoveWorldTreeNode(entity);
 
 		// The world owns the entity, so it should delete it.
 		delete entity;
 	}
 
+	bool World::DoesOwnEntity(Entity* entity) const
+	{
+		return m_Entities.find(entity) != m_Entities.end();
+	}
+
 	void World::ReparentEntityInWorld(Entity* entity, Entity* parent)
 	{
+		TRACE_FUNCTION();
+
 		ionassert(entity);
 
 		// Find the nodes
-		WorldTreeNode* entityNode = m_WorldTreeRoot.FindNodeRecursiveDF(WorldTreeFindNodeByEntityPred(entity));
+		WorldTreeNode* entityNode = FindWorldTreeNode(entity);
 		ionassertnd(entityNode, "The entity is not in the world tree.");
 
 		WorldTreeNode* parentNode = &m_WorldTreeRoot;
 		if (parent)
 		{
-			parentNode = m_WorldTreeRoot.FindNodeRecursiveDF(WorldTreeFindNodeByEntityPred(parent));
+			parentNode = FindWorldTreeNode(parent);
 			ionassertnd(parentNode, "The parent entity is not in the world tree.");
 
 			RemoveChildEntity(entity);
@@ -131,6 +161,42 @@ namespace Ion
 
 		// Reparent in world tree
 		parentNode->Insert(entityNode->RemoveFromParent());
+	}
+
+	World::WorldTreeNode* World::FindWorldTreeNode(Entity* entity) const
+	{
+		auto it = m_EntityToWorldTreeNodeMap.find(entity);
+		if (it != m_EntityToWorldTreeNodeMap.end())
+		{
+			return it->second;
+		}
+		return nullptr;
+	}
+
+	World::WorldTreeNode& World::InsertWorldTreeNode(Entity* entity)
+	{
+		return InsertWorldTreeNode(entity, m_WorldTreeRoot);
+	}
+
+	World::WorldTreeNode& World::InsertWorldTreeNode(Entity* entity, WorldTreeNode& parent)
+	{
+		TRACE_FUNCTION();
+
+		ionassert(!FindWorldTreeNode(entity), "The node for that entity already exists.");
+
+		WorldTreeNode& node = parent.Insert(m_WorldTreeNodeFactory.Create(WorldTreeNodeData(entity)));
+		m_EntityToWorldTreeNodeMap.insert({entity, &node});
+		return node;
+	}
+
+	void World::RemoveWorldTreeNode(Entity* entity)
+	{
+		TRACE_FUNCTION();
+
+		WorldTreeNode* node = FindWorldTreeNode(entity);
+		ionassertnd(node, "The entity was not in the world tree.");
+
+		m_WorldTreeNodeFactory.Destroy(node->RemoveFromParent());
 	}
 
 	inline World::WorldTreeNode& World::GetWorldTreeRoot()
