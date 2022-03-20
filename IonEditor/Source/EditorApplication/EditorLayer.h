@@ -15,6 +15,8 @@ namespace Editor
 
 		EditorLayer(const char* name);
 
+		void ExpandWorldTreeToEntity(Entity* entity);
+
 	protected:
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
@@ -34,17 +36,21 @@ namespace Editor
 
 		void DrawWorldTreePanel();
 		void DrawWorldTreeNodes();
-		void DrawWorldTreeNodeChildren(const WorldTreeNode& node);
+		void DrawWorldTreeNodeChildren(const WorldTreeNode& node, WorldTreeNode* nextExpandNode = nullptr);
 
 		void DrawDetailsPanel();
-		void DrawDetailsNameSection(Entity* entity);
-		void DrawDetailsComponentTreeSection(Entity* entity);
-		void DrawDetailsTransformSection(Entity* entity);
-		void DrawDetailsRenderingSection(Entity* entity);
+		void DrawDetailsNameSection(Entity& entity);
+		void DrawDetailsRelationsSection(Entity& entity);
+		void DrawDetailsRelationsChildrenSection(Entity& entity);
+		void DrawDetailsComponentTreeSection(Entity& entity);
+		void DrawDetailsTransformSection(Entity& entity);
+		void DrawDetailsRenderingSection(Entity& entity);
 
 		void DrawDiagnosticsPanel();
 
 		// End of UI drawing related functions
+
+		WorldTreeNode* PopWorldTreeExpandChain();
 
 		bool IsMouseInViewportRect() const;
 		bool CanCaptureViewport() const;
@@ -76,7 +82,7 @@ namespace Editor
 		>;
 		EventDispatcher<EventFunctions, EditorLayer> m_EventDispatcher;
 
-		//WorldTree m_WorldTree;
+		TArray<WorldTreeNode*> m_ExpandWorldTreeChain;
 
 		TShared<Texture> m_ViewportFramebuffer;
 		UVector2 m_ViewportSize;

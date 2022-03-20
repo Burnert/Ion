@@ -271,16 +271,22 @@ namespace Editor
 	{
 		TRACE_FUNCTION();
 
-		DrawWorldTreeNodeChildren(EditorApplication::Get()->GetEditorWorld()->GetWorldTreeRoot());
+		WorldTreeNode* firstExpandNode = PopWorldTreeExpandChain();
+		DrawWorldTreeNodeChildren(EditorApplication::Get()->GetEditorWorld()->GetWorldTreeRoot(), firstExpandNode);
+		// Clear the expand chain just in case
+		if (!m_ExpandWorldTreeChain.empty())
+			m_ExpandWorldTreeChain.clear();
 	}
 
-	void EditorLayer::DrawWorldTreeNodeChildren(const WorldTreeNode& node)
+	void EditorLayer::DrawWorldTreeNodeChildren(const WorldTreeNode& node, WorldTreeNode* nextExpandNode)
 	{
 		TRACE_FUNCTION();
 
 		int64 imguiNodeIndex = 0;
 		for (const WorldTreeNode* child : node.GetChildren())
 		{
+			ionassert(child);
+
 			const WorldTreeNodeData& nodeData = child->Element();
 
 			bool bIsFolder = nodeData.IsFolder();
@@ -291,7 +297,9 @@ namespace Editor
 			ImGuiTreeNodeFlags imguiNodeFlags =
 				ImGuiTreeNodeFlags_OpenOnArrow |
 				ImGuiTreeNodeFlags_OpenOnDoubleClick |
-				ImGuiTreeNodeFlags_SpanAvailWidth;
+				ImGuiTreeNodeFlags_SpanAvailWidth |
+				ImGuiTreeNodeFlags_FramePadding;
+			// It shouldn't expand if there are no children
 			if (!bHasChildren)
 			{
 				imguiNodeFlags |=
@@ -313,19 +321,36 @@ namespace Editor
 				{
 					imguiNodeFlags |= ImGuiTreeNodeFlags_Selected;
 				}
+
+				// Expand (open) the tree node if it is in the expand chain
+				if (nextExpandNode == child)
+				{
+					ImGui::SetNextItemOpen(true);
+					// And get the next node to expand
+					nextExpandNode = PopWorldTreeExpandChain();
+				}
 			}
 
-			bool bImguiTreeNodeOpen = ImGui::TreeNodeEx((void*)imguiNodeIndex++, imguiNodeFlags, "%s", nodeName.c_str());
+			void* nodeId = (void*)imguiNodeIndex++;
+			// Retrieve the previous state of the tree node
+			bool bWasOpen = (bool)ImGui::GetStateStorage()->GetInt(ImGui::GetID(nodeId));
 
-			// Select entity on click
-			if (entity && ImGui::IsItemClicked())
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 4.0f));
+			bool bImguiTreeNodeOpen = ImGui::TreeNodeEx(nodeId, imguiNodeFlags, "%s", nodeName.c_str());
+			ImGui::PopStyleVar(2);
+
+			// Select entity on click, only if the state of the node has not changed
+			// (unless it has no children, since the state won't change then).
+			if ((!bHasChildren || (bWasOpen == bImguiTreeNodeOpen)) &&
+				entity && ImGui::IsItemClicked())
 			{
-				EditorApplication::Get()->SetSelectedEntity(const_cast<Entity*>(entity));
+				EditorApplication::Get()->SetSelectedEntity(entity);
 			}
 
 			if (bHasChildren && bImguiTreeNodeOpen)
 			{
-				DrawWorldTreeNodeChildren(*child);
+				DrawWorldTreeNodeChildren(*child, nextExpandNode);
 				ImGui::TreePop();
 			}
 		}
@@ -346,13 +371,12 @@ namespace Editor
 
 					ImGui::PushID("Details");
 
-					DrawDetailsNameSection(selectedEntity);
-
+					DrawDetailsNameSection(*selectedEntity);
+					DrawDetailsRelationsSection(*selectedEntity);
 					ImGui::Separator();
-
-					DrawDetailsComponentTreeSection(selectedEntity);
-					DrawDetailsTransformSection(selectedEntity);
-					DrawDetailsRenderingSection(selectedEntity);
+					DrawDetailsComponentTreeSection(*selectedEntity);
+					DrawDetailsTransformSection(*selectedEntity);
+					DrawDetailsRenderingSection(*selectedEntity);
 
 					if (selectedComponent)
 					{
@@ -374,7 +398,7 @@ namespace Editor
 		}
 	}
 
-	void EditorLayer::DrawDetailsNameSection(Entity* entity)
+	void EditorLayer::DrawDetailsNameSection(Entity& entity)
 	{
 		TRACE_FUNCTION();
 
@@ -384,16 +408,108 @@ namespace Editor
 			ImGuiInputTextFlags_EnterReturnsTrue;
 
 		char name[128] = { };
-		strcpy_s(name, entity->GetName().c_str());
+		strcpy_s(name, entity.GetName().c_str());
 		if (ImGui::InputText("Entity Name", name, sizeof(name), imguiInputTextFlags))
 		{
-			entity->SetName(name);
+			entity.SetName(name);
 		}
 
 		ImGui::PopID();
 	}
 
-	void EditorLayer::DrawDetailsComponentTreeSection(Entity* entity)
+	void EditorLayer::DrawDetailsRelationsSection(Entity& entity)
+	{
+		TRACE_FUNCTION();
+
+		ImGui::PushID("Relations");
+
+		if (ImGui::CollapsingHeaderUnframed("Relations"))
+		{
+			// Parent
+
+			Entity* parent = entity.GetParent();
+			const String& parentNameStr = parent ? parent->GetName() : "None";
+
+			ImGui::Indent();
+			ImGui::Text("Parent");
+			ImGui::SameLine(120);
+			if (parent)
+			{
+				ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.2f, 1.0f), "%s", parentNameStr.c_str());
+				ImGui::SameLine();
+				if (ImGui::SmallButton("Select"))
+				{
+					EditorApplication::Get()->SetSelectedEntity(parent);
+					ExpandWorldTreeToEntity(parent);
+				}
+			}
+			else
+			{
+				ImGui::TextDisabled("%s", parentNameStr.c_str());
+			}
+			ImGui::Unindent();
+
+			// Children
+
+			if (entity.HasChildren())
+			{
+				ImGuiTreeNodeFlags flags =
+					ImGuiTreeNodeFlags_NoTreePushOnOpen |
+					ImGuiTreeNodeFlags_DefaultOpen;
+				bool bOpen = ImGui::TreeNodeEx("Children", flags);
+				ImGui::SameLine(120);
+				ImGui::Text("(%llu)", entity.GetChildren().size());
+				if (bOpen)
+				{
+					DrawDetailsRelationsChildrenSection(entity);
+				}
+			}
+			else
+			{
+				ImGui::Indent();
+				ImGui::Text("Children");
+				ImGui::SameLine(120);
+				ImGui::TextDisabled("None");
+				ImGui::Unindent();
+			}
+		}
+
+		ImGui::PopID();
+	}
+
+	void EditorLayer::DrawDetailsRelationsChildrenSection(Entity& entity)
+	{
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.0f, 2.0f));
+		if (ImGui::BeginChild("children_list", ImVec2(-FLT_MIN, 4 * ImGui::GetTextLineHeightWithSpacing()), true))
+		{
+			ImGuiStyle& style = ImGui::GetStyle();
+			const TArray<Entity*>& children = entity.GetChildren();
+			int32 index = 0;
+			for (Entity* child : children)
+			{
+				ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+
+				ImGui::AlignTextToFramePadding();
+				ImGui::Text("%s", child->GetName().c_str());
+				ImGui::SameLine();
+
+				ImVec2 selectSize = ImGui::CalcTextSize("Select");
+				ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.0f, 2.0f));
+				ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - selectSize.x - style.FramePadding.x);
+				String selectLabel = "Select"s + "##" + ToString(index++);
+				if (ImGui::Button(selectLabel.c_str()))
+				{
+					EditorApplication::Get()->SetSelectedEntity(child);
+					ExpandWorldTreeToEntity(child);
+				}
+				ImGui::PopStyleVar(2);
+			}
+			ImGui::EndChild();
+		}
+		ImGui::PopStyleVar();
+	}
+
+	void EditorLayer::DrawDetailsComponentTreeSection(Entity& entity)
 	{
 		TRACE_FUNCTION();
 
@@ -410,7 +526,7 @@ namespace Editor
 		}
 	}
 
-	void EditorLayer::DrawDetailsTransformSection(Entity* entity)
+	void EditorLayer::DrawDetailsTransformSection(Entity& entity)
 	{
 		TRACE_FUNCTION();
 
@@ -418,7 +534,7 @@ namespace Editor
 		{
 			ImGui::PushID("Transform");
 
-			const Transform& currentTransform = entity->GetTransform();
+			const Transform& currentTransform = entity.GetTransform();
 
 			Vector3 location       = currentTransform.GetLocation();
 			Vector3 rotationAngles = currentTransform.GetRotation().Angles();
@@ -432,14 +548,14 @@ namespace Editor
 			if (bChanged)
 			{
 				Transform newTransform = { location, Rotator(rotationAngles), scale };
-				entity->SetTransform(newTransform);
+				entity.SetTransform(newTransform);
 			}
 
 			ImGui::PopID();
 		}
 	}
 
-	void EditorLayer::DrawDetailsRenderingSection(Entity* entity)
+	void EditorLayer::DrawDetailsRenderingSection(Entity& entity)
 	{
 		TRACE_FUNCTION();
 
@@ -447,16 +563,16 @@ namespace Editor
 		{
 			ImGui::PushID("Rendering");
 
-			bool bVisible = entity->IsVisible();
-			bool bVisibleInGame = entity->IsVisibleInGame();
+			bool bVisible = entity.IsVisible();
+			bool bVisibleInGame = entity.IsVisibleInGame();
 
 			if (ImGui::Checkbox("Visible", &bVisible))
 			{
-				entity->SetVisible(bVisible);
+				entity.SetVisible(bVisible);
 			}
 			if (ImGui::Checkbox("Visible in game", &bVisibleInGame))
 			{
-				entity->SetVisibleInGame(bVisibleInGame);
+				entity.SetVisibleInGame(bVisibleInGame);
 			}
 
 			ImGui::PopID();
@@ -482,6 +598,26 @@ namespace Editor
 
 			ImGui::End();
 		}
+	}
+
+	void EditorLayer::ExpandWorldTreeToEntity(Entity* entity)
+	{
+		ionassert(entity);
+
+		WorldTreeNode* node = EditorApplication::Get()->GetEditorWorld()->FindWorldTreeNode(entity);
+		// Don't include the tree root
+		while ((node = node->GetParent()) && node->HasParent())
+		{
+			m_ExpandWorldTreeChain.push_back(node);
+		}
+	}
+
+	EditorLayer::WorldTreeNode* EditorLayer::PopWorldTreeExpandChain()
+	{
+		WorldTreeNode* node = !m_ExpandWorldTreeChain.empty() ? m_ExpandWorldTreeChain.back() : nullptr;
+		if (node)
+			m_ExpandWorldTreeChain.pop_back();
+		return node;
 	}
 
 	bool EditorLayer::IsMouseInViewportRect() const

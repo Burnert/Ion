@@ -177,6 +177,11 @@ struct TTreeNode
 		return m_Parent;
 	}
 
+	inline bool HasParent() const
+	{
+		return (bool)m_Parent;
+	}
+
 private:
 	inline TTreeNode(const ElementType& element) :
 		m_Element(element),

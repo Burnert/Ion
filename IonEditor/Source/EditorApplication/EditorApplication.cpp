@@ -103,6 +103,13 @@ namespace Editor
 		dirLightEntity->SetRotation(Rotator({ -60.0f, 0.0f, 0.0f }));
 		dirLightEntity->SetName("DirectionalLight");
 
+		for (int32 i = 0; i < 6; i++)
+		{
+			Entity* childEntity = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
+			childEntity->SetName(String("Test") + ToString(i));
+			childEntity->AttachTo(lightEntity);
+		}
+
 		//const WorldTree& worldTree = m_EditorMainWorld->GetWorldTree();
 		//worldTree.LogTree();
 

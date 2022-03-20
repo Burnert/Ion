@@ -40,6 +40,9 @@ namespace Ion
 		/* If the parent paremeter is null, the Entity will be parented to the World root. */
 		void AttachTo(Entity* parent);
 
+		bool HasChildren() const;
+		const TArray<Entity*>& GetChildren() const;
+
 		/* Returns the GUID of the Entity.
 		   A GUID is initiated at the creation of the Entity. */
 		const GUID& GetGuid() const;
@@ -174,6 +177,16 @@ namespace Ion
 	inline Entity* Entity::GetParent() const
 	{
 		return m_Parent;
+	}
+
+	inline bool Entity::HasChildren() const
+	{
+		return !m_Children.empty();
+	}
+
+	inline const TArray<Entity*>& Entity::GetChildren() const
+	{
+		return m_Children;
 	}
 
 	inline const GUID& Entity::GetGuid() const

@@ -47,6 +47,9 @@ using TStringView  = WStringView;
 using TStringView  = StringView;
 #endif
 
+// Use the string literals globally
+using namespace std::string_literals;
+
 // Memory
 
 using std::align_val_t;

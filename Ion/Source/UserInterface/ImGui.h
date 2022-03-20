@@ -49,4 +49,9 @@ namespace ImGui
 	}
 
 	IMGUI_API Ion::Vector4 GetWindowWorkRect();
+
+	// Widgets
+
+	IMGUI_API bool CollapsingHeaderUnframed(const char* label, ImGuiTreeNodeFlags flags = 0);
+	IMGUI_API bool CollapsingHeaderUnframed(const char* label, bool* p_visible, ImGuiTreeNodeFlags flags = 0);
 }
