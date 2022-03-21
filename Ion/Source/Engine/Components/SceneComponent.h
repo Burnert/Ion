@@ -4,6 +4,20 @@
 
 namespace Ion
 {
+	struct SceneComponentData
+	{
+		Transform Transform;
+		uint8 bVisible : 1;
+		uint8 bVisibleInGame : 1;
+
+		SceneComponentData() :
+			bVisible(true),
+			bVisibleInGame(true)
+		{
+		}
+	};
+
+	/* Abstract class */
 	class ION_API SceneComponent : public Component
 	{
 	public:
@@ -27,10 +41,48 @@ namespace Ion
 
 		Transform GetWorldTransform() const;
 
+		void AttachTo(SceneComponent* parent);
+		void Detach();
+		SceneComponent* GetParent() const;
+		const TArray<SceneComponent*>& GetChildren() const;
+		TArray<SceneComponent*> GetAllDescendants() const;
+
 	protected:
 		SceneComponent();
 
 	private:
+		void AddChild(SceneComponent* component);
+		void RemoveChild(SceneComponent* component);
+		void GetAllDescendants_Internal(TArray<SceneComponent*>& outArray) const;
+
+	private:
 		SceneComponentData m_SceneData;
+
+		SceneComponent* m_Parent;
+		TArray<SceneComponent*> m_Children;
 	};
+
+	class EmptySceneComponent final : public SceneComponent
+	{
+		ENTITY_COMPONENT_CLASS_BODY()
+
+	private:
+		EmptySceneComponent();
+	};
+
+	template<>
+	struct ComponentTypeDefaults<EmptySceneComponent>
+	{
+		static constexpr const char* Name = "EmptySceneComponent";
+	};
+
+	inline SceneComponent* SceneComponent::GetParent() const
+	{
+		return m_Parent;
+	}
+
+	inline const TArray<SceneComponent*>& SceneComponent::GetChildren() const
+	{
+		return m_Children;
+	}
 }

@@ -146,6 +146,7 @@ namespace Ion
 		GUID m_WorldGUID;
 
 		ComponentRegistry m_ComponentRegistry;
+
 		EntitySet m_Entities; // World is the owner of the entities
 		EntityArray m_ChildEntities;
 

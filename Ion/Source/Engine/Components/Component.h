@@ -102,19 +102,7 @@ namespace Ion
 	DECLARE_COMPONENT_CALLBACK(Tick, float)
 	DECLARE_COMPONENT_CALLBACK(BuildRendererData, RRendererData&)
 
-	struct SceneComponentData
-	{
-		Transform Transform;
-		uint8 bVisible : 1;
-		uint8 bVisibleInGame : 1;
-
-		SceneComponentData() :
-			bVisible(true),
-			bVisibleInGame(true)
-		{
-		}
-	};
-
+	/* Abstract class */
 	class ION_API Component
 	{
 	public:
@@ -195,10 +183,10 @@ namespace Ion
 
 		template<typename CompT>
 		void DestroyComponent(CompT* component);
-
+		// Does nothing
 		template<typename CompT>
 		void BindComponentToEntity(Entity* entity, CompT* component) {}
-
+		// Does nothing
 		template<typename CompT>
 		void UnbindComponentFromEntity(Entity* entity, CompT* component) {}
 

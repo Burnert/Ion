@@ -5,6 +5,12 @@ namespace Ion
 	class ION_API Entity
 	{
 	public:
+		//using ComponentTreeNodeFactory = TTreeNodeFactory<Component*, 32>;
+		//using ComponentTreeNode        = TTreeNode<Component*>;
+		//using ComponentNodeMap         = THashMap<Component*, ComponentTreeNode*>;
+
+		using ComponentSet = THashSet<Component*>;
+
 		Entity();
 		Entity(const GUID& guid);
 
@@ -20,6 +26,8 @@ namespace Ion
 		void SetScale(const Vector3& scale);
 		const Vector3& GetScale() const;
 
+		Transform GetWorldTransform() const;
+
 		void SetVisible(bool bVisible);
 		bool IsVisible() const;
 
@@ -29,8 +37,17 @@ namespace Ion
 		void SetTickEnabled(bool bTick);
 		bool IsTickEnabled() const;
 
+		void SetRootComponent(SceneComponent* component);
+		SceneComponent* GetRootComponent() const;
+		bool HasSceneComponent(SceneComponent* component) const;
+
+		/* Adds a non-scene component */
 		void AddComponent(Component* component);
+		/* Removes a non-scene component */
 		void RemoveComponent(Component* component);
+		bool HasNonSceneComponent(Component* component) const;
+
+		bool HasComponent(Component* component) const;
 
 		void SetName(const String& name);
 		const String& GetName() const;
@@ -39,6 +56,8 @@ namespace Ion
 		Entity* GetParent() const;
 		/* If the parent paremeter is null, the Entity will be parented to the World root. */
 		void AttachTo(Entity* parent);
+		/* Parent to the World root. */
+		void Detach();
 
 		bool HasChildren() const;
 		const TArray<Entity*>& GetChildren() const;
@@ -61,32 +80,47 @@ namespace Ion
 	protected:
 		void Update(float deltaTime);
 
+		/* Call in custom entity class constructor. */
+		void SetNoCreateRootOnSpawn();
+
 	protected:
 		virtual void Tick(float deltaTime) { }
-		virtual void OnSpawn(World* worldContext) { }
+		virtual void OnSpawn(World* worldContext);
 		virtual void OnDestroy() { }
 
 	private:
 		void AddChild(Entity* child);
 		void RemoveChild(Entity* child);
 
+		/* Set entity related component data. */
+		void BindComponent(Component* component);
+		/* Reset entity related component data. */
+		void UnbindComponent(Component* component);
+
+		/* Called in any function that changes the relative transform. */
+		void UpdateWorldTransformCache();
+		void UpdateChildrenWorldTransformCache();
+
 	private:
 		GUID m_GUID;
 
 		World* m_WorldContext;
 
-		Transform m_Transform;
+		Transform m_RelativeTransform;
+		Transform m_WorldTransformCache;
 
-		THashSet<Component*> m_Components;
+		SceneComponent* m_RootComponent;
+		ComponentSet m_Components;
 
 		Entity* m_Parent;
 		TArray<Entity*> m_Children;
 
+		String m_Name;
+
+		uint8 m_bCreateEmptyRootOnSpawn : 1;
 		uint8 m_bTickEnabled : 1;
 		uint8 m_bVisible : 1;
 		uint8 m_bVisibleInGame : 1;
-
-		String m_Name;
 
 		friend class Engine;
 		friend class World;
@@ -94,44 +128,29 @@ namespace Ion
 
 	// Inline definitions
 
-	inline void Entity::SetTransform(const Transform& transform)
-	{
-		m_Transform = transform;
-	}
-
 	inline const Transform& Entity::GetTransform() const
 	{
-		return m_Transform;
-	}
-
-	inline void Entity::SetLocation(const Vector3& location)
-	{
-		m_Transform.SetLocation(location);
+		return m_RelativeTransform;
 	}
 
 	inline const Vector3& Entity::GetLocation() const
 	{
-		return m_Transform.GetLocation();
-	}
-
-	inline void Entity::SetRotation(const Rotator& rotation)
-	{
-		m_Transform.SetRotation(rotation);
+		return m_RelativeTransform.GetLocation();
 	}
 
 	inline const Rotator& Entity::GetRotation() const
 	{
-		return m_Transform.GetRotation();
-	}
-
-	inline void Entity::SetScale(const Vector3& scale)
-	{
-		m_Transform.SetScale(scale);
+		return m_RelativeTransform.GetRotation();
 	}
 
 	inline const Vector3& Entity::GetScale() const
 	{
-		return m_Transform.GetScale();
+		return m_RelativeTransform.GetScale();
+	}
+
+	inline Transform Entity::GetWorldTransform() const
+	{
+		return m_WorldTransformCache;
 	}
 
 	inline void Entity::SetVisible(bool bVisible)
@@ -162,6 +181,11 @@ namespace Ion
 	inline bool Entity::IsTickEnabled() const
 	{
 		return m_bTickEnabled;
+	}
+
+	inline SceneComponent* Entity::GetRootComponent() const
+	{
+		return m_RootComponent;
 	}
 
 	inline void Entity::SetName(const String& name)

@@ -1,6 +1,7 @@
 #include "IonPCH.h"
 
 #include "Component.h"
+#include "Engine/Entity.h"
 
 namespace Ion
 {

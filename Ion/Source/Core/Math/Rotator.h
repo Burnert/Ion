@@ -7,24 +7,24 @@ namespace Ion
 	class Rotator
 	{
 	public:
-		Rotator() :
+		inline Rotator() :
 			m_Angles(Vector3()),
-			m_Quaternion(Quaternion())
+			m_Quaternion(Quaternion(1.0f, 0.0f, 0.0f, 0.0f))
 		{ }
 
-		Rotator(const Vector3& angles) :
+		inline Rotator(const Vector3& angles) :
 			m_Angles(angles),
 			m_Quaternion(Quaternion(Math::Radians(angles)))
 		{ }
 
-		Rotator(const Quaternion& quaternion) :
+		inline Rotator(const Quaternion& quaternion) :
 			m_Quaternion(quaternion),
 			m_Angles(Math::Degrees(Math::Euler(quaternion)))
 		{ }
 
-		void Rotate(const Quaternion& quaternion)
+		inline void Rotate(const Quaternion& quaternion)
 		{
-			m_Quaternion += quaternion;
+			m_Quaternion = quaternion * m_Quaternion;
 			m_Angles = Math::Degrees(Math::Euler(m_Quaternion));
 		}
 
@@ -37,7 +37,6 @@ namespace Ion
 		{
 			Rotate(rotator.Quat());
 		}
-
 
 		inline Vector3 Forward() const
 		{
@@ -52,17 +51,17 @@ namespace Ion
 			return Math::Rotate(m_Quaternion, Vector3(0.0f, 1.0f, 0.0f));
 		}
 
-		void SetPitch(float pitch)
+		inline void SetPitch(float pitch)
 		{
 			m_Angles.x = pitch;
 			RecalcQuaternion();
 		}
-		void SetYaw(float yaw)
+		inline void SetYaw(float yaw)
 		{
 			m_Angles.y = yaw;
 			RecalcQuaternion();
 		}
-		void SetRoll(float roll)
+		inline void SetRoll(float roll)
 		{
 			m_Angles.z = roll;
 			RecalcQuaternion();
@@ -80,51 +79,51 @@ namespace Ion
 			return Rotator(Math::Inverse(m_Quaternion));
 		}
 
-		Rotator operator+(const Rotator& other) const
+		inline Rotator operator+(const Rotator& other) const
 		{
 			Rotator rot = *this;
 			rot.Rotate(other);
 			return rot;
 		}
 
-		Rotator& operator+=(const Rotator& other)
+		inline Rotator& operator+=(const Rotator& other)
 		{
 			Rotate(other);
 			return *this;
 		}
 
-		Rotator operator-(const Rotator& other) const
+		inline Rotator operator-(const Rotator& other) const
 		{
 			Rotator rot = *this;
 			rot.Rotate(-other);
 			return rot;
 		}
 
-		Rotator& operator-=(const Rotator& other)
+		inline Rotator& operator-=(const Rotator& other)
 		{
 			Rotate(-other);
 			return *this;
 		}
 
-		Rotator operator-() const
+		inline Rotator operator-() const
 		{
 			return Inverse();
 		}
 
 		/* Returns true even if some of the components are not exactly the same, 
 		   but effectively the same (e.g. 360 and 0 degrees) */
-		bool operator==(const Rotator& other) const
+		inline bool operator==(const Rotator& other) const
 		{
 			return m_Quaternion == other.m_Quaternion;
 		}
 
-		bool operator!=(const Rotator& other) const
+		inline bool operator!=(const Rotator& other) const
 		{
 			return !(*this == other);
 		}
 
 	private:
-		void RecalcQuaternion()
+		inline void RecalcQuaternion()
 		{
 			m_Quaternion = Quaternion(Math::Radians(m_Angles));
 		}

@@ -74,9 +74,9 @@ namespace Editor
 		ComponentRegistry& registry = m_EditorMainWorld->GetComponentRegistry();
 
 		m_TestMeshComponent = registry.CreateComponent<MeshComponent>();
-		GetModelDeferred(g_ExampleModels[0], [&, this]
+		GetModelDeferred(g_ExampleModels[0], [this](ExampleModelData& model)
 		{
-			m_TestMeshComponent->SetMesh(g_ExampleModels[0].Mesh);
+			m_TestMeshComponent->SetMesh(model.Mesh);
 		});
 
 		m_TestLightComponent = registry.CreateComponent<LightComponent>();
@@ -89,17 +89,17 @@ namespace Editor
 		m_TestDirLightComponent->GetDirectionalLightDataRef().Intensity = 1.0f;
 
 		Entity* entity = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
-		entity->AddComponent(m_TestMeshComponent);
+		entity->SetRootComponent(m_TestMeshComponent);
 		entity->SetTransform(Transform(Vector3(0.0f, -1.0f, 0.0f), Rotator(Vector3(-90.0f, 0.0f, 0.0f))));
 		entity->SetName("Mesh");
 
 		Entity* lightEntity = m_EditorMainWorld->SpawnAndAttachEntityOfClass<Entity>(entity);
-		lightEntity->AddComponent(m_TestLightComponent);
+		lightEntity->SetRootComponent(m_TestLightComponent);
 		lightEntity->SetLocation(Vector3(0.0f, 1.0f, 0.0f));
 		lightEntity->SetName("Light");
 
 		Entity* dirLightEntity = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
-		dirLightEntity->AddComponent(m_TestDirLightComponent);
+		dirLightEntity->SetRootComponent(m_TestDirLightComponent);
 		dirLightEntity->SetRotation(Rotator({ -60.0f, 0.0f, 0.0f }));
 		dirLightEntity->SetName("DirectionalLight");
 
@@ -110,6 +110,24 @@ namespace Editor
 			childEntity->AttachTo(lightEntity);
 		}
 
+		Entity* lastEntity = nullptr;
+		for (int32 i = 0; i < 6; ++i)
+		{
+			MeshComponent* meshComp1 = registry.CreateComponent<MeshComponent>();
+			GetModelDeferred(g_ExampleModels[i], [meshComp1, this](ExampleModelData& model)
+			{
+				meshComp1->SetMesh(model.Mesh);
+			});
+			Entity* entity1 = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
+			entity1->SetRootComponent(meshComp1);
+			entity1->SetName("Mesh_" + ToString(i));
+			if (lastEntity)
+			{
+				entity1->AttachTo(lastEntity);
+			}
+			lastEntity = entity1;
+		}
+
 		//const WorldTree& worldTree = m_EditorMainWorld->GetWorldTree();
 		//worldTree.LogTree();
 
@@ -118,12 +136,12 @@ namespace Editor
 			for (int32 i = 0; i < g_nHarnasSqrt * g_nHarnasSqrt; ++i)
 			{
 				MeshComponent* mesh = registry.CreateComponent<MeshComponent>();
-				GetModelDeferred(g_ExampleModels[1], [mesh]
+				GetModelDeferred(g_ExampleModels[1], [mesh](ExampleModelData& model)
 				{
-					mesh->SetMesh(g_ExampleModels[1].Mesh);
+					mesh->SetMesh(model.Mesh);
 				});
 				Entity* ent = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
-				ent->AddComponent(mesh);
+				ent->SetRootComponent(mesh);
 				float x = ((i % g_nHarnasSqrt)) * 0.2f - g_nHarnasSqrt * 0.1f;
 				float z = ((i / g_nHarnasSqrt)) * 0.2f - g_nHarnasSqrt * 0.1f;
 				ent->SetLocation(Vector3(x, -4.0f, z));

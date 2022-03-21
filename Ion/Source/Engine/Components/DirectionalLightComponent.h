@@ -17,8 +17,6 @@ namespace Ion
 
 		// Component Callback methods
 
-		void COMPCALLBACKFUNC OnCreate();
-		void COMPCALLBACKFUNC OnDestroy();
 		void COMPCALLBACKFUNC BuildRendererData(RRendererData& data);
 
 		// End of Component Callback methods
@@ -35,6 +33,6 @@ namespace Ion
 	template<>
 	struct ComponentTypeDefaults<DirectionalLightComponent>
 	{
-		static constexpr const char* Name = "Directional Light Component";
+		static constexpr const char* Name = "DirectionalLightComponent";
 	};
 }

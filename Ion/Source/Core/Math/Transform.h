@@ -46,10 +46,14 @@ namespace Ion
 
 		Transform& operator*=(const Transform& other)
 		{
-			m_Location += other.m_Location;
-			m_Rotation += other.m_Rotation;
-			m_Scale *= other.m_Scale;
-			RebuildMatrix();
+			m_Matrix = other.GetMatrix() * m_Matrix;
+
+			Quaternion rotation;
+			Vector3 skew;
+			Vector4 perspective;
+			glm::decompose(m_Matrix, m_Scale, rotation, m_Location, skew, perspective);
+
+			m_Rotation = Rotator(rotation);
 
 			return *this;
 		}

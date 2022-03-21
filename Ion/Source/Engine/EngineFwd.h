@@ -15,9 +15,11 @@ namespace Ion
 	// Entity.h
 	class Entity;
 	// Components/Component.h
-	struct SceneComponentData;
 	class Component;
 	class ComponentRegistry;
+	// Components/SceneComponent.h
+	struct SceneComponentData;
+	class SceneComponent;
 	// Components/MeshComponent.h
 	class MeshComponent;
 	// Components/LightComponent.h

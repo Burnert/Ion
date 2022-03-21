@@ -5,6 +5,8 @@
 
 namespace Ion
 {
+	DECLARE_ENTITY_COMPONENT_CLASS(EmptySceneComponent)
+
 	void SceneComponent::SetTransform(const Transform& transform)
 	{
 		m_SceneData.Transform = transform;
@@ -68,16 +70,79 @@ namespace Ion
 	Transform SceneComponent::GetWorldTransform() const
 	{
 		Transform worldTransform = GetTransform();
-		if (GetOwner())
+
+		Entity* owner = GetOwner();
+		if (owner)
 		{
-			worldTransform *= GetOwner()->GetTransform();
+			worldTransform *= owner->GetWorldTransform();
 		}
+
 		return worldTransform;
 	}
 
+	void SceneComponent::AttachTo(SceneComponent* parent)
+	{
+		ionassert(parent);
+		ionassert(parent->GetOwner() == GetOwner(),
+			"Cannot attach Scene Component to one with a different owning Entity.");
+
+		//m_Parent = parent;
+		//m_Parent->AddChild(this);
+
+		//Entity* owner = parent->GetOwner();
+	}
+
+	void SceneComponent::Detach()
+	{
+		if (m_Parent)
+		{
+			//m_Parent->RemoveChild(this);
+			//m_Parent = nullptr;
+		}
+	}
+
+	TArray<SceneComponent*> SceneComponent::GetAllDescendants() const
+	{
+		TArray<SceneComponent*> descendants;
+		GetAllDescendants_Internal(descendants);
+		return descendants;
+	}
+
+	void SceneComponent::AddChild(SceneComponent* component)
+	{
+		ionassert(component);
+		ionassert(std::find(m_Children.begin(), m_Children.end(), component) == m_Children.end());
+
+		m_Children.push_back(component);
+	}
+
+	void SceneComponent::RemoveChild(SceneComponent* component)
+	{
+		ionassert(component);
+
+		auto it = std::find(m_Children.begin(), m_Children.end(), component);
+		if (it != m_Children.end())
+			m_Children.erase(it);
+	}
+
+	void SceneComponent::GetAllDescendants_Internal(TArray<SceneComponent*>& outArray) const
+	{
+		for (SceneComponent* child : m_Children)
+		{
+			outArray.push_back(child);
+			child->GetAllDescendants_Internal(outArray);
+		}
+	}
+
 	SceneComponent::SceneComponent() :
-		m_SceneData({ })
+		m_SceneData({ }),
+		m_Parent(nullptr)
 	{
 		InitAsSceneComponent();
+	}
+
+	EmptySceneComponent::EmptySceneComponent()
+	{
+		SetTickEnabled(false);
 	}
 }

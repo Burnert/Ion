@@ -11,27 +11,11 @@ namespace Ion
 {
 	DECLARE_ENTITY_COMPONENT_CLASS(MeshComponent)
 
-	ENTITY_COMPONENT_STATIC_CALLBACK_ONCREATE_FUNC()
-	ENTITY_COMPONENT_STATIC_CALLBACK_ONDESTROY_FUNC()
 	ENTITY_COMPONENT_STATIC_CALLBACK_BUILDRENDERERDATA_FUNC()
-	//ENTITY_COMPONENT_STATIC_CALLBACK_TICK_FUNC()
 
 	MeshComponent::MeshComponent()
 	{
 		SetTickEnabled(false);
-		InitAsSceneComponent();
-	}
-
-	void MeshComponent::OnCreate()
-	{
-		//Component::OnCreate();
-		//LOG_INFO("MeshComponent::OnCreate()");
-	}
-
-	void MeshComponent::OnDestroy()
-	{
-		//Component::OnDestroy();
-		//LOG_INFO("MeshComponent::OnDestroy()");
 	}
 
 	void MeshComponent::BuildRendererData(RRendererData& data)

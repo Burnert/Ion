@@ -8,17 +8,7 @@ namespace Ion
 {
 	DECLARE_ENTITY_COMPONENT_CLASS(LightComponent)
 
-	ENTITY_COMPONENT_STATIC_CALLBACK_ONCREATE_FUNC()
-	ENTITY_COMPONENT_STATIC_CALLBACK_ONDESTROY_FUNC()
 	ENTITY_COMPONENT_STATIC_CALLBACK_BUILDRENDERERDATA_FUNC()
-
-	void LightComponent::OnCreate()
-	{
-	}
-
-	void LightComponent::OnDestroy()
-	{
-	}
 
 	LightComponentData& LightComponent::GetLightDataRef()
 	{

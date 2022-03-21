@@ -5,7 +5,7 @@
 #include "Core/Memory/MetaPointer.h"
 #include "Core/Math/Math.h"
 
-template<typename T>
+template<typename T, size_t NodesInBlock = 256>
 class TTreeNodeFactory;
 
 template<typename T>
@@ -16,6 +16,11 @@ struct TTreeNode
 	using NodeArray   = TArray<NodeType*>;
 
 	inline ElementType& Get()
+	{
+		return m_Element;
+	}
+
+	inline const ElementType& Get() const
 	{
 		return m_Element;
 	}
@@ -126,11 +131,11 @@ struct TTreeNode
 	}
 
 	template<typename Pred>
-	inline NodeType* FindNodeRecursiveDF(Pred pred)
+	inline NodeType* FindNodeRecursiveDF(Pred pred) const
 	{
 		for (NodeType* node : m_Children)
 		{
-			if (pred(node->Element()))
+			if (pred(node->Get()))
 				return node;
 
 			if (NodeType* node2 = node->FindNodeRecursiveDF(pred))
@@ -139,22 +144,12 @@ struct TTreeNode
 		return nullptr;
 	}
 
-	inline NodeType* FindNodeByElementRecursiveDF(const ElementType& element)
+	inline NodeType* FindNodeByElementRecursiveDF(const ElementType& element) const
 	{
 		return FindNodeRecursiveDF([&element](ElementType& el)
 		{
 			return el == element;
 		});
-	}
-
-	inline ElementType& Element()
-	{
-		return m_Element;
-	}
-
-	inline const ElementType& Element() const
-	{
-		return m_Element;
 	}
 
 	inline const NodeArray& GetChildren() const
@@ -200,7 +195,8 @@ private:
 	NodeType* m_Parent;
 	ElementType m_Element;
 
-	friend class TTreeNodeFactory<T>;
+	template<typename U, size_t NodesInBlock>
+	friend class TTreeNodeFactory;
 	friend TFunction<bool(NodeType*, NodeType*)>;
 };
 
@@ -214,7 +210,7 @@ private:
 #define _TREENODEALLOC_CHECK_NODE_ALLOC_DEBUG(ptr)
 #endif
 
-template<typename T>
+template<typename T, size_t NodesInBlock>
 class TTreeNodeFactory
 {
 public:
@@ -247,7 +243,7 @@ public:
 	}
 
 private:
-	TPoolAllocator<NodeType> m_NodeAllocator;
+	TPoolAllocator<NodeType, NodesInBlock> m_NodeAllocator;
 #if ION_DEBUG
 	THashSet<void*> m_Allocations_Debug;
 #endif

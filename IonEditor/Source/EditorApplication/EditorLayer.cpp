@@ -287,7 +287,7 @@ namespace Editor
 		{
 			ionassert(child);
 
-			const WorldTreeNodeData& nodeData = child->Element();
+			const WorldTreeNodeData& nodeData = child->Get();
 
 			bool bIsFolder = nodeData.IsFolder();
 			bool bHasChildren = child->HasChildren();

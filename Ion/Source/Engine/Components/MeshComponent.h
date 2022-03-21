@@ -10,10 +10,7 @@ namespace Ion
 
 		// Component Callback methods
 
-		void COMPCALLBACKFUNC OnCreate();
-		void COMPCALLBACKFUNC OnDestroy();
 		void COMPCALLBACKFUNC BuildRendererData(RRendererData& data);
-		//void Tick(float deltaTime);
 
 		// End of Component Callback methods
 
@@ -24,13 +21,12 @@ namespace Ion
 		MeshComponent();
 
 	private:
-		SceneComponentData m_SceneData;
 		TShared<Mesh> m_Mesh;
 	};
 
 	template<>
 	struct ComponentTypeDefaults<MeshComponent>
 	{
-		static constexpr const char* Name = "Mesh Component";
+		static constexpr const char* Name = "MeshComponent";
 	};
 }

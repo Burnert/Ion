@@ -16,7 +16,7 @@ namespace Editor
 		String Name;
 
 	private:
-		TArray<TFunction<void()>> m_OnInit;
+		TArray<TFunction<void(ExampleModelData&)>> m_OnInit;
 
 		bool m_bLoaded = false;
 
@@ -116,7 +116,7 @@ namespace Editor
 	{
 		for(ExampleModelData& model : g_ExampleModels)
 		{
-			model.SetOnInit([&model, scene]
+			model.SetOnInit([scene](ExampleModelData& model)
 			{
 				scene->AddDrawableObject(model.Mesh.get());
 			});
@@ -148,7 +148,7 @@ namespace Editor
 	{
 		if (model.IsLoaded())
 		{
-			onInit();
+			onInit(model);
 		}
 		else
 		{
@@ -163,7 +163,7 @@ namespace Editor
 			InitExampleModel(*this);
 			for (auto& func : m_OnInit)
 			{
-				checked_call(func);
+				checked_call(func, *this);
 			}
 			m_bLoaded = true;
 		}
