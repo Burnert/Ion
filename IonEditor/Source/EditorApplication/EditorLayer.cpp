@@ -5,6 +5,7 @@
 
 #include "Engine/World.h"
 #include "Engine/Entity.h"
+#include "Engine/Components/SceneComponent.h"
 
 #include "Renderer/Renderer.h"
 
@@ -333,7 +334,7 @@ namespace Editor
 
 			void* nodeId = (void*)imguiNodeIndex++;
 			// Retrieve the previous state of the tree node
-			bool bWasOpen = (bool)ImGui::GetStateStorage()->GetInt(ImGui::GetID(nodeId));
+			bool bWasOpen = ImGui::IsTreeNodeOpen(nodeId);
 
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 4.0f));
@@ -367,8 +368,6 @@ namespace Editor
 				Entity* selectedEntity = EditorApplication::Get()->GetSelectedEntity();
 				if (selectedEntity)
 				{
-					Component* selectedComponent = EditorApplication::Get()->GetSelectedComponent();
-
 					ImGui::PushID("Details");
 
 					DrawDetailsNameSection(*selectedEntity);
@@ -377,15 +376,6 @@ namespace Editor
 					DrawDetailsComponentTreeSection(*selectedEntity);
 					DrawDetailsTransformSection(*selectedEntity);
 					DrawDetailsRenderingSection(*selectedEntity);
-
-					if (selectedComponent)
-					{
-						ImGui::Separator();
-						ImGui::Spacing();
-						ImGui::Text("Component Details");
-						ImGui::Spacing();
-						ImGui::Separator();
-					}
 
 					ImGui::PopID();
 				}
@@ -515,14 +505,33 @@ namespace Editor
 
 		if (ImGui::CollapsingHeader("Component Tree", ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			ImGui::BeginChild("ComponentTree", ImVec2(0, 100), true);
-			ImGui::PushID("ComponentTree");
+			ImGui::BeginChild("ComponentTree", ImVec2(0, 100), true, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_HorizontalScrollbar);
 
-			ImGui::Text("WORK IN PROGRESS");
-			ImGui::Text("The entity has no components.");
+			DrawComponentTreeContent(entity);
 
-			ImGui::PopID();
 			ImGui::EndChild();
+
+			// Deselect component when free space is clicked
+			if (ImGui::IsItemClicked())
+			{
+				EditorApplication::Get()->SetSelectedComponent(nullptr);
+			}
+
+			Component* selectedComponent = EditorApplication::Get()->GetSelectedComponent();
+
+			if (selectedComponent)
+			{
+				ImGui::Separator();
+				ImGui::Spacing();
+				ImGui::Text("Component Details");
+				ImGui::Spacing();
+				ImGui::Separator();
+
+				if (selectedComponent->IsSceneComponent())
+				{
+
+				}
+			}
 		}
 	}
 
@@ -597,6 +606,120 @@ namespace Editor
 			}
 
 			ImGui::End();
+		}
+	}
+
+	void EditorLayer::DrawComponentTreeContent(Entity& entity)
+	{
+		SceneComponent* rootComponent = entity.GetRootComponent();
+		ionassert(rootComponent);
+
+		bool bRootOpen = DrawComponentTreeSceneComponentNode(*rootComponent);
+		ImGui::SameLine();
+		ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.2f, 1.0f), "Root");
+		if (bRootOpen)
+		{
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::Spacing();
+
+			DrawComponentTreeNodeChildren(*rootComponent, 1);
+		}
+		if (!entity.GetComponents().empty())
+		{
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::Spacing();
+
+			DrawComponentTreeNonSceneComponents(entity);
+		}
+	}
+
+	void EditorLayer::DrawComponentTreeNodeChildren(SceneComponent& component, int64 startId)
+	{
+		for (SceneComponent* child : component.GetChildren())
+		{
+			DrawComponentTreeSceneComponentNode(*child, startId++, true);
+		}
+	}
+
+	// True if open
+	bool EditorLayer::DrawComponentTreeSceneComponentNode(SceneComponent& component, int64 id, bool bDrawChildren)
+	{
+		bool bHasChildren = component.HasChildren();
+
+		ImGuiTreeNodeFlags imguiNodeFlags =
+			ImGuiTreeNodeFlags_OpenOnArrow |
+			ImGuiTreeNodeFlags_OpenOnDoubleClick |
+			ImGuiTreeNodeFlags_SpanAvailWidth |
+			ImGuiTreeNodeFlags_FramePadding;
+		// It shouldn't expand if there are no children
+		if (!bHasChildren)
+		{
+			imguiNodeFlags |=
+				ImGuiTreeNodeFlags_Leaf |
+				ImGuiTreeNodeFlags_NoTreePushOnOpen;
+		}
+		// Don't tree push, because the nodes won't be drawn
+		if (!bDrawChildren)
+		{
+			imguiNodeFlags |= ImGuiTreeNodeFlags_NoTreePushOnOpen;
+		}
+
+		String nodeName = component.GetName();
+
+		// Highlight the selected component
+		if ((Component*)&component == EditorApplication::Get()->GetSelectedComponent())
+		{
+			imguiNodeFlags |= ImGuiTreeNodeFlags_Selected;
+		}
+
+		void* nodeId = (void*)id;
+		// Retrieve the previous state of the tree node
+		bool bWasOpen = ImGui::IsTreeNodeOpen(nodeId);
+
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 4.0f));
+		bool bImguiTreeNodeOpen = ImGui::TreeNodeEx(nodeId, imguiNodeFlags, "%s", nodeName.c_str());
+		bool bTreeNodeClicked = ImGui::IsItemClicked();
+		ImGui::PopStyleVar(2);
+
+		ImGui::SameLine();
+		ImGui::TextDisabled("(%s)", component.GetClassDisplayName().c_str());
+
+		// Select component on click, only if the state of the node has not changed
+		// (unless it has no children, since the state won't change then).
+		if ((!bHasChildren || (bWasOpen == bImguiTreeNodeOpen)) && bTreeNodeClicked)
+		{
+			EditorApplication::Get()->SetSelectedComponent(&component);
+		}
+
+		if (bDrawChildren && bHasChildren && bImguiTreeNodeOpen)
+		{
+			DrawComponentTreeNodeChildren(component);
+			ImGui::TreePop();
+		}
+
+		return bHasChildren && bImguiTreeNodeOpen;
+	}
+
+	void EditorLayer::DrawComponentTreeNonSceneComponents(Entity& entity)
+	{
+		const Entity::ComponentSet& nonSceneComponents = entity.GetComponents();
+
+		int64 uniqueIndex = 0;
+		for (Component* component : nonSceneComponents)
+		{
+			ionassert(component);
+
+			String nodeName = component->GetName() + "##" + ToString(uniqueIndex++);
+			bool bSelected = EditorApplication::Get()->GetSelectedComponent() == component;
+			if (ImGui::Selectable(nodeName.c_str(), bSelected))
+			{
+				EditorApplication::Get()->SetSelectedComponent(component);
+			}
+			ImGui::SameLine();
+			ImGui::TextDisabled("(%s)", component->GetClassDisplayName().c_str());
 		}
 	}
 

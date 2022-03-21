@@ -46,8 +46,14 @@ namespace Ion
 		/* Removes a non-scene component */
 		void RemoveComponent(Component* component);
 		bool HasNonSceneComponent(Component* component) const;
+		const ComponentSet& GetComponents() const;
 
 		bool HasComponent(Component* component) const;
+
+		/* Set entity related component data. */
+		void BindComponent(Component* component);
+		/* Reset entity related component data. */
+		void UnbindComponent(Component* component);
 
 		void SetName(const String& name);
 		const String& GetName() const;
@@ -91,11 +97,6 @@ namespace Ion
 	private:
 		void AddChild(Entity* child);
 		void RemoveChild(Entity* child);
-
-		/* Set entity related component data. */
-		void BindComponent(Component* component);
-		/* Reset entity related component data. */
-		void UnbindComponent(Component* component);
 
 		/* Called in any function that changes the relative transform. */
 		void UpdateWorldTransformCache();
@@ -186,6 +187,11 @@ namespace Ion
 	inline SceneComponent* Entity::GetRootComponent() const
 	{
 		return m_RootComponent;
+	}
+
+	inline const Entity::ComponentSet& Entity::GetComponents() const
+	{
+		return m_Components;
 	}
 
 	inline void Entity::SetName(const String& name)

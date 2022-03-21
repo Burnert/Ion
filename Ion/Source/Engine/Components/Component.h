@@ -23,10 +23,11 @@ namespace ComponentStaticCallbacks \
 	} \
 }
 
+/* Generates the function used to call every component's *func* function statically. */
 #define ENTITY_COMPONENT_STATIC_CALLBACK_FUNC_HELPER_EX(func, forEachBody, ...) \
 namespace _EntityPrivate \
 { \
-	using _##func##THashMap = THashMap<GUID, _ComponentClass_>; \
+	using _##func##THashMap = TCompContainer<_ComponentClass_>; /* THashMap<GUID, _ComponentClass_> */ \
 	static char _##func##TracerName[256] = "ENTITY_COMPONENT_STATIC_CALLBACK_FUNC_HELPER_EX("#func") - "; \
 	static errno_t _Dummy_##func##TracerName = strcat_s(_##func##TracerName, ComponentTypeDefaults<_ComponentClass_>::Name); \
 	static auto _##func = [](void* containerPtr, __VA_ARGS__) \
@@ -35,6 +36,7 @@ namespace _EntityPrivate \
 		if constexpr (THas##func<_ComponentClass_>) \
 		{ \
 			_##func##THashMap& container = *(_##func##THashMap*)containerPtr; \
+			/* Call the callback functions */ \
 			for (auto& [k, comp] : container) \
 			{ \
 				forEachBody; \
@@ -70,17 +72,20 @@ if (comp.IsSceneComponent()) \
 , RRendererData& data)
 
 // Put in the component's class in the .h file
-#define ENTITY_COMPONENT_CLASS_BODY() \
+#define ENTITY_COMPONENT_CLASS_BODY(displayName) \
 public: \
 friend class ComponentRegistry; \
-inline static ComponentTypeID TypeID;
+static ComponentTypeID TypeID; \
+static inline const String ClassDisplayName = displayName; \
+virtual const String& GetClassDisplayName() const override { return ClassDisplayName; }
 
 // Put in the component's .cpp file
 #define DECLARE_ENTITY_COMPONENT_CLASS(component) \
+ComponentTypeID component::TypeID = ComponentRegistry::RegisterComponentClass<component>(); \
 namespace _EntityPrivate \
 { \
 	/* Can't have function calls out in the open, unless they're assignments. */ \
-	static ComponentTypeID _Dummy_##component##TypeID = component::TypeID = ComponentRegistry::RegisterComponentClass<component>(); \
+	/*static ComponentTypeID _Dummy_##component##TypeID */ \
 	using _ComponentClass_ = component; \
 }
 
@@ -135,6 +140,8 @@ namespace Ion
 		bool operator==(const Component& other) const;
 		bool operator!=(const Component& other) const;
 
+		virtual const String& GetClassDisplayName() const = 0;
+
 	protected:
 		Component();
 
@@ -167,6 +174,8 @@ namespace Ion
 		friend class Entity;
 	};
 
+	/* Container for Components of type T
+	   Used to call Component Callback functions */
 	template<typename T>
 	using TCompContainer = THashMap<GUID, T>;
 
@@ -209,7 +218,7 @@ namespace Ion
 
 		World* m_WorldContext;
 
-		static THashSet<ComponentTypeID> s_RegisteredTypes;
+		static THashSet<ComponentTypeID>* s_RegisteredTypes;
 		static ComponentTypeID s_ComponentIDCounter;
 	};
 
@@ -324,8 +333,14 @@ namespace Ion
 	{
 		static_assert(TIsBaseOfV<Component, CompT>);
 
+		// I don't know why, but this set has to by dynamically allocated
+		// or the insert crashes the thing... Don't ask.
+		// Also, screw the memory leak here cause it's not really a leak.
+		if (!s_RegisteredTypes)
+			s_RegisteredTypes = new THashSet<ComponentTypeID>;
+
 		CompT::TypeID = s_ComponentIDCounter;
-		s_RegisteredTypes.insert(s_ComponentIDCounter);
+		s_RegisteredTypes->insert(s_ComponentIDCounter);
 
 		return s_ComponentIDCounter++;
 	}

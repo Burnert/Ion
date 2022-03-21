@@ -82,23 +82,40 @@ namespace Ion
 
 	void SceneComponent::AttachTo(SceneComponent* parent)
 	{
-		ionassert(parent);
+		if (!parent)
+		{
+			Detach();
+		}
+
+		// Only bind the component if it's not owned yet.
+		if (!GetOwner())
+		{
+			parent->GetOwner()->BindComponent(this);
+		}
+
 		ionassert(parent->GetOwner() == GetOwner(),
 			"Cannot attach Scene Component to one with a different owning Entity.");
 
-		//m_Parent = parent;
-		//m_Parent->AddChild(this);
+		// Remove from current parent first
+		if (m_Parent)
+		{
+			m_Parent->RemoveChild(this);
+		}
 
-		//Entity* owner = parent->GetOwner();
+		m_Parent = parent;
+		m_Parent->AddChild(this);
 	}
 
-	void SceneComponent::Detach()
+	SceneComponent* SceneComponent::Detach()
 	{
 		if (m_Parent)
 		{
-			//m_Parent->RemoveChild(this);
-			//m_Parent = nullptr;
+			m_Parent->RemoveChild(this);
+			m_Parent = nullptr;
+
+			GetOwner()->UnbindComponent(this);
 		}
+		return this;
 	}
 
 	TArray<SceneComponent*> SceneComponent::GetAllDescendants() const

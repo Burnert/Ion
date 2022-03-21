@@ -12,6 +12,7 @@
 #include "Engine/Components/MeshComponent.h"
 #include "Engine/Components/LightComponent.h"
 #include "Engine/Components/DirectionalLightComponent.h"
+#include "Engine/Components/BehaviorComponent.h"
 
 #include "Core/Container/OldTree.h"
 #include "Core/Container/Tree.h"
@@ -110,22 +111,49 @@ namespace Editor
 			childEntity->AttachTo(lightEntity);
 		}
 
-		Entity* lastEntity = nullptr;
-		for (int32 i = 0; i < 6; ++i)
+		if (0)
 		{
-			MeshComponent* meshComp1 = registry.CreateComponent<MeshComponent>();
-			GetModelDeferred(g_ExampleModels[i], [meshComp1, this](ExampleModelData& model)
+			Entity* lastEntity = nullptr;
+			for (int32 i = 0; i < 6; ++i)
 			{
-				meshComp1->SetMesh(model.Mesh);
-			});
-			Entity* entity1 = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
-			entity1->SetRootComponent(meshComp1);
-			entity1->SetName("Mesh_" + ToString(i));
-			if (lastEntity)
-			{
-				entity1->AttachTo(lastEntity);
+				MeshComponent* meshComp1 = registry.CreateComponent<MeshComponent>();
+				GetModelDeferred(g_ExampleModels[i], [meshComp1, this](ExampleModelData& model)
+				{
+					meshComp1->SetMesh(model.Mesh);
+				});
+				Entity* entity1 = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
+				entity1->SetRootComponent(meshComp1);
+				entity1->SetName("Mesh_" + ToString(i));
+				if (lastEntity)
+				{
+					entity1->AttachTo(lastEntity);
+				}
+				lastEntity = entity1;
 			}
-			lastEntity = entity1;
+		}
+		
+		if (1)
+		{
+			Entity* entity2 = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
+			entity2->SetName("MultipleMeshes");
+			SceneComponent* lastComp = entity2->GetRootComponent();
+			for (int32 i = 0; i < 6; ++i)
+			{
+				MeshComponent* meshComp1 = registry.CreateComponent<MeshComponent>();
+				GetModelDeferred(g_ExampleModels[i], [meshComp1, this](ExampleModelData& model)
+				{
+					meshComp1->SetMesh(model.Mesh);
+				});
+				meshComp1->SetName("Mesh_" + ToString(i));
+				meshComp1->AttachTo(lastComp);
+				lastComp = meshComp1;
+			}
+			BehaviorComponent* behaviorComp = registry.CreateComponent<BehaviorComponent>();
+			behaviorComp->SetName("Nice Behavior");
+			entity2->AddComponent(behaviorComp);
+			behaviorComp = registry.CreateComponent<BehaviorComponent>();
+			behaviorComp->SetName("Nice Behavior 2");
+			entity2->AddComponent(behaviorComp);
 		}
 
 		//const WorldTree& worldTree = m_EditorMainWorld->GetWorldTree();
@@ -279,7 +307,7 @@ namespace Editor
 	void EditorApplication::SetSelectedEntity(Entity* entity)
 	{
 		m_SelectedEntity = entity;
-		if (!entity)
+		if (GetSelectedComponent() && entity != GetSelectedComponent()->GetOwner())
 		{
 			SetSelectedComponent(nullptr);
 		}

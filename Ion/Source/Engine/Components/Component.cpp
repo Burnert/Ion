@@ -68,6 +68,6 @@ namespace Ion
 		}
 	}
 
-	THashSet<ComponentTypeID> ComponentRegistry::s_RegisteredTypes;
+	THashSet<ComponentTypeID>* ComponentRegistry::s_RegisteredTypes = nullptr;
 	ComponentTypeID ComponentRegistry::s_ComponentIDCounter = 0;
 }

@@ -6,7 +6,7 @@ namespace Ion
 {
 	class ION_API MeshComponent final : public SceneComponent
 	{
-		ENTITY_COMPONENT_CLASS_BODY()
+		ENTITY_COMPONENT_CLASS_BODY("Mesh")
 
 		// Component Callback methods
 

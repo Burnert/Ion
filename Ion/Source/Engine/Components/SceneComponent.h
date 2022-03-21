@@ -42,8 +42,10 @@ namespace Ion
 		Transform GetWorldTransform() const;
 
 		void AttachTo(SceneComponent* parent);
-		void Detach();
+		/* Returns this component */
+		SceneComponent* Detach();
 		SceneComponent* GetParent() const;
+		bool HasChildren() const;
 		const TArray<SceneComponent*>& GetChildren() const;
 		TArray<SceneComponent*> GetAllDescendants() const;
 
@@ -64,7 +66,7 @@ namespace Ion
 
 	class EmptySceneComponent final : public SceneComponent
 	{
-		ENTITY_COMPONENT_CLASS_BODY()
+		ENTITY_COMPONENT_CLASS_BODY("Empty Scene Component")
 
 	private:
 		EmptySceneComponent();
@@ -79,6 +81,11 @@ namespace Ion
 	inline SceneComponent* SceneComponent::GetParent() const
 	{
 		return m_Parent;
+	}
+
+	inline bool SceneComponent::HasChildren() const
+	{
+		return !m_Children.empty();
 	}
 
 	inline const TArray<SceneComponent*>& SceneComponent::GetChildren() const

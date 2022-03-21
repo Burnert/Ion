@@ -48,6 +48,11 @@ namespace Editor
 
 		void DrawDiagnosticsPanel();
 
+		void DrawComponentTreeContent(Entity& entity);
+		void DrawComponentTreeNodeChildren(SceneComponent& component, int64 startId = 0);
+		bool DrawComponentTreeSceneComponentNode(SceneComponent& component, int64 id = 0, bool bDrawChildren = false);
+		void DrawComponentTreeNonSceneComponents(Entity& entity);
+
 		// End of UI drawing related functions
 
 		WorldTreeNode* PopWorldTreeExpandChain();

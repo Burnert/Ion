@@ -14,7 +14,7 @@ namespace Ion
 
 	class ION_API LightComponent final : public SceneComponent
 	{
-		ENTITY_COMPONENT_CLASS_BODY()
+		ENTITY_COMPONENT_CLASS_BODY("Light")
 
 		// Component Callback methods
 

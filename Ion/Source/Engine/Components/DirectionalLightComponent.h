@@ -13,7 +13,7 @@ namespace Ion
 
 	class ION_API DirectionalLightComponent final : public SceneComponent
 	{
-		ENTITY_COMPONENT_CLASS_BODY();
+		ENTITY_COMPONENT_CLASS_BODY("Directional Light");
 
 		// Component Callback methods
 

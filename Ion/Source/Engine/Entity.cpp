@@ -73,7 +73,7 @@ namespace Ion
 	{
 		ionassert(!component->IsSceneComponent(),
 			"Add Scene Components using SceneComponent::AttachTo.");
-		ionassert(HasNonSceneComponent(component));
+		ionassert(!HasNonSceneComponent(component));
 
 		//m_WorldContext->GetComponentRegistry().BindComponentToEntity(this, component);
 		BindComponent(component);
@@ -162,7 +162,7 @@ namespace Ion
 		if (m_bCreateEmptyRootOnSpawn)
 		{
 			ComponentRegistry& registry = worldContext->GetComponentRegistry();
-			m_RootComponent = registry.CreateComponent<EmptySceneComponent>();
+			SetRootComponent(registry.CreateComponent<EmptySceneComponent>());
 			m_RootComponent->SetName("Root");
 		}
 	}
