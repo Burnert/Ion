@@ -1,19 +1,20 @@
 #pragma once
 
-#define DECLARE_COMPONENT_CALLBACK(func, ...) \
+#define DECLARE_COMPONENT_SERIALCALL(func, ...) \
 DECLARE_THASFUNCTION(func); \
 namespace ComponentStaticCallbacks \
 { \
 	using func##FPtr = void(*)(void*, __VA_ARGS__); \
-	/* Components which implement this callback function */ \
+	/* Components which implement this serialcall */ \
 	inline TArray<func##FPtr> g_##func; \
+	/* Get the function that calls each component's func serially. */ \
 	inline func##FPtr Get##func##FPtr(ComponentTypeID id) \
 	{ \
 		if (g_##func.size() <= id) \
 			return nullptr; \
 		return g_##func[id]; \
 	} \
-	/* Called in ENTITY_COMPONENT_STATIC_CALLBACK_FUNC_HELPER */ \
+	/* Called in ENTITY_COMPONENT_SERIALCALL_HELPER */ \
 	inline int32 func##_AddComponentClass(func##FPtr fn, ComponentTypeID id) \
 	{ \
 		if (g_##func.size() <= id) \
@@ -24,11 +25,11 @@ namespace ComponentStaticCallbacks \
 }
 
 /* Generates the function used to call every component's *func* function statically. */
-#define ENTITY_COMPONENT_STATIC_CALLBACK_FUNC_HELPER_EX(func, forEachBody, ...) \
+#define DECLARE_COMPONENT_SERIALCALL_HELPER_EX(func, forEachBody, ...) \
 namespace _EntityPrivate \
 { \
 	using _##func##THashMap = TCompContainer<_ComponentClass_>; /* THashMap<GUID, _ComponentClass_> */ \
-	static char _##func##TracerName[256] = "ENTITY_COMPONENT_STATIC_CALLBACK_FUNC_HELPER_EX("#func") - "; \
+	static char _##func##TracerName[256] = "DECLARE_COMPONENT_SERIALCALL_HELPER_EX("#func") - "; \
 	static errno_t _Dummy_##func##TracerName = strcat_s(_##func##TracerName, ComponentTypeDefaults<_ComponentClass_>::Name); \
 	static auto _##func = [](void* containerPtr, __VA_ARGS__) \
 	{ \
@@ -36,7 +37,7 @@ namespace _EntityPrivate \
 		if constexpr (THas##func<_ComponentClass_>) \
 		{ \
 			_##func##THashMap& container = *(_##func##THashMap*)containerPtr; \
-			/* Call the callback functions */ \
+			/* Call the serialcall functions */ \
 			for (auto& [k, comp] : container) \
 			{ \
 				forEachBody; \
@@ -46,30 +47,8 @@ namespace _EntityPrivate \
 	static int32 _Dummy_##func = ComponentStaticCallbacks::func##_AddComponentClass(_##func, _ComponentClass_::TypeID); \
 };
 
-#define ENTITY_COMPONENT_STATIC_CALLBACK_FUNC_HELPER(func) \
-ENTITY_COMPONENT_STATIC_CALLBACK_FUNC_HELPER_EX(func, comp.func())
-
-// Put in the component's .cpp file after the DECLARE_ENTITY_COMPONENT_CLASS, if the component implements OnCreate
-#define ENTITY_COMPONENT_STATIC_CALLBACK_ONCREATE_FUNC() \
-ENTITY_COMPONENT_STATIC_CALLBACK_FUNC_HELPER(OnCreate)
-
-// Put in the component's .cpp file after the DECLARE_ENTITY_COMPONENT_CLASS, if the component implements OnDestroy
-#define ENTITY_COMPONENT_STATIC_CALLBACK_ONDESTROY_FUNC() \
-ENTITY_COMPONENT_STATIC_CALLBACK_FUNC_HELPER(OnDestroy)
-
-// Put in the component's .cpp file after the DECLARE_ENTITY_COMPONENT_CLASS, if the component implements Tick
-#define ENTITY_COMPONENT_STATIC_CALLBACK_TICK_FUNC() \
-ENTITY_COMPONENT_STATIC_CALLBACK_FUNC_HELPER_EX(Tick, \
-if (comp.IsTickEnabled()) \
-	comp.Tick(deltaTime); \
-, float deltaTime)
-
-// Put in the component's .cpp file after the DECLARE_ENTITY_COMPONENT_CLASS, if the component implements BuildRendererData
-#define ENTITY_COMPONENT_STATIC_CALLBACK_BUILDRENDERERDATA_FUNC() \
-ENTITY_COMPONENT_STATIC_CALLBACK_FUNC_HELPER_EX(BuildRendererData, \
-if (comp.IsSceneComponent()) \
-	comp.BuildRendererData(data); \
-, RRendererData& data)
+#define ENTITY_COMPONENT_SERIALCALL_HELPER(func) \
+DECLARE_COMPONENT_SERIALCALL_HELPER_EX(func, comp.func())
 
 // Put in the component's class in the .h file
 #define ENTITY_COMPONENT_CLASS_BODY(displayName) \
@@ -89,8 +68,22 @@ namespace _EntityPrivate \
 	using _ComponentClass_ = component; \
 }
 
+// Put in the component's .cpp file after the DECLARE_ENTITY_COMPONENT_CLASS, if the component implements Tick
+#define DECLARE_COMPONENT_SERIALCALL_TICK() \
+DECLARE_COMPONENT_SERIALCALL_HELPER_EX(Tick, \
+if (comp.IsTickEnabled()) \
+	comp.Tick(deltaTime); \
+, float deltaTime)
+
+// Put in the component's .cpp file after the DECLARE_ENTITY_COMPONENT_CLASS, if the component implements BuildRendererData
+#define DECLARE_COMPONENT_SERIALCALL_BUILDRENDERERDATA() \
+DECLARE_COMPONENT_SERIALCALL_HELPER_EX(BuildRendererData, \
+if (comp.IsSceneComponent()) \
+	comp.BuildRendererData(data); \
+, RRendererData& data)
+
 // For documentation purposes
-#define COMPCALLBACKFUNC
+#define SERIALCALL
 
 namespace Ion
 {
@@ -102,22 +95,17 @@ namespace Ion
 
 	using ComponentTypeID = uint16;
 
-	DECLARE_COMPONENT_CALLBACK(OnCreate)
-	DECLARE_COMPONENT_CALLBACK(OnDestroy)
-	DECLARE_COMPONENT_CALLBACK(Tick, float)
-	DECLARE_COMPONENT_CALLBACK(BuildRendererData, RRendererData&)
+	DECLARE_COMPONENT_SERIALCALL(OnCreate)
+	DECLARE_COMPONENT_SERIALCALL(OnDestroy)
+	DECLARE_COMPONENT_SERIALCALL(Tick, float)
+	DECLARE_COMPONENT_SERIALCALL(BuildRendererData, RRendererData&)
 
 	/* Abstract class */
 	class ION_API Component
 	{
 	public:
-		// Component Callback methods
-
-		void COMPCALLBACKFUNC OnCreate() { }
-		void COMPCALLBACKFUNC OnDestroy() { }
-		void COMPCALLBACKFUNC Tick(float deltaTime) { }
-
-		// End of Component Callback methods
+		virtual void OnCreate() { }
+		virtual void OnDestroy() { }
 
 		void SetTickEnabled(bool bTick);
 		bool IsTickEnabled() const;
@@ -181,6 +169,12 @@ namespace Ion
 
 	class ION_API ComponentRegistry
 	{
+		struct StaticComponentTypeData
+		{
+			THashSet<ComponentTypeID> RegisteredTypes;
+			ComponentTypeID ComponentIDCounter = 0;
+		};
+
 	public:
 		using ComponentContainerPtr = void*;
 
@@ -212,14 +206,13 @@ namespace Ion
 		template<typename ContainerT>
 		ContainerT& GetContainer();
 
+		static StaticComponentTypeData* GetComponentTypeData();
+
 	private:
 		THashMap<ComponentTypeID, ComponentContainerPtr> m_ComponentArrays;
 		THashSet<ComponentTypeID> m_InitializedTypes;
 
 		World* m_WorldContext;
-
-		static THashSet<ComponentTypeID>* s_RegisteredTypes;
-		static ComponentTypeID s_ComponentIDCounter;
 	};
 
 	// Component inline definitions
@@ -333,16 +326,20 @@ namespace Ion
 	{
 		static_assert(TIsBaseOfV<Component, CompT>);
 
-		// I don't know why, but this set has to by dynamically allocated
+		StaticComponentTypeData* componentTypeData = GetComponentTypeData();
+
+		CompT::TypeID = componentTypeData->ComponentIDCounter;
+		//componentTypeData->RegisteredTypes.insert(s_ComponentIDCounter);
+
+		return componentTypeData->ComponentIDCounter++;
+	}
+
+	inline ComponentRegistry::StaticComponentTypeData* ComponentRegistry::GetComponentTypeData()
+	{
+		// I don't know why, but the set has to by dynamically allocated
 		// or the insert crashes the thing... Don't ask.
-		// Also, screw the memory leak here cause it's not really a leak.
-		if (!s_RegisteredTypes)
-			s_RegisteredTypes = new THashSet<ComponentTypeID>;
-
-		CompT::TypeID = s_ComponentIDCounter;
-		s_RegisteredTypes->insert(s_ComponentIDCounter);
-
-		return s_ComponentIDCounter++;
+		static StaticComponentTypeData* c_ComponentTypeData = new StaticComponentTypeData;
+		return c_ComponentTypeData;
 	}
 
 	template<typename CompT>

@@ -74,7 +74,8 @@ namespace Ion
 		for (World* world : m_RegisteredWorlds)
 		{
 			Scene* scene = world->GetScene();
-			if (!scene) continue;
+			if (!scene)
+				continue;
 
 			RRendererData data { };
 			world->BuildRendererData(data, deltaTime);

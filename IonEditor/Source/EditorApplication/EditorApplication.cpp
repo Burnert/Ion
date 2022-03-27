@@ -1,22 +1,17 @@
 #include "EditorPCH.h"
 
 #include "EditorApplication.h"
-#include "Renderer/Renderer.h"
-
 #include "EditorLayer.h"
 
-#include "ExampleModels.h"
+#include "Renderer/Renderer.h"
 
 #include "Engine/Engine.h"
-#include "Engine/WorldTree.h"
 #include "Engine/Components/MeshComponent.h"
 #include "Engine/Components/LightComponent.h"
 #include "Engine/Components/DirectionalLightComponent.h"
 #include "Engine/Components/BehaviorComponent.h"
 
-#include "Core/Container/OldTree.h"
-#include "Core/Container/Tree.h"
-#include "Core/Memory/PoolAllocator.h"
+#include "ExampleModels.h"
 
 namespace Ion
 {
@@ -177,36 +172,6 @@ namespace Editor
 				ent->SetName(String("Harnas_") + ToString(i));
 				g_HarnasArray.push_back(ent);
 			}
-		}
-
-		if (0)
-		{
-			using StringTree = TTree<String>;
-			StringTree tree;
-			StringTree::NodeRef root   = tree.GetRootNode();
-			StringTree::NodeRef node0  = tree.Insert("Node0");
-			StringTree::NodeRef node1  = tree.Insert("Node1");
-			StringTree::NodeRef node2  = tree.Insert("Node2", root);
-			StringTree::NodeRef node00 = tree.Insert("Node00", node0);
-			StringTree::NodeRef node01 = tree.Insert("Node01", node0);
-			StringTree::NodeRef node10 = tree.Insert("Node10", node1);
-			//node1.Element() = nullptr;
-			tree.LogTree();
-			tree.Remove(node0, true);
-			tree.LogTree();
-			tree.Remove(node00, true);
-			tree.LogTree();
-			tree.Remove(node1);
-			tree.LogTree();
-			StringTree::NodeRef node3  = tree.Insert("Node3");
-			StringTree::NodeRef node30 = tree.Insert("Node30", node3);
-			StringTree::NodeRef node31 = tree.Insert("Node31", node3);
-			StringTree::NodeRef node32 = tree.Insert(node3);
-			tree.LogTree();
-			String& n3Str = *node30.Element();
-			LOG_INFO(n3Str);
-			LOG_INFO(BoolStr(node32.IsElementNode()));
-			LOG_INFO(BoolStr(node31.IsElementNode()));
 		}
 
 		if (1)

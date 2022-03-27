@@ -8,11 +8,7 @@ namespace Ion
 	{
 		ENTITY_COMPONENT_CLASS_BODY("Mesh")
 
-		// Component Callback methods
-
-		void COMPCALLBACKFUNC BuildRendererData(RRendererData& data);
-
-		// End of Component Callback methods
+		void SERIALCALL BuildRendererData(RRendererData& data);
 
 		void SetMesh(const TShared<Mesh>& mesh);
 		TShared<Mesh> GetMesh() const;

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Components/Component.h"
-#include "WorldTree.h"
 
 namespace Ion
 {
@@ -66,13 +65,6 @@ namespace Ion
 
 	private:
 		Entity* m_Entity;
-	};
-
-	enum class EWorldStructureChangedEventType
-	{
-		EntityAdded = 1,
-		EntityRemoved = 2,
-		EntityMoved = 3,
 	};
 
 	struct WorldInitializer

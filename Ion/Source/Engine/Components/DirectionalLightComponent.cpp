@@ -8,7 +8,7 @@ namespace Ion
 {
 	DECLARE_ENTITY_COMPONENT_CLASS(DirectionalLightComponent)
 
-	ENTITY_COMPONENT_STATIC_CALLBACK_BUILDRENDERERDATA_FUNC()
+	DECLARE_COMPONENT_SERIALCALL_BUILDRENDERERDATA()
 
 	DirectionalLightComponentData& DirectionalLightComponent::GetDirectionalLightDataRef()
 	{

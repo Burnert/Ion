@@ -8,7 +8,7 @@ namespace Ion
 	{
 		ENTITY_COMPONENT_CLASS_BODY("Behavior Component")
 
-		//void COMPCALLBACKFUNC OnCreate();
+		//void SERIALCALL OnCreate();
 
 	private:
 		BehaviorComponent();

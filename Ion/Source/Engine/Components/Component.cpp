@@ -1,7 +1,6 @@
 #include "IonPCH.h"
 
 #include "Component.h"
-#include "Engine/Entity.h"
 
 namespace Ion
 {
@@ -50,6 +49,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
+		// Iterate over the containers first
 		for (auto& [id, container] : m_ComponentArrays)
 		{
 			ComponentStaticCallbacks::TickFPtr func = ComponentStaticCallbacks::GetTickFPtr(id);
@@ -67,7 +67,4 @@ namespace Ion
 			checked_call(func, container, data);
 		}
 	}
-
-	THashSet<ComponentTypeID>* ComponentRegistry::s_RegisteredTypes = nullptr;
-	ComponentTypeID ComponentRegistry::s_ComponentIDCounter = 0;
 }

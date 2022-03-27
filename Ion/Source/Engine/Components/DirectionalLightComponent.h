@@ -17,7 +17,7 @@ namespace Ion
 
 		// Component Callback methods
 
-		void COMPCALLBACKFUNC BuildRendererData(RRendererData& data);
+		void SERIALCALL BuildRendererData(RRendererData& data);
 
 		// End of Component Callback methods
 

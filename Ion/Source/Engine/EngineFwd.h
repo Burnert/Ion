@@ -10,13 +10,13 @@ namespace Ion
 	struct WorldTreeNodeData;
 	struct WorldTreeFindNodeByEntityPred;
 	struct WorldInitializer;
-	// WorldTree.h
-	class WorldTree;
 	// Entity.h
 	class Entity;
 	// Components/Component.h
 	class Component;
 	class ComponentRegistry;
+	// Components/BehaviorComponent.h
+	class BehaviorComponent;
 	// Components/SceneComponent.h
 	struct SceneComponentData;
 	class SceneComponent;

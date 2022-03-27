@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Engine/WorldTree.h"
-
 namespace Ion
 {
 namespace Editor
