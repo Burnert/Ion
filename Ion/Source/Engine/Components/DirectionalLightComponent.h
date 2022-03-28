@@ -13,7 +13,7 @@ namespace Ion
 
 	class ION_API DirectionalLightComponent final : public SceneComponent
 	{
-		ENTITY_COMPONENT_CLASS_BODY("Directional Light");
+		ENTITY_COMPONENT_CLASS_BODY(DirectionalLightComponent, "Directional Light");
 
 		// Component Callback methods
 
@@ -28,11 +28,5 @@ namespace Ion
 
 	private:
 		DirectionalLightComponentData m_DirectionalLightData;
-	};
-
-	template<>
-	struct ComponentTypeDefaults<DirectionalLightComponent>
-	{
-		static constexpr const char* Name = "DirectionalLightComponent";
 	};
 }

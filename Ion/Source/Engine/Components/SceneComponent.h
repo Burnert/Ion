@@ -66,16 +66,10 @@ namespace Ion
 
 	class EmptySceneComponent final : public SceneComponent
 	{
-		ENTITY_COMPONENT_CLASS_BODY("Empty Scene Component")
+		ENTITY_COMPONENT_CLASS_BODY(EmptySceneComponent, "Empty Scene Component")
 
 	private:
 		EmptySceneComponent();
-	};
-
-	template<>
-	struct ComponentTypeDefaults<EmptySceneComponent>
-	{
-		static constexpr const char* Name = "EmptySceneComponent";
 	};
 
 	inline SceneComponent* SceneComponent::GetParent() const

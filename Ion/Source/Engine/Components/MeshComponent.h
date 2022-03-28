@@ -6,7 +6,7 @@ namespace Ion
 {
 	class ION_API MeshComponent final : public SceneComponent
 	{
-		ENTITY_COMPONENT_CLASS_BODY("Mesh")
+		ENTITY_COMPONENT_CLASS_BODY(MeshComponent, "Mesh")
 
 		void SERIALCALL BuildRendererData(RRendererData& data);
 
@@ -18,11 +18,5 @@ namespace Ion
 
 	private:
 		TShared<Mesh> m_Mesh;
-	};
-
-	template<>
-	struct ComponentTypeDefaults<MeshComponent>
-	{
-		static constexpr const char* Name = "MeshComponent";
 	};
 }

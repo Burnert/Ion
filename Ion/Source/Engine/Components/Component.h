@@ -2,103 +2,120 @@
 
 #define DECLARE_COMPONENT_SERIALCALL(func, ...) \
 DECLARE_THASFUNCTION(func); \
-namespace ComponentStaticCallbacks \
+namespace ComponentSerialCall \
 { \
-	using func##FPtr = void(*)(void*, __VA_ARGS__); \
-	/* Components which implement this serialcall */ \
-	inline TArray<func##FPtr> g_##func; \
-	/* Get the function that calls each component's func serially. */ \
-	inline func##FPtr Get##func##FPtr(ComponentTypeID id) \
+	namespace Private \
 	{ \
-		if (g_##func.size() <= id) \
-			return nullptr; \
-		return g_##func[id]; \
+		/* Function signature */ \
+		using func##FPtr = void(*)(void*, __VA_ARGS__); \
+		/* Components which implement this serialcall */ \
+		inline THashMap<ComponentTypeID, func##FPtr> g_##func##Functions; \
+		/* Get the function that calls each component's serialcall function. */ \
+		inline func##FPtr Get##func##Function(ComponentTypeID id) \
+		{ \
+			return g_##func##Functions[id]; \
+		} \
+		/* Called in ENTITY_COMPONENT_SERIALCALL_HELPER */ \
+		inline int32 func##_AddFunctionForType(ComponentTypeID id, func##FPtr fn) \
+		{ \
+			g_##func##Functions[id] = fn; \
+			return 0; \
+		} \
 	} \
-	/* Called in ENTITY_COMPONENT_SERIALCALL_HELPER */ \
-	inline int32 func##_AddComponentClass(func##FPtr fn, ComponentTypeID id) \
+	/* Call all the serialcall functions of components which are in the specified container. */ \
+	template<typename... Args> \
+	inline void func(ComponentTypeID typeId, void* container, Args&&... args) \
 	{ \
-		if (g_##func.size() <= id) \
-			g_##func.resize(id + 1, nullptr); \
-		g_##func[id] = fn; \
-		return 0; \
+		Private::func##FPtr fn = Private::Get##func##Function(typeId); \
+		checked_call(fn, container, args...); \
 	} \
 }
 
-/* Generates the function used to call every component's *func* function statically. */
+/* Generates the code used to call serialcall functions on all components. */
 #define DECLARE_COMPONENT_SERIALCALL_HELPER_EX(func, forEachBody, ...) \
-namespace _EntityPrivate \
+namespace ComponentSerialCall \
 { \
-	using _##func##THashMap = TCompContainer<_ComponentClass_>; /* THashMap<GUID, _ComponentClass_> */ \
-	static char _##func##TracerName[256] = "DECLARE_COMPONENT_SERIALCALL_HELPER_EX("#func") - "; \
-	static errno_t _Dummy_##func##TracerName = strcat_s(_##func##TracerName, ComponentTypeDefaults<_ComponentClass_>::Name); \
-	static auto _##func = [](void* containerPtr, __VA_ARGS__) \
+	namespace Private \
 	{ \
-		TRACE_SCOPE(_##func##TracerName); \
-		if constexpr (THas##func<_ComponentClass_>) \
+		/* Type of the this component container */ \
+		using func##Container = TCompContainer<ThisComponentClass>; /* THashMap<GUID, _ComponentClass_> */ \
+		static char func##TracerName[256] = "DECLARE_COMPONENT_SERIALCALL_HELPER_EX("#func") - "; \
+		CALL_OUTSIDE({ strcat_s(func##TracerName, ThisComponentClass::ClassDisplayName.c_str()); }, func##0); \
+		/* Function that calls all the components' serialcall functions in the specified component container. 
+		   It has to be a lambda to avoid symbol redefinition. */ \
+		static auto CallEach##func = [](void* containerPtr, __VA_ARGS__) \
 		{ \
-			_##func##THashMap& container = *(_##func##THashMap*)containerPtr; \
-			/* Call the serialcall functions */ \
-			for (auto& [k, comp] : container) \
+			/* Make sure the type actually has the function, just in case. */ \
+			if constexpr (THas##func<ThisComponentClass>) \
 			{ \
-				forEachBody; \
+				TRACE_SCOPE(func##TracerName); \
+				func##Container& container = *(func##Container*)containerPtr; \
+				/* Call the serialcall functions */ \
+				for (auto& [k, comp] : container) \
+				{ \
+					forEachBody; \
+				} \
 			} \
-		} \
-	}; \
-	static int32 _Dummy_##func = ComponentStaticCallbacks::func##_AddComponentClass(_##func, _ComponentClass_::TypeID); \
-};
+		}; \
+		CALL_OUTSIDE({ func##_AddFunctionForType(ThisComponentClass::GetTypeID(), CallEach##func); }, func##1); \
+	} \
+}
 
+/* Generates the code used to call serialcall functions on all components. */
 #define ENTITY_COMPONENT_SERIALCALL_HELPER(func) \
 DECLARE_COMPONENT_SERIALCALL_HELPER_EX(func, comp.func())
 
-// Put in the component's class in the .h file
-#define ENTITY_COMPONENT_CLASS_BODY(displayName) \
+/* Put in the component's class in the .h file */
+#define ENTITY_COMPONENT_CLASS_BODY(className, displayName) \
+private: \
+static inline ComponentTypeID s_TypeID = -1; \
+protected: \
 public: \
-friend class ComponentRegistry; \
-static ComponentTypeID TypeID; \
-static inline const String ClassDisplayName = displayName; \
-virtual const String& GetClassDisplayName() const override { return ClassDisplayName; }
-
-// Put in the component's .cpp file
-#define DECLARE_ENTITY_COMPONENT_CLASS(component) \
-ComponentTypeID component::TypeID = ComponentRegistry::RegisterComponentClass<component>(); \
-namespace _EntityPrivate \
+static inline ComponentTypeID GetTypeID() \
 { \
-	/* Can't have function calls out in the open, unless they're assignments. */ \
-	/*static ComponentTypeID _Dummy_##component##TypeID */ \
-	using _ComponentClass_ = component; \
+	if (s_TypeID == -1) \
+		s_TypeID = ComponentRegistry::RegisterComponentClass<className>(); \
+	return s_TypeID; \
+} \
+static inline const String ClassName = #className; \
+static inline const String ClassDisplayName = displayName; \
+virtual const String& GetClassName() const override { return ClassName; } \
+virtual const String& GetClassDisplayName() const override { return ClassDisplayName; } \
+friend class ComponentRegistry;
+
+/* Put in the component's .cpp file (one per file) */
+#define DECLARE_ENTITY_COMPONENT_CLASS(component) \
+namespace ComponentSerialCall \
+{ \
+	namespace Private \
+	{ \
+		using ThisComponentClass = component; \
+	} \
 }
 
-// Put in the component's .cpp file after the DECLARE_ENTITY_COMPONENT_CLASS, if the component implements Tick
+/* Put in the component's .cpp file after the DECLARE_ENTITY_COMPONENT_CLASS, if the component implements Tick */
 #define DECLARE_COMPONENT_SERIALCALL_TICK() \
 DECLARE_COMPONENT_SERIALCALL_HELPER_EX(Tick, \
 if (comp.IsTickEnabled()) \
 	comp.Tick(deltaTime); \
 , float deltaTime)
 
-// Put in the component's .cpp file after the DECLARE_ENTITY_COMPONENT_CLASS, if the component implements BuildRendererData
+/* Put in the component's .cpp file after the DECLARE_ENTITY_COMPONENT_CLASS, if the component implements BuildRendererData */
 #define DECLARE_COMPONENT_SERIALCALL_BUILDRENDERERDATA() \
 DECLARE_COMPONENT_SERIALCALL_HELPER_EX(BuildRendererData, \
 if (comp.IsSceneComponent()) \
 	comp.BuildRendererData(data); \
 , RRendererData& data)
 
-// For documentation purposes
+/* For documentation purposes */
 #define SERIALCALL
 
 namespace Ion
 {
-	template<typename CompT>
-	struct ComponentTypeDefaults
-	{
-		static constexpr const char* Name = "Unknown Component";
-	};
+	using ComponentTypeID = int16;
 
-	using ComponentTypeID = uint16;
-
-	DECLARE_COMPONENT_SERIALCALL(OnCreate)
-	DECLARE_COMPONENT_SERIALCALL(OnDestroy)
-	DECLARE_COMPONENT_SERIALCALL(Tick, float)
-	DECLARE_COMPONENT_SERIALCALL(BuildRendererData, RRendererData&)
+	DECLARE_COMPONENT_SERIALCALL(Tick, float);
+	DECLARE_COMPONENT_SERIALCALL(BuildRendererData, RRendererData&);
 
 	/* Abstract class */
 	class ION_API Component
@@ -128,7 +145,10 @@ namespace Ion
 		bool operator==(const Component& other) const;
 		bool operator!=(const Component& other) const;
 
+		// Overriden in final classes by ENTITY_COMPONENT_CLASS_BODY
 		virtual const String& GetClassDisplayName() const = 0;
+		// Overriden in final classes by ENTITY_COMPONENT_CLASS_BODY
+		virtual const String& GetClassName() const = 0; // @TODO: Get rid of these Windows macros
 
 	protected:
 		Component();
@@ -139,8 +159,8 @@ namespace Ion
 		template<typename CompT>
 		struct Hasher
 		{
-			size_t operator()(const CompT& comp) const noexcept {
-
+			size_t operator()(const CompT& comp) const noexcept
+			{
 				return THash<GUID>()(comp.GetGUID());
 			}
 		};
@@ -162,8 +182,8 @@ namespace Ion
 		friend class Entity;
 	};
 
-	/* Container for Components of type T
-	   Used to call Component Callback functions */
+	// @TODO: Change this to something more efficient
+	/* Container for Components of type T */
 	template<typename T>
 	using TCompContainer = THashMap<GUID, T>;
 
@@ -176,7 +196,7 @@ namespace Ion
 		};
 
 	public:
-		using ComponentContainerPtr = void*;
+		using ComponentContainer = void;
 
 		ComponentRegistry(World* worldContext);
 		~ComponentRegistry();
@@ -209,7 +229,7 @@ namespace Ion
 		static StaticComponentTypeData* GetComponentTypeData();
 
 	private:
-		THashMap<ComponentTypeID, ComponentContainerPtr> m_ComponentArrays;
+		THashMap<ComponentTypeID, ComponentContainer*> m_Containers;
 		THashSet<ComponentTypeID> m_InitializedTypes;
 
 		World* m_WorldContext;
@@ -269,10 +289,9 @@ namespace Ion
 	{
 		static_assert(TIsBaseOfV<Component, CompT>);
 		using CompContainer = TCompContainer<CompT>;
-		const ComponentTypeID TypeID = CompT::TypeID;
 
 		// Initialize the array if it's the first component of that type
-		if (m_InitializedTypes.find(TypeID) == m_InitializedTypes.end())
+		if (m_InitializedTypes.find(CompT::s_TypeID) == m_InitializedTypes.end())
 		{
 			InitializeComponentContainter<CompT>();
 		}
@@ -280,16 +299,14 @@ namespace Ion
 		CompContainer& container = GetContainer<CompContainer>();
 
 		CompT component(Forward<Args>(args)...);
-		auto& [it, _] = container.emplace(component.GetGUID(), Move(component));
+		auto [it, _] = container.emplace(component.GetGUID(), Move(component));
 
 		CompT* componentPtr = &(*it).second;
 		componentPtr->m_WorldContext = m_WorldContext;
-		componentPtr->m_Name = ComponentTypeDefaults<CompT>::Name;
+		componentPtr->m_Name = CompT::ClassDisplayName;
 
-		if constexpr (THasOnCreate<CompT>)
-		{
-			componentPtr->OnCreate();
-		}
+		componentPtr->OnCreate();
+
 		return componentPtr;
 	}
 
@@ -313,10 +330,9 @@ namespace Ion
 				return;
 			}
 			CompT* componentPtr = &(*it).second;
-			if constexpr (THasOnDestroy<CompT>)
-			{
-				component->OnDestroy();
-			}
+
+			component->OnDestroy();
+
 			container.erase(guid);
 		}
 	}
@@ -328,7 +344,7 @@ namespace Ion
 
 		StaticComponentTypeData* componentTypeData = GetComponentTypeData();
 
-		CompT::TypeID = componentTypeData->ComponentIDCounter;
+		CompT::s_TypeID = componentTypeData->ComponentIDCounter;
 		//componentTypeData->RegisteredTypes.insert(s_ComponentIDCounter);
 
 		return componentTypeData->ComponentIDCounter++;
@@ -347,11 +363,10 @@ namespace Ion
 	{
 		static_assert(TIsBaseOfV<Component, CompT>);
 		using CompContainer = TCompContainer<CompT>;
-		const ComponentTypeID TypeID = CompT::TypeID;
 
-		m_InitializedTypes.insert(TypeID);
+		m_InitializedTypes.insert(CompT::s_TypeID);
 		CompContainer* container = new CompContainer;
-		m_ComponentArrays.insert({ TypeID, container });
+		m_Containers.insert({ CompT::s_TypeID, container });
 	}
 
 	template<typename ContainerT>
@@ -360,7 +375,7 @@ namespace Ion
 		using CompT = ContainerT::value_type::second_type;
 		static_assert(TIsBaseOfV<Component, CompT>);
 
-		ComponentContainerPtr containerPtr = m_ComponentArrays.at(CompT::TypeID);
+		ComponentContainer* containerPtr = m_Containers.at(CompT::s_TypeID);
 		return *(ContainerT*)containerPtr;
 	}
 }

@@ -39,7 +39,7 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		// Cleanup allocated structures
-		for (auto& [id, ptr] : m_ComponentArrays)
+		for (auto& [id, ptr] : m_Containers)
 		{
 			checked_delete(ptr);
 		}
@@ -49,11 +49,10 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		// Iterate over the containers first
-		for (auto& [id, container] : m_ComponentArrays)
+		// Call the functions for each component container
+		for (auto& [id, container] : m_Containers)
 		{
-			ComponentStaticCallbacks::TickFPtr func = ComponentStaticCallbacks::GetTickFPtr(id);
-			checked_call(func, container, deltaTime);
+			ComponentSerialCall::Tick(id, container, deltaTime);
 		}
 	}
 
@@ -61,10 +60,9 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		for (auto& [id, container] : m_ComponentArrays)
+		for (auto& [id, container] : m_Containers)
 		{
-			ComponentStaticCallbacks::BuildRendererDataFPtr func = ComponentStaticCallbacks::GetBuildRendererDataFPtr(id);
-			checked_call(func, container, data);
+			ComponentSerialCall::BuildRendererData(id, container, data);
 		}
 	}
 }

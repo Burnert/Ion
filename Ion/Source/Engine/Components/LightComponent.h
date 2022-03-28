@@ -14,7 +14,7 @@ namespace Ion
 
 	class ION_API LightComponent final : public SceneComponent
 	{
-		ENTITY_COMPONENT_CLASS_BODY("Light")
+		ENTITY_COMPONENT_CLASS_BODY(LightComponent, "Light")
 
 		// Component Callback methods
 
@@ -29,11 +29,5 @@ namespace Ion
 
 	private:
 		LightComponentData m_LightData;
-	};
-
-	template<>
-	struct ComponentTypeDefaults<LightComponent>
-	{
-		static constexpr const char* Name = "LightComponent";
 	};
 }
