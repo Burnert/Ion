@@ -469,6 +469,8 @@ namespace Editor
 
 	void EditorLayer::DrawDetailsRelationsChildrenSection(Entity& entity)
 	{
+		TRACE_FUNCTION();
+
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.0f, 2.0f));
 		if (ImGui::BeginChild("children_list", ImVec2(-FLT_MIN, 4 * ImGui::GetTextLineHeightWithSpacing()), true))
 		{
@@ -522,16 +524,45 @@ namespace Editor
 			if (selectedComponent)
 			{
 				ImGui::Separator();
-				ImGui::Spacing();
-				ImGui::Text("Component Details");
-				ImGui::Spacing();
-				ImGui::Separator();
 
-				if (selectedComponent->IsSceneComponent())
+				bool bComponentDetailsOpen = ImGui::CollapsingHeader("Component Details");
+
+				if (bComponentDetailsOpen)
 				{
-
+					if (selectedComponent->IsSceneComponent())
+					{
+						DrawSceneComponentDetails(*(SceneComponent*)selectedComponent);
+					}
+					else
+					{
+						// @TODO: Non-scene component details
+					}
 				}
+
+				ImGui::Separator();
 			}
+		}
+	}
+
+	void EditorLayer::DrawSceneComponentDetails(SceneComponent& component)
+	{
+		TRACE_FUNCTION();
+
+		ImGui::PushID("ComponentDetails");
+		ImGui::Indent();
+		DrawSceneComponentDetailsTransformSection(component);
+		ImGui::Unindent();
+		ImGui::PopID();
+	}
+
+	void EditorLayer::DrawSceneComponentDetailsTransformSection(SceneComponent& component)
+	{
+		TRACE_FUNCTION();
+
+		Transform transform = component.GetTransform();
+		if (DrawTransformSection(transform))
+		{
+			component.SetTransform(transform);
 		}
 	}
 
@@ -539,28 +570,10 @@ namespace Editor
 	{
 		TRACE_FUNCTION();
 
-		if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+		Transform transform = entity.GetTransform();
+		if (DrawTransformSection(transform))
 		{
-			ImGui::PushID("Transform");
-
-			const Transform& currentTransform = entity.GetTransform();
-
-			Vector3 location       = currentTransform.GetLocation();
-			Vector3 rotationAngles = currentTransform.GetRotation().Angles();
-			Vector3 scale          = currentTransform.GetScale();
-
-			bool bChanged = false;
-			bChanged |= ImGui::DragFloat3("Location", (float*)&location,       0.0125f, 0.0f, 0.0f, "%.5f");
-			bChanged |= ImGui::DragFloat3("Rotation", (float*)&rotationAngles, 0.5f,    0.0f, 0.0f, "%.5f");
-			bChanged |= ImGui::DragFloat3("Scale",    (float*)&scale,          0.0125f, 0.0f, 0.0f, "%.5f");
-
-			if (bChanged)
-			{
-				Transform newTransform = { location, Rotator(rotationAngles), scale };
-				entity.SetTransform(newTransform);
-			}
-
-			ImGui::PopID();
+			entity.SetTransform(transform);
 		}
 	}
 
@@ -588,6 +601,38 @@ namespace Editor
 		}
 	}
 
+	bool EditorLayer::DrawTransformSection(Transform& inOutTransform)
+	{
+		TRACE_FUNCTION();
+
+		if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID("Transform");
+
+			Vector3 location = inOutTransform.GetLocation();
+			Vector3 rotationAngles = inOutTransform.GetRotation().Angles();
+			Vector3 scale = inOutTransform.GetScale();
+
+			// @TODO: Write warning: Modyfing non-uniformly scaled object's 
+			// transform in world space may have unpredictable results.
+
+			bool bChanged = false;
+			bChanged |= ImGui::DragFloat3("Location", (float*)&location, 0.0125f, 0.0f, 0.0f, "%.5f");
+			bChanged |= ImGui::DragFloat3("Rotation", (float*)&rotationAngles, 0.5f, 0.0f, 0.0f, "%.5f");
+			bChanged |= ImGui::DragFloat3("Scale", (float*)&scale, 0.0125f, 0.0f, 0.0f, "%.5f");
+
+			if (bChanged)
+			{
+				inOutTransform = { location, Rotator(rotationAngles), scale };
+			}
+
+			ImGui::PopID();
+
+			return bChanged;
+		}
+		return false;
+	}
+
 	void EditorLayer::DrawDiagnosticsPanel()
 	{
 		TRACE_FUNCTION();
@@ -611,6 +656,8 @@ namespace Editor
 
 	void EditorLayer::DrawComponentTreeContent(Entity& entity)
 	{
+		TRACE_FUNCTION();
+
 		SceneComponent* rootComponent = entity.GetRootComponent();
 		ionassert(rootComponent);
 
@@ -637,6 +684,8 @@ namespace Editor
 
 	void EditorLayer::DrawComponentTreeNodeChildren(SceneComponent& component, int64 startId)
 	{
+		TRACE_FUNCTION();
+
 		for (SceneComponent* child : component.GetChildren())
 		{
 			DrawComponentTreeSceneComponentNode(*child, startId++, true);
@@ -646,6 +695,8 @@ namespace Editor
 	// True if open
 	bool EditorLayer::DrawComponentTreeSceneComponentNode(SceneComponent& component, int64 id, bool bDrawChildren)
 	{
+		TRACE_FUNCTION();
+
 		bool bHasChildren = component.HasChildren();
 
 		ImGuiTreeNodeFlags imguiNodeFlags =
@@ -705,6 +756,8 @@ namespace Editor
 
 	void EditorLayer::DrawComponentTreeNonSceneComponents(Entity& entity)
 	{
+		TRACE_FUNCTION();
+
 		const Entity::ComponentSet& nonSceneComponents = entity.GetComponents();
 
 		int64 uniqueIndex = 0;

@@ -6,7 +6,8 @@ namespace Ion
 {
 	struct SceneComponentData
 	{
-		Transform Transform;
+		Transform RelativeTransform;
+		Transform WorldTransformCache;
 		uint8 bVisible : 1;
 		uint8 bVisibleInGame : 1;
 
@@ -39,7 +40,7 @@ namespace Ion
 		void SetVisibleInGame(bool bVisibleInGame);
 		bool IsVisibleInGame() const;
 
-		Transform GetWorldTransform() const;
+		const Transform& GetWorldTransform() const;
 
 		void AttachTo(SceneComponent* parent);
 		/* Returns this component */
@@ -57,11 +58,17 @@ namespace Ion
 		void RemoveChild(SceneComponent* component);
 		void GetAllDescendants_Internal(TArray<SceneComponent*>& outArray) const;
 
+		/* Called in any function that changes the relative transform. */
+		void UpdateWorldTransformCache();
+		void UpdateChildrenWorldTransformCache();
+
 	private:
 		SceneComponentData m_SceneData;
 
 		SceneComponent* m_Parent;
 		TArray<SceneComponent*> m_Children;
+
+		friend class Entity;
 	};
 
 	class EmptySceneComponent final : public SceneComponent
@@ -71,6 +78,41 @@ namespace Ion
 	private:
 		EmptySceneComponent();
 	};
+
+	inline const Transform& SceneComponent::GetTransform() const
+	{
+		return m_SceneData.RelativeTransform;
+	}
+
+	inline const Vector3& SceneComponent::GetLocation() const
+	{
+		return m_SceneData.RelativeTransform.GetLocation();
+	}
+
+	inline const Rotator& SceneComponent::GetRotation() const
+	{
+		return m_SceneData.RelativeTransform.GetRotation();
+	}
+
+	inline const Vector3& SceneComponent::GetScale() const
+	{
+		return m_SceneData.RelativeTransform.GetScale();
+	}
+
+	inline bool SceneComponent::IsVisible() const
+	{
+		return m_SceneData.bVisible;
+	}
+
+	inline bool SceneComponent::IsVisibleInGame() const
+	{
+		return m_SceneData.bVisibleInGame;
+	}
+
+	inline const Transform& SceneComponent::GetWorldTransform() const
+	{
+		return m_SceneData.WorldTransformCache;
+	}
 
 	inline SceneComponent* SceneComponent::GetParent() const
 	{

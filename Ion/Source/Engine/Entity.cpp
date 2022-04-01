@@ -210,6 +210,7 @@ namespace Ion
 		}
 
 		UpdateChildrenWorldTransformCache();
+		UpdateRootComponentWorldTransformCache();
 	}
 
 	void Entity::UpdateChildrenWorldTransformCache()
@@ -217,6 +218,14 @@ namespace Ion
 		for (Entity* child : m_Children)
 		{
 			child->UpdateWorldTransformCache();
+		}
+	}
+
+	void Entity::UpdateRootComponentWorldTransformCache()
+	{
+		if (m_RootComponent)
+		{
+			m_RootComponent->UpdateWorldTransformCache();
 		}
 	}
 }

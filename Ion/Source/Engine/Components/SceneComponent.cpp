@@ -9,42 +9,26 @@ namespace Ion
 
 	void SceneComponent::SetTransform(const Transform& transform)
 	{
-		m_SceneData.Transform = transform;
-	}
-
-	const Transform& SceneComponent::GetTransform() const
-	{
-		return m_SceneData.Transform;
+		m_SceneData.RelativeTransform = transform;
+		UpdateWorldTransformCache();
 	}
 
 	void SceneComponent::SetLocation(const Vector3& location)
 	{
-		m_SceneData.Transform.SetLocation(location);
-	}
-
-	const Vector3& SceneComponent::GetLocation() const
-	{
-		return m_SceneData.Transform.GetLocation();
+		m_SceneData.RelativeTransform.SetLocation(location);
+		UpdateWorldTransformCache();
 	}
 
 	void SceneComponent::SetRotation(const Rotator& rotation)
 	{
-		m_SceneData.Transform.SetRotation(rotation);
-	}
-
-	const Rotator& SceneComponent::GetRotation() const
-	{
-		return m_SceneData.Transform.GetRotation();
+		m_SceneData.RelativeTransform.SetRotation(rotation);
+		UpdateWorldTransformCache();
 	}
 
 	void SceneComponent::SetScale(const Vector3& scale)
 	{
-		m_SceneData.Transform.SetScale(scale);
-	}
-
-	const Vector3& SceneComponent::GetScale() const
-	{
-		return m_SceneData.Transform.GetScale();
+		m_SceneData.RelativeTransform.SetScale(scale);
+		UpdateWorldTransformCache();
 	}
 
 	void SceneComponent::SetVisible(bool bVisible)
@@ -52,32 +36,9 @@ namespace Ion
 		m_SceneData.bVisible = bVisible;
 	}
 
-	bool SceneComponent::IsVisible() const
-	{
-		return m_SceneData.bVisible;
-	}
-
 	void SceneComponent::SetVisibleInGame(bool bVisibleInGame)
 	{
 		m_SceneData.bVisibleInGame = bVisibleInGame;
-	}
-
-	bool SceneComponent::IsVisibleInGame() const
-	{
-		return m_SceneData.bVisibleInGame;
-	}
-
-	Transform SceneComponent::GetWorldTransform() const
-	{
-		Transform worldTransform = GetTransform();
-
-		Entity* owner = GetOwner();
-		if (owner)
-		{
-			worldTransform *= owner->GetWorldTransform();
-		}
-
-		return worldTransform;
 	}
 
 	void SceneComponent::AttachTo(SceneComponent* parent)
@@ -127,6 +88,8 @@ namespace Ion
 
 	void SceneComponent::AddChild(SceneComponent* component)
 	{
+		TRACE_FUNCTION();
+
 		ionassert(component);
 		ionassert(std::find(m_Children.begin(), m_Children.end(), component) == m_Children.end());
 
@@ -135,6 +98,8 @@ namespace Ion
 
 	void SceneComponent::RemoveChild(SceneComponent* component)
 	{
+		TRACE_FUNCTION();
+
 		ionassert(component);
 
 		auto it = std::find(m_Children.begin(), m_Children.end(), component);
@@ -148,6 +113,29 @@ namespace Ion
 		{
 			outArray.push_back(child);
 			child->GetAllDescendants_Internal(outArray);
+		}
+	}
+
+	void SceneComponent::UpdateWorldTransformCache()
+	{
+		if (m_Parent)
+		{
+			m_SceneData.WorldTransformCache = m_SceneData.RelativeTransform * m_Parent->GetWorldTransform();
+		}
+		else
+		{
+			ionassert(GetOwner());
+			m_SceneData.WorldTransformCache = m_SceneData.RelativeTransform * GetOwner()->GetWorldTransform();
+		}
+
+		UpdateChildrenWorldTransformCache();
+	}
+
+	void SceneComponent::UpdateChildrenWorldTransformCache()
+	{
+		for (SceneComponent* child : m_Children)
+		{
+			child->UpdateWorldTransformCache();
 		}
 	}
 

@@ -44,6 +44,12 @@ namespace Editor
 		void DrawDetailsTransformSection(Entity& entity);
 		void DrawDetailsRenderingSection(Entity& entity);
 
+		void DrawSceneComponentDetails(SceneComponent& component);
+		void DrawSceneComponentDetailsTransformSection(SceneComponent& component);
+
+		/* Returns true if the transform has changed. */
+		bool DrawTransformSection(Transform& inOutTransform);
+
 		void DrawDiagnosticsPanel();
 
 		void DrawComponentTreeContent(Entity& entity);

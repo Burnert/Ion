@@ -26,7 +26,7 @@ namespace Ion
 		void SetScale(const Vector3& scale);
 		const Vector3& GetScale() const;
 
-		Transform GetWorldTransform() const;
+		const Transform& GetWorldTransform() const;
 
 		void SetVisible(bool bVisible);
 		bool IsVisible() const;
@@ -101,6 +101,7 @@ namespace Ion
 		/* Called in any function that changes the relative transform. */
 		void UpdateWorldTransformCache();
 		void UpdateChildrenWorldTransformCache();
+		void UpdateRootComponentWorldTransformCache();
 
 	private:
 		GUID m_GUID;
@@ -149,7 +150,7 @@ namespace Ion
 		return m_RelativeTransform.GetScale();
 	}
 
-	inline Transform Entity::GetWorldTransform() const
+	inline const Transform& Entity::GetWorldTransform() const
 	{
 		return m_WorldTransformCache;
 	}
