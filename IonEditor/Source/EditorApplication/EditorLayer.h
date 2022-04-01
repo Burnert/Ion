@@ -46,9 +46,12 @@ namespace Editor
 
 		void DrawSceneComponentDetails(SceneComponent& component);
 		void DrawSceneComponentDetailsTransformSection(SceneComponent& component);
+		void DrawSceneComponentDetailsRenderingSection(SceneComponent& component);
 
 		/* Returns true if the transform has changed. */
 		bool DrawTransformSection(Transform& inOutTransform);
+		/* Returns true if the settings have changed */
+		bool DrawRenderingSection(bool& bInOutVisible, bool& bInOutVisibleInGame);
 
 		void DrawDiagnosticsPanel();
 

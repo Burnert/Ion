@@ -551,6 +551,7 @@ namespace Editor
 		ImGui::PushID("ComponentDetails");
 		ImGui::Indent();
 		DrawSceneComponentDetailsTransformSection(component);
+		DrawSceneComponentDetailsRenderingSection(component);
 		ImGui::Unindent();
 		ImGui::PopID();
 	}
@@ -563,6 +564,19 @@ namespace Editor
 		if (DrawTransformSection(transform))
 		{
 			component.SetTransform(transform);
+		}
+	}
+
+	void EditorLayer::DrawSceneComponentDetailsRenderingSection(SceneComponent& component)
+	{
+		TRACE_FUNCTION();
+
+		bool bVisible = component.IsVisible();
+		bool bVisibleInGame = component.IsVisibleInGame();
+		if (DrawRenderingSection(bVisible, bVisibleInGame))
+		{
+			component.SetVisible(bVisible);
+			component.SetVisibleInGame(bVisibleInGame);
 		}
 	}
 
@@ -581,23 +595,12 @@ namespace Editor
 	{
 		TRACE_FUNCTION();
 
-		if (ImGui::CollapsingHeader("Rendering", ImGuiTreeNodeFlags_DefaultOpen))
+		bool bVisible = entity.IsVisible();
+		bool bVisibleInGame = entity.IsVisibleInGame();
+		if (DrawRenderingSection(bVisible, bVisibleInGame))
 		{
-			ImGui::PushID("Rendering");
-
-			bool bVisible = entity.IsVisible();
-			bool bVisibleInGame = entity.IsVisibleInGame();
-
-			if (ImGui::Checkbox("Visible", &bVisible))
-			{
-				entity.SetVisible(bVisible);
-			}
-			if (ImGui::Checkbox("Visible in game", &bVisibleInGame))
-			{
-				entity.SetVisibleInGame(bVisibleInGame);
-			}
-
-			ImGui::PopID();
+			entity.SetVisible(bVisible);
+			entity.SetVisibleInGame(bVisibleInGame);
 		}
 	}
 
@@ -625,6 +628,26 @@ namespace Editor
 			{
 				inOutTransform = { location, Rotator(rotationAngles), scale };
 			}
+
+			ImGui::PopID();
+
+			return bChanged;
+		}
+		return false;
+	}
+
+	bool EditorLayer::DrawRenderingSection(bool& bInOutVisible, bool& bInOutVisibleInGame)
+	{
+		TRACE_FUNCTION();
+
+		if (ImGui::CollapsingHeader("Rendering", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID("Rendering");
+
+			bool bChanged = false;
+
+			bChanged |= ImGui::Checkbox("Visible", &bInOutVisible);
+			bChanged |= ImGui::Checkbox("Visible in game", &bInOutVisibleInGame);
 
 			ImGui::PopID();
 
