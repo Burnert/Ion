@@ -10,6 +10,8 @@ namespace Ion
 	struct WorldTreeNodeData;
 	struct WorldTreeFindNodeByEntityPred;
 	struct WorldInitializer;
+	// SceneObjectData.h
+	struct SceneObjectData;
 	// Entity.h
 	class Entity;
 	// Components/Component.h
@@ -18,7 +20,6 @@ namespace Ion
 	// Components/BehaviorComponent.h
 	class BehaviorComponent;
 	// Components/SceneComponent.h
-	struct SceneComponentData;
 	class SceneComponent;
 	// Components/MeshComponent.h
 	class MeshComponent;

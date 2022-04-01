@@ -1,14 +1,12 @@
 #pragma once
 
+#include "SceneObjectData.h"
+
 namespace Ion
 {
 	class ION_API Entity
 	{
 	public:
-		//using ComponentTreeNodeFactory = TTreeNodeFactory<Component*, 32>;
-		//using ComponentTreeNode        = TTreeNode<Component*>;
-		//using ComponentNodeMap         = THashMap<Component*, ComponentTreeNode*>;
-
 		using ComponentSet = THashSet<Component*>;
 
 		Entity();
@@ -108,8 +106,7 @@ namespace Ion
 
 		World* m_WorldContext;
 
-		Transform m_RelativeTransform;
-		Transform m_WorldTransformCache;
+		SceneObjectData m_SceneData;
 
 		SceneComponent* m_RootComponent;
 		ComponentSet m_Components;
@@ -121,8 +118,6 @@ namespace Ion
 
 		uint8 m_bCreateEmptyRootOnSpawn : 1;
 		uint8 m_bTickEnabled : 1;
-		uint8 m_bVisible : 1;
-		uint8 m_bVisibleInGame : 1;
 
 		friend class Engine;
 		friend class World;
@@ -132,47 +127,47 @@ namespace Ion
 
 	inline const Transform& Entity::GetTransform() const
 	{
-		return m_RelativeTransform;
+		return m_SceneData.RelativeTransform;
 	}
 
 	inline const Vector3& Entity::GetLocation() const
 	{
-		return m_RelativeTransform.GetLocation();
+		return m_SceneData.RelativeTransform.GetLocation();
 	}
 
 	inline const Rotator& Entity::GetRotation() const
 	{
-		return m_RelativeTransform.GetRotation();
+		return m_SceneData.RelativeTransform.GetRotation();
 	}
 
 	inline const Vector3& Entity::GetScale() const
 	{
-		return m_RelativeTransform.GetScale();
+		return m_SceneData.RelativeTransform.GetScale();
 	}
 
 	inline const Transform& Entity::GetWorldTransform() const
 	{
-		return m_WorldTransformCache;
+		return m_SceneData.WorldTransformCache;
 	}
 
 	inline void Entity::SetVisible(bool bVisible)
 	{
-		m_bVisible = bVisible;
+		m_SceneData.bVisible = bVisible;
 	}
 
 	inline bool Entity::IsVisible() const
 	{
-		return m_bVisible;
+		return m_SceneData.bVisible;
 	}
 
 	inline void Entity::SetVisibleInGame(bool bVisibleInGame)
 	{
-		m_bVisibleInGame = bVisibleInGame;
+		m_SceneData.bVisibleInGame = bVisibleInGame;
 	}
 
 	inline bool Entity::IsVisibleInGame() const
 	{
-		return m_bVisibleInGame;
+		return m_SceneData.bVisibleInGame;
 	}
 
 	inline void Entity::SetTickEnabled(bool bTick)

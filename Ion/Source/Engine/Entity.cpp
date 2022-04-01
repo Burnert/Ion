@@ -15,8 +15,6 @@ namespace Ion
 		m_WorldContext(nullptr),
 		m_bCreateEmptyRootOnSpawn(true),
 		m_bTickEnabled(true),
-		m_bVisible(true),
-		m_bVisibleInGame(true),
 		m_Parent(nullptr),
 		m_RootComponent(nullptr)
 		//m_RootComponentNode(m_ComponentTreeNodeFactory.Create(nullptr))
@@ -25,25 +23,25 @@ namespace Ion
 
 	void Entity::SetTransform(const Transform& transform)
 	{
-		m_RelativeTransform = transform;
+		m_SceneData.RelativeTransform = transform;
 		UpdateWorldTransformCache();
 	}
 
 	void Entity::SetLocation(const Vector3& location)
 	{
-		m_RelativeTransform.SetLocation(location);
+		m_SceneData.RelativeTransform.SetLocation(location);
 		UpdateWorldTransformCache();
 	}
 
 	void Entity::SetRotation(const Rotator& rotation)
 	{
-		m_RelativeTransform.SetRotation(rotation);
+		m_SceneData.RelativeTransform.SetRotation(rotation);
 		UpdateWorldTransformCache();
 	}
 
 	void Entity::SetScale(const Vector3& scale)
 	{
-		m_RelativeTransform.SetScale(scale);
+		m_SceneData.RelativeTransform.SetScale(scale);
 		UpdateWorldTransformCache();
 	}
 
@@ -202,11 +200,11 @@ namespace Ion
 	{
 		if (m_Parent)
 		{
-			m_WorldTransformCache = m_RelativeTransform * m_Parent->GetWorldTransform();
+			m_SceneData.WorldTransformCache = m_SceneData.RelativeTransform * m_Parent->GetWorldTransform();
 		}
 		else
 		{
-			m_WorldTransformCache = m_RelativeTransform;
+			m_SceneData.WorldTransformCache = m_SceneData.RelativeTransform;
 		}
 
 		UpdateChildrenWorldTransformCache();

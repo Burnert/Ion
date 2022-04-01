@@ -1,23 +1,10 @@
 #pragma once
 
 #include "Component.h"
+#include "Engine/SceneObjectData.h"
 
 namespace Ion
 {
-	struct SceneComponentData
-	{
-		Transform RelativeTransform;
-		Transform WorldTransformCache;
-		uint8 bVisible : 1;
-		uint8 bVisibleInGame : 1;
-
-		SceneComponentData() :
-			bVisible(true),
-			bVisibleInGame(true)
-		{
-		}
-	};
-
 	/* Abstract class */
 	class ION_API SceneComponent : public Component
 	{
@@ -63,7 +50,7 @@ namespace Ion
 		void UpdateChildrenWorldTransformCache();
 
 	private:
-		SceneComponentData m_SceneData;
+		SceneObjectData m_SceneData;
 
 		SceneComponent* m_Parent;
 		TArray<SceneComponent*> m_Children;
