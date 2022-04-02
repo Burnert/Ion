@@ -2,9 +2,7 @@
 
 #include "Ion.h"
 
-namespace Ion
-{
-namespace Editor
+namespace Ion::Editor
 {
 	class EditorLayer;
 
@@ -50,6 +48,11 @@ namespace Editor
 		void UpdateEditorCamera(float deltaTime);
 		void UpdateEditorCameraLocation(float deltaTime);
 
+		void CreateViewportFramebuffer();
+		void ResizeViewportFramebuffer(const UVector2& size);
+		void TryResizeViewportFramebuffer(const UVector2& size);
+		const TShared<Texture>& GetViewportFramebuffer() const;
+
 	private:
 		static EditorApplication* s_Instance;
 
@@ -63,6 +66,7 @@ namespace Editor
 		EventDispatcher<EventFunctions, EditorApplication> m_EventDispatcher;
 
 		TShared<EditorLayer> m_EditorLayer;
+		TShared<Texture> m_ViewportFramebuffer;
 
 		World* m_EditorMainWorld;
 		Entity* m_SelectedEntity;
@@ -100,5 +104,9 @@ namespace Editor
 	{
 		return m_EditorCamera;
 	}
-}
+
+	inline const TShared<Texture>& EditorApplication::GetViewportFramebuffer() const
+	{
+		return m_ViewportFramebuffer;
+	}
 }

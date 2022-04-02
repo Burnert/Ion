@@ -13,9 +13,7 @@
 
 #include "ExampleModels.h"
 
-namespace Ion
-{
-namespace Editor
+namespace Ion::Editor
 {
 	// Constructed at the entry point
 	EditorApplication::EditorApplication() :
@@ -370,6 +368,52 @@ namespace Editor
 		}
 	}
 
+	void EditorApplication::CreateViewportFramebuffer()
+	{
+		TRACE_FUNCTION();
+
+		WindowDimensions windowDimensions = EditorApplication::GetWindow()->GetDimensions();
+
+		TextureDescription desc { };
+		desc.Dimensions.Width = windowDimensions.Width;
+		desc.Dimensions.Height = windowDimensions.Height;
+		desc.bUseAsRenderTarget = true;
+		desc.bCreateColorAttachment = true;
+		desc.bCreateDepthStencilAttachment = true;
+		desc.bCreateDepthSampler = true;
+
+		m_ViewportFramebuffer = Texture::Create(desc);
+	}
+	void EditorApplication::ResizeViewportFramebuffer(const UVector2& size)
+	{
+		TRACE_FUNCTION();
+
+		// @TODO: This function probably shouldn't even be called, if the framebuffer is not set
+		if (!m_ViewportFramebuffer)
+			return;
+
+		TextureDescription desc = m_ViewportFramebuffer->GetDescription();
+		desc.Dimensions.Width = size.x;
+		desc.Dimensions.Height = size.y;
+
+		m_ViewportFramebuffer = Texture::Create(desc);
+	}
+
+	void EditorApplication::TryResizeViewportFramebuffer(const UVector2& size)
+	{
+		TRACE_FUNCTION();
+
+		if (size.x && size.y)
+		{
+			TextureDimensions viewportDimensions = m_ViewportFramebuffer->GetDimensions();
+			if (size != UVector2(viewportDimensions.Width, viewportDimensions.Height))
+			{
+				ResizeViewportFramebuffer(size);
+
+				EditorApplication::Get()->GetEditorCamera()->SetAspectRatio((float)size.x / (float)size.y);
+			}
+		}
+	}
+
 	EditorApplication* EditorApplication::s_Instance;
-}
 }

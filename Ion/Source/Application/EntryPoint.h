@@ -20,7 +20,7 @@ static int32 MainShared()
 	TRACE_SESSION_END();
 
 #ifdef ION_DEBUG
-#ifndef DONT_PAUSE_ON_EXIT
+#ifndef DISABLE_PAUSE_ON_EXIT
 	ION_LOG_DEBUG("Press Enter to close.");
 	(void)getchar();
 #endif

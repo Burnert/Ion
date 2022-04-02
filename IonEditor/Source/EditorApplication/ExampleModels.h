@@ -1,8 +1,6 @@
 #pragma once
 
-namespace Ion
-{
-namespace Editor
+namespace Ion::Editor
 {
 	struct ExampleModelData
 	{
@@ -169,5 +167,4 @@ namespace Editor
 			m_bLoaded = true;
 		}
 	}
-}
 }

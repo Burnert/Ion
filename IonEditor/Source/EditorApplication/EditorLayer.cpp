@@ -32,7 +32,7 @@ namespace Editor
 
 	void EditorLayer::OnAttach()
 	{
-		CreateViewportFramebuffer();
+		EditorApplication::Get()->CreateViewportFramebuffer();
 	}
 
 	void EditorLayer::OnDetach()
@@ -43,7 +43,7 @@ namespace Editor
 	{
 		TRACE_FUNCTION();
 
-		TryResizeViewportFramebuffer();
+		EditorApplication::Get()->TryResizeViewportFramebuffer(m_ViewportSize);
 		DrawEditorUI();
 	}
 
@@ -55,7 +55,7 @@ namespace Editor
 
 		// Render to viewport
 
-		renderer->SetRenderTarget(m_ViewportFramebuffer);
+		renderer->SetRenderTarget(EditorApplication::Get()->GetViewportFramebuffer());
 
 		renderer->Clear(Vector4(0.1f, 0.1f, 0.1f, 1.0f));
 		renderer->RenderScene(EditorApplication::Get()->GetEditorScene());
@@ -195,22 +195,24 @@ namespace Editor
 
 			char windowName[16];
 			sprintf_s(windowName, "Viewport##%i", /* ID */ 0);
-			if (!ImGui::Begin(windowName, &m_bViewportOpen, windowFlags))
+			bool bOpen;
+			if (bOpen = ImGui::Begin(windowName, &m_bViewportOpen, windowFlags))
 			{
-				ImGui::End();
 				ImGui::PopStyleVar(3);
-				return;
+
+				// Save the viewport rect for later
+				m_ViewportRect = ImGui::GetWindowWorkRect();
+				m_bViewportHovered = ImGui::IsWindowHovered();
+
+				m_ViewportSize = UVector2(m_ViewportRect.z - m_ViewportRect.x, m_ViewportRect.w - m_ViewportRect.y);
+
+				const TShared<Texture>& viewportFramebuffer = EditorApplication::Get()->GetViewportFramebuffer();
+				const TextureDimensions& viewportDimensions = viewportFramebuffer->GetDimensions();
+				ImGui::Image(viewportFramebuffer->GetNativeID(),
+					ImVec2((float)viewportDimensions.Width, (float)viewportDimensions.Height));
 			}
-			ImGui::PopStyleVar(3);
-
-			// Save the viewport rect for later
-			m_ViewportRect = ImGui::GetWindowWorkRect();
-			m_bViewportHovered = ImGui::IsWindowHovered();
-
-			m_ViewportSize = UVector2(m_ViewportRect.z - m_ViewportRect.x, m_ViewportRect.w - m_ViewportRect.y);
-
-			const TextureDimensions& viewportDimensions = m_ViewportFramebuffer->GetDimensions();
-			ImGui::Image(m_ViewportFramebuffer->GetNativeID(), ImVec2((float)viewportDimensions.Width, (float)viewportDimensions.Height));
+			if (!bOpen)
+				ImGui::PopStyleVar(3);
 
 			ImGui::End();
 		}
@@ -872,53 +874,6 @@ namespace Editor
 
 	void EditorLayer::OnKeyReleasedEvent(const KeyReleasedEvent& event)
 	{
-	}
-
-	void EditorLayer::CreateViewportFramebuffer()
-	{
-		TRACE_FUNCTION();
-
-		WindowDimensions windowDimensions = EditorApplication::GetWindow()->GetDimensions();
-
-		TextureDescription desc { };
-		desc.Dimensions.Width = windowDimensions.Width;
-		desc.Dimensions.Height = windowDimensions.Height;
-		desc.bUseAsRenderTarget = true;
-		desc.bCreateColorAttachment = true;
-		desc.bCreateDepthStencilAttachment = true;
-		desc.bCreateDepthSampler = true;
-
-		m_ViewportFramebuffer = Texture::Create(desc);
-	}
-	void EditorLayer::ResizeViewportFramebuffer(const UVector2& size)
-	{
-		TRACE_FUNCTION();
-
-		// @TODO: This function probably shouldn't even be called, if the framebuffer is not set
-		if (!m_ViewportFramebuffer)
-			return;
-
-		TextureDescription desc = m_ViewportFramebuffer->GetDescription();
-		desc.Dimensions.Width = size.x;
-		desc.Dimensions.Height = size.y;
-
-		m_ViewportFramebuffer = Texture::Create(desc);
-	}
-
-	void EditorLayer::TryResizeViewportFramebuffer()
-	{
-		TRACE_FUNCTION();
-
-		if (m_ViewportSize.x && m_ViewportSize.y)
-		{
-			TextureDimensions viewportDimensions = m_ViewportFramebuffer->GetDimensions();
-			if (m_ViewportSize != UVector2(viewportDimensions.Width, viewportDimensions.Height))
-			{
-				ResizeViewportFramebuffer(m_ViewportSize);
-
-				EditorApplication::Get()->GetEditorCamera()->SetAspectRatio((float)m_ViewportSize.x / (float)m_ViewportSize.y);
-			}
-		}
 	}
 }
 }
