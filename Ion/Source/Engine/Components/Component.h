@@ -315,7 +315,7 @@ namespace Ion
 	{
 		static_assert(TIsBaseOfV<Component, CompT>);
 		using CompContainer = TCompContainer<CompT>;
-		const ComponentTypeID TypeID = CompT::TypeID;
+		const ComponentTypeID TypeID = CompT::s_TypeID;
 
 		if (component)
 		{

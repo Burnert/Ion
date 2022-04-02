@@ -17,18 +17,18 @@ namespace Ion
 
 	void LightComponent::BuildRendererData(RRendererData& data)
 	{
-		if (!IsVisible() || !GetOwner()->IsVisible())
-			return;
+		if (ShouldBeRendered())
+		{
+			Transform worldTransform = GetWorldTransform();
 
-		Transform worldTransform = GetWorldTransform();
-
-		RLightRenderProxy light { };
-		light.Location  = worldTransform.GetLocation();
-		light.Color     = m_LightData.LightColor;
-		light.Intensity = m_LightData.Intensity;
-		light.Falloff   = m_LightData.Falloff;
-		light.Type      = ELightType::Point;
-		data.AddLight(light);
+			RLightRenderProxy light { };
+			light.Location = worldTransform.GetLocation();
+			light.Color = m_LightData.LightColor;
+			light.Intensity = m_LightData.Intensity;
+			light.Falloff = m_LightData.Falloff;
+			light.Type = ELightType::Point;
+			data.AddLight(light);
+		}
 	}
 
 	LightComponent::LightComponent() :

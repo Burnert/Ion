@@ -1,0 +1,49 @@
+#include "IonPCH.h"
+
+#include "MeshEntity.h"
+#include "Engine/Components/MeshComponent.h"
+#include "Engine/World.h"
+
+namespace Ion
+{
+	MeshEntity::MeshEntity() :
+		MeshEntity(GUID())
+	{
+	}
+
+	MeshEntity::MeshEntity(const GUID& guid) :
+		Entity(guid)
+	{
+		SetNoCreateRootOnSpawn();
+	}
+
+	MeshComponent* MeshEntity::GetMeshComponent() const
+	{
+		ionassert(GetRootComponent()->GetClassName() == "MeshComponent",
+			"The root component has been set to a wrong type.");
+		return (MeshComponent*)GetRootComponent();
+	}
+
+	void MeshEntity::SetMesh(const TShared<Mesh>& mesh)
+	{
+		GetMeshComponent()->SetMesh(mesh);
+	}
+
+	TShared<Mesh> MeshEntity::GetMesh() const
+	{
+		return GetMeshComponent()->GetMesh();
+	}
+
+	void MeshEntity::OnSpawn(World* worldContext)
+	{
+		ComponentRegistry& registry = worldContext->GetComponentRegistry();
+		SetRootComponent(registry.CreateComponent<MeshComponent>());
+		GetRootComponent()->SetName("Mesh");
+	}
+
+	void MeshEntity::OnDestroy()
+	{
+		ComponentRegistry& registry = GetWorldContext()->GetComponentRegistry();
+		registry.DestroyComponent(GetMeshComponent());
+	}
+}

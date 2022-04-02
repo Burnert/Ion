@@ -41,6 +41,12 @@ namespace Ion
 		m_SceneData.bVisibleInGame = bVisibleInGame;
 	}
 
+	bool SceneComponent::ShouldBeRendered() const
+	{
+		ionassert(GetOwner());
+		return IsVisible() && GetOwner()->IsVisible();
+	}
+
 	void SceneComponent::AttachTo(SceneComponent* parent)
 	{
 		if (!parent)

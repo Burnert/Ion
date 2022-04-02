@@ -91,7 +91,7 @@ namespace Ion
 	protected:
 		virtual void Tick(float deltaTime) { }
 		virtual void OnSpawn(World* worldContext);
-		virtual void OnDestroy() { }
+		virtual void OnDestroy() { /* @TODO: destroy components */ }
 
 	private:
 		void AddChild(Entity* child);

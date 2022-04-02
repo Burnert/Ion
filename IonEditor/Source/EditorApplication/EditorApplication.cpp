@@ -10,6 +10,7 @@
 #include "Engine/Components/LightComponent.h"
 #include "Engine/Components/DirectionalLightComponent.h"
 #include "Engine/Components/BehaviorComponent.h"
+#include "Engine/Entity/MeshEntity.h"
 
 #include "ExampleModels.h"
 
@@ -67,11 +68,11 @@ namespace Ion::Editor
 
 		ComponentRegistry& registry = m_EditorMainWorld->GetComponentRegistry();
 
-		m_TestMeshComponent = registry.CreateComponent<MeshComponent>();
-		GetModelDeferred(g_ExampleModels[0], [this](ExampleModelData& model)
-		{
-			m_TestMeshComponent->SetMesh(model.Mesh);
-		});
+		//m_TestMeshComponent = registry.CreateComponent<MeshComponent>();
+		//GetModelDeferred(g_ExampleModels[0], [this](ExampleModelData& model)
+		//{
+		//	m_TestMeshComponent->SetMesh(model.Mesh);
+		//});
 
 		m_TestLightComponent = registry.CreateComponent<LightComponent>();
 		m_TestLightComponent->GetLightDataRef().LightColor = Vector3(1.0f, 1.0f, 0.0f);
@@ -82,10 +83,13 @@ namespace Ion::Editor
 		m_TestDirLightComponent->GetDirectionalLightDataRef().LightColor = Vector3(1.0f, 1.0f, 1.0f);
 		m_TestDirLightComponent->GetDirectionalLightDataRef().Intensity = 1.0f;
 
-		Entity* entity = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
-		entity->SetRootComponent(m_TestMeshComponent);
+		MeshEntity* entity = m_EditorMainWorld->SpawnEntityOfClass<MeshEntity>();
 		entity->SetTransform(Transform(Vector3(0.0f, -1.0f, 0.0f), Rotator(Vector3(-90.0f, 0.0f, 0.0f))));
 		entity->SetName("Mesh");
+		GetModelDeferred(g_ExampleModels[0], [this, entity](ExampleModelData& model)
+		{
+			entity->SetMesh(model.Mesh);
+		});
 
 		Entity* lightEntity = m_EditorMainWorld->SpawnAndAttachEntityOfClass<Entity>(entity);
 		lightEntity->SetRootComponent(m_TestLightComponent);

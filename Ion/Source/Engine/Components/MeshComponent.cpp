@@ -22,13 +22,13 @@ namespace Ion
 	{
 		// @TODO: Takes 1.5-2ms for 10k components
 
+		ionassert(GetOwner());
+
 		if (!m_Mesh)
 			return;
 
-		if (!IsVisible() || !GetOwner()->IsVisible())
-			return;
-
-		data.AddPrimitive(AsRenderProxy());
+		if (ShouldBeRendered())
+			data.AddPrimitive(AsRenderProxy());
 	}
 
 	//void MeshComponent::Tick(float deltaTime)

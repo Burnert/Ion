@@ -17,18 +17,18 @@ namespace Ion
 
 	void DirectionalLightComponent::BuildRendererData(RRendererData& data)
 	{
-		if (!IsVisible() || !GetOwner()->IsVisible())
-			return;
+		if (ShouldBeRendered())
+		{
+			// @TODO: If active dirlight:
+			Transform worldTransform = GetWorldTransform();
 
-		// @TODO: If active dirlight:
-		Transform worldTransform = GetWorldTransform();
-
-		RLightRenderProxy light { };
-		light.Color     = m_DirectionalLightData.LightColor;
-		light.Intensity = m_DirectionalLightData.Intensity;
-		light.Direction = worldTransform.GetForwardVector();
-		light.Type      = ELightType::Directional;
-		data.DirectionalLight = light;
+			RLightRenderProxy light { };
+			light.Color = m_DirectionalLightData.LightColor;
+			light.Intensity = m_DirectionalLightData.Intensity;
+			light.Direction = worldTransform.GetForwardVector();
+			light.Type = ELightType::Directional;
+			data.DirectionalLight = light;
+		}
 	}
 
 	DirectionalLightComponent::DirectionalLightComponent() :

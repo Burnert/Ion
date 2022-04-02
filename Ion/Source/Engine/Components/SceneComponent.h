@@ -29,6 +29,8 @@ namespace Ion
 
 		const Transform& GetWorldTransform() const;
 
+		bool ShouldBeRendered() const;
+
 		void AttachTo(SceneComponent* parent);
 		/* Returns this component */
 		SceneComponent* Detach();

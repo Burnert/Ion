@@ -175,6 +175,7 @@ namespace Ion
 			ComponentRegistry& registry = worldContext->GetComponentRegistry();
 			SetRootComponent(registry.CreateComponent<EmptySceneComponent>());
 			m_RootComponent->SetName("Root");
+			// @TODO: Destroy on destroy
 		}
 	}
 
