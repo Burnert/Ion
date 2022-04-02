@@ -116,7 +116,8 @@ namespace Ion
 
 		BindScreenTexturePrimitives(GetEditorViewportShader().get());
 		sceneFinalTexture->Bind(0);
-		editorDataTexture->BindDepth(1);
+		sceneFinalTexture->BindDepth(1);
+		editorDataTexture->BindDepth(2);
 
 		// Index count is always 6 (2 triangles)
 		dxcall_v(context->DrawIndexed(6, 0, 0));
