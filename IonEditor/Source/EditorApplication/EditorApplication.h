@@ -48,10 +48,18 @@ namespace Ion::Editor
 		void UpdateEditorCamera(float deltaTime);
 		void UpdateEditorCameraLocation(float deltaTime);
 
-		void CreateViewportFramebuffer();
+		void RenderEditorScene();
+
+		void CreateViewportFramebuffer(const UVector2& size);
 		void ResizeViewportFramebuffer(const UVector2& size);
-		void TryResizeViewportFramebuffer(const UVector2& size);
 		const TShared<Texture>& GetViewportFramebuffer() const;
+		/* Creates the viewport, if it hasn't been done yet. */
+		void TryResizeViewportFramebuffer(const UVector2& size);
+
+		void CreateFinalSceneFramebuffer(const UVector2& size);
+		void ResizeFinalSceneFramebuffer(const UVector2& size);
+		void CreateEditorDataFramebuffer(const UVector2& size);
+		void ResizeEditorDataFramebuffer(const UVector2& size);
 
 	private:
 		static EditorApplication* s_Instance;
@@ -67,6 +75,8 @@ namespace Ion::Editor
 
 		TShared<EditorLayer> m_EditorLayer;
 		TShared<Texture> m_ViewportFramebuffer;
+		TShared<Texture> m_FinalSceneFramebuffer;
+		TShared<Texture> m_EditorDataFramebuffer;
 
 		World* m_EditorMainWorld;
 		Entity* m_SelectedEntity;

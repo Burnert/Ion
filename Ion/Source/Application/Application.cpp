@@ -152,9 +152,11 @@ namespace Ion
 
 		m_LayerStack->OnRender();
 
+		// Render to the window framebuffer last
+		Renderer::Get()->SetRenderTarget(nullptr);
+
 		{
 			TRACE_SCOPE("Render ImGui");
-			Renderer::Get()->SetRenderTarget(nullptr);
 			ImGuiRenderPlatform(ImGui::GetDrawData());
 		}
 

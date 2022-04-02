@@ -97,15 +97,29 @@ namespace Ion
 
 	void Renderer::BindScreenTexturePrimitives() const
 	{
+		BindScreenTexturePrimitives(m_ScreenTextureRenderData.Shader.get());
+	}
+
+	void Renderer::BindScreenTexturePrimitives(Shader* customShader) const
+	{
 		TRACE_FUNCTION();
 
-		m_ScreenTextureRenderData.Shader->Bind();
+		ionassert(customShader);
+
+		customShader->Bind();
 		m_ScreenTextureRenderData.VertexBuffer->Bind();
 		m_ScreenTextureRenderData.VertexBuffer->BindLayout();
 		m_ScreenTextureRenderData.IndexBuffer->Bind();
 	}
 
 	void Renderer::InitShaders()
+	{
+		InitBasicShader();
+		InitEditorDataShader();
+		InitEditorViewportShader();
+	}
+
+	void Renderer::InitBasicShader()
 	{
 		String vertexSrc;
 		String pixelSrc;
@@ -131,6 +145,66 @@ namespace Ion
 		if (!m_BasicShader->Compile())
 		{
 			LOG_ERROR("Could not compile the Basic Shader.");
+			debugbreak();
+		}
+	}
+
+	void Renderer::InitEditorDataShader()
+	{
+		String vertexSrc;
+		String pixelSrc;
+
+		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
+
+		// @TODO: This needs a refactor
+		if (RenderAPI::GetCurrent() == ERenderAPI::DX11)
+		{
+			File::ReadToString(shadersPath + L"Editor/EditorDataVS.hlsl", vertexSrc);
+			File::ReadToString(shadersPath + L"Editor/EditorDataPS.hlsl", pixelSrc);
+		}
+		else
+		{
+			File::ReadToString(shadersPath + L"Editor/EditorData.vert", vertexSrc);
+			File::ReadToString(shadersPath + L"Editor/EditorData.frag", pixelSrc);
+		}
+
+		m_EditorDataShader = Shader::Create();
+		m_EditorDataShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
+		m_EditorDataShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
+
+		if (!m_EditorDataShader->Compile())
+		{
+			LOG_ERROR("Could not compile the EditorData Shader.");
+			debugbreak();
+		}
+	}
+
+	void Renderer::InitEditorViewportShader()
+	{
+		String vertexSrc;
+		String pixelSrc;
+
+		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
+
+		// @TODO: This needs a refactor
+		if (RenderAPI::GetCurrent() == ERenderAPI::DX11)
+		{
+			File::ReadToString(shadersPath + L"Editor/EditorViewportVS.hlsl", vertexSrc);
+			File::ReadToString(shadersPath + L"Editor/EditorViewportPS.hlsl", pixelSrc);
+		}
+		else
+		{
+			File::ReadToString(shadersPath + L"Editor/EditorViewport.vert", vertexSrc);
+			File::ReadToString(shadersPath + L"Editor/EditorViewport.frag", pixelSrc);
+		}
+
+		m_EditorViewportShader = Shader::Create();
+		m_EditorViewportShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
+		m_EditorViewportShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
+
+		if (!m_EditorViewportShader->Compile())
+		{
+			LOG_ERROR("Could not compile the EditorViewport Shader.");
 			debugbreak();
 		}
 	}

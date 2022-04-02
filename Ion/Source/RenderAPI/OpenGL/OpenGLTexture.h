@@ -14,6 +14,7 @@ namespace Ion
 		virtual void UpdateSubresource(Image* image) override;
 
 		virtual void Bind(uint32 slot = 0) const override;
+		virtual void BindDepth(uint32 slot = 0) const override;
 		virtual void Unbind() const override;
 
 		virtual void* GetNativeID() const override;

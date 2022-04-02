@@ -58,6 +58,10 @@ namespace Ion
 		m_BoundSlot = slot;
 	}
 
+	void OpenGLTexture::BindDepth(uint32 slot) const
+	{
+	}
+
 	void OpenGLTexture::Unbind() const
 	{
 		// This is useless for the time being

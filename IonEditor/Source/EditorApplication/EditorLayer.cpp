@@ -32,7 +32,6 @@ namespace Editor
 
 	void EditorLayer::OnAttach()
 	{
-		EditorApplication::Get()->CreateViewportFramebuffer();
 	}
 
 	void EditorLayer::OnDetach()
@@ -50,15 +49,6 @@ namespace Editor
 	void EditorLayer::OnRender()
 	{
 		TRACE_FUNCTION();
-
-		Renderer* renderer = Renderer::Get();
-
-		// Render to viewport
-
-		renderer->SetRenderTarget(EditorApplication::Get()->GetViewportFramebuffer());
-
-		renderer->Clear(Vector4(0.1f, 0.1f, 0.1f, 1.0f));
-		renderer->RenderScene(EditorApplication::Get()->GetEditorScene());
 	}
 
 	void EditorLayer::OnEvent(const Event& event)
@@ -207,9 +197,12 @@ namespace Editor
 				m_ViewportSize = UVector2(m_ViewportRect.z - m_ViewportRect.x, m_ViewportRect.w - m_ViewportRect.y);
 
 				const TShared<Texture>& viewportFramebuffer = EditorApplication::Get()->GetViewportFramebuffer();
-				const TextureDimensions& viewportDimensions = viewportFramebuffer->GetDimensions();
-				ImGui::Image(viewportFramebuffer->GetNativeID(),
-					ImVec2((float)viewportDimensions.Width, (float)viewportDimensions.Height));
+				if (viewportFramebuffer)
+				{
+					const TextureDimensions& viewportDimensions = viewportFramebuffer->GetDimensions();
+					ImGui::Image(viewportFramebuffer->GetNativeID(),
+						ImVec2((float)viewportDimensions.Width, (float)viewportDimensions.Height));
+				}
 			}
 			if (!bOpen)
 				ImGui::PopStyleVar(3);

@@ -225,6 +225,8 @@ namespace Ion::Editor
 	void EditorApplication::OnRender()
 	{
 		TRACE_FUNCTION();
+
+		RenderEditorScene();
 	}
 
 	void EditorApplication::OnShutdown()
@@ -368,43 +370,71 @@ namespace Ion::Editor
 		}
 	}
 
-	void EditorApplication::CreateViewportFramebuffer()
+	void EditorApplication::RenderEditorScene()
+	{
+		if (m_ViewportFramebuffer)
+		{
+			// Render the scene
+			Renderer::Get()->SetRenderTarget(m_FinalSceneFramebuffer);
+
+			Renderer::Get()->Clear(Vector4(0.1f, 0.1f, 0.1f, 1.0f));
+			Renderer::Get()->RenderScene(GetEditorScene());
+
+			// Render to editor data framebuffer
+			Renderer::Get()->SetRenderTarget(m_EditorDataFramebuffer);
+
+			Renderer::Get()->Clear(Vector4(0.0f, 0.0f, 0.0f, 0.0f));
+			SceneEditorDataInfo info { };
+			info.SelectedEntity = m_SelectedEntity;
+			Renderer::Get()->RenderSceneEditorData(GetEditorScene(), info);
+
+			// Render to viewport framebuffer
+			Renderer::Get()->SetRenderTarget(m_ViewportFramebuffer);
+
+			Renderer::Get()->Clear(Vector4(0.0f, 0.0f, 0.0f, 0.0f));
+			Renderer::Get()->DrawEditorViewport(m_FinalSceneFramebuffer, m_EditorDataFramebuffer);
+		}
+	}
+
+	void EditorApplication::CreateViewportFramebuffer(const UVector2& size)
 	{
 		TRACE_FUNCTION();
 
-		WindowDimensions windowDimensions = EditorApplication::GetWindow()->GetDimensions();
-
 		TextureDescription desc { };
-		desc.Dimensions.Width = windowDimensions.Width;
-		desc.Dimensions.Height = windowDimensions.Height;
+		desc.Dimensions.Width = size.x;
+		desc.Dimensions.Height = size.y;
 		desc.bUseAsRenderTarget = true;
 		desc.bCreateColorAttachment = true;
-		desc.bCreateDepthStencilAttachment = true;
-		desc.bCreateDepthSampler = true;
 
 		m_ViewportFramebuffer = Texture::Create(desc);
+
+		CreateFinalSceneFramebuffer(size);
+		CreateEditorDataFramebuffer(size);
 	}
+
 	void EditorApplication::ResizeViewportFramebuffer(const UVector2& size)
 	{
 		TRACE_FUNCTION();
-
-		// @TODO: This function probably shouldn't even be called, if the framebuffer is not set
-		if (!m_ViewportFramebuffer)
-			return;
 
 		TextureDescription desc = m_ViewportFramebuffer->GetDescription();
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
 
 		m_ViewportFramebuffer = Texture::Create(desc);
+
+		ResizeFinalSceneFramebuffer(size);
+		ResizeEditorDataFramebuffer(size);
 	}
 
 	void EditorApplication::TryResizeViewportFramebuffer(const UVector2& size)
 	{
-		TRACE_FUNCTION();
-
 		if (size.x && size.y)
 		{
+			if (!m_ViewportFramebuffer)
+			{
+				CreateViewportFramebuffer(size);
+			}
+
 			TextureDimensions viewportDimensions = m_ViewportFramebuffer->GetDimensions();
 			if (size != UVector2(viewportDimensions.Width, viewportDimensions.Height))
 			{
@@ -413,6 +443,58 @@ namespace Ion::Editor
 				EditorApplication::Get()->GetEditorCamera()->SetAspectRatio((float)size.x / (float)size.y);
 			}
 		}
+	}
+
+	void EditorApplication::CreateFinalSceneFramebuffer(const UVector2& size)
+	{
+		TRACE_FUNCTION();
+
+		TextureDescription desc { };
+		desc.Dimensions.Width = size.x;
+		desc.Dimensions.Height = size.y;
+		desc.bUseAsRenderTarget = true;
+		desc.bCreateColorAttachment = true;
+		desc.bCreateDepthStencilAttachment = true;
+		desc.bCreateDepthSampler = true;
+
+		m_FinalSceneFramebuffer = Texture::Create(desc);
+	}
+
+	void EditorApplication::ResizeFinalSceneFramebuffer(const UVector2& size)
+	{
+		TRACE_FUNCTION();
+
+		TextureDescription desc = m_FinalSceneFramebuffer->GetDescription();
+		desc.Dimensions.Width = size.x;
+		desc.Dimensions.Height = size.y;
+
+		m_FinalSceneFramebuffer = Texture::Create(desc);
+	}
+
+	void EditorApplication::CreateEditorDataFramebuffer(const UVector2& size)
+	{
+		TRACE_FUNCTION();
+
+		TextureDescription desc { };
+		desc.Dimensions.Width = size.x;
+		desc.Dimensions.Height = size.y;
+		desc.bUseAsRenderTarget = true;
+		desc.bCreateColorAttachment = true;
+		desc.bCreateDepthStencilAttachment = true;
+		desc.bCreateDepthSampler = true;
+
+		m_EditorDataFramebuffer = Texture::Create(desc);
+	}
+
+	void EditorApplication::ResizeEditorDataFramebuffer(const UVector2& size)
+	{
+		TRACE_FUNCTION();
+
+		TextureDescription desc = m_EditorDataFramebuffer->GetDescription();
+		desc.Dimensions.Width = size.x;
+		desc.Dimensions.Height = size.y;
+
+		m_EditorDataFramebuffer = Texture::Create(desc);
 	}
 
 	EditorApplication* EditorApplication::s_Instance;

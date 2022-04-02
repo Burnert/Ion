@@ -9,6 +9,8 @@ namespace Ion
 	class DX11VertexBuffer;
 	class DX11IndexBuffer;
 
+	// @TODO: Move the rendering code to the Renderer class and leave only the render api specific things here
+
 	class ION_API DX11Renderer : public Renderer
 	{
 	public:
@@ -22,8 +24,10 @@ namespace Ion
 
 		virtual void Draw(const RPrimitiveRenderProxy& primitive, const Scene* targetScene = nullptr) const override;
 		virtual void DrawScreenTexture(const TShared<Texture>& texture) const override;
+		virtual void DrawEditorViewport(const TShared<Texture>& sceneFinalTexture, const TShared<Texture>& editorDataTexture) const override;
 
 		virtual void RenderScene(const Scene* scene) override;
+		virtual void RenderSceneEditorData(const Scene* scene, const SceneEditorDataInfo& info) override;
 
 		virtual void SetCurrentScene(const Scene* scene) override;
 		virtual const Scene* GetCurrentScene() const override;

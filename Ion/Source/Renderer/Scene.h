@@ -62,6 +62,7 @@ namespace Ion
 		Scene();
 		~Scene() { }
 
+		/* BROKEN DON'T USE */
 		void UpdateRenderData();
 		void LoadSceneData(const RRendererData& data);
 

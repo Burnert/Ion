@@ -28,17 +28,7 @@ namespace Ion
 		if (!IsVisible() || !GetOwner()->IsVisible())
 			return;
 
-		Material* material = m_Mesh->GetMaterial().lock().get();
-		Transform worldTransform = GetWorldTransform();
-
-		RPrimitiveRenderProxy mesh { };
-		mesh.Transform     = worldTransform.GetMatrix();
-		mesh.Material      = material;
-		mesh.Shader        = material->GetShader().get();
-		mesh.VertexBuffer  = m_Mesh->GetVertexBufferRaw();
-		mesh.IndexBuffer   = m_Mesh->GetIndexBufferRaw();
-		mesh.UniformBuffer = m_Mesh->GetUniformBufferRaw();
-		data.AddPrimitive(mesh);
+		data.AddPrimitive(AsRenderProxy());
 	}
 
 	//void MeshComponent::Tick(float deltaTime)
@@ -49,24 +39,27 @@ namespace Ion
 
 	void MeshComponent::SetMesh(const TShared<Mesh>& mesh)
 	{
-		// @TODO: Temporary - change how Scene works
-		// It has to take in a Transform with a Mesh
-		// A Mesh by itself should not have a transform
-		// because it will be shared between different components
-		if (mesh != m_Mesh)
-		{
-			// TEMPORARY
-			//mesh->SetTransform(m_SceneData.Transform.GetMatrix());
-
-			//Scene* scene = GetWorldContext()->GetEditorScene();
-			//scene->RemoveDrawableObject(m_Mesh.get());
-			//scene->AddDrawableObject(mesh.get());
-		}
 		m_Mesh = mesh;
 	}
 
 	TShared<Mesh> MeshComponent::GetMesh() const
 	{
 		return m_Mesh;
+	}
+
+	RPrimitiveRenderProxy MeshComponent::AsRenderProxy() const
+	{
+		Material* material = m_Mesh->GetMaterial().lock().get();
+		Transform worldTransform = GetWorldTransform();
+
+		RPrimitiveRenderProxy mesh { };
+		mesh.Transform     = worldTransform.GetMatrix();
+		mesh.Material      = material;
+		mesh.Shader        = material->GetShader().get();
+		mesh.VertexBuffer  = m_Mesh->GetVertexBufferRaw();
+		mesh.IndexBuffer   = m_Mesh->GetIndexBufferRaw();
+		mesh.UniformBuffer = m_Mesh->GetUniformBufferRaw();
+
+		return mesh;
 	}
 }

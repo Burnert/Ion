@@ -12,6 +12,9 @@
 
 #include "Application/EnginePath.h"
 
+#include "Engine/Entity.h"
+#include "Engine/Components/MeshComponent.h"
+
 namespace Ion
 {
 	DX11Renderer::DX11Renderer() :
@@ -43,13 +46,16 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		ionassert(m_CurrentRTV);
-		ionassert(m_CurrentDSV);
-
 		ID3D11DeviceContext* context = DX11::GetContext();
 
-		dxcall_v(context->ClearRenderTargetView(m_CurrentRTV, (float*)&color));
-		dxcall_v(context->ClearDepthStencilView(m_CurrentDSV, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0));
+		if (m_CurrentRTV)
+		{
+			dxcall_v(context->ClearRenderTargetView(m_CurrentRTV, (float*)&color));
+		}
+		if (m_CurrentDSV)
+		{
+			dxcall_v(context->ClearDepthStencilView(m_CurrentDSV, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0));
+		}
 	}
 
 	void DX11Renderer::Draw(const RPrimitiveRenderProxy& primitive, const Scene* targetScene) const
@@ -97,6 +103,20 @@ namespace Ion
 
 		BindScreenTexturePrimitives();
 		texture->Bind(0);
+
+		// Index count is always 6 (2 triangles)
+		dxcall_v(context->DrawIndexed(6, 0, 0));
+	}
+
+	void DX11Renderer::DrawEditorViewport(const TShared<Texture>& sceneFinalTexture, const TShared<Texture>& editorDataTexture) const
+	{
+		TRACE_FUNCTION();
+
+		ID3D11DeviceContext* context = DX11::GetContext();
+
+		BindScreenTexturePrimitives(GetEditorViewportShader().get());
+		sceneFinalTexture->Bind(0);
+		editorDataTexture->BindDepth(1);
 
 		// Index count is always 6 (2 triangles)
 		dxcall_v(context->DrawIndexed(6, 0, 0));
@@ -155,6 +175,26 @@ namespace Ion
 			TRACE_SCOPE("DX11Renderer::RenderScene - Draw Primitives");
 			for (const RPrimitiveRenderProxy& primitive : scene->GetScenePrimitives())
 			{
+				Draw(primitive, scene);
+			}
+		}
+	}
+
+	void DX11Renderer::RenderSceneEditorData(const Scene* scene, const SceneEditorDataInfo& info)
+	{
+		if (info.SelectedEntity)
+		{
+			SceneComponent* root = info.SelectedEntity->GetRootComponent();
+			ionassert(root);
+
+			// @TODO: Render all the components
+			if (root->GetClassName() == "MeshComponent")
+			{
+				MeshComponent* mesh = (MeshComponent*)root;
+				RPrimitiveRenderProxy primitive = mesh->AsRenderProxy();
+				// Override materials
+				primitive.Material = nullptr;
+				primitive.Shader = GetEditorDataShader().get();
 				Draw(primitive, scene);
 			}
 		}
@@ -253,10 +293,17 @@ namespace Ion
 		{
 			DX11Texture* dx11Texture = (DX11Texture*)targetTexture.get();
 
-			m_CurrentRTV = dx11Texture->m_RTV;
+			if (!targetTexture->HasColorAttachment() &&
+				!targetTexture->HasDepthStencilAttachment())
+			{
+				LOG_ERROR("Cannot set render target. The texture needs at least one attachment.");
+				return;
+			}
+
+			m_CurrentRTV = targetTexture->HasColorAttachment() ?
+				dx11Texture->m_RTV : nullptr;
 			m_CurrentDSV = targetTexture->HasDepthStencilAttachment() ?
-				dx11Texture->m_DSV :
-				DX11::GetDepthStencilView();
+				dx11Texture->m_DSV : nullptr;
 		}
 		else
 		{

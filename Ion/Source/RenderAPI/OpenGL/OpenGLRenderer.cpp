@@ -109,6 +109,10 @@ namespace Ion
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 	}
 
+	void OpenGLRenderer::DrawEditorViewport(const TShared<Texture>& sceneFinalTexture, const TShared<Texture>& editorDataTexture) const
+	{
+	}
+
 	void OpenGLRenderer::RenderScene(const Scene* scene)
 	{
 		TRACE_FUNCTION();
@@ -162,6 +166,11 @@ namespace Ion
 		{
 			Draw(primitive, scene);
 		}
+	}
+
+	void OpenGLRenderer::RenderSceneEditorData(const Scene* scene, const SceneEditorDataInfo& info)
+	{
+		// @TODO: this
 	}
 
 	void OpenGLRenderer::SetCurrentScene(const Scene* scene)

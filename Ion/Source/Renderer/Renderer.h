@@ -39,6 +39,11 @@ namespace Ion
 		TShared<IndexBuffer> IndexBuffer;
 	};
 
+	struct SceneEditorDataInfo
+	{
+		Entity* SelectedEntity;
+	};
+
 	class ION_API Renderer
 	{
 	public:
@@ -58,11 +63,13 @@ namespace Ion
 
 		virtual void Draw(const RPrimitiveRenderProxy& primitive, const Scene* targetScene = nullptr) const = 0;
 		virtual void DrawScreenTexture(const TShared<Texture>& texture) const = 0;
+		virtual void DrawEditorViewport(const TShared<Texture>& sceneFinalTexture, const TShared<Texture>& editorDataTexture) const = 0; // @TODO: this is a bad idea
 
 		virtual void SetCurrentScene(const Scene* scene) = 0;
 		virtual const Scene* GetCurrentScene() const = 0;
 
 		virtual void RenderScene(const Scene* scene) = 0;
+		virtual void RenderSceneEditorData(const Scene* scene, const SceneEditorDataInfo& info) = 0;
 
 		virtual void SetVSyncEnabled(bool bEnabled) const = 0;
 		virtual bool IsVSyncEnabled() const = 0;
@@ -75,9 +82,19 @@ namespace Ion
 
 		virtual void SetRenderTarget(const TShared<Texture>& targetTexture) = 0;
 
-		inline static TShared<Shader> GetBasicShader()
+		inline static const TShared<Shader>& GetBasicShader()
 		{
 			return Renderer::Get()->m_BasicShader;
+		}
+
+		inline static const TShared<Shader>& GetEditorDataShader()
+		{
+			return Renderer::Get()->m_EditorDataShader;
+		}
+
+		inline static const TShared<Shader>& GetEditorViewportShader()
+		{
+			return Renderer::Get()->m_EditorViewportShader;
 		}
 
 	protected:
@@ -85,8 +102,12 @@ namespace Ion
 
 		void InitScreenTextureRendering();
 		void BindScreenTexturePrimitives() const;
+		void BindScreenTexturePrimitives(Shader* customShader) const;
 
 		void InitShaders();
+		void InitBasicShader();
+		void InitEditorDataShader();
+		void InitEditorViewportShader();
 
 	private:
 		void CreateScreenTexturePrimitives();
@@ -95,6 +116,8 @@ namespace Ion
 		ScreenTextureRenderData m_ScreenTextureRenderData;
 		
 		TShared<Shader> m_BasicShader;
+		TShared<Shader> m_EditorDataShader;
+		TShared<Shader> m_EditorViewportShader;
 
 		static Renderer* s_Instance;
 	};

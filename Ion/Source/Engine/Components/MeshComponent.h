@@ -13,6 +13,8 @@ namespace Ion
 		void SetMesh(const TShared<Mesh>& mesh);
 		TShared<Mesh> GetMesh() const;
 
+		RPrimitiveRenderProxy AsRenderProxy() const;
+
 	private:
 		MeshComponent();
 

@@ -54,8 +54,18 @@ namespace Ion
 
 	void DX11Texture::Bind(uint32 slot) const
 	{
+		ionassert(m_ColorSRV);
+		ionassert(m_ColorSamplerState);
 		dxcall_v(DX11::GetContext()->PSSetShaderResources(slot, 1, &m_ColorSRV));
 		dxcall_v(DX11::GetContext()->PSSetSamplers(slot, 1, &m_ColorSamplerState));
+	}
+
+	void DX11Texture::BindDepth(uint32 slot) const
+	{
+		ionassert(m_DepthSRV);
+		ionassert(m_DepthSamplerState);
+		dxcall_v(DX11::GetContext()->PSSetShaderResources(slot, 1, &m_DepthSRV));
+		dxcall_v(DX11::GetContext()->PSSetSamplers(slot, 1, &m_DepthSamplerState));
 	}
 
 	void DX11Texture::Unbind() const
