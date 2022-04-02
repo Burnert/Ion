@@ -384,8 +384,12 @@ namespace Ion::Editor
 			Renderer::Get()->SetRenderTarget(m_EditorDataFramebuffer);
 
 			Renderer::Get()->Clear(Vector4(0.0f, 0.0f, 0.0f, 0.0f));
-			SceneEditorDataInfo info { };
+			SceneEditorDataInfo info;
 			info.SelectedEntity = m_SelectedEntity;
+			if (m_SelectedEntity)
+			{
+				info.SelectedComponents = m_SelectedEntity->GetAllOwnedSceneComponents();
+			}
 			Renderer::Get()->RenderSceneEditorData(GetEditorScene(), info);
 
 			// Render to viewport framebuffer
@@ -405,6 +409,8 @@ namespace Ion::Editor
 		desc.Dimensions.Height = size.y;
 		desc.bUseAsRenderTarget = true;
 		desc.bCreateColorAttachment = true;
+		desc.UWrapMode = ETextureWrapMode::Clamp;
+		desc.VWrapMode = ETextureWrapMode::Clamp;
 
 		m_ViewportFramebuffer = Texture::Create(desc);
 
@@ -456,6 +462,8 @@ namespace Ion::Editor
 		desc.bCreateColorAttachment = true;
 		desc.bCreateDepthStencilAttachment = true;
 		desc.bCreateDepthSampler = true;
+		desc.UWrapMode = ETextureWrapMode::Clamp;
+		desc.VWrapMode = ETextureWrapMode::Clamp;
 
 		m_FinalSceneFramebuffer = Texture::Create(desc);
 	}
@@ -482,6 +490,8 @@ namespace Ion::Editor
 		desc.bCreateColorAttachment = true;
 		desc.bCreateDepthStencilAttachment = true;
 		desc.bCreateDepthSampler = true;
+		desc.UWrapMode = ETextureWrapMode::Clamp;
+		desc.VWrapMode = ETextureWrapMode::Clamp;
 
 		m_EditorDataFramebuffer = Texture::Create(desc);
 	}

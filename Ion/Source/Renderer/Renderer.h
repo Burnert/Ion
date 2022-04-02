@@ -42,6 +42,7 @@ namespace Ion
 	struct SceneEditorDataInfo
 	{
 		Entity* SelectedEntity;
+		TArray<SceneComponent*> SelectedComponents;
 	};
 
 	class ION_API Renderer

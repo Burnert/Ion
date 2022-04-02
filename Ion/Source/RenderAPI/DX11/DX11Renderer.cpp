@@ -185,18 +185,17 @@ namespace Ion
 	{
 		if (info.SelectedEntity)
 		{
-			SceneComponent* root = info.SelectedEntity->GetRootComponent();
-			ionassert(root);
-
-			// @TODO: Render all the components
-			if (root->GetClassName() == "MeshComponent")
+			for (SceneComponent* component : info.SelectedComponents)
 			{
-				MeshComponent* mesh = (MeshComponent*)root;
-				RPrimitiveRenderProxy primitive = mesh->AsRenderProxy();
-				// Override materials
-				primitive.Material = nullptr;
-				primitive.Shader = GetEditorDataShader().get();
-				Draw(primitive, scene);
+				if (component->GetClassName() == "MeshComponent")
+				{
+					MeshComponent* mesh = (MeshComponent*)component;
+					RPrimitiveRenderProxy primitive = mesh->AsRenderProxy();
+					// Override materials
+					primitive.Material = nullptr;
+					primitive.Shader = GetEditorDataShader().get();
+					Draw(primitive, scene);
+				}
 			}
 		}
 	}

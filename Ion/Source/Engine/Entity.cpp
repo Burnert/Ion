@@ -17,7 +17,6 @@ namespace Ion
 		m_bTickEnabled(true),
 		m_Parent(nullptr),
 		m_RootComponent(nullptr)
-		//m_RootComponentNode(m_ComponentTreeNodeFactory.Create(nullptr))
 	{
 	}
 
@@ -54,7 +53,9 @@ namespace Ion
 			UnbindComponent(m_RootComponent);
 
 		m_RootComponent = component;
-		BindComponent(m_RootComponent);
+		BindComponent(component);
+
+		m_SceneComponents.insert(component);
 	}
 
 	bool Entity::HasSceneComponent(SceneComponent* component) const
@@ -62,9 +63,16 @@ namespace Ion
 		if (m_RootComponent == component)
 			return true;
 
-		TArray<SceneComponent*> descendants = m_RootComponent->GetAllDescendants();
-		auto it = std::find(descendants.begin(), descendants.end(), component);
-		return it != descendants.end();
+		return m_SceneComponents.find((SceneComponent*)component) != m_SceneComponents.end();
+
+		//TArray<SceneComponent*> descendants = m_RootComponent->GetAllDescendants();
+		//auto it = std::find(descendants.begin(), descendants.end(), component);
+		//return it != descendants.end();
+	}
+
+	TArray<SceneComponent*> Entity::GetAllOwnedSceneComponents() const
+	{
+		return TArray<SceneComponent*>(m_SceneComponents.begin(), m_SceneComponents.end());
 	}
 
 	void Entity::AddComponent(Component* component)
@@ -73,9 +81,7 @@ namespace Ion
 			"Add Scene Components using SceneComponent::AttachTo.");
 		ionassert(!HasNonSceneComponent(component));
 
-		//m_WorldContext->GetComponentRegistry().BindComponentToEntity(this, component);
 		BindComponent(component);
-		m_Components.insert(component);
 	}
 
 	void Entity::RemoveComponent(Component* component)
@@ -84,9 +90,7 @@ namespace Ion
 			"Remove Scene Components using SceneComponent::Detach.");
 		ionassert(HasNonSceneComponent(component));
 
-		//m_WorldContext->GetComponentRegistry().UnbindComponentFromEntity(this, component);
 		UnbindComponent(component);
-		m_Components.erase(component);
 	}
 
 	bool Entity::HasNonSceneComponent(Component* component) const
@@ -97,12 +101,21 @@ namespace Ion
 
 	bool Entity::HasComponent(Component* component) const
 	{
-		if (!component || !m_RootComponent)
+		if (!component)
 			return false;
 
-		TArray<SceneComponent*> descendants = m_RootComponent->GetAllDescendants();
-		auto it = std::find(descendants.begin(), descendants.end(), component);
-		return it != descendants.end();
+		if (component->IsSceneComponent())
+		{
+			return HasSceneComponent((SceneComponent*)component);
+		}
+		else
+		{
+			return HasNonSceneComponent(component);
+		}
+
+		//TArray<SceneComponent*> descendants = m_RootComponent->GetAllDescendants();
+		//auto it = std::find(descendants.begin(), descendants.end(), component);
+		//return it != descendants.end();
 	}
 
 	void Entity::AttachTo(Entity* parent)
@@ -187,6 +200,14 @@ namespace Ion
 		ionassert(component);
 
 		component->m_OwningEntity = this;
+		if (component->IsSceneComponent())
+		{
+			m_SceneComponents.insert((SceneComponent*)component);
+		}
+		else
+		{
+			m_Components.insert(component);
+		}
 	}
 
 	void Entity::UnbindComponent(Component* component)
@@ -194,6 +215,14 @@ namespace Ion
 		ionassert(component);
 
 		component->m_OwningEntity = nullptr;
+		if (component->IsSceneComponent())
+		{
+			m_SceneComponents.erase((SceneComponent*)component);
+		}
+		else
+		{
+			m_Components.erase(component);
+		}
 	}
 
 	void Entity::UpdateWorldTransformCache()

@@ -38,6 +38,7 @@ namespace Ion
 		void SetRootComponent(SceneComponent* component);
 		SceneComponent* GetRootComponent() const;
 		bool HasSceneComponent(SceneComponent* component) const;
+		TArray<SceneComponent*> GetAllOwnedSceneComponents() const;
 
 		/* Adds a non-scene component */
 		void AddComponent(Component* component);
@@ -108,8 +109,10 @@ namespace Ion
 
 		SceneObjectData m_SceneData;
 
-		SceneComponent* m_RootComponent;
+		// Only non-scene components
 		ComponentSet m_Components;
+		SceneComponent* m_RootComponent;
+		THashSet<SceneComponent*> m_SceneComponents;
 
 		Entity* m_Parent;
 		TArray<Entity*> m_Children;
