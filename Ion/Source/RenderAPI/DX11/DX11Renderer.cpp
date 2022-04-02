@@ -43,6 +43,9 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
+		ionassert(m_CurrentRTV);
+		ionassert(m_CurrentDSV);
+
 		ID3D11DeviceContext* context = DX11::GetContext();
 
 		dxcall_v(context->ClearRenderTargetView(m_CurrentRTV, (float*)&color));

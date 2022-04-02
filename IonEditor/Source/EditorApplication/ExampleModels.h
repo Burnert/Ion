@@ -44,6 +44,7 @@ namespace Editor
 		texDesc.Dimensions.Height = texAssetDesc->Height;
 		texDesc.bGenerateMips = true;
 		texDesc.bUseAsRenderTarget = true;
+		texDesc.bCreateColorAttachment = true;
 		data.Texture = Texture::Create(texDesc);
 
 		Image texImage((uint8*)data.TextureAsset->Data(), texAssetDesc->Width, texAssetDesc->Height, texAssetDesc->NumChannels);

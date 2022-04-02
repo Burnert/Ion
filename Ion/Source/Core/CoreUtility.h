@@ -52,6 +52,16 @@ NODISCARD constexpr inline TEnableIfT<TIsIntegralV<T>, T> BooleanToBitmask(bool 
 	return (T)-(int64)boolean;
 }
 
+/* Templated version of FLAGS_IF()
+   If the condition is true, return the bitflags, else return 0. */
+template<typename T>
+NODISCARD constexpr inline TIf<TIsEnumV<T>, uint32, T> FlagsIf(bool condition, T bitflags) noexcept
+{
+	using Type = TIf<TIsEnumV<T>, uint32, T>;
+	static_assert(TIsIntegralV<Type>);
+	return ~((Type)condition - 1) & bitflags;
+}
+
 // Memory :
 
 template<typename SizeT, typename AlignT>

@@ -18,6 +18,10 @@
 
 #define BITFLAG(x) (1 << (x))
 
+/* If the condition is 1, return the bitflags, else return 0.
+   [If] must be the same type as [Bits] */
+#define FLAGS_IF(If, Bits) (~((If) - 1) & (Bits))
+
 #define BIND_METHOD(x)    std::bind(&x, this)
 #define BIND_METHOD_1P(x) std::bind(&x, this, std::placeholders::_1)
 

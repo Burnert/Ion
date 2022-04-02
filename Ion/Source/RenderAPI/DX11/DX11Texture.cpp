@@ -8,19 +8,21 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		ReleaseTexture();
+		ReleaseResources();
 	}
 
 	void DX11Texture::SetDimensions(TextureDimensions dimensions)
 	{
 		//ionassert(dimensions.Width <= 16384 && dimensions.Height <= 16384, "Textures larger than 16K are unsupported.");
-
-
+		// @TODO: This probably should not be here (recreate the texture instead)
 	}
 
 	void DX11Texture::UpdateSubresource(Image* image)
 	{
 		TRACE_FUNCTION();
+
+		ionassert(m_Description.bUseAsRenderTarget,
+			"Cannot update subresource if the texture has not been created as a render target.");
 
 		if (!image->IsLoaded())
 		{
@@ -35,27 +37,25 @@ namespace Ion
 			image->GetHeight() != m_Description.Dimensions.Height)
 		{
 			LOG_WARN("Image dimensions do not match texture dimensions.");
-			//ReleaseTexture();
-			//CreateTexture(image->GetPixelData(), image->GetWidth(), image->GetHeight());
 			return;
 		}
 
 		uint32 lineSize = image->GetWidth() * 4;
 
 		// Update Subresource
-		dxcall_v(context->UpdateSubresource(m_Texture, 0, nullptr, image->GetPixelData(), lineSize, 0));
+		dxcall_v(context->UpdateSubresource(m_ColorTexture, 0, nullptr, image->GetPixelData(), lineSize, 0));
 
 		if (m_Description.bGenerateMips)
 		{
 			// Generate mipmaps
-			dxcall_v(context->GenerateMips(m_SRV));
+			dxcall_v(context->GenerateMips(m_ColorSRV));
 		}
 	}
 
 	void DX11Texture::Bind(uint32 slot) const
 	{
-		dxcall_v(DX11::GetContext()->PSSetShaderResources(slot, 1, &m_SRV));
-		dxcall_v(DX11::GetContext()->PSSetSamplers(slot, 1, &m_SamplerState));
+		dxcall_v(DX11::GetContext()->PSSetShaderResources(slot, 1, &m_ColorSRV));
+		dxcall_v(DX11::GetContext()->PSSetSamplers(slot, 1, &m_ColorSamplerState));
 	}
 
 	void DX11Texture::Unbind() const
@@ -66,25 +66,40 @@ namespace Ion
 
 	void* DX11Texture::GetNativeID() const
 	{
-		return m_SRV;
+		return m_ColorSRV;
 	}
 
 	DX11Texture::DX11Texture(const TextureDescription& desc) :
 		Texture(desc),
-		m_Texture(nullptr),
-		m_SRV(nullptr),
+		m_ColorTexture(nullptr),
 		m_RTV(nullptr),
-		m_SamplerState(nullptr),
+		m_ColorSRV(nullptr),
+		m_ColorSamplerState(nullptr),
 		m_DepthStencilTexture(nullptr),
-		m_DSV(nullptr)
+		m_DSV(nullptr),
+		m_DepthSRV(nullptr),
+		m_DepthSamplerState(nullptr)
 	{
-		CreateTexture(desc);
+		CreateAttachments(desc);
 	}
 
-	void DX11Texture::CreateTexture(const TextureDescription& desc)
+	void DX11Texture::CreateAttachments(const TextureDescription& desc)
 	{
 		TRACE_FUNCTION();
 
+		if (desc.bCreateColorAttachment)
+		{
+			CreateColorAttachment(desc);
+		}
+
+		if (desc.bCreateDepthStencilAttachment)
+		{
+			CreateDepthStencilAttachment(desc);
+		}
+	}
+
+	void DX11Texture::CreateColorAttachment(const TextureDescription& desc)
+	{
 		HRESULT hResult;
 
 		ID3D11Device* device = DX11::GetDevice();
@@ -105,16 +120,16 @@ namespace Ion
 
 		tex2DDesc.BindFlags =
 			D3D11_BIND_SHADER_RESOURCE |
-			~(desc.bUseAsRenderTarget - 1) & D3D11_BIND_RENDER_TARGET;
+			FlagsIf(desc.bUseAsRenderTarget, D3D11_BIND_RENDER_TARGET);
 
-		tex2DDesc.CPUAccessFlags = 
-			~(desc.bAllowCPUReadAccess  - 1) & D3D11_CPU_ACCESS_READ |
-			~(desc.bAllowCPUWriteAccess - 1) & D3D11_CPU_ACCESS_WRITE;
+		tex2DDesc.CPUAccessFlags =
+			FlagsIf(desc.bAllowCPUReadAccess, D3D11_CPU_ACCESS_READ) |
+			FlagsIf(desc.bAllowCPUWriteAccess, D3D11_CPU_ACCESS_WRITE);
 
 		tex2DDesc.MiscFlags =
-			~(desc.bGenerateMips - 1) & D3D11_RESOURCE_MISC_GENERATE_MIPS;
+			FlagsIf(desc.bGenerateMips, D3D11_RESOURCE_MISC_GENERATE_MIPS);
 
-		dxcall(device->CreateTexture2D(&tex2DDesc, nullptr, &m_Texture));
+		dxcall(device->CreateTexture2D(&tex2DDesc, nullptr, &m_ColorTexture));
 
 		// Create SRV (Shader Resource View)
 
@@ -123,7 +138,7 @@ namespace Ion
 		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 		srvDesc.Texture2D.MipLevels = -1;
 
-		dxcall(device->CreateShaderResourceView(m_Texture, &srvDesc, &m_SRV));
+		dxcall(device->CreateShaderResourceView(m_ColorTexture, &srvDesc, &m_ColorSRV));
 
 		// Create Sampler State
 
@@ -134,11 +149,11 @@ namespace Ion
 		samplerDesc.AddressW = WrapModeToDX11AddressMode(desc.WWrapMode);
 		samplerDesc.MaxAnisotropy = 1;
 		samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-		samplerDesc.MipLODBias = desc.LODBias; // For visualization
+		samplerDesc.MipLODBias = desc.LODBias;
 		samplerDesc.MinLOD = -D3D11_FLOAT32_MAX;
 		samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
-		dxcall(device->CreateSamplerState(&samplerDesc, &m_SamplerState));
+		dxcall(device->CreateSamplerState(&samplerDesc, &m_ColorSamplerState));
 
 		// Create RTV (Render Target View)
 
@@ -149,18 +164,11 @@ namespace Ion
 			rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 			rtvDesc.Texture2D.MipSlice = 0;
 
-			dxcall(device->CreateRenderTargetView(m_Texture, &rtvDesc, &m_RTV));
-
-			// Create Depth Stencil
-
-			if (desc.bCreateDepthStencilAttachment)
-			{
-				CreateDepthStencilTexture(desc);
-			}
+			dxcall(device->CreateRenderTargetView(m_ColorTexture, &rtvDesc, &m_RTV));
 		}
 	}
 
-	void DX11Texture::CreateDepthStencilTexture(const TextureDescription& desc)
+	void DX11Texture::CreateDepthStencilAttachment(const TextureDescription& desc)
 	{
 		TRACE_FUNCTION();
 
@@ -168,11 +176,17 @@ namespace Ion
 
 		ID3D11Device* device = DX11::GetDevice();
 
+		// Create Depth Stencil Texture2D
+
 		D3D11_TEXTURE2D_DESC depthDesc { };
-		depthDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+		depthDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
 		depthDesc.Width = desc.Dimensions.Width;
 		depthDesc.Height = desc.Dimensions.Height;
-		depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+
+		depthDesc.BindFlags =
+			D3D11_BIND_DEPTH_STENCIL |
+			FlagsIf(desc.bCreateDepthSampler, D3D11_BIND_SHADER_RESOURCE);
+
 		depthDesc.Usage = UsageToDX11Usage(desc.Usage);
 		depthDesc.SampleDesc.Count = 1;
 		depthDesc.SampleDesc.Quality = 0;
@@ -181,28 +195,60 @@ namespace Ion
 		depthDesc.ArraySize = 1;
 
 		depthDesc.CPUAccessFlags =
-			~(desc.bAllowCPUReadAccess  - 1) & D3D11_CPU_ACCESS_READ |
-			~(desc.bAllowCPUWriteAccess - 1) & D3D11_CPU_ACCESS_WRITE;
+			FlagsIf(desc.bAllowCPUReadAccess, D3D11_CPU_ACCESS_READ) |
+			FlagsIf(desc.bAllowCPUWriteAccess, D3D11_CPU_ACCESS_WRITE);
 
 		dxcall(device->CreateTexture2D(&depthDesc, nullptr, &m_DepthStencilTexture));
 
+		// Create DSV (Depth Stencil View)
+
 		D3D11_DEPTH_STENCIL_VIEW_DESC dsvd { };
-		dsvd.Format = depthDesc.Format;
+		dsvd.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 		dsvd.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 		dsvd.Texture2D.MipSlice = 0;
 
 		dxcall(device->CreateDepthStencilView(m_DepthStencilTexture, &dsvd, &m_DSV));
+
+		if (desc.bCreateDepthSampler)
+		{
+			// Create SRV (Shader Resource View)
+
+			D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc { };
+			srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+			srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+			srvDesc.Texture2D.MipLevels = -1;
+
+			dxcall(device->CreateShaderResourceView(m_DepthStencilTexture, &srvDesc, &m_DepthSRV));
+
+			// Create Sampler State
+
+			D3D11_SAMPLER_DESC samplerDesc { };
+			samplerDesc.Filter = SelectDX11Filter(desc.MinFilter, desc.MagFilter, desc.MipFilter);
+			samplerDesc.AddressU = WrapModeToDX11AddressMode(desc.UWrapMode);
+			samplerDesc.AddressV = WrapModeToDX11AddressMode(desc.VWrapMode);
+			samplerDesc.AddressW = WrapModeToDX11AddressMode(desc.WWrapMode);
+			samplerDesc.MaxAnisotropy = 1;
+			samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+			samplerDesc.MipLODBias = desc.LODBias;
+			samplerDesc.MinLOD = -D3D11_FLOAT32_MAX;
+			samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+			dxcall(device->CreateSamplerState(&samplerDesc, &m_DepthSamplerState));
+		}
 	}
 
-	void DX11Texture::ReleaseTexture()
+	void DX11Texture::ReleaseResources()
 	{
 		TRACE_FUNCTION();
 
-		COMRelease(m_Texture);
-		COMRelease(m_SRV);
-		COMRelease(m_SamplerState);
+		COMRelease(m_ColorTexture);
+		COMRelease(m_RTV);
+		COMRelease(m_ColorSRV);
+		COMRelease(m_ColorSamplerState);
 
 		COMRelease(m_DepthStencilTexture);
 		COMRelease(m_DSV);
+		COMRelease(m_DepthSRV);
+		COMRelease(m_DepthSamplerState);
 	}
 }

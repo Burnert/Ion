@@ -68,7 +68,6 @@ namespace Editor
 		Entity* m_SelectedEntity;
 		Component* m_SelectedComponent;
 
-		//Scene* m_Scene;
 		TShared<Camera> m_EditorCamera;
 		Transform m_EditorCameraTransform;
 		float m_EditorCameraMoveSpeed;

@@ -103,18 +103,21 @@ namespace Ion
 		DX11Texture(const TextureDescription& desc);
 
 	private:
-		void CreateTexture(const TextureDescription& desc);
-		void CreateDepthStencilTexture(const TextureDescription& desc);
-		void ReleaseTexture();
+		void CreateAttachments(const TextureDescription& desc);
+		void CreateColorAttachment(const TextureDescription& desc);
+		void CreateDepthStencilAttachment(const TextureDescription& desc);
+		void ReleaseResources();
 
 	private:
-		ID3D11Texture2D* m_Texture;
-		ID3D11ShaderResourceView* m_SRV;
+		ID3D11Texture2D* m_ColorTexture;
 		ID3D11RenderTargetView* m_RTV;
-		ID3D11SamplerState* m_SamplerState;
+		ID3D11ShaderResourceView* m_ColorSRV;
+		ID3D11SamplerState* m_ColorSamplerState;
 
 		ID3D11Texture2D* m_DepthStencilTexture;
 		ID3D11DepthStencilView* m_DSV;
+		ID3D11ShaderResourceView* m_DepthSRV;
+		ID3D11SamplerState* m_DepthSamplerState;
 
 		friend class Texture;
 		friend class DX11Renderer;

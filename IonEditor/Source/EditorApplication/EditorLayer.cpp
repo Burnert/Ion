@@ -880,11 +880,13 @@ namespace Editor
 
 		WindowDimensions windowDimensions = EditorApplication::GetWindow()->GetDimensions();
 
-		TextureDescription desc{ };
+		TextureDescription desc { };
 		desc.Dimensions.Width = windowDimensions.Width;
 		desc.Dimensions.Height = windowDimensions.Height;
 		desc.bUseAsRenderTarget = true;
+		desc.bCreateColorAttachment = true;
 		desc.bCreateDepthStencilAttachment = true;
+		desc.bCreateDepthSampler = true;
 
 		m_ViewportFramebuffer = Texture::Create(desc);
 	}

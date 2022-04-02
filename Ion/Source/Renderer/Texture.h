@@ -40,7 +40,9 @@ namespace Ion
 			{
 				uint32 bGenerateMips : 1;
 				uint32 bUseAsRenderTarget : 1;
+				uint32 bCreateColorAttachment : 1; // @TODO: Implement GL version
 				uint32 bCreateDepthStencilAttachment : 1;
+				uint32 bCreateDepthSampler : 1; // @TODO: Implement GL version
 				uint32 bAllowCPUReadAccess : 1;
 				uint32 bAllowCPUWriteAccess : 1;
 			};
@@ -84,9 +86,14 @@ namespace Ion
 			return m_Description.bUseAsRenderTarget;
 		}
 
+		FORCEINLINE bool HasColorAttachment() const
+		{
+			return m_Description.bCreateColorAttachment;
+		}
+
 		FORCEINLINE bool HasDepthStencilAttachment() const
 		{
-			return m_Description.bUseAsRenderTarget && m_Description.bCreateDepthStencilAttachment;
+			return m_Description.bCreateDepthStencilAttachment;
 		}
 
 	protected:

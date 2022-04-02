@@ -83,6 +83,14 @@ using TIsFloating = std::is_floating_point<T>;
 template<typename T>
 inline constexpr bool TIsFloatingV = std::is_floating_point_v<T>;
 
+// IsEnum
+
+template<typename T>
+using TIsEnum = std::is_enum<T>;
+
+template<typename T>
+inline constexpr bool TIsEnumV = std::is_enum_v<T>;
+
 // IsSame
 
 template<typename T, typename U>
