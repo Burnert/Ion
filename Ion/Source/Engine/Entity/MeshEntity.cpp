@@ -36,6 +36,8 @@ namespace Ion
 
 	void MeshEntity::OnSpawn(World* worldContext)
 	{
+		Entity::OnSpawn(worldContext);
+
 		ComponentRegistry& registry = worldContext->GetComponentRegistry();
 		SetRootComponent(registry.CreateComponent<MeshComponent>());
 		GetRootComponent()->SetName("Mesh");
@@ -43,6 +45,8 @@ namespace Ion
 
 	void MeshEntity::OnDestroy()
 	{
+		Entity::OnDestroy();
+
 		ComponentRegistry& registry = GetWorldContext()->GetComponentRegistry();
 		registry.DestroyComponent(GetMeshComponent());
 	}
