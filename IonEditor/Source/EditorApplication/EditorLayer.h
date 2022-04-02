@@ -99,6 +99,9 @@ namespace Ion::Editor
 
 		bool m_bDiagnosticsPanelOpen;
 
+		bool m_bImGuiMetricsOpen;
+		bool m_bImGuiDemoOpen;
+
 		friend class EditorApplication;
 	};
 }

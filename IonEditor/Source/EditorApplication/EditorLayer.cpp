@@ -26,7 +26,9 @@ namespace Editor
 		m_bContentBrowserOpen(true),
 		m_bWorldTreePanelOpen(true),
 		m_bDetailsPanelOpen(true),
-		m_bDiagnosticsPanelOpen(false)
+		m_bDiagnosticsPanelOpen(false),
+		m_bImGuiMetricsOpen(false),
+		m_bImGuiDemoOpen(false)
 	{
 	}
 
@@ -99,8 +101,10 @@ namespace Editor
 		DrawDetailsPanel();
 		DrawDiagnosticsPanel();
 
-		ImGui::ShowDemoWindow();
-		ImGui::ShowMetricsWindow();
+		if (m_bImGuiMetricsOpen)
+			ImGui::ShowMetricsWindow(&m_bImGuiMetricsOpen);
+		if (m_bImGuiDemoOpen)
+			ImGui::ShowDemoWindow(&m_bImGuiDemoOpen);
 	}
 
 	void EditorLayer::DrawMainMenuBar()
@@ -158,6 +162,12 @@ namespace Editor
 				{
 					Renderer::Get()->SetVSyncEnabled(c_bVSync);
 				}
+
+				ImGui::Separator();
+
+				ImGui::MenuItem("ImGui Metrics", nullptr, &m_bImGuiMetricsOpen);
+				ImGui::MenuItem("ImGui Demo", nullptr, &m_bImGuiDemoOpen);
+
 				ImGui::EndMenu();
 			}
 
