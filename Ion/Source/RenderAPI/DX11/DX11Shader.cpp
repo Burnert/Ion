@@ -52,9 +52,12 @@ namespace Ion
 			HRESULT hResult;
 			ID3D11Device* device = DX11::GetDevice();
 
-			uint32 compileFlags = D3DCOMPILE_OPTIMIZATION_LEVEL3;
+			uint32 compileFlags =
 #if ION_DEBUG
-			compileFlags |= D3DCOMPILE_DEBUG;
+				D3DCOMPILE_SKIP_OPTIMIZATION |
+				D3DCOMPILE_DEBUG;
+#else
+				D3DCOMPILE_OPTIMIZATION_LEVEL3;
 #endif
 			ID3DBlob* errorMessagesBlob = nullptr;
 

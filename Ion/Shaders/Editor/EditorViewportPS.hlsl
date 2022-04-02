@@ -3,17 +3,17 @@
 Texture2D g_Texture[3];
 SamplerState g_Sampler[3];
 
-static const float OutlineDisplaceUV[] = {
+static const float2 OutlineDisplaceUV[] = {
 	{  0.0f,   -1.0f   },
 	{  0.707f, -0.707f },
 	{  1.0f,    0.0f   },
 	{  0.707f,  0.707f },
-	{  0.0f,    0.0f   },
-	{ -0.707f, -0.707f },
-	{ -1.0f,   -1.0f   },
+	{  0.0f,    1.0f   },
+	{ -0.707f,  0.707f },
+	{ -1.0f,    0.0f   },
 	{ -0.707f, -0.707f },
 };
-static const float2 OutlineWidth = float2(0.001f, 0.002f);
+static const float2 OutlineWidth = float2(0.002f, 0.004f);
 
 static const float4 SelectionColor = float4(0.0f, 0.5f, 1.0f, 1.0f);
 
