@@ -392,7 +392,10 @@ namespace Ion::Editor
 			info.SelectedEntity = m_SelectedEntity;
 			if (m_SelectedEntity)
 			{
-				info.SelectedComponents = m_SelectedEntity->GetAllOwnedSceneComponents();
+				if (m_SelectedComponent && m_SelectedComponent->IsSceneComponent())
+					info.SelectedComponents.push_back((SceneComponent*)m_SelectedComponent);
+				else
+					info.SelectedComponents = m_SelectedEntity->GetAllOwnedSceneComponents();
 			}
 			Renderer::Get()->RenderSceneEditorData(GetEditorScene(), info);
 
