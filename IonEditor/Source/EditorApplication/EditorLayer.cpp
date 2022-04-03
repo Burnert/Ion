@@ -6,10 +6,14 @@
 #include "Engine/World.h"
 #include "Engine/Entity.h"
 #include "Engine/Components/SceneComponent.h"
+#include "Engine/Components/MeshComponent.h"
+#include "Engine/Entity/MeshEntity.h"
 
 #include "Renderer/Renderer.h"
 
 #include "UserInterface/ImGui.h"
+
+#include "ExampleModels.h"
 
 namespace Ion
 {
@@ -381,6 +385,10 @@ namespace Editor
 					DrawDetailsComponentTreeSection(*selectedEntity);
 					DrawDetailsTransformSection(*selectedEntity);
 					DrawDetailsRenderingSection(*selectedEntity);
+					if (MeshEntity* meshEntity = dynamic_cast<MeshEntity*>(selectedEntity))
+					{
+						DrawMeshSection(*meshEntity->GetMeshComponent());
+					}
 
 					ImGui::PopID();
 				}
@@ -557,6 +565,10 @@ namespace Editor
 		ImGui::Indent();
 		DrawSceneComponentDetailsTransformSection(component);
 		DrawSceneComponentDetailsRenderingSection(component);
+		if (component.GetClassName() == "MeshComponent")
+		{
+			DrawMeshSection((MeshComponent&)component);
+		}
 		ImGui::Unindent();
 		ImGui::PopID();
 	}
@@ -659,6 +671,65 @@ namespace Editor
 			return bChanged;
 		}
 		return false;
+	}
+
+	bool EditorLayer::DrawMeshSection(MeshComponent& meshComponent)
+	{
+		TRACE_FUNCTION();
+
+		bool bChanged = false;
+		if (ImGui::CollapsingHeader("Mesh", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID("MeshSettings");
+
+			// @TODO: Not the most elegant solution
+			String previewName;
+			for (ExampleModelData& model : g_ExampleModels)
+			{
+				if (model.Mesh == meshComponent.GetMesh())
+				{
+					previewName = StringConverter::WStringToString(model.MeshAsset->GetLocation());
+					break;
+				}
+			}
+
+			ImGuiComboFlags flags = ImGuiComboFlags_HeightLargest;
+			if (ImGui::BeginCombo("Mesh Asset", previewName.c_str(), flags))
+			{
+				// @TODO: I think this asset manager was written on drugs
+				//TArray<AssetHandle> meshAssets = AssetManager::ListAssets(EAssetType::Mesh);
+
+				//for (AssetHandle& asset : meshAssets)
+				//{
+				//	asset->
+				//	bool bDisabled = !asset->IsLoaded() && !asset->IsLoading();
+				//	ImGuiSelectableFlags flags2 = FlagsIf(bDisabled, ImGuiSelectableFlags_Disabled);
+				//	String assetName = StringConverter::WStringToString(asset->GetLocation().ToString());
+				//	ImGui::Selectable(assetName.c_str(), );
+				//}
+
+				for (ExampleModelData& model : g_ExampleModels)
+				{
+					bool bDisabled = !model.IsLoaded();
+					bool bSelected = model.Mesh == meshComponent.GetMesh();
+
+					AssetHandle& asset = model.MeshAsset;
+
+					ImGuiSelectableFlags flags2 = FlagsIf(bDisabled, ImGuiSelectableFlags_Disabled);
+					String assetName = StringConverter::WStringToString(asset->GetLocation().ToString());
+					if (ImGui::Selectable(assetName.c_str(), bSelected, flags2))
+					{
+						meshComponent.SetMesh(model.Mesh);
+						bChanged = true;
+					}
+				}
+
+				ImGui::EndCombo();
+			}
+
+			ImGui::PopID();
+		}
+		return bChanged;
 	}
 
 	void EditorLayer::DrawDiagnosticsPanel()

@@ -50,6 +50,8 @@ namespace Ion::Editor
 		bool DrawTransformSection(Transform& inOutTransform);
 		/* Returns true if the settings have changed */
 		bool DrawRenderingSection(bool& bInOutVisible, bool& bInOutVisibleInGame);
+		/* Returns true if the settings have changed */
+		bool DrawMeshSection(MeshComponent& meshComponent);
 
 		void DrawDiagnosticsPanel();
 

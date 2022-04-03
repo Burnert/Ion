@@ -107,6 +107,8 @@ namespace Ion
 		static AssetHandle CreateAsset(EAssetType type, FilePath location);
 		static void DeleteAsset(AssetHandle handle);
 
+		static TArray<AssetHandle> ListAssets(EAssetType type);
+
 		//static const AssetReference* GetAssetReference(AssetHandle handle);
 
 		static inline bool IsAssetLoaded(AssetHandle handle)

@@ -142,6 +142,19 @@ namespace Ion
 		m_Assets.erase(handle.m_ID);
 	}
 
+	TArray<AssetHandle> AssetManager::ListAssets(EAssetType type)
+	{
+		TArray<AssetHandle> assets;
+		assets.reserve(m_Assets.size());
+		for (auto& [k, v] : m_Assets)
+		{
+			if (type == EAssetType::All || v.Type == type)
+				assets.push_back(AssetHandle(v.ID, &v));
+		}
+		assets.shrink_to_fit();
+		return assets;
+	}
+
 	inline void AssetManager::LoadAssetData(AssetReference& ref)
 	{
 		TRACE_FUNCTION();

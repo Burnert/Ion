@@ -26,7 +26,8 @@ namespace Ion
 		Text,
 		Mesh,
 		Texture,
-		Sound
+		Sound,
+		All = 0xFF
 	};
 
 	FORCEINLINE constexpr const char* AssetTypeToString(EAssetType type)
@@ -315,6 +316,11 @@ namespace Ion
 		inline TAssetDescTypeT<Type>* GetDescription()
 		{
 			return m_RefPtr->GetDescription<Type>();
+		}
+
+		inline const FilePath& GetLocation() const
+		{
+			return m_RefPtr->Location;
 		}
 
 	private:
