@@ -2,6 +2,7 @@
 
 #include "DX11Shader.h"
 #include "DX11Include.h"
+#include "Renderer/RendererCore.h"
 #include <d3dcompiler.h>
 
 #pragma comment(lib, "d3dcompiler.lib")
@@ -53,7 +54,7 @@ namespace Ion
 			ID3D11Device* device = DX11::GetDevice();
 
 			uint32 compileFlags =
-#if ION_DEBUG
+#if SHADER_DEBUG_ENABLED
 				D3DCOMPILE_SKIP_OPTIMIZATION |
 				D3DCOMPILE_DEBUG;
 #else
