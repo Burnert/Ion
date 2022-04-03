@@ -27,6 +27,7 @@ namespace Editor
 		m_bViewportHovered(false),
 		m_bViewportCaptured(false),
 		m_bViewportOpen(true),
+		m_bInsertWindowOpen(true),
 		m_bContentBrowserOpen(true),
 		m_bWorldTreePanelOpen(true),
 		m_bDetailsPanelOpen(true),
@@ -100,6 +101,7 @@ namespace Editor
 
 		DrawMainMenuBar();
 		DrawViewportWindow();
+		DrawInsertWindow();
 		DrawContentBrowser();
 		DrawWorldTreePanel();
 		DrawDetailsPanel();
@@ -149,6 +151,7 @@ namespace Editor
 			if (ImGui::BeginMenu("View"))
 			{
 				ImGui::MenuItem("Viewport", nullptr, &m_bViewportOpen);
+				ImGui::MenuItem("Insert", nullptr, &m_bInsertWindowOpen);
 				ImGui::MenuItem("Content Browser", nullptr, &m_bContentBrowserOpen);
 				ImGui::MenuItem("World Tree", nullptr, &m_bWorldTreePanelOpen);
 				ImGui::MenuItem("Details", nullptr, &m_bDetailsPanelOpen);
@@ -225,6 +228,41 @@ namespace Editor
 		}
 	}
 
+	void EditorLayer::DrawInsertWindow()
+	{
+		if (m_bInsertWindowOpen)
+		{
+			if (ImGui::Begin("Insert", &m_bInsertWindowOpen))
+			{
+				if (ImGui::BeginTabBar("InsertType"))
+				{
+					if (ImGui::BeginTabItem("Entity", nullptr))
+					{
+						ImGuiWindowFlags flags = ImGuiWindowFlags_None;
+						if (ImGui::BeginChild("InsertFrame", ImVec2(0, 0), true, flags))
+						{
+							ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0, 0.5f));
+							if (ImGui::Selectable("Empty Entity", false, 0, ImVec2(0, 40)))
+							{
+							}
+							if (ImGui::IsItemHovered())
+							{
+								ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+								// @TODO: get a grab hand cursor here
+							}
+							ImGui::PopStyleVar();
+						}
+						ImGui::EndChild();
+
+						ImGui::EndTabItem();
+					}
+					ImGui::EndTabBar();
+				}
+			}
+			ImGui::End();
+		}
+	}
+
 	void EditorLayer::DrawContentBrowser()
 	{
 		TRACE_FUNCTION();
@@ -236,11 +274,6 @@ namespace Editor
 			ImGui::PushID("ContentBrowser");
 
 			ImGui::Text("Test");
-
-			if (ImGui::Button("Change Mesh"))
-			{
-				EditorApplication::Get()->TestChangeMesh();
-			}
 
 			ImGui::PopID();
 
@@ -520,6 +553,11 @@ namespace Editor
 
 		if (ImGui::CollapsingHeader("Component Tree", ImGuiTreeNodeFlags_DefaultOpen))
 		{
+			if (ImGui::Button("Add Component"))
+			{
+
+			}
+
 			ImGui::BeginChild("ComponentTree", ImVec2(0, 100), true, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_HorizontalScrollbar);
 
 			DrawComponentTreeContent(entity);

@@ -29,11 +29,11 @@ namespace Ion::Editor
 		void SetSelectedComponent(Component* component);
 		Component* GetSelectedComponent() const;
 
+		void DeleteSelectedObject();
+
 		World* GetEditorWorld() const;
 		TShared<Camera> GetEditorCamera() const;
 		Scene* GetEditorScene() const;
-
-		void TestChangeMesh();
 
 		static void ExitEditor();
 
@@ -87,10 +87,6 @@ namespace Ion::Editor
 		float m_EditorCameraMoveSpeed;
 
 		bool m_bViewportCaptured;
-
-		MeshComponent* m_TestMeshComponent;
-		LightComponent* m_TestLightComponent;
-		DirectionalLightComponent* m_TestDirLightComponent;
 
 		friend class EditorLayer;
 	};

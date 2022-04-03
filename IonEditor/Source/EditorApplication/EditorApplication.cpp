@@ -33,7 +33,7 @@ namespace Ion::Editor
 	{
 	}
 
-	constexpr int32 g_nHarnasSqrt = 100;
+	constexpr int32 g_nHarnasSqrt = 20;
 	static TArray<Entity*> g_HarnasArray;
 
 	void EditorApplication::OnInit()
@@ -53,108 +53,22 @@ namespace Ion::Editor
 		m_EditorMainWorld = g_Engine->CreateWorld(worldInitializer);
 		m_EditorMainWorld->GetScene()->SetActiveCamera(m_EditorCamera);
 
-		//m_Scene = new Scene;
-
 		m_EditorCameraTransform.SetLocation(Vector3(0.0f, 0.0f, 2.0f));
 		m_EditorCamera->SetFOV(Math::Radians(90.0f));
 		m_EditorCamera->SetNearClip(0.1f);
 		m_EditorCamera->SetFarClip(100.0f);
 
-		//m_Scene->SetActiveCamera(m_EditorCamera);
-
 		InitExample(nullptr);
 
-		// Engine testing:
-
 		ComponentRegistry& registry = m_EditorMainWorld->GetComponentRegistry();
-
-		//m_TestMeshComponent = registry.CreateComponent<MeshComponent>();
-		//GetModelDeferred(g_ExampleModels[0], [this](ExampleModelData& model)
-		//{
-		//	m_TestMeshComponent->SetMesh(model.Mesh);
-		//});
-
-		m_TestLightComponent = registry.CreateComponent<LightComponent>();
-		m_TestLightComponent->GetLightDataRef().LightColor = Vector3(1.0f, 1.0f, 0.0f);
-		m_TestLightComponent->GetLightDataRef().Intensity = 1.0f;
-		m_TestLightComponent->GetLightDataRef().Falloff = 5.0f;
-
-		m_TestDirLightComponent = registry.CreateComponent<DirectionalLightComponent>();
-		m_TestDirLightComponent->GetDirectionalLightDataRef().LightColor = Vector3(1.0f, 1.0f, 1.0f);
-		m_TestDirLightComponent->GetDirectionalLightDataRef().Intensity = 1.0f;
 
 		MeshEntity* entity = m_EditorMainWorld->SpawnEntityOfClass<MeshEntity>();
 		entity->SetTransform(Transform(Vector3(0.0f, -1.0f, 0.0f), Rotator(Vector3(-90.0f, 0.0f, 0.0f))));
 		entity->SetName("Mesh");
-		GetModelDeferred(g_ExampleModels[0], [this, entity](ExampleModelData& model)
+		GetModelDeferred(g_ExampleModels[0], [entity](ExampleModelData& model)
 		{
 			entity->SetMesh(model.Mesh);
 		});
-
-		Entity* lightEntity = m_EditorMainWorld->SpawnAndAttachEntityOfClass<Entity>(entity);
-		lightEntity->SetRootComponent(m_TestLightComponent);
-		lightEntity->SetLocation(Vector3(0.0f, 1.0f, 0.0f));
-		lightEntity->SetName("Light");
-
-		Entity* dirLightEntity = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
-		dirLightEntity->SetRootComponent(m_TestDirLightComponent);
-		dirLightEntity->SetRotation(Rotator({ -60.0f, 0.0f, 0.0f }));
-		dirLightEntity->SetName("DirectionalLight");
-
-		for (int32 i = 0; i < 6; i++)
-		{
-			Entity* childEntity = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
-			childEntity->SetName(String("Test") + ToString(i));
-			childEntity->AttachTo(lightEntity);
-		}
-
-		if (0)
-		{
-			Entity* lastEntity = nullptr;
-			for (int32 i = 0; i < 6; ++i)
-			{
-				MeshComponent* meshComp1 = registry.CreateComponent<MeshComponent>();
-				GetModelDeferred(g_ExampleModels[i], [meshComp1, this](ExampleModelData& model)
-				{
-					meshComp1->SetMesh(model.Mesh);
-				});
-				Entity* entity1 = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
-				entity1->SetRootComponent(meshComp1);
-				entity1->SetName("Mesh_" + ToString(i));
-				if (lastEntity)
-				{
-					entity1->AttachTo(lastEntity);
-				}
-				lastEntity = entity1;
-			}
-		}
-		
-		if (1)
-		{
-			Entity* entity2 = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
-			entity2->SetName("MultipleMeshes");
-			SceneComponent* lastComp = entity2->GetRootComponent();
-			for (int32 i = 0; i < 6; ++i)
-			{
-				MeshComponent* meshComp1 = registry.CreateComponent<MeshComponent>();
-				GetModelDeferred(g_ExampleModels[i], [meshComp1, this](ExampleModelData& model)
-				{
-					meshComp1->SetMesh(model.Mesh);
-				});
-				meshComp1->SetName("Mesh_" + ToString(i));
-				meshComp1->AttachTo(lastComp);
-				lastComp = meshComp1;
-			}
-			BehaviorComponent* behaviorComp = registry.CreateComponent<BehaviorComponent>();
-			behaviorComp->SetName("Nice Behavior");
-			entity2->AddComponent(behaviorComp);
-			behaviorComp = registry.CreateComponent<BehaviorComponent>();
-			behaviorComp->SetName("Nice Behavior 2");
-			entity2->AddComponent(behaviorComp);
-		}
-
-		//const WorldTree& worldTree = m_EditorMainWorld->GetWorldTree();
-		//worldTree.LogTree();
 
 		if (0)
 		{
@@ -174,27 +88,6 @@ namespace Ion::Editor
 				ent->SetName(String("Harnas_") + ToString(i));
 				g_HarnasArray.push_back(ent);
 			}
-		}
-
-		if (1)
-		{
-			TTreeNodeFactory<String> nodeFactory;
-			TTreeNode<String>& root = nodeFactory.Create("Root");
-			TTreeNode<String>& child0 = root.Insert(nodeFactory.Create("Child0"));
-			TTreeNode<String>& child1 = root.Insert(nodeFactory.Create("Child1"));
-			TTreeNode<String>& child2 = root.Insert(nodeFactory.Create("Child2"));
-			TTreeNode<String>& child3 = root.Insert(nodeFactory.Create("Child3"));
-			TTreeNode<String>& child4 = root.Insert(nodeFactory.Create("Child4"));
-			TTreeNode<String>& child5 = root.Insert(nodeFactory.Create("Child5"), 2);
-			nodeFactory.Destroy(root.Remove(child3));
-			child0.Insert(root.Remove(child5));
-			root.SwapNodes(0, 2);
-			root.SortNodes(std::less<String>());
-		}
-		
-		if (0)
-		{
-			TestPoolAllocator();
 		}
 	}
 
@@ -287,16 +180,28 @@ namespace Ion::Editor
 		m_SelectedComponent = component;
 	}
 
+	void EditorApplication::DeleteSelectedObject()
+	{
+		if (m_SelectedEntity)
+		{
+			if (m_SelectedComponent)
+			{
+				Entity* owner = m_SelectedComponent->GetOwner();
+				ionassert(owner == m_SelectedEntity);
+
+				//m_SelectedComponent->Destroy();
+				//m_EditorMainWorld->GetComponentRegistry().DestroyComponent(m_SelectedComponent); // TEMPORARY
+
+				return;
+			}
+
+			//m_SelectedEntity->Destroy();
+		}
+	}
+
 	Scene* EditorApplication::GetEditorScene() const
 	{
 		return m_EditorMainWorld->GetScene();
-	}
-
-	void EditorApplication::TestChangeMesh()
-	{
-		static int32 c_Index = 1;
-		m_TestMeshComponent->SetMesh(g_ExampleModels[c_Index].Mesh);
-		c_Index = (c_Index + 1) % g_ExampleModels.size();
 	}
 
 	void EditorApplication::ExitEditor()
@@ -331,6 +236,11 @@ namespace Ion::Editor
 			case Key::Escape:
 			{
 				SetSelectedEntity(nullptr);
+				break;
+			}
+			case Key::Delete:
+			{
+				DeleteSelectedObject();
 				break;
 			}
 		}

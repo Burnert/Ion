@@ -28,6 +28,8 @@ namespace Ion::Editor
 
 		void DrawViewportWindow();
 
+		void DrawInsertWindow();
+
 		void DrawContentBrowser();
 
 		void DrawWorldTreePanel();
@@ -95,6 +97,7 @@ namespace Ion::Editor
 		bool m_bViewportCaptured;
 
 		bool m_bViewportOpen;
+		bool m_bInsertWindowOpen;
 		bool m_bContentBrowserOpen;
 		bool m_bWorldTreePanelOpen;
 		bool m_bDetailsPanelOpen;
