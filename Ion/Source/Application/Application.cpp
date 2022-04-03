@@ -221,6 +221,11 @@ namespace Ion
 		int32 width = (int32)event.GetWidth();
 		int32 height = (int32)event.GetHeight();
 
+		// Cannot create a texture with a width or height of 0.
+		// This happens when the window is minimized
+		if (width == 0 || height == 0)
+			return;
+
 		Renderer::Get()->SetViewportDimensions(ViewportDimensions { 0, 0, width, height });
 	}
 
