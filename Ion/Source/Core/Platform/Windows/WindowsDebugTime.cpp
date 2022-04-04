@@ -1,5 +1,6 @@
 #include "IonPCH.h"
 
+#include "Core/Platform/Windows/WindowsHeaders.h"
 #include "Core/Diagnostics/DebugTime.h"
 
 namespace Ion

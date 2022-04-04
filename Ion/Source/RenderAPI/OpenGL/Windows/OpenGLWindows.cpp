@@ -3,7 +3,6 @@
 #include "OpenGLWindows.h"
 #include "glad/glad_wgl.h"
 
-#include "Core/Platform/Windows/WindowsUtility.h"
 #include "Application/Platform/Windows/WindowsWindow.h"
 
 #include "UserInterface/ImGui.h"

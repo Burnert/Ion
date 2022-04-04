@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Core/Platform/Windows/WindowsCore.h"
 #include "RenderAPI/OpenGL/OpenGL.h"
 
 namespace Ion

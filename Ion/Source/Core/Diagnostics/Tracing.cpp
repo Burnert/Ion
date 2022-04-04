@@ -139,8 +139,8 @@ namespace Ion
 		}
 		// Write trace cache dump event
 		{
-			int32 pid = GetCurrentProcessId();
-			int32 tid = GetCurrentThreadId();
+			int32 pid = Platform::GetCurrentProcessId();
+			int32 tid = Platform::GetCurrentThreadId();
 
 			WriteBeginEvent("TRACE_CACHE_DUMP", TimestampToMicroseconds(dumpTracer.m_StartTime),
 				pid, localThreadNameCache.at(tid).c_str(), fileDumpTemp);
@@ -159,17 +159,15 @@ namespace Ion
 		UniqueLock lock(s_ResultsMutex);
 
 		// @TODO: Make this platform independent
-		int32 pid = GetCurrentProcessId();
-		int32 tid = GetCurrentThreadId();
+		int32 pid = Platform::GetCurrentProcessId();
+		int32 tid = Platform::GetCurrentThreadId();
 
 		// Cache the debug thread name
 		if (s_ThreadNameCache.find(tid) == s_ThreadNameCache.end())
 		{
-			wchar* desc;
-			GetThreadDescription(GetCurrentThread(), &desc);
+			WString desc = Platform::GetCurrentThreadDescription();
 			wchar descStr[100];
-			swprintf_s(descStr, L"%s (%d)", desc, tid);
-			LocalFree(desc);
+			swprintf_s(descStr, L"%s (%d)", desc.c_str(), tid);
 			s_ThreadNameCache.emplace(tid, StringConverter::WStringToString(descStr));
 		}
 
@@ -187,8 +185,8 @@ namespace Ion
 		s_TraceStarts.erase(key);
 
 		// @TODO: Make this platform independent
-		int32 pid = GetCurrentProcessId();
-		int32 tid = GetCurrentThreadId();
+		int32 pid = Platform::GetCurrentProcessId();
+		int32 tid = Platform::GetCurrentThreadId();
 
 		double durationMs = duration * 0.001;
 		TraceResult& traceResult = s_TraceResults.emplace_back<TraceResult>({ m_Name, m_StartTime, endTime, duration, pid, tid });

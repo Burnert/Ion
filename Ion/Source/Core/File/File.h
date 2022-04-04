@@ -258,10 +258,10 @@ namespace Ion
 		friend class File;
 	private:
 		WindowsFileData() :
-			m_FileHandle(INVALID_HANDLE_VALUE)
+			m_FileHandle((void*)(int64)-1 /* INVALID_HANDLE_VALUE */)
 		{ }
 		
-		HANDLE m_FileHandle;
+		void* m_FileHandle;
 	};
 
 	using NativeFile = WindowsFileData;

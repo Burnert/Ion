@@ -3,6 +3,8 @@
 #include "CoreMacros.h"
 #include "Logging/Logger.h"
 #include "Core/StringConverter.h"
+#include "Platform/Platform.h"
+//#include "Platform/Windows/WindowsCore.h"
 
 #if ION_PLATFORM_WINDOWS
 #define MBRESULTCANCEL 2 // IDCANCEL
@@ -22,21 +24,20 @@ namespace Ion
 		static constexpr const char* AssertFailedExLog = "Assertion exception: {0}\n{4}  function: {1}\n  in {2}:{3}";
 		static constexpr const char* AssertFailedPrintf = "Assertion failed: %s\n%s  function: %s\n  in %s:%d";
 
-		inline static int32 ShowMessageBox(const char* expression, const char* function, const char* file, int32 line, const char* message = "")
+		inline static int32 ShowMessageBox(const char* expression, const char* function,
+			const char* file, int32 line, const char* message = "")
 		{
-#if ION_PLATFORM_WINDOWS
 			char buffer[550];
 			sprintf_s(buffer, AssertFailedPrintf, expression, message, function, file, line);
 			wchar bufferW[550] { };
 			StringConverter::CharToWChar(buffer, bufferW);
-			return MessageBox(nullptr, bufferW, TEXT("Ion Assertion Failure!"), MB_RETRYCANCEL | MB_ICONERROR);
-#else
-			return MBRESULTCANCEL;
-#endif
+			return Platform::MessageBox(bufferW, TEXT("Ion Assertion Failure!"),
+				Platform::MBT_RetryCancel, Platform::MBI_Error);
 		}
 
 		template<typename... Args>
-		inline static int32 HandleFail(const char* expression, const char* function, const char* file, int32 line, const char* format = nullptr, Args&&... args)
+		inline static int32 HandleFail(const char* expression, const char* function,
+			const char* file, int32 line, const char* format = nullptr, Args&&... args)
 		{
 			if (format != nullptr)
 			{

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Core/Platform/Windows/WindowsHeaders.h"
 #include "Core/CoreApi.h"
 #include "Core/Input/Input.h"
 

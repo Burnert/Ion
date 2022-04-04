@@ -16,6 +16,8 @@
 
 #include "UserInterface/ImGui.h"
 
+#include "IonApp.h"
+
 namespace Ion
 {
 	Application* Application::Get()
@@ -31,14 +33,16 @@ namespace Ion
 		return Renderer::Get();
 	}
 
-	Application::Application() :
+	Application::Application(App* clientApp) :
 		m_EventDispatcher(this),
 		m_EventQueue(MakeUnique<EventQueue<EventHandler>>()),
 		m_LayerStack(MakeUnique<LayerStack>()),
 		m_MainThreadId(std::this_thread::get_id()),
-		m_bRunning(true)
+		m_bRunning(true),
+		m_ClientApp(clientApp)
 	{
-		Logger::Init();
+		ionassert(clientApp);
+		//Logger::Init();
 	}
 
 	Application::~Application()
@@ -85,6 +89,7 @@ namespace Ion
 		TRACE_BEGIN(0, "Application - Client::OnInit");
 		// Call client overriden Init function
 		OnInit();
+		m_ClientApp->OnInit();
 		TRACE_END(0);
 	}
 
@@ -97,6 +102,7 @@ namespace Ion
 		TRACE_BEGIN(0, "Application - Client::OnShutdown");
 		// Call client overriden Shutdown function
 		OnShutdown();
+		m_ClientApp->OnShutdown();
 		TRACE_END(0);
 
 		AssetManager::Shutdown();
@@ -133,6 +139,7 @@ namespace Ion
 		
 		TRACE_BEGIN(0, "Application - Client::OnUpdate");
 		OnUpdate(deltaTime);
+		m_ClientApp->OnUpdate(deltaTime);
 		TRACE_END(0);
 
 		m_LayerStack->OnUpdate(deltaTime);
@@ -148,6 +155,7 @@ namespace Ion
 
 		TRACE_BEGIN(0, "Application - Client::OnRender");
 		OnRender();
+		m_ClientApp->OnRender();
 		TRACE_END(0);
 
 		m_LayerStack->OnRender();
@@ -161,6 +169,11 @@ namespace Ion
 		}
 
 		RenderAPI::EndFrame(*m_Window);
+	}
+
+	void Application::CallClientAppOnEvent(const Event& event)
+	{
+		m_ClientApp->OnEvent(event);
 	}
 
 	void Application::SetApplicationTitle(const WString& title)

@@ -1,5 +1,6 @@
 #include "IonPCH.h"
 
+#include "Core/Platform/Windows/WindowsHeaders.h"
 #include "Core/StringConverter.h"
 #include "Core/CoreAsserts.h"
 

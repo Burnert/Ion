@@ -4,8 +4,8 @@
 #include "Texture.h"
 
 #include "RenderAPI/RenderAPI.h"
-#include "RenderAPI/OpenGL/OpenGLTexture.h"
 #include "RenderAPI/DX11/DX11Texture.h"
+#include "RenderAPI/OpenGL/OpenGLTexture.h"
 
 namespace Ion
 {

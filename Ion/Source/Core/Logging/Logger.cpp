@@ -1,8 +1,9 @@
 #include "IonPCH.h"
 
 #include "Logger.h"
-#include "spdlog/sinks/stdout_color_sinks.h"
+//#include "spdlog/sinks/stdout_color_sinks.h"
 
+#if 0
 namespace Ion
 {
 #ifdef ION_ENGINE
@@ -24,3 +25,4 @@ namespace Ion
 		s_ClientLogger->set_level(spdlog::level::trace);
 	}
 }
+#endif

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Core/Platform/Windows/WindowsHeaders.h"
 #include "Core/CoreMacros.h"
 #include "Core/CoreAsserts.h"
 

@@ -1,11 +1,9 @@
 #pragma once
 
 #include "Core/CoreApi.h"
-#include "Application/Application.h"
 #include "Core/Input/Input.h"
-
-class WindowsInputManager;
-class WindowsWindow;
+#include "Core/Platform/Windows/WindowsCore.h"
+#include "Application/Application.h"
 
 struct ImDrawData;
 struct ImGuiViewport;
@@ -28,6 +26,8 @@ namespace Ion
 		static float GetPerformanceFrequency() { return s_PerformanceFrequency; }
 
 	protected:
+		WindowsApplication(App* clientApp);
+
 		// Tagged as final so it cannot be overriden in the client
 
 		virtual void PollEvents() final override;
@@ -50,5 +50,7 @@ namespace Ion
 		static float s_PerformanceFrequency;
 		//static LARGE_INTEGER s_liFirstFrameTime;
 		//static float s_LastFrameTime;
+
+		friend Application* InstantiateApplication();
 	};
 }

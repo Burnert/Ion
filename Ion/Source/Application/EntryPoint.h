@@ -1,5 +1,10 @@
 #pragma once
 
+namespace Ion
+{
+	Application* InstantiateApplication();
+}
+
 #ifdef ION_PLATFORM_WINDOWS
 
 static int32 MainShared()
@@ -10,7 +15,7 @@ static int32 MainShared()
 #endif
 	DebugTimer::InitPlatform();
 
-	Application* application = CreateApplication();
+	Application* application = InstantiateApplication();
 	application->Start();
 
 	TRACE_SESSION_BEGIN("Shutdown");

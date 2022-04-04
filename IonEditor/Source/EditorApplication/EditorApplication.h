@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Ion.h"
+#include "IonApp.h"
 
 namespace Ion::Editor
 {
 	class EditorLayer;
 
-	class EDITOR_API EditorApplication : public IonApplication
+	class EDITOR_API EditorApplication : public App
 	{
 	public:
 		inline static EditorApplication* Get() { return s_Instance; }

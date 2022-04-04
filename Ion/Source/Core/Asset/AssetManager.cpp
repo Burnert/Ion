@@ -490,7 +490,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		SetThreadDescription(GetCurrentThread(), L"AssetWorker");
+		Platform::SetCurrentThreadDescription(L"AssetWorker");
 
 		AssetManager::WorkQueue& queue = AssetManager::m_WorkQueue;
 

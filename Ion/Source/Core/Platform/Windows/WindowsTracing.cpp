@@ -1,5 +1,6 @@
 #include "IonPCH.h"
 
+#include "Core/Platform/Windows/WindowsHeaders.h"
 #include "Core/Diagnostics/Tracing.h"
 
 #if ION_ENABLE_TRACING

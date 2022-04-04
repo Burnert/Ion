@@ -11,15 +11,10 @@
 
 struct ImDrawData;
 
-/* Specifies the main class of the application (can be used only once) */
-#define USE_APPLICATION_CLASS(className) \
-Ion::Application* Ion::CreateApplication() \
-{ \
-	return Application::Create<className>(); \
-}
-
 namespace Ion
 {
+	class App;
+
 	template<void(const Event&)>
 	class EventQueue;
 
@@ -41,17 +36,13 @@ namespace Ion
 		/* Called by the Entry Point */
 		virtual void Start();
 
-		/* Creates an instance of an application singleton */
-		template<typename T>
-		static T* Create()
-		{
-			static_assert(TIsBaseOfV<Application, T>);
+		void Exit();
 
-			s_Instance = new T;
-			return (T*)s_Instance;
-		}
+		void SetApplicationTitle(const WString& title);
 
 		static Application* Get();
+		template<typename T>
+		static Application* Create(App* clientApp);
 
 		static Renderer* GetRenderer();
 
@@ -71,13 +62,11 @@ namespace Ion
 		}
 
 	protected:
-		Application();
+		Application(App* clientApp);
 
 		void Init();
 		void Run();
 		void Shutdown();
-
-		void Exit();
 
 		// Event system related functions
 
@@ -111,6 +100,7 @@ namespace Ion
 
 			TRACE_BEGIN(0, "Application - Client::OnEvent");
 			OnEvent(event);
+			CallClientAppOnEvent(event);
 			TRACE_END(0);
 		}
 
@@ -150,8 +140,6 @@ namespace Ion
 		virtual void Update(float DeltaTime);
 		virtual void Render();
 
-		void SetApplicationTitle(const WString& title);
-
 	protected:
 
 		// To be overriden in client:
@@ -179,6 +167,7 @@ namespace Ion
 		static Application* s_Instance;
 
 	private:
+		void CallClientAppOnEvent(const Event& event);
 		float CalculateFrameTime(); // Implemented per platform
 
 		void SetupWindowTitle();
@@ -188,6 +177,7 @@ namespace Ion
 
 		void InitImGui() const;
 		void ShutdownImGui() const;
+
 	protected:
 		virtual void InitImGuiBackend(const TShared<GenericWindow>& window) const { }
 		virtual void ImGuiNewFramePlatform() const { }
@@ -195,6 +185,8 @@ namespace Ion
 		virtual void ImGuiShutdownPlatform() const { }
 
 	private:
+		App* m_ClientApp;
+
 		bool m_bRunning;
 
 		TShared<GenericWindow> m_Window;
@@ -212,8 +204,6 @@ namespace Ion
 		template<typename T>
 		friend void ParseCommandLineArgs(int32 argc, T* argv[]);
 	};
-
-	Application* CreateApplication();
 
 	template<typename T>
 	void ParseCommandLineArgs(int32 argc, T* argv[])
@@ -238,5 +228,13 @@ namespace Ion
 				i++;
 			}
 		}
+	}
+
+	template<typename T>
+	inline Application* Application::Create(App* clientApp)
+	{
+		static_assert(TIsBaseOfV<Application, T>);
+		ionassert(!s_Instance);
+		return s_Instance = new T(clientApp);
 	}
 }

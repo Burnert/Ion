@@ -1,5 +1,6 @@
 #include "IonPCH.h"
 
+#include "WindowsCore.h"
 #include "Core/GUID.h"
 
 #pragma comment(lib, "Rpcrt4.lib")

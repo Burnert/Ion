@@ -497,7 +497,7 @@ namespace Ion
 		SerialClassTest t;
 		t.a = 93.2f;
 		t.b = -51;
-		ZeroMemory(t.c, sizeof(t.c));
+		memset(t.c, 0, sizeof(t.c));
 		t.d = 666601;
 
 		Serial serial;

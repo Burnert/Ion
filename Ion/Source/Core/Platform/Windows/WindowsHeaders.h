@@ -1,7 +1,15 @@
 #pragma once
 
+// I don't know why Windows is like this
+#ifdef TEXT
+#undef TEXT
+#endif
+#ifdef APIENTRY
+#undef APIENTRY
+#endif
+
 #define NOMINMAX
 #include <Windows.h>
 #include <windowsx.h>
-
-// @TODO: Use this instead of including windows headers in PCH for now
+#include <rpc.h>
+#include <rpcdce.h>

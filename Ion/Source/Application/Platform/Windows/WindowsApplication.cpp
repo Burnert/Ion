@@ -2,10 +2,9 @@
 
 #include "WindowsApplication.h"
 #include "WindowsWindow.h"
-#include "Core/Platform/Windows/WindowsInput.h"
+#include "Core/Platform/Windows/WindowsCore.h"
 
 #include "RenderAPI/RenderAPI.h"
-#include "RenderAPI/OpenGL/Windows/OpenGLWindows.h"
 
 #include "UserInterface/ImGui.h"
 
@@ -49,6 +48,11 @@ namespace Ion
 		QueryPerformanceCounter(&s_FirstFrameTime);
 
 		Init();
+	}
+
+	WindowsApplication::WindowsApplication(App* clientApp) :
+		Application(clientApp)
+	{
 	}
 
 	void WindowsApplication::PollEvents()

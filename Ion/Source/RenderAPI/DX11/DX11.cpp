@@ -1,12 +1,16 @@
 #include "IonPCH.h"
 
 #include "DX11.h"
+
 #include "Application/Platform/Windows/WindowsWindow.h"
 #include "Core/Platform/Windows/WindowsUtility.h"
 
 #include "Renderer/Renderer.h"
 
 #include "UserInterface/ImGui.h"
+
+#pragma comment(lib, "d3d11.lib")
+#pragma comment(lib, "dxguid.lib")
 
 namespace Ion
 {

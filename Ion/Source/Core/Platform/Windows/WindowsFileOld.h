@@ -1,5 +1,6 @@
 #pragma once
 
+#include "WindowsCore.h"
 #include "Core/File/File.h"
 
 namespace Ion

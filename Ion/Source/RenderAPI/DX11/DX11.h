@@ -1,12 +1,9 @@
 #pragma once
 
+#include "Core/Platform/Windows/WindowsCore.h"
+
 #include <d3d11.h>
 #include <dxgidebug.h>
-
-#include "Core/Platform/Windows/WindowsMacros.h"
-
-#pragma comment(lib, "d3d11.lib")
-#pragma comment(lib, "dxguid.lib")
 
 #if ION_LOG_ENABLED
 /// Requires

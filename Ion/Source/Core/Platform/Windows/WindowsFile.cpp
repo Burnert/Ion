@@ -1,9 +1,10 @@
 #include "IonPCH.h"
 
+#include "Core/Platform/Windows/WindowsCore.h"
+
 #include "Core/File/File.h"
 
 #include "Core/CoreMacros.h"
-#include "Core/Platform/Windows/WindowsUtility.h"
 
 #ifdef ION_LOG_ENABLED
 

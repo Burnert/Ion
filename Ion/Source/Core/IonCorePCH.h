@@ -8,5 +8,3 @@
 #include "Core/Event/EventQueue.h"
 
 #include "Core/Layer/LayerStack.h"
-
-#include "Platform/PlatformCore.h"
