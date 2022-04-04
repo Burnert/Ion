@@ -99,7 +99,8 @@ namespace Ion
 		virtual void Tick(float deltaTime);
 		/* Called when the entity is spawned in the world. */
 		virtual void OnSpawn(World* worldContext);
-		/* Called when the entity is removed from the world. */
+		/* Called when the entity is removed from the world. 
+		   Destroys all the owned components. */
 		virtual void OnDestroy();
 
 	private:

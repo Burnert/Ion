@@ -126,7 +126,7 @@ using TAtomic = std::atomic<T>;
 // Debug
 
 #if ION_DEBUG
-#define TypeInfo(name) std::type_info name
+#define _TypeInfo(name) std::type_info name
 #else
-#define TypeInfo(name)
+#define _TypeInfo(name)
 #endif

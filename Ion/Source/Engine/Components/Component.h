@@ -7,7 +7,7 @@ namespace ComponentSerialCall \
 	namespace Private \
 	{ \
 		/* Function signature */ \
-		using func##FPtr = void(*)(void*, __VA_ARGS__); \
+		using func##FPtr = void(*)(Ion::IComponentContainer*, __VA_ARGS__); \
 		/* Components which implement this serialcall */ \
 		inline THashMap<ComponentTypeID, func##FPtr> g_##func##Functions; \
 		/* Get the function that calls each component's serialcall function. */ \
@@ -24,7 +24,7 @@ namespace ComponentSerialCall \
 	} \
 	/* Call all the serialcall functions of components which are in the specified container. */ \
 	template<typename... Args> \
-	inline void func(ComponentTypeID typeId, void* container, Args&&... args) \
+	inline void func(ComponentTypeID typeId, Ion::IComponentContainer* container, Args&&... args) \
 	{ \
 		Private::func##FPtr fn = Private::Get##func##Function(typeId); \
 		checked_call(fn, container, args...); \
@@ -43,13 +43,13 @@ namespace ComponentSerialCall \
 		CALL_OUTSIDE({ strcat_s(func##TracerName, ThisComponentClass::ClassDisplayName.c_str()); }, func##0); \
 		/* Function that calls all the components' serialcall functions in the specified component container. 
 		   It has to be a lambda to avoid symbol redefinition. */ \
-		static auto CallEach##func = [](void* containerPtr, __VA_ARGS__) \
+		static auto CallEach##func = [](Ion::IComponentContainer* containerPtr, __VA_ARGS__) \
 		{ \
 			/* Make sure the type actually has the function, just in case. */ \
 			if constexpr (THas##func<ThisComponentClass>) \
 			{ \
 				TRACE_SCOPE(func##TracerName); \
-				func##Container& container = *(func##Container*)containerPtr; \
+				func##Container& container = *(func##Container*)containerPtr->GetRawContainer(); \
 				/* Call the serialcall functions */ \
 				for (auto& [k, comp] : container) \
 				{ \
@@ -68,29 +68,73 @@ DECLARE_COMPONENT_SERIALCALL_HELPER_EX(func, comp.func())
 /* Put in the component's class in the .h file */
 #define ENTITY_COMPONENT_CLASS_BODY(className, displayName) \
 private: \
-static inline ComponentTypeID s_TypeID = -1; \
+static inline ComponentTypeID s_TypeID = InvalidComponentTypeID; \
 protected: \
 public: \
 static inline ComponentTypeID GetTypeID() \
 { \
-	if (s_TypeID == -1) \
-		s_TypeID = ComponentRegistry::RegisterComponentClass<className>(); \
+	if (s_TypeID == InvalidComponentTypeID) \
+		ComponentRegistry::RegisterComponentClass<className>(THash<String>()(#className)); \
 	return s_TypeID; \
 } \
+using RawComponentContainerType = TCompContainer<className>; \
+/* Container wrapper that will be inserted into the Component Registry */ \
+class ION_API ComponentContainerImpl : public IComponentContainer \
+{ \
+public: \
+	using Type          = ComponentContainerImpl; \
+	using ComponentT    = className; \
+	using RawContainerT = RawComponentContainerType; \
+	virtual void Erase(Component* component) override; \
+	virtual Component* Find(Component* component) const override; \
+	virtual ComponentTypeID GetTypeID() const override; \
+	virtual void* GetRawContainer() override; \
+	RawComponentContainerType Container; \
+}; \
 static inline const String ClassName = #className; \
 static inline const String ClassDisplayName = displayName; \
+virtual ComponentTypeID GetFinalTypeID() const override { return GetTypeID(); } \
+virtual const ComponentDatabase::TypeInfo& GetFinalTypeInfo() const override \
+{ \
+	return ComponentRegistry::GetComponentTypeDatabase()->GetTypeInfo(GetFinalTypeID()); \
+} \
+/* @TODO: Add GetTypeData */ \
 virtual const String& GetClassName() const override { return ClassName; } \
 virtual const String& GetClassDisplayName() const override { return ClassDisplayName; } \
 friend class ComponentRegistry;
 
+DECLARE_THASFUNCTION(GetTypeID);
+
 /* Put in the component's .cpp file (one per file) */
-#define DECLARE_ENTITY_COMPONENT_CLASS(component) \
+#define DECLARE_ENTITY_COMPONENT_CLASS(className) \
 namespace ComponentSerialCall \
 { \
 	namespace Private \
 	{ \
-		using ThisComponentClass = component; \
+		using ThisComponentClass = className; \
 	} \
+} \
+void className::ComponentContainerImpl::Erase(Component* component) \
+{ \
+	ionassert(Container.find(component->GetGUID()) != Container.end()); \
+	Container.erase(component->GetGUID()); \
+} \
+Component* className::ComponentContainerImpl::Find(Component* component) const \
+{ \
+	auto it = Container.find(component->GetGUID()); \
+	if (it == Container.end()) \
+		return nullptr; \
+	const className* componentPtr = &it->second; \
+	ionassert(componentPtr == component); \
+	return component; \
+} \
+ComponentTypeID className::ComponentContainerImpl::GetTypeID() const \
+{ \
+	return className::GetTypeID(); \
+} \
+void* className::ComponentContainerImpl::GetRawContainer() \
+{ \
+	return &Container; \
 }
 
 /* Put in the component's .cpp file after the DECLARE_ENTITY_COMPONENT_CLASS, if the component implements Tick */
@@ -112,7 +156,41 @@ if (comp.IsSceneComponent()) \
 
 namespace Ion
 {
-	using ComponentTypeID = int16;
+	// The hash of the Component class name
+	using ComponentTypeID = size_t;
+	constexpr ComponentTypeID InvalidComponentTypeID = (ComponentTypeID)-1;
+
+	// @TODO: Change this to something more efficient
+	/* Container for Components of type T */
+	template<typename T>
+	using TCompContainer = THashMap<GUID, T>;
+
+	struct ComponentDatabase
+	{
+		struct TypeInfo
+		{
+			ComponentTypeID ID;
+			String ClassName;
+		};
+
+		THashMap<ComponentTypeID, TypeInfo> RegisteredTypes;
+
+		void RegisterType(const TypeInfo& info)
+		{
+			RegisteredTypes.insert({ info.ID, info });
+		}
+
+		bool IsTypeRegistered(ComponentTypeID id) const
+		{
+			return RegisteredTypes.find(id) != RegisteredTypes.end();
+		}
+
+		const TypeInfo& GetTypeInfo(ComponentTypeID id) const
+		{
+			ionassertnd(IsTypeRegistered(id));
+			return RegisteredTypes.find(id)->second;
+		}
+	};
 
 	DECLARE_COMPONENT_SERIALCALL(Tick, float);
 	DECLARE_COMPONENT_SERIALCALL(BuildRendererData, RRendererData&);
@@ -154,9 +232,13 @@ namespace Ion
 		bool operator!=(const Component& other) const;
 
 		// Overriden in final classes by ENTITY_COMPONENT_CLASS_BODY
+
 		virtual const String& GetClassDisplayName() const = 0;
-		// Overriden in final classes by ENTITY_COMPONENT_CLASS_BODY
 		virtual const String& GetClassName() const = 0; // @TODO: Get rid of these Windows macros
+		virtual ComponentTypeID GetFinalTypeID() const = 0;
+		virtual const ComponentDatabase::TypeInfo& GetFinalTypeInfo() const = 0;
+
+		// End of overriden in final classes ...
 
 	protected:
 		Component();
@@ -190,59 +272,64 @@ namespace Ion
 		friend class Entity;
 	};
 
-	// @TODO: Change this to something more efficient
-	/* Container for Components of type T */
+	class IComponentContainer
+	{
+	public:
+		// No Insert function, only the Component Registry can
+		// emplace components because the type has to be known
+
+		virtual void Erase(Component* component) = 0;
+		virtual Component* Find(Component* component) const = 0;
+
+		virtual ComponentTypeID GetTypeID() const = 0;
+		virtual void* GetRawContainer() = 0;
+	};
+
 	template<typename T>
-	using TCompContainer = THashMap<GUID, T>;
+	static constexpr bool TIsComponentTypeFinal = THasGetTypeID<T>;
 
 	class ION_API ComponentRegistry
 	{
-		struct StaticComponentTypeData
-		{
-			THashSet<ComponentTypeID> RegisteredTypes;
-			ComponentTypeID ComponentIDCounter = 0;
-		};
-
 	public:
-		using ComponentContainer = void;
-
 		ComponentRegistry(World* worldContext);
 		~ComponentRegistry();
 
 		template<typename CompT, typename... Args>
 		CompT* CreateComponent(Args&&... args);
 
-		template<typename CompT>
+		template<typename CompT, TEnableIfT<TIsComponentTypeFinal<CompT>>* = 0>
+		void DestroyComponent(CompT* component);
+		template<typename CompT, TEnableIfT<!TIsComponentTypeFinal<CompT>>* = 0>
 		void DestroyComponent(CompT* component);
 
-		template<>
-		void DestroyComponent(Component* component);
-
-		// Does nothing
 		template<typename CompT>
-		void BindComponentToEntity(Entity* entity, CompT* component) {}
-		// Does nothing
-		template<typename CompT>
-		void UnbindComponentFromEntity(Entity* entity, CompT* component) {}
-
-		template<typename CompT>
-		static ComponentTypeID RegisterComponentClass();
+		static ComponentTypeID RegisterComponentClass(size_t classNameHash);
 
 		void Update(float deltaTime);
 		void BuildRendererData(RRendererData& data);
+
+		static const ComponentDatabase* GetComponentTypeDatabase();
 
 	private:
 		template<typename CompT>
 		void InitializeComponentContainter();
 
-		template<typename ContainerT>
-		ContainerT& GetContainer();
+		template<typename CompT>
+		bool IsContainerInitialized() const;
+		bool IsContainerInitialized(ComponentTypeID id) const ;
 
-		static StaticComponentTypeData* GetComponentTypeData();
+		template<typename CompT>
+		typename CompT::RawComponentContainerType& GetRawContainer();
+
+		IComponentContainer* GetContainer(ComponentTypeID id);
+
+		template<typename CompT, typename... Args>
+		CompT& EmplaceComponentInContainer(TCompContainer<CompT>& container, Args&&... args);
+
+		static ComponentDatabase* GetComponentTypeDatabase_Internal();
 
 	private:
-		THashMap<ComponentTypeID, ComponentContainer*> m_Containers;
-		THashSet<ComponentTypeID> m_InitializedTypes;
+		THashMap<ComponentTypeID, IComponentContainer*> m_Containers;
 
 		World* m_WorldContext;
 	};
@@ -300,94 +387,162 @@ namespace Ion
 	inline CompT* ComponentRegistry::CreateComponent(Args&&... args)
 	{
 		static_assert(TIsBaseOfV<Component, CompT>);
-		using CompContainer = TCompContainer<CompT>;
+		using CompContainer = typename CompT::RawComponentContainerType;
 
 		// Initialize the array if it's the first component of that type
-		if (m_InitializedTypes.find(CompT::s_TypeID) == m_InitializedTypes.end())
+		if (!IsContainerInitialized<CompT>())
 		{
 			InitializeComponentContainter<CompT>();
 		}
 
-		CompContainer& container = GetContainer<CompContainer>();
+		CompContainer& container = GetRawContainer<CompT>();
 
-		CompT component(Forward<Args>(args)...);
-		auto [it, _] = container.emplace(component.GetGUID(), Move(component));
+		CompT& componentPtr = EmplaceComponentInContainer(container, Forward<Args>(args)...);
+		componentPtr.m_WorldContext = m_WorldContext;
+		componentPtr.m_Name = CompT::ClassDisplayName;
 
-		CompT* componentPtr = &(*it).second;
-		componentPtr->m_WorldContext = m_WorldContext;
-		componentPtr->m_Name = CompT::ClassDisplayName;
+		componentPtr.OnCreate();
 
-		componentPtr->OnCreate();
-
-		return componentPtr;
+		return &componentPtr;
 	}
 
-	template<typename CompT>
+	/* Compile-time version */
+	template<typename CompT, TEnableIfT<TIsComponentTypeFinal<CompT>>*>
 	inline void ComponentRegistry::DestroyComponent(CompT* component)
 	{
 		static_assert(TIsBaseOfV<Component, CompT>);
-		using CompContainer = TCompContainer<CompT>;
-		const ComponentTypeID TypeID = CompT::s_TypeID;
+		using CompContainer = CompT::RawComponentContainerType;
 
 		if (component)
 		{
-			CompContainer& container = GetContainer<CompContainer>();
+			ionassert(IsContainerInitialized<CompT>());
+
+			CompContainer& container = GetRawContainer<CompT>();
 
 			GUID guid = component->GetGUID();
 
 			auto it = container.find(guid);
 			if (it == container.end())
 			{
-				LOG_WARN("Component does not exist in the registry.\nGUID = {0}", component->GetGUID());
+				LOG_ERROR("Component does not exist in the registry.\nGUID = {0}", component->GetGUID());
 				return;
 			}
-			CompT* componentPtr = &(*it).second;
-
+			CompT* componentPtr = &it->second;
+			ionassert(componentPtr == component);
 			component->OnDestroy();
 
 			container.erase(guid);
 		}
 	}
 
-	template<typename CompT>
-	inline ComponentTypeID ComponentRegistry::RegisterComponentClass()
+	/* Runtime version (if the component type is not known at compile time) */
+	template<typename CompT, TEnableIfT<!TIsComponentTypeFinal<CompT>>*>
+	inline void ComponentRegistry::DestroyComponent(CompT* component)
 	{
 		static_assert(TIsBaseOfV<Component, CompT>);
 
-		StaticComponentTypeData* componentTypeData = GetComponentTypeData();
+		if (component)
+		{
+			ComponentTypeID typeId = component->GetFinalTypeID();
 
-		CompT::s_TypeID = componentTypeData->ComponentIDCounter;
-		//componentTypeData->RegisteredTypes.insert(s_ComponentIDCounter);
+			ionassert(IsContainerInitialized(typeId));
 
-		return componentTypeData->ComponentIDCounter++;
+			IComponentContainer* container = GetContainer(typeId);
+			if (Component* found = container->Find(component))
+			{
+				ionassert(found == component);
+				component->OnDestroy();
+
+				container->Erase(component);
+			}
+			else
+			{
+				LOG_ERROR("Component does not exist in the registry.\nGUID = {0}", component->GetGUID());
+			}
+		}
 	}
 
-	inline ComponentRegistry::StaticComponentTypeData* ComponentRegistry::GetComponentTypeData()
+	template<typename CompT>
+	inline ComponentTypeID ComponentRegistry::RegisterComponentClass(size_t classNameHash)
+	{
+		static_assert(TIsBaseOfV<Component, CompT>);
+
+		ComponentDatabase* typeDB = GetComponentTypeDatabase_Internal();
+		ionassertnd(typeDB->RegisteredTypes.find(classNameHash) == typeDB->RegisteredTypes.end(),
+			"The class name hash already exists. Use a different class name."); // If it ever happens
+
+		CompT::s_TypeID = classNameHash;
+
+		ComponentDatabase::TypeInfo typeInfo;
+		typeInfo.ID = classNameHash;
+		typeInfo.ClassName = CompT::ClassName;
+
+		typeDB->RegisterType(typeInfo);
+
+		return classNameHash;
+	}
+
+	inline ComponentDatabase* ComponentRegistry::GetComponentTypeDatabase_Internal()
 	{
 		// I don't know why, but the set has to by dynamically allocated
 		// or the insert crashes the thing... Don't ask.
-		static StaticComponentTypeData* c_ComponentTypeData = new StaticComponentTypeData;
+		static ComponentDatabase* c_ComponentTypeData = new ComponentDatabase;
 		return c_ComponentTypeData;
+	}
+
+	inline const ComponentDatabase* ComponentRegistry::GetComponentTypeDatabase()
+	{
+		return GetComponentTypeDatabase_Internal();
 	}
 
 	template<typename CompT>
 	inline void ComponentRegistry::InitializeComponentContainter()
 	{
 		static_assert(TIsBaseOfV<Component, CompT>);
-		using CompContainer = TCompContainer<CompT>;
+		using CompContainer = CompT::ComponentContainerImpl;
 
-		m_InitializedTypes.insert(CompT::s_TypeID);
+		ionassert(!IsContainerInitialized<CompT>());
+
 		CompContainer* container = new CompContainer;
 		m_Containers.insert({ CompT::s_TypeID, container });
 	}
 
-	template<typename ContainerT>
-	ContainerT& ComponentRegistry::GetContainer()
+	template<typename CompT>
+	inline bool ComponentRegistry::IsContainerInitialized() const
 	{
-		using CompT = ContainerT::value_type::second_type;
-		static_assert(TIsBaseOfV<Component, CompT>);
+		return IsContainerInitialized(CompT::s_TypeID);
+	}
 
-		ComponentContainer* containerPtr = m_Containers.at(CompT::s_TypeID);
-		return *(ContainerT*)containerPtr;
+	inline bool ComponentRegistry::IsContainerInitialized(ComponentTypeID id) const
+	{
+		return m_Containers.find(id) != m_Containers.end();
+	}
+
+	template<typename CompT>
+	typename CompT::RawComponentContainerType& ComponentRegistry::GetRawContainer()
+	{
+		static_assert(TIsBaseOfV<Component, CompT>);
+		using ContainerT = CompT::ComponentContainerImpl;
+		using RawContainerT = CompT::RawComponentContainerType;
+
+		ionassert(IsContainerInitialized<CompT>());
+
+		ContainerT* containerPtr = (ContainerT*)m_Containers.at(CompT::s_TypeID);
+		return containerPtr->Container;
+	}
+
+	inline IComponentContainer* ComponentRegistry::GetContainer(ComponentTypeID id)
+	{
+		ionassert(IsContainerInitialized(id));
+		return m_Containers.at(id);
+	}
+
+	template<typename CompT, typename... Args>
+	CompT& ComponentRegistry::EmplaceComponentInContainer(TCompContainer<CompT>& container, Args&&... args)
+	{
+		CompT component(Forward<Args>(args)...);
+		auto [it, bUnique] = container.emplace(component.GetGUID(), Move(component));
+		ionassert(bUnique, "GUID collision?");
+		return it->second;
 	}
 }

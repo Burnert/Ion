@@ -58,8 +58,8 @@ namespace Ion
 				m_OwningEntity->RemoveComponent(this);
 			}
 		}
-		// @TODO: get the type in runtime
-		// m_WorldContext->GetComponentRegistry().DestroyComponent();
+
+		m_WorldContext->GetComponentRegistry().DestroyComponent(this);
 	}
 
 	void Component::SetTickEnabled(bool bTick)

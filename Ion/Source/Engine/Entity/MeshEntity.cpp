@@ -46,8 +46,5 @@ namespace Ion
 	void MeshEntity::OnDestroy()
 	{
 		Entity::OnDestroy();
-
-		ComponentRegistry& registry = GetWorldContext()->GetComponentRegistry();
-		registry.DestroyComponent(GetMeshComponent());
 	}
 }

@@ -16,6 +16,8 @@ namespace Ion
 	class Entity;
 	// Components/Component.h
 	class Component;
+	class IComponentContainer;
+	struct ComponentDatabase;
 	class ComponentRegistry;
 	// Components/BehaviorComponent.h
 	class BehaviorComponent;

@@ -190,7 +190,10 @@ namespace Ion
 		{
 			component->Destroy();
 		}
+		m_Components.clear();
+
 		m_RootComponent->Destroy(false);
+		m_RootComponent = nullptr;
 	}
 
 	void Entity::AddChild(Entity* child)

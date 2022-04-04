@@ -70,6 +70,16 @@ namespace Ion::Editor
 			entity->SetMesh(model.Mesh);
 		});
 
+		MeshComponent* meshComp = registry.CreateComponent<MeshComponent>();
+		Entity* emptyEntity = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
+		emptyEntity->SetName("Empty Entity");
+		emptyEntity->SetRootComponent(meshComp);
+		emptyEntity->SetLocation(Vector3(2.0f, 0.0f, 0.0f));
+		GetModelDeferred(g_ExampleModels[3], [meshComp](ExampleModelData& model)
+		{
+			meshComp->SetMesh(model.Mesh);
+		});
+
 		if (1)
 		{
 			for (int32 i = 0; i < g_nHarnasSqrt * g_nHarnasSqrt; ++i)
@@ -192,10 +202,15 @@ namespace Ion::Editor
 				Entity* owner = m_SelectedComponent->GetOwner();
 				ionassert(owner == m_SelectedEntity);
 
-				m_SelectedComponent->Destroy();
-				m_SelectedComponent = nullptr;
+				// Destroy the component only if it's not the root
+				// If it's the root just delete the entity (@TODO: Ask the user first!!)
+				if (owner->GetRootComponent() != m_SelectedComponent)
+				{
+					m_SelectedComponent->Destroy();
+					m_SelectedComponent = nullptr;
 
-				return;
+					return;
+				}
 			}
 
 			m_SelectedEntity->Destroy();

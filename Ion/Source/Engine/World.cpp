@@ -58,6 +58,7 @@ namespace Ion
 		{
 			entity->OnDestroy();
 		}
+		m_Entities.clear();
 	}
 
 	void World::SetTickEnabled(bool bTick)
