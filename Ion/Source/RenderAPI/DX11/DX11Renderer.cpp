@@ -12,7 +12,7 @@
 
 #include "Application/EnginePath.h"
 
-#include "Engine/Entity.h"
+#include "Engine/Entity/Entity.h"
 #include "Engine/Components/MeshComponent.h"
 
 namespace Ion

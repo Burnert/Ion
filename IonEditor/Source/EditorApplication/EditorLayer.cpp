@@ -4,7 +4,7 @@
 #include "EditorApplication.h"
 
 #include "Engine/World.h"
-#include "Engine/Entity.h"
+#include "Engine/Entity/Entity.h"
 #include "Engine/Components/SceneComponent.h"
 #include "Engine/Components/MeshComponent.h"
 #include "Engine/Entity/MeshEntity.h"

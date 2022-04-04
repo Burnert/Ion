@@ -1,7 +1,7 @@
 #include "IonPCH.h"
 
 #include "SceneComponent.h"
-#include "Engine/Entity.h"
+#include "Engine/Entity/Entity.h"
 
 namespace Ion
 {
@@ -75,13 +75,14 @@ namespace Ion
 
 	SceneComponent* SceneComponent::Detach()
 	{
+		ionassert(GetOwner());
+
 		if (m_Parent)
 		{
 			m_Parent->RemoveChild(this);
 			m_Parent = nullptr;
-
-			GetOwner()->UnbindComponent(this);
 		}
+		GetOwner()->UnbindComponent(this);
 		return this;
 	}
 

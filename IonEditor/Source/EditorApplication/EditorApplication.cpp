@@ -70,17 +70,15 @@ namespace Ion::Editor
 			entity->SetMesh(model.Mesh);
 		});
 
-		if (0)
+		if (1)
 		{
 			for (int32 i = 0; i < g_nHarnasSqrt * g_nHarnasSqrt; ++i)
 			{
-				MeshComponent* mesh = registry.CreateComponent<MeshComponent>();
-				GetModelDeferred(g_ExampleModels[1], [mesh](ExampleModelData& model)
+				MeshEntity* ent = m_EditorMainWorld->SpawnEntityOfClass<MeshEntity>();
+				GetModelDeferred(g_ExampleModels[1], [ent](ExampleModelData& model)
 				{
-					mesh->SetMesh(model.Mesh);
+					ent->SetMesh(model.Mesh);
 				});
-				Entity* ent = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
-				ent->SetRootComponent(mesh);
 				float x = ((i % g_nHarnasSqrt)) * 0.2f - g_nHarnasSqrt * 0.1f;
 				float z = ((i / g_nHarnasSqrt)) * 0.2f - g_nHarnasSqrt * 0.1f;
 				ent->SetLocation(Vector3(x, -4.0f, z));
@@ -101,22 +99,27 @@ namespace Ion::Editor
 		c_Time += deltaTime;
 
 		int32 nHarnas = 0;
-		for (Entity* harnas : g_HarnasArray)
+		for (Entity*& harnas : g_HarnasArray)
 		{
-			int32 x = nHarnas % g_nHarnasSqrt;
-			int32 y = nHarnas / g_nHarnasSqrt;
+			if (harnas && m_EditorMainWorld->DoesOwnEntity(harnas))
+			{
+				int32 x = nHarnas % g_nHarnasSqrt;
+				int32 y = nHarnas / g_nHarnasSqrt;
 
-			float wave = 0.0f;
-			wave += sinf(((float)x + c_Time * 10.0f) / g_nHarnasSqrt * (float)Math::TWO_PI * 2.0f);
-			wave += sinf(((float)y + c_Time * 10.0f) / g_nHarnasSqrt * (float)Math::TWO_PI * 2.0f);
+				float wave = 0.0f;
+				wave += sinf(((float)x + c_Time * 10.0f) / g_nHarnasSqrt * (float)Math::TWO_PI * 2.0f);
+				wave += sinf(((float)y + c_Time * 10.0f) / g_nHarnasSqrt * (float)Math::TWO_PI * 2.0f);
 
-			Vector3 location = harnas->GetLocation();
-			location.y = wave;
-			harnas->SetLocation(location);
+				Vector3 location = harnas->GetLocation();
+				location.y = wave;
+				harnas->SetLocation(location);
+			}
+			else
+			{
+				harnas = nullptr;
+			}
 			nHarnas++;
 		}
-
-		//m_Scene->UpdateRenderData();
 	}
 
 	void EditorApplication::OnRender()
@@ -189,13 +192,14 @@ namespace Ion::Editor
 				Entity* owner = m_SelectedComponent->GetOwner();
 				ionassert(owner == m_SelectedEntity);
 
-				//m_SelectedComponent->Destroy();
-				//m_EditorMainWorld->GetComponentRegistry().DestroyComponent(m_SelectedComponent); // TEMPORARY
+				m_SelectedComponent->Destroy();
+				m_SelectedComponent = nullptr;
 
 				return;
 			}
 
-			//m_SelectedEntity->Destroy();
+			m_SelectedEntity->Destroy();
+			m_SelectedEntity = nullptr;
 		}
 	}
 

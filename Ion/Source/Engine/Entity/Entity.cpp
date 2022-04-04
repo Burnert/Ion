@@ -1,8 +1,8 @@
 #include "IonPCH.h"
 
 #include "Entity.h"
-#include "World.h"
-#include "Components/SceneComponent.h"
+#include "Engine/World.h"
+#include "Engine/Components/SceneComponent.h"
 
 namespace Ion
 {
@@ -168,6 +168,11 @@ namespace Ion
 		m_bCreateEmptyRootOnSpawn = false;
 	}
 
+	void Entity::Tick(float deltaTime)
+	{
+
+	}
+
 	void Entity::OnSpawn(World* worldContext)
 	{
 		if (m_bCreateEmptyRootOnSpawn)
@@ -175,8 +180,17 @@ namespace Ion
 			ComponentRegistry& registry = worldContext->GetComponentRegistry();
 			SetRootComponent(registry.CreateComponent<EmptySceneComponent>());
 			m_RootComponent->SetName("Root");
-			// @TODO: Destroy on destroy
 		}
+	}
+
+	void Entity::OnDestroy()
+	{
+		// @TODO: destroy the components in the comp registry!
+		for (Component* component : m_Components)
+		{
+			component->Destroy();
+		}
+		m_RootComponent->Destroy(false);
 	}
 
 	void Entity::AddChild(Entity* child)
@@ -224,6 +238,42 @@ namespace Ion
 		{
 			m_Components.erase(component);
 		}
+	}
+
+	void Entity::Destroy(bool bReparent)
+	{
+		ionassert(m_WorldContext);
+
+		// Reparent the children
+		if (HasChildren())
+		{
+			// If it doesn't have a parent it will 
+			// get parented to the world root anyway.
+			Entity* attachTo = bReparent ?
+				GetParent() : // World root if none
+				nullptr;      // World root
+
+			for (Entity* child : m_Children)
+			{
+				child->AttachTo(attachTo);
+			}
+		}
+
+		// Components are destroyed in OnDestroy function
+		m_WorldContext->RemoveEntity(this);
+	}
+
+	void Entity::DestroyWithChildren()
+	{
+		if (HasChildren())
+		{
+			for (Entity* child : m_Children)
+			{
+				child->DestroyWithChildren();
+			}
+		}
+
+		Destroy(false);
 	}
 
 	void Entity::UpdateWorldTransformCache()

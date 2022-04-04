@@ -77,6 +77,7 @@ namespace Ion
 	public:
 		using EntityArray = TArray<Entity*>;
 		using EntitySet   = THashSet<Entity*>;
+		using EntityMap   = THashMap<GUID, Entity*>;
 
 		using WorldTreeNodeFactory = TTreeNodeFactory<WorldTreeNodeData>;
 		using WorldTreeNode        = TTreeNode<WorldTreeNodeData>;
@@ -97,7 +98,10 @@ namespace Ion
 		void AddEntity(Entity* entity);
 		void AddEntity(Entity* entity, Entity* attachTo);
 		void RemoveEntity(Entity* entity);
+
 		bool DoesOwnEntity(Entity* entity) const;
+		bool DoesOwnEntity(const GUID& guid) const;
+		Entity* FindEntity(const GUID& guid);
 
 		void ReparentEntityInWorld(Entity* entity, Entity* parent);
 
@@ -131,6 +135,9 @@ namespace Ion
 		World();
 		~World();
 
+		void AddEntityToCollection(Entity* entity);
+		void RemoveEntityFromCollection(Entity* entity);
+
 		void AddChildEntity(Entity* child);
 		void RemoveChildEntity(Entity* child);
 
@@ -139,7 +146,7 @@ namespace Ion
 
 		ComponentRegistry m_ComponentRegistry;
 
-		EntitySet m_Entities; // World is the owner of the entities
+		EntityMap m_Entities; // World is the owner of the entities
 		EntityArray m_ChildEntities;
 
 		WorldTreeNodeFactory m_WorldTreeNodeFactory;

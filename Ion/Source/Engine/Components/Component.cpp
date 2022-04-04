@@ -1,6 +1,9 @@
 #include "IonPCH.h"
 
 #include "Component.h"
+#include "SceneComponent.h"
+#include "Engine/Entity/Entity.h"
+#include "Engine/World.h"
 
 namespace Ion
 {
@@ -13,6 +16,50 @@ namespace Ion
 		m_bIsSceneComponent(false)
 		//m_bUpdateSceneData(false)
 	{
+	}
+
+	void Component::Destroy(bool bReparent)
+	{
+		ionassert(m_WorldContext);
+
+		if (m_OwningEntity)
+		{
+			if (IsSceneComponent())
+			{
+				SceneComponent* comp = ((SceneComponent*)this);
+				if (comp->HasChildren())
+				{
+					if (bReparent && !comp->GetParent())
+					{
+						LOG_ERROR("Cannot reparent component's children if it has no parent.");
+						bReparent = false; // Force no reparent
+					}
+
+					// Reparent or destroy the children
+					if (bReparent)
+					{
+						for (SceneComponent* child : comp->GetChildren())
+						{
+							child->AttachTo(comp->GetParent());
+						}
+					}
+					else
+					{
+						for (SceneComponent* child : comp->GetChildren())
+						{
+							child->Destroy(false);
+						}
+					}
+				}
+				comp->Detach();
+			}
+			else
+			{
+				m_OwningEntity->RemoveComponent(this);
+			}
+		}
+		// @TODO: get the type in runtime
+		// m_WorldContext->GetComponentRegistry().DestroyComponent();
 	}
 
 	void Component::SetTickEnabled(bool bTick)

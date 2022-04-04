@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Engine/Entity.h"
+#include "Entity.h"
 
 namespace Ion
 {

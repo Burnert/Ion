@@ -1,7 +1,7 @@
 #include "IonPCH.h"
 
 #include "LightComponent.h"
-#include "Engine/Entity.h"
+#include "Engine/Entity/Entity.h"
 #include "Renderer/Renderer.h"
 
 namespace Ion

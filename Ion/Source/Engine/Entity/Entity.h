@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SceneObjectData.h"
+#include "Engine/SceneObjectData.h"
 
 namespace Ion
 {
@@ -49,13 +49,19 @@ namespace Ion
 
 		bool HasComponent(Component* component) const;
 
-		/* Set entity related component data. */
+		/* Set entity related component data and add the component to entity's collection. */
 		void BindComponent(Component* component);
-		/* Reset entity related component data. */
+		/* Reset entity related component data and remove the component from entity's collection. */
 		void UnbindComponent(Component* component);
 
 		void SetName(const String& name);
 		const String& GetName() const;
+
+		/* If bReparent is true, the child entities will get reparented
+		   to this entity's parent instead of the world root, unless it has no parent.
+		   Use DestroyWithChildren if you don't want to keep the children. */
+		void Destroy(bool bReparent = true);
+		void DestroyWithChildren();
 
 		/* Returns null if the Entity is parented to the World root. */
 		Entity* GetParent() const;
@@ -89,9 +95,12 @@ namespace Ion
 		void SetNoCreateRootOnSpawn();
 
 	protected:
-		virtual void Tick(float deltaTime) { }
+		/* Called each frame. */
+		virtual void Tick(float deltaTime);
+		/* Called when the entity is spawned in the world. */
 		virtual void OnSpawn(World* worldContext);
-		virtual void OnDestroy() { /* @TODO: destroy components */ }
+		/* Called when the entity is removed from the world. */
+		virtual void OnDestroy();
 
 	private:
 		void AddChild(Entity* child);

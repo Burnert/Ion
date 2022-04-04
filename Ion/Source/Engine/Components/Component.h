@@ -121,8 +121,16 @@ namespace Ion
 	class ION_API Component
 	{
 	public:
+		/* Called by the ComponentRegistry */
 		virtual void OnCreate() { }
+		/* Called by the ComponentRegistry */
 		virtual void OnDestroy() { }
+
+		/* If bReparent is true, the children will get
+		   reparented to the parent of this component.
+		   Else they will get destroyed.
+		   bReparent is unused on non-scene components. */
+		void Destroy(bool bReparent = true);
 
 		void SetTickEnabled(bool bTick);
 		bool IsTickEnabled() const;
@@ -206,6 +214,10 @@ namespace Ion
 
 		template<typename CompT>
 		void DestroyComponent(CompT* component);
+
+		template<>
+		void DestroyComponent(Component* component);
+
 		// Does nothing
 		template<typename CompT>
 		void BindComponentToEntity(Entity* entity, CompT* component) {}

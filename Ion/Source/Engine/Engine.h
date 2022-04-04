@@ -1,7 +1,7 @@
 #pragma once
 
 #include "World.h"
-#include "Entity.h"
+#include "Entity/Entity.h"
 
 namespace Ion
 {

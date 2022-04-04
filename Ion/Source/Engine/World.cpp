@@ -1,7 +1,7 @@
 #include "IonPCH.h"
 
 #include "World.h"
-#include "Entity.h"
+#include "Entity/Entity.h"
 #include "Renderer/Scene.h"
 
 #pragma warning(disable:6011)
@@ -42,7 +42,7 @@ namespace Ion
 		if (!m_bTickWorld)
 			return;
 
-		for (Entity* entity : m_Entities)
+		for (auto& [guid, entity] : m_Entities)
 		{
 			entity->Update(deltaTime);
 		}
@@ -54,7 +54,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		for (Entity* entity : m_Entities)
+		for (auto& [guid, entity] : m_Entities)
 		{
 			entity->OnDestroy();
 		}
@@ -70,8 +70,6 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		m_ComponentRegistry.BuildRendererData(data);
-
-		//m_Scene->UpdateRenderData();
 	}
 
 	void World::AddEntity(Entity* entity)
@@ -84,7 +82,7 @@ namespace Ion
 		InitEntity(entity);
 
 		// Insert the entity to collections
-		m_Entities.insert(entity);
+		AddEntityToCollection(entity);
 		AddChildEntity(entity);
 		InsertWorldTreeNode(entity);
 	}
@@ -93,10 +91,8 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		if (!attachTo)
-			AddEntity(entity);
-
 		ionassert(entity);
+		ionassert(attachTo);
 		ionassert(!DoesOwnEntity(entity), "Entity already exists in the world.");
 
 		WorldTreeNode* parentNode = FindWorldTreeNode(attachTo);
@@ -106,8 +102,8 @@ namespace Ion
 
 		InitEntity(entity);
 
-		// Insert the entity to collections
-		m_Entities.insert(entity);
+		AddEntityToCollection(entity);
+		// Attach the entity to the parent node
 		InsertWorldTreeNode(entity, *parentNode);
 
 		// Update entities
@@ -122,7 +118,9 @@ namespace Ion
 		ionassert(entity);
 		ionassert(DoesOwnEntity(entity), "Entity doesn't exist in the world.");
 
-		m_Entities.erase(entity);
+		entity->OnDestroy();
+
+		RemoveEntityFromCollection(entity);
 		RemoveChildEntity(entity);
 
 		RemoveWorldTreeNode(entity);
@@ -133,7 +131,12 @@ namespace Ion
 
 	bool World::DoesOwnEntity(Entity* entity) const
 	{
-		return m_Entities.find(entity) != m_Entities.end();
+		return DoesOwnEntity(entity->GetGuid());
+	}
+
+	bool World::DoesOwnEntity(const GUID& guid) const
+	{
+		return m_Entities.find(guid) != m_Entities.end();
 	}
 
 	void World::ReparentEntityInWorld(Entity* entity, Entity* parent)
@@ -161,6 +164,15 @@ namespace Ion
 
 		// Reparent in world tree
 		parentNode->Insert(entityNode->RemoveFromParent());
+	}
+
+	Entity* World::FindEntity(const GUID& guid)
+	{
+		auto it = m_Entities.find(guid);
+		if (it == m_Entities.end())
+			return nullptr;
+
+		return it->second;
 	}
 
 	World::WorldTreeNode* World::FindWorldTreeNode(Entity* entity) const
@@ -229,11 +241,21 @@ namespace Ion
 
 		checked_delete(m_Scene);
 
-		for (Entity* entity : m_Entities)
+		for (auto& [guid, entity] : m_Entities)
 		{
 			checked_delete(entity);
 		}
 		m_Entities.clear();
+	}
+
+	void World::AddEntityToCollection(Entity* entity)
+	{
+		m_Entities.insert({ entity->GetGuid(), entity });
+	}
+
+	void World::RemoveEntityFromCollection(Entity* entity)
+	{
+		m_Entities.erase(entity->GetGuid());
 	}
 
 	void World::AddChildEntity(Entity* child)
