@@ -1,7 +1,7 @@
 project "SpdLog"
     kind "StaticLib"
-	cppdialect "C++17"
     language "C++"
+	cppdialect "C++17"
 
 	pchheader "pch.h.in"
 	pchsource "spdlog_pch.cpp"
@@ -36,7 +36,7 @@ project "SpdLog"
 
     filter "system:windows"
         systemversion "latest"
-        staticruntime "Off"
+        staticruntime "On"
 		
 		defines {
 		}

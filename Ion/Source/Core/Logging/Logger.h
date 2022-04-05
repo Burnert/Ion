@@ -1,9 +1,11 @@
 #pragma once
 
 #include "Core/CoreApi.h"
+#include "Core/CoreMacros.h"
 #include "Core/CoreTypes.h"
 
 #define SPDLOG_WCHAR_TO_UTF8_SUPPORT
+#define SPDLOG_COMPILED_LIB
 #include "spdlog/spdlog.h"
 
 namespace Ion

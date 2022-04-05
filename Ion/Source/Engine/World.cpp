@@ -212,7 +212,7 @@ namespace Ion
 		m_WorldTreeNodeFactory.Destroy(node->RemoveFromParent());
 	}
 
-	inline World::WorldTreeNode& World::GetWorldTreeRoot()
+	World::WorldTreeNode& World::GetWorldTreeRoot()
 	{
 		return m_WorldTreeRoot;
 	}

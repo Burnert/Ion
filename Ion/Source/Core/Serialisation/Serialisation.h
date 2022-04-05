@@ -492,7 +492,7 @@ namespace Ion
 		}
 	};
 
-	void SerialisationTest()
+	inline void SerialisationTest()
 	{
 		SerialClassTest t;
 		t.a = 93.2f;

@@ -31,10 +31,9 @@ project "ImGui"
 
     filter "system:windows"
         systemversion "latest"
-        staticruntime "Off"
+        staticruntime "On"
 		
 		defines {
-			"IMGUI_API=__declspec(dllexport)"
 		}
 
     filter "configurations:Debug"

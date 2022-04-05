@@ -24,8 +24,9 @@ end
 
 project "Ion"
 	location "Ion"
-	kind "SharedLib"
+	kind "StaticLib"
 	language "C++"
+	cppdialect "C++17"
 	characterset "Unicode"
 
 	pchheader "IonPCH.h"
@@ -62,20 +63,13 @@ project "Ion"
 	}
 
 	filter "system:windows"
-		cppdialect "C++17"
-		staticruntime "Off"
+		staticruntime "On"
 		systemversion "latest"
 
 		defines {
+			"ION_STATIC_LIB",
 			"ION_PLATFORM_WINDOWS",
-			"ION_ENGINE"
-		}
-
-		postbuildcommands {
-			"{MKDIR} ../Build/" .. outputdir .. "/IonExample",
-			"{COPY} %{cfg.buildtarget.relpath} ../Build/" .. outputdir .. "/IonExample",
-			"{MKDIR} ../Build/" .. outputdir .. "/IonEditor",
-			"{COPY} %{cfg.buildtarget.relpath} ../Build/" .. outputdir .. "/IonEditor"
+			"ION_ENGINE",
 		}
 
 	filter "configurations:Debug"
@@ -135,7 +129,7 @@ project "IonEditor"
 	}
 
 	filter "system:windows"
-		staticruntime "Off"
+		staticruntime "On"
 		systemversion "latest"
 
 		debugargs { "--enginePath", "%{wks.location}Ion" }
@@ -165,6 +159,7 @@ project "IonExample"
 	location "IonExample"
 	kind "ConsoleApp"
 	language "C++"
+	cppdialect "C++17"
 	characterset "Unicode"
 
 	targetdir ("Build/" .. outputdir .. "/%{prj.name}")
@@ -190,8 +185,7 @@ project "IonExample"
 	}
 
 	filter "system:windows"
-		cppdialect "C++17"
-		staticruntime "Off"
+		staticruntime "On"
 		systemversion "latest"
 		
 		debugargs { "--enginePath", "%{wks.location}Ion" }

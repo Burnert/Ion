@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Core/Logging/Logger.h"
-
 #define FORCEINLINE __forceinline
 #define NODISCARD [[nodiscard]]
 #define NOVTABLE __declspec(novtable)

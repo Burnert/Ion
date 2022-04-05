@@ -19,7 +19,7 @@ project "Glad"
 
     filter "system:windows"
         systemversion "latest"
-        staticruntime "Off"
+        staticruntime "On"
 
     filter "configurations:Debug"
 		defines "ION_DEBUG"
