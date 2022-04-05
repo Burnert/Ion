@@ -133,18 +133,25 @@ namespace Editor
 			}
 			if (ImGui::BeginMenu("Edit"))
 			{
-				ImGui::MenuItem("Undo");
-				ImGui::MenuItem("Redo");
+				bool bSelected = EditorApplication::Get()->IsAnyObjectSelected();
+
+				ImGui::MenuItem("Undo", nullptr, false, false);
+				ImGui::MenuItem("Redo", nullptr, false, false);
 				ImGui::Separator();
-				ImGui::MenuItem("Cut");
-				ImGui::MenuItem("Copy");
-				ImGui::MenuItem("Paste");
-				ImGui::MenuItem("Delete");
-				ImGui::Separator();
-				if (ImGui::MenuItem("Deselect"))
+				ImGui::MenuItem("Cut", nullptr, false, false);
+				ImGui::MenuItem("Copy", nullptr, false, false);
+				ImGui::MenuItem("Paste", nullptr, false, false);
+				if (ImGui::MenuItem("Delete", nullptr, false, bSelected))
 				{
-					EditorApplication::Get()->SetSelectedEntity(nullptr);
+					EditorApplication::Get()->DeleteSelectedObject();
 				}
+				ImGui::SameLine(100); ImGui::TextDisabled("Del");
+				ImGui::Separator();
+				if (ImGui::MenuItem("Deselect", nullptr, false, bSelected))
+				{
+					EditorApplication::Get()->DeselectCurrentObject();
+				}
+				ImGui::SameLine(100); ImGui::TextDisabled("Esc");
 
 				ImGui::EndMenu();
 			}
@@ -287,26 +294,26 @@ namespace Editor
 
 		if (m_bWorldTreePanelOpen)
 		{
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4, 4));
 			if (ImGui::Begin("World Tree", &m_bWorldTreePanelOpen))
 			{
-				if (ImGui::Button("Deselect"))
-				{
-					EditorApplication::Get()->SetSelectedEntity(nullptr);
-				}
-
-				ImGui::Separator();
-
 				World* editorWorld = EditorApplication::Get()->GetEditorWorld();
 				if (editorWorld)
 				{
-					ImGui::PushID("WorldTree");
-
-					DrawWorldTreeNodes();
-
-					ImGui::PopID();
+					ImGui::BeginChild("WorldTree");
+					{
+						DrawWorldTreeNodes();
+					}
+					ImGui::EndChild();
+					// Deselect entity when free space is clicked
+					if (ImGui::IsItemClicked())
+					{
+						EditorApplication::Get()->DeselectCurrentEntity();
+					}
 				}
 			}
 			ImGui::End();
+			ImGui::PopStyleVar();
 		}
 	}
 
@@ -388,7 +395,7 @@ namespace Editor
 			if ((!bHasChildren || (bWasOpen == bImguiTreeNodeOpen)) &&
 				entity && ImGui::IsItemClicked())
 			{
-				EditorApplication::Get()->SetSelectedEntity(entity);
+				EditorApplication::Get()->SelectObject(entity);
 			}
 
 			if (bHasChildren && bImguiTreeNodeOpen)
@@ -475,7 +482,7 @@ namespace Editor
 				ImGui::SameLine();
 				if (ImGui::SmallButton("Select"))
 				{
-					EditorApplication::Get()->SetSelectedEntity(parent);
+					EditorApplication::Get()->SelectObject(parent);
 					ExpandWorldTreeToEntity(parent);
 				}
 			}
@@ -537,7 +544,7 @@ namespace Editor
 				String selectLabel = "Select"s + "##" + ToString(index++);
 				if (ImGui::Button(selectLabel.c_str()))
 				{
-					EditorApplication::Get()->SetSelectedEntity(child);
+					EditorApplication::Get()->SelectObject(child);
 					ExpandWorldTreeToEntity(child);
 				}
 				ImGui::PopStyleVar(2);
@@ -567,7 +574,7 @@ namespace Editor
 			// Deselect component when free space is clicked
 			if (ImGui::IsItemClicked())
 			{
-				EditorApplication::Get()->SetSelectedComponent(nullptr);
+				EditorApplication::Get()->DeselectCurrentComponent();
 			}
 
 			Component* selectedComponent = EditorApplication::Get()->GetSelectedComponent();
@@ -879,7 +886,7 @@ namespace Editor
 		// (unless it has no children, since the state won't change then).
 		if ((!bHasChildren || (bWasOpen == bImguiTreeNodeOpen)) && bTreeNodeClicked)
 		{
-			EditorApplication::Get()->SetSelectedComponent(&component);
+			EditorApplication::Get()->SelectObject(&component);
 		}
 
 		if (bDrawChildren && bHasChildren && bImguiTreeNodeOpen)
@@ -906,7 +913,7 @@ namespace Editor
 			bool bSelected = EditorApplication::Get()->GetSelectedComponent() == component;
 			if (ImGui::Selectable(nodeName.c_str(), bSelected))
 			{
-				EditorApplication::Get()->SetSelectedComponent(component);
+				EditorApplication::Get()->SelectObject(component);
 			}
 			ImGui::SameLine();
 			ImGui::TextDisabled("(%s)", component->GetClassDisplayName().c_str());

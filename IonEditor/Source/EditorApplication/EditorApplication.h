@@ -23,12 +23,15 @@ namespace Ion::Editor
 		void CaptureViewport(bool bCapture);
 		void DriveEditorCameraRotation(float yawDelta, float pitchDelta);
 
-		void SetSelectedEntity(Entity* entity);
 		Entity* GetSelectedEntity() const;
-
-		void SetSelectedComponent(Component* component);
 		Component* GetSelectedComponent() const;
+		bool IsAnyObjectSelected() const;
 
+		void SelectObject(Entity* entity);
+		void SelectObject(Component* component);
+		void DeselectCurrentEntity();
+		void DeselectCurrentComponent();
+		void DeselectCurrentObject();
 		void DeleteSelectedObject();
 
 		World* GetEditorWorld() const;
@@ -45,6 +48,9 @@ namespace Ion::Editor
 		void OnKeyPressedEvent(const KeyPressedEvent& event);
 
 	private:
+		void SetSelectedEntity(Entity* entity);
+		void SetSelectedComponent(Component* component);
+
 		void UpdateEditorCamera(float deltaTime);
 		void UpdateEditorCameraLocation(float deltaTime);
 
@@ -99,6 +105,11 @@ namespace Ion::Editor
 	inline Component* EditorApplication::GetSelectedComponent() const
 	{
 		return m_SelectedComponent;
+	}
+
+	inline bool EditorApplication::IsAnyObjectSelected() const
+	{
+		return m_SelectedEntity || m_SelectedComponent;
 	}
 
 	inline World* EditorApplication::GetEditorWorld() const

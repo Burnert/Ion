@@ -80,7 +80,7 @@ namespace Ion::Editor
 			meshComp->SetMesh(model.Mesh);
 		});
 
-		if (1)
+		if (0)
 		{
 			for (int32 i = 0; i < g_nHarnasSqrt * g_nHarnasSqrt; ++i)
 			{
@@ -182,15 +182,52 @@ namespace Ion::Editor
 	void EditorApplication::SetSelectedEntity(Entity* entity)
 	{
 		m_SelectedEntity = entity;
-		if (GetSelectedComponent() && entity != GetSelectedComponent()->GetOwner())
-		{
-			SetSelectedComponent(nullptr);
-		}
 	}
 
 	void EditorApplication::SetSelectedComponent(Component* component)
 	{
 		m_SelectedComponent = component;
+	}
+
+	void EditorApplication::SelectObject(Entity* entity)
+	{
+		if (!entity || m_SelectedComponent && entity != m_SelectedComponent->GetOwner())
+		{
+			DeselectCurrentComponent();
+		}
+		SetSelectedEntity(entity);
+	}
+
+	void EditorApplication::SelectObject(Component* component)
+	{
+		// If the component has a different owner than the selected entity,
+		// select the owner entity first.
+		if (component && component->GetOwner() != m_SelectedEntity)
+		{
+			SetSelectedEntity(component->GetOwner());
+		}
+		SetSelectedComponent(component);
+	}
+
+	void EditorApplication::DeselectCurrentEntity()
+	{
+		SetSelectedEntity(nullptr);
+		SetSelectedComponent(nullptr);
+	}
+
+	void EditorApplication::DeselectCurrentComponent()
+	{
+		SetSelectedComponent(nullptr);
+	}
+
+	void EditorApplication::DeselectCurrentObject()
+	{
+		if (m_SelectedComponent)
+		{
+			DeselectCurrentComponent();
+			return;
+		}
+		DeselectCurrentEntity();
 	}
 
 	void EditorApplication::DeleteSelectedObject()
@@ -207,14 +244,14 @@ namespace Ion::Editor
 				if (owner->GetRootComponent() != m_SelectedComponent)
 				{
 					m_SelectedComponent->Destroy();
-					m_SelectedComponent = nullptr;
+					SetSelectedComponent(nullptr);
 
 					return;
 				}
 			}
 
 			m_SelectedEntity->Destroy();
-			m_SelectedEntity = nullptr;
+			SetSelectedEntity(nullptr);
 		}
 	}
 
@@ -254,7 +291,7 @@ namespace Ion::Editor
 		{
 			case Key::Escape:
 			{
-				SetSelectedEntity(nullptr);
+				DeselectCurrentObject();
 				break;
 			}
 			case Key::Delete:
