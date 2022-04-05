@@ -25,6 +25,25 @@ namespace Ion
 	class Shader;
 	class IndexBuffer;
 
+	enum class ECursorType : uint8
+	{
+		Arrow = 0,
+		Help,
+		Cross,
+		TextEdit,
+		Unavailable,
+		UpArrow,
+		ResizeNS,
+		ResizeWE,
+		ResizeNWSE,
+		ResizeNESW,
+		Move,
+		Hand,
+		Grab,
+		GrabClosed,
+		_Count
+	};
+
 	class ION_API Application
 	{
 		friend GenericWindow;
@@ -39,6 +58,10 @@ namespace Ion
 		void Exit();
 
 		void SetApplicationTitle(const WString& title);
+
+		/* Sets the cursor for the current frame only. */
+		virtual void SetCursor(ECursorType cursor);
+		virtual ECursorType GetCurrentCursor() const;
 
 		static Application* Get();
 		template<typename T>

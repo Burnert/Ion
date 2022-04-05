@@ -93,10 +93,14 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		TRACE_BEGIN(0, "WindowsWindow - ImGui_ImplWin32_WndProcHandler");
-		if (ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam))
-			return 1;
-		TRACE_END(0);
+		// @TODO: fix - quick hack
+		if (uMsg != WM_SETCURSOR)
+		{
+			TRACE_BEGIN(0, "WindowsWindow - ImGui_ImplWin32_WndProcHandler");
+			if (ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam))
+				return 1;
+			TRACE_END(0);
+		}
 
 		// Read ImGui input first and decide what to do
 		// @TODO: This is a quick fix so do something better in the future
@@ -215,6 +219,21 @@ namespace Ion
 
 			case WM_SYSCHAR:
 			{
+				break;
+			}
+
+			case WM_SETCURSOR:
+			{
+				// @TODO: fix - quick hack
+				if (WindowsApplication::Get()->m_RequestedCursor == -1)
+					if (ImGui_ImplWin32_WndProcHandler(hWnd, WM_SETCURSOR, wParam, lParam))
+						return 1;
+
+				if (LOWORD(lParam) == HTCLIENT)
+				{
+					WindowsApplication::Get()->UpdateMouseCursor();
+					return 1;
+				}
 				break;
 			}
 

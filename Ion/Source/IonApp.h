@@ -19,6 +19,9 @@ namespace Ion
 		void Exit();
 		void SetApplicationTitle(const WString& title);
 
+		void SetCursor(ECursorType cursor);
+		ECursorType GetCurrentCursor() const;
+
 		Application* GetEngineApplication() const;
 
 		const TShared<GenericWindow>& GetWindow();
@@ -64,5 +67,15 @@ namespace Ion
 	inline LayerStack* App::GetLayerStack()
 	{
 		return GetEngineApplication()->GetLayerStack();
+	}
+
+	inline void App::SetCursor(ECursorType cursor)
+	{
+		GetEngineApplication()->SetCursor(cursor);
+	}
+
+	inline ECursorType App::GetCurrentCursor() const
+	{
+		return GetEngineApplication()->GetCurrentCursor();
 	}
 }

@@ -254,8 +254,7 @@ namespace Editor
 							}
 							if (ImGui::IsItemHovered())
 							{
-								ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
-								// @TODO: get a grab hand cursor here
+								EditorApplication::Get()->SetCursor(ECursorType::Grab);
 							}
 							ImGui::PopStyleVar();
 						}

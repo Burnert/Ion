@@ -34,6 +34,18 @@ namespace Ion
 	static LARGE_INTEGER s_FirstFrameTime;
 	static float s_LastFrameTime = 0;
 
+	void WindowsApplication::SetCursor(ECursorType cursor)
+	{
+		m_RequestedCursor = (int32)cursor;
+	}
+
+	ECursorType WindowsApplication::GetCurrentCursor() const
+	{
+		if (m_CurrentCursor == -1)
+			return ECursorType::Arrow;
+		return (ECursorType)m_CurrentCursor;
+	}
+
 	void WindowsApplication::InitWindows(HINSTANCE hInstance)
 	{
 		TRACE_FUNCTION();
@@ -46,11 +58,16 @@ namespace Ion
 
 		QueryPerformanceCounter(&s_FirstFrameTime);
 
+		LoadCursors();
+
 		Init();
 	}
 
 	WindowsApplication::WindowsApplication(App* clientApp) :
-		Application(clientApp)
+		Application(clientApp),
+		m_CurrentCursor(0),
+		m_RequestedCursor(0),
+		m_CursorHandles()
 	{
 	}
 
@@ -72,6 +89,10 @@ namespace Ion
 	void WindowsApplication::Update(float DeltaTime)
 	{
 		TRACE_FUNCTION();
+
+		if (m_CurrentCursor != m_RequestedCursor)
+			UpdateMouseCursor();
+		m_RequestedCursor = -1;
 
 		Application::Update(DeltaTime);
 	}
@@ -122,6 +143,88 @@ namespace Ion
 	// -------------------------------------------------------------
 	//  ImGui related  ---------------------------------------------
 	// -------------------------------------------------------------
+
+	void WindowsApplication::LoadCursors()
+	{
+		constexpr size_t count = (size_t)ECursorType::_Count;
+		WString cursorPath;
+		for (int32 i = 0; i < count; ++i)
+		{
+			HCURSOR& handle = m_CursorHandles[i];
+			ECursorType currentCursor = (ECursorType)i;
+			switch (currentCursor)
+			{
+			case ECursorType::Arrow:
+				handle = LoadCursor(NULL, IDC_ARROW);
+				break;
+			case ECursorType::Help:
+				handle = LoadCursor(NULL, IDC_HELP);
+				break;
+			case ECursorType::Cross:
+				handle = LoadCursor(NULL, IDC_CROSS);
+				break;
+			case ECursorType::TextEdit:
+				handle = LoadCursor(NULL, IDC_IBEAM);
+				break;
+			case ECursorType::Unavailable:
+				handle = LoadCursor(NULL, IDC_NO);
+				break;
+			case ECursorType::UpArrow:
+				handle = LoadCursor(NULL, IDC_UPARROW);
+				break;
+			case ECursorType::ResizeNS:
+				handle = LoadCursor(NULL, IDC_SIZENS);
+				break;
+			case ECursorType::ResizeWE:
+				handle = LoadCursor(NULL, IDC_SIZEWE);
+				break;
+			case ECursorType::ResizeNWSE:
+				handle = LoadCursor(NULL, IDC_SIZENWSE);
+				break;
+			case ECursorType::ResizeNESW:
+				handle = LoadCursor(NULL, IDC_SIZENESW);
+				break;
+			case ECursorType::Move:
+				handle = LoadCursor(NULL, IDC_SIZEALL);
+				break;
+			case ECursorType::Hand:
+				handle = LoadCursor(NULL, IDC_HAND);
+				break;
+			case ECursorType::Grab:
+				// @TODO: unhardcode these paths
+				cursorPath = (EnginePath::GetContentPath() + L"Cursor/openhand.cur").ToString();
+				handle = LoadCursorFromFile(cursorPath.c_str());
+				if (!handle)
+				{
+					LOG_WARN(L"Could not load cursor {0}. The default one will be used.", cursorPath);
+					handle = LoadCursor(NULL, IDC_ARROW);
+				}
+				break;
+			case ECursorType::GrabClosed:
+				cursorPath = (EnginePath::GetContentPath() + L"Cursor/closedhand.cur").ToString();
+				handle = LoadCursorFromFile(cursorPath.c_str());
+				if (!handle)
+				{
+					LOG_WARN(L"Could not load cursor {0}. The default one will be used.", cursorPath);
+					handle = LoadCursor(NULL, IDC_ARROW);
+				}
+				break;
+			default:
+				ionassert(0, "Cursor type not implemented.");
+				handle = LoadCursor(NULL, IDC_ARROW);
+			}
+		}
+		m_CurrentCursor = 0;
+	}
+
+	void WindowsApplication::UpdateMouseCursor()
+	{
+		m_CurrentCursor = m_RequestedCursor;
+		if (m_CurrentCursor == -1) // Don't change the cursor here
+			return;
+		HCURSOR handle = m_CursorHandles[m_CurrentCursor];
+		::SetCursor(handle);
+	}
 
 	void WindowsApplication::InitImGuiBackend(const TShared<GenericWindow>& window) const
 	{

@@ -19,6 +19,9 @@ namespace Ion
 		/* Called by the Entry Point */
 		virtual void Start();
 
+		virtual void SetCursor(ECursorType cursor) override;
+		virtual ECursorType GetCurrentCursor() const override;
+
 		void InitWindows(HINSTANCE hInstance);
 
 		FORCEINLINE static HINSTANCE GetHInstance() { return m_HInstance; }
@@ -39,6 +42,9 @@ namespace Ion
 		virtual void OnWindowCloseEvent_Internal(const WindowCloseEvent& event) override;
 
 	private:
+		void LoadCursors();
+		void UpdateMouseCursor();
+
 		virtual void InitImGuiBackend(const TShared<GenericWindow>& window) const override;
 		virtual void ImGuiNewFramePlatform() const override;
 		virtual void ImGuiRenderPlatform(ImDrawData* drawData) const override;
@@ -51,6 +57,11 @@ namespace Ion
 		//static LARGE_INTEGER s_liFirstFrameTime;
 		//static float s_LastFrameTime;
 
+		HCURSOR m_CursorHandles[(size_t)ECursorType::_Count];
+		int32 m_CurrentCursor;
+		int32 m_RequestedCursor;
+
 		friend Application* InstantiateApplication();
+		friend class WindowsWindow;
 	};
 }

@@ -28,6 +28,16 @@ namespace Ion
 			return GetCheckedEnginePath() + L"Shaders";
 		}
 
+		static inline FilePath GetContentPath()
+		{
+			return s_EnginePath + L"Content";
+		}
+
+		static inline FilePath GetCheckedContentPath()
+		{
+			return GetCheckedEnginePath() + L"Content";
+		}
+
 	protected:
 		static inline void SetEnginePath(const WString& path)
 		{

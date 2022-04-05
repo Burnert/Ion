@@ -20,6 +20,16 @@
 
 namespace Ion
 {
+	void Application::SetCursor(ECursorType cursor)
+	{
+		LOG_WARN("Changing the cursor is not supported on this platform.");
+	}
+
+	ECursorType Application::GetCurrentCursor() const
+	{
+		return ECursorType::Arrow;
+	}
+
 	Application* Application::Get()
 	{
 		// This goes off when Application was not yet created.
