@@ -41,8 +41,10 @@ namespace Ion
 
 	ECursorType WindowsApplication::GetCurrentCursor() const
 	{
-		if (m_CurrentCursor == -1)
-			return ECursorType::Arrow;
+		// The current cursor will not get updated until the next frame,
+		// so if it's going to change, return the requested cursor instead.
+		if (m_RequestedCursor != -1)
+			return (ECursorType)m_RequestedCursor;
 		return (ECursorType)m_CurrentCursor;
 	}
 
@@ -92,7 +94,8 @@ namespace Ion
 
 		if (m_CurrentCursor != m_RequestedCursor)
 			UpdateMouseCursor();
-		m_RequestedCursor = -1;
+
+		SetCursor(ECursorType::NoChange);
 
 		Application::Update(DeltaTime);
 	}
@@ -217,13 +220,16 @@ namespace Ion
 		m_CurrentCursor = 0;
 	}
 
-	void WindowsApplication::UpdateMouseCursor()
+	bool WindowsApplication::UpdateMouseCursor()
 	{
+		if (m_RequestedCursor == (int32)ECursorType::NoChange) // Don't change the cursor
+			return false;
+
 		m_CurrentCursor = m_RequestedCursor;
-		if (m_CurrentCursor == -1) // Don't change the cursor here
-			return;
+
 		HCURSOR handle = m_CursorHandles[m_CurrentCursor];
 		::SetCursor(handle);
+		return true;
 	}
 
 	void WindowsApplication::InitImGuiBackend(const TShared<GenericWindow>& window) const

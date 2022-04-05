@@ -43,7 +43,7 @@ namespace Ion
 
 	private:
 		void LoadCursors();
-		void UpdateMouseCursor();
+		bool UpdateMouseCursor();
 
 		virtual void InitImGuiBackend(const TShared<GenericWindow>& window) const override;
 		virtual void ImGuiNewFramePlatform() const override;

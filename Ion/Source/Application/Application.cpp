@@ -137,6 +137,13 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
+		// Don't reset the cursor if the mouse is being held
+		if (!InputManager::IsMouseButtonPressed(Mouse::Left))
+		{
+			// Reset the cursor
+			SetCursor(ECursorType::Arrow);
+		}
+
 		g_Engine->Update(deltaTime);
 
 		ImGuiNewFramePlatform();
@@ -153,6 +160,15 @@ namespace Ion
 		TRACE_END(0);
 
 		m_LayerStack->OnUpdate(deltaTime);
+
+		// Arrow means that the cursor was not overriden by Ion,
+		// so ImGui can override it.
+		ECursorType cursor = GetCurrentCursor();
+		if (cursor == ECursorType::Arrow)
+		{
+			ImGuiMouseCursor imGuiCursor = ImGui::GetMouseCursor();
+			SetImGuiCursor(imGuiCursor);
+		}
 	}
 
 	void Application::Render()
@@ -325,6 +341,7 @@ namespace Ion
 		ImGuiIO& imGuiIO = ImGui::GetIO();
 		imGuiIO.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 		imGuiIO.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+		imGuiIO.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
 		if (RenderAPI::GetCurrent() == ERenderAPI::DX11
 #if PLATFORM_SUPPORTS_OPENGL && PLATFORM_ENABLE_IMGUI_VIEWPORTS_OPENGL
 			|| RenderAPI::GetCurrent() == ERenderAPI::OpenGL
@@ -351,6 +368,25 @@ namespace Ion
 
 		ImGuiShutdownPlatform();
 		ImGui::DestroyContext();
+	}
+
+	void Application::SetImGuiCursor(int32 cursor)
+	{
+		ImGuiMouseCursor_ cur = (ImGuiMouseCursor_)cursor;
+		ECursorType actualCursor = ECursorType::Arrow;
+		switch (cur)
+		{
+			case ImGuiMouseCursor_Arrow:        actualCursor = ECursorType::Arrow; break;
+			case ImGuiMouseCursor_TextInput:    actualCursor = ECursorType::TextEdit; break;
+			case ImGuiMouseCursor_ResizeAll:    actualCursor = ECursorType::Move; break;
+			case ImGuiMouseCursor_ResizeEW:     actualCursor = ECursorType::ResizeWE; break;
+			case ImGuiMouseCursor_ResizeNS:     actualCursor = ECursorType::ResizeNS; break;
+			case ImGuiMouseCursor_ResizeNESW:   actualCursor = ECursorType::ResizeNESW; break;
+			case ImGuiMouseCursor_ResizeNWSE:   actualCursor = ECursorType::ResizeNWSE; break;
+			case ImGuiMouseCursor_Hand:         actualCursor = ECursorType::Hand; break;
+			case ImGuiMouseCursor_NotAllowed:   actualCursor = ECursorType::Unavailable; break;
+		}
+		SetCursor(actualCursor);
 	}
 
 	Application* Application::s_Instance = nullptr;

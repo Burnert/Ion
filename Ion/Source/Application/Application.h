@@ -25,8 +25,9 @@ namespace Ion
 	class Shader;
 	class IndexBuffer;
 
-	enum class ECursorType : uint8
+	enum class ECursorType : int8
 	{
+		NoChange = -1, // Don't change the cursor
 		Arrow = 0,
 		Help,
 		Cross,
@@ -200,6 +201,8 @@ namespace Ion
 
 		void InitImGui() const;
 		void ShutdownImGui() const;
+
+		void SetImGuiCursor(int32 cursor);
 
 	protected:
 		virtual void InitImGuiBackend(const TShared<GenericWindow>& window) const { }
