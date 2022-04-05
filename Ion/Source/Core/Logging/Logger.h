@@ -3,7 +3,6 @@
 #include "Core/CoreApi.h"
 #include "Core/CoreTypes.h"
 
-#if 0 // @TODO: don't include windows.h in spdlog
 #define SPDLOG_WCHAR_TO_UTF8_SUPPORT
 #include "spdlog/spdlog.h"
 
@@ -32,26 +31,25 @@ namespace Ion
 #endif
 	};
 }
-#endif
 
 #ifdef ION_LOG_ENABLED
 	#ifdef ION_ENGINE
-		#define ION_LOG_ENGINE_TRACE(...)      //Ion::Logger::GetEngineLogger()->trace(__VA_ARGS__)
-		#define ION_LOG_ENGINE_DEBUG(...)      //Ion::Logger::GetEngineLogger()->debug(__VA_ARGS__)
-		#define ION_LOG_ENGINE_INFO(...)       //Ion::Logger::GetEngineLogger()->info(__VA_ARGS__)
-		#define ION_LOG_ENGINE_WARN(...)       //Ion::Logger::GetEngineLogger()->warn(__VA_ARGS__)
-		#define ION_LOG_ENGINE_ERROR(...)      //Ion::Logger::GetEngineLogger()->error(__VA_ARGS__)
-		#define ION_LOG_ENGINE_CRITICAL(...)   //Ion::Logger::GetEngineLogger()->critical(__VA_ARGS__)
+		#define ION_LOG_ENGINE_TRACE(...)      Ion::Logger::GetEngineLogger()->trace(__VA_ARGS__)
+		#define ION_LOG_ENGINE_DEBUG(...)      Ion::Logger::GetEngineLogger()->debug(__VA_ARGS__)
+		#define ION_LOG_ENGINE_INFO(...)       Ion::Logger::GetEngineLogger()->info(__VA_ARGS__)
+		#define ION_LOG_ENGINE_WARN(...)       Ion::Logger::GetEngineLogger()->warn(__VA_ARGS__)
+		#define ION_LOG_ENGINE_ERROR(...)      Ion::Logger::GetEngineLogger()->error(__VA_ARGS__)
+		#define ION_LOG_ENGINE_CRITICAL(...)   Ion::Logger::GetEngineLogger()->critical(__VA_ARGS__)
 
 		#define ION_LOG_ENGINE_BADPLATFORMFUNCTIONCALL() ION_LOG_ENGINE_CRITICAL("{0} is not supposed to be called on this platform!", __FUNCTION__)
 	#endif
 
-	#define ION_LOG_TRACE(...)             //Ion::Logger::GetClientLogger()->trace(__VA_ARGS__)
-	#define ION_LOG_DEBUG(...)             //Ion::Logger::GetClientLogger()->debug(__VA_ARGS__)
-	#define ION_LOG_INFO(...)              //Ion::Logger::GetClientLogger()->info(__VA_ARGS__)
-	#define ION_LOG_WARN(...)              //Ion::Logger::GetClientLogger()->warn(__VA_ARGS__)
-	#define ION_LOG_ERROR(...)             //Ion::Logger::GetClientLogger()->error(__VA_ARGS__)
-	#define ION_LOG_CRITICAL(...)          //Ion::Logger::GetClientLogger()->critical(__VA_ARGS__)
+	#define ION_LOG_TRACE(...)                 Ion::Logger::GetClientLogger()->trace(__VA_ARGS__)
+	#define ION_LOG_DEBUG(...)                 Ion::Logger::GetClientLogger()->debug(__VA_ARGS__)
+	#define ION_LOG_INFO(...)                  Ion::Logger::GetClientLogger()->info(__VA_ARGS__)
+	#define ION_LOG_WARN(...)                  Ion::Logger::GetClientLogger()->warn(__VA_ARGS__)
+	#define ION_LOG_ERROR(...)                 Ion::Logger::GetClientLogger()->error(__VA_ARGS__)
+	#define ION_LOG_CRITICAL(...)              Ion::Logger::GetClientLogger()->critical(__VA_ARGS__)
 
 	// Side independent
 

@@ -11,16 +11,14 @@ workspace "Ion"
 outputdir = "%{cfg.system}-%{cfg.architecture}-%{cfg.buildcfg}"
 
 ThirdParty = {
-	Glad = "Ion/ThirdParty/Glad",
-	ImGui = "Ion/ThirdParty/ImGui"
+	Glad   = "Ion/ThirdParty/Glad",
+	ImGui  = "Ion/ThirdParty/ImGui",
+	SpdLog = "Ion/ThirdParty/SpdLog"
 }
 
--- for i, dir in ipairs(ThirdParty) do
--- 	include(dir)
--- end
-
-include "Ion/ThirdParty/Glad"
-include "Ion/ThirdParty/ImGui"
+for name, dir in pairs(ThirdParty) do
+	include(dir)
+end
 
 -- Ion -----------------------------------------------------------
 
@@ -46,7 +44,7 @@ project "Ion"
 		"%{prj.name}/ThirdParty/Glad/include",
 		"%{prj.name}/ThirdParty/ImGui",
 		"%{prj.name}/ThirdParty/glm",
-		"%{prj.name}/ThirdParty/SpdLog/include",
+		"%{prj.name}/ThirdParty/SpdLog/SpdLog/include",
 		"%{prj.name}/ThirdParty/stb",
 		"%{prj.name}/ThirdParty/rapidxml",
 		"%{prj.name}/Source"
@@ -55,6 +53,7 @@ project "Ion"
 	links {
 		"Glad",
 		"ImGui",
+		"SpdLog",
 		"opengl32.lib"
 	}
 	
@@ -117,7 +116,7 @@ project "IonEditor"
 		"Ion/ThirdParty/Glad/include",
 		"Ion/ThirdParty/ImGui",
 		"Ion/ThirdParty/glm",
-		"Ion/ThirdParty/SpdLog/include",
+		"Ion/ThirdParty/SpdLog/SpdLog/include",
 		"Ion/ThirdParty/stb",
 		"Ion/ThirdParty/rapidxml",
 		"%{prj.name}/Source"
@@ -181,7 +180,7 @@ project "IonExample"
 		"Ion/Source",
 		"Ion/ThirdParty/ImGui",
 		"Ion/ThirdParty/glm",
-		"Ion/ThirdParty/SpdLog/include",
+		"Ion/ThirdParty/SpdLog/SpdLog/include",
 		"Ion/ThirdParty/rapidxml",
 		"%{prj.name}/Source"
 	}

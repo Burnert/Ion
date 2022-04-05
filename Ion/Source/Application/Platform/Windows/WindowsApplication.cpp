@@ -2,7 +2,6 @@
 
 #include "WindowsApplication.h"
 #include "WindowsWindow.h"
-#include "Core/Platform/Windows/WindowsCore.h"
 
 #include "RenderAPI/RenderAPI.h"
 

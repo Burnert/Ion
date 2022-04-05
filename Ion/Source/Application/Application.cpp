@@ -42,7 +42,7 @@ namespace Ion
 		m_ClientApp(clientApp)
 	{
 		ionassert(clientApp);
-		//Logger::Init();
+		Logger::Init();
 	}
 
 	Application::~Application()

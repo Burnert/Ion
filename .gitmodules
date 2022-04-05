@@ -1,5 +1,5 @@
 [submodule "Ion/ThirdParty/SpdLog"]
-	path = Ion/ThirdParty/SpdLog
+	path = Ion/ThirdParty/SpdLog/SpdLog
 	url = https://github.com/gabime/spdlog
 [submodule "Ion/ThirdParty/glm"]
 	path = Ion/ThirdParty/glm
