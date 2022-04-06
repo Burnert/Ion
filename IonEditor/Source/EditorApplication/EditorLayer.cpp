@@ -238,6 +238,10 @@ namespace Editor
 						}
 						ImGui::EndDragDropTarget();
 					}
+					if (ImGui::IsItemHovered())
+					{
+						EditorApplication::Get()->SetCursor(ECursorType::Cross);
+					}
 				}
 			}
 
