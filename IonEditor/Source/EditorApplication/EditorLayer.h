@@ -131,12 +131,15 @@ namespace Ion::Editor
 		bool bActivated = ImGui::Selectable(name.c_str(), false, flags, ImVec2(ImGui::GetContentRegionAvail().x, 30));
 		if (ImGui::IsItemHovered())
 		{
-			EditorApplication::Get()->SetCursor(ECursorType::Grab);
 			ImGui::BeginTooltip();
 			ImGui::PushTextWrapPos(180);
 			ImGui::Text("Drag and drop to the viewport or double-click to add an entity.");
 			ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();
+			EditorApplication::Get()->SetCursor(
+				ImGui::IsItemActive() ?
+				ECursorType::GrabClosed :
+				ECursorType::Grab);
 		}
 		ImGuiDragDropFlags dndFlags = ImGuiDragDropFlags_None;
 		if (ImGui::BeginDragDropSource(dndFlags))
