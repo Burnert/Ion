@@ -187,9 +187,11 @@ namespace Ion
 
 	void Entity::OnDestroy()
 	{
-		// @TODO: destroy the components in the comp registry!
-		for (Component* component : m_Components)
+		// Can't use the for loop because Component::Destroy
+		// removes the component from m_Components.
+		while (!m_Components.empty())
 		{
+			Component* component = *m_Components.begin();
 			component->Destroy();
 		}
 		m_Components.clear();

@@ -59,6 +59,8 @@ namespace Ion
 			entity->OnDestroy();
 		}
 		m_Entities.clear();
+
+		checked_delete(m_Scene);
 	}
 
 	void World::SetTickEnabled(bool bTick)
@@ -235,19 +237,6 @@ namespace Ion
 		m_ComponentRegistry(this),
 		m_WorldTreeRoot(m_WorldTreeNodeFactory.Create(WorldTreeNodeData()))
 	{
-	}
-
-	World::~World()
-	{
-		TRACE_FUNCTION();
-
-		checked_delete(m_Scene);
-
-		for (auto& [guid, entity] : m_Entities)
-		{
-			checked_delete(entity);
-		}
-		m_Entities.clear();
 	}
 
 	void World::AddEntityToCollection(Entity* entity)

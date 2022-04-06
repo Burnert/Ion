@@ -266,9 +266,6 @@ namespace Ion
 			String ClassName;
 			String ClassDisplayName;
 
-			InstantiateComponentFPtr InstantiateType;
-			InstantiateComponentContainerFPtr InstantiateContainer;
-
 			union
 			{
 				uint64 PackedFlags;
@@ -282,11 +279,17 @@ namespace Ion
 				ID(InvalidComponentTypeID),
 				ClassName("NULL"),
 				ClassDisplayName("Unknown Component"),
-				InstantiateType(nullptr),
-				InstantiateContainer(nullptr),
+				m_InstantiateType(nullptr),
+				m_InstantiateContainer(nullptr),
 				PackedFlags(0)
 			{
 			}
+
+		private:
+			InstantiateComponentFPtr m_InstantiateType;
+			InstantiateComponentContainerFPtr m_InstantiateContainer;
+
+			friend class ComponentRegistry;
 		};
 
 		THashMap<ComponentTypeID, TypeInfo> RegisteredTypes;
@@ -528,9 +531,9 @@ namespace Ion
 		typeInfo.ID = CompT::GetTypeID();
 		typeInfo.ClassName = CompT::ClassName;
 		typeInfo.ClassDisplayName = CompT::ClassDisplayName;
-		typeInfo.InstantiateType = FInstantiateComponent<CompT>::Call;
-		typeInfo.InstantiateContainer = FInstantiateComponentContainer<CompT>::Call;
 		typeInfo.bIsSceneComponent = TIsConvertibleV<CompT*, SceneComponent*>;
+		typeInfo.m_InstantiateType = FInstantiateComponent<CompT>::Call;
+		typeInfo.m_InstantiateContainer = FInstantiateComponentContainer<CompT>::Call;
 
 		FRegisterSerialCallForComponent<CompT>::Call();
 
@@ -575,7 +578,7 @@ namespace Ion
 		
 		ComponentDatabase* database = GetComponentTypeDatabase_Internal();
 
-		InstantiateComponentFPtr instantiateFPtr = database->GetTypeInfo(id).InstantiateType;
+		InstantiateComponentFPtr instantiateFPtr = database->GetTypeInfo(id).m_InstantiateType;
 		ionassertnd(instantiateFPtr);
 		Component* componentPtr = instantiateFPtr(this);
 		ionassertnd(componentPtr);
@@ -673,7 +676,7 @@ namespace Ion
 
 		ComponentDatabase* database = GetComponentTypeDatabase_Internal();
 
-		InstantiateComponentContainerFPtr initializeContianerFPtr = database->GetTypeInfo(id).InstantiateContainer;
+		InstantiateComponentContainerFPtr initializeContianerFPtr = database->GetTypeInfo(id).m_InstantiateContainer;
 		ionassertnd(initializeContianerFPtr);
 		IComponentContainer* containerPtr = initializeContianerFPtr(this);
 		ionassertnd(containerPtr);

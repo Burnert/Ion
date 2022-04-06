@@ -133,7 +133,6 @@ namespace Ion
 
 	private:
 		World();
-		~World();
 
 		void AddEntityToCollection(Entity* entity);
 		void RemoveEntityFromCollection(Entity* entity);
