@@ -4,6 +4,12 @@ namespace Ion::Editor
 {
 	class EditorApplication;
 
+	struct DNDEntityInsertData
+	{
+		using InstantiateFunc = void(World*);
+		InstantiateFunc* Instantiate;
+	};
+
 	class EDITOR_API EditorLayer : public Layer
 	{
 	public:
@@ -117,13 +123,33 @@ namespace Ion::Editor
 	{
 		static_assert(TIsConvertibleV<Lambda, TFunction<void(World*)>>);
 
-		ImGuiSelectableFlags selectableFlags = ImGuiSelectableFlags_AllowDoubleClick;
 		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0, 0.5f));
-		bool bActivated = ImGui::Selectable(name.c_str(), false, selectableFlags, ImVec2(0, 30));
+		// Make the selectable's style unresponsive to clicks
+		ImVec4 activeColor = ImGui::GetStyleColorVec4(ImGuiCol_HeaderHovered);
+		ImGui::PushStyleColor(ImGuiCol_HeaderActive, activeColor);
+		ImGuiSelectableFlags flags = ImGuiSelectableFlags_AllowDoubleClick;
+		bool bActivated = ImGui::Selectable(name.c_str(), false, flags, ImVec2(ImGui::GetContentRegionAvail().x, 30));
 		if (ImGui::IsItemHovered())
 		{
 			EditorApplication::Get()->SetCursor(ECursorType::Grab);
+			ImGui::BeginTooltip();
+			ImGui::PushTextWrapPos(180);
+			ImGui::Text("Drag and drop to the viewport or double-click to add an entity.");
+			ImGui::PopTextWrapPos();
+			ImGui::EndTooltip();
 		}
+		ImGuiDragDropFlags dndFlags = ImGuiDragDropFlags_None;
+		if (ImGui::BeginDragDropSource(dndFlags))
+		{
+			DNDEntityInsertData data { };
+			data.Instantiate = onInstantiate;
+			ImGui::SetDragDropPayload("Ion_DND_InsertEntity", &data, sizeof(DNDEntityInsertData), ImGuiCond_Once);
+
+			ImGui::Text(name.c_str());
+
+			ImGui::EndDragDropSource();
+		}
+		ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 		if (bActivated)
 		{

@@ -209,11 +209,10 @@ namespace Editor
 
 			char windowName[16];
 			sprintf_s(windowName, "Viewport##%i", /* ID */ 0);
-			bool bOpen;
-			if (bOpen = ImGui::Begin(windowName, &m_bViewportOpen, windowFlags))
+			bool bOpen = ImGui::Begin(windowName, &m_bViewportOpen, windowFlags);
+			ImGui::PopStyleVar(3);
+			if (bOpen)
 			{
-				ImGui::PopStyleVar(3);
-
 				// Save the viewport rect for later
 				m_ViewportRect = ImGui::GetWindowWorkRect();
 				m_bViewportHovered = ImGui::IsWindowHovered();
@@ -226,10 +225,21 @@ namespace Editor
 					const TextureDimensions& viewportDimensions = viewportFramebuffer->GetDimensions();
 					ImGui::Image(viewportFramebuffer->GetNativeID(),
 						ImVec2((float)viewportDimensions.Width, (float)viewportDimensions.Height));
+
+					if (ImGui::BeginDragDropTarget())
+					{
+						ImGuiDragDropFlags dndFlags = ImGuiDragDropFlags_None;
+						if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Ion_DND_InsertEntity", dndFlags))
+						{
+							ionassert(payload->DataSize == sizeof(DNDEntityInsertData));
+
+							DNDEntityInsertData& data = *(DNDEntityInsertData*)payload->Data;
+							data.Instantiate(EditorApplication::Get()->GetEditorWorld());
+						}
+						ImGui::EndDragDropTarget();
+					}
 				}
 			}
-			if (!bOpen)
-				ImGui::PopStyleVar(3);
 
 			ImGui::End();
 		}
