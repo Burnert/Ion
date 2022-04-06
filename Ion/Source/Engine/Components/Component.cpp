@@ -5,6 +5,11 @@
 #include "Engine/Entity/Entity.h"
 #include "Engine/World.h"
 
+#include "BehaviorComponent.h"
+#include "DirectionalLightComponent.h"
+#include "LightComponent.h"
+#include "MeshComponent.h"
+
 namespace Ion
 {
 	// Component
@@ -79,6 +84,7 @@ namespace Ion
 		m_WorldContext(worldContext)
 	{
 		ionassert(worldContext);
+		RegisterComponents();
 	}
 
 	ComponentRegistry::~ComponentRegistry()
@@ -90,6 +96,15 @@ namespace Ion
 		{
 			checked_delete(ptr);
 		}
+	}
+
+	void ComponentRegistry::RegisterComponents()
+	{
+		RegisterComponentClass<BehaviorComponent>();
+		RegisterComponentClass<EmptySceneComponent>();
+		RegisterComponentClass<DirectionalLightComponent>();
+		RegisterComponentClass<LightComponent>();
+		RegisterComponentClass<MeshComponent>();
 	}
 
 	void ComponentRegistry::Update(float deltaTime)

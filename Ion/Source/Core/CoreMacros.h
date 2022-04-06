@@ -26,6 +26,7 @@
 /* Calls the code outside of a function
    Place expr in { }
    id param should be something unique in the translation unit.
+   It's not guaranteed that it will get called. Always check it.
    Also, it's probably a bad idea to put this in header files,
    unless you want it to be called every time they're included in a cpp. */
 #define CALL_OUTSIDE(expr, id) \

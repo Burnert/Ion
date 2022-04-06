@@ -60,6 +60,8 @@ namespace Ion
 		friend class Entity;
 	};
 
+	ENTITY_COMPONENT_CLASS_HEADER(EmptySceneComponent);
+
 	class EmptySceneComponent final : public SceneComponent
 	{
 		ENTITY_COMPONENT_CLASS_BODY(EmptySceneComponent, "Empty Scene Component")

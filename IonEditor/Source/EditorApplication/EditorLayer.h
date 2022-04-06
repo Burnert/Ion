@@ -1,13 +1,28 @@
 #pragma once
 
+#include "Engine/Components/Component.h"
+
 namespace Ion::Editor
 {
 	class EditorApplication;
 
-	struct DNDEntityInsertData
+	struct DNDInsertEntityData
 	{
-		using InstantiateFunc = void(World*);
+		using InstantiateFunc = Entity*(World*);
 		InstantiateFunc* Instantiate;
+	};
+
+	struct DNDInsertComponentData
+	{
+		using InstantiateFunc = Component*(World*, ComponentTypeID);
+		InstantiateFunc* Instantiate;
+		ComponentTypeID ID;
+	};
+
+	enum class ESceneObjectType
+	{
+		Entity,
+		Component,
 	};
 
 	class EDITOR_API EditorLayer : public Layer
@@ -35,8 +50,10 @@ namespace Ion::Editor
 		void DrawViewportWindow();
 
 		void DrawInsertPanel();
-		template<typename Lambda>
-		void DrawInsertPanelElement(const String& name, Lambda onInstantiate);
+		void DrawInsertPanelEntityTab();
+		void DrawInsertPanelComponentTab();
+		template<ESceneObjectType ObjectType, typename Lambda>
+		void DrawInsertPanelElement(const String& name, Lambda instantiate, const ComponentDatabase::TypeInfo* info = nullptr);
 
 		void DrawContentBrowser();
 
@@ -105,7 +122,7 @@ namespace Ion::Editor
 		bool m_bViewportCaptured;
 
 		bool m_bViewportOpen;
-		bool m_bInsertWindowOpen;
+		bool m_bInsertPanelOpen;
 		bool m_bContentBrowserOpen;
 		bool m_bWorldTreePanelOpen;
 		bool m_bDetailsPanelOpen;
@@ -118,10 +135,12 @@ namespace Ion::Editor
 		friend class EditorApplication;
 	};
 
-	template<typename Lambda>
-	inline void EditorLayer::DrawInsertPanelElement(const String& name, Lambda onInstantiate)
+	template<ESceneObjectType ObjectType, typename Lambda>
+	inline void EditorLayer::DrawInsertPanelElement(const String& name, Lambda instantiate, const ComponentDatabase::TypeInfo* info)
 	{
-		static_assert(TIsConvertibleV<Lambda, TFunction<void(World*)>>);
+		static_assert(
+			ObjectType == ESceneObjectType::Entity    && TIsConvertibleV<Lambda, TFunction<DNDInsertEntityData::InstantiateFunc>> ||
+			ObjectType == ESceneObjectType::Component && TIsConvertibleV<Lambda, TFunction<DNDInsertComponentData::InstantiateFunc>>);
 
 		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0, 0.5f));
 		// Make the selectable's style unresponsive to clicks
@@ -133,9 +152,17 @@ namespace Ion::Editor
 		{
 			ImGui::BeginTooltip();
 			ImGui::PushTextWrapPos(180);
-			ImGui::Text("Drag and drop to the viewport or double-click to add an entity.");
+			if constexpr (ObjectType == ESceneObjectType::Entity)
+			{
+				ImGui::Text("Drag and drop to the viewport or double-click to add an entity.");
+			}
+			else if constexpr (ObjectType == ESceneObjectType::Component)
+			{
+				ImGui::Text("Drag and drop to the component tree to add a component.");
+			}
 			ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();
+
 			EditorApplication::Get()->SetCursor(
 				ImGui::IsItemActive() ?
 				ECursorType::GrabClosed :
@@ -144,9 +171,24 @@ namespace Ion::Editor
 		ImGuiDragDropFlags dndFlags = ImGuiDragDropFlags_None;
 		if (ImGui::BeginDragDropSource(dndFlags))
 		{
-			DNDEntityInsertData data { };
-			data.Instantiate = onInstantiate;
-			ImGui::SetDragDropPayload("Ion_DND_InsertEntity", &data, sizeof(DNDEntityInsertData), ImGuiCond_Once);
+			if constexpr (ObjectType == ESceneObjectType::Entity)
+			{
+				DNDInsertEntityData data { };
+				data.Instantiate = instantiate;
+				ImGui::SetDragDropPayload("Ion_DND_InsertEntity", &data, sizeof(DNDInsertEntityData), ImGuiCond_Once);
+			}
+			else if constexpr (ObjectType == ESceneObjectType::Component)
+			{
+				ionassert(info);
+
+				String payloadType = info->bIsSceneComponent ?
+					"Ion_DND_InsertSceneComponent" :
+					"Ion_DND_InsertComponent";
+				DNDInsertComponentData data { };
+				data.Instantiate = instantiate;
+				data.ID = info->ID;
+				ImGui::SetDragDropPayload(payloadType.c_str(), &data, sizeof(DNDInsertComponentData), ImGuiCond_Once);
+			}
 
 			ImGui::Text(name.c_str());
 
@@ -154,12 +196,15 @@ namespace Ion::Editor
 		}
 		ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
-		if (bActivated)
+		if constexpr (ObjectType == ESceneObjectType::Entity)
 		{
-			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+			if (bActivated)
 			{
-				World* editorWorld = EditorApplication::Get()->GetEditorWorld();
-				onInstantiate(editorWorld);
+				if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+				{
+					World* editorWorld = EditorApplication::Get()->GetEditorWorld();
+					instantiate(editorWorld);
+				}
 			}
 		}
 	}

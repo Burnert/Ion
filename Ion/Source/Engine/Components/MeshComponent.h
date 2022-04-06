@@ -4,6 +4,8 @@
 
 namespace Ion
 {
+	ENTITY_COMPONENT_CLASS_HEADER(MeshComponent);
+
 	class ION_API MeshComponent final : public SceneComponent
 	{
 		ENTITY_COMPONENT_CLASS_BODY(MeshComponent, "Mesh")

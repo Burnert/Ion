@@ -11,6 +11,8 @@ namespace Ion
 		float Intensity;
 	};
 
+	ENTITY_COMPONENT_CLASS_HEADER(DirectionalLightComponent);
+
 	class ION_API DirectionalLightComponent final : public SceneComponent
 	{
 		ENTITY_COMPONENT_CLASS_BODY(DirectionalLightComponent, "Directional Light");

@@ -12,6 +12,8 @@ namespace Ion
 		float Falloff;
 	};
 
+	ENTITY_COMPONENT_CLASS_HEADER(LightComponent);
+
 	class ION_API LightComponent final : public SceneComponent
 	{
 		ENTITY_COMPONENT_CLASS_BODY(LightComponent, "Light")

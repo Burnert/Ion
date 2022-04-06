@@ -198,7 +198,7 @@ namespace Ion
 		ionassert(!FindWorldTreeNode(entity), "The node for that entity already exists.");
 
 		WorldTreeNode& node = parent.Insert(m_WorldTreeNodeFactory.Create(WorldTreeNodeData(entity)));
-		m_EntityToWorldTreeNodeMap.insert({entity, &node});
+		m_EntityToWorldTreeNodeMap.insert({ entity, &node });
 		return node;
 	}
 
@@ -210,6 +210,7 @@ namespace Ion
 		ionassertnd(node, "The entity was not in the world tree.");
 
 		m_WorldTreeNodeFactory.Destroy(node->RemoveFromParent());
+		m_EntityToWorldTreeNodeMap.erase(entity);
 	}
 
 	World::WorldTreeNode& World::GetWorldTreeRoot()
@@ -251,6 +252,7 @@ namespace Ion
 
 	void World::AddEntityToCollection(Entity* entity)
 	{
+		ionassert(m_Entities.find(entity->GetGuid()) == m_Entities.end());
 		m_Entities.insert({ entity->GetGuid(), entity });
 	}
 
@@ -261,6 +263,7 @@ namespace Ion
 
 	void World::AddChildEntity(Entity* child)
 	{
+		ionassert(std::find(m_ChildEntities.begin(), m_ChildEntities.end(), child) == m_ChildEntities.end());
 		m_ChildEntities.push_back(child);
 	}
 

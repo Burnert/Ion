@@ -27,7 +27,7 @@ namespace Editor
 		m_bViewportHovered(false),
 		m_bViewportCaptured(false),
 		m_bViewportOpen(true),
-		m_bInsertWindowOpen(true),
+		m_bInsertPanelOpen(true),
 		m_bContentBrowserOpen(true),
 		m_bWorldTreePanelOpen(true),
 		m_bDetailsPanelOpen(true),
@@ -158,7 +158,7 @@ namespace Editor
 			if (ImGui::BeginMenu("View"))
 			{
 				ImGui::MenuItem("Viewport", nullptr, &m_bViewportOpen);
-				ImGui::MenuItem("Insert", nullptr, &m_bInsertWindowOpen);
+				ImGui::MenuItem("Insert", nullptr, &m_bInsertPanelOpen);
 				ImGui::MenuItem("Content Browser", nullptr, &m_bContentBrowserOpen);
 				ImGui::MenuItem("World Tree", nullptr, &m_bWorldTreePanelOpen);
 				ImGui::MenuItem("Details", nullptr, &m_bDetailsPanelOpen);
@@ -231,9 +231,9 @@ namespace Editor
 						ImGuiDragDropFlags dndFlags = ImGuiDragDropFlags_None;
 						if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Ion_DND_InsertEntity", dndFlags))
 						{
-							ionassert(payload->DataSize == sizeof(DNDEntityInsertData));
+							ionassert(payload->DataSize == sizeof(DNDInsertEntityData));
 
-							DNDEntityInsertData& data = *(DNDEntityInsertData*)payload->Data;
+							DNDInsertEntityData& data = *(DNDInsertEntityData*)payload->Data;
 							data.Instantiate(EditorApplication::Get()->GetEditorWorld());
 						}
 						ImGui::EndDragDropTarget();
@@ -251,36 +251,63 @@ namespace Editor
 
 	void EditorLayer::DrawInsertPanel()
 	{
-		if (m_bInsertWindowOpen)
+		if (m_bInsertPanelOpen)
 		{
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4, 4));
-			if (ImGui::Begin("Insert", &m_bInsertWindowOpen))
+			if (ImGui::Begin("Insert", &m_bInsertPanelOpen))
 			{
 				if (ImGui::BeginTabBar("InsertType"))
 				{
-					if (ImGui::BeginTabItem("Entity", nullptr))
-					{
-						ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysUseWindowPadding;
-						if (ImGui::BeginChild("InsertFrame", ImVec2(0, 0), false, flags))
-						{
-							DrawInsertPanelElement("Empty Entity", [](World* context)
-							{
-								context->SpawnEntityOfClass<Entity>();
-							});
-							DrawInsertPanelElement("Mesh Entity", [](World* context)
-							{
-								context->SpawnEntityOfClass<MeshEntity>();
-							});
-						}
-						ImGui::EndChild();
-
-						ImGui::EndTabItem();
-					}
+					DrawInsertPanelEntityTab();
+					DrawInsertPanelComponentTab();
 					ImGui::EndTabBar();
 				}
 			}
 			ImGui::End();
 			ImGui::PopStyleVar();
+		}
+	}
+
+	void EditorLayer::DrawInsertPanelEntityTab()
+	{
+		if (ImGui::BeginTabItem("Entity", nullptr))
+		{
+			ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysUseWindowPadding;
+			if (ImGui::BeginChild("InsertEntityFrame", ImVec2(0, 0), false, flags))
+			{
+				DrawInsertPanelElement<ESceneObjectType::Entity>("Empty Entity", [](World* context) -> Entity*
+				{
+					return context->SpawnEntityOfClass<Entity>();
+				});
+				DrawInsertPanelElement<ESceneObjectType::Entity>("Mesh Entity", [](World* context) -> Entity*
+				{
+					return context->SpawnEntityOfClass<MeshEntity>();
+				});
+			}
+			ImGui::EndChild();
+			ImGui::EndTabItem();
+		}
+	}
+
+	void EditorLayer::DrawInsertPanelComponentTab()
+	{
+		if (ImGui::BeginTabItem("Component", nullptr))
+		{
+			ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysUseWindowPadding;
+			if (ImGui::BeginChild("InsertComponentFrame", ImVec2(0, 0), false, flags))
+			{
+				const ComponentDatabase* database = ComponentRegistry::GetComponentTypeDatabase();
+				for (auto& [id, info] : database->RegisteredTypes)
+				{
+					DrawInsertPanelElement<ESceneObjectType::Component>(info.ClassDisplayName,
+					[](World* context, ComponentTypeID id) -> Component* {
+						ComponentRegistry& registry = context->GetComponentRegistry();
+						return registry.CreateComponent(id);
+					}, &info);
+				}
+			}
+			ImGui::EndChild();
+			ImGui::EndTabItem();
 		}
 	}
 
@@ -574,21 +601,26 @@ namespace Editor
 
 		if (ImGui::CollapsingHeader("Component Tree", ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			if (ImGui::Button("Add Component"))
-			{
-
-			}
-
 			ImGui::BeginChild("ComponentTree", ImVec2(0, 100), true, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_HorizontalScrollbar);
-
 			DrawComponentTreeContent(entity);
-
 			ImGui::EndChild();
-
 			// Deselect component when free space is clicked
 			if (ImGui::IsItemClicked())
 			{
 				EditorApplication::Get()->DeselectCurrentComponent();
+			}
+			if (ImGui::BeginDragDropTarget())
+			{
+				ImGuiDragDropFlags dndFlags = ImGuiDragDropFlags_None;
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Ion_DND_InsertComponent", dndFlags))
+				{
+					ionassert(payload->DataSize == sizeof(DNDInsertComponentData));
+
+					DNDInsertComponentData& data = *(DNDInsertComponentData*)payload->Data;
+					Component* component = data.Instantiate(EditorApplication::Get()->GetEditorWorld(), data.ID);
+					entity.AddComponent(component);
+				}
+				ImGui::EndDragDropTarget();
 			}
 
 			Component* selectedComponent = EditorApplication::Get()->GetSelectedComponent();
@@ -890,8 +922,22 @@ namespace Editor
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 4.0f));
 		bool bImguiTreeNodeOpen = ImGui::TreeNodeEx(nodeId, imguiNodeFlags, "%s", nodeName.c_str());
-		bool bTreeNodeClicked = ImGui::IsItemClicked();
 		ImGui::PopStyleVar(2);
+		bool bTreeNodeClicked = ImGui::IsItemClicked();
+		if (ImGui::BeginDragDropTarget())
+		{
+			ImGuiDragDropFlags dndFlags = ImGuiDragDropFlags_None;
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Ion_DND_InsertSceneComponent", dndFlags))
+			{
+				ionassert(payload->DataSize == sizeof(DNDInsertComponentData));
+
+				DNDInsertComponentData& data = *(DNDInsertComponentData*)payload->Data;
+				SceneComponent* comp = (SceneComponent*)data.Instantiate(EditorApplication::Get()->GetEditorWorld(), data.ID);
+				comp->AttachTo(&component);
+			}
+
+			ImGui::EndDragDropTarget();
+		}
 
 		ImGui::SameLine();
 		ImGui::TextDisabled("(%s)", component.GetClassDisplayName().c_str());

@@ -1,7 +1,6 @@
 #include "IonPCH.h"
 
 #include "MeshComponent.h"
-#include "Engine/World.h"
 #include "Engine/Entity/Entity.h"
 #include "Renderer/Renderer.h"
 
