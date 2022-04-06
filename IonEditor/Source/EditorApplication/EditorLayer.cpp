@@ -101,7 +101,7 @@ namespace Editor
 
 		DrawMainMenuBar();
 		DrawViewportWindow();
-		DrawInsertWindow();
+		DrawInsertPanel();
 		DrawContentBrowser();
 		DrawWorldTreePanel();
 		DrawDetailsPanel();
@@ -235,28 +235,28 @@ namespace Editor
 		}
 	}
 
-	void EditorLayer::DrawInsertWindow()
+	void EditorLayer::DrawInsertPanel()
 	{
 		if (m_bInsertWindowOpen)
 		{
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4, 4));
 			if (ImGui::Begin("Insert", &m_bInsertWindowOpen))
 			{
 				if (ImGui::BeginTabBar("InsertType"))
 				{
 					if (ImGui::BeginTabItem("Entity", nullptr))
 					{
-						ImGuiWindowFlags flags = ImGuiWindowFlags_None;
-						if (ImGui::BeginChild("InsertFrame", ImVec2(0, 0), true, flags))
+						ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysUseWindowPadding;
+						if (ImGui::BeginChild("InsertFrame", ImVec2(0, 0), false, flags))
 						{
-							ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0, 0.5f));
-							if (ImGui::Selectable("Empty Entity", false, 0, ImVec2(0, 40)))
+							DrawInsertPanelElement("Empty Entity", [](World* context)
 							{
-							}
-							if (ImGui::IsItemHovered())
+								context->SpawnEntityOfClass<Entity>();
+							});
+							DrawInsertPanelElement("Mesh Entity", [](World* context)
 							{
-								EditorApplication::Get()->SetCursor(ECursorType::Grab);
-							}
-							ImGui::PopStyleVar();
+								context->SpawnEntityOfClass<MeshEntity>();
+							});
 						}
 						ImGui::EndChild();
 
@@ -266,6 +266,7 @@ namespace Editor
 				}
 			}
 			ImGui::End();
+			ImGui::PopStyleVar();
 		}
 	}
 

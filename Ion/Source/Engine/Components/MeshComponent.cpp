@@ -49,6 +49,8 @@ namespace Ion
 
 	RPrimitiveRenderProxy MeshComponent::AsRenderProxy() const
 	{
+		ionassert(m_Mesh);
+
 		Material* material = m_Mesh->GetMaterial().lock().get();
 		Transform worldTransform = GetWorldTransform();
 

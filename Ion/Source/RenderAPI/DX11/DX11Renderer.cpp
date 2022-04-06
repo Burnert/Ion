@@ -189,8 +189,11 @@ namespace Ion
 			{
 				if (component->GetClassName() == "MeshComponent")
 				{
-					MeshComponent* mesh = (MeshComponent*)component;
-					RPrimitiveRenderProxy primitive = mesh->AsRenderProxy();
+					MeshComponent* meshComponent = (MeshComponent*)component;
+					// Don't draw components with no mesh
+					if (!meshComponent->GetMesh())
+						continue;
+					RPrimitiveRenderProxy primitive = meshComponent->AsRenderProxy();
 					// Override materials
 					primitive.Material = nullptr;
 					primitive.Shader = GetEditorDataShader().get();

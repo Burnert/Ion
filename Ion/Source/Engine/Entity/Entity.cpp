@@ -6,7 +6,8 @@
 
 namespace Ion
 {
-	Entity::Entity() : Entity(GUID())
+	Entity::Entity() :
+		Entity(GUID())
 	{
 	}
 
@@ -18,6 +19,7 @@ namespace Ion
 		m_Parent(nullptr),
 		m_RootComponent(nullptr)
 	{
+		SetName("Entity");
 	}
 
 	void Entity::SetTransform(const Transform& transform)

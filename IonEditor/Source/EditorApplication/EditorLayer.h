@@ -28,7 +28,9 @@ namespace Ion::Editor
 
 		void DrawViewportWindow();
 
-		void DrawInsertWindow();
+		void DrawInsertPanel();
+		template<typename Lambda>
+		void DrawInsertPanelElement(const String& name, Lambda onInstantiate);
 
 		void DrawContentBrowser();
 
@@ -109,4 +111,27 @@ namespace Ion::Editor
 
 		friend class EditorApplication;
 	};
+
+	template<typename Lambda>
+	inline void EditorLayer::DrawInsertPanelElement(const String& name, Lambda onInstantiate)
+	{
+		static_assert(TIsConvertibleV<Lambda, TFunction<void(World*)>>);
+
+		ImGuiSelectableFlags selectableFlags = ImGuiSelectableFlags_AllowDoubleClick;
+		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0, 0.5f));
+		bool bActivated = ImGui::Selectable(name.c_str(), false, selectableFlags, ImVec2(0, 30));
+		if (ImGui::IsItemHovered())
+		{
+			EditorApplication::Get()->SetCursor(ECursorType::Grab);
+		}
+		ImGui::PopStyleVar();
+		if (bActivated)
+		{
+			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+			{
+				World* editorWorld = EditorApplication::Get()->GetEditorWorld();
+				onInstantiate(editorWorld);
+			}
+		}
+	}
 }

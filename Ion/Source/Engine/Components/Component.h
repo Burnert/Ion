@@ -504,13 +504,13 @@ namespace Ion
 		ionassert(!IsContainerInitialized<CompT>());
 
 		CompContainer* container = new CompContainer;
-		m_Containers.insert({ CompT::s_TypeID, container });
+		m_Containers.insert({ CompT::GetTypeID(), container });
 	}
 
 	template<typename CompT>
 	inline bool ComponentRegistry::IsContainerInitialized() const
 	{
-		return IsContainerInitialized(CompT::s_TypeID);
+		return IsContainerInitialized(CompT::GetTypeID());
 	}
 
 	inline bool ComponentRegistry::IsContainerInitialized(ComponentTypeID id) const
@@ -527,7 +527,7 @@ namespace Ion
 
 		ionassert(IsContainerInitialized<CompT>());
 
-		ContainerT* containerPtr = (ContainerT*)m_Containers.at(CompT::s_TypeID);
+		ContainerT* containerPtr = (ContainerT*)m_Containers.at(CompT::GetTypeID());
 		return containerPtr->Container;
 	}
 

@@ -15,6 +15,7 @@ namespace Ion
 		Entity(guid)
 	{
 		SetNoCreateRootOnSpawn();
+		SetName("Mesh");
 	}
 
 	MeshComponent* MeshEntity::GetMeshComponent() const
