@@ -20,11 +20,10 @@ namespace ComponentSerialCall::Private \
 		return g_##func##Functions[id]; \
 	} \
 	/* Called in ENTITY_COMPONENT_SERIALCALL_HELPER */ \
-	inline int32 func##_AddFunctionForType(ComponentTypeID id, func##FPtr fn) \
+	inline void func##_AddFunctionForType(ComponentTypeID id, func##FPtr fn) \
 	{ \
 		g_##func##Functions[id] = fn; \
-		LOG_DEBUG(#func"_AddFunctionForType called for {1}", id); \
-		return 0; \
+		LOG_DEBUG(#func"_AddFunctionForType called for {0}", id); \
 	} \
 } \
 namespace ComponentSerialCall \
@@ -62,7 +61,7 @@ namespace ComponentSerialCall::Private \
 		} \
 	}; \
 	CALL_OUTSIDE({ \
-		OnRegisterListeners::Add([] \
+		s_OnRegisterListeners.Add([] \
 		{ \
 			func##_AddFunctionForType(ThisComponentClass::GetTypeID(), CallEach##func); \
 		}); \
@@ -140,20 +139,21 @@ namespace ComponentSerialCall::Private \
 	struct OnRegisterListeners \
 	{ \
 		using FPtr = void(*)(); \
-		using ArrayType = TArray<FPtr>; \
-		static ArrayType& GetListeners() \
+		using CollectionType = THashSet<FPtr>; \
+		CollectionType& GetListeners() \
 		{ \
 			if (!s_Listeners) \
-				s_Listeners = new ArrayType; \
+				s_Listeners = new CollectionType; \
 			return *s_Listeners; \
 		} \
-		static void Add(FPtr fptr) \
+		void Add(FPtr fptr) \
 		{ \
-			GetListeners().push_back(fptr); \
+			GetListeners().insert(fptr); \
 		} \
 	private: \
-		static inline ArrayType* s_Listeners; \
+		CollectionType* s_Listeners = nullptr; \
 	}; \
+	static OnRegisterListeners s_OnRegisterListeners; \
 } \
 void className::ComponentContainerImpl::Erase(Component* component) \
 { \
@@ -192,7 +192,7 @@ Component* FInstantiateComponent<className>::Call(ComponentRegistry* registry) \
 void FRegisterSerialCallForComponent<className>::Call() \
 { \
 	using namespace ComponentSerialCall::Private; \
-	for (OnRegisterListeners::FPtr onRegister : OnRegisterListeners::GetListeners()) \
+	for (OnRegisterListeners::FPtr onRegister : s_OnRegisterListeners.GetListeners()) \
 	{ \
 		onRegister(); \
 	} \
