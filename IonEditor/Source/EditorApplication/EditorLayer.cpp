@@ -695,15 +695,18 @@ namespace Editor
 	{
 		TRACE_FUNCTION();
 
-		ImGui::PushID("ComponentDetails");
-
-		const ComponentDatabase::TypeInfo& typeInfo = component.GetFinalTypeInfo();
-		for (INCProperty* prop : typeInfo.EditableProperties)
+		if (ImGui::CollapsingHeader(component.GetClassName().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			DrawComponentDetailsProperty(component, prop);
-		}
+			ImGui::PushID("ComponentDetails");
 
-		ImGui::PopID();
+			const ComponentDatabase::TypeInfo& typeInfo = component.GetFinalTypeInfo();
+			for (INCProperty* prop : typeInfo.EditableProperties)
+			{
+				DrawComponentDetailsProperty(component, prop);
+			}
+
+			ImGui::PopID();
+		}
 	}
 
 	void EditorLayer::DrawComponentDetailsProperty(Component& component, INCProperty* prop)
@@ -711,34 +714,27 @@ namespace Editor
 		const String& name = prop->GetDisplayName();
 		ENCPropertyType type = prop->GetType();
 
-		if (ImGui::CollapsingHeader(name.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+		bool bChanged = false;
+
+		switch (type)
 		{
-			ImGui::PushID(name.c_str());
-
-			bool bChanged = false;
-
-			switch (type)
+			// @TODO: Implement the rest
+			case ENCPropertyType::Float:
 			{
-				// @TODO: Implement the rest
-				case ENCPropertyType::Float:
-				{
-					float value = *(float*)prop->GetValue(component);
-					bChanged |= ImGui::DragFloat(name.c_str(), (float*)&value, 0.0125f);
+				float value = *(float*)prop->GetValue(component);
+				bChanged |= ImGui::DragFloat(name.c_str(), (float*)&value, 0.0125f);
+				if (bChanged)
 					prop->Update(component, &value);
-					break;
-				}
-				case ENCPropertyType::Vector3:
-				{
-					Vector3 value = *(Vector3*)prop->GetValue(component);
-					bChanged |= ImGui::DragFloat3(name.c_str(), (float*)&value, 0.0125f);
-					prop->Update(component, &value);
-					break;
-				}
+				break;
 			}
-
-			if (bChanged) { }
-
-			ImGui::PopID();
+			case ENCPropertyType::Vector3:
+			{
+				Vector3 value = *(Vector3*)prop->GetValue(component);
+				bChanged |= ImGui::DragFloat3(name.c_str(), (float*)&value, 0.0125f);
+				if (bChanged)
+					prop->Update(component, &value);
+				break;
+			}
 		}
 	}
 
