@@ -138,3 +138,8 @@ using TRemoveAllExtents = std::remove_all_extents_t<T>;
 
 template<typename T>
 using TNumericLimits = std::numeric_limits<T>;
+
+// DeclVal
+
+template<typename T>
+static auto DeclVal() -> decltype(std::declval<T>());

@@ -712,14 +712,28 @@ namespace Editor
 	template<typename T>
 	static void DrawPropertyScalar(Component& component, INCProperty* prop, ImGuiDataType type, int32 nDims)
 	{
-		T value = *(T*)prop->GetValue(component);
+		TINCPropertyTyped<T>* tProp = (TINCPropertyTyped<T>*)prop;
+		const TNCPropertyOptionalParams<T>& params = tProp->GetParams();
+
+		const T* minValue = params.bUseMinValue ?
+			&params.MinValue : nullptr;
+		const T* maxValue = params.bUseMaxValue ?
+			&params.MaxValue : nullptr;
+
+		T value = tProp->Get(component);
 		if (ImGui::DragScalarN(prop->GetDisplayName().c_str(), type, &value, nDims, 0.0125f,
-			nullptr, nullptr, "%.3f", ImGuiSliderFlags_None))
-			prop->Update(component, &value);
+			minValue, maxValue, "%.3f", ImGuiSliderFlags_None))
+			tProp->Set(component, value);
+		if constexpr (TIsSameV<T, Vector3>)
+		{
+			ImGui::Text("Default: {%f, %f, %f}", params.DefaultValue.x, params.DefaultValue.y, params.DefaultValue.z);
+		}
 	}
 
 	void EditorLayer::DrawComponentDetailsProperty(Component& component, INCProperty* prop)
 	{
+		ionassert(prop);
+
 		const String& name = prop->GetDisplayName();
 		ENCPropertyType type = prop->GetType();
 
@@ -727,9 +741,10 @@ namespace Editor
 		{
 			case ENCPropertyType::Bool:
 			{
-				bool value = *(bool*)prop->GetValue(component);
+				TINCPropertyTyped<bool>* tProp = (TINCPropertyTyped<bool>*)prop;
+				bool value = tProp->Get(component);
 				if (ImGui::Checkbox(prop->GetDisplayName().c_str(), &value))
-					prop->Update(component, &value);
+					tProp->Set(component, value);
 				break;
 			}
 			case ENCPropertyType::Int32:

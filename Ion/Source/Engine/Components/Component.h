@@ -105,7 +105,7 @@ using ComponentType = className; \
 using RawComponentContainerType = TCompContainer<className>; \
 static ComponentTypeID GetTypeID() \
 { \
-	/*ionassert(s_TypeID != InvalidComponentTypeID, "["#className"] has not been registered."); */\
+	/*ionassert(s_TypeID != InvalidComponentTypeID, "["#className"] has not been registered."); */ \
 	return s_TypeID; \
 } \
 /* Container wrapper that will be inserted into the Component Registry */ \
@@ -135,8 +135,7 @@ friend class ComponentRegistry;
 
 DECLARE_THASFUNCTION(GetTypeID);
 
-/* Put in the component's .cpp file (one per file).
-   World.h has to be included. */
+/* Put in the component's .cpp file (one per file). */
 #define DECLARE_ENTITY_COMPONENT_CLASS(className) \
 using ComponentType = className; \
 namespace ComponentSerialCall::Private \
@@ -231,7 +230,6 @@ void FRegisterSerialCallForComponent<className>::Call() \
 void FRegisterPropertiesForComponent<className>::Call() \
 { \
 	ComponentDatabase* database = ComponentRegistry::GetComponentTypeDatabase_Internal(); \
-	ionassert(database); \
 	ComponentDatabase::TypeInfo& typeInfo = database->GetTypeInfo_Internal(className::GetTypeID()); \
 	for (INCProperty* prop : _GetNCPropContainer()) \
 	{ \
@@ -258,17 +256,37 @@ if (comp.IsSceneComponent()) \
 #define SERIALCALL
 
 /* Declare Entity Component Property in the component class in the .h file */
-#define DECLARE_NCPROPERTY(type, varName) \
-type varName; \
-static TNCProperty<type, ComponentType> NCProperty_##varName;
+#define DECLARE_NCPROPERTY(type, propName) \
+type propName = type(); \
+static TNCProperty<type, ComponentType> NCProperty_##propName;
 
 /* Define Entity Component Property in the component .cpp file */
-#define DEFINE_NCPROPERTY(varName, displayName, onChanged) \
-TNCProperty<decltype(ComponentType::varName), ComponentType> ComponentType::NCProperty_##varName = \
-TNCProperty<decltype(ComponentType::varName), ComponentType>(#varName, displayName, &ComponentType::varName, onChanged); \
+#define DEFINE_NCPROPERTY(propName, displayName) \
+TNCProperty<decltype(ComponentType::propName), ComponentType> ComponentType::NCProperty_##propName = \
+TNCProperty<decltype(ComponentType::propName), ComponentType>(#propName, displayName, &ComponentType::propName); \
 CALL_OUTSIDE({ \
-	_AddNCProperty(&ComponentType::NCProperty_##varName); \
-}, varName##0);
+	_AddNCProperty(&ComponentType::NCProperty_##propName); \
+}, propName##0);
+
+
+/* Set optional property parameter (param names in TNCPropertyOptionalParams) */
+#define NCPROPERTY_PARAM(propName, param, value) \
+DECLARE_THASFIELD_EX(bUse##param, Use##param##propName); \
+template<typename T> \
+struct FNCPropertySetUse##param##propName \
+{ \
+	static void Call() \
+	{ \
+		if constexpr (THasField##Use##param##propName<TNCPropertyOptionalParams<T>>) \
+		{ \
+			ComponentType::NCProperty_##propName.OptionalParams.bUse##param = true; \
+		} \
+	} \
+}; \
+CALL_OUTSIDE({ \
+	ComponentType::NCProperty_##propName.OptionalParams.param = value; \
+	FNCPropertySetUse##param##propName<decltype(ComponentType::NCProperty_##propName)::Type>::Call(); \
+}, propName##param);
 
 namespace Ion
 {
@@ -338,68 +356,114 @@ namespace Ion
 	template<> constexpr ENCPropertyType NCPropertyTypeAsEnum<Vector3> = ENCPropertyType::Vector3;
 	template<> constexpr ENCPropertyType NCPropertyTypeAsEnum<Vector4> = ENCPropertyType::Vector4;
 
+	template<typename T>
+	using TNCPropertyOnChangeFunc = void(const T&);
+
+	template<typename T>
+	struct TNCPropertyOptionalParams
+	{
+		T DefaultValue;
+		T MinValue;
+		T MaxValue;
+		union
+		{
+			uint64 PackedFlags;
+			struct
+			{
+				uint64 bUseMinValue : 1;
+				uint64 bUseMaxValue : 1;
+			};
+		};
+
+		TNCPropertyOptionalParams() :
+			DefaultValue(T()),
+			MinValue(T()),
+			MaxValue(T()),
+			bUseMinValue(false),
+			bUseMaxValue(false)
+		{
+		}
+	};
+
 	/* Entity Component Property interface */
 	class INCProperty
 	{
 	public:
-		/* data param must be the same type as the property. */
-		virtual void Update(Component& object, void* data) = 0;
-		virtual void* GetValue(Component& object) const = 0;
-
+		virtual const String& GetMemberName() const = 0;
 		virtual const String& GetDisplayName() const = 0;
 		virtual ENCPropertyType GetType() const = 0;
 
 	protected:
 		virtual void OnRegister() = 0;
+
+	private:
+		virtual void Init(Component& component) = 0;
 		
 		template<typename T>
 		friend struct FRegisterPropertiesForComponent;
+		friend struct ComponentDatabase;
 	};
 
 	template<typename T>
-	using TNCPropertyOnChangeFunc = void(const T&);
-
-	/* Entity Component Property template */
-	template<typename T, typename CompT>
-	class TNCProperty : public INCProperty
+	class TINCPropertyTyped : public INCProperty
 	{
 	public:
+		virtual void Set(Component& object, const T& value) = 0;
+		virtual const T& Get(Component& object) const = 0;
+
+		virtual const TNCPropertyOptionalParams<T>& GetParams() const = 0;
+
+		virtual ENCPropertyType GetType() const override
+		{
+			return NCPropertyTypeAsEnum<T>;
+		}
+	};
+
+	/* Entity Component Property template
+	   Instantiated once per class, not per object. */
+	template<typename T, typename CompT>
+	class TNCProperty : public TINCPropertyTyped<T>
+	{
+	public:
+		using Type = T;
 		using TOnChangeFunc = TFunction<TNCPropertyOnChangeFunc<T>>;
 
 		TOnChangeFunc OnChanged;
 		String MemberName;
 		String DisplayName;
 		T CompT::* MemberPtr;
-		ENCPropertyType Type;
-		T Value;
+		TNCPropertyOptionalParams<T> OptionalParams;
 
-		template<typename Lambda>
-		TNCProperty(const String& memberName, const String& displayName, T CompT::* memberPtr, Lambda onChanged) :
+		TNCProperty(const String& memberName, const String& displayName, T CompT::* memberPtr) :
 			MemberName(memberName),
 			DisplayName(displayName),
 			MemberPtr(memberPtr),
-			Type(NCPropertyTypeAsEnum<T>),
-			Value(T())
+			OptionalParams()
 		{
-			if constexpr (TIsConvertibleV<Lambda, TOnChangeFunc>)
-			{
-				OnChanged = onChanged;
-			}
+			//if constexpr (TIsConvertibleV<Lambda, TOnChangeFunc>)
+			//{
+			//	OnChanged = onChanged;
+			//}
 		}
 
-		virtual void Update(Component& object, void* data) override
+		virtual void Set(Component& object, const T& value) override
 		{
-			ionassert(data);
 			//LOG_DEBUG("TNCProperty::Update [{0}::{1}]", CompT::ClassName, MemberName);
-			T& value = ((CompT&)object).*MemberPtr = *(T*)data;
+			T& member = ((CompT&)object).*MemberPtr = value;
+			ClampValue(member);
 			if (OnChanged)
 				OnChanged(value);
 		}
 
-		virtual void* GetValue(Component& object) const override
+		virtual const T& Get(Component& object) const override
 		{
 			ionassert(dynamic_cast<CompT*>(&object));
-			return &(((CompT&)object).*MemberPtr);
+			return ((CompT&)object).*MemberPtr;
+		}
+
+		virtual const String& GetMemberName() const override
+		{
+			return MemberName;
 		}
 
 		virtual const String& GetDisplayName() const override
@@ -407,9 +471,9 @@ namespace Ion
 			return DisplayName;
 		}
 
-		virtual ENCPropertyType GetType() const override
+		virtual const TNCPropertyOptionalParams<T>& GetParams() const override
 		{
-			return Type;
+			return OptionalParams;
 		}
 
 	protected:
@@ -418,8 +482,55 @@ namespace Ion
 			LOG_DEBUG("TNCProperty::OnRegister [{0}::{1}]", CompT::ClassName, MemberName);
 		}
 
+	private:
+		/* Clamp the value only if the type can be compared */
+		template<typename U, TEnableIfT<TTestOperatorLT<U, U>>* = 0>
+		bool ClampValue(U& value)
+		{
+			if (OptionalParams.bUseMinValue && OptionalParams.bUseMaxValue &&
+				OptionalParams.MaxValue < OptionalParams.MinValue)
+			{
+				//LOG_ERROR("TNCProperty<{0}, {1}>::Init -> MaxValue ({2}) is less than MinValue ({3}). Value will not be set.",
+				//	TypeToString<T>, CompT::ClassName, OptionalParams.MaxValue, OptionalParams.MinValue);
+				return false;
+			}
+
+			if (OptionalParams.bUseMinValue &&
+				value < OptionalParams.MinValue)
+			{
+				//LOG_WARN("TNCProperty<{0}, {1}>::Init -> DefaultValue ({2}) is less than MinValue ({3}). Clamping.",
+				//	TypeToString<T>, CompT::ClassName, OptionalParams.DefaultValue, OptionalParams.MinValue);
+				value = OptionalParams.MinValue;
+			}
+			else if (OptionalParams.bUseMaxValue &&
+				OptionalParams.MaxValue < value)
+			{
+				//LOG_WARN("TNCProperty<{0}, {1}>::Init -> DefaultValue ({2}) is greater than MaxValue ({3}). Clamping.",
+				//	TypeToString<T>, CompT::ClassName, OptionalParams.DefaultValue, OptionalParams.MaxValue);
+				value = OptionalParams.MaxValue;
+			}
+			return true;
+		}
+		template<typename U, TEnableIfT<!TTestOperatorLT<U, U>>* = 0>
+		bool ClampValue(U& value)
+		{
+			return true;
+		}
+
+		virtual void Init(Component& component) override
+		{
+			T& member = ((CompT&)component).*MemberPtr;
+
+			T defaultValue = OptionalParams.DefaultValue;
+			if (ClampValue(defaultValue))
+			{
+				member = defaultValue;
+			}
+		}
+
 		template<typename T>
 		friend struct FRegisterPropertiesForComponent;
+		friend struct ComponentDatabase;
 	};
 
 	// Component Database:
@@ -485,8 +596,18 @@ namespace Ion
 			return RegisteredTypes.find(id)->second;
 		}
 
+		void InitProperties(ComponentTypeID id, Component& component)
+		{
+			TypeInfo& typeInfo = GetTypeInfo_Internal(id);
+			for (INCProperty* prop : typeInfo.EditableProperties)
+			{
+				prop->Init(component);
+			}
+		}
+
 		template<typename T>
 		friend struct FRegisterPropertiesForComponent;
+		friend class ComponentRegistry;
 	};
 
 	DECLARE_COMPONENT_SERIALCALL(Tick, float);
@@ -740,9 +861,13 @@ namespace Ion
 
 		CompContainer& container = GetRawContainer<CompT>();
 
+		ComponentDatabase* database = GetComponentTypeDatabase_Internal();
+
 		CompT& component = EmplaceComponentInContainer(container, Forward<Args>(args)...);
 		component.m_WorldContext = m_WorldContext;
 		component.m_Name = CompT::ClassDisplayName;
+
+		database->InitProperties(CompT::GetTypeID(), component);
 
 		component.OnCreate();
 
@@ -768,6 +893,8 @@ namespace Ion
 
 		componentPtr->m_WorldContext = m_WorldContext;
 		componentPtr->m_Name = componentPtr->GetClassDisplayName();
+
+		database->InitProperties(id, *componentPtr);
 
 		componentPtr->OnCreate();
 

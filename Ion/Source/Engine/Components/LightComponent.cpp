@@ -10,9 +10,16 @@ namespace Ion
 
 	DECLARE_COMPONENT_SERIALCALL_BUILDRENDERERDATA()
 
-	DEFINE_NCPROPERTY(LightColor, "Light Color", [] { })
-	DEFINE_NCPROPERTY(Intensity,  "Intensity",   [] { })
-	DEFINE_NCPROPERTY(Falloff,    "Falloff",     [] { })
+	DEFINE_NCPROPERTY(LightColor, "Light Color");
+	NCPROPERTY_PARAM(LightColor, DefaultValue, Vector3(1.0f, 1.0f, 1.0f));
+
+	DEFINE_NCPROPERTY(Intensity, "Intensity");
+	NCPROPERTY_PARAM(Intensity, DefaultValue, 1.0f);
+	NCPROPERTY_PARAM(Intensity, MinValue, 0.0f);
+
+	DEFINE_NCPROPERTY(Falloff, "Falloff");
+	NCPROPERTY_PARAM(Falloff, DefaultValue, 4.0f);
+	NCPROPERTY_PARAM(Falloff, MinValue, 0.0f);
 
 	LightComponentData& LightComponent::GetLightDataRef()
 	{
@@ -36,10 +43,7 @@ namespace Ion
 	}
 
 	LightComponent::LightComponent() :
-		m_LightData({ }),
-		LightColor(Vector3(1.0f, 1.0f, 1.0f)),
-		Intensity(1.0f),
-		Falloff(4.0f)
+		m_LightData({ })
 	{
 	}
 }

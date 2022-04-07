@@ -10,8 +10,12 @@ namespace Ion
 
 	DECLARE_COMPONENT_SERIALCALL_BUILDRENDERERDATA()
 
-	DEFINE_NCPROPERTY(LightColor, "Light Color", [] { })
-	DEFINE_NCPROPERTY(Intensity,  "Intensity",   [] { })
+	DEFINE_NCPROPERTY(LightColor, "Light Color");
+	NCPROPERTY_PARAM(LightColor, DefaultValue, Vector3(1.0f, 1.0f, 1.0f));
+
+	DEFINE_NCPROPERTY(Intensity, "Intensity");
+	NCPROPERTY_PARAM(Intensity, DefaultValue, 1.0f);
+	NCPROPERTY_PARAM(Intensity, MinValue, 0.0f);
 
 	DirectionalLightComponentData& DirectionalLightComponent::GetDirectionalLightDataRef()
 	{
@@ -35,9 +39,7 @@ namespace Ion
 	}
 
 	DirectionalLightComponent::DirectionalLightComponent() :
-		m_DirectionalLightData({ }),
-		LightColor(Vector3(1.0f, 1.0f, 1.0f)),
-		Intensity(1.0f)
+		m_DirectionalLightData({ })
 	{
 	}
 }

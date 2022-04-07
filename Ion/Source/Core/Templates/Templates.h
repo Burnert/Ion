@@ -250,17 +250,65 @@ struct TTypeSize<TTypePack<Types...>> : public TTypeSize<Types...> { };
 // - Has Function Test
 // -------------------------------------------------------------------------------------
 
-#define DECLARE_THASFUNCTION(funcname) \
+#define DECLARE_THASFUNCTION_EX(funcname, templateSuffix) \
 namespace _THelpers \
 { \
 	template<typename ClassT> \
-	struct _THas##funcname \
+	struct _THas##templateSuffix \
 	{ \
-		template<typename T> static constexpr TBool<true>  Test(decltype(&T::##funcname)); \
+		template<typename T> static constexpr TBool<true>  Test(decltype(&T::funcname)); \
 		template<typename T> static constexpr TBool<false> Test(...); \
 	public: \
 		static constexpr bool Value = decltype(Test<ClassT>(0))::value; \
 	}; \
 } \
 template<typename ClassT> \
-static constexpr bool THas##funcname = _THelpers::_THas##funcname<ClassT>::Value
+static constexpr bool THas##templateSuffix = _THelpers::_THas##templateSuffix<ClassT>::Value
+
+#define DECLARE_THASFUNCTION(funcname) DECLARE_THASFUNCTION_EX(funcname, funcname)
+
+// -------------------------------------------------------------------------------------
+// - Has Field Test
+// -------------------------------------------------------------------------------------
+
+#define DECLARE_THASFIELD_EX(fieldname, templateSuffix) \
+namespace _THelpers \
+{ \
+	template<typename ClassT> \
+	struct _THasField##templateSuffix \
+	{ \
+		template<typename T> static constexpr TBool<true>  Test(decltype(T::fieldname)*); \
+		template<typename T> static constexpr TBool<false> Test(...); \
+	public: \
+		static constexpr bool Value = decltype(Test<ClassT>(0))::value; \
+	}; \
+} \
+template<typename ClassT> \
+static constexpr bool THasField##templateSuffix = _THelpers::_THasField##templateSuffix<ClassT>::Value
+
+#define DECLARE_THASFIELD(fieldname) DECLARE_THASFIELD_EX(fieldname, fieldname)
+
+// -------------------------------------------------------------------------------------
+// - Operator Test
+// -------------------------------------------------------------------------------------
+
+#define DECLARE_TEST_OPERATOR(op, opName) \
+namespace _THelpers \
+{ \
+	template<typename Lhs, typename Rhs> \
+	struct _TTestOperator##opName \
+	{ \
+		template<typename L, typename R> \
+		static constexpr TBool<true> Test(decltype(DeclVal<L>() op DeclVal<R>())); \
+		template<typename, typename> \
+		static constexpr TBool<false> Test(...); \
+	public: \
+		static constexpr bool Value = decltype(Test<Lhs, Rhs>(0))::value; \
+	}; \
+} \
+template<typename Lhs, typename Rhs> \
+static constexpr bool TTestOperator##opName = _THelpers::_TTestOperatorLT<Lhs, Rhs>::Value
+
+DECLARE_TEST_OPERATOR(<, LT);
+DECLARE_TEST_OPERATOR(>, GT);
+DECLARE_TEST_OPERATOR(==, Equals);
