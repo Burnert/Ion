@@ -21,11 +21,6 @@ namespace Ion
 	NCPROPERTY_PARAM(Falloff, DefaultValue, 4.0f);
 	NCPROPERTY_PARAM(Falloff, MinValue, 0.0f);
 
-	LightComponentData& LightComponent::GetLightDataRef()
-	{
-		return m_LightData;
-	}
-
 	void LightComponent::BuildRendererData(RRendererData& data)
 	{
 		if (ShouldBeRendered())
@@ -42,8 +37,7 @@ namespace Ion
 		}
 	}
 
-	LightComponent::LightComponent() :
-		m_LightData({ })
+	LightComponent::LightComponent()
 	{
 	}
 }

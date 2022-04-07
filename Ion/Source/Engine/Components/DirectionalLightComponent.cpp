@@ -17,11 +17,6 @@ namespace Ion
 	NCPROPERTY_PARAM(Intensity, DefaultValue, 1.0f);
 	NCPROPERTY_PARAM(Intensity, MinValue, 0.0f);
 
-	DirectionalLightComponentData& DirectionalLightComponent::GetDirectionalLightDataRef()
-	{
-		return m_DirectionalLightData;
-	}
-
 	void DirectionalLightComponent::BuildRendererData(RRendererData& data)
 	{
 		if (ShouldBeRendered())
@@ -38,8 +33,7 @@ namespace Ion
 		}
 	}
 
-	DirectionalLightComponent::DirectionalLightComponent() :
-		m_DirectionalLightData({ })
+	DirectionalLightComponent::DirectionalLightComponent()
 	{
 	}
 }

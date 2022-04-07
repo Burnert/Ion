@@ -5,13 +5,6 @@
 
 namespace Ion
 {
-	struct LightComponentData
-	{
-		Vector3 LightColor;
-		float Intensity;
-		float Falloff;
-	};
-
 	ENTITY_COMPONENT_CLASS_HEADER(LightComponent)
 
 	class ION_API LightComponent final : public SceneComponent
@@ -24,12 +17,7 @@ namespace Ion
 		DECLARE_NCPROPERTY(float,   Intensity)
 		DECLARE_NCPROPERTY(float,   Falloff)
 
-		LightComponentData& GetLightDataRef();
-
 	private:
 		LightComponent();
-
-	private:
-		LightComponentData m_LightData;
 	};
 }
