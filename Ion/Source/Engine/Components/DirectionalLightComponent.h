@@ -17,11 +17,10 @@ namespace Ion
 	{
 		ENTITY_COMPONENT_CLASS_BODY(DirectionalLightComponent, "Directional Light");
 
-		// Component Callback methods
-
 		void SERIALCALL BuildRendererData(RRendererData& data);
 
-		// End of Component Callback methods
+		DECLARE_NCPROPERTY(Vector3, LightColor)
+		DECLARE_NCPROPERTY(float,   Intensity)
 
 		DirectionalLightComponentData& GetDirectionalLightDataRef();
 

@@ -19,11 +19,11 @@ namespace ComponentSerialCall::Private \
 	{ \
 		return g_##func##Functions[id]; \
 	} \
-	/* Called in ENTITY_COMPONENT_SERIALCALL_HELPER */ \
-	inline void func##_AddFunctionForType(ComponentTypeID id, func##FPtr fn) \
+	/* Called in DECLARE_COMPONENT_SERIALCALL_HELPER_EX */ \
+	inline void func##_AddFunctionForType(ComponentTypeID id, const String& typeClassName, func##FPtr fn) \
 	{ \
 		g_##func##Functions[id] = fn; \
-		LOG_DEBUG(#func"_AddFunctionForType called for {0}", id); \
+		LOG_DEBUG(#func"_AddFunctionForType called for {0} ({1:x})", typeClassName, id); \
 	} \
 } \
 namespace ComponentSerialCall \
@@ -63,13 +63,13 @@ namespace ComponentSerialCall::Private \
 	CALL_OUTSIDE({ \
 		s_OnRegisterListeners.Add([] \
 		{ \
-			func##_AddFunctionForType(ThisComponentClass::GetTypeID(), CallEach##func); \
+			func##_AddFunctionForType(ThisComponentClass::GetTypeID(), ThisComponentClass::ClassName, CallEach##func); \
 		}); \
 	}, func##Implement); \
 }
 
 /* Generates the code used to call serialcall functions on all components. */
-#define ENTITY_COMPONENT_SERIALCALL_HELPER(func) \
+#define DECLARE_COMPONENT_SERIALCALL_HELPER(func) \
 DECLARE_COMPONENT_SERIALCALL_HELPER_EX(func, comp.func())
 
 /* Put in the component's .h file. */
@@ -88,6 +88,11 @@ template<> \
 struct FRegisterSerialCallForComponent<class className> \
 { \
 	static void Call(); \
+}; \
+template<> \
+struct FRegisterPropertiesForComponent<class className> \
+{ \
+	static void Call(); \
 };
 
 /* Put in the component's class in the .h file */
@@ -96,6 +101,7 @@ private: \
 static inline ComponentTypeID s_TypeID = THash<String>()(#className); \
 protected: \
 public: \
+using ComponentType = className; \
 using RawComponentContainerType = TCompContainer<className>; \
 static ComponentTypeID GetTypeID() \
 { \
@@ -132,6 +138,7 @@ DECLARE_THASFUNCTION(GetTypeID);
 /* Put in the component's .cpp file (one per file).
    World.h has to be included. */
 #define DECLARE_ENTITY_COMPONENT_CLASS(className) \
+using ComponentType = className; \
 namespace ComponentSerialCall::Private \
 { \
 	using ThisComponentClass = className; \
@@ -177,6 +184,23 @@ void* className::ComponentContainerImpl::GetRawContainer() \
 { \
 	return &Container; \
 } \
+/* Entity Component Property setup */ \
+using NCPropsContianerType = THashSet<INCProperty*>; \
+static NCPropsContianerType& _GetNCPropContainer() \
+{ \
+	static NCPropsContianerType* _NCProperties = new NCPropsContianerType; \
+	return *_NCProperties; \
+} \
+static INCProperty* _FindNCProperty(INCProperty* prop) \
+{ \
+	return _GetNCPropContainer().find(prop) != _GetNCPropContainer().end() ? prop : nullptr; \
+} \
+static void _AddNCProperty(INCProperty* prop) \
+{ \
+	ionassert(!_FindNCProperty(prop), \
+		"Property %s already exists.", _FindNCProperty(prop)->GetDisplayName().c_str()); \
+	_GetNCPropContainer().insert(prop); \
+} \
 /* Component instantiate function for runtime creation (type not known at compile-time). */ \
 Component* FInstantiateComponent<className>::Call(ComponentRegistry* registry) \
 { \
@@ -188,6 +212,12 @@ Component* FInstantiateComponent<className>::Call(ComponentRegistry* registry) \
 	className::RawComponentContainerType* container = (className::RawComponentContainerType*)raw; \
 	return &ComponentRegistry::EmplaceComponentInContainer(*container); \
 } \
+/* Initializes the component container for the specified component registry. */ \
+IComponentContainer* FInstantiateComponentContainer<className>::Call(ComponentRegistry* registry) \
+{ \
+	ionassert(registry); \
+	return new className::ComponentContainerImpl; \
+} \
 /* Registers serialcall functions for this component type. */ \
 void FRegisterSerialCallForComponent<className>::Call() \
 { \
@@ -197,11 +227,17 @@ void FRegisterSerialCallForComponent<className>::Call() \
 		onRegister(); \
 	} \
 } \
-/* Initializes the component container for the specified component registry. */ \
-IComponentContainer* FInstantiateComponentContainer<className>::Call(ComponentRegistry* registry) \
+/* Registers Entity Component Properties for this component type */ \
+void FRegisterPropertiesForComponent<className>::Call() \
 { \
-	ionassert(registry); \
-	return new className::ComponentContainerImpl; \
+	ComponentDatabase* database = ComponentRegistry::GetComponentTypeDatabase_Internal(); \
+	ionassert(database); \
+	ComponentDatabase::TypeInfo& typeInfo = database->GetTypeInfo_Internal(className::GetTypeID()); \
+	for (INCProperty* prop : _GetNCPropContainer()) \
+	{ \
+		typeInfo.EditableProperties.insert(prop); \
+		prop->OnRegister(); \
+	} \
 }
 
 /* Put in the component's .cpp file after the DECLARE_ENTITY_COMPONENT_CLASS, if the component implements Tick */
@@ -220,6 +256,19 @@ if (comp.IsSceneComponent()) \
 
 /* For documentation purposes */
 #define SERIALCALL
+
+/* Declare Entity Component Property in the component class in the .h file */
+#define DECLARE_NCPROPERTY(type, varName) \
+type varName; \
+static TNCProperty<type, ComponentType> NCProperty_##varName;
+
+/* Define Entity Component Property in the component .cpp file */
+#define DEFINE_NCPROPERTY(varName, displayName, onChanged) \
+TNCProperty<decltype(ComponentType::varName), ComponentType> ComponentType::NCProperty_##varName = \
+TNCProperty<decltype(ComponentType::varName), ComponentType>(#varName, displayName, &ComponentType::varName, onChanged); \
+CALL_OUTSIDE({ \
+	_AddNCProperty(&ComponentType::NCProperty_##varName); \
+}, varName##0);
 
 namespace Ion
 {
@@ -258,6 +307,123 @@ namespace Ion
 		static void Call() { }
 	};
 
+	template<typename CompT>
+	struct FRegisterPropertiesForComponent
+	{
+		static void Call() { }
+	};
+
+	// Entity Component Property:
+
+	enum class ENCPropertyType : uint8
+	{
+		None = 0,
+		Bool,
+		Int32,
+		Int64,
+		Float,
+		Vector2,
+		Vector3,
+		Vector4,
+	};
+
+	template<typename T>
+	constexpr ENCPropertyType NCPropertyTypeAsEnum = ENCPropertyType::None;
+
+	template<> constexpr ENCPropertyType NCPropertyTypeAsEnum<bool>    = ENCPropertyType::Bool;
+	template<> constexpr ENCPropertyType NCPropertyTypeAsEnum<int32>   = ENCPropertyType::Int32;
+	template<> constexpr ENCPropertyType NCPropertyTypeAsEnum<int64>   = ENCPropertyType::Int64;
+	template<> constexpr ENCPropertyType NCPropertyTypeAsEnum<float>   = ENCPropertyType::Float;
+	template<> constexpr ENCPropertyType NCPropertyTypeAsEnum<Vector2> = ENCPropertyType::Vector2;
+	template<> constexpr ENCPropertyType NCPropertyTypeAsEnum<Vector3> = ENCPropertyType::Vector3;
+	template<> constexpr ENCPropertyType NCPropertyTypeAsEnum<Vector4> = ENCPropertyType::Vector4;
+
+	/* Entity Component Property interface */
+	class INCProperty
+	{
+	public:
+		/* data param must be the same type as the property. */
+		virtual void Update(Component& object, void* data) = 0;
+		virtual void* GetValue(Component& object) const = 0;
+
+		virtual const String& GetDisplayName() const = 0;
+		virtual ENCPropertyType GetType() const = 0;
+
+	protected:
+		virtual void OnRegister() = 0;
+		
+		template<typename T>
+		friend struct FRegisterPropertiesForComponent;
+	};
+
+	template<typename T>
+	using TNCPropertyOnChangeFunc = void(const T&);
+
+	/* Entity Component Property template */
+	template<typename T, typename CompT>
+	class TNCProperty : public INCProperty
+	{
+	public:
+		using TOnChangeFunc = TFunction<TNCPropertyOnChangeFunc<T>>;
+
+		TOnChangeFunc OnChanged;
+		String MemberName;
+		String DisplayName;
+		T CompT::* MemberPtr;
+		ENCPropertyType Type;
+		T Value;
+
+		template<typename Lambda>
+		TNCProperty(const String& memberName, const String& displayName, T CompT::* memberPtr, Lambda onChanged) :
+			MemberName(memberName),
+			DisplayName(displayName),
+			MemberPtr(memberPtr),
+			Type(NCPropertyTypeAsEnum<T>),
+			Value(T())
+		{
+			if constexpr (TIsConvertibleV<Lambda, TOnChangeFunc>)
+			{
+				OnChanged = onChanged;
+			}
+		}
+
+		virtual void Update(Component& object, void* data) override
+		{
+			ionassert(data);
+			//LOG_DEBUG("TNCProperty::Update [{0}::{1}]", CompT::ClassName, MemberName);
+			T& value = ((CompT&)object).*MemberPtr = *(T*)data;
+			if (OnChanged)
+				OnChanged(value);
+		}
+
+		virtual void* GetValue(Component& object) const override
+		{
+			ionassert(dynamic_cast<CompT*>(&object));
+			return &(((CompT&)object).*MemberPtr);
+		}
+
+		virtual const String& GetDisplayName() const override
+		{
+			return DisplayName;
+		}
+
+		virtual ENCPropertyType GetType() const override
+		{
+			return Type;
+		}
+
+	protected:
+		virtual void OnRegister() override
+		{
+			LOG_DEBUG("TNCProperty::OnRegister [{0}::{1}]", CompT::ClassName, MemberName);
+		}
+
+		template<typename T>
+		friend struct FRegisterPropertiesForComponent;
+	};
+
+	// Component Database:
+
 	struct ComponentDatabase
 	{
 		struct TypeInfo
@@ -265,6 +431,8 @@ namespace Ion
 			ComponentTypeID ID;
 			String ClassName;
 			String ClassDisplayName;
+
+			THashSet<INCProperty*> EditableProperties;
 
 			union
 			{
@@ -309,6 +477,16 @@ namespace Ion
 			ionassertnd(IsTypeRegistered(id));
 			return RegisteredTypes.find(id)->second;
 		}
+
+	private:
+		TypeInfo& GetTypeInfo_Internal(ComponentTypeID id)
+		{
+			ionassertnd(IsTypeRegistered(id));
+			return RegisteredTypes.find(id)->second;
+		}
+
+		template<typename T>
+		friend struct FRegisterPropertiesForComponent;
 	};
 
 	DECLARE_COMPONENT_SERIALCALL(Tick, float);
@@ -461,6 +639,8 @@ namespace Ion
 		friend struct FInstantiateComponentContainer;
 		template<typename T>
 		friend struct FRegisterSerialCallForComponent;
+		template<typename T>
+		friend struct FRegisterPropertiesForComponent;
 	};
 
 	// Component inline definitions
@@ -517,6 +697,8 @@ namespace Ion
 	{
 		static_assert(TIsBaseOfV<Component, CompT> && TIsComponentTypeFinal<CompT>);
 
+		LOG_DEBUG("ComponentRegistry::RegisterComponentClass<{0}>", CompT::ClassName);
+
 		ComponentDatabase* typeDB = GetComponentTypeDatabase_Internal();
 		auto it = typeDB->RegisteredTypes.find(CompT::GetTypeID());
 		// Don't register the same component twice.
@@ -535,9 +717,10 @@ namespace Ion
 		typeInfo.m_InstantiateType = FInstantiateComponent<CompT>::Call;
 		typeInfo.m_InstantiateContainer = FInstantiateComponentContainer<CompT>::Call;
 
-		FRegisterSerialCallForComponent<CompT>::Call();
-
 		typeDB->RegisterType(typeInfo);
+
+		FRegisterSerialCallForComponent<CompT>::Call();
+		FRegisterPropertiesForComponent<CompT>::Call();
 
 		return CompT::GetTypeID();
 	}
@@ -664,6 +847,8 @@ namespace Ion
 		static_assert(TIsBaseOfV<Component, CompT>);
 		using CompContainer = CompT::ComponentContainerImpl;
 
+		LOG_DEBUG("ComponentRegistry::InitializeComponentContainter<{0}>", CompT::ClassName);
+
 		ionassert(!IsContainerInitialized<CompT>());
 
 		CompContainer* container = new CompContainer;
@@ -675,6 +860,9 @@ namespace Ion
 		ionassert(!IsContainerInitialized(id));
 
 		ComponentDatabase* database = GetComponentTypeDatabase_Internal();
+		ionassert(database);
+
+		LOG_DEBUG("ComponentRegistry::InitializeComponentContainter({0}) <- Runtime", database->GetTypeInfo(id).ClassName);
 
 		InstantiateComponentContainerFPtr initializeContianerFPtr = database->GetTypeInfo(id).m_InstantiateContainer;
 		ionassertnd(initializeContianerFPtr);

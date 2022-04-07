@@ -66,12 +66,16 @@ namespace Ion::Editor
 		void DrawDetailsRelationsSection(Entity& entity);
 		void DrawDetailsRelationsChildrenSection(Entity& entity);
 		void DrawDetailsComponentTreeSection(Entity& entity);
+		void DrawDetailsEntitySection(Entity& entity);
 		void DrawDetailsTransformSection(Entity& entity);
 		void DrawDetailsRenderingSection(Entity& entity);
+		void DrawDetailsComponentSection(Component& component);
 
 		void DrawSceneComponentDetails(SceneComponent& component);
 		void DrawSceneComponentDetailsTransformSection(SceneComponent& component);
 		void DrawSceneComponentDetailsRenderingSection(SceneComponent& component);
+		void DrawComponentDetails(Component& component);
+		void DrawComponentDetailsProperty(Component& component, INCProperty* prop);
 
 		/* Returns true if the transform has changed. */
 		bool DrawTransformSection(Transform& inOutTransform);

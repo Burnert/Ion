@@ -458,17 +458,33 @@ namespace Editor
 				Entity* selectedEntity = EditorApplication::Get()->GetSelectedEntity();
 				if (selectedEntity)
 				{
+					Component* selectedComponent = EditorApplication::Get()->GetSelectedComponent();
+
+					const String& selectedObjectName = selectedComponent ?
+						selectedComponent->GetName() :
+						selectedEntity->GetName();
+
+					const String& selectedObjectClass = selectedComponent ?
+						selectedComponent->GetClassName() :
+						"Entity";
+
 					ImGui::PushID("Details");
 
 					DrawDetailsNameSection(*selectedEntity);
 					DrawDetailsRelationsSection(*selectedEntity);
 					ImGui::Separator();
 					DrawDetailsComponentTreeSection(*selectedEntity);
-					DrawDetailsTransformSection(*selectedEntity);
-					DrawDetailsRenderingSection(*selectedEntity);
-					if (MeshEntity* meshEntity = dynamic_cast<MeshEntity*>(selectedEntity))
+					ImGui::Separator();
+					ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.3f, 0.9f), "%s", selectedObjectName.c_str());
+					ImGui::SameLine(); ImGui::TextDisabled("(%s)", selectedObjectClass.c_str());
+					ImGui::Separator();
+					if (selectedComponent)
 					{
-						DrawMeshSection(*meshEntity->GetMeshComponent());
+						DrawDetailsComponentSection(*selectedComponent);
+					}
+					else
+					{
+						DrawDetailsEntitySection(*selectedEntity);
 					}
 
 					ImGui::PopID();
@@ -622,29 +638,16 @@ namespace Editor
 				}
 				ImGui::EndDragDropTarget();
 			}
+		}
+	}
 
-			Component* selectedComponent = EditorApplication::Get()->GetSelectedComponent();
-
-			if (selectedComponent)
-			{
-				ImGui::Separator();
-
-				bool bComponentDetailsOpen = ImGui::CollapsingHeader("Component Details");
-
-				if (bComponentDetailsOpen)
-				{
-					if (selectedComponent->IsSceneComponent())
-					{
-						DrawSceneComponentDetails(*(SceneComponent*)selectedComponent);
-					}
-					else
-					{
-						// @TODO: Non-scene component details
-					}
-				}
-
-				ImGui::Separator();
-			}
+	void EditorLayer::DrawDetailsEntitySection(Entity& entity)
+	{
+		DrawDetailsTransformSection(entity);
+		DrawDetailsRenderingSection(entity);
+		if (MeshEntity* meshEntity = dynamic_cast<MeshEntity*>(&entity))
+		{
+			DrawMeshSection(*meshEntity->GetMeshComponent());
 		}
 	}
 
@@ -652,15 +655,15 @@ namespace Editor
 	{
 		TRACE_FUNCTION();
 
-		ImGui::PushID("ComponentDetails");
-		ImGui::Indent();
+		ImGui::PushID("SceneComponentDetails");
+
 		DrawSceneComponentDetailsTransformSection(component);
 		DrawSceneComponentDetailsRenderingSection(component);
 		if (component.GetClassName() == "MeshComponent")
 		{
 			DrawMeshSection((MeshComponent&)component);
 		}
-		ImGui::Unindent();
+
 		ImGui::PopID();
 	}
 
@@ -688,6 +691,57 @@ namespace Editor
 		}
 	}
 
+	void EditorLayer::DrawComponentDetails(Component& component)
+	{
+		TRACE_FUNCTION();
+
+		ImGui::PushID("ComponentDetails");
+
+		const ComponentDatabase::TypeInfo& typeInfo = component.GetFinalTypeInfo();
+		for (INCProperty* prop : typeInfo.EditableProperties)
+		{
+			DrawComponentDetailsProperty(component, prop);
+		}
+
+		ImGui::PopID();
+	}
+
+	void EditorLayer::DrawComponentDetailsProperty(Component& component, INCProperty* prop)
+	{
+		const String& name = prop->GetDisplayName();
+		ENCPropertyType type = prop->GetType();
+
+		if (ImGui::CollapsingHeader(name.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushID(name.c_str());
+
+			bool bChanged = false;
+
+			switch (type)
+			{
+				// @TODO: Implement the rest
+				case ENCPropertyType::Float:
+				{
+					float value = *(float*)prop->GetValue(component);
+					bChanged |= ImGui::DragFloat(name.c_str(), (float*)&value, 0.0125f);
+					prop->Update(component, &value);
+					break;
+				}
+				case ENCPropertyType::Vector3:
+				{
+					Vector3 value = *(Vector3*)prop->GetValue(component);
+					bChanged |= ImGui::DragFloat3(name.c_str(), (float*)&value, 0.0125f);
+					prop->Update(component, &value);
+					break;
+				}
+			}
+
+			if (bChanged) { }
+
+			ImGui::PopID();
+		}
+	}
+
 	void EditorLayer::DrawDetailsTransformSection(Entity& entity)
 	{
 		TRACE_FUNCTION();
@@ -710,6 +764,15 @@ namespace Editor
 			entity.SetVisible(bVisible);
 			entity.SetVisibleInGame(bVisibleInGame);
 		}
+	}
+
+	void EditorLayer::DrawDetailsComponentSection(Component& component)
+	{
+		if (component.IsSceneComponent())
+		{
+			DrawSceneComponentDetails((SceneComponent&)component);
+		}
+		DrawComponentDetails(component);
 	}
 
 	bool EditorLayer::DrawTransformSection(Transform& inOutTransform)
@@ -853,14 +916,15 @@ namespace Editor
 
 		bool bRootOpen = DrawComponentTreeSceneComponentNode(*rootComponent);
 		ImGui::SameLine();
-		ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.2f, 1.0f), "Root");
+		ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.3f, 0.9f), "Root");
 		if (bRootOpen)
 		{
+			ImGui::Indent();
 			ImGui::Spacing();
 			ImGui::Separator();
 			ImGui::Spacing();
-
 			DrawComponentTreeNodeChildren(*rootComponent, 1);
+			ImGui::Unindent();
 		}
 		if (!entity.GetComponents().empty())
 		{

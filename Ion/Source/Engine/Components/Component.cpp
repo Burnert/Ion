@@ -100,6 +100,10 @@ namespace Ion
 
 	void ComponentRegistry::RegisterComponents()
 	{
+		TRACE_FUNCTION();
+
+		LOG_DEBUG("ComponentRegistry::RegisterComponents");
+
 		RegisterComponentClass<BehaviorComponent>();
 		RegisterComponentClass<EmptySceneComponent>();
 		RegisterComponentClass<DirectionalLightComponent>();

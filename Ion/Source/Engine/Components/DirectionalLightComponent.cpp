@@ -10,6 +10,9 @@ namespace Ion
 
 	DECLARE_COMPONENT_SERIALCALL_BUILDRENDERERDATA()
 
+	DEFINE_NCPROPERTY(LightColor, "Light Color", [] { })
+	DEFINE_NCPROPERTY(Intensity,  "Intensity",   [] { })
+
 	DirectionalLightComponentData& DirectionalLightComponent::GetDirectionalLightDataRef()
 	{
 		return m_DirectionalLightData;
@@ -23,8 +26,8 @@ namespace Ion
 			Transform worldTransform = GetWorldTransform();
 
 			RLightRenderProxy light { };
-			light.Color = m_DirectionalLightData.LightColor;
-			light.Intensity = m_DirectionalLightData.Intensity;
+			light.Color = LightColor;
+			light.Intensity = Intensity;
 			light.Direction = worldTransform.GetForwardVector();
 			light.Type = ELightType::Directional;
 			data.DirectionalLight = light;
@@ -32,7 +35,9 @@ namespace Ion
 	}
 
 	DirectionalLightComponent::DirectionalLightComponent() :
-		m_DirectionalLightData({ })
+		m_DirectionalLightData({ }),
+		LightColor(Vector3(1.0f, 1.0f, 1.0f)),
+		Intensity(1.0f)
 	{
 	}
 }
