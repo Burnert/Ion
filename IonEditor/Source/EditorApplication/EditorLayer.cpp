@@ -709,30 +709,57 @@ namespace Editor
 		}
 	}
 
+	template<typename T>
+	static void DrawPropertyScalar(Component& component, INCProperty* prop, ImGuiDataType type, int32 nDims)
+	{
+		T value = *(T*)prop->GetValue(component);
+		if (ImGui::DragScalarN(prop->GetDisplayName().c_str(), type, &value, nDims, 0.0125f,
+			nullptr, nullptr, "%.3f", ImGuiSliderFlags_None))
+			prop->Update(component, &value);
+	}
+
 	void EditorLayer::DrawComponentDetailsProperty(Component& component, INCProperty* prop)
 	{
 		const String& name = prop->GetDisplayName();
 		ENCPropertyType type = prop->GetType();
 
-		bool bChanged = false;
-
 		switch (type)
 		{
-			// @TODO: Implement the rest
+			case ENCPropertyType::Bool:
+			{
+				bool value = *(bool*)prop->GetValue(component);
+				if (ImGui::Checkbox(prop->GetDisplayName().c_str(), &value))
+					prop->Update(component, &value);
+				break;
+			}
+			case ENCPropertyType::Int32:
+			{
+				DrawPropertyScalar<int32>(component, prop, ImGuiDataType_S32, 1);
+				break;
+			}
+			case ENCPropertyType::Int64:
+			{
+				DrawPropertyScalar<int64>(component, prop, ImGuiDataType_S64, 1);
+				break;
+			}
 			case ENCPropertyType::Float:
 			{
-				float value = *(float*)prop->GetValue(component);
-				bChanged |= ImGui::DragFloat(name.c_str(), (float*)&value, 0.0125f);
-				if (bChanged)
-					prop->Update(component, &value);
+				DrawPropertyScalar<float>(component, prop, ImGuiDataType_Float, 1);
+				break;
+			}
+			case ENCPropertyType::Vector2:
+			{
+				DrawPropertyScalar<Vector2>(component, prop, ImGuiDataType_Float, 2);
 				break;
 			}
 			case ENCPropertyType::Vector3:
 			{
-				Vector3 value = *(Vector3*)prop->GetValue(component);
-				bChanged |= ImGui::DragFloat3(name.c_str(), (float*)&value, 0.0125f);
-				if (bChanged)
-					prop->Update(component, &value);
+				DrawPropertyScalar<Vector3>(component, prop, ImGuiDataType_Float, 3);
+				break;
+			}
+			case ENCPropertyType::Vector4:
+			{
+				DrawPropertyScalar<Vector4>(component, prop, ImGuiDataType_Float, 4);
 				break;
 			}
 		}
