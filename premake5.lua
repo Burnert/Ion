@@ -11,9 +11,10 @@ workspace "Ion"
 outputdir = "%{cfg.system}-%{cfg.architecture}-%{cfg.buildcfg}"
 
 ThirdParty = {
-	Glad   = "Ion/ThirdParty/Glad",
-	ImGui  = "Ion/ThirdParty/ImGui",
-	SpdLog = "Ion/ThirdParty/SpdLog"
+	FreeType = "Ion/ThirdParty/FreeType",
+	Glad     = "Ion/ThirdParty/Glad",
+	ImGui    = "Ion/ThirdParty/ImGui",
+	SpdLog   = "Ion/ThirdParty/SpdLog"
 }
 
 for name, dir in pairs(ThirdParty) do
@@ -42,6 +43,7 @@ project "Ion"
 	}
 
 	includedirs {
+        "%{prj.name}/ThirdParty/FreeType/freetype/include",
 		"%{prj.name}/ThirdParty/Glad/include",
 		"%{prj.name}/ThirdParty/ImGui",
 		"%{prj.name}/ThirdParty/glm",
@@ -52,6 +54,7 @@ project "Ion"
 	}
 
 	links {
+		"FreeType",
 		"Glad",
 		"ImGui",
 		"SpdLog",

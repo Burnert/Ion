@@ -48,8 +48,11 @@ namespace Ion
 
 	struct EngineFonts
 	{
-		ImFont* DefaultFont;
-		ImFont* DefaultFontCondensed;
+		ImFont* Exo;
+		ImFont* Exo2;
+		ImFont* OpenSans;
+		ImFont* Roboto;
+		ImFont* SourceSansPro;
 	};
 
 	class ION_API Application

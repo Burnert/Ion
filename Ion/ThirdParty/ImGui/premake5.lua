@@ -14,15 +14,23 @@ project "ImGui"
         "imgui/backends/imgui_impl_dx11.h",
         "imgui/backends/imgui_impl_win32.cpp",
         "imgui/backends/imgui_impl_win32.h",
+        "imgui/misc/freetype/imgui_freetype.h",
+        "imgui/misc/freetype/imgui_freetype.cpp",
     }
 
     includedirs {
         "imgui",
-        "../Glad/include"
+        "../Glad/include",
+        "../FreeType/freetype/include"
     }
 
     links {
-        "Glad"
+        "Glad",
+        "FreeType"
+    }
+
+    defines {
+        "IMGUI_ENABLE_FREETYPE"
     }
 
 	flags {

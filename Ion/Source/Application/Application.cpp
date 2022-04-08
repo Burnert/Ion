@@ -394,18 +394,31 @@ namespace Ion
 	{
 		ImGuiIO& io = ImGui::GetIO();
 
-		String defaultPath = StringConverter::WStringToString(
-			EnginePath::GetFontsPath() + L"OpenSans-Medium.ttf");
-		String defaultCondensedPath = StringConverter::WStringToString(
-			EnginePath::GetFontsPath() + L"OpenSans_SemiCondensed-Medium.ttf");
+		String exoPath = StringConverter::WStringToString(
+			EnginePath::GetFontsPath() + L"Exo/Exo-Regular.ttf");
+		String exo2Path = StringConverter::WStringToString(
+			EnginePath::GetFontsPath() + L"Exo2/Exo2-Regular.ttf");
+		String openSansPath = StringConverter::WStringToString(
+			EnginePath::GetFontsPath() + L"OpenSans/OpenSans-Regular.ttf");
+		String robotoPath = StringConverter::WStringToString(
+			EnginePath::GetFontsPath() + L"Roboto/Roboto-Regular.ttf");
+		String sourceSansProPath = StringConverter::WStringToString(
+			EnginePath::GetFontsPath() + L"SourceSansPro/SourceSansPro-Regular.ttf");
 
 		ImFontConfig config;
-		config.OversampleH = 2;
-		config.OversampleV = 2;
-		config.RasterizerMultiply = 1.0f;
+		config.OversampleH = 3;
+		config.OversampleV = 3;
+		config.SizePixels = 16;
 
-		m_Fonts.DefaultFont = io.Fonts->AddFontFromFileTTF(defaultPath.c_str(), 19, &config);
-		m_Fonts.DefaultFontCondensed = io.Fonts->AddFontFromFileTTF(defaultCondensedPath.c_str(), 19, &config);
+		m_Fonts.Exo                = io.Fonts->AddFontFromFileTTF(exoPath.c_str(),           18, &config);
+		m_Fonts.Exo2               = io.Fonts->AddFontFromFileTTF(exo2Path.c_str(),          18, &config);
+		m_Fonts.OpenSans           = io.Fonts->AddFontFromFileTTF(openSansPath.c_str(),      18, &config);
+		m_Fonts.Roboto             = io.Fonts->AddFontFromFileTTF(robotoPath.c_str(),        18, &config);
+		m_Fonts.SourceSansPro      = io.Fonts->AddFontFromFileTTF(sourceSansProPath.c_str(), 18, &config);
+
+		io.FontDefault = m_Fonts.Exo2;
+
+		ImGui::GetTextLineHeight();
 	}
 
 	Application* Application::s_Instance = nullptr;

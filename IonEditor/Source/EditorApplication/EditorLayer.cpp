@@ -1062,7 +1062,7 @@ namespace Editor
 			Entity* owner = component.GetOwner();
 			ionassert(owner);
 			bool bCanDelete = component.GetOwner()->GetRootComponent() != &component;
-			String deleteLabel = bCanDelete ? "Delete" : "Delete owning entity";
+			String deleteLabel = bCanDelete ? "Delete" : "Delete Entity";
 			if (ImGui::MenuItem(deleteLabel.c_str()))
 			{
 				bCanDelete ?

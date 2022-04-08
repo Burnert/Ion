@@ -8,3 +8,6 @@
 	path = Ion/ThirdParty/ImGui/imgui
 	url = https://github.com/ocornut/imgui
 	branch = docking
+[submodule "Ion/ThirdParty/FreeType/freetype"]
+	path = Ion/ThirdParty/FreeType/freetype
+	url = https://gitlab.freedesktop.org/freetype/freetype/
