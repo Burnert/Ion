@@ -14,10 +14,11 @@ namespace Ion
 	Entity::Entity(const GUID& guid) :
 		m_GUID(guid),
 		m_WorldContext(nullptr),
+		m_Parent(nullptr),
+		m_RootComponent(nullptr),
 		m_bCreateEmptyRootOnSpawn(true),
 		m_bTickEnabled(true),
-		m_Parent(nullptr),
-		m_RootComponent(nullptr)
+		m_bPendingKill(false)
 	{
 		SetName("Entity");
 	}
@@ -187,17 +188,7 @@ namespace Ion
 
 	void Entity::OnDestroy()
 	{
-		// Can't use the for loop because Component::Destroy
-		// removes the component from m_Components.
-		while (!m_Components.empty())
-		{
-			Component* component = *m_Components.begin();
-			component->Destroy();
-		}
-		m_Components.clear();
 
-		m_RootComponent->Destroy(false);
-		m_RootComponent = nullptr;
 	}
 
 	void Entity::AddChild(Entity* child)
@@ -251,6 +242,12 @@ namespace Ion
 	{
 		ionassert(m_WorldContext);
 
+		// Don't do anything if it's already set
+		if (IsPendingKill())
+			return;
+
+		m_bPendingKill = true;
+
 		// Reparent the children
 		if (HasChildren())
 		{
@@ -266,8 +263,22 @@ namespace Ion
 			}
 		}
 
-		// Components are destroyed in OnDestroy function
-		m_WorldContext->RemoveEntity(this);
+		m_WorldContext->MarkEntityForDestroy(this);
+
+		// Destroy the components too
+
+		// Can't use the for loop because Component::Destroy
+		// removes the component from m_Components.
+		while (!m_Components.empty())
+		{
+			Component* component = *m_Components.begin();
+			component->Destroy();
+		}
+		m_Components.clear();
+
+		// Children will get destroyed too
+		m_RootComponent->Destroy(false);
+		m_RootComponent = nullptr;
 	}
 
 	void Entity::DestroyWithChildren()

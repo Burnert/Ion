@@ -95,15 +95,13 @@ namespace Ion
 		template<typename EntityT, typename... Args>
 		EntityT* SpawnAndAttachEntityOfClass(Entity* attachTo, Args&&... args);
 
-		void AddEntity(Entity* entity);
-		void AddEntity(Entity* entity, Entity* attachTo);
-		void RemoveEntity(Entity* entity);
-
 		bool DoesOwnEntity(Entity* entity) const;
 		bool DoesOwnEntity(const GUID& guid) const;
 		Entity* FindEntity(const GUID& guid);
 
 		void ReparentEntityInWorld(Entity* entity, Entity* parent);
+
+		void MarkEntityForDestroy(Entity* entity);
 
 		Scene* GetScene() const;
 
@@ -122,6 +120,9 @@ namespace Ion
 
 	private:
 		void InitEntity(Entity* entity);
+		void AddEntity(Entity* entity);
+		void AddEntity(Entity* entity, Entity* attachTo);
+		void RemoveEntity(Entity* entity);
 
 	protected:
 		void BuildRendererData(RRendererData& data, float deltaTime);
@@ -144,6 +145,7 @@ namespace Ion
 		GUID m_WorldGUID;
 
 		ComponentRegistry m_ComponentRegistry;
+		EntityArray m_EntitiesPendingKill;
 
 		EntityMap m_Entities; // World is the owner of the entities
 		EntityArray m_ChildEntities;

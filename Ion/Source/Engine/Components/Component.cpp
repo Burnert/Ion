@@ -18,14 +18,30 @@ namespace Ion
 		m_bTickEnabled(true),
 		m_WorldContext(nullptr),
 		m_OwningEntity(nullptr),
-		m_bIsSceneComponent(false)
+		m_bIsSceneComponent(false),
+		m_bPendingKill(false)
 		//m_bUpdateSceneData(false)
 	{
+	}
+
+	void Component::OnCreate()
+	{
+	}
+
+	void Component::OnDestroy()
+	{
+		
 	}
 
 	void Component::Destroy(bool bReparent)
 	{
 		ionassert(m_WorldContext);
+
+		// Don't do anything if it's already set
+		if (IsPendingKill())
+			return;
+
+		m_bPendingKill = true;
 
 		if (m_OwningEntity)
 		{
@@ -64,7 +80,7 @@ namespace Ion
 			}
 		}
 
-		m_WorldContext->GetComponentRegistry().DestroyComponent(this);
+		m_WorldContext->GetComponentRegistry().MarkForDestroy(this);
 	}
 
 	void Component::SetTickEnabled(bool bTick)
@@ -109,6 +125,31 @@ namespace Ion
 		RegisterComponentClass<DirectionalLightComponent>();
 		RegisterComponentClass<LightComponent>();
 		RegisterComponentClass<MeshComponent>();
+	}
+
+	void ComponentRegistry::MarkForDestroy(Component* component)
+	{
+		ionassert(component->IsPendingKill());
+		ionassert(m_InvalidComponents.find(component->GetFinalTypeID()) != m_InvalidComponents.end());
+
+		m_InvalidComponents.at(component->GetFinalTypeID()).push_back(component);
+	}
+
+	void ComponentRegistry::DestroyInvalidComponents()
+	{
+		// Invalid components are those that are pending kill
+		// => that Destroy has been called on.
+		// They are added to m_InvalidComponents
+		// using the MarkForDestroy function.
+		for (auto& [id, container] : m_InvalidComponents)
+		{
+			for (Component* invalidComponent : container)
+			{
+				ionassert(id == invalidComponent->GetFinalTypeID());
+				DestroyComponent(invalidComponent);
+			}
+			container.clear();
+		}
 	}
 
 	void ComponentRegistry::Update(float deltaTime)

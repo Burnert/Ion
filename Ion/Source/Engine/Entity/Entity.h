@@ -63,6 +63,8 @@ namespace Ion
 		void Destroy(bool bReparent = true);
 		void DestroyWithChildren();
 
+		bool IsPendingKill() const;
+
 		/* Returns null if the Entity is parented to the World root. */
 		Entity* GetParent() const;
 		/* If the parent paremeter is null, the Entity will be parented to the World root. */
@@ -131,6 +133,7 @@ namespace Ion
 
 		uint8 m_bCreateEmptyRootOnSpawn : 1;
 		uint8 m_bTickEnabled : 1;
+		uint8 m_bPendingKill : 1;
 
 		friend class Engine;
 		friend class World;
@@ -236,6 +239,11 @@ namespace Ion
 	inline World* Entity::GetWorldContext() const
 	{
 		return m_WorldContext;
+	}
+
+	inline bool Entity::IsPendingKill() const
+	{
+		return m_bPendingKill;
 	}
 
 	inline bool Entity::operator==(const Entity& other) const

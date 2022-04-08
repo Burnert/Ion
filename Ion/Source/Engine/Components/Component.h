@@ -56,6 +56,8 @@ namespace ComponentSerialCall::Private \
 			/* Call the serialcall functions */ \
 			for (auto& [k, comp] : container) \
 			{ \
+				/* Don't call the function if the component is to be destroyed */ \
+				if (comp.IsPendingKill()) return; \
 				forEachBody; \
 			} \
 		} \
@@ -618,15 +620,17 @@ namespace Ion
 	{
 	public:
 		/* Called by the ComponentRegistry */
-		virtual void OnCreate() { }
+		virtual void OnCreate();
 		/* Called by the ComponentRegistry */
-		virtual void OnDestroy() { }
+		virtual void OnDestroy();
 
 		/* If bReparent is true, the children will get
 		   reparented to the parent of this component.
 		   Else they will get destroyed.
 		   bReparent is unused on non-scene components. */
 		void Destroy(bool bReparent = true);
+
+		bool IsPendingKill() const;
 
 		void SetTickEnabled(bool bTick);
 		bool IsTickEnabled() const;
@@ -682,7 +686,7 @@ namespace Ion
 
 		uint8 m_bTickEnabled : 1;
 		uint8 m_bIsSceneComponent : 1;
-		//uint8 m_bUpdateSceneData : 1;
+		uint8 m_bPendingKill : 1;
 
 		String m_Name;
 
@@ -724,6 +728,10 @@ namespace Ion
 		template<typename CompT, TEnableIfT<!TIsComponentTypeFinal<CompT>>* = 0>
 		void DestroyComponent(CompT* component);
 
+		void MarkForDestroy(Component* component);
+
+		void DestroyInvalidComponents();
+
 		void Update(float deltaTime);
 		void BuildRendererData(RRendererData& data);
 
@@ -751,6 +759,7 @@ namespace Ion
 
 	private:
 		THashMap<ComponentTypeID, IComponentContainer*> m_Containers;
+		THashMap<ComponentTypeID, TArray<Component*>> m_InvalidComponents;
 
 		World* m_WorldContext;
 
@@ -799,6 +808,11 @@ namespace Ion
 	inline World* Component::GetWorldContext() const
 	{
 		return m_WorldContext;
+	}
+
+	inline bool Component::IsPendingKill() const
+	{
+		return m_bPendingKill;
 	}
 
 	inline bool Component::operator==(const Component& other) const
@@ -980,6 +994,7 @@ namespace Ion
 
 		CompContainer* container = new CompContainer;
 		m_Containers.insert({ CompT::GetTypeID(), container });
+		m_InvalidComponents.insert({ CompT::GetTypeID(), TArray<Component*>() });
 	}
 
 	inline void ComponentRegistry::InitializeComponentContainter(ComponentTypeID id)
@@ -991,12 +1006,13 @@ namespace Ion
 
 		LOG_DEBUG("ComponentRegistry::InitializeComponentContainter({0}) <- Runtime", database->GetTypeInfo(id).ClassName);
 
-		InstantiateComponentContainerFPtr initializeContianerFPtr = database->GetTypeInfo(id).m_InstantiateContainer;
-		ionassertnd(initializeContianerFPtr);
-		IComponentContainer* containerPtr = initializeContianerFPtr(this);
+		InstantiateComponentContainerFPtr instantiateContianerFPtr = database->GetTypeInfo(id).m_InstantiateContainer;
+		ionassertnd(instantiateContianerFPtr);
+		IComponentContainer* containerPtr = instantiateContianerFPtr(this);
 		ionassertnd(containerPtr);
 
 		m_Containers.insert({ containerPtr->GetTypeID(), containerPtr });
+		m_InvalidComponents.insert({ containerPtr->GetTypeID(), TArray<Component*>() });
 	}
 
 	template<typename CompT>

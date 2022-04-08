@@ -39,6 +39,14 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
+		m_ComponentRegistry.DestroyInvalidComponents();
+		// Destroy entities that are pending kill
+		for (Entity* entity : m_EntitiesPendingKill)
+		{
+			RemoveEntity(entity);
+		}
+		m_EntitiesPendingKill.clear();
+
 		if (!m_bTickWorld)
 			return;
 
@@ -167,6 +175,11 @@ namespace Ion
 
 		// Reparent in world tree
 		parentNode->Insert(entityNode->RemoveFromParent());
+	}
+
+	void World::MarkEntityForDestroy(Entity* entity)
+	{
+		m_EntitiesPendingKill.push_back(entity);
 	}
 
 	Entity* World::FindEntity(const GUID& guid)

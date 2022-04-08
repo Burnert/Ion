@@ -51,6 +51,17 @@ namespace Editor
 
 		EditorApplication::Get()->TryResizeViewportFramebuffer(m_ViewportSize);
 		DrawEditorUI();
+
+		for (Entity* entity : m_EntitiesToDestroy)
+		{
+			EditorApplication::Get()->DeleteObject(entity);
+		}
+		m_EntitiesToDestroy.clear();
+		for (Component* component : m_ComponentsToDestroy)
+		{
+			EditorApplication::Get()->DeleteObject(component);
+		}
+		m_ComponentsToDestroy.clear();
 	}
 
 	void EditorLayer::OnRender()
@@ -450,7 +461,7 @@ namespace Editor
 			{
 				if (entity)
 				{
-					EditorApplication::Get()->DeleteObject(entity);
+					m_EntitiesToDestroy.push_back(entity);
 				}
 			}
 			ImGui::EndPopup();
@@ -1066,14 +1077,14 @@ namespace Editor
 			if (ImGui::MenuItem(deleteLabel.c_str()))
 			{
 				bCanDelete ?
-					EditorApplication::Get()->DeleteObject(&component) :
-					EditorApplication::Get()->DeleteObject(owner);
+					m_ComponentsToDestroy.push_back(&component) :
+					m_EntitiesToDestroy.push_back(owner);
 			}
 			if (ImGui::IsItemHovered() && !bCanDelete)
 			{
 				ImGui::BeginTooltip();
 				ImGui::PushTextWrapPos(180);
-				ImGui::Text("Cannot delete the root component. Deletes the owning entity.");
+				ImGui::Text("Cannot delete the root component. Deletes the owning entity instead.");
 				ImGui::PopTextWrapPos();
 				ImGui::EndTooltip();
 			}
@@ -1120,7 +1131,7 @@ namespace Editor
 			{
 				if (ImGui::MenuItem("Delete"))
 				{
-					EditorApplication::Get()->DeleteObject(component);
+					m_ComponentsToDestroy.push_back(component);
 				}
 				ImGui::EndPopup();
 			}
