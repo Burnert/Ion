@@ -444,6 +444,18 @@ namespace Editor
 			EditorApplication::Get()->SelectObject(entity);
 		}
 
+		if (ImGui::BeginPopupContextItem())
+		{
+			if (ImGui::MenuItem("Delete"))
+			{
+				if (entity)
+				{
+					EditorApplication::Get()->DeleteObject(entity);
+				}
+			}
+			ImGui::EndPopup();
+		}
+
 		if (bHasChildren && bImguiTreeNodeOpen)
 		{
 			DrawWorldTreeNodeChildren(node, nextExpandNode);
@@ -1045,6 +1057,29 @@ namespace Editor
 			ImGui::EndDragDropTarget();
 		}
 
+		if (ImGui::BeginPopupContextItem())
+		{
+			Entity* owner = component.GetOwner();
+			ionassert(owner);
+			bool bCanDelete = component.GetOwner()->GetRootComponent() != &component;
+			String deleteLabel = bCanDelete ? "Delete" : "Delete owning entity";
+			if (ImGui::MenuItem(deleteLabel.c_str()))
+			{
+				bCanDelete ?
+					EditorApplication::Get()->DeleteObject(&component) :
+					EditorApplication::Get()->DeleteObject(owner);
+			}
+			if (ImGui::IsItemHovered() && !bCanDelete)
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(180);
+				ImGui::Text("Cannot delete the root component. Deletes the owning entity.");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+			ImGui::EndPopup();
+		}
+
 		ImGui::SameLine();
 		ImGui::TextDisabled("(%s)", component.GetClassDisplayName().c_str());
 
@@ -1080,6 +1115,14 @@ namespace Editor
 			if (ImGui::Selectable(nodeName.c_str(), bSelected))
 			{
 				EditorApplication::Get()->SelectObject(component);
+			}
+			if (ImGui::BeginPopupContextItem())
+			{
+				if (ImGui::MenuItem("Delete"))
+				{
+					EditorApplication::Get()->DeleteObject(component);
+				}
+				ImGui::EndPopup();
 			}
 			ImGui::SameLine();
 			ImGui::TextDisabled("(%s)", component->GetClassDisplayName().c_str());

@@ -230,6 +230,30 @@ namespace Ion::Editor
 		DeselectCurrentEntity();
 	}
 
+	void EditorApplication::DeleteObject(Entity* entity)
+	{
+		ionassert(entity);
+		entity->Destroy();
+		SetSelectedEntity(nullptr);
+	}
+
+	bool EditorApplication::DeleteObject(Component* component)
+	{
+		ionassert(component);
+		Entity* owner = component->GetOwner();
+		ionassert(owner);
+
+		// Destroy the component only if it's not the root
+		if (owner->GetRootComponent() != component)
+		{
+			component->Destroy();
+			SetSelectedComponent(nullptr);
+
+			return true;
+		}
+		return false;
+	}
+
 	void EditorApplication::DeleteSelectedObject()
 	{
 		if (m_SelectedEntity)
@@ -239,19 +263,15 @@ namespace Ion::Editor
 				Entity* owner = m_SelectedComponent->GetOwner();
 				ionassert(owner == m_SelectedEntity);
 
-				// Destroy the component only if it's not the root
-				// If it's the root just delete the entity (@TODO: Ask the user first!!)
-				if (owner->GetRootComponent() != m_SelectedComponent)
+				// If it's the root component, it won't get deleted,
+				// just delete the entity (@TODO: Ask the user first!!)
+				if (DeleteObject(m_SelectedComponent))
 				{
-					m_SelectedComponent->Destroy();
-					SetSelectedComponent(nullptr);
-
 					return;
 				}
 			}
 
-			m_SelectedEntity->Destroy();
-			SetSelectedEntity(nullptr);
+			DeleteObject(m_SelectedEntity);
 		}
 	}
 

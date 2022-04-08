@@ -32,6 +32,8 @@ namespace Ion::Editor
 		void DeselectCurrentEntity();
 		void DeselectCurrentComponent();
 		void DeselectCurrentObject();
+		void DeleteObject(Entity* entity);
+		bool DeleteObject(Component* component);
 		void DeleteSelectedObject();
 
 		World* GetEditorWorld() const;
