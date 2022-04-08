@@ -53,10 +53,14 @@ namespace Ion
 		// @TODO: POTENTIAL MEMORY LEAK
 		// when the previous root component gets abandoned
 		if (m_RootComponent)
+		{
 			UnbindComponent(m_RootComponent);
+			m_RootComponent->UpdateWorldTransformCache();
+		}
 
 		m_RootComponent = component;
 		BindComponent(component);
+		m_RootComponent->UpdateWorldTransformCache();
 
 		m_SceneComponents.insert(component);
 	}
@@ -145,6 +149,8 @@ namespace Ion
 
 		m_Parent = parent;
 		m_WorldContext->ReparentEntityInWorld(this, parent);
+
+		UpdateWorldTransformCache();
 	}
 
 	void Entity::Detach()
@@ -154,6 +160,8 @@ namespace Ion
 			m_Parent->RemoveChild(this);
 			m_Parent = nullptr;
 			m_WorldContext->ReparentEntityInWorld(this, nullptr);
+
+			UpdateWorldTransformCache();
 		}
 	}
 
@@ -215,7 +223,8 @@ namespace Ion
 		component->m_OwningEntity = this;
 		if (component->IsSceneComponent())
 		{
-			m_SceneComponents.insert((SceneComponent*)component);
+			SceneComponent* sceneComponent = (SceneComponent*)component;
+			m_SceneComponents.insert(sceneComponent);
 		}
 		else
 		{
@@ -230,7 +239,8 @@ namespace Ion
 		component->m_OwningEntity = nullptr;
 		if (component->IsSceneComponent())
 		{
-			m_SceneComponents.erase((SceneComponent*)component);
+			SceneComponent* sceneComponent = (SceneComponent*)component;
+			m_SceneComponents.erase(sceneComponent);
 		}
 		else
 		{

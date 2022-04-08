@@ -71,6 +71,8 @@ namespace Ion
 
 		m_Parent = parent;
 		m_Parent->AddChild(this);
+
+		UpdateWorldTransformCache();
 	}
 
 	SceneComponent* SceneComponent::Detach()
@@ -83,6 +85,9 @@ namespace Ion
 			m_Parent = nullptr;
 		}
 		GetOwner()->UnbindComponent(this);
+
+		UpdateWorldTransformCache();
+
 		return this;
 	}
 
@@ -131,8 +136,10 @@ namespace Ion
 		}
 		else
 		{
-			ionassert(GetOwner());
-			m_SceneData.WorldTransformCache = m_SceneData.RelativeTransform * GetOwner()->GetWorldTransform();
+			if (GetOwner())
+				m_SceneData.WorldTransformCache = m_SceneData.RelativeTransform * GetOwner()->GetWorldTransform();
+			else
+				m_SceneData.WorldTransformCache = m_SceneData.RelativeTransform;
 		}
 
 		UpdateChildrenWorldTransformCache();

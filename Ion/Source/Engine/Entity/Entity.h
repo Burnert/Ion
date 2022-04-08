@@ -49,9 +49,11 @@ namespace Ion
 
 		bool HasComponent(Component* component) const;
 
-		/* Set entity related component data and add the component to entity's collection. */
+		/* Set entity related component data and add the component to entity's collection. 
+		   Updates scene component's world transform cache. */
 		void BindComponent(Component* component);
-		/* Reset entity related component data and remove the component from entity's collection. */
+		/* Reset entity related component data and remove the component from entity's collection.
+		   Updates scene component's world transform cache. */
 		void UnbindComponent(Component* component);
 
 		void SetName(const String& name);

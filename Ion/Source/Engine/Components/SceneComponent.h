@@ -31,8 +31,13 @@ namespace Ion
 
 		bool ShouldBeRendered() const;
 
+		/* Attaches to the specified parent component.
+		   Sets the owner (entity) of this component to the parent's owner.
+		   Updates the world transform cache. */
 		void AttachTo(SceneComponent* parent);
-		/* Returns this component */
+		/* Detaches from the parent and removes from the owner.
+		   Updates the world transform cache.
+		   Returns this component */
 		SceneComponent* Detach();
 		SceneComponent* GetParent() const;
 		bool HasChildren() const;
