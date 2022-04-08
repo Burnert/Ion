@@ -38,6 +38,16 @@ namespace Ion
 			return GetCheckedEnginePath() + L"Content";
 		}
 
+		static inline FilePath GetFontsPath()
+		{
+			return GetContentPath() + L"Fonts";
+		}
+
+		static inline FilePath GetCheckedFontsPath()
+		{
+			return GetCheckedContentPath() + L"Fonts";
+		}
+
 	protected:
 		static inline void SetEnginePath(const WString& path)
 		{

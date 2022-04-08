@@ -87,6 +87,7 @@ namespace Ion
 		AssetManager::Init();
 
 		InitImGui();
+		LoadFonts();
 
 		// @TODO: This should be in the Runtime eventually
 		//m_LayerStack->PushLayer<GameLayer>("GameLayer");
@@ -387,6 +388,24 @@ namespace Ion
 			case ImGuiMouseCursor_NotAllowed:   actualCursor = ECursorType::Unavailable; break;
 		}
 		SetCursor(actualCursor);
+	}
+
+	void Application::LoadFonts()
+	{
+		ImGuiIO& io = ImGui::GetIO();
+
+		String defaultPath = StringConverter::WStringToString(
+			EnginePath::GetFontsPath() + L"OpenSans-Medium.ttf");
+		String defaultCondensedPath = StringConverter::WStringToString(
+			EnginePath::GetFontsPath() + L"OpenSans_SemiCondensed-Medium.ttf");
+
+		ImFontConfig config;
+		config.OversampleH = 2;
+		config.OversampleV = 2;
+		config.RasterizerMultiply = 1.0f;
+
+		m_Fonts.DefaultFont = io.Fonts->AddFontFromFileTTF(defaultPath.c_str(), 19, &config);
+		m_Fonts.DefaultFontCondensed = io.Fonts->AddFontFromFileTTF(defaultCondensedPath.c_str(), 19, &config);
 	}
 
 	Application* Application::s_Instance = nullptr;

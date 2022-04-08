@@ -22,6 +22,8 @@ namespace Ion
 		void SetCursor(ECursorType cursor);
 		ECursorType GetCurrentCursor() const;
 
+		EngineFonts& GetEngineFonts();
+
 		Application* GetEngineApplication() const;
 
 		const TShared<GenericWindow>& GetWindow();
@@ -77,5 +79,10 @@ namespace Ion
 	inline ECursorType App::GetCurrentCursor() const
 	{
 		return GetEngineApplication()->GetCurrentCursor();
+	}
+
+	inline EngineFonts& App::GetEngineFonts()
+	{
+		return GetEngineApplication()->GetEngineFonts();
 	}
 }

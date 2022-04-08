@@ -10,6 +10,7 @@
 #include "Application/EnginePath.h"
 
 struct ImDrawData;
+struct ImFont;
 
 namespace Ion
 {
@@ -45,6 +46,12 @@ namespace Ion
 		_Count
 	};
 
+	struct EngineFonts
+	{
+		ImFont* DefaultFont;
+		ImFont* DefaultFontCondensed;
+	};
+
 	class ION_API Application
 	{
 		friend GenericWindow;
@@ -63,6 +70,8 @@ namespace Ion
 		/* Sets the cursor for the current frame only. */
 		virtual void SetCursor(ECursorType cursor);
 		virtual ECursorType GetCurrentCursor() const;
+
+		EngineFonts& GetEngineFonts();
 
 		static Application* Get();
 		template<typename T>
@@ -204,6 +213,8 @@ namespace Ion
 
 		void SetImGuiCursor(int32 cursor);
 
+		void LoadFonts();
+
 	protected:
 		virtual void InitImGuiBackend(const TShared<GenericWindow>& window) const { }
 		virtual void ImGuiNewFramePlatform() const { }
@@ -226,6 +237,8 @@ namespace Ion
 
 		//WString m_BaseWindowTitle;
 		WString m_ApplicationTitle;
+
+		EngineFonts m_Fonts;
 
 		template<typename T>
 		friend void ParseCommandLineArgs(int32 argc, T* argv[]);
@@ -262,5 +275,10 @@ namespace Ion
 		static_assert(TIsBaseOfV<Application, T>);
 		ionassert(!s_Instance);
 		return s_Instance = new T(clientApp);
+	}
+
+	inline EngineFonts& Application::GetEngineFonts()
+	{
+		return m_Fonts;
 	}
 }
