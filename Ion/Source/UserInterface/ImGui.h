@@ -28,7 +28,7 @@
 
 namespace ImGui
 {
-	inline bool IsTreeNodeOpen(void* id)
+	inline bool IsTreeNodeOpen(const void* id)
 	{
 		// Retrieve the state of the tree node
 		return (bool)ImGui::GetStateStorage()->GetInt(ImGui::GetID(id));

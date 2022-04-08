@@ -60,6 +60,7 @@ namespace Ion::Editor
 		void DrawWorldTreePanel();
 		void DrawWorldTreeNodes();
 		void DrawWorldTreeNodeChildren(const WorldTreeNode& node, WorldTreeNode* nextExpandNode = nullptr);
+		void DrawWorldTreeNode(const WorldTreeNode& node, WorldTreeNode* nextExpandNode = nullptr);
 
 		void DrawDetailsPanel();
 		void DrawDetailsNameSection(Entity& entity);

@@ -377,73 +377,77 @@ namespace Editor
 		for (const WorldTreeNode* child : node.GetChildren())
 		{
 			ionassert(child);
+			DrawWorldTreeNode(*child, nextExpandNode);
+		}
+	}
 
-			const WorldTreeNodeData& nodeData = child->Get();
+	void EditorLayer::DrawWorldTreeNode(const WorldTreeNode& node, WorldTreeNode* nextExpandNode)
+	{
+		const WorldTreeNodeData& nodeData = node.Get();
 
-			bool bIsFolder = nodeData.IsFolder();
-			bool bHasChildren = child->HasChildren();
-			String nodeName;
-			Entity* entity = nullptr;
+		bool bIsFolder = nodeData.IsFolder();
+		bool bHasChildren = node.HasChildren();
+		String nodeName;
+		Entity* entity = nullptr;
 
-			ImGuiTreeNodeFlags imguiNodeFlags =
-				ImGuiTreeNodeFlags_OpenOnArrow |
-				ImGuiTreeNodeFlags_OpenOnDoubleClick |
-				ImGuiTreeNodeFlags_SpanAvailWidth |
-				ImGuiTreeNodeFlags_FramePadding;
-			// It shouldn't expand if there are no children
-			if (!bHasChildren)
+		ImGuiTreeNodeFlags imguiNodeFlags =
+			ImGuiTreeNodeFlags_OpenOnArrow |
+			ImGuiTreeNodeFlags_OpenOnDoubleClick |
+			ImGuiTreeNodeFlags_SpanAvailWidth |
+			ImGuiTreeNodeFlags_FramePadding;
+		// It shouldn't expand if there are no children
+		if (!bHasChildren)
+		{
+			imguiNodeFlags |=
+				ImGuiTreeNodeFlags_Leaf |
+				ImGuiTreeNodeFlags_NoTreePushOnOpen;
+		}
+
+		if (bIsFolder)
+		{
+			nodeName = nodeData.AsFolder()->Name;
+		}
+		else
+		{
+			entity = nodeData.AsEntity();
+			nodeName = entity->GetName();
+
+			// Highlight the selected entity
+			if (entity == EditorApplication::Get()->GetSelectedEntity())
 			{
-				imguiNodeFlags |=
-					ImGuiTreeNodeFlags_Leaf |
-					ImGuiTreeNodeFlags_NoTreePushOnOpen;
+				imguiNodeFlags |= ImGuiTreeNodeFlags_Selected;
 			}
 
-			if (bIsFolder)
+			// Expand (open) the tree node if it is in the expand chain
+			if (nextExpandNode == &node)
 			{
-				nodeName = nodeData.AsFolder()->Name;
+				ImGui::SetNextItemOpen(true);
+				// And get the next node to expand
+				nextExpandNode = PopWorldTreeExpandChain();
 			}
-			else
-			{
-				entity = nodeData.AsEntity();
-				nodeName = entity->GetName();
+		}
 
-				// Highlight the selected entity
-				if (entity == EditorApplication::Get()->GetSelectedEntity())
-				{
-					imguiNodeFlags |= ImGuiTreeNodeFlags_Selected;
-				}
+		const void* nodeId = &node;
+		// Retrieve the previous state of the tree node
+		bool bWasOpen = ImGui::IsTreeNodeOpen(nodeId);
 
-				// Expand (open) the tree node if it is in the expand chain
-				if (nextExpandNode == child)
-				{
-					ImGui::SetNextItemOpen(true);
-					// And get the next node to expand
-					nextExpandNode = PopWorldTreeExpandChain();
-				}
-			}
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 4.0f));
+		bool bImguiTreeNodeOpen = ImGui::TreeNodeEx(nodeId, imguiNodeFlags, "%s", nodeName.c_str());
+		ImGui::PopStyleVar(2);
 
-			void* nodeId = (void*)imguiNodeIndex++;
-			// Retrieve the previous state of the tree node
-			bool bWasOpen = ImGui::IsTreeNodeOpen(nodeId);
+		// Select entity on click, only if the state of the node has not changed
+		// (unless it has no children, since the state won't change then).
+		if ((!bHasChildren || (bWasOpen == bImguiTreeNodeOpen)) &&
+			entity && ImGui::IsItemClicked())
+		{
+			EditorApplication::Get()->SelectObject(entity);
+		}
 
-			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
-			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 4.0f));
-			bool bImguiTreeNodeOpen = ImGui::TreeNodeEx(nodeId, imguiNodeFlags, "%s", nodeName.c_str());
-			ImGui::PopStyleVar(2);
-
-			// Select entity on click, only if the state of the node has not changed
-			// (unless it has no children, since the state won't change then).
-			if ((!bHasChildren || (bWasOpen == bImguiTreeNodeOpen)) &&
-				entity && ImGui::IsItemClicked())
-			{
-				EditorApplication::Get()->SelectObject(entity);
-			}
-
-			if (bHasChildren && bImguiTreeNodeOpen)
-			{
-				DrawWorldTreeNodeChildren(*child, nextExpandNode);
-				ImGui::TreePop();
-			}
+		if (bHasChildren && bImguiTreeNodeOpen)
+		{
+			DrawWorldTreeNodeChildren(node, nextExpandNode);
+			ImGui::TreePop();
 		}
 	}
 
