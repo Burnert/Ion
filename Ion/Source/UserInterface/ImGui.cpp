@@ -5,6 +5,12 @@
 
 namespace ImGui
 {
+	bool IsTreeNodeToggled()
+	{
+		ImGuiWindow* window = GetCurrentWindow();
+		return window->DC.LastItemStatusFlags & ImGuiItemStatusFlags_ToggledOpen;
+	}
+
 	Ion::Vector4 GetWindowWorkRect()
 	{
 		ImGuiWindow* window = GetCurrentWindow();

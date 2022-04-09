@@ -35,6 +35,8 @@ namespace ImGui
 		return (bool)ImGui::GetStateStorage()->GetInt(ImGui::GetID(id));
 	}
 
+	bool IsTreeNodeToggled();
+
 	inline bool WantKeyboard()
 	{
 		if (ImGui::GetCurrentContext())

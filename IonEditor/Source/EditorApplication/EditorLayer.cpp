@@ -454,22 +454,18 @@ namespace Editor
 		}
 
 		const void* nodeId = &node;
-		// Retrieve the previous state of the tree node
-		bool bWasOpen = ImGui::IsTreeNodeOpen(nodeId);
 
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 4.0f));
 		bool bImguiTreeNodeOpen = ImGui::TreeNodeEx(nodeId, imguiNodeFlags, "%s", nodeName.c_str());
 		ImGui::PopStyleVar(2);
-
-		// Select entity on click, only if the state of the node has not changed
+		// Select entity on click, only if the node has not toggled the open state
 		// (unless it has no children, since the state won't change then).
-		if ((!bHasChildren || (bWasOpen == bImguiTreeNodeOpen)) &&
-			entity && ImGui::IsItemClicked())
+		if (entity && ImGui::IsItemClicked() &&
+			!ImGui::IsTreeNodeToggled())
 		{
 			EditorApplication::Get()->SelectObject(entity);
 		}
-
 		if (ImGui::BeginDragDropSource())
 		{
 			// Dragging state (bit 0) will be set on the next frame based on bit 1
@@ -539,7 +535,6 @@ namespace Editor
 			}
 			ImGui::EndDragDropTarget();
 		}
-
 		if (ImGui::BeginPopupContextItem())
 		{
 			// Delete
@@ -1141,15 +1136,18 @@ namespace Editor
 			imguiNodeFlags |= ImGuiTreeNodeFlags_Selected;
 		}
 
-		void* nodeId = (void*)id;
-		// Retrieve the previous state of the tree node
-		bool bWasOpen = ImGui::IsTreeNodeOpen(nodeId);
+		void* nodeId = &component;
 
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 4.0f));
 		bool bImguiTreeNodeOpen = ImGui::TreeNodeEx(nodeId, imguiNodeFlags, "%s", nodeName.c_str());
 		ImGui::PopStyleVar(2);
-		bool bTreeNodeClicked = ImGui::IsItemClicked();
+		// Select component on click, only if the state of the node has not changed
+		// (unless it has no children, since the state won't change then).
+		if (ImGui::IsItemClicked() && !ImGui::IsTreeNodeToggled())
+		{
+			EditorApplication::Get()->SelectObject(&component);
+		}
 		if (ImGui::BeginDragDropTarget())
 		{
 			ImGuiDragDropFlags dndFlags = ImGuiDragDropFlags_None;
@@ -1164,7 +1162,6 @@ namespace Editor
 
 			ImGui::EndDragDropTarget();
 		}
-
 		if (ImGui::BeginPopupContextItem())
 		{
 			Entity* owner = component.GetOwner();
@@ -1190,13 +1187,6 @@ namespace Editor
 
 		ImGui::SameLine();
 		ImGui::TextDisabled("(%s)", component.GetClassDisplayName().c_str());
-
-		// Select component on click, only if the state of the node has not changed
-		// (unless it has no children, since the state won't change then).
-		if ((!bHasChildren || (bWasOpen == bImguiTreeNodeOpen)) && bTreeNodeClicked)
-		{
-			EditorApplication::Get()->SelectObject(&component);
-		}
 
 		if (bDrawChildren && bHasChildren && bImguiTreeNodeOpen)
 		{
