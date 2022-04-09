@@ -67,15 +67,18 @@ namespace Ion
 
 		bool IsPendingKill() const;
 
+		bool HasParent() const;
 		/* Returns null if the Entity is parented to the World root. */
 		Entity* GetParent() const;
 		/* If the parent paremeter is null, the Entity will be parented to the World root. */
 		void AttachTo(Entity* parent);
 		/* Parent to the World root. */
 		void Detach();
+		bool CanAttachTo(Entity* parent) const;
 
 		bool HasChildren() const;
 		const TArray<Entity*>& GetChildren() const;
+		TArray<Entity*> GetAllChildren() const;
 
 		/* Returns the GUID of the Entity.
 		   A GUID is initiated at the creation of the Entity. */
@@ -110,6 +113,8 @@ namespace Ion
 	private:
 		void AddChild(Entity* child);
 		void RemoveChild(Entity* child);
+
+		void GetAllChildren(TArray<Entity*>& outChildren) const;
 
 		/* Called in any function that changes the relative transform. */
 		void UpdateWorldTransformCache();
@@ -218,6 +223,11 @@ namespace Ion
 		return m_Name;
 	}
 
+	inline bool Entity::HasParent() const
+	{
+		return m_Parent;
+	}
+
 	inline Entity* Entity::GetParent() const
 	{
 		return m_Parent;
@@ -231,6 +241,13 @@ namespace Ion
 	inline const TArray<Entity*>& Entity::GetChildren() const
 	{
 		return m_Children;
+	}
+
+	inline TArray<Entity*> Entity::GetAllChildren() const
+	{
+		TArray<Entity*> children;
+		GetAllChildren(children);
+		return children;
 	}
 
 	inline const GUID& Entity::GetGuid() const

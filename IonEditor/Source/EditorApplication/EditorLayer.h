@@ -125,6 +125,12 @@ namespace Ion::Editor
 
 		UVector2 m_ViewportSize;
 		Vector4 m_ViewportRect;
+
+		/* bit 0 - keep the hovered node set */
+		TMetaPointer<const WorldTreeNode> m_HoveredWorldTreeNodeDragTarget;
+		/* bit 0 - is dragging, bit 1 - start/keep dragging? */
+		int8 m_DraggedWorldTreeNodeInfo;
+
 		bool m_bViewportHovered;
 		bool m_bViewportCaptured;
 

@@ -8,6 +8,11 @@
 
 namespace Ion
 {
+	const String& WorldTreeNodeData::GetName() const
+	{
+		return IsFolder() ? AsFolder()->Name : AsEntity()->GetName();
+	}
+
 	World* World::Create(const WorldInitializer& initializer)
 	{
 		TRACE_FUNCTION();

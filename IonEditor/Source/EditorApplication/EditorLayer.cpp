@@ -33,7 +33,9 @@ namespace Editor
 		m_bDetailsPanelOpen(true),
 		m_bDiagnosticsPanelOpen(false),
 		m_bImGuiMetricsOpen(false),
-		m_bImGuiDemoOpen(false)
+		m_bImGuiDemoOpen(false),
+		m_DraggedWorldTreeNodeInfo(0),
+		m_HoveredWorldTreeNodeDragTarget(nullptr)
 	{
 	}
 
@@ -344,6 +346,16 @@ namespace Editor
 	{
 		TRACE_FUNCTION();
 
+		// Set dragging state (bit 0) if bit 1 is true
+		m_DraggedWorldTreeNodeInfo = (m_DraggedWorldTreeNodeInfo & Bitflag(1)) ? Bitflag(0) : 0;
+		// Reset the target if not dragging
+		if (!(m_DraggedWorldTreeNodeInfo & Bitflag(0)))
+		{
+			m_HoveredWorldTreeNodeDragTarget = nullptr;
+		}
+		// If the bit 0 doesn't get set, the hovered node will be reset.
+		m_HoveredWorldTreeNodeDragTarget.SetMetaFlag<0>(false);
+
 		if (m_bWorldTreePanelOpen)
 		{
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4, 4));
@@ -367,6 +379,11 @@ namespace Editor
 			ImGui::End();
 			ImGui::PopStyleVar();
 		}
+		// Bit 0 hasn't been set, reset the hovered node
+		if (!m_HoveredWorldTreeNodeDragTarget.GetMetaFlag<0>())
+		{
+			m_HoveredWorldTreeNodeDragTarget = nullptr;
+		}
 	}
 
 	void EditorLayer::DrawWorldTreeNodes()
@@ -375,9 +392,6 @@ namespace Editor
 
 		WorldTreeNode* firstExpandNode = PopWorldTreeExpandChain();
 		DrawWorldTreeNodeChildren(EditorApplication::Get()->GetEditorWorld()->GetWorldTreeRoot(), firstExpandNode);
-		// Clear the expand chain just in case
-		if (!m_ExpandWorldTreeChain.empty())
-			m_ExpandWorldTreeChain.clear();
 	}
 
 	void EditorLayer::DrawWorldTreeNodeChildren(const WorldTreeNode& node, WorldTreeNode* nextExpandNode)
@@ -402,6 +416,7 @@ namespace Editor
 		Entity* entity = nullptr;
 
 		ImGuiTreeNodeFlags imguiNodeFlags =
+			ImGuiTreeNodeFlags_DefaultOpen |
 			ImGuiTreeNodeFlags_OpenOnArrow |
 			ImGuiTreeNodeFlags_OpenOnDoubleClick |
 			ImGuiTreeNodeFlags_SpanAvailWidth |
@@ -455,14 +470,95 @@ namespace Editor
 			EditorApplication::Get()->SelectObject(entity);
 		}
 
+		if (ImGui::BeginDragDropSource())
+		{
+			// Dragging state (bit 0) will be set on the next frame based on bit 1
+			m_DraggedWorldTreeNodeInfo |= Bitflag(1);
+
+			const WorldTreeNode* nodePtr = &node;
+			ImGui::SetDragDropPayload("Ion_DND_WorldTreeNode", &nodePtr, sizeof(WorldTreeNode*), ImGuiCond_Once);
+
+			if (m_HoveredWorldTreeNodeDragTarget)
+			{
+				// Show the action that is going to be performed
+				const WorldTreeNodeData& hovered = m_HoveredWorldTreeNodeDragTarget->Get();
+				bool bCanAttach = entity->CanAttachTo(hovered.AsEntity());
+				const char* action = bCanAttach ? "Attach" : "Cannot attach";
+				ImGui::Text("%s %s to %s", action, node.Get().GetName().c_str(), hovered.GetName().c_str());
+			}
+			else
+			{
+				// Show the name of the currently dragged node
+				ImGui::Text(node.Get().GetName().c_str());
+			}
+
+			ImGui::EndDragDropSource();
+		}
+		if (ImGui::BeginDragDropTarget())
+		{
+			m_HoveredWorldTreeNodeDragTarget = &node;
+			m_HoveredWorldTreeNodeDragTarget.SetMetaFlag<0>(true);
+
+			bool bCanAttachTo = false;
+
+			// First, check if the drag and drop node can even be attached to the target.
+			ImGuiDragDropFlags dndFlags = ImGuiDragDropFlags_AcceptPeekOnly;
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Ion_DND_WorldTreeNode", dndFlags))
+			{
+				ionassert(payload->DataSize == sizeof(WorldTreeNode*));
+				WorldTreeNode* nodePtr = *(WorldTreeNode**)payload->Data;
+				if (nodePtr->Get().IsEntity())
+				{
+					Entity* source = nodePtr->Get().AsEntity();
+					ionassert(source);
+					// If the target entity is in the source entity's children,
+					// it cannot be attached to.
+					bCanAttachTo = source->CanAttachTo(entity);
+				}
+			}
+			if (bCanAttachTo)
+			{
+				dndFlags = ImGuiDragDropFlags_None;
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Ion_DND_WorldTreeNode", dndFlags))
+				{
+					ionassert(payload->DataSize == sizeof(WorldTreeNode*));
+					WorldTreeNode* nodePtr = *(WorldTreeNode**)payload->Data;
+
+					if (entity)
+					{
+						// Attach source entity to this node's entity
+						const WorldTreeNodeData& data = nodePtr->Get();
+						if (data.IsEntity())
+						{
+							Entity* source = data.AsEntity();
+							source->AttachTo(entity);
+							ExpandWorldTreeToEntity(source);
+						}
+					}
+				}
+			}
+			ImGui::EndDragDropTarget();
+		}
+
 		if (ImGui::BeginPopupContextItem())
 		{
+			// Delete
 			if (ImGui::MenuItem("Delete"))
 			{
 				if (entity)
 				{
 					m_EntitiesToDestroy.push_back(entity);
 				}
+			}
+			// Detach
+			bool bCanDetach = entity ? entity->HasParent() : false;
+			if (ImGui::MenuItem("Detach", nullptr, false, bCanDetach))
+			{
+				entity->Detach();
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("Parent to the world root.");
 			}
 			ImGui::EndPopup();
 		}
@@ -1019,6 +1115,7 @@ namespace Editor
 		bool bHasChildren = component.HasChildren();
 
 		ImGuiTreeNodeFlags imguiNodeFlags =
+			ImGuiTreeNodeFlags_DefaultOpen |
 			ImGuiTreeNodeFlags_OpenOnArrow |
 			ImGuiTreeNodeFlags_OpenOnDoubleClick |
 			ImGuiTreeNodeFlags_SpanAvailWidth |
@@ -1143,6 +1240,9 @@ namespace Editor
 	void EditorLayer::ExpandWorldTreeToEntity(Entity* entity)
 	{
 		ionassert(entity);
+
+		// Discard the previous attempt
+		m_ExpandWorldTreeChain.clear();
 
 		WorldTreeNode* node = EditorApplication::Get()->GetEditorWorld()->FindWorldTreeNode(entity);
 		// Don't include the tree root

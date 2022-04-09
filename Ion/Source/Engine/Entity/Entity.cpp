@@ -61,8 +61,6 @@ namespace Ion
 		m_RootComponent = component;
 		BindComponent(component);
 		m_RootComponent->UpdateWorldTransformCache();
-
-		m_SceneComponents.insert(component);
 	}
 
 	bool Entity::HasSceneComponent(SceneComponent* component) const
@@ -130,7 +128,10 @@ namespace Ion
 		if (!parent)
 		{
 			Detach();
+			return;
 		}
+
+		ionassert(CanAttachTo(parent));
 
 		if (m_Parent == parent)
 		{
@@ -163,6 +164,13 @@ namespace Ion
 
 			UpdateWorldTransformCache();
 		}
+	}
+
+	bool Entity::CanAttachTo(Entity* parent) const
+	{
+		// Can attach if parent isn't a part of the children
+		TArray<Entity*> children = GetAllChildren();
+		return std::find(children.begin(), children.end(), parent) == children.end();
 	}
 
 	void Entity::Update(float deltaTime)
@@ -214,6 +222,15 @@ namespace Ion
 		auto it = std::find(m_Children.begin(), m_Children.end(), child);
 		if (it != m_Children.end())
 			m_Children.erase(it);
+	}
+
+	void Entity::GetAllChildren(TArray<Entity*>& outChildren) const
+	{
+		for (Entity* child : m_Children)
+		{
+			outChildren.push_back(child);
+			child->GetAllChildren(outChildren);
+		}
 	}
 
 	void Entity::BindComponent(Component* component)
@@ -273,6 +290,9 @@ namespace Ion
 			}
 		}
 
+		Detach();
+
+		// World is going to remove the entity from its collections
 		m_WorldContext->MarkEntityForDestroy(this);
 
 		// Destroy the components too

@@ -29,6 +29,13 @@ namespace Ion
 			return m_Pointer.GetMetaFlag<0>();
 		}
 
+		inline bool IsEntity() const
+		{
+			return !IsFolder();
+		}
+
+		const String& GetName() const;
+
 		inline WorldTreeNodeData(Entity* entity) :
 			m_Pointer((uint8*)entity)
 		{
