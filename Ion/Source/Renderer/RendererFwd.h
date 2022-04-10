@@ -22,6 +22,8 @@ namespace Ion
 	// Renderer.h
 	struct RRendererData;
 	struct ScreenTextureRenderData;
+	struct REditorPassPrimitive;
+	struct EditorPassData;
 	class Renderer;
 	// RendererCore.h
 	struct ViewportDimensions;

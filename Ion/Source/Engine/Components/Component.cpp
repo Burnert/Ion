@@ -127,6 +127,14 @@ namespace Ion
 		RegisterComponentClass<MeshComponent>();
 	}
 
+	Component* ComponentRegistry::FindComponentByGUID(const GUID& guid) const
+	{
+		auto it = m_ComponentsByGUID.find(guid);
+		if (it != m_ComponentsByGUID.end())
+			return it->second;
+		return nullptr;
+	}
+
 	void ComponentRegistry::MarkForDestroy(Component* component)
 	{
 		ionassert(component->IsPendingKill());

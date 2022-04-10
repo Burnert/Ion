@@ -255,6 +255,13 @@ namespace Editor
 					{
 						EditorApplication::Get()->SetCursor(ECursorType::Cross);
 					}
+					if (ImGui::IsItemClicked())
+					{
+						ImVec2 mousePos = ImGui::GetMousePos();
+						Vector4 workRect = ImGui::GetWindowWorkRect();
+						Vector2 viewportPos = { mousePos.x - workRect.x, mousePos.y - workRect.y };
+						EditorApplication::Get()->ClickViewport(viewportPos);
+					}
 				}
 			}
 

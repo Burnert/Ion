@@ -23,6 +23,21 @@ namespace Ion
 		Mirror = 2
 	};
 
+	enum class ETextureFormat : uint8
+	{
+		RGBA8 = 0, // Default
+		RGBAFloat32,
+		UInt32,
+		UInt128GUID,
+	};
+
+	enum class ETextureMapType : uint8
+	{
+		Read,
+		Write,
+		ReadWrite,
+	};
+
 	struct TextureDimensions
 	{
 		uint32 Width;
@@ -31,6 +46,7 @@ namespace Ion
 
 	struct TextureDescription
 	{
+		String DebugName;
 		TextureDimensions Dimensions;
 		float LODBias;
 		union
@@ -47,6 +63,7 @@ namespace Ion
 				uint32 bAllowCPUWriteAccess : 1;
 			};
 		};
+		ETextureFormat Format;
 		ETextureUsage Usage;
 		ETextureFilteringMethod MinFilter;
 		ETextureFilteringMethod MagFilter;
@@ -69,6 +86,10 @@ namespace Ion
 		virtual void Bind(uint32 slot = 0) const = 0;
 		virtual void BindDepth(uint32 slot = 0) const = 0;
 		virtual void Unbind() const = 0;
+
+		virtual void CopyTo(const TShared<Texture>& destination) const = 0;
+		virtual void Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType) = 0;
+		virtual void Unmap() = 0;
 
 		virtual void* GetNativeID() const = 0;
 

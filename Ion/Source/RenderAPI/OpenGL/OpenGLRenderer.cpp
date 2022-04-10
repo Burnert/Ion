@@ -168,11 +168,6 @@ namespace Ion
 		}
 	}
 
-	void OpenGLRenderer::RenderSceneEditorData(const Scene* scene, const SceneEditorDataInfo& info)
-	{
-		// @TODO: this
-	}
-
 	void OpenGLRenderer::SetCurrentScene(const Scene* scene)
 	{
 		m_CurrentScene = scene;

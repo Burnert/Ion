@@ -12,6 +12,7 @@ namespace Ion
 
 		virtual void OnInit() { };
 		virtual void OnUpdate(float deltaTime) { };
+		virtual void PostUpdate() { };
 		virtual void OnRender() { };
 		virtual void OnShutdown() { };
 		virtual void OnEvent(const Event& event) { };

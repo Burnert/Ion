@@ -12,6 +12,10 @@ namespace Ion
 		Matrix4 ModelViewProjectionMatrix;
 		Matrix4 TransformMatrix;
 		Matrix4 InverseTransposeMatrix;
+
+		// With Editor
+
+		UVector4 RenderGuid;
 	};
 
 	class UniformBuffer;

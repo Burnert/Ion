@@ -2,6 +2,7 @@
 
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
+#include "UniformBuffer.h"
 #include "Shader.h"
 #include "Texture.h"
 #include "Material.h"
@@ -39,10 +40,24 @@ namespace Ion
 		TShared<IndexBuffer> IndexBuffer;
 	};
 
-	struct SceneEditorDataInfo
+	struct REditorPassPrimitive
 	{
-		Entity* SelectedEntity;
-		TArray<SceneComponent*> SelectedComponents;
+		GUID Guid = GUID::Zero;
+		const VertexBuffer* VertexBuffer;
+		const IndexBuffer* IndexBuffer;
+		const UniformBuffer* UniformBuffer;
+		Matrix4 Transform;
+	};
+
+	struct EditorPassData
+	{
+		/* UInt128GUID */
+		TShared<Texture> RTObjectID;
+		/* Mainly Depth */
+		TShared<Texture> RTSelection;
+
+		TArray<REditorPassPrimitive> Primitives;
+		TArray<REditorPassPrimitive> SelectedPrimitives;
 	};
 
 	class ION_API Renderer
@@ -70,7 +85,6 @@ namespace Ion
 		virtual const Scene* GetCurrentScene() const = 0;
 
 		virtual void RenderScene(const Scene* scene) = 0;
-		virtual void RenderSceneEditorData(const Scene* scene, const SceneEditorDataInfo& info) = 0;
 
 		virtual void SetVSyncEnabled(bool bEnabled) const = 0;
 		virtual bool IsVSyncEnabled() const = 0;
@@ -83,14 +97,21 @@ namespace Ion
 
 		virtual void SetRenderTarget(const TShared<Texture>& targetTexture) = 0;
 
+		void RenderEditorPass(const Scene* scene, const EditorPassData& data);
+
 		inline static const TShared<Shader>& GetBasicShader()
 		{
 			return Renderer::Get()->m_BasicShader;
 		}
 
-		inline static const TShared<Shader>& GetEditorDataShader()
+		inline static const TShared<Shader>& GetEditorObjectIDShader()
 		{
-			return Renderer::Get()->m_EditorDataShader;
+			return Renderer::Get()->m_EditorObjectIDShader;
+		}
+
+		inline static const TShared<Shader>& GetEditorSelectedShader()
+		{
+			return Renderer::Get()->m_EditorSelectedShader;
 		}
 
 		inline static const TShared<Shader>& GetEditorViewportShader()
@@ -107,7 +128,8 @@ namespace Ion
 
 		void InitShaders();
 		void InitBasicShader();
-		void InitEditorDataShader();
+		void InitEditorObjectIDShader();
+		void InitEditorSelectedShader();
 		void InitEditorViewportShader();
 
 	private:
@@ -117,7 +139,9 @@ namespace Ion
 		ScreenTextureRenderData m_ScreenTextureRenderData;
 		
 		TShared<Shader> m_BasicShader;
-		TShared<Shader> m_EditorDataShader;
+
+		TShared<Shader> m_EditorObjectIDShader;
+		TShared<Shader> m_EditorSelectedShader;
 		TShared<Shader> m_EditorViewportShader;
 
 		static Renderer* s_Instance;

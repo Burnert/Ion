@@ -181,28 +181,6 @@ namespace Ion
 		}
 	}
 
-	void DX11Renderer::RenderSceneEditorData(const Scene* scene, const SceneEditorDataInfo& info)
-	{
-		if (info.SelectedEntity)
-		{
-			for (SceneComponent* component : info.SelectedComponents)
-			{
-				if (component->GetClassName() == "MeshComponent")
-				{
-					MeshComponent* meshComponent = (MeshComponent*)component;
-					// Don't draw components with no mesh
-					if (!meshComponent->GetMesh())
-						continue;
-					RPrimitiveRenderProxy primitive = meshComponent->AsRenderProxy();
-					// Override materials
-					primitive.Material = nullptr;
-					primitive.Shader = GetEditorDataShader().get();
-					Draw(primitive, scene);
-				}
-			}
-		}
-	}
-
 	void DX11Renderer::SetCurrentScene(const Scene* scene)
 	{
 		m_CurrentScene = scene;

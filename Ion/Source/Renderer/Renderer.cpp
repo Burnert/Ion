@@ -115,7 +115,8 @@ namespace Ion
 	void Renderer::InitShaders()
 	{
 		InitBasicShader();
-		InitEditorDataShader();
+		InitEditorObjectIDShader();
+		InitEditorSelectedShader();
 		InitEditorViewportShader();
 	}
 
@@ -149,7 +150,7 @@ namespace Ion
 		}
 	}
 
-	void Renderer::InitEditorDataShader()
+	void Renderer::InitEditorObjectIDShader()
 	{
 		String vertexSrc;
 		String pixelSrc;
@@ -159,22 +160,52 @@ namespace Ion
 		// @TODO: This needs a refactor
 		if (RenderAPI::GetCurrent() == ERenderAPI::DX11)
 		{
-			File::ReadToString(shadersPath + L"Editor/EditorDataVS.hlsl", vertexSrc);
-			File::ReadToString(shadersPath + L"Editor/EditorDataPS.hlsl", pixelSrc);
+			File::ReadToString(shadersPath + L"Editor/EditorObjectIDVS.hlsl", vertexSrc);
+			File::ReadToString(shadersPath + L"Editor/EditorObjectIDPS.hlsl", pixelSrc);
 		}
 		else
 		{
-			File::ReadToString(shadersPath + L"Editor/EditorData.vert", vertexSrc);
-			File::ReadToString(shadersPath + L"Editor/EditorData.frag", pixelSrc);
+			File::ReadToString(shadersPath + L"Editor/EditorObjectID.vert", vertexSrc);
+			File::ReadToString(shadersPath + L"Editor/EditorObjectID.frag", pixelSrc);
 		}
 
-		m_EditorDataShader = Shader::Create();
-		m_EditorDataShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
-		m_EditorDataShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
+		m_EditorObjectIDShader = Shader::Create();
+		m_EditorObjectIDShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
+		m_EditorObjectIDShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
-		if (!m_EditorDataShader->Compile())
+		if (!m_EditorObjectIDShader->Compile())
 		{
-			LOG_ERROR("Could not compile the EditorData Shader.");
+			LOG_ERROR("Could not compile the EditorObjectID Shader.");
+			debugbreak();
+		}
+	}
+
+	void Renderer::InitEditorSelectedShader()
+	{
+		String vertexSrc;
+		String pixelSrc;
+
+		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
+
+		// @TODO: This needs a refactor
+		if (RenderAPI::GetCurrent() == ERenderAPI::DX11)
+		{
+			File::ReadToString(shadersPath + L"Editor/EditorSelectedVS.hlsl", vertexSrc);
+			File::ReadToString(shadersPath + L"Editor/EditorSelectedPS.hlsl", pixelSrc);
+		}
+		else
+		{
+			File::ReadToString(shadersPath + L"Editor/EditorSelected.vert", vertexSrc);
+			File::ReadToString(shadersPath + L"Editor/EditorSelected.frag", pixelSrc);
+		}
+
+		m_EditorSelectedShader = Shader::Create();
+		m_EditorSelectedShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
+		m_EditorSelectedShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
+
+		if (!m_EditorSelectedShader->Compile())
+		{
+			LOG_ERROR("Could not compile the EditorSelected Shader.");
 			debugbreak();
 		}
 	}
@@ -206,6 +237,64 @@ namespace Ion
 		{
 			LOG_ERROR("Could not compile the EditorViewport Shader.");
 			debugbreak();
+		}
+	}
+
+	void Renderer::RenderEditorPass(const Scene* scene, const EditorPassData& data)
+	{
+		ionassert(scene);
+
+		if (!data.RTObjectID || !data.RTSelection || data.Primitives.empty())
+			return;
+
+		SetRenderTarget(data.RTObjectID);
+		Clear(Vector4(0.0f, 0.0f, 0.0f, 0.0f));
+
+		SceneUniforms& uniforms = scene->m_SceneUniformBuffer->DataRef<SceneUniforms>();
+		uniforms.ViewMatrix = scene->m_RenderCamera.ViewMatrix;
+		uniforms.ProjectionMatrix = scene->m_RenderCamera.ProjectionMatrix;
+		uniforms.ViewProjectionMatrix = scene->m_RenderCamera.ViewProjectionMatrix;
+		uniforms.CameraLocation = scene->m_RenderCamera.Location;
+		scene->m_SceneUniformBuffer->UpdateData();
+		scene->m_SceneUniformBuffer->Bind(0);
+
+		for (const REditorPassPrimitive& editorPrim : data.Primitives)
+		{
+			RPrimitiveRenderProxy prim { };
+			prim.VertexBuffer = editorPrim.VertexBuffer;
+			prim.IndexBuffer = editorPrim.IndexBuffer;
+			prim.UniformBuffer = editorPrim.UniformBuffer;
+			prim.Material = nullptr;
+			prim.Shader = GetEditorObjectIDShader().get();
+			prim.Transform = editorPrim.Transform;
+
+			// Load the GUID
+			MeshUniforms& meshUniforms = prim.UniformBuffer->DataRef<MeshUniforms>();
+			meshUniforms.RenderGuid = *(UVector4*)editorPrim.Guid.GetRawBytes().data();
+
+			Draw(prim, scene);
+
+			// Reset
+			meshUniforms.RenderGuid = UVector4();
+		}
+
+		SetRenderTarget(data.RTSelection);
+		Clear(Vector4(0.0f, 0.0f, 0.0f, 0.0f));
+
+		if (!data.SelectedPrimitives.empty())
+		{
+			for (const REditorPassPrimitive& editorPrim : data.SelectedPrimitives)
+			{
+				RPrimitiveRenderProxy prim { };
+				prim.VertexBuffer = editorPrim.VertexBuffer;
+				prim.IndexBuffer = editorPrim.IndexBuffer;
+				prim.UniformBuffer = editorPrim.UniformBuffer;
+				prim.Material = nullptr;
+				prim.Shader = GetEditorSelectedShader().get();
+				prim.Transform = editorPrim.Transform;
+
+				Draw(prim, scene);
+			}
 		}
 	}
 

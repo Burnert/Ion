@@ -21,7 +21,6 @@ namespace Ion
 		virtual void DrawEditorViewport(const TShared<Texture>& sceneFinalTexture, const TShared<Texture>& editorDataTexture) const override;
 
 		virtual void RenderScene(const Scene* scene) override;
-		virtual void RenderSceneEditorData(const Scene* scene, const SceneEditorDataInfo& info) override;
 
 		virtual void SetCurrentScene(const Scene* scene) override;
 		virtual const Scene* GetCurrentScene() const override;

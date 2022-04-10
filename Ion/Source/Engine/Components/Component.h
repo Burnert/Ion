@@ -121,6 +121,7 @@ public: \
 	virtual Component* Find(Component* component) const override; \
 	virtual ComponentTypeID GetTypeID() const override; \
 	virtual void* GetRawContainer() override; \
+	virtual Component* ForEachHelper(void*& inOutGenericIt) override; \
 	RawComponentContainerType Container; \
 }; \
 static inline const String ClassName = #className; \
@@ -134,8 +135,6 @@ virtual const ComponentDatabase::TypeInfo& GetFinalTypeInfo() const override \
 virtual const String& GetClassName() const override { return ClassName; } \
 virtual const String& GetClassDisplayName() const override { return ClassDisplayName; } \
 friend class ComponentRegistry;
-
-DECLARE_THASFUNCTION(GetTypeID);
 
 /* Put in the component's .cpp file (one per file). */
 #define DECLARE_ENTITY_COMPONENT_CLASS(className) \
@@ -184,6 +183,18 @@ ComponentTypeID className::ComponentContainerImpl::GetTypeID() const \
 void* className::ComponentContainerImpl::GetRawContainer() \
 { \
 	return &Container; \
+} \
+Component* className::ComponentContainerImpl::ForEachHelper(void*& inOutGenericIt) \
+{ \
+	RawComponentContainerType::iterator*& typedIt = (RawComponentContainerType::iterator*&)inOutGenericIt; \
+	if (!typedIt) \
+		typedIt = new RawComponentContainerType::iterator(Container.begin()); \
+	if (*typedIt != Container.end()) \
+		return &((*typedIt)++)->second; \
+	/* Cleanup */ \
+	delete typedIt; \
+	typedIt = nullptr; \
+	return nullptr; \
 } \
 /* Entity Component Property setup */ \
 using NCPropsContianerType = THashSet<INCProperty*>; \
@@ -292,6 +303,8 @@ CALL_OUTSIDE({ \
 
 namespace Ion
 {
+	DECLARE_THASFUNCTION(GetTypeID);
+
 	// The hash of the Component class name
 	using ComponentTypeID = size_t;
 	constexpr ComponentTypeID InvalidComponentTypeID = (ComponentTypeID)-1;
@@ -566,6 +579,13 @@ namespace Ion
 			{
 			}
 
+			template<typename T>
+			bool Is() const
+			{
+				static_assert(TIsBaseOfV<Component, T> && TIsComponentTypeFinal<T>);
+				return ID == T::GetTypeID();
+			}
+
 		private:
 			InstantiateComponentFPtr m_InstantiateType;
 			InstantiateComponentContainerFPtr m_InstantiateContainer;
@@ -662,6 +682,10 @@ namespace Ion
 
 		// End of overriden in final classes ...
 
+		template<typename T>
+		bool IsOfType() const;
+		bool IsOfType(ComponentTypeID id) const;
+
 	protected:
 		Component();
 
@@ -706,7 +730,25 @@ namespace Ion
 
 		virtual ComponentTypeID GetTypeID() const = 0;
 		virtual void* GetRawContainer() = 0;
+
+		template<typename Lambda>
+		void ForEach(Lambda forEach);
+
+	private:
+		virtual Component* ForEachHelper(void*& inOutGenericIt) = 0;
 	};
+
+	template<typename Lambda>
+	inline void IComponentContainer::ForEach(Lambda forEach)
+	{
+		static_assert(TIsConvertibleV<Lambda, TFunction<void(Component*)>>);
+		
+		void* genericIt = nullptr;
+		while (Component* comp = ForEachHelper(genericIt))
+		{
+			forEach(comp);
+		}
+	}
 
 	class ION_API ComponentRegistry
 	{
@@ -727,6 +769,11 @@ namespace Ion
 		void DestroyComponent(CompT* component);
 		template<typename CompT, TEnableIfT<!TIsComponentTypeFinal<CompT>>* = 0>
 		void DestroyComponent(CompT* component);
+
+		Component* FindComponentByGUID(const GUID& guid) const;
+
+		template<typename Lambda>
+		void ForEachComponentOfType(ComponentTypeID id, Lambda forEach);
 
 		void MarkForDestroy(Component* component);
 
@@ -760,6 +807,7 @@ namespace Ion
 	private:
 		THashMap<ComponentTypeID, IComponentContainer*> m_Containers;
 		THashMap<ComponentTypeID, TArray<Component*>> m_InvalidComponents;
+		THashMap<GUID, Component*> m_ComponentsByGUID;
 
 		World* m_WorldContext;
 
@@ -878,6 +926,9 @@ namespace Ion
 		ComponentDatabase* database = GetComponentTypeDatabase_Internal();
 
 		CompT& component = EmplaceComponentInContainer(container, Forward<Args>(args)...);
+
+		m_ComponentsByGUID[component.GetGUID()] = &component;
+
 		component.m_WorldContext = m_WorldContext;
 		component.m_Name = CompT::ClassDisplayName;
 
@@ -902,8 +953,11 @@ namespace Ion
 
 		InstantiateComponentFPtr instantiateFPtr = database->GetTypeInfo(id).m_InstantiateType;
 		ionassertnd(instantiateFPtr);
+		// This will add the component to the registry container
 		Component* componentPtr = instantiateFPtr(this);
 		ionassertnd(componentPtr);
+
+		m_ComponentsByGUID[componentPtr->GetGUID()] = componentPtr;
 
 		componentPtr->m_WorldContext = m_WorldContext;
 		componentPtr->m_Name = componentPtr->GetClassDisplayName();
@@ -941,6 +995,7 @@ namespace Ion
 			component->OnDestroy();
 
 			container.erase(guid);
+			m_ComponentsByGUID.erase(guid);
 		}
 	}
 
@@ -962,6 +1017,7 @@ namespace Ion
 				ionassert(found == component);
 				component->OnDestroy();
 
+				m_ComponentsByGUID.erase(component->GetGUID());
 				container->Erase(component);
 			}
 			else
@@ -969,6 +1025,12 @@ namespace Ion
 				LOG_ERROR("Component does not exist in the registry.\nGUID = {0}", component->GetGUID());
 			}
 		}
+	}
+
+	template<typename Lambda>
+	inline void ComponentRegistry::ForEachComponentOfType(ComponentTypeID id, Lambda forEach)
+	{
+		return GetContainer(id)->ForEach(forEach);
 	}
 
 	inline ComponentDatabase* ComponentRegistry::GetComponentTypeDatabase_Internal()
@@ -1052,5 +1114,17 @@ namespace Ion
 		auto [it, bUnique] = container.emplace(component.GetGUID(), Move(component));
 		ionassert(bUnique, "GUID collision?");
 		return it->second;
+	}
+
+	template<typename T>
+	inline bool Component::IsOfType() const
+	{
+		static_assert(TIsBaseOfV<Component, T> && TIsComponentTypeFinal<T>);
+		return GetFinalTypeID() == T::GetTypeID();
+	}
+
+	inline bool Component::IsOfType(ComponentTypeID id) const
+	{
+		return GetFinalTypeID() == id;
 	}
 }

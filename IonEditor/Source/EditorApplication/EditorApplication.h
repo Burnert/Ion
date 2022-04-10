@@ -16,6 +16,7 @@ namespace Ion::Editor
 
 		virtual void OnInit() override;
 		virtual void OnUpdate(float deltaTime) override;
+		virtual void PostUpdate() override;
 		virtual void OnRender() override;
 		virtual void OnShutdown() override;
 		virtual void OnEvent(const Event& event) override;
@@ -35,6 +36,8 @@ namespace Ion::Editor
 		void DeleteObject(Entity* entity);
 		bool DeleteObject(Component* component);
 		void DeleteSelectedObject();
+
+		void ClickViewport(const IVector2& position);
 
 		World* GetEditorWorld() const;
 		TShared<Camera> GetEditorCamera() const;
@@ -56,7 +59,11 @@ namespace Ion::Editor
 		void UpdateEditorCamera(float deltaTime);
 		void UpdateEditorCameraLocation(float deltaTime);
 
+		static REditorPassPrimitive CreateEditorPassPrimitive(SceneComponent* component);
+		void PrepareEditorPass();
 		void RenderEditorScene();
+
+		void SelectClickedObject();
 
 		void CreateViewportFramebuffer(const UVector2& size);
 		void ResizeViewportFramebuffer(const UVector2& size);
@@ -84,7 +91,12 @@ namespace Ion::Editor
 		TShared<EditorLayer> m_EditorLayer;
 		TShared<Texture> m_ViewportFramebuffer;
 		TShared<Texture> m_FinalSceneFramebuffer;
-		TShared<Texture> m_EditorDataFramebuffer;
+
+		TShared<EditorPassData> m_EditorPassData;
+		TShared<Texture> m_EditorDataSelected;
+		TShared<Texture> m_EditorDataObjectID;
+		TShared<Texture> m_EditorDataObjectIDStaging;
+		IVector2 m_ClickedViewportPoint;
 
 		World* m_EditorMainWorld;
 		Entity* m_SelectedEntity;

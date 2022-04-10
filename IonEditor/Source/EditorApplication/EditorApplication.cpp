@@ -23,7 +23,8 @@ namespace Ion::Editor
 		m_EditorCameraMoveSpeed(5.0f),
 		m_EditorMainWorld(nullptr),
 		m_SelectedEntity(nullptr),
-		m_SelectedComponent(nullptr)
+		m_SelectedComponent(nullptr),
+		m_ClickedViewportPoint({ -1, -1 })
 	{
 		ionassert(!s_Instance);
 		s_Instance = this;
@@ -103,6 +104,8 @@ namespace Ion::Editor
 	{
 		TRACE_FUNCTION();
 
+		SelectClickedObject();
+
 		UpdateEditorCamera(deltaTime);
 
 		static float c_Time = 0.0f;
@@ -130,6 +133,11 @@ namespace Ion::Editor
 			}
 			nHarnas++;
 		}
+	}
+
+	void EditorApplication::PostUpdate()
+	{
+		PrepareEditorPass();
 	}
 
 	void EditorApplication::OnRender()
@@ -275,6 +283,11 @@ namespace Ion::Editor
 		}
 	}
 
+	void EditorApplication::ClickViewport(const IVector2& position)
+	{
+		m_ClickedViewportPoint = position;
+	}
+
 	Scene* EditorApplication::GetEditorScene() const
 	{
 		return m_EditorMainWorld->GetScene();
@@ -360,37 +373,152 @@ namespace Ion::Editor
 		}
 	}
 
+	REditorPassPrimitive EditorApplication::CreateEditorPassPrimitive(SceneComponent* component)
+	{
+		// @TODO: Implement the rest
+		if (!component->IsOfType<MeshComponent>())
+			return REditorPassPrimitive();
+
+		MeshComponent* meshComponent = (MeshComponent*)component;
+		RPrimitiveRenderProxy meshProxy = meshComponent->AsRenderProxy();
+
+		REditorPassPrimitive prim { };
+		prim.Guid = meshComponent->GetGUID();
+		prim.VertexBuffer = meshProxy.VertexBuffer;
+		prim.IndexBuffer = meshProxy.IndexBuffer;
+		prim.UniformBuffer = meshProxy.UniformBuffer;
+		prim.Transform = meshProxy.Transform;
+
+		return prim;
+	}
+
+	void EditorApplication::PrepareEditorPass()
+	{
+		if (!m_EditorPassData)
+		{
+			m_EditorPassData = MakeShared<EditorPassData>();
+		}
+
+		// Prepare the Editor Render Pass
+
+		if (!m_EditorDataObjectID || !m_EditorDataSelected)
+			return;
+
+		m_EditorPassData->RTObjectID = m_EditorDataObjectID;
+		m_EditorPassData->RTSelection = m_EditorDataSelected;
+
+		m_EditorPassData->Primitives.clear();
+		m_EditorPassData->SelectedPrimitives.clear();
+		
+		ComponentRegistry& registry = GetEditorWorld()->GetComponentRegistry();
+		const ComponentDatabase* database = registry.GetComponentTypeDatabase();
+		for (auto& [id, type] : database->RegisteredTypes)
+		{
+			// @TODO: For now only add mesh components, extend this in the future
+			// if (type.bIsSceneComponent)
+			if (type.Is<MeshComponent>())
+			{
+				auto& componentType = type;
+				registry.ForEachComponentOfType(id, [this, &componentType](Component* component)
+				{
+					m_EditorPassData->Primitives.push_back(CreateEditorPassPrimitive((SceneComponent*)component));
+				});
+			}
+		}
+
+		if (m_SelectedEntity)
+		{
+			//if (m_SelectedEntity->GetRootComponent()->IsOfType<MeshComponent>())
+			//{
+			//	MeshComponent* meshComponent = (MeshComponent*)m_SelectedEntity->GetRootComponent();
+			//	m_EditorPassData->SelectedPrimitives.push_back(CreateEditorPassPrimitive(meshComponent));
+			//}
+
+			// If there's at least one scene component selected,
+			// don't render the whole entity, but only the selected components
+			if (m_SelectedComponent && m_SelectedComponent->IsSceneComponent())
+			{
+				if (m_SelectedComponent->IsOfType<MeshComponent>())
+				{
+					MeshComponent* meshComponent = (MeshComponent*)m_SelectedComponent;
+					m_EditorPassData->SelectedPrimitives.push_back(CreateEditorPassPrimitive(meshComponent));
+				}
+			}
+			else
+			{
+				for (SceneComponent* comp : m_SelectedEntity->GetAllOwnedSceneComponents())
+				{
+					if (comp->IsOfType<MeshComponent>())
+					{
+						MeshComponent* meshComponent = (MeshComponent*)comp;
+						m_EditorPassData->SelectedPrimitives.push_back(CreateEditorPassPrimitive(meshComponent));
+					}
+				}
+			}
+		}
+	}
+
 	void EditorApplication::RenderEditorScene()
 	{
 		if (m_ViewportFramebuffer)
 		{
 			// Render the scene
-			Renderer::Get()->SetRenderTarget(m_FinalSceneFramebuffer);
 
+			Renderer::Get()->SetRenderTarget(m_FinalSceneFramebuffer);
 			Renderer::Get()->Clear(Vector4(0.1f, 0.1f, 0.1f, 1.0f));
 			Renderer::Get()->RenderScene(GetEditorScene());
 
-			// Render to editor data framebuffer
-			Renderer::Get()->SetRenderTarget(m_EditorDataFramebuffer);
+			// Render editor pass
 
-			Renderer::Get()->Clear(Vector4(0.0f, 0.0f, 0.0f, 0.0f));
-			SceneEditorDataInfo info;
-			info.SelectedEntity = m_SelectedEntity;
-			if (m_SelectedEntity)
-			{
-				if (m_SelectedComponent && m_SelectedComponent->IsSceneComponent())
-					info.SelectedComponents.push_back((SceneComponent*)m_SelectedComponent);
-				else
-					info.SelectedComponents = m_SelectedEntity->GetAllOwnedSceneComponents();
-			}
-			Renderer::Get()->RenderSceneEditorData(GetEditorScene(), info);
+			Renderer::Get()->RenderEditorPass(GetEditorScene(), *m_EditorPassData);
 
 			// Render to viewport framebuffer
-			Renderer::Get()->SetRenderTarget(m_ViewportFramebuffer);
 
+			Renderer::Get()->SetRenderTarget(m_ViewportFramebuffer);
 			Renderer::Get()->Clear(Vector4(0.0f, 0.0f, 0.0f, 0.0f));
-			Renderer::Get()->DrawEditorViewport(m_FinalSceneFramebuffer, m_EditorDataFramebuffer);
+			Renderer::Get()->DrawEditorViewport(m_FinalSceneFramebuffer, m_EditorDataSelected);
 		}
+	}
+
+	void EditorApplication::SelectClickedObject()
+	{
+		if (!m_EditorDataSelected ||
+			m_ClickedViewportPoint.x == -1 || m_ClickedViewportPoint.y == -1)
+			return;
+
+		// Copy the object ID to the staging texture
+		m_EditorDataObjectID->CopyTo(m_EditorDataObjectIDStaging);
+
+		auto [width, height] = m_EditorDataObjectIDStaging->GetDimensions();
+
+		// Get the data on the CPU
+		void* buffer = nullptr;
+		int32 lineSize = 0;
+		m_EditorDataObjectIDStaging->Map(buffer, lineSize, ETextureMapType::Read);
+		ionassert(lineSize / sizeof(GUID) >= width);
+
+		// Get the pixel as GUID bytes
+		GUID guid = GUID::Zero;
+		memcpy(&guid, (GUID*)buffer + ((int32)m_ClickedViewportPoint.y * (lineSize / sizeof(GUID)) + (int32)m_ClickedViewportPoint.x), sizeof(GUID));
+
+		LOG_DEBUG("Clicked component [{0}]", guid.ToString());
+
+		// Deselect if Zero GUID (the clear space was clicked)
+		if (guid.IsZero())
+		{
+			DeselectCurrentEntity();
+		}
+		else
+		{
+			Component* selectedComponent = GetEditorWorld()->GetComponentRegistry().FindComponentByGUID(guid);
+			ionassert(selectedComponent);
+			ionassert(selectedComponent->GetOwner());
+			SelectObject(selectedComponent->GetOwner());
+		}
+
+		m_EditorDataObjectIDStaging->Unmap();
+
+		m_ClickedViewportPoint = { -1, -1 };
 	}
 
 	void EditorApplication::CreateViewportFramebuffer(const UVector2& size)
@@ -398,6 +526,7 @@ namespace Ion::Editor
 		TRACE_FUNCTION();
 
 		TextureDescription desc { };
+		desc.DebugName = "Viewport";
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
 		desc.bUseAsRenderTarget = true;
@@ -449,6 +578,7 @@ namespace Ion::Editor
 		TRACE_FUNCTION();
 
 		TextureDescription desc { };
+		desc.DebugName = "FinalScene";
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
 		desc.bUseAsRenderTarget = true;
@@ -477,6 +607,7 @@ namespace Ion::Editor
 		TRACE_FUNCTION();
 
 		TextureDescription desc { };
+		desc.DebugName = "EditorSelected";
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
 		desc.bUseAsRenderTarget = true;
@@ -486,18 +617,56 @@ namespace Ion::Editor
 		desc.UWrapMode = ETextureWrapMode::Clamp;
 		desc.VWrapMode = ETextureWrapMode::Clamp;
 
-		m_EditorDataFramebuffer = Texture::Create(desc);
+		m_EditorDataSelected = Texture::Create(desc);
+
+		desc = { };
+		desc.DebugName = "EditorObjectID";
+		desc.Dimensions.Width = size.x;
+		desc.Dimensions.Height = size.y;
+		desc.bUseAsRenderTarget = true;
+		desc.bCreateColorAttachment = true;
+		desc.bCreateDepthStencilAttachment = true;
+		desc.Format = ETextureFormat::UInt128GUID;
+		desc.UWrapMode = ETextureWrapMode::Clamp;
+		desc.VWrapMode = ETextureWrapMode::Clamp;
+
+		m_EditorDataObjectID = Texture::Create(desc);
+
+		desc = { };
+		desc.DebugName = "EditorObjectIDStaging";
+		desc.Dimensions.Width = size.x;
+		desc.Dimensions.Height = size.y;
+		desc.bCreateColorAttachment = true;
+		desc.bAllowCPUReadAccess = true;
+		desc.Usage = ETextureUsage::Staging;
+		desc.Format = ETextureFormat::UInt128GUID;
+		desc.UWrapMode = ETextureWrapMode::Clamp;
+		desc.VWrapMode = ETextureWrapMode::Clamp;
+
+		m_EditorDataObjectIDStaging = Texture::Create(desc);
 	}
 
 	void EditorApplication::ResizeEditorDataFramebuffer(const UVector2& size)
 	{
 		TRACE_FUNCTION();
 
-		TextureDescription desc = m_EditorDataFramebuffer->GetDescription();
+		TextureDescription desc = m_EditorDataSelected->GetDescription();
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
 
-		m_EditorDataFramebuffer = Texture::Create(desc);
+		m_EditorDataSelected = Texture::Create(desc);
+
+		desc = m_EditorDataObjectID->GetDescription();
+		desc.Dimensions.Width = size.x;
+		desc.Dimensions.Height = size.y;
+
+		m_EditorDataObjectID = Texture::Create(desc);
+
+		desc = m_EditorDataObjectIDStaging->GetDescription();
+		desc.Dimensions.Width = size.x;
+		desc.Dimensions.Height = size.y;
+
+		m_EditorDataObjectIDStaging = Texture::Create(desc);
 	}
 
 	EditorApplication* EditorApplication::s_Instance;

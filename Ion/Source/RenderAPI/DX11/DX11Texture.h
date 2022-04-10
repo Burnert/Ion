@@ -17,6 +17,10 @@ namespace Ion
 		virtual void BindDepth(uint32 slot = 0) const override;
 		virtual void Unbind() const override;
 
+		virtual void CopyTo(const TShared<Texture>& destination) const override;
+		virtual void Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType) override;
+		virtual void Unmap() override;
+
 		virtual void* GetNativeID() const override;
 
 		inline static constexpr D3D11_USAGE UsageToDX11Usage(ETextureUsage usage)
@@ -28,6 +32,7 @@ namespace Ion
 				case ETextureUsage::Dynamic:    return D3D11_USAGE_DYNAMIC;
 				case ETextureUsage::Staging:    return D3D11_USAGE_STAGING;
 			}
+			ionassert(false, "Invalid usage.");
 			return D3D11_USAGE_DEFAULT;
 		}
 
@@ -39,7 +44,47 @@ namespace Ion
 				case ETextureWrapMode::Clamp:  return D3D11_TEXTURE_ADDRESS_CLAMP;
 				case ETextureWrapMode::Mirror: return D3D11_TEXTURE_ADDRESS_MIRROR;
 			}
+			ionassert(false, "Invalid wrap mode.");
 			return D3D11_TEXTURE_ADDRESS_WRAP;
+		}
+
+		inline static constexpr DXGI_FORMAT FormatToDX11Format(ETextureFormat format)
+		{
+			switch (format)
+			{
+				case ETextureFormat::RGBA8:       return DXGI_FORMAT_R8G8B8A8_UNORM;
+				case ETextureFormat::RGBAFloat32: return DXGI_FORMAT_R32G32B32A32_FLOAT;
+				case ETextureFormat::UInt32:      return DXGI_FORMAT_R32_UINT;
+				case ETextureFormat::UInt128GUID: return DXGI_FORMAT_R32G32B32A32_UINT;
+			}
+			ionassert(false, "Invalid format.");
+			return DXGI_FORMAT_UNKNOWN;
+		}
+
+		/* Returns bytes per pixel for a format. */
+		inline static constexpr int32 GetFormatPixelSize(ETextureFormat format)
+		{
+			switch (format)
+			{
+				case ETextureFormat::RGBA8:       return 4;
+				case ETextureFormat::RGBAFloat32: return 16;
+				case ETextureFormat::UInt32:      return 4;
+				case ETextureFormat::UInt128GUID: return 16;
+			}
+			ionassert(false, "Invalid format.");
+			return 0;
+		}
+
+		inline static constexpr D3D11_MAP MapTypeToDX11Map(ETextureMapType mapType)
+		{
+			switch (mapType)
+			{
+				case ETextureMapType::Read:      return D3D11_MAP_READ;
+				case ETextureMapType::Write:     return D3D11_MAP_WRITE;
+				case ETextureMapType::ReadWrite: return D3D11_MAP_READ_WRITE;
+			}
+			ionassert(false, "Invalid map type.");
+			return D3D11_MAP_READ;
 		}
 
 		inline static constexpr D3D11_FILTER SelectDX11Filter(ETextureFilteringMethod minFilter, ETextureFilteringMethod magFilter, ETextureFilteringMethod mipFilter)
@@ -97,6 +142,7 @@ namespace Ion
 					break;
 				}
 			}
+			ionassert(false, "Invalid filter.");
 			return D3D11_FILTER_MIN_MAG_MIP_POINT;
 		}
 

@@ -306,6 +306,21 @@ namespace Ion
 #endif
 	}
 
+	void DX11::SetDebugName(ID3D11DeviceChild* object, const String& name, const String& prefix)
+	{
+#if ION_DEBUG
+		ionassert(object);
+
+		if (name.empty())
+			return;
+
+		HRESULT hResult;
+		
+		String fullName = prefix + name;
+		dxcall(object->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)fullName.size(), fullName.c_str()));
+#endif
+	}
+
 	void DX11::SetDisplayVersion(const char* version)
 	{
 		TRACE_FUNCTION();

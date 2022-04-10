@@ -125,6 +125,8 @@ namespace Ion
 		static void PrintDebugMessages();
 		static void PrepareDebugMessageQueue();
 
+		static void SetDebugName(ID3D11DeviceChild* object, const String& name, const String& prefix);
+
 		static constexpr const char* D3DFeatureLevelToString(D3D_FEATURE_LEVEL level)
 		{
 			switch (level)

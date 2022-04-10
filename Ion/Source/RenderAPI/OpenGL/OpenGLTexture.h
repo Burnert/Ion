@@ -17,6 +17,10 @@ namespace Ion
 		virtual void BindDepth(uint32 slot = 0) const override;
 		virtual void Unbind() const override;
 
+		virtual void CopyTo(const TShared<Texture>& destination) const override;
+		virtual void Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType) override;
+		virtual void Unmap() override;
+
 		virtual void* GetNativeID() const override;
 
 		int32 GetBoundSlot() const { return m_BoundSlot; }

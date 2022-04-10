@@ -68,6 +68,18 @@ namespace Ion
 		// @TODO: Implement a texture manager with some indication which slots are bound by which textures
 	}
 
+	void OpenGLTexture::CopyTo(const TShared<Texture>& destination) const
+	{
+	}
+
+	void OpenGLTexture::Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType)
+	{
+	}
+
+	void OpenGLTexture::Unmap()
+	{
+	}
+
 	void* OpenGLTexture::GetNativeID() const
 	{
 		return (void*)(uint64)m_ID;

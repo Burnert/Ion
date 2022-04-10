@@ -74,6 +74,36 @@ namespace Ion
 		dxcall_v(DX11::GetContext()->PSSetSamplers(0, 0, nullptr));
 	}
 
+	void DX11Texture::CopyTo(const TShared<Texture>& destination) const
+	{
+		TShared<DX11Texture> destTexture = TStaticCast<DX11Texture>(destination);
+
+		ID3D11DeviceContext* context = DX11::GetContext();
+
+		dxcall_v(context->CopyResource(destTexture->m_ColorTexture, m_ColorTexture));
+	}
+
+	void DX11Texture::Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType)
+	{
+		HRESULT hResult;
+
+		ID3D11DeviceContext* context = DX11::GetContext();
+
+		D3D11_MAPPED_SUBRESOURCE msr { };
+
+		dxcall(context->Map(m_ColorTexture, 0, MapTypeToDX11Map(mapType), 0, &msr));
+
+		outBuffer = msr.pData;
+		outLineSize = msr.RowPitch;
+	}
+
+	void DX11Texture::Unmap()
+	{
+		ID3D11DeviceContext* context = DX11::GetContext();
+
+		dxcall_v(context->Unmap(m_ColorTexture, 0));
+	}
+
 	void* DX11Texture::GetNativeID() const
 	{
 		return m_ColorSRV;
@@ -124,12 +154,12 @@ namespace Ion
 		tex2DDesc.Height = desc.Dimensions.Height;
 		tex2DDesc.MipLevels = 0;
 		tex2DDesc.ArraySize = 1;
-		tex2DDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		tex2DDesc.Format = FormatToDX11Format(desc.Format);
 		tex2DDesc.Usage = UsageToDX11Usage(desc.Usage);
 		tex2DDesc.SampleDesc.Count = 1;
 
 		tex2DDesc.BindFlags =
-			D3D11_BIND_SHADER_RESOURCE |
+			FlagsIf(desc.Usage != ETextureUsage::Staging, D3D11_BIND_SHADER_RESOURCE) |
 			FlagsIf(desc.bUseAsRenderTarget, D3D11_BIND_RENDER_TARGET);
 
 		tex2DDesc.CPUAccessFlags =
@@ -140,41 +170,48 @@ namespace Ion
 			FlagsIf(desc.bGenerateMips, D3D11_RESOURCE_MISC_GENERATE_MIPS);
 
 		dxcall(device->CreateTexture2D(&tex2DDesc, nullptr, &m_ColorTexture));
+		DX11::SetDebugName(m_ColorTexture, desc.DebugName, "Texture2D_");
 
-		// Create SRV (Shader Resource View)
-
-		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc { };
-		srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-		srvDesc.Texture2D.MipLevels = -1;
-
-		dxcall(device->CreateShaderResourceView(m_ColorTexture, &srvDesc, &m_ColorSRV));
-
-		// Create Sampler State
-
-		D3D11_SAMPLER_DESC samplerDesc { };
-		samplerDesc.Filter = SelectDX11Filter(desc.MinFilter, desc.MagFilter, desc.MipFilter);
-		samplerDesc.AddressU = WrapModeToDX11AddressMode(desc.UWrapMode);
-		samplerDesc.AddressV = WrapModeToDX11AddressMode(desc.VWrapMode);
-		samplerDesc.AddressW = WrapModeToDX11AddressMode(desc.WWrapMode);
-		samplerDesc.MaxAnisotropy = 1;
-		samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-		samplerDesc.MipLODBias = desc.LODBias;
-		samplerDesc.MinLOD = -D3D11_FLOAT32_MAX;
-		samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
-
-		dxcall(device->CreateSamplerState(&samplerDesc, &m_ColorSamplerState));
-
-		// Create RTV (Render Target View)
-
-		if (desc.bUseAsRenderTarget)
+		if (desc.Usage != ETextureUsage::Staging)
 		{
-			D3D11_RENDER_TARGET_VIEW_DESC rtvDesc { };
-			rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-			rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-			rtvDesc.Texture2D.MipSlice = 0;
+			// Create SRV (Shader Resource View)
 
-			dxcall(device->CreateRenderTargetView(m_ColorTexture, &rtvDesc, &m_RTV));
+			D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc { };
+			srvDesc.Format = FormatToDX11Format(desc.Format);
+			srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+			srvDesc.Texture2D.MipLevels = -1;
+
+			dxcall(device->CreateShaderResourceView(m_ColorTexture, &srvDesc, &m_ColorSRV));
+			DX11::SetDebugName(m_ColorSRV, desc.DebugName, "SRV_");
+
+			// Create Sampler State
+
+			D3D11_SAMPLER_DESC samplerDesc { };
+			samplerDesc.Filter = SelectDX11Filter(desc.MinFilter, desc.MagFilter, desc.MipFilter);
+			samplerDesc.AddressU = WrapModeToDX11AddressMode(desc.UWrapMode);
+			samplerDesc.AddressV = WrapModeToDX11AddressMode(desc.VWrapMode);
+			samplerDesc.AddressW = WrapModeToDX11AddressMode(desc.WWrapMode);
+			samplerDesc.MaxAnisotropy = 1;
+			samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+			samplerDesc.MipLODBias = desc.LODBias;
+			samplerDesc.MinLOD = -D3D11_FLOAT32_MAX;
+			samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+			dxcall(device->CreateSamplerState(&samplerDesc, &m_ColorSamplerState));
+			DX11::SetDebugName(m_ColorSamplerState, desc.DebugName, "SamplerState_");
+
+			// Create RTV (Render Target View)
+
+			if (desc.bUseAsRenderTarget)
+			{
+				D3D11_RENDER_TARGET_VIEW_DESC rtvDesc { };
+				rtvDesc.Format = FormatToDX11Format(desc.Format);
+				rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+				rtvDesc.Texture2D.MipSlice = 0;
+
+				dxcall(device->CreateRenderTargetView(m_ColorTexture, &rtvDesc, &m_RTV));
+				DX11::SetDebugName(m_RTV, desc.DebugName, "RTV_");
+			}
 		}
 	}
 
@@ -209,6 +246,7 @@ namespace Ion
 			FlagsIf(desc.bAllowCPUWriteAccess, D3D11_CPU_ACCESS_WRITE);
 
 		dxcall(device->CreateTexture2D(&depthDesc, nullptr, &m_DepthStencilTexture));
+		DX11::SetDebugName(m_DepthStencilTexture, desc.DebugName, "Depth_Texture2D_");
 
 		// Create DSV (Depth Stencil View)
 
@@ -218,6 +256,7 @@ namespace Ion
 		dsvd.Texture2D.MipSlice = 0;
 
 		dxcall(device->CreateDepthStencilView(m_DepthStencilTexture, &dsvd, &m_DSV));
+		DX11::SetDebugName(m_DSV, desc.DebugName, "DSV_");
 
 		if (desc.bCreateDepthSampler)
 		{
@@ -229,6 +268,7 @@ namespace Ion
 			srvDesc.Texture2D.MipLevels = -1;
 
 			dxcall(device->CreateShaderResourceView(m_DepthStencilTexture, &srvDesc, &m_DepthSRV));
+			DX11::SetDebugName(m_DepthSRV, desc.DebugName, "Depth_SRV_");
 
 			// Create Sampler State
 
@@ -244,6 +284,7 @@ namespace Ion
 			samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
 			dxcall(device->CreateSamplerState(&samplerDesc, &m_DepthSamplerState));
+			DX11::SetDebugName(m_DepthSamplerState, desc.DebugName, "Depth_SamplerState_");
 		}
 	}
 

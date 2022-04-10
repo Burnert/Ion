@@ -33,6 +33,10 @@ cbuffer MeshConstants : register(b1)
 	float4x4 ModelViewProjectionMatrix;
 	float4x4 TransformMatrix;
 	float4x4 InverseTransposeMatrix;
+
+	// With Editor
+
+	uint4 RenderGuid;
 };
 
 // Input/Output Structs

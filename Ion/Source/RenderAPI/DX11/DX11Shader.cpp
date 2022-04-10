@@ -105,6 +105,7 @@ namespace Ion
 			}
 		}
 
+		m_bCompiled = true;
 		return true;
 	}
 
