@@ -45,4 +45,9 @@ namespace Ion::Platform
 		::LocalFree(desc);
 		return descStr;
 	}
+
+	WString GetSystemDefaultFontPath()
+	{
+		return L"C:\\Windows\\Fonts\\arial.ttf";
+	}
 }

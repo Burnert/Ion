@@ -421,6 +421,9 @@ namespace Ion::Editor
 				auto& componentType = type;
 				registry.ForEachComponentOfType(id, [this, &componentType](Component* component)
 				{
+					if (!((MeshComponent*)component)->GetMesh())
+						return;
+
 					m_EditorPassData->Primitives.push_back(CreateEditorPassPrimitive((SceneComponent*)component));
 				});
 			}
@@ -428,12 +431,6 @@ namespace Ion::Editor
 
 		if (m_SelectedEntity)
 		{
-			//if (m_SelectedEntity->GetRootComponent()->IsOfType<MeshComponent>())
-			//{
-			//	MeshComponent* meshComponent = (MeshComponent*)m_SelectedEntity->GetRootComponent();
-			//	m_EditorPassData->SelectedPrimitives.push_back(CreateEditorPassPrimitive(meshComponent));
-			//}
-
 			// If there's at least one scene component selected,
 			// don't render the whole entity, but only the selected components
 			if (m_SelectedComponent && m_SelectedComponent->IsSceneComponent())
@@ -441,6 +438,9 @@ namespace Ion::Editor
 				if (m_SelectedComponent->IsOfType<MeshComponent>())
 				{
 					MeshComponent* meshComponent = (MeshComponent*)m_SelectedComponent;
+					if (!meshComponent->GetMesh())
+						return;
+
 					m_EditorPassData->SelectedPrimitives.push_back(CreateEditorPassPrimitive(meshComponent));
 				}
 			}
@@ -451,6 +451,9 @@ namespace Ion::Editor
 					if (comp->IsOfType<MeshComponent>())
 					{
 						MeshComponent* meshComponent = (MeshComponent*)comp;
+						if (!meshComponent->GetMesh())
+							return;
+
 						m_EditorPassData->SelectedPrimitives.push_back(CreateEditorPassPrimitive(meshComponent));
 					}
 				}

@@ -391,33 +391,30 @@ namespace Ion
 		SetCursor(actualCursor);
 	}
 
+	static ImFont* LoadFont(const WString& fontPath, float size, ImFontConfig* config)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		String path = StringConverter::WStringToString(EnginePath::GetFontsPath() + fontPath);
+		return io.Fonts->AddFontFromFileTTF(path.c_str(), size, config);
+	}
+
 	void Application::LoadFonts()
 	{
 		ImGuiIO& io = ImGui::GetIO();
 
-		String exoPath = StringConverter::WStringToString(
-			EnginePath::GetFontsPath() + L"Exo/Exo-Regular.ttf");
-		String exo2Path = StringConverter::WStringToString(
-			EnginePath::GetFontsPath() + L"Exo2/Exo2-Regular.ttf");
-		String openSansPath = StringConverter::WStringToString(
-			EnginePath::GetFontsPath() + L"OpenSans/OpenSans-Regular.ttf");
-		String robotoPath = StringConverter::WStringToString(
-			EnginePath::GetFontsPath() + L"Roboto/Roboto-Regular.ttf");
-		String sourceSansProPath = StringConverter::WStringToString(
-			EnginePath::GetFontsPath() + L"SourceSansPro/SourceSansPro-Regular.ttf");
-
 		ImFontConfig config;
-		config.OversampleH = 3;
-		config.OversampleV = 3;
-		config.SizePixels = 16;
 
-		m_Fonts.Exo                = io.Fonts->AddFontFromFileTTF(exoPath.c_str(),           18, &config);
-		m_Fonts.Exo2               = io.Fonts->AddFontFromFileTTF(exo2Path.c_str(),          18, &config);
-		m_Fonts.OpenSans           = io.Fonts->AddFontFromFileTTF(openSansPath.c_str(),      18, &config);
-		m_Fonts.Roboto             = io.Fonts->AddFontFromFileTTF(robotoPath.c_str(),        18, &config);
-		m_Fonts.SourceSansPro      = io.Fonts->AddFontFromFileTTF(sourceSansProPath.c_str(), 18, &config);
+		m_Fonts.Roboto_14     = LoadFont(L"Roboto/Roboto-Regular.ttf",         14, &config);
+		m_Fonts.Roboto_16     = LoadFont(L"Roboto/Roboto-Regular.ttf",         16, &config);
+		m_Fonts.RobotoSlab_20 = LoadFont(L"RobotoSlab/RobotoSlab-Regular.ttf", 20, &config);
+		m_Fonts.Exo2_20       = LoadFont(L"Exo2/Exo2-Medium.ttf",              20, &config);
+		m_Fonts.Exo2_24       = LoadFont(L"Exo2/Exo2-Regular.ttf",             24, &config);
 
-		io.FontDefault = m_Fonts.Exo2;
+		strcpy_s(config.Name, "System Default, 14px");
+		String systemFontPath = StringConverter::WStringToString(Platform::GetSystemDefaultFontPath());
+		m_Fonts.System_14 = io.Fonts->AddFontFromFileTTF(systemFontPath.c_str(), 14, &config);
+
+		io.FontDefault = m_Fonts.System_14;
 
 		ImGui::GetTextLineHeight();
 	}
