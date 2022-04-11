@@ -3,6 +3,9 @@
 #include "EditorApplication.h"
 #include "EditorLayer.h"
 
+#include "Editor/Viewport/EditorViewport.h"
+#include "Editor/UI/ViewportUI.h"
+
 #include "Renderer/Renderer.h"
 
 #include "Engine/Engine.h"
@@ -19,12 +22,9 @@ namespace Ion::Editor
 	// Constructed at the entry point
 	EditorApplication::EditorApplication() :
 		m_EventDispatcher(this),
-		m_bViewportCaptured(false),
-		m_EditorCameraMoveSpeed(5.0f),
 		m_EditorMainWorld(nullptr),
 		m_SelectedEntity(nullptr),
-		m_SelectedComponent(nullptr),
-		m_ClickedViewportPoint({ -1, -1 })
+		m_SelectedComponent(nullptr)
 	{
 		ionassert(!s_Instance);
 		s_Instance = this;
@@ -46,18 +46,21 @@ namespace Ion::Editor
 
 		m_EditorLayer = GetLayerStack()->PushLayer<EditorLayer>("EditorLayer");
 
-		Renderer::Get()->SetVSyncEnabled(true);
+		m_MainViewport = AddViewport();
+		
+		TShared<EditorViewport> additionalViewport = AddViewport();
+		additionalViewport->GetUI()->SetOpen(true);
+		additionalViewport->GetUI()->SetWindowName("Viewport 2");
 
-		m_EditorCamera = Camera::Create();
+		TShared<EditorViewport> mainViewport = m_MainViewport.lock();
+		m_EditorLayer->SetMainViewportOpenFlagPtr(&mainViewport->GetUI()->GetWindowOpenFlagRef());
+		mainViewport->GetUI()->SetOpen(true);
+		mainViewport->GetUI()->SetWindowName("Main Viewport");
+
+		Renderer::Get()->SetVSyncEnabled(true);
 
 		WorldInitializer worldInitializer { };
 		m_EditorMainWorld = g_Engine->CreateWorld(worldInitializer);
-		m_EditorMainWorld->GetScene()->SetActiveCamera(m_EditorCamera);
-
-		m_EditorCameraTransform.SetLocation(Vector3(0.0f, 0.0f, 2.0f));
-		m_EditorCamera->SetFOV(Math::Radians(90.0f));
-		m_EditorCamera->SetNearClip(0.1f);
-		m_EditorCamera->SetFarClip(100.0f);
 
 		InitExample(nullptr);
 
@@ -104,35 +107,35 @@ namespace Ion::Editor
 	{
 		TRACE_FUNCTION();
 
-		SelectClickedObject();
+		DriveCameraUpdate(deltaTime);
 
-		UpdateEditorCamera(deltaTime);
+		UpdateViewports(deltaTime);
 
-		static float c_Time = 0.0f;
-		c_Time += deltaTime;
+		//static float c_Time = 0.0f;
+		//c_Time += deltaTime;
 
-		int32 nHarnas = 0;
-		for (Entity*& harnas : g_HarnasArray)
-		{
-			if (harnas && m_EditorMainWorld->DoesOwnEntity(harnas))
-			{
-				int32 x = nHarnas % g_nHarnasSqrt;
-				int32 y = nHarnas / g_nHarnasSqrt;
+		//int32 nHarnas = 0;
+		//for (Entity*& harnas : g_HarnasArray)
+		//{
+		//	if (harnas && m_EditorMainWorld->DoesOwnEntity(harnas))
+		//	{
+		//		int32 x = nHarnas % g_nHarnasSqrt;
+		//		int32 y = nHarnas / g_nHarnasSqrt;
 
-				float wave = 0.0f;
-				wave += sinf(((float)x + c_Time * 10.0f) / g_nHarnasSqrt * (float)Math::TWO_PI * 2.0f);
-				wave += sinf(((float)y + c_Time * 10.0f) / g_nHarnasSqrt * (float)Math::TWO_PI * 2.0f);
+		//		float wave = 0.0f;
+		//		wave += sinf(((float)x + c_Time * 10.0f) / g_nHarnasSqrt * (float)Math::TWO_PI * 2.0f);
+		//		wave += sinf(((float)y + c_Time * 10.0f) / g_nHarnasSqrt * (float)Math::TWO_PI * 2.0f);
 
-				Vector3 location = harnas->GetLocation();
-				location.y = wave;
-				harnas->SetLocation(location);
-			}
-			else
-			{
-				harnas = nullptr;
-			}
-			nHarnas++;
-		}
+		//		Vector3 location = harnas->GetLocation();
+		//		location.y = wave;
+		//		harnas->SetLocation(location);
+		//	}
+		//	else
+		//	{
+		//		harnas = nullptr;
+		//	}
+		//	nHarnas++;
+		//}
 	}
 
 	void EditorApplication::PostUpdate()
@@ -144,7 +147,7 @@ namespace Ion::Editor
 	{
 		TRACE_FUNCTION();
 
-		RenderEditorScene();
+		RenderViewports();
 	}
 
 	void EditorApplication::OnShutdown()
@@ -165,26 +168,76 @@ namespace Ion::Editor
 		m_EventDispatcher.Dispatch(event);
 	}
 
-	void EditorApplication::CaptureViewport(bool bCapture)
+	TShared<EditorViewport>& EditorApplication::AddViewport()
 	{
-		if (m_bViewportCaptured != bCapture)
-		{
-			m_bViewportCaptured = bCapture;
+		UVector2 initialSize = { 1, 1 };
+		TShared<EditorViewport> viewport = MakeShared<EditorViewport>(initialSize, (int32)m_Viewports.size());
 
-			GetWindow()->ShowCursor(!bCapture);
-			GetWindow()->LockCursor(bCapture);
+		viewport->SetOnClicked([this](const GUID& clickedGuid)
+		{
+			SelectClickedObject(clickedGuid);
+		});
+
+		viewport->SetOnCaptured([this](EditorViewport& viewport)
+		{
+			ionassert(m_Viewports.find(viewport.GetGuid()) != m_Viewports.end());
+			m_CapturedViewport = m_Viewports.at(viewport.GetGuid());
+		});
+
+		viewport->SetOnReleased([this](EditorViewport& viewport)
+		{
+			ionassert(m_Viewports.find(viewport.GetGuid()) != m_Viewports.end());
+			m_CapturedViewport.reset();
+		});
+
+		auto& [id, ref] = *m_Viewports.insert({ viewport->GetGuid(), viewport }).first;
+
+		return ref;
+	}
+
+	void EditorApplication::RemoveViewport(const GUID& viewportID)
+	{
+		auto it = m_Viewports.find(viewportID);
+		if (it != m_Viewports.end())
+		{
+			if (m_CapturedViewport == it->second)
+				m_CapturedViewport = nullptr;
+			if (m_MainViewport.lock() == it->second)
+				m_MainViewport.reset();
+			m_Viewports.erase(viewportID);
 		}
 	}
 
-	void EditorApplication::DriveEditorCameraRotation(float yawDelta, float pitchDelta)
+	TShared<EditorViewport> EditorApplication::GetViewport(const GUID& viewportID)
 	{
-		yawDelta *= 0.2f;
-		pitchDelta *= 0.2f;
+		auto it = m_Viewports.find(viewportID);
+		if (it != m_Viewports.end())
+			return it->second;
+		return nullptr;
+	}
 
-		Rotator cameraRotation = m_EditorCameraTransform.GetRotation();
-		cameraRotation.SetPitch(Math::Clamp(cameraRotation.Pitch() - pitchDelta, -89.99f, 89.99f));
-		cameraRotation.SetYaw(cameraRotation.Yaw() - yawDelta);
-		m_EditorCameraTransform.SetRotation(cameraRotation);
+	void EditorApplication::UpdateViewports(float deltaTime)
+	{
+		for (auto& [id, viewport] : m_Viewports)
+		{
+			viewport->Update(deltaTime);
+		}
+	}
+
+	void EditorApplication::RenderViewports()
+	{
+		for (auto& [id, viewport] : m_Viewports)
+		{
+			viewport->Render();
+		}
+	}
+
+	void EditorApplication::DrawViewports()
+	{
+		for (auto& [id, viewport] : m_Viewports)
+		{
+			viewport->GetUI()->Draw();
+		}
 	}
 
 	void EditorApplication::SetSelectedEntity(Entity* entity)
@@ -283,11 +336,6 @@ namespace Ion::Editor
 		}
 	}
 
-	void EditorApplication::ClickViewport(const IVector2& position)
-	{
-		m_ClickedViewportPoint = position;
-	}
-
 	Scene* EditorApplication::GetEditorScene() const
 	{
 		return m_EditorMainWorld->GetScene();
@@ -312,10 +360,7 @@ namespace Ion::Editor
 
 	void EditorApplication::OnRawInputMouseMovedEvent(const RawInputMouseMovedEvent& event)
 	{
-		if (m_bViewportCaptured)
-		{
-			DriveEditorCameraRotation(event.GetX(), event.GetY());
-		}
+		DriveCapturedViewportCameraRotation({ event.GetY(), event.GetX() });
 	}
 
 	void EditorApplication::OnKeyPressedEvent(const KeyPressedEvent& event)
@@ -335,41 +380,55 @@ namespace Ion::Editor
 		}
 	}
 
-	void EditorApplication::UpdateEditorCamera(float deltaTime)
-	{
-		UpdateEditorCameraLocation(deltaTime);
-		m_EditorCamera->SetTransform(m_EditorCameraTransform.GetMatrix());
-	}
-
 #pragma warning(disable:6031)
-	void EditorApplication::UpdateEditorCameraLocation(float deltaTime)
+	void EditorApplication::DriveCameraUpdate(float deltaTime)
 	{
-		if (m_bViewportCaptured)
+		if (m_CapturedViewport)
 		{
+			Vector3 axisValues { };
+
 			if (GetInputManager()->IsKeyPressed(Key::W))
 			{
-				m_EditorCameraTransform += m_EditorCameraTransform.GetForwardVector() * deltaTime * m_EditorCameraMoveSpeed;
+				axisValues.z += 1.0f;
 			}
 			if (GetInputManager()->IsKeyPressed(Key::S))
 			{
-				m_EditorCameraTransform += -m_EditorCameraTransform.GetForwardVector() * deltaTime * m_EditorCameraMoveSpeed;
+				axisValues.z += -1.0f;
 			}
 			if (GetInputManager()->IsKeyPressed(Key::A))
 			{
-				m_EditorCameraTransform += -m_EditorCameraTransform.GetRightVector() * deltaTime * m_EditorCameraMoveSpeed;
+				axisValues.x += -1.0f;
 			}
 			if (GetInputManager()->IsKeyPressed(Key::D))
 			{
-				m_EditorCameraTransform += m_EditorCameraTransform.GetRightVector() * deltaTime * m_EditorCameraMoveSpeed;
+				axisValues.x += 1.0f;
 			}
 			if (GetInputManager()->IsKeyPressed(Key::Q))
 			{
-				m_EditorCameraTransform += Vector3(0.0f, -1.0f, 0.0f) * deltaTime * m_EditorCameraMoveSpeed;
+				axisValues.y += -1.0f;
 			}
 			if (GetInputManager()->IsKeyPressed(Key::E))
 			{
-				m_EditorCameraTransform += Vector3(0.0f, 1.0f, 0.0f) * deltaTime * m_EditorCameraMoveSpeed;
+				axisValues.y += 1.0f;
 			}
+
+			DriveCapturedViewportCamera(axisValues, deltaTime);
+		}
+	}
+
+	void EditorApplication::DriveCapturedViewportCamera(const Vector3& axisValues, float deltaTime)
+	{
+		if (m_CapturedViewport)
+		{
+			m_CapturedViewport->DriveCamera(axisValues, deltaTime);
+		}
+	}
+
+	void EditorApplication::DriveCapturedViewportCameraRotation(const Vector2& axisValues)
+	{
+		if (m_CapturedViewport)
+		{
+			m_CapturedViewport->DriveCameraRotation(axisValues);
 		}
 	}
 
@@ -400,12 +459,6 @@ namespace Ion::Editor
 		}
 
 		// Prepare the Editor Render Pass
-
-		if (!m_EditorDataObjectID || !m_EditorDataSelected)
-			return;
-
-		m_EditorPassData->RTObjectID = m_EditorDataObjectID;
-		m_EditorPassData->RTSelection = m_EditorDataSelected;
 
 		m_EditorPassData->Primitives.clear();
 		m_EditorPassData->SelectedPrimitives.clear();
@@ -461,215 +514,21 @@ namespace Ion::Editor
 		}
 	}
 
-	void EditorApplication::RenderEditorScene()
+	void EditorApplication::SelectClickedObject(const GUID& clickedGuid)
 	{
-		if (m_ViewportFramebuffer)
-		{
-			// Render the scene
-
-			Renderer::Get()->SetRenderTarget(m_FinalSceneFramebuffer);
-			Renderer::Get()->Clear(Vector4(0.1f, 0.1f, 0.1f, 1.0f));
-			Renderer::Get()->RenderScene(GetEditorScene());
-
-			// Render editor pass
-
-			Renderer::Get()->RenderEditorPass(GetEditorScene(), *m_EditorPassData);
-
-			// Render to viewport framebuffer
-
-			Renderer::Get()->SetRenderTarget(m_ViewportFramebuffer);
-			Renderer::Get()->Clear(Vector4(0.0f, 0.0f, 0.0f, 0.0f));
-			Renderer::Get()->DrawEditorViewport(m_FinalSceneFramebuffer, m_EditorDataSelected);
-		}
-	}
-
-	void EditorApplication::SelectClickedObject()
-	{
-		if (!m_EditorDataSelected ||
-			m_ClickedViewportPoint.x == -1 || m_ClickedViewportPoint.y == -1)
-			return;
-
-		// Copy the object ID to the staging texture
-		m_EditorDataObjectID->CopyTo(m_EditorDataObjectIDStaging);
-
-		auto [width, height] = m_EditorDataObjectIDStaging->GetDimensions();
-
-		// Get the data on the CPU
-		void* buffer = nullptr;
-		int32 lineSize = 0;
-		m_EditorDataObjectIDStaging->Map(buffer, lineSize, ETextureMapType::Read);
-		ionassert(lineSize / sizeof(GUID) >= width);
-
-		// Get the pixel as GUID bytes
-		GUID guid = GUID::Zero;
-		memcpy(&guid, (GUID*)buffer + ((int32)m_ClickedViewportPoint.y * (lineSize / sizeof(GUID)) + (int32)m_ClickedViewportPoint.x), sizeof(GUID));
-
-		LOG_DEBUG("Clicked component [{0}]", guid.ToString());
-
 		// Deselect if Zero GUID (the clear space was clicked)
-		if (guid.IsZero())
+		if (clickedGuid.IsZero())
 		{
 			DeselectCurrentEntity();
 		}
 		else
 		{
-			Component* selectedComponent = GetEditorWorld()->GetComponentRegistry().FindComponentByGUID(guid);
+			DeselectCurrentComponent();
+			Component* selectedComponent = GetEditorWorld()->GetComponentRegistry().FindComponentByGUID(clickedGuid);
 			ionassert(selectedComponent);
 			ionassert(selectedComponent->GetOwner());
 			SelectObject(selectedComponent->GetOwner());
 		}
-
-		m_EditorDataObjectIDStaging->Unmap();
-
-		m_ClickedViewportPoint = { -1, -1 };
-	}
-
-	void EditorApplication::CreateViewportFramebuffer(const UVector2& size)
-	{
-		TRACE_FUNCTION();
-
-		TextureDescription desc { };
-		desc.DebugName = "Viewport";
-		desc.Dimensions.Width = size.x;
-		desc.Dimensions.Height = size.y;
-		desc.bUseAsRenderTarget = true;
-		desc.bCreateColorAttachment = true;
-		desc.UWrapMode = ETextureWrapMode::Clamp;
-		desc.VWrapMode = ETextureWrapMode::Clamp;
-
-		m_ViewportFramebuffer = Texture::Create(desc);
-
-		CreateFinalSceneFramebuffer(size);
-		CreateEditorDataFramebuffer(size);
-	}
-
-	void EditorApplication::ResizeViewportFramebuffer(const UVector2& size)
-	{
-		TRACE_FUNCTION();
-
-		TextureDescription desc = m_ViewportFramebuffer->GetDescription();
-		desc.Dimensions.Width = size.x;
-		desc.Dimensions.Height = size.y;
-
-		m_ViewportFramebuffer = Texture::Create(desc);
-
-		ResizeFinalSceneFramebuffer(size);
-		ResizeEditorDataFramebuffer(size);
-	}
-
-	void EditorApplication::TryResizeViewportFramebuffer(const UVector2& size)
-	{
-		if (size.x && size.y)
-		{
-			if (!m_ViewportFramebuffer)
-			{
-				CreateViewportFramebuffer(size);
-			}
-
-			TextureDimensions viewportDimensions = m_ViewportFramebuffer->GetDimensions();
-			if (size != UVector2(viewportDimensions.Width, viewportDimensions.Height))
-			{
-				ResizeViewportFramebuffer(size);
-
-				EditorApplication::Get()->GetEditorCamera()->SetAspectRatio((float)size.x / (float)size.y);
-			}
-		}
-	}
-
-	void EditorApplication::CreateFinalSceneFramebuffer(const UVector2& size)
-	{
-		TRACE_FUNCTION();
-
-		TextureDescription desc { };
-		desc.DebugName = "FinalScene";
-		desc.Dimensions.Width = size.x;
-		desc.Dimensions.Height = size.y;
-		desc.bUseAsRenderTarget = true;
-		desc.bCreateColorAttachment = true;
-		desc.bCreateDepthStencilAttachment = true;
-		desc.bCreateDepthSampler = true;
-		desc.UWrapMode = ETextureWrapMode::Clamp;
-		desc.VWrapMode = ETextureWrapMode::Clamp;
-
-		m_FinalSceneFramebuffer = Texture::Create(desc);
-	}
-
-	void EditorApplication::ResizeFinalSceneFramebuffer(const UVector2& size)
-	{
-		TRACE_FUNCTION();
-
-		TextureDescription desc = m_FinalSceneFramebuffer->GetDescription();
-		desc.Dimensions.Width = size.x;
-		desc.Dimensions.Height = size.y;
-
-		m_FinalSceneFramebuffer = Texture::Create(desc);
-	}
-
-	void EditorApplication::CreateEditorDataFramebuffer(const UVector2& size)
-	{
-		TRACE_FUNCTION();
-
-		TextureDescription desc { };
-		desc.DebugName = "EditorSelected";
-		desc.Dimensions.Width = size.x;
-		desc.Dimensions.Height = size.y;
-		desc.bUseAsRenderTarget = true;
-		desc.bCreateColorAttachment = true;
-		desc.bCreateDepthStencilAttachment = true;
-		desc.bCreateDepthSampler = true;
-		desc.UWrapMode = ETextureWrapMode::Clamp;
-		desc.VWrapMode = ETextureWrapMode::Clamp;
-
-		m_EditorDataSelected = Texture::Create(desc);
-
-		desc = { };
-		desc.DebugName = "EditorObjectID";
-		desc.Dimensions.Width = size.x;
-		desc.Dimensions.Height = size.y;
-		desc.bUseAsRenderTarget = true;
-		desc.bCreateColorAttachment = true;
-		desc.bCreateDepthStencilAttachment = true;
-		desc.Format = ETextureFormat::UInt128GUID;
-		desc.UWrapMode = ETextureWrapMode::Clamp;
-		desc.VWrapMode = ETextureWrapMode::Clamp;
-
-		m_EditorDataObjectID = Texture::Create(desc);
-
-		desc = { };
-		desc.DebugName = "EditorObjectIDStaging";
-		desc.Dimensions.Width = size.x;
-		desc.Dimensions.Height = size.y;
-		desc.bCreateColorAttachment = true;
-		desc.bAllowCPUReadAccess = true;
-		desc.Usage = ETextureUsage::Staging;
-		desc.Format = ETextureFormat::UInt128GUID;
-		desc.UWrapMode = ETextureWrapMode::Clamp;
-		desc.VWrapMode = ETextureWrapMode::Clamp;
-
-		m_EditorDataObjectIDStaging = Texture::Create(desc);
-	}
-
-	void EditorApplication::ResizeEditorDataFramebuffer(const UVector2& size)
-	{
-		TRACE_FUNCTION();
-
-		TextureDescription desc = m_EditorDataSelected->GetDescription();
-		desc.Dimensions.Width = size.x;
-		desc.Dimensions.Height = size.y;
-
-		m_EditorDataSelected = Texture::Create(desc);
-
-		desc = m_EditorDataObjectID->GetDescription();
-		desc.Dimensions.Width = size.x;
-		desc.Dimensions.Height = size.y;
-
-		m_EditorDataObjectID = Texture::Create(desc);
-
-		desc = m_EditorDataObjectIDStaging->GetDescription();
-		desc.Dimensions.Width = size.x;
-		desc.Dimensions.Height = size.y;
-
-		m_EditorDataObjectIDStaging = Texture::Create(desc);
 	}
 
 	EditorApplication* EditorApplication::s_Instance;

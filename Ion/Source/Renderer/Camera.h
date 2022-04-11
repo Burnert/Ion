@@ -68,7 +68,6 @@ namespace Ion
 
 	private:
 		// @TODO: Bad memory layout...
-		Vector3 m_CameraLocation;
 		Matrix4 m_CameraTransform;
 
 		mutable Matrix4 m_ViewProjectionMatrix;

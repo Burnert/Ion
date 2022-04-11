@@ -6,19 +6,6 @@ namespace Ion::Editor
 {
 	class EditorApplication;
 
-	struct DNDInsertEntityData
-	{
-		using InstantiateFunc = Entity*(World*);
-		InstantiateFunc* Instantiate;
-	};
-
-	struct DNDInsertComponentData
-	{
-		using InstantiateFunc = Component*(World*, ComponentTypeID);
-		InstantiateFunc* Instantiate;
-		ComponentTypeID ID;
-	};
-
 	enum class ESceneObjectType
 	{
 		Entity,
@@ -48,6 +35,7 @@ namespace Ion::Editor
 		void DrawMainMenuBar();
 
 		void DrawViewportWindow();
+		void DrawViewportWindows();
 
 		void DrawInsertPanel();
 		void DrawInsertPanelEntityTab();
@@ -96,8 +84,7 @@ namespace Ion::Editor
 
 		WorldTreeNode* PopWorldTreeExpandChain();
 
-		bool IsMouseInViewportRect() const;
-		bool CanCaptureViewport() const;
+		void SetMainViewportOpenFlagPtr(bool* flagPtr);
 
 		void OnMouseButtonPressedEvent(const MouseButtonPressedEvent& event);
 		void OnMouseButtonReleasedEvent(const MouseButtonReleasedEvent& event);
@@ -123,18 +110,12 @@ namespace Ion::Editor
 		TArray<Entity*> m_EntitiesToDestroy;
 		TArray<Component*> m_ComponentsToDestroy;
 
-		UVector2 m_ViewportSize;
-		Vector4 m_ViewportRect;
-
 		/* bit 0 - keep the hovered node set */
 		TMetaPointer<const WorldTreeNode> m_HoveredWorldTreeNodeDragTarget;
 		/* bit 0 - is dragging, bit 1 - start/keep dragging? */
 		int8 m_DraggedWorldTreeNodeInfo;
 
-		bool m_bViewportHovered;
-		bool m_bViewportCaptured;
-
-		bool m_bViewportOpen;
+		bool* m_bMainViewportOpenPtr;
 		bool m_bInsertPanelOpen;
 		bool m_bContentBrowserOpen;
 		bool m_bWorldTreePanelOpen;

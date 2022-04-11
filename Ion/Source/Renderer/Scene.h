@@ -64,7 +64,9 @@ namespace Ion
 
 		/* BROKEN DON'T USE */
 		void UpdateRenderData();
+
 		void LoadSceneData(const RRendererData& data);
+		void LoadCamera(const TShared<Camera>& camera);
 
 		// Render Thread: --------------------------------------------------------------------------
 

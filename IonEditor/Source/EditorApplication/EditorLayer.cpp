@@ -15,18 +15,12 @@
 
 #include "ExampleModels.h"
 
-namespace Ion
-{
-namespace Editor
+namespace Ion::Editor
 {
 	EditorLayer::EditorLayer(const char* name) :
 		Layer(name),
 		m_EventDispatcher(this),
-		m_ViewportSize({ }),
-		m_ViewportRect({ }),
-		m_bViewportHovered(false),
-		m_bViewportCaptured(false),
-		m_bViewportOpen(true),
+		m_bMainViewportOpenPtr(nullptr),
 		m_bInsertPanelOpen(true),
 		m_bContentBrowserOpen(true),
 		m_bWorldTreePanelOpen(true),
@@ -51,7 +45,6 @@ namespace Editor
 	{
 		TRACE_FUNCTION();
 
-		EditorApplication::Get()->TryResizeViewportFramebuffer(m_ViewportSize);
 		DrawEditorUI();
 
 		for (Entity* entity : m_EntitiesToDestroy)
@@ -113,7 +106,7 @@ namespace Editor
 		// The rest
 
 		DrawMainMenuBar();
-		DrawViewportWindow();
+		DrawViewportWindows();
 		DrawInsertPanel();
 		DrawContentBrowser();
 		DrawWorldTreePanel();
@@ -170,7 +163,7 @@ namespace Editor
 			}
 			if (ImGui::BeginMenu("View"))
 			{
-				ImGui::MenuItem("Viewport", nullptr, &m_bViewportOpen);
+				ImGui::MenuItem("Main Viewport", nullptr, m_bMainViewportOpenPtr);
 				ImGui::MenuItem("Insert", nullptr, &m_bInsertPanelOpen);
 				ImGui::MenuItem("Content Browser", nullptr, &m_bContentBrowserOpen);
 				ImGui::MenuItem("World Tree", nullptr, &m_bWorldTreePanelOpen);
@@ -204,69 +197,12 @@ namespace Editor
 
 	void EditorLayer::DrawViewportWindow()
 	{
-		TRACE_FUNCTION();
 
-		if (m_bViewportOpen)
-		{
-			ImGuiWindowFlags windowFlags =
-				ImGuiWindowFlags_NoScrollbar |
-				ImGuiWindowFlags_NoNavFocus |
-				ImGuiWindowFlags_NoBackground;
+	}
 
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-
-			if (m_bViewportCaptured)
-				ImGui::SetNextWindowFocus();
-
-			char windowName[16];
-			sprintf_s(windowName, "Viewport##%i", /* ID */ 0);
-			bool bOpen = ImGui::Begin(windowName, &m_bViewportOpen, windowFlags);
-			ImGui::PopStyleVar(3);
-			if (bOpen)
-			{
-				// Save the viewport rect for later
-				m_ViewportRect = ImGui::GetWindowWorkRect();
-				m_bViewportHovered = ImGui::IsWindowHovered();
-
-				m_ViewportSize = UVector2(m_ViewportRect.z - m_ViewportRect.x, m_ViewportRect.w - m_ViewportRect.y);
-
-				const TShared<Texture>& viewportFramebuffer = EditorApplication::Get()->GetViewportFramebuffer();
-				if (viewportFramebuffer)
-				{
-					const TextureDimensions& viewportDimensions = viewportFramebuffer->GetDimensions();
-					ImGui::Image(viewportFramebuffer->GetNativeID(),
-						ImVec2((float)viewportDimensions.Width, (float)viewportDimensions.Height));
-
-					if (ImGui::BeginDragDropTarget())
-					{
-						ImGuiDragDropFlags dndFlags = ImGuiDragDropFlags_None;
-						if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Ion_DND_InsertEntity", dndFlags))
-						{
-							ionassert(payload->DataSize == sizeof(DNDInsertEntityData));
-
-							DNDInsertEntityData& data = *(DNDInsertEntityData*)payload->Data;
-							data.Instantiate(EditorApplication::Get()->GetEditorWorld());
-						}
-						ImGui::EndDragDropTarget();
-					}
-					if (ImGui::IsItemHovered())
-					{
-						EditorApplication::Get()->SetCursor(ECursorType::Cross);
-					}
-					if (ImGui::IsItemClicked())
-					{
-						ImVec2 mousePos = ImGui::GetMousePos();
-						Vector4 workRect = ImGui::GetWindowWorkRect();
-						Vector2 viewportPos = { mousePos.x - workRect.x, mousePos.y - workRect.y };
-						EditorApplication::Get()->ClickViewport(viewportPos);
-					}
-				}
-			}
-
-			ImGui::End();
-		}
+	void EditorLayer::DrawViewportWindows()
+	{
+		EditorApplication::Get()->DrawViewports();
 	}
 
 	void EditorLayer::DrawInsertPanel()
@@ -1257,39 +1193,17 @@ namespace Editor
 		return node;
 	}
 
-	bool EditorLayer::IsMouseInViewportRect() const
+	void EditorLayer::SetMainViewportOpenFlagPtr(bool* flagPtr)
 	{
-		IVector2 cursorPos = InputManager::GetCursorPosition();
-		return
-			// @TODO: Get some IsPointInRect function goin' (like PtInRect)
-			cursorPos.x >= m_ViewportRect.x && cursorPos.x <= m_ViewportRect.z &&
-			cursorPos.y >= m_ViewportRect.y && cursorPos.y <= m_ViewportRect.w;
-	}
-
-	bool EditorLayer::CanCaptureViewport() const
-	{
-		return m_bViewportHovered && IsMouseInViewportRect();
+		m_bMainViewportOpenPtr = flagPtr;
 	}
 
 	void EditorLayer::OnMouseButtonPressedEvent(const MouseButtonPressedEvent& event)
 	{
-		if (CanCaptureViewport())
-		{
-			// @TODO: Dispatch event to Viewport
-
-			// Move editor camera on right click
-			if (event.GetMouseButton() == Mouse::Right)
-			{
-				m_bViewportCaptured = true;
-				EditorApplication::Get()->CaptureViewport(true);
-			}
-		}
 	}
 
 	void EditorLayer::OnMouseButtonReleasedEvent(const MouseButtonReleasedEvent& event)
 	{
-		m_bViewportCaptured = false;
-		EditorApplication::Get()->CaptureViewport(false);
 	}
 
 	void EditorLayer::OnMouseDoubleClickEvent(const MouseDoubleClickEvent& event)
@@ -1311,5 +1225,4 @@ namespace Editor
 	void EditorLayer::OnKeyReleasedEvent(const KeyReleasedEvent& event)
 	{
 	}
-}
 }

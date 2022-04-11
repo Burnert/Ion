@@ -1,10 +1,32 @@
 #pragma once
 
 #include "IonApp.h"
+#include "EditorCore/EditorCore.h"
+
+#include "Engine/Components/Component.h"
 
 namespace Ion::Editor
 {
 	class EditorLayer;
+	class EditorViewport;
+
+	struct ViewportObject
+	{
+		TShared<EditorViewport> Viewport;
+	};
+
+	struct DNDInsertEntityData
+	{
+		using InstantiateFunc = Entity*(World*);
+		InstantiateFunc* Instantiate;
+	};
+
+	struct DNDInsertComponentData
+	{
+		using InstantiateFunc = Component*(World*, ComponentTypeID);
+		InstantiateFunc* Instantiate;
+		ComponentTypeID ID;
+	};
 
 	class EDITOR_API EditorApplication : public App
 	{
@@ -21,9 +43,6 @@ namespace Ion::Editor
 		virtual void OnShutdown() override;
 		virtual void OnEvent(const Event& event) override;
 
-		void CaptureViewport(bool bCapture);
-		void DriveEditorCameraRotation(float yawDelta, float pitchDelta);
-
 		Entity* GetSelectedEntity() const;
 		Component* GetSelectedComponent() const;
 		bool IsAnyObjectSelected() const;
@@ -37,13 +56,13 @@ namespace Ion::Editor
 		bool DeleteObject(Component* component);
 		void DeleteSelectedObject();
 
-		void ClickViewport(const IVector2& position);
-
 		World* GetEditorWorld() const;
-		TShared<Camera> GetEditorCamera() const;
 		Scene* GetEditorScene() const;
 
 		static void ExitEditor();
+
+		/* Valid for the frame after PostUpdate */
+		const TShared<EditorPassData>& GetEditorPassData() const;
 
 	protected:
 		void OnWindowResizeEvent(const WindowResizeEvent& event);
@@ -53,28 +72,25 @@ namespace Ion::Editor
 		void OnKeyPressedEvent(const KeyPressedEvent& event);
 
 	private:
+		TShared<EditorViewport>& AddViewport();
+		void RemoveViewport(const GUID& viewportID);
+		TShared<EditorViewport> GetViewport(const GUID& viewportID);
+		void UpdateViewports(float deltaTime);
+		void RenderViewports();
+		void DrawViewports();
+
+		void DriveCapturedViewportCamera(const Vector3& axisValues, float deltaTime);
+		void DriveCapturedViewportCameraRotation(const Vector2& axisValues);
+
 		void SetSelectedEntity(Entity* entity);
 		void SetSelectedComponent(Component* component);
 
-		void UpdateEditorCamera(float deltaTime);
-		void UpdateEditorCameraLocation(float deltaTime);
+		void DriveCameraUpdate(float deltaTime);
 
 		static REditorPassPrimitive CreateEditorPassPrimitive(SceneComponent* component);
 		void PrepareEditorPass();
-		void RenderEditorScene();
 
-		void SelectClickedObject();
-
-		void CreateViewportFramebuffer(const UVector2& size);
-		void ResizeViewportFramebuffer(const UVector2& size);
-		const TShared<Texture>& GetViewportFramebuffer() const;
-		/* Creates the viewport, if it hasn't been done yet. */
-		void TryResizeViewportFramebuffer(const UVector2& size);
-
-		void CreateFinalSceneFramebuffer(const UVector2& size);
-		void ResizeFinalSceneFramebuffer(const UVector2& size);
-		void CreateEditorDataFramebuffer(const UVector2& size);
-		void ResizeEditorDataFramebuffer(const UVector2& size);
+		void SelectClickedObject(const GUID& clickedGuid);
 
 	private:
 		static EditorApplication* s_Instance;
@@ -89,24 +105,16 @@ namespace Ion::Editor
 		EventDispatcher<EventFunctions, EditorApplication> m_EventDispatcher;
 
 		TShared<EditorLayer> m_EditorLayer;
-		TShared<Texture> m_ViewportFramebuffer;
-		TShared<Texture> m_FinalSceneFramebuffer;
 
 		TShared<EditorPassData> m_EditorPassData;
-		TShared<Texture> m_EditorDataSelected;
-		TShared<Texture> m_EditorDataObjectID;
-		TShared<Texture> m_EditorDataObjectIDStaging;
-		IVector2 m_ClickedViewportPoint;
 
 		World* m_EditorMainWorld;
 		Entity* m_SelectedEntity;
 		Component* m_SelectedComponent;
 
-		TShared<Camera> m_EditorCamera;
-		Transform m_EditorCameraTransform;
-		float m_EditorCameraMoveSpeed;
-
-		bool m_bViewportCaptured;
+		THashMap<GUID, TShared<EditorViewport>> m_Viewports;
+		TWeak<EditorViewport> m_MainViewport;
+		TShared<EditorViewport> m_CapturedViewport;
 
 		friend class EditorLayer;
 	};
@@ -131,13 +139,8 @@ namespace Ion::Editor
 		return m_EditorMainWorld;
 	}
 
-	inline TShared<Camera> EditorApplication::GetEditorCamera() const
+	inline const TShared<EditorPassData>& EditorApplication::GetEditorPassData() const
 	{
-		return m_EditorCamera;
-	}
-
-	inline const TShared<Texture>& EditorApplication::GetViewportFramebuffer() const
-	{
-		return m_ViewportFramebuffer;
+		return m_EditorPassData;
 	}
 }

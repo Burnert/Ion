@@ -63,7 +63,6 @@ namespace Ion
 	}
 
 	Camera::Camera() :
-		m_CameraLocation(Vector3(0.0f)),
 		m_CameraTransform(Matrix4(1.0f)),
 		m_ViewProjectionMatrix(Matrix4(1.0f)),
 		m_ViewMatrix(Matrix4(1.0f)),

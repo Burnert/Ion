@@ -102,15 +102,13 @@ namespace Ion
 
 	void Scene::LoadSceneData(const RRendererData& data)
 	{
-		if (!m_ActiveCamera)
-			return;
-
 		m_RenderPrimitives = data.Primitives;
 		m_RenderLights = data.Lights;
 		m_RenderDirLight = data.DirectionalLight;
 		m_RenderAmbientLight = data.AmbientLightColor;
 
-		m_ActiveCamera->CopyRenderData(m_RenderCamera);
+		if (m_ActiveCamera)
+			m_ActiveCamera->CopyRenderData(m_RenderCamera);
 
 		// Shrink arrays
 
@@ -119,5 +117,10 @@ namespace Ion
 
 		if (m_RenderLights.capacity() > m_RenderLights.size() * 2)
 			m_RenderLights.shrink_to_fit();
+	}
+
+	void Scene::LoadCamera(const TShared<Camera>& camera)
+	{
+		camera->CopyRenderData(m_RenderCamera);
 	}
 }
