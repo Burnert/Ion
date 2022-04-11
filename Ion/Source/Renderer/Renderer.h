@@ -103,15 +103,18 @@ namespace Ion
 		virtual void Init() = 0;
 
 		void Clear() const;
+		void RenderScene(const Scene* scene) const;
+		void Draw(const RPrimitiveRenderProxy& primitive, const Scene* targetScene = nullptr) const;
+
 		virtual void Clear(const RendererClearOptions& options) const = 0;
 
-		virtual void Draw(const RPrimitiveRenderProxy& primitive, const Scene* targetScene = nullptr) const = 0;
+		virtual void DrawIndexed(uint32 indexCount) const = 0;
+
 		virtual void DrawScreenTexture(const TShared<Texture>& texture) const = 0;
 
 		virtual void SetCurrentScene(const Scene* scene) = 0;
 		virtual const Scene* GetCurrentScene() const = 0;
 
-		virtual void RenderScene(const Scene* scene) = 0;
 		virtual void RenderEditorViewport(const TShared<Texture>& sceneFinalTexture, const TShared<Texture>& editorDataTexture) const = 0; // @TODO: this is a bad idea
 
 		virtual void SetVSyncEnabled(bool bEnabled) const = 0;

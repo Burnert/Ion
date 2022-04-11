@@ -62,41 +62,11 @@ namespace Ion
 		}
 	}
 
-	void DX11Renderer::Draw(const RPrimitiveRenderProxy& primitive, const Scene* targetScene) const
+	void DX11Renderer::DrawIndexed(uint32 indexCount) const
 	{
-		TRACE_FUNCTION();
-
-		ionassert(targetScene);
-
 		ID3D11DeviceContext* context = DX11::GetContext();
 
-		const Material* material = primitive.Material;
-		const DX11VertexBuffer* vb = (DX11VertexBuffer*)primitive.VertexBuffer;
-		const DX11IndexBuffer* ib = (DX11IndexBuffer*)primitive.IndexBuffer;
-		const DX11UniformBuffer* ub = (DX11UniformBuffer*)primitive.UniformBuffer;
-		const DX11Shader* shader = (DX11Shader*)primitive.Shader;
-
-		shader->Bind();
-		vb->Bind();
-		vb->BindLayout();
-		ib->Bind();
-
-		const Matrix4& viewProjectionMatrix = targetScene->m_RenderCamera.ViewProjectionMatrix;
-		const Matrix4& modelMatrix = primitive.Transform;
-
-		MeshUniforms& uniformData = ub->DataRef<MeshUniforms>();
-		uniformData.TransformMatrix = modelMatrix;
-		uniformData.InverseTransposeMatrix = Math::InverseTranspose(modelMatrix);
-		uniformData.ModelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
-
-		ub->UpdateData();
-		ub->Bind(1);
-
-		if (material) 
-			material->BindTextures();
-		//material->UpdateShaderUniforms();
-
-		dxcall_v(context->DrawIndexed(ib->GetIndexCount(), 0, 0));
+		dxcall_v(context->DrawIndexed(indexCount, 0, 0));
 	}
 
 	void DX11Renderer::DrawScreenTexture(const TShared<Texture>& texture) const
@@ -109,7 +79,7 @@ namespace Ion
 		texture->Bind(0);
 
 		// Index count is always 6 (2 triangles)
-		dxcall_v(context->DrawIndexed(6, 0, 0));
+		DrawIndexed(6);
 	}
 
 	void DX11Renderer::RenderEditorViewport(const TShared<Texture>& sceneFinalTexture, const TShared<Texture>& editorDataTexture) const
@@ -124,65 +94,7 @@ namespace Ion
 		editorDataTexture->BindDepth(2);
 
 		// Index count is always 6 (2 triangles)
-		dxcall_v(context->DrawIndexed(6, 0, 0));
-	}
-
-	void DX11Renderer::RenderScene(const Scene* scene)
-	{
-		TRACE_FUNCTION();
-
-		m_CurrentScene = scene;
-
-		// Set global matrices and other scene data
-		SceneUniforms& uniforms = scene->m_SceneUniformBuffer->DataRef<SceneUniforms>();
-		uniforms.ViewMatrix = scene->m_RenderCamera.ViewMatrix;
-		uniforms.ProjectionMatrix = scene->m_RenderCamera.ProjectionMatrix;
-		uniforms.ViewProjectionMatrix = scene->m_RenderCamera.ViewProjectionMatrix;
-		uniforms.CameraLocation = scene->m_RenderCamera.Location;
-
-		// Set lights
-		const RLightRenderProxy& dirLight = scene->GetRenderDirLight();
-		const TArray<RLightRenderProxy>& lights = scene->GetRenderLights();
-		uint32 lightNum = (int32)scene->GetRenderLights().size();
-
-		if (dirLight.IsEnabled())
-		{
-			uniforms.DirLight.Direction = Vector4(dirLight.Direction, 0.0f);
-			uniforms.DirLight.Color = Vector4(dirLight.Color, 1.0f);
-			uniforms.DirLight.Intensity = dirLight.Intensity;
-		}
-		else
-		{
-			uniforms.DirLight.Intensity = 0.0f;
-		}
-
-		uniforms.AmbientLightColor = scene->m_RenderAmbientLight;
-		uniforms.LightNum = lightNum;
-
-		uint32 lightIndex = 0;
-		for (const RLightRenderProxy& light : lights)
-		{
-			LightUniforms& lightUniforms = uniforms.Lights[lightIndex];
-
-			lightUniforms.Location = Vector4(light.Location, 1.0f);
-			lightUniforms.Color = Vector4(light.Color, 1.0f);
-			lightUniforms.Intensity = light.Intensity;
-			lightUniforms.Falloff = light.Falloff;
-
-			lightIndex++;
-		}
-
-		// Update Constant Buffers
-		scene->m_SceneUniformBuffer->UpdateData();
-		scene->m_SceneUniformBuffer->Bind(0);
-
-		{
-			TRACE_SCOPE("DX11Renderer::RenderScene - Draw Primitives");
-			for (const RPrimitiveRenderProxy& primitive : scene->GetScenePrimitives())
-			{
-				Draw(primitive, scene);
-			}
-		}
+		DrawIndexed(6);
 	}
 
 	void DX11Renderer::SetCurrentScene(const Scene* scene)

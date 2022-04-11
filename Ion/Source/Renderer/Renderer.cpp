@@ -42,6 +42,93 @@ namespace Ion
 		Clear(RendererClearOptions());
 	}
 
+	void Renderer::RenderScene(const Scene* scene) const
+	{
+		TRACE_FUNCTION();
+
+		// Set global matrices and other scene data
+		SceneUniforms& uniforms = scene->m_SceneUniformBuffer->DataRef<SceneUniforms>();
+		uniforms.ViewMatrix = scene->m_RenderCamera.ViewMatrix;
+		uniforms.ProjectionMatrix = scene->m_RenderCamera.ProjectionMatrix;
+		uniforms.ViewProjectionMatrix = scene->m_RenderCamera.ViewProjectionMatrix;
+		uniforms.CameraLocation = scene->m_RenderCamera.Location;
+
+		// Set lights
+		const RLightRenderProxy& dirLight = scene->GetRenderDirLight();
+		const TArray<RLightRenderProxy>& lights = scene->GetRenderLights();
+		uint32 lightNum = (int32)scene->GetRenderLights().size();
+
+		if (dirLight.IsEnabled())
+		{
+			uniforms.DirLight.Direction = Vector4(dirLight.Direction, 0.0f);
+			uniforms.DirLight.Color = Vector4(dirLight.Color, 1.0f);
+			uniforms.DirLight.Intensity = dirLight.Intensity;
+		}
+		else
+		{
+			uniforms.DirLight.Intensity = 0.0f;
+		}
+
+		uniforms.AmbientLightColor = scene->m_RenderAmbientLight;
+		uniforms.LightNum = lightNum;
+
+		uint32 lightIndex = 0;
+		for (const RLightRenderProxy& light : lights)
+		{
+			LightUniforms& lightUniforms = uniforms.Lights[lightIndex];
+
+			lightUniforms.Location = Vector4(light.Location, 1.0f);
+			lightUniforms.Color = Vector4(light.Color, 1.0f);
+			lightUniforms.Intensity = light.Intensity;
+			lightUniforms.Falloff = light.Falloff;
+
+			lightIndex++;
+		}
+
+		// Update Constant Buffers
+		scene->m_SceneUniformBuffer->UpdateData();
+		scene->m_SceneUniformBuffer->Bind(0);
+
+		{
+			TRACE_SCOPE("Renderer::RenderScene - Draw Primitives");
+			for (const RPrimitiveRenderProxy& primitive : scene->GetScenePrimitives())
+			{
+				Draw(primitive, scene);
+			}
+		}
+	}
+
+	void Renderer::Draw(const RPrimitiveRenderProxy& primitive, const Scene* targetScene) const
+	{
+		TRACE_FUNCTION();
+
+		ionassert(targetScene);
+
+		primitive.Shader->Bind();
+		primitive.VertexBuffer->Bind();
+		primitive.VertexBuffer->BindLayout();
+		primitive.IndexBuffer->Bind();
+
+		const Matrix4& viewProjectionMatrix = targetScene->m_RenderCamera.ViewProjectionMatrix;
+		const Matrix4& modelMatrix = primitive.Transform;
+
+		MeshUniforms& uniformData = primitive.UniformBuffer->DataRef<MeshUniforms>();
+		uniformData.TransformMatrix = modelMatrix;
+		uniformData.InverseTransposeMatrix = Math::InverseTranspose(modelMatrix);
+		uniformData.ModelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
+
+		primitive.UniformBuffer->UpdateData();
+		primitive.UniformBuffer->Bind(1);
+
+		const Material* material = primitive.Material;
+
+		if (material)
+			material->BindTextures();
+		//material->UpdateShaderUniforms();
+
+		DrawIndexed(primitive.IndexBuffer->GetIndexCount());
+	}
+
 	void Renderer::CreateScreenTexturePrimitives()
 	{
 		TRACE_FUNCTION();
@@ -82,7 +169,7 @@ namespace Ion
 			2, 0, 3,
 		};
 
-		TShared<VertexLayout> quadLayout = MakeShareable(new VertexLayout(2));
+		TShared<VertexLayout> quadLayout = MakeShared<VertexLayout>(2);
 		quadLayout->AddAttribute(EVertexAttributeSemantic::Position, EVertexAttributeType::Float, 3, false);
 		quadLayout->AddAttribute(EVertexAttributeSemantic::TexCoord, EVertexAttributeType::Float, 2, false);
 

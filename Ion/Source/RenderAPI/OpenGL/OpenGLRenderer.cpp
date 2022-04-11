@@ -63,50 +63,54 @@ namespace Ion
 		);
 	}
 
-	void OpenGLRenderer::Draw(const RPrimitiveRenderProxy& primitive, const Scene* targetScene) const
+	//void OpenGLRenderer::Draw(const RPrimitiveRenderProxy& primitive, const Scene* targetScene) const
+	//{
+	//	TRACE_FUNCTION();
+
+	//	ionassert(targetScene);
+
+	//	const Material* material = primitive.Material;
+	//	const OpenGLVertexBuffer* vertexBuffer = (OpenGLVertexBuffer*)primitive.VertexBuffer;
+	//	const OpenGLIndexBuffer* indexBuffer = (OpenGLIndexBuffer*)primitive.IndexBuffer;
+	//	const OpenGLUniformBuffer* uniformBuffer = (OpenGLUniformBuffer*)primitive.UniformBuffer;
+	//	const OpenGLShader* shader = (OpenGLShader*)primitive.Shader;
+
+	//	vertexBuffer->Bind();
+	//	vertexBuffer->BindLayout();
+	//	indexBuffer->Bind();
+	//	shader->Bind();
+
+	//	if (material)
+	//	{
+	//		material->BindTextures();
+	//		//material->UpdateShaderUniforms();
+	//		material->ForEachTexture([shader](const TShared<Texture> texture, uint32 slot)
+	//		{
+	//			char uniformName[20];
+	//			sprintf_s(uniformName, "g_Samplers[%u]", slot);
+	//			shader->SetUniform1i(uniformName, slot);
+	//		});
+	//	}
+
+	//	// Calculate the Model View Projection Matrix based on the current scene camera
+	//	const RCameraRenderProxy& activeCamera = targetScene->GetCameraRenderProxy();
+
+	//	const Matrix4& viewProjectionMatrix = activeCamera.ViewProjectionMatrix;
+	//	const Matrix4& modelMatrix = primitive.Transform;
+
+	//	MeshUniforms& uniformData = uniformBuffer->DataRef<MeshUniforms>();
+	//	uniformData.TransformMatrix = modelMatrix;
+	//	uniformData.InverseTransposeMatrix = Math::InverseTranspose(modelMatrix);
+	//	uniformData.ModelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
+
+	//	uniformBuffer->UpdateData();
+	//	uniformBuffer->Bind(1);
+
+	//	uint32 indexCount = indexBuffer->GetIndexCount();
+	//}
+
+	void OpenGLRenderer::DrawIndexed(uint32 indexCount) const
 	{
-		TRACE_FUNCTION();
-
-		ionassert(targetScene);
-
-		const Material* material = primitive.Material;
-		const OpenGLVertexBuffer* vertexBuffer = (OpenGLVertexBuffer*)primitive.VertexBuffer;
-		const OpenGLIndexBuffer* indexBuffer = (OpenGLIndexBuffer*)primitive.IndexBuffer;
-		const OpenGLUniformBuffer* uniformBuffer = (OpenGLUniformBuffer*)primitive.UniformBuffer;
-		const OpenGLShader* shader = (OpenGLShader*)primitive.Shader;
-
-		vertexBuffer->Bind();
-		vertexBuffer->BindLayout();
-		indexBuffer->Bind();
-		shader->Bind();
-
-		if (material)
-		{
-			material->BindTextures();
-			//material->UpdateShaderUniforms();
-			material->ForEachTexture([shader](const TShared<Texture> texture, uint32 slot)
-			{
-				char uniformName[20];
-				sprintf_s(uniformName, "g_Samplers[%u]", slot);
-				shader->SetUniform1i(uniformName, slot);
-			});
-		}
-
-		// Calculate the Model View Projection Matrix based on the current scene camera
-		const RCameraRenderProxy& activeCamera = targetScene->GetCameraRenderProxy();
-
-		const Matrix4& viewProjectionMatrix = activeCamera.ViewProjectionMatrix;
-		const Matrix4& modelMatrix = primitive.Transform;
-
-		MeshUniforms& uniformData = uniformBuffer->DataRef<MeshUniforms>();
-		uniformData.TransformMatrix = modelMatrix;
-		uniformData.InverseTransposeMatrix = Math::InverseTranspose(modelMatrix);
-		uniformData.ModelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
-
-		uniformBuffer->UpdateData();
-		uniformBuffer->Bind(1);
-
-		uint32 indexCount = indexBuffer->GetIndexCount();
 		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
 	}
 
@@ -123,61 +127,6 @@ namespace Ion
 
 	void OpenGLRenderer::RenderEditorViewport(const TShared<Texture>& sceneFinalTexture, const TShared<Texture>& editorDataTexture) const
 	{
-	}
-
-	void OpenGLRenderer::RenderScene(const Scene* scene)
-	{
-		TRACE_FUNCTION();
-
-		m_CurrentScene = scene;
-
-		// Set global matrices and other scene data
-		SceneUniforms& uniforms = scene->m_SceneUniformBuffer->DataRef<SceneUniforms>();
-		uniforms.ViewMatrix = scene->m_RenderCamera.ViewMatrix;
-		uniforms.ProjectionMatrix = scene->m_RenderCamera.ProjectionMatrix;
-		uniforms.ViewProjectionMatrix = scene->m_RenderCamera.ViewProjectionMatrix;
-		uniforms.CameraLocation = scene->m_RenderCamera.Location;
-
-		// Set lights
-		const RLightRenderProxy& dirLight = scene->GetRenderDirLight();
-		const TArray<RLightRenderProxy>& lights = scene->GetRenderLights();
-		uint32 lightNum = scene->GetLightNumber();
-
-		if (scene->HasDirectionalLight())
-		{
-			uniforms.DirLight.Direction = Vector4(dirLight.Direction, 0.0f);
-			uniforms.DirLight.Color = Vector4(dirLight.Color, 1.0f);
-			uniforms.DirLight.Intensity = dirLight.Intensity;
-		}
-		else
-		{
-			uniforms.DirLight.Intensity = 0.0f;
-		}
-
-		uniforms.AmbientLightColor = scene->GetAmbientLightColor();
-		uniforms.LightNum = lightNum;
-
-		uint32 lightIndex = 0;
-		for (const RLightRenderProxy& light : lights)
-		{
-			LightUniforms& lightUniforms = uniforms.Lights[lightIndex];
-
-			lightUniforms.Location = Vector4(light.Location, 1.0f);
-			lightUniforms.Color = Vector4(light.Color, 1.0f);
-			lightUniforms.Intensity = light.Intensity;
-			lightUniforms.Falloff = light.Falloff;
-
-			lightIndex++;
-		}
-
-		// Update Constant Buffers
-		scene->m_SceneUniformBuffer->UpdateData();
-		scene->m_SceneUniformBuffer->Bind(0);
-
-		for (const RPrimitiveRenderProxy& primitive : scene->GetScenePrimitives())
-		{
-			Draw(primitive, scene);
-		}
 	}
 
 	void OpenGLRenderer::SetCurrentScene(const Scene* scene)

@@ -21,10 +21,10 @@ namespace Ion
 
 		virtual void Clear(const RendererClearOptions& options) const override;
 
-		virtual void Draw(const RPrimitiveRenderProxy& primitive, const Scene* targetScene = nullptr) const override;
+		virtual void DrawIndexed(uint32 indexCount) const override;
+
 		virtual void DrawScreenTexture(const TShared<Texture>& texture) const override;
 
-		virtual void RenderScene(const Scene* scene) override;
 		virtual void RenderEditorViewport(const TShared<Texture>& sceneFinalTexture, const TShared<Texture>& editorDataTexture) const override;
 
 		virtual void SetCurrentScene(const Scene* scene) override;
