@@ -18,7 +18,6 @@
 namespace Ion
 {
 	DX11Renderer::DX11Renderer() :
-		m_CurrentScene(nullptr),
 		m_CurrentRTV(nullptr),
 		m_CurrentDSV(nullptr),
 		m_ViewportDimensions({ })
@@ -82,16 +81,6 @@ namespace Ion
 
 		// Index count is always 6 (2 triangles)
 		DrawIndexed(6);
-	}
-
-	void DX11Renderer::SetCurrentScene(const Scene* scene)
-	{
-		m_CurrentScene = scene;
-	}
-
-	const Scene* DX11Renderer::GetCurrentScene() const
-	{
-		return m_CurrentScene;
 	}
 
 	void DX11Renderer::SetVSyncEnabled(bool bEnabled) const

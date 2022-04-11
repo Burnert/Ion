@@ -8,8 +8,7 @@
 
 namespace Ion
 {
-	OpenGLRenderer::OpenGLRenderer()
-		: m_CurrentScene(nullptr),
+	OpenGLRenderer::OpenGLRenderer() :
 		m_CurrentRenderTarget(0)
 	{ }
 
@@ -116,16 +115,6 @@ namespace Ion
 
 	void OpenGLRenderer::RenderEditorViewport(const TShared<Texture>& sceneFinalTexture, const TShared<Texture>& editorDataTexture) const
 	{
-	}
-
-	void OpenGLRenderer::SetCurrentScene(const Scene* scene)
-	{
-		m_CurrentScene = scene;
-	}
-
-	const Scene* OpenGLRenderer::GetCurrentScene() const
-	{
-		return m_CurrentScene;
 	}
 
 	void OpenGLRenderer::SetVSyncEnabled(bool bEnabled) const

@@ -111,9 +111,6 @@ namespace Ion
 
 		virtual void DrawIndexed(uint32 indexCount) const = 0;
 
-		virtual void SetCurrentScene(const Scene* scene) = 0;
-		virtual const Scene* GetCurrentScene() const = 0;
-
 		virtual void RenderEditorViewport(const TShared<Texture>& sceneFinalTexture, const TShared<Texture>& editorDataTexture) const = 0; // @TODO: this is a bad idea
 
 		virtual void SetVSyncEnabled(bool bEnabled) const = 0;

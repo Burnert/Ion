@@ -19,9 +19,6 @@ namespace Ion
 
 		virtual void RenderEditorViewport(const TShared<Texture>& sceneFinalTexture, const TShared<Texture>& editorDataTexture) const override;
 
-		virtual void SetCurrentScene(const Scene* scene) override;
-		virtual const Scene* GetCurrentScene() const override;
-
 		virtual void SetVSyncEnabled(bool bEnabled) const override;
 		virtual bool IsVSyncEnabled() const override;
 
@@ -60,8 +57,6 @@ namespace Ion
 		}
 
 	private:
-		const Scene* m_CurrentScene;
-
 		uint32 m_CurrentRenderTarget;
 	};
 }
