@@ -108,7 +108,7 @@ namespace Ion
 		dxcall_v(context->DrawIndexed(6, 0, 0));
 	}
 
-	void DX11Renderer::DrawEditorViewport(const TShared<Texture>& sceneFinalTexture, const TShared<Texture>& editorDataTexture) const
+	void DX11Renderer::RenderEditorViewport(const TShared<Texture>& sceneFinalTexture, const TShared<Texture>& editorDataTexture) const
 	{
 		TRACE_FUNCTION();
 

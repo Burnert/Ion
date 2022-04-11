@@ -71,7 +71,7 @@ namespace Ion::Editor
 
 			Renderer::Get()->SetRenderTarget(m_ViewportFramebuffer);
 			Renderer::Get()->Clear(Vector4(0.0f, 0.0f, 0.0f, 0.0f));
-			Renderer::Get()->DrawEditorViewport(m_FinalSceneFramebuffer, m_SelectedFramebuffer);
+			Renderer::Get()->RenderEditorViewport(m_FinalSceneFramebuffer, m_SelectedFramebuffer);
 		}
 	}
 
