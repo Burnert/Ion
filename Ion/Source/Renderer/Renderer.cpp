@@ -129,6 +129,17 @@ namespace Ion
 		DrawIndexed(primitive.IndexBuffer->GetIndexCount());
 	}
 
+	void Renderer::DrawScreenTexture(const TShared<Texture>& texture) const
+	{
+		TRACE_FUNCTION();
+
+		BindScreenTexturePrimitives();
+		texture->Bind(0);
+
+		// Index count is always 6 (2 triangles)
+		DrawIndexed(6);
+	}
+
 	void Renderer::CreateScreenTexturePrimitives()
 	{
 		TRACE_FUNCTION();

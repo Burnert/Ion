@@ -114,17 +114,6 @@ namespace Ion
 		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
 	}
 
-	void OpenGLRenderer::DrawScreenTexture(const TShared<Texture>& texture) const
-	{
-		TRACE_FUNCTION();
-
-		BindScreenTexturePrimitives();
-		texture->Bind(0);
-
-		// Index count is always 6 (2 triangles)
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-	}
-
 	void OpenGLRenderer::RenderEditorViewport(const TShared<Texture>& sceneFinalTexture, const TShared<Texture>& editorDataTexture) const
 	{
 	}

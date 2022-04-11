@@ -23,8 +23,6 @@ namespace Ion
 
 		virtual void DrawIndexed(uint32 indexCount) const override;
 
-		virtual void DrawScreenTexture(const TShared<Texture>& texture) const override;
-
 		virtual void RenderEditorViewport(const TShared<Texture>& sceneFinalTexture, const TShared<Texture>& editorDataTexture) const override;
 
 		virtual void SetCurrentScene(const Scene* scene) override;

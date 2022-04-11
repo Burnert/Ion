@@ -105,12 +105,11 @@ namespace Ion
 		void Clear() const;
 		void RenderScene(const Scene* scene) const;
 		void Draw(const RPrimitiveRenderProxy& primitive, const Scene* targetScene = nullptr) const;
+		void DrawScreenTexture(const TShared<Texture>& texture) const;
 
 		virtual void Clear(const RendererClearOptions& options) const = 0;
 
 		virtual void DrawIndexed(uint32 indexCount) const = 0;
-
-		virtual void DrawScreenTexture(const TShared<Texture>& texture) const = 0;
 
 		virtual void SetCurrentScene(const Scene* scene) = 0;
 		virtual const Scene* GetCurrentScene() const = 0;

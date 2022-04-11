@@ -69,19 +69,6 @@ namespace Ion
 		dxcall_v(context->DrawIndexed(indexCount, 0, 0));
 	}
 
-	void DX11Renderer::DrawScreenTexture(const TShared<Texture>& texture) const
-	{
-		TRACE_FUNCTION();
-
-		ID3D11DeviceContext* context = DX11::GetContext();
-
-		BindScreenTexturePrimitives();
-		texture->Bind(0);
-
-		// Index count is always 6 (2 triangles)
-		DrawIndexed(6);
-	}
-
 	void DX11Renderer::RenderEditorViewport(const TShared<Texture>& sceneFinalTexture, const TShared<Texture>& editorDataTexture) const
 	{
 		TRACE_FUNCTION();
