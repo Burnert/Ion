@@ -38,17 +38,29 @@ namespace Ion
 		InitScreenTextureRendering();
 	}
 
-	void OpenGLRenderer::Clear() const
-	{
-		Clear(Vector4(0.0f, 0.0f, 0.0f, 1.0f));
-	}
-
-	void OpenGLRenderer::Clear(const Vector4& color) const
+	void OpenGLRenderer::Clear(const RendererClearOptions& options) const
 	{
 		TRACE_FUNCTION();
 
-		glClearColor(color.x, color.y, color.z, color.w);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		if (options.bClearColor)
+		{
+			glClearColor(options.ClearColorValue.x, options.ClearColorValue.y,
+				options.ClearColorValue.z, options.ClearColorValue.w);
+		}
+		if (options.bClearDepth)
+		{
+			glClearDepth(options.ClearDepthValue);
+		}
+		if (options.bClearStencil)
+		{
+			glClearStencil(options.ClearStencilValue);
+		}
+
+		glClear(
+			FlagsIf(options.bClearColor,   GL_COLOR_BUFFER_BIT) |
+			FlagsIf(options.bClearDepth,   GL_DEPTH_BUFFER_BIT) |
+			FlagsIf(options.bClearStencil, GL_STENCIL_BUFFER_BIT)
+		);
 	}
 
 	void OpenGLRenderer::Draw(const RPrimitiveRenderProxy& primitive, const Scene* targetScene) const

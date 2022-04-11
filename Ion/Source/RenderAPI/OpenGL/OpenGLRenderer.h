@@ -13,8 +13,7 @@ namespace Ion
 
 		virtual void Init() override;
 
-		virtual void Clear() const override;
-		virtual void Clear(const Vector4& color) const override;
+		virtual void Clear(const RendererClearOptions& options) const override;
 
 		virtual void Draw(const RPrimitiveRenderProxy& primitive, const Scene* targetScene = nullptr) const override;
 		virtual void DrawScreenTexture(const TShared<Texture>& texture) const override;

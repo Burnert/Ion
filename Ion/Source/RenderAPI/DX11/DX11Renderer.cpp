@@ -37,12 +37,7 @@ namespace Ion
 		InitShaders();
 	}
 
-	void DX11Renderer::Clear() const
-	{
-		Clear(Vector4(0.0f, 0.0f, 0.0f, 1.0f));
-	}
-
-	void DX11Renderer::Clear(const Vector4& color) const
+	void DX11Renderer::Clear(const RendererClearOptions& options) const
 	{
 		TRACE_FUNCTION();
 
@@ -50,11 +45,20 @@ namespace Ion
 
 		if (m_CurrentRTV)
 		{
-			dxcall_v(context->ClearRenderTargetView(m_CurrentRTV, (float*)&color));
+			if (options.bClearColor)
+			{
+				dxcall_v(context->ClearRenderTargetView(m_CurrentRTV, (float*)&options.ClearColorValue));
+			}
 		}
 		if (m_CurrentDSV)
 		{
-			dxcall_v(context->ClearDepthStencilView(m_CurrentDSV, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0));
+			if (options.bClearDepth || options.bClearStencil)
+			{
+				dxcall_v(context->ClearDepthStencilView(m_CurrentDSV,
+					FlagsIf(options.bClearDepth, D3D11_CLEAR_DEPTH) |
+					FlagsIf(options.bClearStencil, D3D11_CLEAR_STENCIL),
+					options.ClearDepthValue, options.ClearStencilValue));
+			}
 		}
 	}
 

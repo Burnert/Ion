@@ -40,6 +40,34 @@ namespace Ion
 		TShared<IndexBuffer> IndexBuffer;
 	};
 
+	struct RendererClearOptions
+	{
+		static inline const Vector4  DefaultClearColor   = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+		static constexpr float       DefaultClearDepth   = 1.0f;
+		static constexpr uint8       DefaultClearStencil = 0;
+
+		Vector4 ClearColorValue;
+		float ClearDepthValue;
+		uint8 ClearStencilValue;
+
+		uint8 bClearColor : 1;
+		uint8 bClearDepth : 1;
+		uint8 bClearStencil : 1;
+
+		RendererClearOptions(
+			const Vector4& color = DefaultClearColor,
+			float depth          = DefaultClearDepth, 
+			uint8 stencil        = DefaultClearStencil) :
+			ClearColorValue(color),
+			ClearDepthValue(depth),
+			ClearStencilValue(stencil),
+			bClearColor(true),
+			bClearDepth(true),
+			bClearStencil(true)
+		{
+		}
+	};
+
 	struct REditorPassPrimitive
 	{
 		GUID Guid = GUID::Zero;
@@ -74,8 +102,8 @@ namespace Ion
 
 		virtual void Init() = 0;
 
-		virtual void Clear() const = 0;
-		virtual void Clear(const Vector4& color) const = 0;
+		void Clear() const;
+		virtual void Clear(const RendererClearOptions& options) const = 0;
 
 		virtual void Draw(const RPrimitiveRenderProxy& primitive, const Scene* targetScene = nullptr) const = 0;
 		virtual void DrawScreenTexture(const TShared<Texture>& texture) const = 0;

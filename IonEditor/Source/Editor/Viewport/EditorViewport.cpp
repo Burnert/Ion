@@ -70,7 +70,7 @@ namespace Ion::Editor
 			// Render to viewport framebuffer
 
 			Renderer::Get()->SetRenderTarget(m_ViewportFramebuffer);
-			Renderer::Get()->Clear(Vector4(0.0f, 0.0f, 0.0f, 0.0f));
+			Renderer::Get()->Clear();
 			Renderer::Get()->RenderEditorViewport(m_FinalSceneFramebuffer, m_SelectedFramebuffer);
 		}
 	}

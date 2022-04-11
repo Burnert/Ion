@@ -37,6 +37,11 @@ namespace Ion
 		return s_Instance;
 	}
 
+	void Renderer::Clear() const
+	{
+		Clear(RendererClearOptions());
+	}
+
 	void Renderer::CreateScreenTexturePrimitives()
 	{
 		TRACE_FUNCTION();
@@ -247,8 +252,12 @@ namespace Ion
 		if (!data.RTObjectID || !data.RTSelection || data.Primitives.empty())
 			return;
 
+		// Set the alpha channel to 0
+		RendererClearOptions clearOptions { };
+		clearOptions.ClearColorValue = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+
 		SetRenderTarget(data.RTObjectID);
-		Clear(Vector4(0.0f, 0.0f, 0.0f, 0.0f));
+		Clear(clearOptions);
 
 		SceneUniforms& uniforms = scene->m_SceneUniformBuffer->DataRef<SceneUniforms>();
 		uniforms.ViewMatrix = scene->m_RenderCamera.ViewMatrix;
@@ -279,7 +288,7 @@ namespace Ion
 		}
 
 		SetRenderTarget(data.RTSelection);
-		Clear(Vector4(0.0f, 0.0f, 0.0f, 0.0f));
+		Clear(clearOptions);
 
 		if (!data.SelectedPrimitives.empty())
 		{
