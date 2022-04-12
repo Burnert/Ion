@@ -286,7 +286,6 @@ namespace Ion
 	void Renderer::InitEditorSelectedShader()
 	{
 		String vertexSrc;
-		String pixelSrc;
 
 		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
 
@@ -294,17 +293,15 @@ namespace Ion
 		if (RenderAPI::GetCurrent() == ERenderAPI::DX11)
 		{
 			File::ReadToString(shadersPath + L"Editor/EditorSelectedVS.hlsl", vertexSrc);
-			File::ReadToString(shadersPath + L"Editor/EditorSelectedPS.hlsl", pixelSrc);
 		}
 		else
 		{
 			File::ReadToString(shadersPath + L"Editor/EditorSelected.vert", vertexSrc);
-			File::ReadToString(shadersPath + L"Editor/EditorSelected.frag", pixelSrc);
 		}
 
 		m_EditorSelectedShader = Shader::Create();
 		m_EditorSelectedShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
-		m_EditorSelectedShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
+		m_EditorSelectedShader->AddShaderSource(EShaderType::Pixel, String());
 
 		if (!m_EditorSelectedShader->Compile())
 		{

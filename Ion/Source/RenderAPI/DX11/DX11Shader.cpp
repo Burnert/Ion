@@ -50,6 +50,12 @@ namespace Ion
 		{
 			DXShader& shader = entry.second;
 
+			if (shader.Source.empty())
+			{
+				shader.ShaderPtr = nullptr;
+				continue;
+			}
+
 			HRESULT hResult;
 			ID3D11Device* device = DX11::GetDevice();
 
