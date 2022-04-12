@@ -378,7 +378,7 @@ public:
 
 		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
 
-		if (RenderAPI::GetCurrent() == ERenderAPI::DX11)
+		if (RHI::GetCurrent() == ERHI::DX11)
 		{
 			File::ReadToString(shadersPath + L"BasicVS.hlsl", vertexSrc);
 			File::ReadToString(shadersPath + L"BasicPS.hlsl", pixelSrc);

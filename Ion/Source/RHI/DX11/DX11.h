@@ -53,7 +53,6 @@ namespace Ion
 
 	class ION_API DX11
 	{
-		friend class RenderAPI;
 	public:
 		/* Called by the Application class */
 		static void Init(GenericWindow* window);
@@ -191,7 +190,7 @@ namespace Ion
 
 		static IDXGIInfoQueue* s_DebugInfoQueue;
 #endif
-
 		friend class DX11Renderer;
+		friend class RHI;
 	};
 }

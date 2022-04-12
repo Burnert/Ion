@@ -11,11 +11,11 @@ namespace Ion
 {
 	TShared<Texture> Texture::Create(const TextureDescription& desc)
 	{
-		switch (RenderAPI::GetCurrent())
+		switch (RHI::GetCurrent())
 		{
-			case ERenderAPI::OpenGL:
+			case ERHI::OpenGL:
 				return MakeShareable(new OpenGLTexture(desc));
-			case ERenderAPI::DX11:
+			case ERHI::DX11:
 				return MakeShareable(new DX11Texture(desc));
 			default:
 				return TShared<Texture>();

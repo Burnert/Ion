@@ -11,7 +11,6 @@ namespace Ion
 
 	class ION_API OpenGL
 	{
-		friend class RenderAPI;
 	public:
 		/* Called by the Application class */
 		static void Init(GenericWindow* window);
@@ -59,5 +58,7 @@ namespace Ion
 
 	private:
 		static char s_DisplayName[120];
+
+		friend class RHI;
 	};
 }

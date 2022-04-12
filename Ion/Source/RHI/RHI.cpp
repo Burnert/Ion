@@ -15,24 +15,24 @@
 
 namespace Ion
 {
-	bool RenderAPI::Init(ERenderAPI api, GenericWindow* window)
+	bool RHI::Init(ERHI rhi, GenericWindow* window)
 	{
 		//SCOPED_PERFORMANCE_COUNTER(RenderAPI_InitTime);
 		TRACE_FUNCTION();
 
-		SetCurrent(api);
+		SetCurrent(rhi);
 
-		switch (api)
+		switch (rhi)
 		{
 #if PLATFORM_SUPPORTS_OPENGL
-			case ERenderAPI::OpenGL:
+			case ERHI::OpenGL:
 			{
 				OpenGL::Init(window);
 				break;
 			}
 #endif
 #if PLATFORM_SUPPORTS_DX11
-			case ERenderAPI::DX11:
+			case ERHI::DX11:
 			{
 				DX11::Init(window);
 				break;
@@ -44,12 +44,12 @@ namespace Ion
 		return true;
 	}
 
-	void RenderAPI::Shutdown()
+	void RHI::Shutdown()
 	{
-		switch (s_CurrentRenderAPI)
+		switch (s_CurrentRHI)
 		{
 #if PLATFORM_SUPPORTS_DX11
-			case ERenderAPI::DX11:
+			case ERHI::DX11:
 			{
 				DX11::Shutdown();
 				break;
@@ -60,12 +60,12 @@ namespace Ion
 		}
 	}
 
-	void RenderAPI::BeginFrame()
+	void RHI::BeginFrame()
 	{
-		switch (s_CurrentRenderAPI)
+		switch (s_CurrentRHI)
 		{
 #if PLATFORM_SUPPORTS_DX11
-		case ERenderAPI::DX11:
+		case ERHI::DX11:
 		{
 			DX11::BeginFrame();
 			break;
@@ -76,19 +76,19 @@ namespace Ion
 		}
 	}
 
-	void RenderAPI::EndFrame(GenericWindow& window)
+	void RHI::EndFrame(GenericWindow& window)
 	{
-		switch (s_CurrentRenderAPI)
+		switch (s_CurrentRHI)
 		{
 #if PLATFORM_SUPPORTS_OPENGL
-			case ERenderAPI::OpenGL:
+			case ERHI::OpenGL:
 			{
 				OpenGL::EndFrame(window);
 				break;
 			}
 #endif
 #if PLATFORM_SUPPORTS_DX11
-			case ERenderAPI::DX11:
+			case ERHI::DX11:
 			{
 				DX11::EndFrame();
 				break;
@@ -99,12 +99,12 @@ namespace Ion
 		}
 	}
 
-	void RenderAPI::ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height)
+	void RHI::ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height)
 	{
-		switch (s_CurrentRenderAPI)
+		switch (s_CurrentRHI)
 		{
 #if PLATFORM_SUPPORTS_DX11
-		case ERenderAPI::DX11:
+		case ERHI::DX11:
 		{
 			DX11::ChangeDisplayMode(window, mode, width, height);
 			break;
@@ -115,47 +115,47 @@ namespace Ion
 		}
 	}
 
-	void RenderAPI::ResizeBuffers(GenericWindow& window, const TextureDimensions& size)
+	void RHI::ResizeBuffers(GenericWindow& window, const TextureDimensions& size)
 	{
-		switch (s_CurrentRenderAPI)
+		switch (s_CurrentRHI)
 		{
-		case ERenderAPI::None:    break;
+		case ERHI::None:    break;
 #if PLATFORM_SUPPORTS_DX11
-		case ERenderAPI::DX11:    DX11::ResizeBuffers(window, size); break;
+		case ERHI::DX11:    DX11::ResizeBuffers(window, size); break;
 #endif
 		}
 	}
 
-	const char* RenderAPI::GetCurrentDisplayName()
+	const char* RHI::GetCurrentDisplayName()
 	{
-		switch (s_CurrentRenderAPI)
+		switch (s_CurrentRHI)
 		{
-		case ERenderAPI::None:    return "Currently not using any Render API.";
+		case ERHI::None:    return "Currently not using any Render API.";
 #if PLATFORM_SUPPORTS_OPENGL
-		case ERenderAPI::OpenGL:  return OpenGL::GetDisplayName();
+		case ERHI::OpenGL:  return OpenGL::GetDisplayName();
 #endif
 #if PLATFORM_SUPPORTS_DX11
-		case ERenderAPI::DX11:    return DX11::GetDisplayName();
+		case ERHI::DX11:    return DX11::GetDisplayName();
 #endif
 		default:                  return "";
 		}
 	}
 
-	void RenderAPI::InitImGuiBackend()
+	void RHI::InitImGuiBackend()
 	{
 		TRACE_FUNCTION();
 
-		switch (s_CurrentRenderAPI)
+		switch (s_CurrentRHI)
 		{
 #if PLATFORM_SUPPORTS_OPENGL
-			case ERenderAPI::OpenGL:
+			case ERHI::OpenGL:
 			{
 				OpenGL::InitImGuiBackend();
 				break;
 			}
 #endif
 #if PLATFORM_SUPPORTS_DX11
-			case ERenderAPI::DX11:
+			case ERHI::DX11:
 			{
 				DX11::InitImGuiBackend();
 				break;
@@ -164,21 +164,21 @@ namespace Ion
 		}
 	}
 
-	void RenderAPI::ImGuiNewFrame()
+	void RHI::ImGuiNewFrame()
 	{
 		TRACE_FUNCTION();
 
-		switch (s_CurrentRenderAPI)
+		switch (s_CurrentRHI)
 		{
 #if PLATFORM_SUPPORTS_OPENGL
-			case ERenderAPI::OpenGL:
+			case ERHI::OpenGL:
 			{
 				OpenGL::ImGuiNewFrame();
 				break;
 			}
 #endif
 #if PLATFORM_SUPPORTS_DX11
-			case ERenderAPI::DX11:
+			case ERHI::DX11:
 			{
 				DX11::ImGuiNewFrame();
 				break;
@@ -187,21 +187,21 @@ namespace Ion
 		}
 	}
 
-	void RenderAPI::ImGuiRender(ImDrawData* drawData)
+	void RHI::ImGuiRender(ImDrawData* drawData)
 	{
 		TRACE_FUNCTION();
 
-		switch (s_CurrentRenderAPI)
+		switch (s_CurrentRHI)
 		{
 #if PLATFORM_SUPPORTS_OPENGL
-			case ERenderAPI::OpenGL:
+			case ERHI::OpenGL:
 			{
 				OpenGL::ImGuiRender(drawData);
 				break;
 			}
 #endif
 #if PLATFORM_SUPPORTS_DX11
-			case ERenderAPI::DX11:
+			case ERHI::DX11:
 			{
 				DX11::ImGuiRender(drawData);
 				break;
@@ -210,21 +210,21 @@ namespace Ion
 		}
 	}
 
-	void RenderAPI::ImGuiShutdown()
+	void RHI::ImGuiShutdown()
 	{
 		TRACE_FUNCTION();
 
-		switch (s_CurrentRenderAPI)
+		switch (s_CurrentRHI)
 		{
 #if PLATFORM_SUPPORTS_OPENGL
-			case ERenderAPI::OpenGL:
+			case ERHI::OpenGL:
 			{
 				OpenGL::ImGuiShutdown();
 				break;
 			}
 #endif
 #if PLATFORM_SUPPORTS_DX11
-			case ERenderAPI::DX11:
+			case ERHI::DX11:
 			{
 				DX11::ImGuiShutdown();
 				break;
@@ -233,10 +233,10 @@ namespace Ion
 		}
 	}
 
-	void RenderAPI::SetCurrent(ERenderAPI api)
+	void RHI::SetCurrent(ERHI rhi)
 	{
-		s_CurrentRenderAPI = api;
+		s_CurrentRHI = rhi;
 	}
 
-	ERenderAPI RenderAPI::s_CurrentRenderAPI = ERenderAPI::None;
+	ERHI RHI::s_CurrentRHI = ERHI::None;
 }

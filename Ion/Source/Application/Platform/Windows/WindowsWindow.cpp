@@ -850,7 +850,7 @@ namespace Ion
 
 			m_bFullScreenMode = true;
 
-			RenderAPI::ChangeDisplayMode(*this, EDisplayMode::FullScreen, width, height);
+			RHI::ChangeDisplayMode(*this, EDisplayMode::FullScreen, width, height);
 
 			WindowChangeDisplayModeEvent event((uint64)m_WindowHandle, EDisplayMode::FullScreen, width, height);
 			PostEvent(event);
@@ -864,7 +864,7 @@ namespace Ion
 			int32 clientWidth = clientRect.right - clientRect.left;
 			int32 clientHeight = clientRect.bottom - clientRect.top;
 
-			RenderAPI::ChangeDisplayMode(*this, EDisplayMode::Windowed, clientWidth, clientHeight);
+			RHI::ChangeDisplayMode(*this, EDisplayMode::Windowed, clientWidth, clientHeight);
 
 			RECT& windowRect = m_WindowBeforeFullScreen.WindowPlacement.rcNormalPosition;
 			int32 x = windowRect.left;

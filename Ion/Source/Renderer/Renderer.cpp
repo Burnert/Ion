@@ -16,14 +16,14 @@ namespace Ion
 
 		ionassert(!s_Instance);
 
-		switch (RenderAPI::GetCurrent())
+		switch (RHI::GetCurrent())
 		{
-			case ERenderAPI::OpenGL:
+			case ERHI::OpenGL:
 			{
 				s_Instance = new OpenGLRenderer;
 				break;
 			}
-			case ERenderAPI::DX11:
+			case ERHI::DX11:
 			{
 				s_Instance = new DX11Renderer;
 				break;
@@ -148,7 +148,7 @@ namespace Ion
 
 		String vertexSrc;
 		String pixelSrc;
-		if (RenderAPI::GetCurrent() == ERenderAPI::DX11)
+		if (RHI::GetCurrent() == ERHI::DX11)
 		{
 			File::ReadToString(EnginePath::GetCheckedShadersPath() + L"TextureRenderVS.hlsl", vertexSrc);
 			File::ReadToString(EnginePath::GetCheckedShadersPath() + L"TextureRenderPS.hlsl", pixelSrc);
@@ -231,7 +231,7 @@ namespace Ion
 		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
 
 		// @TODO: This needs a refactor
-		if (RenderAPI::GetCurrent() == ERenderAPI::DX11)
+		if (RHI::GetCurrent() == ERHI::DX11)
 		{
 			File::ReadToString(shadersPath + L"BasicVS.hlsl", vertexSrc);
 			File::ReadToString(shadersPath + L"BasicPS.hlsl", pixelSrc);
@@ -261,7 +261,7 @@ namespace Ion
 		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
 
 		// @TODO: This needs a refactor
-		if (RenderAPI::GetCurrent() == ERenderAPI::DX11)
+		if (RHI::GetCurrent() == ERHI::DX11)
 		{
 			File::ReadToString(shadersPath + L"Editor/EditorObjectIDVS.hlsl", vertexSrc);
 			File::ReadToString(shadersPath + L"Editor/EditorObjectIDPS.hlsl", pixelSrc);
@@ -290,7 +290,7 @@ namespace Ion
 		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
 
 		// @TODO: This needs a refactor
-		if (RenderAPI::GetCurrent() == ERenderAPI::DX11)
+		if (RHI::GetCurrent() == ERHI::DX11)
 		{
 			File::ReadToString(shadersPath + L"Editor/EditorSelectedVS.hlsl", vertexSrc);
 		}
@@ -318,7 +318,7 @@ namespace Ion
 		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
 
 		// @TODO: This needs a refactor
-		if (RenderAPI::GetCurrent() == ERenderAPI::DX11)
+		if (RHI::GetCurrent() == ERHI::DX11)
 		{
 			File::ReadToString(shadersPath + L"Editor/EditorViewportVS.hlsl", vertexSrc);
 			File::ReadToString(shadersPath + L"Editor/EditorViewportPS.hlsl", pixelSrc);

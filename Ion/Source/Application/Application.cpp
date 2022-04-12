@@ -79,7 +79,7 @@ namespace Ion
 		g_Engine->Init();
 
 		// Current thread will render graphics in this window.
-		RenderAPI::Init(ERenderAPI::DX11, m_Window.get());
+		RHI::Init(ERHI::DX11, m_Window.get());
 
 		Renderer* renderer = Renderer::Create();
 		renderer->Init();
@@ -119,7 +119,7 @@ namespace Ion
 
 		AssetManager::Shutdown();
 
-		RenderAPI::Shutdown();
+		RHI::Shutdown();
 
 		g_Engine->Shutdown();
 	}
@@ -179,7 +179,7 @@ namespace Ion
 
 		ImGui::Render();
 
-		RenderAPI::BeginFrame();
+		RHI::BeginFrame();
 		RenderToMainWindow();
 
 		TRACE_BEGIN(0, "Application - Client::OnRender");
@@ -197,7 +197,7 @@ namespace Ion
 			ImGuiRenderPlatform(ImGui::GetDrawData());
 		}
 
-		RenderAPI::EndFrame(*m_Window);
+		RHI::EndFrame(*m_Window);
 	}
 
 	void Application::RenderToMainWindow()
@@ -227,7 +227,7 @@ namespace Ion
 	{
 		WString title = m_ApplicationTitle;
 		title += L" - ";
-		title += StringConverter::StringToWString(RenderAPI::GetCurrentDisplayName());
+		title += StringConverter::StringToWString(RHI::GetCurrentDisplayName());
 		m_Window->SetTitle(title);
 	}
 
@@ -281,7 +281,7 @@ namespace Ion
 			return;
 
 		//Renderer::Get()->SetViewportDimensions(ViewportDimensions { 0, 0, width, height });
-		RenderAPI::ResizeBuffers(*GetWindow().get(), { width, height });
+		RHI::ResizeBuffers(*GetWindow().get(), { width, height });
 	}
 
 	void Application::OnWindowChangeDisplayModeEvent_Internal(const WindowChangeDisplayModeEvent& event)
@@ -356,9 +356,9 @@ namespace Ion
 		imGuiIO.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 		imGuiIO.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 		imGuiIO.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
-		if (RenderAPI::GetCurrent() == ERenderAPI::DX11
+		if (RHI::GetCurrent() == ERHI::DX11
 #if PLATFORM_SUPPORTS_OPENGL && PLATFORM_ENABLE_IMGUI_VIEWPORTS_OPENGL
-			|| RenderAPI::GetCurrent() == ERenderAPI::OpenGL
+			|| RHI::GetCurrent() == ERHI::OpenGL
 #endif
 			)
 		{

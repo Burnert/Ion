@@ -7,9 +7,9 @@ struct ImDrawData;
 namespace Ion
 {
 	// @TODO: Implement other Render APIs in the future
-	enum class ERenderAPI
+	enum class ERHI
 	{
-		None,
+		None = 0,
 		OpenGL,
 		DX11,
 		DX12,
@@ -18,10 +18,10 @@ namespace Ion
 
 	class GenericWindow;
 
-	class ION_API RenderAPI
+	class ION_API RHI
 	{
 	public:
-		static bool Init(ERenderAPI api, GenericWindow* window);
+		static bool Init(ERHI rhi, GenericWindow* window);
 		static void Shutdown();
 
 		static void BeginFrame();
@@ -30,7 +30,7 @@ namespace Ion
 		static void ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height);
 		static void ResizeBuffers(GenericWindow& window, const TextureDimensions& size);
 
-		static FORCEINLINE ERenderAPI GetCurrent() { return s_CurrentRenderAPI; }
+		static FORCEINLINE ERHI GetCurrent() { return s_CurrentRHI; }
 
 		static const char* GetCurrentDisplayName();
 
@@ -40,9 +40,9 @@ namespace Ion
 		static void ImGuiShutdown();
 
 	protected:
-		static void SetCurrent(ERenderAPI api);
+		static void SetCurrent(ERHI rhi);
 
 	private:
-		static ERenderAPI s_CurrentRenderAPI;
+		static ERHI s_CurrentRHI;
 	};
 }

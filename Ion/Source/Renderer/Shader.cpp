@@ -10,11 +10,11 @@ namespace Ion
 {
 	TShared<Shader> Shader::Create()
 	{
-		switch (RenderAPI::GetCurrent())
+		switch (RHI::GetCurrent())
 		{
-		case ERenderAPI::OpenGL:
+		case ERHI::OpenGL:
 			return MakeShared<OpenGLShader>();
-		case ERenderAPI::DX11:
+		case ERHI::DX11:
 			return MakeShared<DX11Shader>();
 		default:
 			return TShared<Shader>(nullptr);

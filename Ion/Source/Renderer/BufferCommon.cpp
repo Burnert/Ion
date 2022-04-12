@@ -13,11 +13,11 @@ namespace Ion
 	// Vertex Buffer
 	TShared<VertexBuffer> VertexBuffer::Create(float* vertexAttributes, uint64 count)
 	{
-		switch (RenderAPI::GetCurrent())
+		switch (RHI::GetCurrent())
 		{
-		case ERenderAPI::OpenGL:
+		case ERHI::OpenGL:
 			return MakeShared<OpenGLVertexBuffer>(vertexAttributes, count);
-		case ERenderAPI::DX11:
+		case ERHI::DX11:
 			return MakeShared<DX11VertexBuffer>(vertexAttributes, count);
 		default:
 			return TShared<VertexBuffer>(nullptr);
@@ -27,11 +27,11 @@ namespace Ion
 	// Index Buffer
 	TShared<IndexBuffer> IndexBuffer::Create(uint32* indices, uint32 count)
 	{
-		switch (RenderAPI::GetCurrent())
+		switch (RHI::GetCurrent())
 		{
-		case ERenderAPI::OpenGL:
+		case ERHI::OpenGL:
 			return MakeShared<OpenGLIndexBuffer>(indices, count);
-		case ERenderAPI::DX11:
+		case ERHI::DX11:
 			return MakeShared<DX11IndexBuffer>(indices, count);
 		default:
 			return TShared<IndexBuffer>(nullptr);
@@ -41,11 +41,11 @@ namespace Ion
 	// Uniform Buffer
 	UniformBuffer* UniformBuffer::Create(void* initialData, size_t size)
 	{
-		switch (RenderAPI::GetCurrent())
+		switch (RHI::GetCurrent())
 		{
-		case ERenderAPI::DX11:
+		case ERHI::DX11:
 			return new DX11UniformBuffer(initialData, size);
-		case ERenderAPI::OpenGL:
+		case ERHI::OpenGL:
 			return new OpenGLUniformBuffer(initialData, size);
 		default:
 			return nullptr;
@@ -54,9 +54,9 @@ namespace Ion
 
 	UniformBuffer* UniformBuffer::Create(void* data, size_t size, const UniformDataMap& uniforms)
 	{
-		switch (RenderAPI::GetCurrent())
+		switch (RHI::GetCurrent())
 		{
-		case ERenderAPI::DX11:
+		case ERHI::DX11:
 			return new DX11UniformBuffer(data, size, uniforms);
 		default:
 			return nullptr;
