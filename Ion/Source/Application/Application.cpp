@@ -79,7 +79,8 @@ namespace Ion
 		g_Engine->Init();
 
 		// Current thread will render graphics in this window.
-		RHI::Init(ERHI::DX11, m_Window.get());
+		RHI::Create(ERHI::DX11);
+		RHI::Get()->Init(m_Window.get());
 
 		Renderer* renderer = Renderer::Create();
 		renderer->Init();
@@ -119,7 +120,7 @@ namespace Ion
 
 		AssetManager::Shutdown();
 
-		RHI::Shutdown();
+		RHI::Get()->Shutdown();
 
 		g_Engine->Shutdown();
 	}
@@ -179,7 +180,7 @@ namespace Ion
 
 		ImGui::Render();
 
-		RHI::BeginFrame();
+		RHI::Get()->BeginFrame();
 		RenderToMainWindow();
 
 		TRACE_BEGIN(0, "Application - Client::OnRender");
@@ -197,7 +198,7 @@ namespace Ion
 			ImGuiRenderPlatform(ImGui::GetDrawData());
 		}
 
-		RHI::EndFrame(*m_Window);
+		RHI::Get()->EndFrame(*m_Window);
 	}
 
 	void Application::RenderToMainWindow()
@@ -227,7 +228,7 @@ namespace Ion
 	{
 		WString title = m_ApplicationTitle;
 		title += L" - ";
-		title += StringConverter::StringToWString(RHI::GetCurrentDisplayName());
+		title += StringConverter::StringToWString(RHI::Get()->GetCurrentDisplayName());
 		m_Window->SetTitle(title);
 	}
 
@@ -281,7 +282,7 @@ namespace Ion
 			return;
 
 		//Renderer::Get()->SetViewportDimensions(ViewportDimensions { 0, 0, width, height });
-		RHI::ResizeBuffers(*GetWindow().get(), { width, height });
+		RHI::Get()->ResizeBuffers(*GetWindow().get(), { width, height });
 	}
 
 	void Application::OnWindowChangeDisplayModeEvent_Internal(const WindowChangeDisplayModeEvent& event)

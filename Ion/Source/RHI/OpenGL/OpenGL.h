@@ -1,5 +1,7 @@
 #pragma once
 
+#include "RHI/RHI.h"
+
 #include "glad/glad.h"
 
 struct ImDrawData;
@@ -9,13 +11,22 @@ namespace Ion
 {
 	class GenericWindow;
 
-	class ION_API OpenGL
+	class ION_API OpenGL : public RHI
 	{
 	public:
 		/* Called by the Application class */
-		static void Init(GenericWindow* window);
+		virtual bool Init(GenericWindow* window) override;
+		virtual bool InitWindow(GenericWindow& window) override;
+		virtual void Shutdown() override;
+		virtual void ShutdownWindow(GenericWindow& window) override;
 
-		static void EndFrame(GenericWindow& window);
+		virtual void BeginFrame() override;
+		virtual void EndFrame(GenericWindow& window) override;
+
+		virtual void ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height) override;
+		virtual void ResizeBuffers(GenericWindow& window, const TextureDimensions& size) override;
+
+		virtual String GetCurrentDisplayName() override;
 
 		static FORCEINLINE const char* GetVendor()           { return (const char*)glGetString(GL_VENDOR); }
 		static FORCEINLINE const char* GetRendererName()     { return (const char*)glGetString(GL_RENDERER); }
@@ -26,7 +37,7 @@ namespace Ion
 		static FORCEINLINE int32 GetMajorVersion() { return s_MajorVersion; }
 		static FORCEINLINE int32 GetMinorVersion() { return s_MinorVersion; }
 
-		static const char* GetDisplayName();
+		const char* GetDisplayName() const;
 
 		static void FilterDebugMessages();
 
@@ -41,10 +52,10 @@ namespace Ion
 		static void SetDisplayVersion(const char* version);
 
 	private:
-		static void InitImGuiBackend();
-		static void ImGuiNewFrame();
-		static void ImGuiRender(ImDrawData* drawData);
-		static void ImGuiShutdown();
+		virtual void InitImGuiBackend() override;
+		virtual void ImGuiNewFrame() override;
+		virtual void ImGuiRender(ImDrawData* drawData) override;
+		virtual void ImGuiShutdown() override;
 
 		static void ImGuiImplRendererCreateWindowPlatform(ImGuiViewport* viewport);
 		static void ImGuiImplRendererRenderWindow(ImGuiViewport* viewport, void*);

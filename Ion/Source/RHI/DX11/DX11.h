@@ -1,5 +1,7 @@
 #pragma once
 
+#include "RHI/RHI.h"
+
 #include "Core/Platform/Windows/WindowsCore.h"
 
 #include <d3d11.h>
@@ -51,20 +53,22 @@ namespace Ion
 
 	class GenericWindow;
 
-	class ION_API DX11
+	class ION_API DX11 : public RHI
 	{
 	public:
 		/* Called by the Application class */
-		static void Init(GenericWindow* window);
-		static void InitWindow(GenericWindow& window);
-		static void Shutdown();
-		static void ShutdownWindow(GenericWindow& window);
+		virtual bool Init(GenericWindow* window) override;
+		virtual bool InitWindow(GenericWindow& window) override;
+		virtual void Shutdown() override;
+		virtual void ShutdownWindow(GenericWindow& window) override;
 
-		static void BeginFrame();
-		static void EndFrame();
+		virtual void BeginFrame() override;
+		virtual void EndFrame(GenericWindow& window) override;
 
-		static void ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height);
-		static void ResizeBuffers(GenericWindow& window, const TextureDimensions& size);
+		virtual void ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height);
+		virtual void ResizeBuffers(GenericWindow& window, const TextureDimensions& size);
+
+		virtual String GetCurrentDisplayName() override;
 
 		static FORCEINLINE const char* GetFeatureLevelString()
 		{
@@ -161,10 +165,10 @@ namespace Ion
 		static void CreateDepthStencil(TShared<Texture>& texture, uint32 width, uint32 height);
 
 	private:
-		static void InitImGuiBackend();
-		static void ImGuiNewFrame();
-		static void ImGuiRender(ImDrawData* drawData);
-		static void ImGuiShutdown();
+		virtual void InitImGuiBackend() override;
+		virtual void ImGuiNewFrame() override;
+		virtual void ImGuiRender(ImDrawData* drawData) override;
+		virtual void ImGuiShutdown() override;
 
 	protected:
 		static bool s_Initialized;

@@ -15,7 +15,7 @@
 
 namespace Ion
 {
-	void DX11::Init(GenericWindow* window)
+	bool DX11::Init(GenericWindow* window)
 	{
 #pragma warning(disable:6001)
 #pragma warning(disable:6387)
@@ -32,12 +32,12 @@ namespace Ion
 			TRACE_SCOPE("DX11::Init - Init Debug Layer");
 
 			s_hDxgiDebugModule = LoadLibrary(L"Dxgidebug.dll");
-			win_check(s_hDxgiDebugModule, "Could not load module Dxgidebug.dll.");
+			win_check_r(s_hDxgiDebugModule, false, "Could not load module Dxgidebug.dll.");
 
 			DXGIGetDebugInterface = (DXGIGetDebugInterfaceProc)GetProcAddress(s_hDxgiDebugModule, "DXGIGetDebugInterface");
-			win_check(DXGIGetDebugInterface, "Cannot load DXGIGetDebugInterface from Dxgidebug.dll.");
+			win_check_r(DXGIGetDebugInterface, false, "Cannot load DXGIGetDebugInterface from Dxgidebug.dll.");
 
-			dxcall(DXGIGetDebugInterface(IID_PPV_ARGS(&s_DebugInfoQueue)), "Cannot get the Debug Interface.");
+			dxcall_f(DXGIGetDebugInterface(IID_PPV_ARGS(&s_DebugInfoQueue)), "Cannot get the Debug Interface.");
 		}
 #endif
 		InitWindow(*window);
@@ -45,9 +45,11 @@ namespace Ion
 		SetDisplayVersion(D3DFeatureLevelToString(s_FeatureLevel));
 		LOG_INFO("Renderer: DirectX {0}", GetFeatureLevelString());
 		LOG_INFO("Shader Model {0}", GetShaderModelString());
+
+		return true;
 	}
 
-	void DX11::InitWindow(GenericWindow& window)
+	bool DX11::InitWindow(GenericWindow& window)
 	{
 		TRACE_FUNCTION();
 
@@ -89,7 +91,7 @@ namespace Ion
 			flags |= D3D11_CREATE_DEVICE_DEBUG /*| D3D11_CREATE_DEVICE_DEBUGGABLE*/;
 #endif
 
-			dxcall(
+			dxcall_f(
 				D3D11CreateDeviceAndSwapChain(nullptr,
 					D3D_DRIVER_TYPE_HARDWARE,
 					NULL,
@@ -118,7 +120,7 @@ namespace Ion
 			rd.FrontCounterClockwise = true;
 			rd.DepthClipEnable = true;
 
-			dxcall(s_Device->CreateRasterizerState(&rd, &s_RasterizerState));
+			dxcall_f(s_Device->CreateRasterizerState(&rd, &s_RasterizerState));
 			dxcall_v(s_Context->RSSetState(s_RasterizerState));
 		}
 		// Create Depth / Stencil Buffer
@@ -141,7 +143,7 @@ namespace Ion
 			dsd.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 			dsd.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
 
-			dxcall(s_Device->CreateDepthStencilState(&dsd, &s_DepthStencilState));
+			dxcall_f(s_Device->CreateDepthStencilState(&dsd, &s_DepthStencilState));
 			dxcall_v(s_Context->OMSetDepthStencilState(s_DepthStencilState, 1));
 
 			s_SwapChain->GetDesc(&scd);
@@ -166,14 +168,16 @@ namespace Ion
 
 		IDXGIFactory1* factory = nullptr;
 
-		dxcall(s_SwapChain->GetParent(IID_PPV_ARGS(&factory)), "Cannot get the Swap Chain factory.");
-		dxcall(factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
+		dxcall_f(s_SwapChain->GetParent(IID_PPV_ARGS(&factory)), "Cannot get the Swap Chain factory.");
+		dxcall_f(factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
 
 		factory->Release();
 
 		// -------------------------------------------------------
 
 		dxcall_v(s_Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
+
+		return true;
 	}
 
 	void DX11::Shutdown()
@@ -207,7 +211,7 @@ namespace Ion
 		//dxcall_v(s_Context->OMSetRenderTargets(1, &s_RTV, s_DSV), "Cannot set render target.");
 	}
 
-	void DX11::EndFrame()
+	void DX11::EndFrame(GenericWindow& window)
 	{
 		TRACE_FUNCTION();
 
@@ -240,6 +244,11 @@ namespace Ion
 
 		CreateRenderTarget(window.m_WindowColorTexture);
 		CreateDepthStencil(window.m_WindowDepthStencilTexture, size.Width, size.Height);
+	}
+
+	String DX11::GetCurrentDisplayName()
+	{
+		return GetDisplayName();
 	}
 
 	DX11::MessageArray DX11::GetDebugMessages()

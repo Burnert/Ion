@@ -238,14 +238,14 @@ namespace Ion
 
 		TShared<WindowsWindow> windowsWindow = std::static_pointer_cast<WindowsWindow>(window);
 		ImGui_ImplWin32_Init((HWND)windowsWindow->GetNativeHandle());
-		RHI::InitImGuiBackend();
+		RHI::Get()->InitImGuiBackend();
 	}
 
 	void WindowsApplication::ImGuiNewFramePlatform() const
 	{
 		TRACE_FUNCTION();
 
-		RHI::ImGuiNewFrame();
+		RHI::Get()->ImGuiNewFrame();
 		ImGui_ImplWin32_NewFrame();
 	}
 
@@ -255,7 +255,7 @@ namespace Ion
 
 		TShared<WindowsWindow> window = std::static_pointer_cast<WindowsWindow>(GetWindow());
 
-		RHI::ImGuiRender(drawData);
+		RHI::Get()->ImGuiRender(drawData);
 
 		// @TODO: If viewports enabled:
 
@@ -267,7 +267,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		RHI::ImGuiShutdown();
+		RHI::Get()->ImGuiShutdown();
 		ImGui_ImplWin32_Shutdown();
 	}
 }
