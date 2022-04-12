@@ -1,7 +1,7 @@
 #include "IonPCH.h"
 
 #include "Image.h"
-#include "RenderAPI/RenderAPI.h"
+#include "RHI/RHI.h"
 
 #define STBI_NO_STDIO
 #include "stb_image.h"

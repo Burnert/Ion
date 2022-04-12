@@ -1,7 +1,7 @@
 #include "IonPCH.h"
 
 #include "DX11.h"
-#include "RenderAPI/DX11/DX11Texture.h"
+#include "RHI/DX11/DX11Texture.h"
 
 #include "Application/Platform/Windows/WindowsWindow.h"
 #include "Core/Platform/Windows/WindowsUtility.h"

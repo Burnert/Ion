@@ -3,9 +3,9 @@
 #include "Core/File/Image.h"
 #include "Texture.h"
 
-#include "RenderAPI/RenderAPI.h"
-#include "RenderAPI/DX11/DX11Texture.h"
-#include "RenderAPI/OpenGL/OpenGLTexture.h"
+#include "RHI/RHI.h"
+#include "RHI/DX11/DX11Texture.h"
+#include "RHI/OpenGL/OpenGLTexture.h"
 
 namespace Ion
 {

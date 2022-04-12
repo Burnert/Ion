@@ -10,8 +10,8 @@
 #include "Core/Input/Input.h"
 #include "Core/Logging/Logger.h"
 
-#include "RenderAPI/RenderAPI.h"
-#include "RenderAPI/OpenGL/Windows/OpenGLWindows.h"
+#include "RHI/RHI.h"
+#include "RHI/OpenGL/Windows/OpenGLWindows.h"
 
 #include "UserInterface/ImGui.h"
 

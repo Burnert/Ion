@@ -17,11 +17,11 @@
 
 #include "Core/File/Collada.h"
 
-#include "RenderAPI/DX11/DX11.h"
-#include "RenderAPI/DX11/DX11Shader.h"
-#include "RenderAPI/DX11/DX11Buffer.h"
+#include "RHI/DX11/DX11.h"
+#include "RHI/DX11/DX11Shader.h"
+#include "RHI/DX11/DX11Buffer.h"
 
-#include "RenderAPI/RenderAPI.h"
+#include "RHI/RHI.h"
 
 class IonExample : public IonApplication
 {

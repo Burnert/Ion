@@ -4,9 +4,9 @@
 #include "IndexBuffer.h"
 #include "UniformBuffer.h"
 
-#include "RenderAPI/RenderAPI.h"
-#include "RenderAPI/OpenGL/OpenGLBuffer.h"
-#include "RenderAPI/DX11/DX11Buffer.h"
+#include "RHI/RHI.h"
+#include "RHI/OpenGL/OpenGLBuffer.h"
+#include "RHI/DX11/DX11Buffer.h"
 
 namespace Ion
 {

@@ -2,9 +2,9 @@
 
 #include "Renderer.h"
 
-#include "RenderAPI/RenderAPI.h"
-#include "RenderAPI/OpenGL/OpenGLRenderer.h"
-#include "RenderAPI/DX11/DX11Renderer.h"
+#include "RHI/RHI.h"
+#include "RHI/OpenGL/OpenGLRenderer.h"
+#include "RHI/DX11/DX11Renderer.h"
 
 #include "Application/EnginePath.h"
 

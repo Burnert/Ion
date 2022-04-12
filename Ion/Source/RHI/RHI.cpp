@@ -1,6 +1,6 @@
 #include "IonPCH.h"
 
-#include "RenderAPI.h"
+#include "RHI.h"
 
 #if PLATFORM_SUPPORTS_OPENGL
 #include "OpenGL/OpenGL.h"
