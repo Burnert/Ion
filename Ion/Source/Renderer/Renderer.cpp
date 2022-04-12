@@ -347,7 +347,7 @@ namespace Ion
 	{
 		ionassert(scene);
 
-		if (!data.RTObjectID || !data.RTSelection || data.Primitives.empty())
+		if (!data.RTObjectID || !data.RTObjectIDDepth || !data.RTSelectionDepth || data.Primitives.empty())
 			return;
 
 		// Set the alpha channel to 0
@@ -355,6 +355,7 @@ namespace Ion
 		clearOptions.ClearColorValue = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
 
 		SetRenderTarget(data.RTObjectID);
+		SetDepthStencil(data.RTObjectIDDepth);
 		Clear(clearOptions);
 
 		SceneUniforms& uniforms = scene->m_SceneUniformBuffer->DataRef<SceneUniforms>();
@@ -385,7 +386,8 @@ namespace Ion
 			meshUniforms.RenderGuid = UVector4();
 		}
 
-		SetRenderTarget(data.RTSelection);
+		SetRenderTarget(nullptr);
+		SetDepthStencil(data.RTSelectionDepth);
 		Clear(clearOptions);
 
 		if (!data.SelectedPrimitives.empty())

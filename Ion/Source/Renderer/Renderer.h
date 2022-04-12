@@ -81,8 +81,9 @@ namespace Ion
 	{
 		/* UInt128GUID */
 		TShared<Texture> RTObjectID;
+		TShared<Texture> RTObjectIDDepth;
 		/* Mainly Depth */
-		TShared<Texture> RTSelection;
+		TShared<Texture> RTSelectionDepth;
 
 		TArray<REditorPassPrimitive> Primitives;
 		TArray<REditorPassPrimitive> SelectedPrimitives;
@@ -111,18 +112,21 @@ namespace Ion
 
 		virtual void DrawIndexed(uint32 indexCount) const = 0;
 
-		virtual void RenderEditorViewport(const TShared<Texture>& sceneFinalTexture, const TShared<Texture>& editorDataTexture) const = 0; // @TODO: this is a bad idea
+		virtual void RenderEditorViewport(const EditorViewportTextures& editorViewportTextures) const = 0; // @TODO: this is a bad idea
 
 		virtual void SetVSyncEnabled(bool bEnabled) const = 0;
 		virtual bool IsVSyncEnabled() const = 0;
 
-		virtual void SetViewportDimensions(const ViewportDimensions& dimensions) const = 0;
-		virtual ViewportDimensions GetViewportDimensions() const = 0;
+		virtual void SetViewport(const ViewportDescription& viewport) = 0;
+		virtual ViewportDescription GetViewport() const = 0;
 
 		virtual void SetPolygonDrawMode(EPolygonDrawMode drawMode) const = 0;
 		virtual EPolygonDrawMode GetPolygonDrawMode() const = 0;
 
+		/* Sets the render target (resets the depth stencil to null) */
 		virtual void SetRenderTarget(const TShared<Texture>& targetTexture) = 0;
+		/* Sets the depth stencil target (call this only after SetRenderTarget) */
+		virtual void SetDepthStencil(const TShared<Texture>& targetTexture) = 0;
 
 		void RenderEditorPass(const Scene* scene, const EditorPassData& data);
 

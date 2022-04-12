@@ -1,6 +1,7 @@
 #include "IonPCH.h"
 
 #include "DX11.h"
+#include "RenderAPI/DX11/DX11Texture.h"
 
 #include "Application/Platform/Windows/WindowsWindow.h"
 #include "Core/Platform/Windows/WindowsUtility.h"
@@ -21,8 +22,7 @@ namespace Ion
 
 		TRACE_FUNCTION();
 
-		WindowsWindow& windowsWindow = (WindowsWindow&)window;
-		HWND hwnd = (HWND)window->GetNativeHandle();
+		ionassert(window);
 
 		HRESULT hResult = S_OK;
 
@@ -40,6 +40,22 @@ namespace Ion
 			dxcall(DXGIGetDebugInterface(IID_PPV_ARGS(&s_DebugInfoQueue)), "Cannot get the Debug Interface.");
 		}
 #endif
+		InitWindow(*window);
+
+		SetDisplayVersion(D3DFeatureLevelToString(s_FeatureLevel));
+		LOG_INFO("Renderer: DirectX {0}", GetFeatureLevelString());
+		LOG_INFO("Shader Model {0}", GetShaderModelString());
+	}
+
+	void DX11::InitWindow(GenericWindow& window)
+	{
+		TRACE_FUNCTION();
+
+		HRESULT hResult = S_OK;
+
+		WindowsWindow& windowsWindow = (WindowsWindow&)window;
+		HWND hwnd = (HWND)window.GetNativeHandle();
+
 		// Create Device and Swap Chain
 		DXGI_SWAP_CHAIN_DESC scd { };
 		{
@@ -90,7 +106,7 @@ namespace Ion
 		}
 		// Create Render Target
 
-		CreateRenderTarget();
+		CreateRenderTarget(window.m_WindowColorTexture);
 
 		// Create Rasterizer State
 		{
@@ -129,13 +145,13 @@ namespace Ion
 			dxcall_v(s_Context->OMSetDepthStencilState(s_DepthStencilState, 1));
 
 			s_SwapChain->GetDesc(&scd);
-			CreateDepthStencil(scd.BufferDesc.Width, scd.BufferDesc.Height);
+			CreateDepthStencil(window.m_WindowDepthStencilTexture, scd.BufferDesc.Width, scd.BufferDesc.Height);
 		}
 		// Set Viewports
 		{
 			TRACE_SCOPE("DX11::Init - Set Viewports");
 
-			WindowDimensions dimensions = window->GetDimensions();
+			WindowDimensions dimensions = window.GetDimensions();
 
 			D3D11_VIEWPORT viewport { };
 			viewport.TopLeftX = 0.0f;
@@ -158,10 +174,6 @@ namespace Ion
 		// -------------------------------------------------------
 
 		dxcall_v(s_Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
-
-		SetDisplayVersion(D3DFeatureLevelToString(s_FeatureLevel));
-		LOG_INFO("Renderer: DirectX {0}", GetFeatureLevelString());
-		LOG_INFO("Shader Model {0}", GetShaderModelString());
 	}
 
 	void DX11::Shutdown()
@@ -176,20 +188,23 @@ namespace Ion
 		COMRelease(s_Device);
 		COMRelease(s_Context);
 		COMRelease(s_SwapChain);
-		COMRelease(s_RTV);
 		COMRelease(s_DepthStencilState);
-		COMRelease(s_DSV);
 		COMRelease(s_RasterizerState);
 #if ION_DEBUG
 		COMRelease(s_DebugInfoQueue);
 #endif
 	}
 
+	void DX11::ShutdownWindow(GenericWindow& window)
+	{
+
+	}
+
 	void DX11::BeginFrame()
 	{
 		TRACE_FUNCTION();
 
-		dxcall_v(s_Context->OMSetRenderTargets(1, &s_RTV, s_DSV), "Cannot set render target.");
+		//dxcall_v(s_Context->OMSetRenderTargets(1, &s_RTV, s_DSV), "Cannot set render target.");
 	}
 
 	void DX11::EndFrame()
@@ -200,7 +215,7 @@ namespace Ion
 		dxcall(s_SwapChain->Present(s_SwapInterval, 0), "Cannot present frame.");
 	}
 
-	void DX11::ChangeDisplayMode(EDisplayMode mode, uint32 width, uint32 height)
+	void DX11::ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height)
 	{
 		TRACE_FUNCTION();
 
@@ -208,7 +223,23 @@ namespace Ion
 
 		dxcall(s_SwapChain->SetFullscreenState(mode == EDisplayMode::FullScreen, nullptr));
 
-		ResizeBuffers(width, height);
+		ResizeBuffers(window, { width, height });
+	}
+
+	void DX11::ResizeBuffers(GenericWindow& window, const TextureDimensions& size)
+	{
+		TRACE_FUNCTION();
+
+		HRESULT hResult = S_OK;
+
+		window.m_WindowColorTexture = nullptr;
+		window.m_WindowDepthStencilTexture = nullptr;
+
+		dxcall(s_SwapChain->ResizeBuffers(2, size.Width, size.Height, DXGI_FORMAT_UNKNOWN, 0),
+			"Cannot resize buffers.");
+
+		CreateRenderTarget(window.m_WindowColorTexture);
+		CreateDepthStencil(window.m_WindowDepthStencilTexture, size.Width, size.Height);
 	}
 
 	DX11::MessageArray DX11::GetDebugMessages()
@@ -330,7 +361,7 @@ namespace Ion
 		strcpy_s((s_DisplayName + length), 120 - length, version);
 	}
 
-	void DX11::CreateRenderTarget()
+	void DX11::CreateRenderTarget(TShared<Texture>& texture)
 	{
 		TRACE_FUNCTION();
 
@@ -341,59 +372,27 @@ namespace Ion
 		dxcall(s_SwapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer)),
 			"Cannot get buffer.");
 
-		dxcall(s_Device->CreateRenderTargetView(backBuffer, nullptr, &s_RTV),
-			"Cannot create Render Target from back buffer.");
+		D3D11_TEXTURE2D_DESC t2dDesc;
+		backBuffer->GetDesc(&t2dDesc);
 
-		backBuffer->Release();
+		TextureDescription desc { };
+		desc.Format = ETextureFormat::RGBA8;
+		desc.bUseAsRenderTarget = true;
+		desc.Dimensions = { t2dDesc.Width, t2dDesc.Height };
+
+		texture = MakeShareable(new DX11Texture(desc, backBuffer));
 	}
 
-	void DX11::CreateDepthStencil(uint32 width, uint32 height)
+	void DX11::CreateDepthStencil(TShared<Texture>& texture, uint32 width, uint32 height)
 	{
 		TRACE_FUNCTION();
 
-		HRESULT hResult;
+		TextureDescription desc { };
+		desc.Format = ETextureFormat::D24S8;
+		desc.bUseAsDepthStencil = true;
+		desc.Dimensions = { width, height };
 
-		D3D11_TEXTURE2D_DESC depthDesc { };
-		depthDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-		depthDesc.Width = width;
-		depthDesc.Height = height;
-		depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-		depthDesc.Usage = D3D11_USAGE_DEFAULT;
-		depthDesc.SampleDesc.Count = 1;
-		depthDesc.SampleDesc.Quality = 0;
-		depthDesc.CPUAccessFlags = 0;
-		depthDesc.MiscFlags = 0;
-		depthDesc.MipLevels = 1;
-		depthDesc.ArraySize = 1;
-
-		ID3D11Texture2D* depthStencil;
-
-		dxcall(s_Device->CreateTexture2D(&depthDesc, nullptr, &depthStencil));
-
-		D3D11_DEPTH_STENCIL_VIEW_DESC dsvd { };
-		dsvd.Format = depthDesc.Format;
-		dsvd.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-		dsvd.Texture2D.MipSlice = 0;
-
-		dxcall(s_Device->CreateDepthStencilView(depthStencil, &dsvd, &s_DSV));
-
-		depthStencil->Release();
-	}
-
-	void DX11::ResizeBuffers(uint32 width, uint32 height)
-	{
-		TRACE_FUNCTION();
-
-		HRESULT hResult = S_OK;
-
-		COMReset(s_RTV);
-		COMReset(s_DSV);
-
-		dxcall(s_SwapChain->ResizeBuffers(2, width, height, DXGI_FORMAT_UNKNOWN, 0),
-			"Cannot resize buffers.");
-
-		CreateRenderTarget();
-		CreateDepthStencil(width, height);
+		texture = Texture::Create(desc);
 	}
 
 	void DX11::InitImGuiBackend()
@@ -432,9 +431,7 @@ namespace Ion
 	ID3D11Device* DX11::s_Device = nullptr;
 	ID3D11DeviceContext* DX11::s_Context = nullptr;
 	IDXGISwapChain* DX11::s_SwapChain = nullptr;
-	ID3D11RenderTargetView* DX11::s_RTV = nullptr;
 	ID3D11DepthStencilState* DX11::s_DepthStencilState = nullptr;
-	ID3D11DepthStencilView* DX11::s_DSV = nullptr;
 	ID3D11RasterizerState* DX11::s_RasterizerState = nullptr;
 
 	uint32 DX11::s_SwapInterval = 0;

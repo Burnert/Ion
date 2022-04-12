@@ -23,23 +23,23 @@ namespace Ion
 
 		virtual void DrawIndexed(uint32 indexCount) const override;
 
-		virtual void RenderEditorViewport(const TShared<Texture>& sceneFinalTexture, const TShared<Texture>& editorDataTexture) const override;
+		virtual void RenderEditorViewport(const EditorViewportTextures& editorViewportTextures) const override;
 
 		virtual void SetVSyncEnabled(bool bEnabled) const override;
 		virtual bool IsVSyncEnabled() const override;
 
-		virtual void SetViewportDimensions(const ViewportDimensions& dimensions) const override;
-		virtual ViewportDimensions GetViewportDimensions() const override;
+		virtual void SetViewport(const ViewportDescription& dimensions) override;
+		virtual ViewportDescription GetViewport() const override;
 
 		virtual void SetPolygonDrawMode(EPolygonDrawMode drawMode) const override;
 		virtual EPolygonDrawMode GetPolygonDrawMode() const override;
 
 		virtual void SetRenderTarget(const TShared<Texture>& targetTexture) override;
+		virtual void SetDepthStencil(const TShared<Texture>& targetTexture) override;
 
 	private:
 		ID3D11RenderTargetView* m_CurrentRTV;
 		ID3D11DepthStencilView* m_CurrentDSV;
-
-		mutable ViewportDimensions m_ViewportDimensions;
+		ViewportDescription m_CurrentViewport;
 	};
 }

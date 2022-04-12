@@ -99,19 +99,30 @@ namespace Ion
 		}
 	}
 
-	void RenderAPI::ChangeDisplayMode(EDisplayMode mode, uint32 width, uint32 height)
+	void RenderAPI::ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height)
 	{
 		switch (s_CurrentRenderAPI)
 		{
 #if PLATFORM_SUPPORTS_DX11
 		case ERenderAPI::DX11:
 		{
-			DX11::ChangeDisplayMode(mode, width, height);
+			DX11::ChangeDisplayMode(window, mode, width, height);
 			break;
 		}
 #endif
 		default:
 			return;
+		}
+	}
+
+	void RenderAPI::ResizeBuffers(GenericWindow& window, const TextureDimensions& size)
+	{
+		switch (s_CurrentRenderAPI)
+		{
+		case ERenderAPI::None:    break;
+#if PLATFORM_SUPPORTS_DX11
+		case ERenderAPI::DX11:    DX11::ResizeBuffers(window, size); break;
+#endif
 		}
 	}
 

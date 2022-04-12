@@ -19,8 +19,7 @@ namespace Ion
 {
 	DX11Renderer::DX11Renderer() :
 		m_CurrentRTV(nullptr),
-		m_CurrentDSV(nullptr),
-		m_ViewportDimensions({ })
+		m_CurrentDSV(nullptr)
 	{
 	}
 
@@ -68,16 +67,16 @@ namespace Ion
 		dxcall_v(context->DrawIndexed(indexCount, 0, 0));
 	}
 
-	void DX11Renderer::RenderEditorViewport(const TShared<Texture>& sceneFinalTexture, const TShared<Texture>& editorDataTexture) const
+	void DX11Renderer::RenderEditorViewport(const EditorViewportTextures& editorViewportTextures) const
 	{
 		TRACE_FUNCTION();
 
 		ID3D11DeviceContext* context = DX11::GetContext();
 
 		BindScreenTexturePrimitives(GetEditorViewportShader().get());
-		sceneFinalTexture->Bind(0);
-		sceneFinalTexture->BindDepth(1);
-		editorDataTexture->BindDepth(2);
+		editorViewportTextures.SceneFinalColor->Bind(0);
+		editorViewportTextures.SceneFinalDepth->Bind(1);
+		editorViewportTextures.SelectedDepth->Bind(2);
 
 		// Index count is always 6 (2 triangles)
 		DrawIndexed(6);
@@ -85,7 +84,7 @@ namespace Ion
 
 	void DX11Renderer::SetVSyncEnabled(bool bEnabled) const
 	{
-		DX11::SetSwapInterval((uint32)bEnabled);
+		dxcall_v(DX11::SetSwapInterval((uint32)bEnabled));
 	}
 
 	bool DX11Renderer::IsVSyncEnabled() const
@@ -93,42 +92,47 @@ namespace Ion
 		return DX11::GetSwapInterval();
 	}
 
-	void DX11Renderer::SetViewportDimensions(const ViewportDimensions& dimensions) const
+	void DX11Renderer::SetViewport(const ViewportDescription& viewport)
 	{
 		TRACE_FUNCTION();
 
 		HRESULT hResult = S_OK;
 
-		D3D11_VIEWPORT viewport { };
-		viewport.TopLeftX = (float)dimensions.X;
-		viewport.TopLeftY = (float)dimensions.Y;
-		viewport.Width = (float)dimensions.Width;
-		viewport.Height = (float)dimensions.Height;
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
+		ID3D11DeviceContext* context = DX11::GetContext();
 
-		DX11::s_Context->RSSetViewports(1, &viewport);
-		DX11::ResizeBuffers(dimensions.Width, dimensions.Height);
+		D3D11_VIEWPORT dxViewport { };
+		dxViewport.TopLeftX = (float)viewport.X;
+		dxViewport.TopLeftY = (float)viewport.Y;
+		dxViewport.Width = (float)viewport.Width;
+		dxViewport.Height = (float)viewport.Height;
+		dxViewport.MinDepth = viewport.MinDepth;
+		dxViewport.MaxDepth = viewport.MaxDepth;
 
-		m_ViewportDimensions = dimensions;
+		dxcall_v(context->RSSetViewports(1, &dxViewport));
+
+		m_CurrentViewport = viewport;
 	}
 
-	ViewportDimensions DX11Renderer::GetViewportDimensions() const
+	ViewportDescription DX11Renderer::GetViewport() const
 	{
 		TRACE_FUNCTION();
 
-		D3D11_VIEWPORT viewport { };
+		ID3D11DeviceContext* context = DX11::GetContext();
+
+		D3D11_VIEWPORT dxViewport { };
 		uint32 nViewports = 0;
 
-		DX11::s_Context->RSGetViewports(&nViewports, &viewport);
+		dxcall_v(context->RSGetViewports(&nViewports, &dxViewport));
 
-		ViewportDimensions dimensions { };
-		dimensions.X = (int32)viewport.TopLeftX;
-		dimensions.Y = (int32)viewport.TopLeftY;
-		dimensions.Width = (int32)viewport.Width;
-		dimensions.Height = (int32)viewport.Height;
+		ViewportDescription viewport { };
+		viewport.X = (int32)dxViewport.TopLeftX;
+		viewport.Y = (int32)dxViewport.TopLeftY;
+		viewport.Width = (uint32)dxViewport.Width;
+		viewport.Height = (uint32)dxViewport.Height;
+		viewport.MinDepth = dxViewport.MinDepth;
+		viewport.MaxDepth = dxViewport.MaxDepth;
 
-		return dimensions;
+		return viewport;
 	}
 
 	void DX11Renderer::SetPolygonDrawMode(EPolygonDrawMode drawMode) const
@@ -161,50 +165,53 @@ namespace Ion
 	void DX11Renderer::SetRenderTarget(const TShared<Texture>& targetTexture)
 	{
 		ionassert(!targetTexture || targetTexture->GetDescription().bUseAsRenderTarget);
+		ionassert(!targetTexture || UVector2(targetTexture->GetDimensions()) == m_CurrentViewport.GetSize());
+
+		// ahhhhhhhh idk
+		//if (targetTexture && UVector2(targetTexture->GetDimensions()) != m_CurrentViewport.GetSize())
+		//{
+		//	TextureDimensions size = targetTexture->GetDimensions();
+		//	ViewportDescription viewport = m_CurrentViewport;
+		//	viewport.X = 0;
+		//	viewport.Y = 0;
+		//	viewport.Width = size.Width;
+		//	viewport.Height = size.Height;
+		//	SetViewport(viewport);
+		//}
 
 		if (targetTexture)
 		{
 			DX11Texture* dx11Texture = (DX11Texture*)targetTexture.get();
-
-			if (!targetTexture->HasColorAttachment() &&
-				!targetTexture->HasDepthStencilAttachment())
-			{
-				LOG_ERROR("Cannot set render target. The texture needs at least one attachment.");
-				return;
-			}
-
-			m_CurrentRTV = targetTexture->HasColorAttachment() ?
-				dx11Texture->m_RTV : nullptr;
-			m_CurrentDSV = targetTexture->HasDepthStencilAttachment() ?
-				dx11Texture->m_DSV : nullptr;
+			m_CurrentRTV = dx11Texture->m_RTV;
 		}
 		else
 		{
-			m_CurrentRTV = DX11::GetRenderTargetView();
-			m_CurrentDSV = DX11::GetDepthStencilView();
+			m_CurrentRTV = nullptr;
+		}
+		// Override the depth stencil too
+		// The DSV has to be the same format as the RTV
+		// so it has to be cleared here to make it possible
+		// to set the RTV
+		m_CurrentDSV = nullptr;
+
+		dxcall_v(DX11::GetContext()->OMSetRenderTargets(1, &m_CurrentRTV, m_CurrentDSV));
+	}
+
+	void DX11Renderer::SetDepthStencil(const TShared<Texture>& targetTexture)
+	{
+		ionassert(!targetTexture || targetTexture->GetDescription().bUseAsDepthStencil);
+		ionassert(!targetTexture || UVector2(targetTexture->GetDimensions()) == m_CurrentViewport.GetSize());
+
+		if (targetTexture)
+		{
+			DX11Texture* dx11Texture = (DX11Texture*)targetTexture.get();
+			m_CurrentDSV = dx11Texture->m_DSV;
+		}
+		else
+		{
+			m_CurrentDSV = nullptr;
 		}
 
 		dxcall_v(DX11::GetContext()->OMSetRenderTargets(1, &m_CurrentRTV, m_CurrentDSV));
-
-		D3D11_VIEWPORT viewport { };
-		
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
-		if (targetTexture)
-		{
-			TextureDimensions dimensions = targetTexture->GetDimensions();
-			viewport.TopLeftX = 0.0f;
-			viewport.TopLeftY = 0.0f;
-			viewport.Width = (float)dimensions.Width;
-			viewport.Height = (float)dimensions.Height;
-		}
-		else
-		{
-			viewport.TopLeftX = (float)m_ViewportDimensions.X;
-			viewport.TopLeftY = (float)m_ViewportDimensions.Y;
-			viewport.Width = (float)m_ViewportDimensions.Width;
-			viewport.Height = (float)m_ViewportDimensions.Height;
-		}
-		dxcall_v(DX11::s_Context->RSSetViewports(1, &viewport));
 	}
 }

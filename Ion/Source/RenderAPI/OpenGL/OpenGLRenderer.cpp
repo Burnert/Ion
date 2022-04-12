@@ -113,7 +113,7 @@ namespace Ion
 		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
 	}
 
-	void OpenGLRenderer::RenderEditorViewport(const TShared<Texture>& sceneFinalTexture, const TShared<Texture>& editorDataTexture) const
+	void OpenGLRenderer::RenderEditorViewport(const EditorViewportTextures& editorViewportTextures) const
 	{
 	}
 
@@ -127,20 +127,22 @@ namespace Ion
 		return (bool)OpenGL::GetSwapInterval();
 	}
 
-	void OpenGLRenderer::SetViewportDimensions(const ViewportDimensions& dimensions) const
+	void OpenGLRenderer::SetViewport(const ViewportDescription& viewport)
 	{
 		TRACE_FUNCTION();
 
-		glViewport(dimensions.X, dimensions.Y, dimensions.Width, dimensions.Height);
+		glViewport(viewport.X, viewport.Y, viewport.Width, viewport.Height);
+		glDepthRange(viewport.MinDepth, viewport.MaxDepth);
 	}
 
-	ViewportDimensions OpenGLRenderer::GetViewportDimensions() const
+	ViewportDescription OpenGLRenderer::GetViewport() const
 	{
 		TRACE_FUNCTION();
 
-		ViewportDimensions dimensions;
-		glGetIntegerv(GL_VIEWPORT, (int32*)&dimensions);
-		return dimensions;
+		ViewportDescription viewport;
+		glGetIntegerv(GL_VIEWPORT, (int32*)&viewport);
+		glGetFloatv(GL_DEPTH_RANGE, &viewport.MinDepth);
+		return viewport;
 	}
 
 	void OpenGLRenderer::SetPolygonDrawMode(EPolygonDrawMode drawMode) const
@@ -177,5 +179,9 @@ namespace Ion
 		m_CurrentRenderTarget = targetTexture ?
 			((OpenGLTexture*)targetTexture.get())->m_FramebufferID : 0;
 		glBindFramebuffer(GL_FRAMEBUFFER, m_CurrentRenderTarget);
+	}
+
+	void OpenGLRenderer::SetDepthStencil(const TShared<Texture>& targetTexture)
+	{
 	}
 }

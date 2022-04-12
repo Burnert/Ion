@@ -16,6 +16,11 @@ namespace Ion
 		{
 			return (Height != 0.0f) ? ((float)Width / (float)Height) : 1.0f;
 		}
+
+		inline operator UVector2() const
+		{
+			return UVector2(Width, Height);
+		}
 	};
 
 	enum class EDisplayMode : uint8
@@ -72,6 +77,9 @@ namespace Ion
 
 		Vector2 GetCenterPosition() const;
 
+		const TShared<Texture>& GetWindowColorTexture() const;
+		const TShared<Texture>& GetWindowDepthStencilTexture() const;
+
 	public:
 		// Implemented per platform.
 		static TShared<GenericWindow> Create();
@@ -80,7 +88,24 @@ namespace Ion
 		// Protected constructor: Only shared_ptrs of this class can be made.
 		GenericWindow();
 
+	private:
+		TShared<Texture> m_WindowColorTexture;
+		TShared<Texture> m_WindowDepthStencilTexture;
+
+	protected:
 		bool m_bCursorLocked;
 		bool m_bCursorShown;
+
+		friend class DX11;
 	};
+
+	inline const TShared<Texture>& GenericWindow::GetWindowColorTexture() const
+	{
+		return m_WindowColorTexture;
+	}
+
+	inline const TShared<Texture>& GenericWindow::GetWindowDepthStencilTexture() const
+	{
+		return m_WindowDepthStencilTexture;
+	}
 }

@@ -5,6 +5,15 @@
 
 namespace Ion
 {
+	enum class EDX11FormatUsage
+	{
+		Resource,
+		RTV,
+		DSV,
+		SRV,
+		AuxSRV,
+	};
+
 	class ION_API DX11Texture : public Texture
 	{
 	public:
@@ -14,7 +23,6 @@ namespace Ion
 		virtual void UpdateSubresource(Image* image) override;
 
 		virtual void Bind(uint32 slot = 0) const override;
-		virtual void BindDepth(uint32 slot = 0) const override;
 		virtual void Unbind() const override;
 
 		virtual void CopyTo(const TShared<Texture>& destination) const override;
@@ -48,13 +56,27 @@ namespace Ion
 			return D3D11_TEXTURE_ADDRESS_WRAP;
 		}
 
-		inline static constexpr DXGI_FORMAT FormatToDX11Format(ETextureFormat format)
+		inline static constexpr DXGI_FORMAT FormatToDX11Format(ETextureFormat format, EDX11FormatUsage usage)
 		{
 			switch (format)
 			{
 				case ETextureFormat::RGBA8:       return DXGI_FORMAT_R8G8B8A8_UNORM;
+				case ETextureFormat::RGBA10:      return DXGI_FORMAT_R10G10B10A2_UNORM;
 				case ETextureFormat::RGBAFloat32: return DXGI_FORMAT_R32G32B32A32_FLOAT;
+				case ETextureFormat::Float32:     return DXGI_FORMAT_R32_FLOAT;
 				case ETextureFormat::UInt32:      return DXGI_FORMAT_R32_UINT;
+				case ETextureFormat::D24S8:
+				{
+					switch (usage)
+					{
+					case EDX11FormatUsage::Resource: return DXGI_FORMAT_R24G8_TYPELESS;
+					case EDX11FormatUsage::RTV:      return DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+					case EDX11FormatUsage::DSV:      return DXGI_FORMAT_D24_UNORM_S8_UINT;
+					case EDX11FormatUsage::SRV:      return DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+					case EDX11FormatUsage::AuxSRV:   return DXGI_FORMAT_X24_TYPELESS_G8_UINT;
+					}
+					break;
+				}
 				case ETextureFormat::UInt128GUID: return DXGI_FORMAT_R32G32B32A32_UINT;
 			}
 			ionassert(false, "Invalid format.");
@@ -148,25 +170,23 @@ namespace Ion
 
 	protected:
 		DX11Texture(const TextureDescription& desc);
+		DX11Texture(const TextureDescription& desc, ID3D11Texture2D* existingResource);
 
 	private:
-		void CreateAttachments(const TextureDescription& desc);
-		void CreateColorAttachment(const TextureDescription& desc);
-		void CreateDepthStencilAttachment(const TextureDescription& desc);
+		void CreateTexture(const TextureDescription& desc);
+		void CreateViews(const TextureDescription& desc);
+		void CreateSampler(const TextureDescription& desc);
 		void ReleaseResources();
 
 	private:
-		ID3D11Texture2D* m_ColorTexture;
+		ID3D11Texture2D* m_Texture;
 		ID3D11RenderTargetView* m_RTV;
-		ID3D11ShaderResourceView* m_ColorSRV;
-		ID3D11SamplerState* m_ColorSamplerState;
-
-		ID3D11Texture2D* m_DepthStencilTexture;
 		ID3D11DepthStencilView* m_DSV;
-		ID3D11ShaderResourceView* m_DepthSRV;
-		ID3D11SamplerState* m_DepthSamplerState;
+		ID3D11ShaderResourceView* m_SRV;
+		ID3D11SamplerState* m_SamplerState;
 
 		friend class Texture;
 		friend class DX11Renderer;
+		friend class DX11;
 	};
 }

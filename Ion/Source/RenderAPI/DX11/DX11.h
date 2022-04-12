@@ -50,7 +50,6 @@ namespace Ion
 	};
 
 	class GenericWindow;
-	struct ViewportDimensions;
 
 	class ION_API DX11
 	{
@@ -58,12 +57,15 @@ namespace Ion
 	public:
 		/* Called by the Application class */
 		static void Init(GenericWindow* window);
+		static void InitWindow(GenericWindow& window);
 		static void Shutdown();
+		static void ShutdownWindow(GenericWindow& window);
 
 		static void BeginFrame();
 		static void EndFrame();
 
-		static void ChangeDisplayMode(EDisplayMode mode, uint32 width, uint32 height);
+		static void ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height);
+		static void ResizeBuffers(GenericWindow& window, const TextureDimensions& size);
 
 		static FORCEINLINE const char* GetFeatureLevelString()
 		{
@@ -88,16 +90,6 @@ namespace Ion
 		static inline IDXGISwapChain* GetSwapChain()
 		{
 			return s_SwapChain;
-		}
-
-		static inline ID3D11RenderTargetView* GetRenderTargetView()
-		{
-			return s_RTV;
-		}
-
-		static inline ID3D11DepthStencilView* GetDepthStencilView()
-		{
-			return s_DSV;
 		}
 
 		static inline ID3D11RasterizerState* GetRasterizerState()
@@ -166,9 +158,8 @@ namespace Ion
 	protected:
 		static void SetDisplayVersion(const char* version);
 
-		static void CreateRenderTarget();
-		static void CreateDepthStencil(uint32 width, uint32 height);
-		static void ResizeBuffers(uint32 width, uint32 height);
+		static void CreateRenderTarget(TShared<Texture>& texture);
+		static void CreateDepthStencil(TShared<Texture>& texture, uint32 width, uint32 height);
 
 	private:
 		static void InitImGuiBackend();
@@ -186,9 +177,7 @@ namespace Ion
 		static ID3D11Device* s_Device;
 		static ID3D11DeviceContext* s_Context;
 		static IDXGISwapChain* s_SwapChain;
-		static ID3D11RenderTargetView* s_RTV;
 		static ID3D11DepthStencilState* s_DepthStencilState;
-		static ID3D11DepthStencilView* s_DSV;
 		static ID3D11RasterizerState* s_RasterizerState;
 
 		static uint32 s_SwapInterval;

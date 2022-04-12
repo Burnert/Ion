@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Renderer/RendererCore.h"
+
 struct ImDrawData;
 
 namespace Ion
@@ -15,7 +17,6 @@ namespace Ion
 	};
 
 	class GenericWindow;
-	struct ViewportDimensions;
 
 	class ION_API RenderAPI
 	{
@@ -26,7 +27,8 @@ namespace Ion
 		static void BeginFrame();
 		static void EndFrame(GenericWindow& window);
 
-		static void ChangeDisplayMode(EDisplayMode mode, uint32 width, uint32 height);
+		static void ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height);
+		static void ResizeBuffers(GenericWindow& window, const TextureDimensions& size);
 
 		static FORCEINLINE ERenderAPI GetCurrent() { return s_CurrentRenderAPI; }
 

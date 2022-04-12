@@ -207,6 +207,8 @@ namespace Ion
 		void CallClientAppOnEvent(const Event& event);
 		float CalculateFrameTime(); // Implemented per platform
 
+		void RenderToMainWindow();
+
 		void SetupWindowTitle();
 		void UpdateWindowTitle(float deltaTime);
 
@@ -228,8 +230,6 @@ namespace Ion
 	private:
 		App* m_ClientApp;
 
-		bool m_bRunning;
-
 		TShared<GenericWindow> m_Window;
 		TShared<InputManager> m_InputManager;
 
@@ -243,6 +243,8 @@ namespace Ion
 		WString m_ApplicationTitle;
 
 		EngineFonts m_Fonts;
+
+		bool m_bRunning;
 
 		template<typename T>
 		friend void ParseCommandLineArgs(int32 argc, T* argv[]);

@@ -49,7 +49,8 @@ namespace Ion
 		m_LayerStack(MakeUnique<LayerStack>()),
 		m_MainThreadId(std::this_thread::get_id()),
 		m_bRunning(true),
-		m_ClientApp(clientApp)
+		m_ClientApp(clientApp),
+		m_Fonts()
 	{
 		ionassert(clientApp);
 		Logger::Init();
@@ -179,6 +180,7 @@ namespace Ion
 		ImGui::Render();
 
 		RenderAPI::BeginFrame();
+		RenderToMainWindow();
 
 		TRACE_BEGIN(0, "Application - Client::OnRender");
 		OnRender();
@@ -188,7 +190,7 @@ namespace Ion
 		m_LayerStack->OnRender();
 
 		// Render to the window framebuffer last
-		Renderer::Get()->SetRenderTarget(nullptr);
+		RenderToMainWindow();
 
 		{
 			TRACE_SCOPE("Render ImGui");
@@ -196,6 +198,18 @@ namespace Ion
 		}
 
 		RenderAPI::EndFrame(*m_Window);
+	}
+
+	void Application::RenderToMainWindow()
+	{
+		WindowDimensions windowSize = GetWindow()->GetDimensions();
+		ViewportDescription viewport { };
+		viewport.Width = windowSize.Width;
+		viewport.Height = windowSize.Height;
+		viewport.MaxDepth = 1.0f;
+		Renderer::Get()->SetViewport(viewport);
+		Renderer::Get()->SetRenderTarget(GetWindow()->GetWindowColorTexture());
+		Renderer::Get()->SetDepthStencil(GetWindow()->GetWindowDepthStencilTexture());
 	}
 
 	void Application::CallClientAppOnEvent(const Event& event)
@@ -258,22 +272,20 @@ namespace Ion
 
 	void Application::OnWindowResizeEvent_Internal(const WindowResizeEvent& event)
 	{
-		int32 width = (int32)event.GetWidth();
-		int32 height = (int32)event.GetHeight();
+		uint32 width = event.GetWidth();
+		uint32 height = event.GetHeight();
 
 		// Cannot create a texture with a width or height of 0.
 		// This happens when the window is minimized
 		if (width == 0 || height == 0)
 			return;
 
-		Renderer::Get()->SetViewportDimensions(ViewportDimensions { 0, 0, width, height });
+		//Renderer::Get()->SetViewportDimensions(ViewportDimensions { 0, 0, width, height });
+		RenderAPI::ResizeBuffers(*GetWindow().get(), { width, height });
 	}
 
 	void Application::OnWindowChangeDisplayModeEvent_Internal(const WindowChangeDisplayModeEvent& event)
 	{
-		ViewportDimensions dimensions { };
-		dimensions.Width = event.GetWidth();
-		dimensions.Height = event.GetHeight();
 	}
 
 	void Application::OnKeyPressedEvent_Internal(const KeyPressedEvent& event)

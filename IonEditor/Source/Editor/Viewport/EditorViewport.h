@@ -2,6 +2,7 @@
 
 #include "Core/Core.h"
 #include "EditorCore/CoreApi.h"
+#include "Renderer/RendererCore.h"
 
 namespace Ion::Editor
 {
@@ -34,6 +35,8 @@ namespace Ion::Editor
 
 		const TShared<EditorUIViewport>& GetUI() const;
 
+		UVector2 GetSize() const;
+
 		const GUID& GetGuid() const;
 
 	private:
@@ -65,12 +68,12 @@ namespace Ion::Editor
 
 		TShared<EditorUIViewport> m_UI;
 
-		TShared<Texture> m_ViewportFramebuffer;
-		TShared<Texture> m_FinalSceneFramebuffer;
-
-		TShared<Texture> m_SelectedFramebuffer;
-		TShared<Texture> m_ObjectIDFramebuffer;
-		TShared<Texture> m_ObjectIDStagingFramebuffer;
+		TShared<Texture> m_ViewportColor;
+		TShared<Texture> m_ObjectIDColor;
+		TShared<Texture> m_ObjectIDDepthStencil;
+		TShared<Texture> m_ObjectIDStaging;
+		EditorViewportTextures m_ViewportTextures;
+		UVector2 m_ViewportSize;
 
 		TShared<Camera> m_Camera;
 		Transform m_CameraTransform;
@@ -100,7 +103,12 @@ namespace Ion::Editor
 
 	inline const TShared<Texture>& EditorViewport::GetViewportFramebuffer() const
 	{
-		return m_ViewportFramebuffer;
+		return m_ViewportColor;
+	}
+
+	inline UVector2 EditorViewport::GetSize() const
+	{
+		return m_ViewportSize;
 	}
 
 	template<typename Lambda>

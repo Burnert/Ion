@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/CoreTypes.h"
+#include "RendererFwd.h"
 
 #define UNIFORMBUFFER alignas(16)
 
@@ -12,12 +13,52 @@
 
 namespace Ion
 {
-	struct ViewportDimensions
+	struct EditorViewportTextures
+	{
+		TShared<Texture> SceneFinalColor;
+		TShared<Texture> SceneFinalDepth;
+		TShared<Texture> SelectedDepth;
+	};
+
+	struct ViewportDescription
 	{
 		int32 X;
 		int32 Y;
-		int32 Width;
-		int32 Height;
+		uint32 Width;
+		uint32 Height;
+		float MinDepth;
+		float MaxDepth;
+
+		ViewportDescription() :
+			X(0),
+			Y(0),
+			Width(1),
+			Height(1),
+			MinDepth(0.0f),
+			MaxDepth(1.0f)
+		{
+		}
+
+		inline IVector2 GetOrigin()
+		{
+			return IVector2(X, Y);
+		}
+
+		inline UVector2 GetSize()
+		{
+			return UVector2(Width, Height);
+		}
+
+		inline bool operator==(const ViewportDescription& other) const
+		{
+			return
+				X == other.X &&
+				Y == other.Y &&
+				Width == other.Width &&
+				Height == other.Height &&
+				MinDepth == other.MinDepth &&
+				MaxDepth == other.MaxDepth;
+		}
 	};
 
 	enum class EPolygonDrawMode : uint8

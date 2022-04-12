@@ -26,7 +26,7 @@ namespace Ion
 	struct EditorPassData;
 	class Renderer;
 	// RendererCore.h
-	struct ViewportDimensions;
+	struct ViewportDescription;
 	// Scene.h
 	struct SceneUniforms;
 	struct RPrimitiveRenderProxy;

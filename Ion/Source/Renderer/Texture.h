@@ -25,10 +25,13 @@ namespace Ion
 
 	enum class ETextureFormat : uint8
 	{
-		RGBA8 = 0, // Default
-		RGBAFloat32,
-		UInt32,
-		UInt128GUID,
+		RGBA8 = 0,    // Default - Four 8-bit channels - UNorm
+		RGBA10,       // Three 10-bit channels and 2-bit Alpha - UNorm For HDR display
+		RGBAFloat32,  // Four 32-bit float channels - For HDR rendering
+		UInt32,       // Single channel - UInt
+		Float32,      // Single channel - Float
+		D24S8,        // Depth Stencil
+		UInt128GUID,  // GUID - For editor
 	};
 
 	enum class ETextureMapType : uint8
@@ -42,6 +45,16 @@ namespace Ion
 	{
 		uint32 Width;
 		uint32 Height;
+
+		inline operator UVector2() const
+		{
+			return UVector2(Width, Height);
+		}
+
+		inline operator IVector2() const
+		{
+			return IVector2(Width, Height);
+		}
 	};
 
 	struct TextureDescription
@@ -56,9 +69,8 @@ namespace Ion
 			{
 				uint32 bGenerateMips : 1;
 				uint32 bUseAsRenderTarget : 1;
-				uint32 bCreateColorAttachment : 1; // @TODO: Implement GL version
-				uint32 bCreateDepthStencilAttachment : 1;
-				uint32 bCreateDepthSampler : 1; // @TODO: Implement GL version
+				uint32 bUseAsDepthStencil : 1;
+				uint32 bCreateSampler : 1;
 				uint32 bAllowCPUReadAccess : 1;
 				uint32 bAllowCPUWriteAccess : 1;
 			};
@@ -84,7 +96,6 @@ namespace Ion
 		virtual void UpdateSubresource(Image* image) = 0;
 
 		virtual void Bind(uint32 slot = 0) const = 0;
-		virtual void BindDepth(uint32 slot = 0) const = 0;
 		virtual void Unbind() const = 0;
 
 		virtual void CopyTo(const TShared<Texture>& destination) const = 0;
@@ -93,30 +104,10 @@ namespace Ion
 
 		virtual void* GetNativeID() const = 0;
 
-		FORCEINLINE TextureDimensions GetDimensions() const
-		{
-			return m_Description.Dimensions;
-		}
-
-		FORCEINLINE const TextureDescription& GetDescription() const
-		{
-			return m_Description;
-		}
-
-		FORCEINLINE bool IsRenderTarget() const
-		{
-			return m_Description.bUseAsRenderTarget;
-		}
-
-		FORCEINLINE bool HasColorAttachment() const
-		{
-			return m_Description.bCreateColorAttachment;
-		}
-
-		FORCEINLINE bool HasDepthStencilAttachment() const
-		{
-			return m_Description.bCreateDepthStencilAttachment;
-		}
+		FORCEINLINE TextureDimensions GetDimensions() const;
+		FORCEINLINE const TextureDescription& GetDescription() const;
+		FORCEINLINE bool IsRenderTarget() const;
+		FORCEINLINE bool IsDepthStencil() const;
 
 	protected:
 		Texture(const TextureDescription& desc);
@@ -124,4 +115,24 @@ namespace Ion
 	protected:
 		TextureDescription m_Description;
 	};
+
+	FORCEINLINE TextureDimensions Texture::GetDimensions() const
+	{
+		return m_Description.Dimensions;
+	}
+
+	FORCEINLINE const TextureDescription& Texture::GetDescription() const
+	{
+		return m_Description;
+	}
+
+	FORCEINLINE bool Texture::IsRenderTarget() const
+	{
+		return m_Description.bUseAsRenderTarget;
+	}
+
+	FORCEINLINE bool Texture::IsDepthStencil() const
+	{
+		return m_Description.bUseAsDepthStencil;
+	}
 }

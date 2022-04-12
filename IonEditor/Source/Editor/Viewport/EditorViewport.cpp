@@ -44,8 +44,16 @@ namespace Ion::Editor
 
 	void EditorViewport::Render()
 	{
-		if (m_ViewportFramebuffer)
+		if (m_ViewportColor)
 		{
+			// Assume other textures are initialized as well
+			ionassert(m_ObjectIDColor);
+			ionassert(m_ObjectIDDepthStencil);
+			ionassert(m_ObjectIDStaging);
+			ionassert(m_ViewportTextures.SceneFinalColor);
+			ionassert(m_ViewportTextures.SceneFinalDepth);
+			ionassert(m_ViewportTextures.SelectedDepth);
+
 			Scene* editorScene = EditorApplication::Get()->GetEditorScene();
 			ionassert(editorScene);
 
@@ -53,13 +61,20 @@ namespace Ion::Editor
 			editorScene->LoadCamera(m_Camera);
 
 			TShared<EditorPassData> editorPassData = EditorApplication::Get()->GetEditorPassData();
+			editorPassData->RTObjectID = m_ObjectIDColor;
+			editorPassData->RTObjectIDDepth = m_ObjectIDDepthStencil;
+			editorPassData->RTSelectionDepth = m_ViewportTextures.SelectedDepth;
 
-			editorPassData->RTObjectID = m_ObjectIDFramebuffer;
-			editorPassData->RTSelection = m_SelectedFramebuffer;
+			ViewportDescription viewport { };
+			viewport.Width = GetSize().x;
+			viewport.Height = GetSize().y;
+
+			Renderer::Get()->SetViewport(viewport);
 
 			// Render the scene
 
-			Renderer::Get()->SetRenderTarget(m_FinalSceneFramebuffer);
+			Renderer::Get()->SetRenderTarget(m_ViewportTextures.SceneFinalColor);
+			Renderer::Get()->SetDepthStencil(m_ViewportTextures.SceneFinalDepth);
 			Renderer::Get()->Clear(Vector4(0.1f, 0.1f, 0.1f, 1.0f));
 			Renderer::Get()->RenderScene(editorScene);
 
@@ -69,9 +84,10 @@ namespace Ion::Editor
 
 			// Render to viewport framebuffer
 
-			Renderer::Get()->SetRenderTarget(m_ViewportFramebuffer);
+			Renderer::Get()->SetRenderTarget(m_ViewportColor);
+			Renderer::Get()->SetDepthStencil(nullptr);
 			Renderer::Get()->Clear();
-			Renderer::Get()->RenderEditorViewport(m_FinalSceneFramebuffer, m_SelectedFramebuffer);
+			Renderer::Get()->RenderEditorViewport(m_ViewportTextures);
 		}
 	}
 
@@ -139,24 +155,24 @@ namespace Ion::Editor
 
 	bool EditorViewport::ObtainClickedObject(GUID& outGuid)
 	{
-		if (!m_ObjectIDFramebuffer || !m_ObjectIDStagingFramebuffer)
+		if (!m_ObjectIDColor || !m_ObjectIDDepthStencil || !m_ObjectIDStaging)
 			return false;
 
 		// Copy the object ID to the staging texture
-		m_ObjectIDFramebuffer->CopyTo(m_ObjectIDStagingFramebuffer);
+		m_ObjectIDColor->CopyTo(m_ObjectIDStaging);
 
 		// Get the data on the CPU
 		void* buffer = nullptr;
 		int32 lineSize = 0;
-		m_ObjectIDStagingFramebuffer->Map(buffer, lineSize, ETextureMapType::Read);
-		ionassert(lineSize / sizeof(GUID) >= m_ObjectIDStagingFramebuffer->GetDimensions().Width);
+		m_ObjectIDStaging->Map(buffer, lineSize, ETextureMapType::Read);
+		ionassert(lineSize / sizeof(GUID) >= m_ObjectIDStaging->GetDimensions().Width);
 
 		// Get the pixel as GUID bytes
 		outGuid = GUID::Zero;
 		memcpy(&outGuid, (GUID*)buffer + ((int32)m_ClickedPoint.y * (lineSize / sizeof(GUID)) + (int32)m_ClickedPoint.x), sizeof(GUID));
 
 		// Cleanup
-		m_ObjectIDStagingFramebuffer->Unmap();
+		m_ObjectIDStaging->Unmap();
 
 		return true;
 	}
@@ -171,16 +187,18 @@ namespace Ion::Editor
 	{
 		TRACE_FUNCTION();
 
+		m_ViewportSize = size;
+
 		TextureDescription desc { };
 		desc.DebugName = "Viewport";
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
 		desc.bUseAsRenderTarget = true;
-		desc.bCreateColorAttachment = true;
+		desc.bCreateSampler = true;
 		desc.UWrapMode = ETextureWrapMode::Clamp;
 		desc.VWrapMode = ETextureWrapMode::Clamp;
 
-		m_ViewportFramebuffer = Texture::Create(desc);
+		m_ViewportColor = Texture::Create(desc);
 
 		CreateFinalSceneFramebuffer(size);
 		CreateEditorPassFramebuffers(size);
@@ -190,11 +208,12 @@ namespace Ion::Editor
 	{
 		TRACE_FUNCTION();
 
-		TextureDescription desc = m_ViewportFramebuffer->GetDescription();
+		m_ViewportSize = size;
+
+		TextureDescription desc = m_ViewportColor->GetDescription();
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
-
-		m_ViewportFramebuffer = Texture::Create(desc);
+		m_ViewportColor = Texture::Create(desc);
 
 		ResizeFinalSceneFramebuffer(size);
 		ResizeEditorPassFramebuffers(size);
@@ -204,7 +223,7 @@ namespace Ion::Editor
 	{
 		if (size.x && size.y)
 		{
-			TextureDimensions viewportDimensions = m_ViewportFramebuffer->GetDimensions();
+			TextureDimensions viewportDimensions = m_ViewportColor->GetDimensions();
 			if (size != UVector2(viewportDimensions.Width, viewportDimensions.Height))
 			{
 				ResizeFramebuffers(size);
@@ -223,24 +242,38 @@ namespace Ion::Editor
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
 		desc.bUseAsRenderTarget = true;
-		desc.bCreateColorAttachment = true;
-		desc.bCreateDepthStencilAttachment = true;
-		desc.bCreateDepthSampler = true;
+		desc.bCreateSampler = true;
 		desc.UWrapMode = ETextureWrapMode::Clamp;
 		desc.VWrapMode = ETextureWrapMode::Clamp;
 
-		m_FinalSceneFramebuffer = Texture::Create(desc);
+		m_ViewportTextures.SceneFinalColor = Texture::Create(desc);
+
+		desc = { };
+		desc.DebugName = "FinalSceneDepth";
+		desc.Dimensions.Width = size.x;
+		desc.Dimensions.Height = size.y;
+		desc.bUseAsDepthStencil = true;
+		desc.bCreateSampler = true;
+		desc.Format = ETextureFormat::D24S8;
+		desc.UWrapMode = ETextureWrapMode::Clamp;
+		desc.VWrapMode = ETextureWrapMode::Clamp;
+
+		m_ViewportTextures.SceneFinalDepth = Texture::Create(desc);
 	}
 
 	void EditorViewport::ResizeFinalSceneFramebuffer(const UVector2& size)
 	{
 		TRACE_FUNCTION();
 
-		TextureDescription desc = m_FinalSceneFramebuffer->GetDescription();
+		TextureDescription desc = m_ViewportTextures.SceneFinalColor->GetDescription();
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
+		m_ViewportTextures.SceneFinalColor = Texture::Create(desc);
 
-		m_FinalSceneFramebuffer = Texture::Create(desc);
+		desc = m_ViewportTextures.SceneFinalDepth->GetDescription();
+		desc.Dimensions.Width = size.x;
+		desc.Dimensions.Height = size.y;
+		m_ViewportTextures.SceneFinalDepth = Texture::Create(desc);
 	}
 
 	void EditorViewport::CreateEditorPassFramebuffers(const UVector2& size)
@@ -248,65 +281,75 @@ namespace Ion::Editor
 		TRACE_FUNCTION();
 
 		TextureDescription desc { };
-		desc.DebugName = "EditorSelected";
+		desc.DebugName = "EditorSelectedDepth";
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
-		desc.bUseAsRenderTarget = true;
-		desc.bCreateColorAttachment = true;
-		desc.bCreateDepthStencilAttachment = true;
-		desc.bCreateDepthSampler = true;
+		desc.bUseAsDepthStencil = true;
+		desc.bCreateSampler = true;
+		desc.Format = ETextureFormat::D24S8;
 		desc.UWrapMode = ETextureWrapMode::Clamp;
 		desc.VWrapMode = ETextureWrapMode::Clamp;
 
-		m_SelectedFramebuffer = Texture::Create(desc);
+		m_ViewportTextures.SelectedDepth = Texture::Create(desc);
 
 		desc = { };
 		desc.DebugName = "EditorObjectID";
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
 		desc.bUseAsRenderTarget = true;
-		desc.bCreateColorAttachment = true;
-		desc.bCreateDepthStencilAttachment = true;
+		desc.bCreateSampler = true;
 		desc.Format = ETextureFormat::UInt128GUID;
 		desc.UWrapMode = ETextureWrapMode::Clamp;
 		desc.VWrapMode = ETextureWrapMode::Clamp;
 
-		m_ObjectIDFramebuffer = Texture::Create(desc);
+		m_ObjectIDColor = Texture::Create(desc);
+
+		desc = { };
+		desc.DebugName = "EditorObjectIDDepth";
+		desc.Dimensions.Width = size.x;
+		desc.Dimensions.Height = size.y;
+		desc.bUseAsDepthStencil = true;
+		desc.Format = ETextureFormat::D24S8;
+		desc.UWrapMode = ETextureWrapMode::Clamp;
+		desc.VWrapMode = ETextureWrapMode::Clamp;
+
+		m_ObjectIDDepthStencil = Texture::Create(desc);
 
 		desc = { };
 		desc.DebugName = "EditorObjectIDStaging";
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
-		desc.bCreateColorAttachment = true;
 		desc.bAllowCPUReadAccess = true;
 		desc.Usage = ETextureUsage::Staging;
 		desc.Format = ETextureFormat::UInt128GUID;
 		desc.UWrapMode = ETextureWrapMode::Clamp;
 		desc.VWrapMode = ETextureWrapMode::Clamp;
 
-		m_ObjectIDStagingFramebuffer = Texture::Create(desc);
+		m_ObjectIDStaging = Texture::Create(desc);
 	}
 
 	void EditorViewport::ResizeEditorPassFramebuffers(const UVector2& size)
 	{
 		TRACE_FUNCTION();
 
-		TextureDescription desc = m_SelectedFramebuffer->GetDescription();
+		TextureDescription desc = m_ViewportTextures.SelectedDepth->GetDescription();
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
+		m_ViewportTextures.SelectedDepth = Texture::Create(desc);
 
-		m_SelectedFramebuffer = Texture::Create(desc);
-
-		desc = m_ObjectIDFramebuffer->GetDescription();
+		desc = m_ObjectIDColor->GetDescription();
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
+		m_ObjectIDColor = Texture::Create(desc);
 
-		m_ObjectIDFramebuffer = Texture::Create(desc);
-
-		desc = m_ObjectIDStagingFramebuffer->GetDescription();
+		desc = m_ObjectIDDepthStencil->GetDescription();
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
+		m_ObjectIDDepthStencil = Texture::Create(desc);
 
-		m_ObjectIDStagingFramebuffer = Texture::Create(desc);
+		desc = m_ObjectIDStaging->GetDescription();
+		desc.Dimensions.Width = size.x;
+		desc.Dimensions.Height = size.y;
+		m_ObjectIDStaging = Texture::Create(desc);
 	}
 }
