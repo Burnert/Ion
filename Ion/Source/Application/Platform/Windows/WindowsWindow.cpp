@@ -911,7 +911,7 @@ namespace Ion
 	void WindowsWindow::LockCursor(IVector2 position)
 	{
 		ClientToScreen(m_WindowHandle, (POINT*)&position);
-		RECT rect = { position.x, position.y, position.x, position.y };
+		RECT rect = { position.x, position.y, position.x + 1, position.y + 1 };
 		::ClipCursor(&rect);
 		m_bCursorLocked = true;
 	}
@@ -920,7 +920,7 @@ namespace Ion
 	{
 		POINT cursorPos { };
 		GetCursorPos(&cursorPos);
-		RECT rect = { cursorPos.x, cursorPos.y, cursorPos.x, cursorPos.y };
+		RECT rect = { cursorPos.x, cursorPos.y, cursorPos.x + 1, cursorPos.y + 1 };
 		::ClipCursor(&rect);
 		m_bCursorLocked = true;
 	}
