@@ -425,11 +425,12 @@ namespace Ion
 
 		strcpy_s(config.Name, "System Default, 14px");
 		String systemFontPath = StringConverter::WStringToString(Platform::GetSystemDefaultFontPath());
-		m_Fonts.System_14 = io.Fonts->AddFontFromFileTTF(systemFontPath.c_str(), 14, &config);
+		if (!systemFontPath.empty())
+		{
+			m_Fonts.System_14 = io.Fonts->AddFontFromFileTTF(systemFontPath.c_str(), 14, &config);
+		}
 
-		io.FontDefault = m_Fonts.System_14;
-
-		ImGui::GetTextLineHeight();
+		io.FontDefault = m_Fonts.Roboto_14;
 	}
 
 	Application* Application::s_Instance = nullptr;

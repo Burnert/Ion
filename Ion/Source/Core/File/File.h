@@ -602,6 +602,8 @@ namespace Ion
 
 		FilePath& operator=(const FilePath&) = default;
 		FilePath& operator=(FilePath&&) = default;
+		FilePath& operator=(const WString&);
+		FilePath& operator=(WString&&);
 
 		FilePath& operator+=(const FilePath& path);
 		FilePath& operator+=(const WString& directory);
@@ -640,4 +642,14 @@ namespace Ion
 		mutable WString m_PathName;
 		void UpdatePathName() const;
 	};
+
+	inline FilePath& FilePath::operator=(const WString& str)
+	{
+		Set(str);
+	}
+
+	inline FilePath& FilePath::operator=(WString&& str)
+	{
+		Set(str);
+	}
 }

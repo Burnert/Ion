@@ -48,6 +48,17 @@ namespace Ion::Platform
 
 	WString GetSystemDefaultFontPath()
 	{
-		return L"C:\\Windows\\Fonts\\arial.ttf";
+		constexpr wchar* Paths[] = {
+			L"C:\\Windows\\Fonts\\arial.ttf",
+			L"C:\\Windows\\Fonts\\segoeui.ttf",
+		};
+
+		for (int32 i = 0; i < sizeof(Paths) / sizeof(wchar*); ++i)
+		{
+			if (FilePath(Paths[i]).Exists())
+				return Paths[i];
+		}
+
+		return L"";
 	}
 }
