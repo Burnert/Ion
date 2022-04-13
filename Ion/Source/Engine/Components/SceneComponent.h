@@ -57,6 +57,9 @@ namespace Ion
 		void UpdateChildrenWorldTransformCache();
 
 	private:
+		Transform m_RelativeTransform;
+		Transform m_WorldTransformCache;
+
 		SceneObjectData m_SceneData;
 
 		SceneComponent* m_Parent;
@@ -77,22 +80,22 @@ namespace Ion
 
 	inline const Transform& SceneComponent::GetTransform() const
 	{
-		return m_SceneData.RelativeTransform;
+		return m_RelativeTransform;
 	}
 
 	inline const Vector3& SceneComponent::GetLocation() const
 	{
-		return m_SceneData.RelativeTransform.GetLocation();
+		return m_RelativeTransform.GetLocation();
 	}
 
 	inline const Rotator& SceneComponent::GetRotation() const
 	{
-		return m_SceneData.RelativeTransform.GetRotation();
+		return m_RelativeTransform.GetRotation();
 	}
 
 	inline const Vector3& SceneComponent::GetScale() const
 	{
-		return m_SceneData.RelativeTransform.GetScale();
+		return m_RelativeTransform.GetScale();
 	}
 
 	inline bool SceneComponent::IsVisible() const
@@ -107,7 +110,7 @@ namespace Ion
 
 	inline const Transform& SceneComponent::GetWorldTransform() const
 	{
-		return m_SceneData.WorldTransformCache;
+		return m_WorldTransformCache;
 	}
 
 	inline SceneComponent* SceneComponent::GetParent() const

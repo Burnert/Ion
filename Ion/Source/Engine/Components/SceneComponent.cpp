@@ -9,25 +9,29 @@ namespace Ion
 
 	void SceneComponent::SetTransform(const Transform& transform)
 	{
-		m_SceneData.RelativeTransform = transform;
+		m_RelativeTransform = transform;
+
 		UpdateWorldTransformCache();
 	}
 
 	void SceneComponent::SetLocation(const Vector3& location)
 	{
-		m_SceneData.RelativeTransform.SetLocation(location);
+		m_RelativeTransform.SetLocation(location);
+
 		UpdateWorldTransformCache();
 	}
 
 	void SceneComponent::SetRotation(const Rotator& rotation)
 	{
-		m_SceneData.RelativeTransform.SetRotation(rotation);
+		m_RelativeTransform.SetRotation(rotation);
+
 		UpdateWorldTransformCache();
 	}
 
 	void SceneComponent::SetScale(const Vector3& scale)
 	{
-		m_SceneData.RelativeTransform.SetScale(scale);
+		m_RelativeTransform.SetScale(scale);
+
 		UpdateWorldTransformCache();
 	}
 
@@ -132,14 +136,19 @@ namespace Ion
 	{
 		if (m_Parent)
 		{
-			m_SceneData.WorldTransformCache = m_SceneData.RelativeTransform * m_Parent->GetWorldTransform();
+			m_WorldTransformCache = m_RelativeTransform * m_Parent->GetWorldTransform();
 		}
 		else
 		{
-			if (GetOwner())
-				m_SceneData.WorldTransformCache = m_SceneData.RelativeTransform * GetOwner()->GetWorldTransform();
+			if (GetOwner() && GetOwner()->GetParent())
+			{
+				ionassert(GetOwner()->GetParent()->GetRootComponent());
+				m_WorldTransformCache = m_RelativeTransform * GetOwner()->GetParent()->GetWorldTransform();
+			}
 			else
-				m_SceneData.WorldTransformCache = m_SceneData.RelativeTransform;
+			{
+				m_WorldTransformCache = m_RelativeTransform;
+			}
 		}
 
 		UpdateChildrenWorldTransformCache();

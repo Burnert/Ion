@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/SceneObjectData.h"
+#include "Engine/Components/SceneComponent.h"
 
 namespace Ion
 {
@@ -119,7 +120,6 @@ namespace Ion
 		/* Called in any function that changes the relative transform. */
 		void UpdateWorldTransformCache();
 		void UpdateChildrenWorldTransformCache();
-		void UpdateRootComponentWorldTransformCache();
 
 	private:
 		GUID m_GUID;
@@ -150,27 +150,32 @@ namespace Ion
 
 	inline const Transform& Entity::GetTransform() const
 	{
-		return m_SceneData.RelativeTransform;
+		ionassert(m_RootComponent);
+		return m_RootComponent->GetTransform();
 	}
 
 	inline const Vector3& Entity::GetLocation() const
 	{
-		return m_SceneData.RelativeTransform.GetLocation();
+		ionassert(m_RootComponent);
+		return m_RootComponent->GetLocation();
 	}
 
 	inline const Rotator& Entity::GetRotation() const
 	{
-		return m_SceneData.RelativeTransform.GetRotation();
+		ionassert(m_RootComponent);
+		return m_RootComponent->GetRotation();
 	}
 
 	inline const Vector3& Entity::GetScale() const
 	{
-		return m_SceneData.RelativeTransform.GetScale();
+		ionassert(m_RootComponent);
+		return m_RootComponent->GetScale();
 	}
 
 	inline const Transform& Entity::GetWorldTransform() const
 	{
-		return m_SceneData.WorldTransformCache;
+		ionassert(m_RootComponent);
+		return m_RootComponent->GetWorldTransform();
 	}
 
 	inline void Entity::SetVisible(bool bVisible)
