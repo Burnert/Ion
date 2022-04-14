@@ -16,6 +16,17 @@ namespace Ion
 			RebuildMatrix();
 		}
 
+		Transform(const Matrix4& matrix)
+		{
+			Quaternion rotation;
+			Vector3 skew;
+			Vector4 perspective;
+			glm::decompose(matrix, m_Scale, rotation, m_Location, skew, perspective);
+			m_Rotation = Rotator(rotation);
+
+			RebuildMatrix();
+		}
+
 		void SetLocation(const Vector3& location)
 		{
 			m_Location = location;

@@ -123,9 +123,4 @@ namespace Ion
 	{
 		camera->CopyRenderData(m_RenderCamera);
 	}
-
-	void Scene::InjectPrimitive(RPrimitiveRenderProxy& primitive)
-	{
-		m_RenderPrimitives.push_back(primitive);
-	}
 }

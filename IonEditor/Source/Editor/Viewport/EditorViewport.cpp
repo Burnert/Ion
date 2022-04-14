@@ -3,6 +3,11 @@
 #include "EditorViewport.h"
 #include "EditorApplication/EditorApplication.h"
 #include "Editor/UI/ViewportUI.h"
+#include "Editor/EditorAssets.h"
+
+#include "Engine/Components/SceneComponent.h"
+#include "Engine/Components/MeshComponent.h"
+#include "Engine/World.h"
 
 #include "Renderer/Renderer.h"
 
@@ -77,6 +82,7 @@ namespace Ion::Editor
 			Renderer::Get()->SetDepthStencil(m_ViewportTextures.SceneFinalDepth);
 			Renderer::Get()->Clear(Vector4(0.1f, 0.1f, 0.1f, 1.0f));
 			Renderer::Get()->RenderScene(editorScene);
+			RenderEditorBillboards();
 
 			// Render editor pass
 
@@ -181,6 +187,36 @@ namespace Ion::Editor
 	{
 		if (m_OnClicked)
 			m_OnClicked(clickedGuid);
+	}
+
+	void EditorViewport::RenderEditorBillboards()
+	{
+		World* editorWorld = EditorApplication::Get()->GetEditorWorld();
+
+		ComponentRegistry& registry = editorWorld->GetComponentRegistry();
+		const ComponentDatabase* database = registry.GetComponentTypeDatabase();
+		for (auto& [id, type] : database->RegisteredTypes)
+		{
+			auto& componentType = type;
+			if (!componentType.bIsSceneComponent)
+				continue;
+
+			registry.ForEachComponentOfType(id, [this, &componentType, editorWorld](Component* component)
+			{
+				if (component->IsOfType<MeshComponent>())
+					return;
+
+				SceneComponent* sceneComponent = (SceneComponent*)component;
+
+				RBillboardRenderProxy billboard;
+				billboard.Texture = EditorBillboards::GetComponentBillboardTexture(componentType.ID).get();
+				billboard.LocationWS = sceneComponent->GetLocation();
+				billboard.Scale = 0.2f;
+
+				const Shader* billboardShader = Renderer::Get()->GetBasicUnlitMaskedShader().get();
+				Renderer::Get()->DrawBillboard(billboard, billboardShader, editorWorld->GetScene());
+			});
+		}
 	}
 
 	void EditorViewport::CreateFramebuffers(const UVector2& size)

@@ -61,6 +61,38 @@ namespace Ion
 		}
 	};
 
+	struct RBillboardRenderProxy
+	{
+		const Texture* Texture;
+		Vector3 LocationWS;
+		float Scale;
+	};
+
+	struct RPrimitiveRenderProxy
+	{
+		const VertexBuffer* VertexBuffer;
+		const IndexBuffer* IndexBuffer;
+		const UniformBuffer* UniformBuffer;
+		const Material* Material;
+		const Shader* Shader;
+		Matrix4 Transform;
+	};
+
+	struct REditorPassPrimitive
+	{
+		GUID Guid = GUID::Zero;
+		const VertexBuffer* VertexBuffer;
+		const IndexBuffer* IndexBuffer;
+		const UniformBuffer* UniformBuffer;
+		Matrix4 Transform;
+	};
+
+	struct REditorPassBillboardPrimitive
+	{
+		GUID Guid = GUID::Zero;
+		RBillboardRenderProxy BillboardRenderProxy;
+	};
+
 	enum class EPolygonDrawMode : uint8
 	{
 		Fill,

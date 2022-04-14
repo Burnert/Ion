@@ -50,6 +50,8 @@ namespace Ion::Editor
 		bool ObtainClickedObject(GUID& outGuid);
 		void DispatchOnClicked(const GUID& clickedGuid) const;
 
+		void RenderEditorBillboards();
+
 		void CreateFramebuffers(const UVector2& size);
 		void ResizeFramebuffers(const UVector2& size);
 		/* Creates the viewport, if it hasn't been done yet. */

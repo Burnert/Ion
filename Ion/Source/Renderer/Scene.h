@@ -24,17 +24,6 @@ namespace Ion
 		uint32 LightNum;
 	};
 
-	struct RPrimitiveRenderProxy
-	{
-		const VertexBuffer* VertexBuffer;
-		const IndexBuffer* IndexBuffer;
-		const UniformBuffer* UniformBuffer;
-		const Material* Material;
-		const Texture* Texture;
-		const Shader* Shader;
-		Matrix4 Transform;
-	};
-
 	class ION_API Scene
 	{
 	public:
@@ -68,9 +57,6 @@ namespace Ion
 
 		void LoadSceneData(const RRendererData& data);
 		void LoadCamera(const TShared<Camera>& camera);
-
-		// @TODO: TEMPORARY
-		void InjectPrimitive(RPrimitiveRenderProxy& primitive);
 
 		// Render Thread: --------------------------------------------------------------------------
 

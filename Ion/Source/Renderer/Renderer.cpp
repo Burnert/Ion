@@ -133,10 +133,44 @@ namespace Ion
 			material->BindTextures();
 		//material->UpdateShaderUniforms();
 
-		if (primitive.Texture)
-			primitive.Texture->Bind(0);
-
 		DrawIndexed(primitive.IndexBuffer->GetIndexCount());
+	}
+
+	void Renderer::DrawBillboard(const RBillboardRenderProxy& billboard, const Shader* shader, const Scene* targetScene) const
+	{
+		TRACE_FUNCTION();
+
+		ionassert(targetScene);
+
+		TShared<Mesh> billboardMesh = GetBillboardMesh();
+		ionassert(billboardMesh);
+
+		TShared<VertexBuffer> vb = billboardMesh->GetVertexBuffer();
+		TShared<IndexBuffer> ib = billboardMesh->GetIndexBuffer();
+
+		shader->Bind();
+		vb->Bind();
+		vb->BindLayout();
+		ib->Bind();
+
+		// @TODO: All this cannot be done for each billbord to be drawn
+
+		Transform cameraTransform = Transform(targetScene->GetCameraRenderProxy().Transform);
+
+		Transform transform = Transform(billboard.LocationWS);
+		transform.SetScale(Vector3(billboard.Scale));
+		transform.SetRotation(cameraTransform.GetRotation());
+
+		MeshUniforms& uniforms = billboardMesh->GetUniformsDataRef();
+		uniforms.TransformMatrix = transform.GetMatrix();
+		uniforms.ModelViewProjectionMatrix = targetScene->m_RenderCamera.ViewProjectionMatrix * transform.GetMatrix();
+
+		billboardMesh->GetUniformBufferRaw()->UpdateData();
+		billboardMesh->GetUniformBufferRaw()->Bind(1);
+
+		billboard.Texture->Bind(0);
+
+		DrawIndexed(ib->GetIndexCount());
 	}
 
 	void Renderer::DrawScreenTexture(const TShared<Texture>& texture) const
@@ -464,16 +498,27 @@ namespace Ion
 			prim.Shader = GetEditorObjectIDShader().get();
 			prim.Transform = editorPrim.Transform;
 
-			// Set the mask texture for billboards
-			editorPrim.MaskTexture ?
-				editorPrim.MaskTexture->Bind(0) :
-				m_WhiteTexture->Bind(0);
-
 			// Load the GUID
 			MeshUniforms& meshUniforms = prim.UniformBuffer->DataRef<MeshUniforms>();
 			meshUniforms.RenderGuid = *(UVector4*)editorPrim.Guid.GetRawBytes().data();
 
+			m_WhiteTexture->Bind(0);
+
 			Draw(prim, scene);
+
+			// Reset
+			meshUniforms.RenderGuid = UVector4();
+		}
+
+		for (const REditorPassBillboardPrimitive& billboardPrim : data.Billboards)
+		{
+			TShared<Mesh> billboardMesh = GetBillboardMesh();
+
+			// Load the GUID
+			MeshUniforms& meshUniforms = billboardMesh->GetUniformsDataRef();
+			meshUniforms.RenderGuid = *(UVector4*)billboardPrim.Guid.GetRawBytes().data();
+
+			DrawBillboard(billboardPrim.BillboardRenderProxy, GetEditorObjectIDShader().get(), scene);
 
 			// Reset
 			meshUniforms.RenderGuid = UVector4();
@@ -497,12 +542,17 @@ namespace Ion
 				prim.Shader = GetEditorSelectedShader().get();
 				prim.Transform = editorPrim.Transform;
 
-				// Set the mask texture for billboards
-				editorPrim.MaskTexture ?
-					editorPrim.MaskTexture->Bind(0) :
-					m_WhiteTexture->Bind(0);
+				m_WhiteTexture->Bind(0);
 
 				Draw(prim, scene);
+			}
+		}
+
+		if (!data.SelectedBillboards.empty())
+		{
+			for (const REditorPassBillboardPrimitive& billboardPrim : data.Billboards)
+			{
+				DrawBillboard(billboardPrim.BillboardRenderProxy, GetEditorSelectedShader().get(), scene);
 			}
 		}
 	}

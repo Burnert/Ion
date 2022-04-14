@@ -68,16 +68,6 @@ namespace Ion
 		}
 	};
 
-	struct REditorPassPrimitive
-	{
-		GUID Guid = GUID::Zero;
-		const VertexBuffer* VertexBuffer;
-		const IndexBuffer* IndexBuffer;
-		const UniformBuffer* UniformBuffer;
-		const Texture* MaskTexture; // Mask in the alpha channel
-		Matrix4 Transform;
-	};
-
 	struct EditorPassData
 	{
 		/* UInt128GUID */
@@ -88,6 +78,8 @@ namespace Ion
 
 		TArray<REditorPassPrimitive> Primitives;
 		TArray<REditorPassPrimitive> SelectedPrimitives;
+		TArray<REditorPassBillboardPrimitive> Billboards;
+		TArray<REditorPassBillboardPrimitive> SelectedBillboards;
 	};
 
 	class ION_API Renderer
@@ -106,7 +98,10 @@ namespace Ion
 
 		void Clear() const;
 		void RenderScene(const Scene* scene) const;
+
 		void Draw(const RPrimitiveRenderProxy& primitive, const Scene* targetScene = nullptr) const;
+		/** Draw a screen aligned quad positioned in world space. */
+		void DrawBillboard(const RBillboardRenderProxy& billboard, const Shader* shader, const Scene* targetScene) const;
 		void DrawScreenTexture(const TShared<Texture>& texture) const;
 
 		virtual void Clear(const RendererClearOptions& options) const = 0;

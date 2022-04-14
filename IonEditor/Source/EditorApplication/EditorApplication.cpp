@@ -151,9 +151,6 @@ namespace Ion::Editor
 	{
 		TRACE_FUNCTION();
 
-		// @TODO: this will have to be moved
-		PrepareEditorBillboards();
-
 		RenderViewports();
 	}
 
@@ -455,20 +452,17 @@ namespace Ion::Editor
 			prim.UniformBuffer = meshProxy.UniformBuffer;
 			prim.Transform = meshProxy.Transform;
 		}
-		else
-		{
-			TShared<Mesh> billboard = Renderer::Get()->GetBillboardMesh();
-			prim.VertexBuffer = billboard->GetVertexBufferRaw();
-			prim.IndexBuffer = billboard->GetIndexBufferRaw();
-			prim.UniformBuffer = billboard->GetUniformBufferRaw();
-			prim.MaskTexture = EditorBillboards::GetComponentBillboardTexture(component->GetFinalTypeID()).get();
 
-			Transform transform = component->GetWorldTransform();
-			transform.SetScale(Vector3(0.2f));
-			Transform cameraTransform = m_MainViewport.lock()->GetCameraTransform();
-			transform.SetRotation(cameraTransform.GetRotation());
-			prim.Transform = transform.GetMatrix();
-		}
+		return prim;
+	}
+
+	REditorPassBillboardPrimitive EditorApplication::CreateEditorPassBillboard(SceneComponent* component)
+	{
+		REditorPassBillboardPrimitive prim;
+		prim.Guid = component->GetGUID();
+		prim.BillboardRenderProxy.Texture = EditorBillboards::GetComponentBillboardTexture(component->GetFinalTypeID()).get();
+		prim.BillboardRenderProxy.LocationWS = component->GetLocation();
+		prim.BillboardRenderProxy.Scale = 0.2f;
 
 		return prim;
 	}
@@ -484,6 +478,8 @@ namespace Ion::Editor
 
 		m_EditorPassData->Primitives.clear();
 		m_EditorPassData->SelectedPrimitives.clear();
+		m_EditorPassData->Billboards.clear();
+		m_EditorPassData->SelectedBillboards.clear();
 		
 		ComponentRegistry& registry = GetEditorWorld()->GetComponentRegistry();
 		const ComponentDatabase* database = registry.GetComponentTypeDatabase();
@@ -498,11 +494,17 @@ namespace Ion::Editor
 				SceneComponent* sceneComponent = (SceneComponent*)component;
 
 				// @TODO: this is here only because AssetManager doesn't do its job...
-				if (sceneComponent->IsOfType<MeshComponent>() &&
-					!((MeshComponent*)sceneComponent)->GetMesh())
-					return;
+				if (sceneComponent->IsOfType<MeshComponent>())
+				{
+					if (!((MeshComponent*)sceneComponent)->GetMesh())
+						return;
 
-				m_EditorPassData->Primitives.push_back(CreateEditorPassPrimitive(sceneComponent));
+					m_EditorPassData->Primitives.push_back(CreateEditorPassPrimitive(sceneComponent));
+				}
+				else
+				{
+					m_EditorPassData->Billboards.push_back(CreateEditorPassBillboard(sceneComponent));
+				}
 			});
 		}
 
@@ -517,8 +519,13 @@ namespace Ion::Editor
 					MeshComponent* meshComponent = (MeshComponent*)m_SelectedComponent;
 					if (!meshComponent->GetMesh())
 						return;
+
+					m_EditorPassData->SelectedPrimitives.push_back(CreateEditorPassPrimitive((SceneComponent*)m_SelectedComponent));
 				}
-				m_EditorPassData->SelectedPrimitives.push_back(CreateEditorPassPrimitive((SceneComponent*)m_SelectedComponent));
+				else
+				{
+					m_EditorPassData->SelectedBillboards.push_back(CreateEditorPassBillboard((SceneComponent*)m_SelectedComponent));
+				}
 			}
 			else
 			{
@@ -529,53 +536,15 @@ namespace Ion::Editor
 						MeshComponent* meshComponent = (MeshComponent*)comp;
 						if (!meshComponent->GetMesh())
 							continue;
+
+						m_EditorPassData->SelectedPrimitives.push_back(CreateEditorPassPrimitive(comp));
 					}
-					m_EditorPassData->SelectedPrimitives.push_back(CreateEditorPassPrimitive(comp));
+					else
+					{
+						m_EditorPassData->SelectedBillboards.push_back(CreateEditorPassBillboard(comp));
+					}
 				}
 			}
-		}
-	}
-
-	RPrimitiveRenderProxy EditorApplication::CreateEditorBillboardPrimitive(SceneComponent* component, const TShared<Texture>& texture)
-	{
-		RPrimitiveRenderProxy prim { };
-
-		TShared<Mesh> mesh = Renderer::Get()->GetBillboardMesh();
-		prim.VertexBuffer = mesh->GetVertexBufferRaw();
-		prim.IndexBuffer = mesh->GetIndexBufferRaw();
-		prim.UniformBuffer = mesh->GetUniformBufferRaw();
-		prim.Material = nullptr;
-		prim.Texture = texture.get();
-		prim.Shader = Renderer::Get()->GetBasicUnlitMaskedShader().get();
-
-		Transform transform = component->GetWorldTransform();
-		transform.SetScale(Vector3(0.2f));
-		Transform cameraTransform = m_MainViewport.lock()->GetCameraTransform();
-		transform.SetRotation(cameraTransform.GetRotation());
-		prim.Transform = transform.GetMatrix();
-
-		return prim;
-	}
-
-	void EditorApplication::PrepareEditorBillboards()
-	{
-		ComponentRegistry& registry = GetEditorWorld()->GetComponentRegistry();
-		const ComponentDatabase* database = registry.GetComponentTypeDatabase();
-		for (auto& [id, type] : database->RegisteredTypes)
-		{
-			auto& componentType = type;
-			if (!componentType.bIsSceneComponent)
-				continue;
-
-			registry.ForEachComponentOfType(id, [this, &componentType](Component* component)
-			{
-				if (component->IsOfType<MeshComponent>())
-					return;
-
-				TShared<Texture> billboardTexture = EditorBillboards::GetComponentBillboardTexture(componentType.ID);
-				RPrimitiveRenderProxy prim = CreateEditorBillboardPrimitive((SceneComponent*)component, billboardTexture);
-				GetEditorScene()->InjectPrimitive(prim);
-			});
 		}
 	}
 

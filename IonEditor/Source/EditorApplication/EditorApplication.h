@@ -5,6 +5,8 @@
 
 #include "Engine/Components/Component.h"
 
+#include "Renderer/RendererCore.h"
+
 namespace Ion::Editor
 {
 	class EditorLayer;
@@ -88,9 +90,8 @@ namespace Ion::Editor
 		void DriveCameraUpdate(float deltaTime);
 
 		REditorPassPrimitive CreateEditorPassPrimitive(SceneComponent* component);
+		REditorPassBillboardPrimitive CreateEditorPassBillboard(SceneComponent* component);
 		void PrepareEditorPass();
-		RPrimitiveRenderProxy CreateEditorBillboardPrimitive(SceneComponent* component, const TShared<Texture>& texture);
-		void PrepareEditorBillboards();
 
 		void SelectClickedObject(const GUID& clickedGuid);
 
