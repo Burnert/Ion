@@ -37,6 +37,13 @@ namespace Ion
 		return s_Instance;
 	}
 
+	void Renderer::Init()
+	{
+		InitScreenTextureRendering();
+		InitShaders();
+		InitUtilityPrimitives();
+	}
+
 	void Renderer::Clear() const
 	{
 		Clear(RendererClearOptions());
@@ -126,6 +133,9 @@ namespace Ion
 			material->BindTextures();
 		//material->UpdateShaderUniforms();
 
+		if (primitive.Texture)
+			primitive.Texture->Bind(0);
+
 		DrawIndexed(primitive.IndexBuffer->GetIndexCount());
 	}
 
@@ -191,6 +201,52 @@ namespace Ion
 		m_ScreenTextureRenderData.IndexBuffer = IndexBuffer::Create(quadIndices, sizeof(quadIndices) / sizeof(uint32));
 	}
 
+	void Renderer::InitUtilityPrimitives()
+	{
+		// Quad mesh
+
+		float quadVertices[] = {
+		/*   location           texcoord    normal       */
+			-1.0f,  1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+			 1.0f,  1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+			 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+			-1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+		};
+
+		uint32 quadIndices[] = {
+			0, 2, 1,
+			2, 0, 3,
+		};
+
+		TShared<VertexLayout> quadLayout = MakeShared<VertexLayout>(2);
+		quadLayout->AddAttribute(EVertexAttributeSemantic::Position, EVertexAttributeType::Float, 3, false);
+		quadLayout->AddAttribute(EVertexAttributeSemantic::TexCoord, EVertexAttributeType::Float, 2, false);
+		quadLayout->AddAttribute(EVertexAttributeSemantic::Normal,   EVertexAttributeType::Float, 3, true);
+
+		TShared<VertexBuffer> vb = VertexBuffer::Create(quadVertices, sizeof(quadVertices) / sizeof(float));
+		vb->SetLayout(quadLayout);
+		vb->SetLayoutShader(m_BasicUnlitMaskedShader);
+
+		TShared<IndexBuffer> ib = IndexBuffer::Create(quadIndices, sizeof(quadIndices) / sizeof(uint32));
+
+		m_BillboardMesh = Mesh::Create();
+		m_BillboardMesh->SetVertexBuffer(vb);
+		m_BillboardMesh->SetIndexBuffer(ib);
+
+		// White Texture
+
+		uint8 whiteTex[] = { 0xFF, 0xFF, 0xFF, 0xFF };
+
+		TextureDescription whiteDesc { };
+		whiteDesc.Dimensions.Width = 1;
+		whiteDesc.Dimensions.Height = 1;
+		whiteDesc.Usage = ETextureUsage::Immutable;
+		whiteDesc.bCreateSampler = true;
+		whiteDesc.DebugName = "WhiteTex";
+		whiteDesc.InitialData = whiteTex;
+		m_WhiteTexture = Texture::Create(whiteDesc);
+	}
+
 	void Renderer::InitScreenTextureRendering()
 	{
 		TRACE_FUNCTION();
@@ -218,6 +274,7 @@ namespace Ion
 	void Renderer::InitShaders()
 	{
 		InitBasicShader();
+		InitBasicUnlitMaskedShader();
 		InitEditorObjectIDShader();
 		InitEditorSelectedShader();
 		InitEditorViewportShader();
@@ -249,6 +306,36 @@ namespace Ion
 		if (!m_BasicShader->Compile())
 		{
 			LOG_ERROR("Could not compile the Basic Shader.");
+			debugbreak();
+		}
+	}
+
+	void Renderer::InitBasicUnlitMaskedShader()
+	{
+		String vertexSrc;
+		String pixelSrc;
+
+		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
+
+		// @TODO: This needs a refactor
+		if (RHI::GetCurrent() == ERHI::DX11)
+		{
+			File::ReadToString(shadersPath + L"BasicVS.hlsl", vertexSrc);
+			File::ReadToString(shadersPath + L"BasicUnlitMaskedPS.hlsl", pixelSrc);
+		}
+		else
+		{
+			File::ReadToString(shadersPath + L"Basic.vert", vertexSrc);
+			File::ReadToString(shadersPath + L"BasicUnlitMasked.frag", pixelSrc);
+		}
+
+		m_BasicUnlitMaskedShader = Shader::Create();
+		m_BasicUnlitMaskedShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
+		m_BasicUnlitMaskedShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
+
+		if (!m_BasicUnlitMaskedShader->Compile())
+		{
+			LOG_ERROR("Could not compile the Basic Unlit Masked Shader.");
 			debugbreak();
 		}
 	}
@@ -286,6 +373,7 @@ namespace Ion
 	void Renderer::InitEditorSelectedShader()
 	{
 		String vertexSrc;
+		String pixelSrc;
 
 		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
 
@@ -293,6 +381,7 @@ namespace Ion
 		if (RHI::GetCurrent() == ERHI::DX11)
 		{
 			File::ReadToString(shadersPath + L"Editor/EditorSelectedVS.hlsl", vertexSrc);
+			File::ReadToString(shadersPath + L"BasicUnlitMaskedPS.hlsl", pixelSrc);
 		}
 		else
 		{
@@ -301,7 +390,7 @@ namespace Ion
 
 		m_EditorSelectedShader = Shader::Create();
 		m_EditorSelectedShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
-		m_EditorSelectedShader->AddShaderSource(EShaderType::Pixel, String());
+		m_EditorSelectedShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
 		if (!m_EditorSelectedShader->Compile())
 		{
@@ -351,6 +440,8 @@ namespace Ion
 		RendererClearOptions clearOptions { };
 		clearOptions.ClearColorValue = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
 
+		// ObjectID for viewport click selection
+
 		SetRenderTarget(data.RTObjectID);
 		SetDepthStencil(data.RTObjectIDDepth);
 		Clear(clearOptions);
@@ -373,6 +464,11 @@ namespace Ion
 			prim.Shader = GetEditorObjectIDShader().get();
 			prim.Transform = editorPrim.Transform;
 
+			// Set the mask texture for billboards
+			editorPrim.MaskTexture ?
+				editorPrim.MaskTexture->Bind(0) :
+				m_WhiteTexture->Bind(0);
+
 			// Load the GUID
 			MeshUniforms& meshUniforms = prim.UniformBuffer->DataRef<MeshUniforms>();
 			meshUniforms.RenderGuid = *(UVector4*)editorPrim.Guid.GetRawBytes().data();
@@ -382,6 +478,8 @@ namespace Ion
 			// Reset
 			meshUniforms.RenderGuid = UVector4();
 		}
+
+		// Selection outline
 
 		SetRenderTarget(nullptr);
 		SetDepthStencil(data.RTSelectionDepth);
@@ -398,6 +496,11 @@ namespace Ion
 				prim.Material = nullptr;
 				prim.Shader = GetEditorSelectedShader().get();
 				prim.Transform = editorPrim.Transform;
+
+				// Set the mask texture for billboards
+				editorPrim.MaskTexture ?
+					editorPrim.MaskTexture->Bind(0) :
+					m_WhiteTexture->Bind(0);
 
 				Draw(prim, scene);
 			}

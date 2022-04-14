@@ -58,12 +58,12 @@ namespace Ion
 	void Entity::SetRootComponent(SceneComponent* component)
 	{
 		// Reset the previous root first
-		// @TODO: POTENTIAL MEMORY LEAK
-		// when the previous root component gets abandoned
 		if (m_RootComponent)
 		{
 			UnbindComponent(m_RootComponent);
 			m_RootComponent->UpdateWorldTransformCache();
+			// @TODO: Temporary
+			m_RootComponent->Destroy(false);
 		}
 
 		m_RootComponent = component;

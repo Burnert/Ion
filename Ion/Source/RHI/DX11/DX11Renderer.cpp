@@ -31,8 +31,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		InitScreenTextureRendering();
-		InitShaders();
+		Renderer::Init();
 	}
 
 	void DX11Renderer::Clear(const RendererClearOptions& options) const

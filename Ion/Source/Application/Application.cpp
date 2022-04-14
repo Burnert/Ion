@@ -204,6 +204,13 @@ namespace Ion
 	void Application::RenderToMainWindow()
 	{
 		WindowDimensions windowSize = GetWindow()->GetDimensions();
+		if (windowSize.Width == 0 || windowSize.Height == 0)
+		{
+			Renderer::Get()->SetRenderTarget(nullptr);
+			Renderer::Get()->SetDepthStencil(nullptr);
+			return;
+		}
+
 		ViewportDescription viewport { };
 		viewport.Width = windowSize.Width;
 		viewport.Height = windowSize.Height;

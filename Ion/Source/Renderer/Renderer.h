@@ -74,6 +74,7 @@ namespace Ion
 		const VertexBuffer* VertexBuffer;
 		const IndexBuffer* IndexBuffer;
 		const UniformBuffer* UniformBuffer;
+		const Texture* MaskTexture; // Mask in the alpha channel
 		Matrix4 Transform;
 	};
 
@@ -101,7 +102,7 @@ namespace Ion
 
 		virtual ~Renderer() { };
 
-		virtual void Init() = 0;
+		virtual void Init();
 
 		void Clear() const;
 		void RenderScene(const Scene* scene) const;
@@ -135,6 +136,11 @@ namespace Ion
 			return Renderer::Get()->m_BasicShader;
 		}
 
+		inline static const TShared<Shader>& GetBasicUnlitMaskedShader()
+		{
+			return Renderer::Get()->m_BasicUnlitMaskedShader;
+		}
+
 		inline static const TShared<Shader>& GetEditorObjectIDShader()
 		{
 			return Renderer::Get()->m_EditorObjectIDShader;
@@ -150,8 +156,20 @@ namespace Ion
 			return Renderer::Get()->m_EditorViewportShader;
 		}
 
+		inline static const TShared<Mesh>& GetBillboardMesh()
+		{
+			return Renderer::Get()->m_BillboardMesh;
+		}
+
+		inline static const TShared<Texture>& GetWhiteTexture()
+		{
+			return Renderer::Get()->m_WhiteTexture;
+		}
+
 	protected:
 		Renderer() { }
+
+		void InitUtilityPrimitives();
 
 		void InitScreenTextureRendering();
 		void BindScreenTexturePrimitives() const;
@@ -159,6 +177,7 @@ namespace Ion
 
 		void InitShaders();
 		void InitBasicShader();
+		void InitBasicUnlitMaskedShader();
 		void InitEditorObjectIDShader();
 		void InitEditorSelectedShader();
 		void InitEditorViewportShader();
@@ -168,12 +187,17 @@ namespace Ion
 
 	private:
 		ScreenTextureRenderData m_ScreenTextureRenderData;
-		
+
 		TShared<Shader> m_BasicShader;
+		TShared<Shader> m_BasicUnlitMaskedShader;
 
 		TShared<Shader> m_EditorObjectIDShader;
 		TShared<Shader> m_EditorSelectedShader;
 		TShared<Shader> m_EditorViewportShader;
+
+		TShared<Mesh> m_BillboardMesh;
+
+		TShared<Texture> m_WhiteTexture;
 
 		static Renderer* s_Instance;
 	};

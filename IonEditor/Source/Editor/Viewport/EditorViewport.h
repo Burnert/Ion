@@ -32,6 +32,7 @@ namespace Ion::Editor
 
 		const TShared<Texture>& GetViewportFramebuffer() const;
 		const TShared<Camera>& GetCamera() const;
+		const Transform& GetCameraTransform() const;
 
 		const TShared<EditorUIViewport>& GetUI() const;
 
@@ -89,6 +90,11 @@ namespace Ion::Editor
 	inline const TShared<Camera>& EditorViewport::GetCamera() const
 	{
 		return m_Camera;
+	}
+
+	inline const Transform& EditorViewport::GetCameraTransform() const
+	{
+		return m_CameraTransform;
 	}
 
 	inline const TShared<EditorUIViewport>& EditorViewport::GetUI() const

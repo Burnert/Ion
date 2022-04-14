@@ -556,6 +556,13 @@ namespace Ion
 
 		bool IsRelative() const;
 
+		inline WString LastElement() const
+		{
+			return !m_Path.empty() ?
+				m_Path.back() :
+				L"";
+		}
+
 		inline void SetValidation(EFilePathValidation validation)
 		{
 			m_bChecked = (bool)validation;

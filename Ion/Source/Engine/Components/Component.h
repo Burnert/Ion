@@ -1030,6 +1030,9 @@ namespace Ion
 	template<typename Lambda>
 	inline void ComponentRegistry::ForEachComponentOfType(ComponentTypeID id, Lambda forEach)
 	{
+		if (!IsContainerInitialized(id))
+			return;
+
 		return GetContainer(id)->ForEach(forEach);
 	}
 

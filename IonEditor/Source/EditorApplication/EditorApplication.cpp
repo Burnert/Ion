@@ -6,6 +6,8 @@
 #include "Editor/Viewport/EditorViewport.h"
 #include "Editor/UI/ViewportUI.h"
 
+#include "Editor/EditorAssets.h"
+
 #include "Renderer/Renderer.h"
 
 #include "Engine/Engine.h"
@@ -43,6 +45,8 @@ namespace Ion::Editor
 
 		SetApplicationTitle(L"Ion Editor");
 		GetWindow()->Maximize();
+
+		EditorBillboards::LoadTextures();
 
 		m_EditorLayer = GetLayerStack()->PushLayer<EditorLayer>("EditorLayer");
 
@@ -146,6 +150,9 @@ namespace Ion::Editor
 	void EditorApplication::OnRender()
 	{
 		TRACE_FUNCTION();
+
+		// @TODO: this will have to be moved
+		PrepareEditorBillboards();
 
 		RenderViewports();
 	}
@@ -434,19 +441,34 @@ namespace Ion::Editor
 
 	REditorPassPrimitive EditorApplication::CreateEditorPassPrimitive(SceneComponent* component)
 	{
-		// @TODO: Implement the rest
-		if (!component->IsOfType<MeshComponent>())
-			return REditorPassPrimitive();
-
-		MeshComponent* meshComponent = (MeshComponent*)component;
-		RPrimitiveRenderProxy meshProxy = meshComponent->AsRenderProxy();
-
 		REditorPassPrimitive prim { };
-		prim.Guid = meshComponent->GetGUID();
-		prim.VertexBuffer = meshProxy.VertexBuffer;
-		prim.IndexBuffer = meshProxy.IndexBuffer;
-		prim.UniformBuffer = meshProxy.UniformBuffer;
-		prim.Transform = meshProxy.Transform;
+		prim.Guid = component->GetGUID();
+
+		// @TODO: Implement the rest
+		if (component->IsOfType<MeshComponent>())
+		{
+			MeshComponent* meshComponent = (MeshComponent*)component;
+			RPrimitiveRenderProxy meshProxy = meshComponent->AsRenderProxy();
+
+			prim.VertexBuffer = meshProxy.VertexBuffer;
+			prim.IndexBuffer = meshProxy.IndexBuffer;
+			prim.UniformBuffer = meshProxy.UniformBuffer;
+			prim.Transform = meshProxy.Transform;
+		}
+		else
+		{
+			TShared<Mesh> billboard = Renderer::Get()->GetBillboardMesh();
+			prim.VertexBuffer = billboard->GetVertexBufferRaw();
+			prim.IndexBuffer = billboard->GetIndexBufferRaw();
+			prim.UniformBuffer = billboard->GetUniformBufferRaw();
+			prim.MaskTexture = EditorBillboards::GetComponentBillboardTexture(component->GetFinalTypeID()).get();
+
+			Transform transform = component->GetWorldTransform();
+			transform.SetScale(Vector3(0.2f));
+			Transform cameraTransform = m_MainViewport.lock()->GetCameraTransform();
+			transform.SetRotation(cameraTransform.GetRotation());
+			prim.Transform = transform.GetMatrix();
+		}
 
 		return prim;
 	}
@@ -467,19 +489,21 @@ namespace Ion::Editor
 		const ComponentDatabase* database = registry.GetComponentTypeDatabase();
 		for (auto& [id, type] : database->RegisteredTypes)
 		{
-			// @TODO: For now only add mesh components, extend this in the future
-			// if (type.bIsSceneComponent)
-			if (type.Is<MeshComponent>())
-			{
-				auto& componentType = type;
-				registry.ForEachComponentOfType(id, [this, &componentType](Component* component)
-				{
-					if (!((MeshComponent*)component)->GetMesh())
-						return;
+			auto& componentType = type;
+			if (!componentType.bIsSceneComponent)
+				continue;
 
-					m_EditorPassData->Primitives.push_back(CreateEditorPassPrimitive((SceneComponent*)component));
-				});
-			}
+			registry.ForEachComponentOfType(id, [this, &componentType](Component* component)
+			{
+				SceneComponent* sceneComponent = (SceneComponent*)component;
+
+				// @TODO: this is here only because AssetManager doesn't do its job...
+				if (sceneComponent->IsOfType<MeshComponent>() &&
+					!((MeshComponent*)sceneComponent)->GetMesh())
+					return;
+
+				m_EditorPassData->Primitives.push_back(CreateEditorPassPrimitive(sceneComponent));
+			});
 		}
 
 		if (m_SelectedEntity)
@@ -493,9 +517,8 @@ namespace Ion::Editor
 					MeshComponent* meshComponent = (MeshComponent*)m_SelectedComponent;
 					if (!meshComponent->GetMesh())
 						return;
-
-					m_EditorPassData->SelectedPrimitives.push_back(CreateEditorPassPrimitive(meshComponent));
 				}
+				m_EditorPassData->SelectedPrimitives.push_back(CreateEditorPassPrimitive((SceneComponent*)m_SelectedComponent));
 			}
 			else
 			{
@@ -505,12 +528,54 @@ namespace Ion::Editor
 					{
 						MeshComponent* meshComponent = (MeshComponent*)comp;
 						if (!meshComponent->GetMesh())
-							return;
-
-						m_EditorPassData->SelectedPrimitives.push_back(CreateEditorPassPrimitive(meshComponent));
+							continue;
 					}
+					m_EditorPassData->SelectedPrimitives.push_back(CreateEditorPassPrimitive(comp));
 				}
 			}
+		}
+	}
+
+	RPrimitiveRenderProxy EditorApplication::CreateEditorBillboardPrimitive(SceneComponent* component, const TShared<Texture>& texture)
+	{
+		RPrimitiveRenderProxy prim { };
+
+		TShared<Mesh> mesh = Renderer::Get()->GetBillboardMesh();
+		prim.VertexBuffer = mesh->GetVertexBufferRaw();
+		prim.IndexBuffer = mesh->GetIndexBufferRaw();
+		prim.UniformBuffer = mesh->GetUniformBufferRaw();
+		prim.Material = nullptr;
+		prim.Texture = texture.get();
+		prim.Shader = Renderer::Get()->GetBasicUnlitMaskedShader().get();
+
+		Transform transform = component->GetWorldTransform();
+		transform.SetScale(Vector3(0.2f));
+		Transform cameraTransform = m_MainViewport.lock()->GetCameraTransform();
+		transform.SetRotation(cameraTransform.GetRotation());
+		prim.Transform = transform.GetMatrix();
+
+		return prim;
+	}
+
+	void EditorApplication::PrepareEditorBillboards()
+	{
+		ComponentRegistry& registry = GetEditorWorld()->GetComponentRegistry();
+		const ComponentDatabase* database = registry.GetComponentTypeDatabase();
+		for (auto& [id, type] : database->RegisteredTypes)
+		{
+			auto& componentType = type;
+			if (!componentType.bIsSceneComponent)
+				continue;
+
+			registry.ForEachComponentOfType(id, [this, &componentType](Component* component)
+			{
+				if (component->IsOfType<MeshComponent>())
+					return;
+
+				TShared<Texture> billboardTexture = EditorBillboards::GetComponentBillboardTexture(componentType.ID);
+				RPrimitiveRenderProxy prim = CreateEditorBillboardPrimitive((SceneComponent*)component, billboardTexture);
+				GetEditorScene()->InjectPrimitive(prim);
+			});
 		}
 	}
 

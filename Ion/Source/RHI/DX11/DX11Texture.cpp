@@ -149,7 +149,7 @@ namespace Ion
 		D3D11_TEXTURE2D_DESC tex2DDesc { };
 		tex2DDesc.Width = desc.Dimensions.Width;
 		tex2DDesc.Height = desc.Dimensions.Height;
-		tex2DDesc.MipLevels = 0;
+		tex2DDesc.MipLevels = 1; // @TODO: fix the missing mipmaps thing
 		tex2DDesc.ArraySize = 1;
 		tex2DDesc.Format = FormatToDX11Format(desc.Format, EDX11FormatUsage::Resource);
 		tex2DDesc.Usage = UsageToDX11Usage(desc.Usage);
@@ -168,7 +168,16 @@ namespace Ion
 		tex2DDesc.MiscFlags =
 			FlagsIf(desc.bGenerateMips, D3D11_RESOURCE_MISC_GENERATE_MIPS);
 
-		dxcall(device->CreateTexture2D(&tex2DDesc, nullptr, &m_Texture));
+		D3D11_SUBRESOURCE_DATA sd { };
+
+		ionassert(desc.Usage != ETextureUsage::Immutable || desc.InitialData);
+		if (desc.InitialData)
+		{
+			sd.pSysMem = desc.InitialData;
+			sd.SysMemPitch = desc.Dimensions.Width * 4;
+		}
+
+		dxcall(device->CreateTexture2D(&tex2DDesc, desc.InitialData ? &sd : nullptr, &m_Texture));
 		DX11::SetDebugName(m_Texture, desc.DebugName, "Texture2D_");
 	}
 

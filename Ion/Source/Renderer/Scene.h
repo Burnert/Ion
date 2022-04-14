@@ -30,6 +30,7 @@ namespace Ion
 		const IndexBuffer* IndexBuffer;
 		const UniformBuffer* UniformBuffer;
 		const Material* Material;
+		const Texture* Texture;
 		const Shader* Shader;
 		Matrix4 Transform;
 	};
@@ -67,6 +68,9 @@ namespace Ion
 
 		void LoadSceneData(const RRendererData& data);
 		void LoadCamera(const TShared<Camera>& camera);
+
+		// @TODO: TEMPORARY
+		void InjectPrimitive(RPrimitiveRenderProxy& primitive);
 
 		// Render Thread: --------------------------------------------------------------------------
 

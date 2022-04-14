@@ -87,8 +87,10 @@ namespace Ion::Editor
 
 		void DriveCameraUpdate(float deltaTime);
 
-		static REditorPassPrimitive CreateEditorPassPrimitive(SceneComponent* component);
+		REditorPassPrimitive CreateEditorPassPrimitive(SceneComponent* component);
 		void PrepareEditorPass();
+		RPrimitiveRenderProxy CreateEditorBillboardPrimitive(SceneComponent* component, const TShared<Texture>& texture);
+		void PrepareEditorBillboards();
 
 		void SelectClickedObject(const GUID& clickedGuid);
 

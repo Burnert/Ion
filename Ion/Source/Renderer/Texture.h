@@ -60,6 +60,7 @@ namespace Ion
 	struct TextureDescription
 	{
 		String DebugName;
+		void* InitialData;
 		TextureDimensions Dimensions;
 		float LODBias;
 		union
