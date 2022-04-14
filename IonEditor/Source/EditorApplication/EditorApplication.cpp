@@ -461,7 +461,7 @@ namespace Ion::Editor
 		REditorPassBillboardPrimitive prim;
 		prim.Guid = component->GetGUID();
 		prim.BillboardRenderProxy.Texture = EditorBillboards::GetComponentBillboardTexture(component->GetFinalTypeID()).get();
-		prim.BillboardRenderProxy.LocationWS = component->GetLocation();
+		prim.BillboardRenderProxy.LocationWS = component->GetWorldTransform().GetLocation();
 		prim.BillboardRenderProxy.Scale = 0.2f;
 
 		return prim;

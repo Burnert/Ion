@@ -210,7 +210,7 @@ namespace Ion::Editor
 
 				RBillboardRenderProxy billboard;
 				billboard.Texture = EditorBillboards::GetComponentBillboardTexture(componentType.ID).get();
-				billboard.LocationWS = sceneComponent->GetLocation();
+				billboard.LocationWS = sceneComponent->GetWorldTransform().GetLocation();
 				billboard.Scale = 0.2f;
 
 				const Shader* billboardShader = Renderer::Get()->GetBasicUnlitMaskedShader().get();
