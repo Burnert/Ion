@@ -80,7 +80,7 @@ namespace Ion::Editor
 
 			Renderer::Get()->SetRenderTarget(m_ViewportTextures.SceneFinalColor);
 			Renderer::Get()->SetDepthStencil(m_ViewportTextures.SceneFinalDepth);
-			Renderer::Get()->Clear(Vector4(0.1f, 0.1f, 0.1f, 1.0f));
+			Renderer::Get()->Clear(Vector4(0.02f, 0.02f, 0.02f, 0.01f));
 			Renderer::Get()->RenderScene(editorScene);
 			RenderEditorGrid();
 			RenderEditorBillboards();
