@@ -12,10 +12,12 @@ namespace Ion::Editor
 		static const inline FilePath PathCircle    = L"Icons/Circle.png";
 		static const inline FilePath PathLightbulb = L"Icons/Lightbulb.png";
 		static const inline FilePath PathSun       = L"Icons/Sun.png";
+		static const inline FilePath PathNoMesh    = L"Icons/NoMesh.png";
 
 		static inline TShared<Texture> BillboardCircle;
 		static inline TShared<Texture> BillboardLightbulb;
 		static inline TShared<Texture> BillboardSun;
+		static inline TShared<Texture> BillboardNoMesh;
 
 		static void LoadTextures();
 

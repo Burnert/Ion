@@ -204,7 +204,14 @@ namespace Ion::Editor
 			registry.ForEachComponentOfType(id, [this, &componentType, editorWorld](Component* component)
 			{
 				if (component->IsOfType<MeshComponent>())
-					return;
+				{
+					MeshComponent* meshComponent = (MeshComponent*)component;
+					// Don't draw the billboard if the component has a mesh
+					if (meshComponent->GetMesh())
+					{
+						return;
+					}
+				}
 
 				SceneComponent* sceneComponent = (SceneComponent*)component;
 

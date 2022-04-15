@@ -4,6 +4,7 @@
 #include "Engine/Components/LightComponent.h"
 #include "Engine/Components/DirectionalLightComponent.h"
 #include "Engine/Components/SceneComponent.h"
+#include "Engine/Components/MeshComponent.h"
 
 #include "Renderer/Texture.h"
 
@@ -39,6 +40,7 @@ namespace Ion::Editor
 		LoadTexture(BillboardCircle,    EnginePath::GetEditorContentPath() + PathCircle);
 		LoadTexture(BillboardLightbulb, EnginePath::GetEditorContentPath() + PathLightbulb);
 		LoadTexture(BillboardSun,       EnginePath::GetEditorContentPath() + PathSun);
+		LoadTexture(BillboardNoMesh,    EnginePath::GetEditorContentPath() + PathNoMesh);
 	}
 
 	const TShared<Texture>& EditorBillboards::GetComponentBillboardTexture(ComponentTypeID id)
@@ -47,6 +49,8 @@ namespace Ion::Editor
 			return BillboardLightbulb;
 		if (id == DirectionalLightComponent::GetTypeID())
 			return BillboardSun;
+		if (id == MeshComponent::GetTypeID())
+			return BillboardNoMesh;
 
 		return BillboardCircle;
 	}

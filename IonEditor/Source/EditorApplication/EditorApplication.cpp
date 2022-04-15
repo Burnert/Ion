@@ -496,15 +496,15 @@ namespace Ion::Editor
 				// @TODO: this is here only because AssetManager doesn't do its job...
 				if (sceneComponent->IsOfType<MeshComponent>())
 				{
-					if (!((MeshComponent*)sceneComponent)->GetMesh())
+					MeshComponent* meshComponent = (MeshComponent*)sceneComponent;
+					// Don't draw the billboard if the component has a mesh
+					if (meshComponent->GetMesh())
+					{
+						m_EditorPassData->Primitives.push_back(CreateEditorPassPrimitive(sceneComponent));
 						return;
-
-					m_EditorPassData->Primitives.push_back(CreateEditorPassPrimitive(sceneComponent));
+					}
 				}
-				else
-				{
-					m_EditorPassData->Billboards.push_back(CreateEditorPassBillboard(sceneComponent));
-				}
+				m_EditorPassData->Billboards.push_back(CreateEditorPassBillboard(sceneComponent));
 			});
 		}
 
@@ -517,15 +517,14 @@ namespace Ion::Editor
 				if (m_SelectedComponent->IsOfType<MeshComponent>())
 				{
 					MeshComponent* meshComponent = (MeshComponent*)m_SelectedComponent;
-					if (!meshComponent->GetMesh())
+					// Don't draw the billboard if the component has a mesh
+					if (meshComponent->GetMesh())
+					{
+						m_EditorPassData->SelectedPrimitives.push_back(CreateEditorPassPrimitive((SceneComponent*)m_SelectedComponent));
 						return;
-
-					m_EditorPassData->SelectedPrimitives.push_back(CreateEditorPassPrimitive((SceneComponent*)m_SelectedComponent));
+					}
 				}
-				else
-				{
-					m_EditorPassData->SelectedBillboards.push_back(CreateEditorPassBillboard((SceneComponent*)m_SelectedComponent));
-				}
+				m_EditorPassData->SelectedBillboards.push_back(CreateEditorPassBillboard((SceneComponent*)m_SelectedComponent));
 			}
 			else
 			{
@@ -534,15 +533,14 @@ namespace Ion::Editor
 					if (comp->IsOfType<MeshComponent>())
 					{
 						MeshComponent* meshComponent = (MeshComponent*)comp;
-						if (!meshComponent->GetMesh())
+						// Don't draw the billboard if the component has a mesh
+						if (meshComponent->GetMesh())
+						{
+							m_EditorPassData->SelectedPrimitives.push_back(CreateEditorPassPrimitive(comp));
 							continue;
-
-						m_EditorPassData->SelectedPrimitives.push_back(CreateEditorPassPrimitive(comp));
+						}
 					}
-					else
-					{
-						m_EditorPassData->SelectedBillboards.push_back(CreateEditorPassBillboard(comp));
-					}
+					m_EditorPassData->SelectedBillboards.push_back(CreateEditorPassBillboard(comp));
 				}
 			}
 		}
