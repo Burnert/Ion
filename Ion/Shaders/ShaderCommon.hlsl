@@ -70,6 +70,11 @@ struct BasicPixel
 	float4 TexCoord : TEXCOORD;
 };
 
+float GetPixelDepth(float3 locationWS)
+{
+	return distance(locationWS, CameraLocation);
+}
+
 float SampleFloatMS(in Texture2DMS<float> tex, uint2 location, uint nSamples)
 {
 	float color = 0.0f;

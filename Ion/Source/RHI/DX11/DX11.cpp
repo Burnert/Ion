@@ -124,6 +124,7 @@ namespace Ion
 			rd.CullMode = D3D11_CULL_BACK;
 			rd.FrontCounterClockwise = true;
 			rd.DepthClipEnable = true;
+			rd.MultisampleEnable = true;
 
 			dxcall_f(s_Device->CreateRasterizerState(&rd, &s_RasterizerState));
 			dxcall_v(s_Context->RSSetState(s_RasterizerState));

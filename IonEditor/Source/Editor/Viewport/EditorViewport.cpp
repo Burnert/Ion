@@ -82,10 +82,10 @@ namespace Ion::Editor
 			Renderer::Get()->SetDepthStencil(m_ViewportTextures.SceneFinalDepth);
 			Renderer::Get()->Clear(Vector4(0.02f, 0.02f, 0.02f, 0.01f));
 			Renderer::Get()->RenderScene(editorScene);
+			RenderEditorBillboards();
 			Renderer::Get()->SetBlendingEnabled(true);
 			RenderEditorGrid();
 			Renderer::Get()->SetBlendingEnabled(false);
-			RenderEditorBillboards();
 
 			// Render editor pass
 
@@ -248,6 +248,7 @@ namespace Ion::Editor
 		desc.bCreateSampler = true;
 		desc.UWrapMode = ETextureWrapMode::Clamp;
 		desc.VWrapMode = ETextureWrapMode::Clamp;
+		desc.SetFilterAll(ETextureFilteringMethod::Linear);
 
 		m_ViewportColor = Texture::Create(desc);
 
@@ -297,6 +298,7 @@ namespace Ion::Editor
 		desc.MultiSampling = ETextureMSMode::X4;
 		desc.UWrapMode = ETextureWrapMode::Clamp;
 		desc.VWrapMode = ETextureWrapMode::Clamp;
+		desc.SetFilterAll(ETextureFilteringMethod::Linear);
 
 		m_ViewportTextures.SceneFinalColor = Texture::Create(desc);
 
@@ -310,6 +312,7 @@ namespace Ion::Editor
 		desc.Format = ETextureFormat::D24S8;
 		desc.UWrapMode = ETextureWrapMode::Clamp;
 		desc.VWrapMode = ETextureWrapMode::Clamp;
+		desc.SetFilterAll(ETextureFilteringMethod::Linear);
 
 		m_ViewportTextures.SceneFinalDepth = Texture::Create(desc);
 	}
@@ -342,6 +345,7 @@ namespace Ion::Editor
 		desc.Format = ETextureFormat::D24S8;
 		desc.UWrapMode = ETextureWrapMode::Clamp;
 		desc.VWrapMode = ETextureWrapMode::Clamp;
+		desc.SetFilterAll(ETextureFilteringMethod::Linear);
 
 		m_ViewportTextures.SelectedDepth = Texture::Create(desc);
 
@@ -354,6 +358,7 @@ namespace Ion::Editor
 		desc.Format = ETextureFormat::UInt128GUID;
 		desc.UWrapMode = ETextureWrapMode::Clamp;
 		desc.VWrapMode = ETextureWrapMode::Clamp;
+		desc.SetFilterAll(ETextureFilteringMethod::Linear);
 
 		m_ObjectIDColor = Texture::Create(desc);
 
@@ -365,6 +370,7 @@ namespace Ion::Editor
 		desc.Format = ETextureFormat::D24S8;
 		desc.UWrapMode = ETextureWrapMode::Clamp;
 		desc.VWrapMode = ETextureWrapMode::Clamp;
+		desc.SetFilterAll(ETextureFilteringMethod::Linear);
 
 		m_ObjectIDDepthStencil = Texture::Create(desc);
 
@@ -377,6 +383,7 @@ namespace Ion::Editor
 		desc.Format = ETextureFormat::UInt128GUID;
 		desc.UWrapMode = ETextureWrapMode::Clamp;
 		desc.VWrapMode = ETextureWrapMode::Clamp;
+		desc.SetFilterAll(ETextureFilteringMethod::Linear); 
 
 		m_ObjectIDStaging = Texture::Create(desc);
 	}

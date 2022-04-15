@@ -95,6 +95,13 @@ namespace Ion
 		ETextureWrapMode UWrapMode;
 		ETextureWrapMode VWrapMode;
 		ETextureWrapMode WWrapMode;
+
+		void SetFilterAll(ETextureFilteringMethod filter)
+		{
+			MinFilter = filter;
+			MagFilter = filter;
+			MipFilter = filter;
+		}
 	};
 
 	class ION_API Texture
