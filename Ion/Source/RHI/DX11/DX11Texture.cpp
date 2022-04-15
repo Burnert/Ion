@@ -133,9 +133,17 @@ namespace Ion
 		}
 	}
 
+	static bool IsMultiSampled(const TextureDescription& desc)
+	{
+		return desc.MultiSampling != ETextureMSMode::Default && desc.MultiSampling != ETextureMSMode::X1;
+	}
+
 	void DX11Texture::CreateTexture(const TextureDescription& desc)
 	{
 		TRACE_FUNCTION();
+
+		ionassert(!IsMultiSampled(desc) || !desc.InitialData,
+			"Multisampled textures have to be initialized using UpdateSubresource function");
 
 		HRESULT hResult;
 
@@ -146,16 +154,22 @@ namespace Ion
 
 		// Create Texture2D
 
+		DXGI_FORMAT resourceFormat = FormatToDX11Format(desc.Format, EDX11FormatUsage::Resource);
+
 		int32 mipLevels = desc.bGenerateMips ? 0 : 1;
+		int32 sampleCount = (bool)desc.MultiSampling ? (int32)desc.MultiSampling : 1;
+
+		uint32 availQuality;
+		dxcall(device->CheckMultisampleQualityLevels(resourceFormat, sampleCount, &availQuality));
 
 		D3D11_TEXTURE2D_DESC tex2DDesc { };
 		tex2DDesc.Width = desc.Dimensions.Width;
 		tex2DDesc.Height = desc.Dimensions.Height;
 		tex2DDesc.MipLevels = mipLevels;
 		tex2DDesc.ArraySize = 1;
-		tex2DDesc.Format = FormatToDX11Format(desc.Format, EDX11FormatUsage::Resource);
+		tex2DDesc.Format = resourceFormat;
 		tex2DDesc.Usage = UsageToDX11Usage(desc.Usage);
-		tex2DDesc.SampleDesc.Count = 1;
+		tex2DDesc.SampleDesc.Count = sampleCount;
 
 		tex2DDesc.BindFlags =
 			FlagsIf(desc.bCreateSampler &&
@@ -199,8 +213,13 @@ namespace Ion
 
 			D3D11_RENDER_TARGET_VIEW_DESC rtvDesc { };
 			rtvDesc.Format = FormatToDX11Format(desc.Format, EDX11FormatUsage::RTV);
-			rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-			rtvDesc.Texture2D.MipSlice = 0;
+			rtvDesc.ViewDimension = IsMultiSampled(desc) ?
+				D3D11_RTV_DIMENSION_TEXTURE2DMS :
+				D3D11_RTV_DIMENSION_TEXTURE2D;
+			if (!IsMultiSampled(desc))
+			{
+				rtvDesc.Texture2D.MipSlice = 0;
+			}
 
 			dxcall(device->CreateRenderTargetView(m_Texture, &rtvDesc, &m_RTV));
 			DX11::SetDebugName(m_RTV, desc.DebugName, "RTV_");
@@ -212,8 +231,13 @@ namespace Ion
 
 			D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc { };
 			dsvDesc.Format = FormatToDX11Format(desc.Format, EDX11FormatUsage::DSV);
-			dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-			dsvDesc.Texture2D.MipSlice = 0;
+			dsvDesc.ViewDimension = IsMultiSampled(desc) ?
+				D3D11_DSV_DIMENSION_TEXTURE2DMS :
+				D3D11_DSV_DIMENSION_TEXTURE2D;
+			if (!IsMultiSampled(desc))
+			{
+				dsvDesc.Texture2D.MipSlice = 0;
+			}
 
 			dxcall(device->CreateDepthStencilView(m_Texture, &dsvDesc, &m_DSV));
 			DX11::SetDebugName(m_DSV, desc.DebugName, "DSV_");
@@ -236,8 +260,13 @@ namespace Ion
 
 			D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc { };
 			srvDesc.Format = FormatToDX11Format(desc.Format, EDX11FormatUsage::SRV);
-			srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-			srvDesc.Texture2D.MipLevels = -1;
+			srvDesc.ViewDimension = IsMultiSampled(desc) ?
+				D3D11_SRV_DIMENSION_TEXTURE2DMS :
+				D3D11_SRV_DIMENSION_TEXTURE2D;
+			if (!IsMultiSampled(desc))
+			{
+				srvDesc.Texture2D.MipLevels = -1;
+			}
 
 			dxcall(device->CreateShaderResourceView(m_Texture, &srvDesc, &m_SRV));
 			DX11::SetDebugName(m_SRV, desc.DebugName, "SRV_");

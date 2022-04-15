@@ -107,6 +107,7 @@ namespace Ion
 					&s_FeatureLevel,
 					&context),
 				"Cannot create D3D Device and Swap Chain.");
+
 			dxcall_f(device->QueryInterface(IID_PPV_ARGS(&s_Device)));
 			dxcall_f(context->QueryInterface(IID_PPV_ARGS(&s_Context)));
 		}
@@ -143,7 +144,7 @@ namespace Ion
 			blendDesc.RenderTarget[0].LogicOp = D3D11_LOGIC_OP_NOOP;
 			blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
-			dxcall_f(s_Device->CreateBlendState1(&blendDesc, &s_BlendState));
+			dxcall_f(s_Device->CreateBlendState1(&blendDesc, &s_BlendStateTransparent));
 
 			s_Context->OMSetBlendState(s_BlendState, nullptr, 0xFFFFFFFF);
 		}
@@ -467,6 +468,7 @@ namespace Ion
 	ID3D11DepthStencilState* DX11::s_DepthStencilState = nullptr;
 	ID3D11RasterizerState* DX11::s_RasterizerState = nullptr;
 	ID3D11BlendState1* DX11::s_BlendState = nullptr;
+	ID3D11BlendState1* DX11::s_BlendStateTransparent = nullptr;
 
 	uint32 DX11::s_SwapInterval = 0;
 

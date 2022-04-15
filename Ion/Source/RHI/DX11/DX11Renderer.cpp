@@ -1,5 +1,6 @@
 #include "IonPCH.h"
 
+#include "DX11.h"
 #include "DX11Renderer.h"
 #include "DX11Buffer.h"
 #include "DX11Shader.h"
@@ -66,6 +67,15 @@ namespace Ion
 		dxcall_v(context->DrawIndexed(indexCount, 0, 0));
 	}
 
+	void DX11Renderer::UnbindResources() const
+	{
+		ID3D11DeviceContext* context = DX11::GetContext();
+
+		static ID3D11ShaderResourceView* const c_nullViews[D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT] = { };
+		
+		dxcall_v(context->PSSetShaderResources(0, D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, c_nullViews));
+	}
+
 	void DX11Renderer::RenderEditorViewport(const EditorViewportTextures& editorViewportTextures) const
 	{
 		TRACE_FUNCTION();
@@ -79,6 +89,17 @@ namespace Ion
 
 		// Index count is always 6 (2 triangles)
 		DrawIndexed(6);
+	}
+
+	void DX11Renderer::SetBlendingEnabled(bool bEnable) const
+	{
+		ID3D11DeviceContext* context = DX11::GetContext();
+
+		ID3D11BlendState* blendState = bEnable ?
+			DX11::s_BlendStateTransparent :
+			DX11::s_BlendState;
+
+		dxcall_v(context->OMSetBlendState(blendState, nullptr, 0xFFFFFFFF));
 	}
 
 	void DX11Renderer::SetVSyncEnabled(bool bEnabled) const

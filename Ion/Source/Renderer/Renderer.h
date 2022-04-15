@@ -108,7 +108,11 @@ namespace Ion
 
 		virtual void DrawIndexed(uint32 indexCount) const = 0;
 
+		virtual void UnbindResources() const = 0;
+
 		virtual void RenderEditorViewport(const EditorViewportTextures& editorViewportTextures) const = 0; // @TODO: this is a bad idea
+
+		virtual void SetBlendingEnabled(bool bEnable) const = 0;
 
 		virtual void SetVSyncEnabled(bool bEnabled) const = 0;
 		virtual bool IsVSyncEnabled() const = 0;

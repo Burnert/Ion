@@ -113,7 +113,15 @@ namespace Ion
 		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
 	}
 
+	void OpenGLRenderer::UnbindResources() const
+	{
+	}
+
 	void OpenGLRenderer::RenderEditorViewport(const EditorViewportTextures& editorViewportTextures) const
+	{
+	}
+
+	void OpenGLRenderer::SetBlendingEnabled(bool bEnable) const
 	{
 	}
 

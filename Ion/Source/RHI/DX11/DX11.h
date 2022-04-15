@@ -182,7 +182,9 @@ namespace Ion
 		static IDXGISwapChain* s_SwapChain;
 		static ID3D11DepthStencilState* s_DepthStencilState;
 		static ID3D11RasterizerState* s_RasterizerState;
+		/** Default blend state (nullptr) */
 		static ID3D11BlendState1* s_BlendState;
+		static ID3D11BlendState1* s_BlendStateTransparent;
 
 		static uint32 s_SwapInterval;
 

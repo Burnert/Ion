@@ -1,7 +1,11 @@
 #include "ShaderCommon.hlsl"
 
-Texture2D g_Texture[3];
-SamplerState g_Sampler[3];
+Texture2DMS<float4> g_SceneTexture : register(t0);
+Texture2DMS<float> g_SceneDepthTexture : register(t1);
+Texture2D g_SelectionTexture : register(t2);
+
+//SamplerState g_SceneSampler[2];
+SamplerState g_SelectionSampler : register(s2);
 
 static const float2 OutlineDisplaceUV[] = {
 	{  0.0f,   -1.0f   },
@@ -36,17 +40,23 @@ float MakeOutline(BasicPixel pixel, Texture2D tex, SamplerState smp)
 
 float4 PSMain(BasicPixel pixel) : SV_TARGET
 {
-	float4 scene = float4(g_Texture[0].Sample(g_Sampler[0], pixel.TexCoord.xy).rgb, 1.0f);
-	float sceneDepth = g_Texture[1].Sample(g_Sampler[1], pixel.TexCoord.xy).r;
-	float editorDataDepth = g_Texture[2].Sample(g_Sampler[2], pixel.TexCoord.xy).r;
+	uint2 dimensions;
+	uint nSamples;
+	g_SceneTexture.GetDimensions(dimensions.x, dimensions.y, nSamples);
 
-	float outline = MakeOutline(pixel, g_Texture[2], g_Sampler[2]);
+	uint2 location = (uint2)((double2)dimensions * (double2)pixel.TexCoord.xy);
+	
+	float4 scene = float4(SampleFloat4MS(g_SceneTexture, location, nSamples).rgb, 1.0f);
+	float sceneDepth = SampleFloatMS(g_SceneDepthTexture, location, nSamples);
+	float selectionDepth = g_SelectionTexture.Sample(g_SelectionSampler, pixel.TexCoord.xy).r;
+
+	float outline = MakeOutline(pixel, g_SelectionTexture, g_SelectionSampler);
 
 	float4 finalColor;
 
-	if (editorDataDepth != 1.0f)
+	if (selectionDepth != 1.0f)
 	{
-		bool bIsInFront = editorDataDepth <= sceneDepth;
+		bool bIsInFront = selectionDepth <= sceneDepth;
 		finalColor = saturate(lerp(scene, SelectionColor, bIsInFront ? 0.5f : 0.2f));
 	}
 	else

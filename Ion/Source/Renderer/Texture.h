@@ -34,6 +34,16 @@ namespace Ion
 		UInt128GUID,  // GUID - For editor
 	};
 
+	/** For MSAA multisampling */
+	enum class ETextureMSMode : uint8
+	{
+		Default = 0, // x1 - no multisampling
+		X1 = 1,      // Default
+		X2 = 2,
+		X4 = 4,
+		X8 = 8,
+	};
+
 	enum class ETextureMapType : uint8
 	{
 		Read,
@@ -78,6 +88,7 @@ namespace Ion
 		};
 		ETextureFormat Format;
 		ETextureUsage Usage;
+		ETextureMSMode MultiSampling;
 		ETextureFilteringMethod MinFilter;
 		ETextureFilteringMethod MagFilter;
 		ETextureFilteringMethod MipFilter;

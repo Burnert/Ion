@@ -467,7 +467,7 @@ namespace Ion
 	{
 		ionassert(scene);
 
-		if (!data.RTObjectID || !data.RTObjectIDDepth || !data.RTSelectionDepth || data.Primitives.empty())
+		if (!data.RTObjectID || !data.RTObjectIDDepth || !data.RTSelectionDepth)
 			return;
 
 		// Set the alpha channel to 0

@@ -17,7 +17,11 @@ namespace Ion
 
 		virtual void DrawIndexed(uint32 indexCount) const override;
 
+		virtual void UnbindResources() const override;
+
 		virtual void RenderEditorViewport(const EditorViewportTextures& editorViewportTextures) const override;
+
+		virtual void SetBlendingEnabled(bool bEnable) const override;
 
 		virtual void SetVSyncEnabled(bool bEnabled) const override;
 		virtual bool IsVSyncEnabled() const override;

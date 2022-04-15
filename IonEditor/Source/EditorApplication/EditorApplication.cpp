@@ -71,23 +71,23 @@ namespace Ion::Editor
 
 		ComponentRegistry& registry = m_EditorMainWorld->GetComponentRegistry();
 
-		MeshEntity* entity = m_EditorMainWorld->SpawnEntityOfClass<MeshEntity>();
-		entity->SetTransform(Transform(Vector3(0.0f, -1.0f, 0.0f), Rotator(Vector3(-90.0f, 0.0f, 0.0f))));
-		entity->SetName("Mesh");
-		GetModelDeferred(g_ExampleModels[0], [entity](ExampleModelData& model)
-		{
-			entity->SetMesh(model.Mesh);
-		});
+		//MeshEntity* entity = m_EditorMainWorld->SpawnEntityOfClass<MeshEntity>();
+		//entity->SetTransform(Transform(Vector3(0.0f, -1.0f, 0.0f), Rotator(Vector3(-90.0f, 0.0f, 0.0f))));
+		//entity->SetName("Mesh");
+		//GetModelDeferred(g_ExampleModels[0], [entity](ExampleModelData& model)
+		//{
+		//	entity->SetMesh(model.Mesh);
+		//});
 
-		MeshComponent* meshComp = registry.CreateComponent<MeshComponent>();
-		Entity* emptyEntity = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
-		emptyEntity->SetName("Empty Entity");
-		emptyEntity->SetRootComponent(meshComp);
-		emptyEntity->SetLocation(Vector3(2.0f, 0.0f, 0.0f));
-		GetModelDeferred(g_ExampleModels[3], [meshComp](ExampleModelData& model)
-		{
-			meshComp->SetMesh(model.Mesh);
-		});
+		//MeshComponent* meshComp = registry.CreateComponent<MeshComponent>();
+		//Entity* emptyEntity = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
+		//emptyEntity->SetName("Empty Entity");
+		//emptyEntity->SetRootComponent(meshComp);
+		//emptyEntity->SetLocation(Vector3(2.0f, 0.0f, 0.0f));
+		//GetModelDeferred(g_ExampleModels[3], [meshComp](ExampleModelData& model)
+		//{
+		//	meshComp->SetMesh(model.Mesh);
+		//});
 
 		if (0)
 		{
@@ -151,6 +151,8 @@ namespace Ion::Editor
 	void EditorApplication::OnRender()
 	{
 		TRACE_FUNCTION();
+
+		Renderer::Get()->UnbindResources();
 
 		RenderViewports();
 	}
