@@ -738,9 +738,11 @@ namespace Ion
 		virtual Component* ForEachHelper(void*& inOutGenericIt) = 0;
 	};
 
+	/** Lambda type must be void(Component*) */
 	template<typename Lambda>
 	inline void IComponentContainer::ForEach(Lambda forEach)
 	{
+		// For Each lambda type check
 		static_assert(TIsConvertibleV<Lambda, TFunction<void(Component*)>>);
 		
 		void* genericIt = nullptr;
@@ -772,8 +774,21 @@ namespace Ion
 
 		Component* FindComponentByGUID(const GUID& guid) const;
 
+		/** Lambda type must be void(Component*) */
 		template<typename Lambda>
 		void ForEachComponentOfType(ComponentTypeID id, Lambda forEach);
+
+		/** Sequentially calls ForEachComponentOfType for every component type
+		  * that has its container initialized.
+		  * Lambda type must be void(ComponentTypeID, Component*) */
+		template<typename Lambda>
+		void ForEachComponent(Lambda forEach);
+
+		/** Sequentially calls ForEachComponentOfType for every
+		  * scene component type that has its container initialized.
+		  * Lambda type must be void(SceneComponent*) */
+		template<typename Lambda>
+		void ForEachSceneComponent(Lambda forEach);
 
 		void MarkForDestroy(Component* component);
 
@@ -783,6 +798,8 @@ namespace Ion
 		void BuildRendererData(RRendererData& data);
 
 		static const ComponentDatabase* GetComponentTypeDatabase();
+
+		static const THashMap<ComponentTypeID, ComponentDatabase::TypeInfo>& GetRegisteredTypes();
 
 		/* For internal use */
 		template<typename CompT, typename... Args>
@@ -1036,6 +1053,39 @@ namespace Ion
 		return GetContainer(id)->ForEach(forEach);
 	}
 
+	template<typename Lambda>
+	inline void ComponentRegistry::ForEachComponent(Lambda forEach)
+	{
+		static_assert(TIsConvertibleV<Lambda, TFunction<void(ComponentTypeID, Component*)>>);
+
+		const ComponentDatabase* database = GetComponentTypeDatabase();
+		for (auto& [id, type] : database->RegisteredTypes)
+		{
+			ForEachComponentOfType(id, [id, &forEach](Component* component)
+			{
+				forEach(id, component);
+			});
+		}
+	}
+
+	template<typename Lambda>
+	inline void ComponentRegistry::ForEachSceneComponent(Lambda forEach)
+	{
+		static_assert(TIsConvertibleV<Lambda, TFunction<void(SceneComponent*)>>);
+
+		const ComponentDatabase* database = GetComponentTypeDatabase();
+		for (auto& [id, type] : database->RegisteredTypes)
+		{
+			if (!type.bIsSceneComponent)
+				continue;
+
+			ForEachComponentOfType(id, [id, &forEach](Component* component)
+			{
+				forEach((SceneComponent*)component);
+			});
+		}
+	}
+
 	inline ComponentDatabase* ComponentRegistry::GetComponentTypeDatabase_Internal()
 	{
 		static ComponentDatabase* c_Database = new ComponentDatabase;
@@ -1108,6 +1158,12 @@ namespace Ion
 	{
 		ionassert(IsContainerInitialized(id));
 		return m_Containers.at(id);
+	}
+
+	inline const THashMap<ComponentTypeID, ComponentDatabase::TypeInfo>& ComponentRegistry::GetRegisteredTypes()
+	{
+		const ComponentDatabase* database = GetComponentTypeDatabase();
+		return database->RegisteredTypes;
 	}
 
 	template<typename CompT, typename... Args>

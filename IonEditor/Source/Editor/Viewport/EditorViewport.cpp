@@ -194,36 +194,28 @@ namespace Ion::Editor
 		World* editorWorld = EditorApplication::Get()->GetEditorWorld();
 
 		ComponentRegistry& registry = editorWorld->GetComponentRegistry();
-		const ComponentDatabase* database = registry.GetComponentTypeDatabase();
-		for (auto& [id, type] : database->RegisteredTypes)
+		registry.ForEachSceneComponent([editorWorld](SceneComponent* component)
 		{
-			auto& componentType = type;
-			if (!componentType.bIsSceneComponent)
-				continue;
-
-			registry.ForEachComponentOfType(id, [this, &componentType, editorWorld](Component* component)
+			if (component->IsOfType<MeshComponent>())
 			{
-				if (component->IsOfType<MeshComponent>())
+				MeshComponent* meshComponent = (MeshComponent*)component;
+				// Don't draw the billboard if the component has a mesh
+				if (meshComponent->GetMesh())
 				{
-					MeshComponent* meshComponent = (MeshComponent*)component;
-					// Don't draw the billboard if the component has a mesh
-					if (meshComponent->GetMesh())
-					{
-						return;
-					}
+					return;
 				}
+			}
 
-				SceneComponent* sceneComponent = (SceneComponent*)component;
+			SceneComponent* sceneComponent = (SceneComponent*)component;
 
-				RBillboardRenderProxy billboard;
-				billboard.Texture = EditorBillboards::GetComponentBillboardTexture(componentType.ID).get();
-				billboard.LocationWS = sceneComponent->GetWorldTransform().GetLocation();
-				billboard.Scale = 0.2f;
+			RBillboardRenderProxy billboard;
+			billboard.Texture = EditorBillboards::GetComponentBillboardTexture(component->GetFinalTypeID()).get();
+			billboard.LocationWS = sceneComponent->GetWorldTransform().GetLocation();
+			billboard.Scale = 0.2f;
 
-				const Shader* billboardShader = Renderer::Get()->GetBasicUnlitMaskedShader().get();
-				Renderer::Get()->DrawBillboard(billboard, billboardShader, editorWorld->GetScene());
-			});
-		}
+			const Shader* billboardShader = Renderer::Get()->GetBasicUnlitMaskedShader().get();
+			Renderer::Get()->DrawBillboard(billboard, billboardShader, editorWorld->GetScene());
+		});
 	}
 
 	void EditorViewport::CreateFramebuffers(const UVector2& size)

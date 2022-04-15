@@ -482,31 +482,21 @@ namespace Ion::Editor
 		m_EditorPassData->SelectedBillboards.clear();
 		
 		ComponentRegistry& registry = GetEditorWorld()->GetComponentRegistry();
-		const ComponentDatabase* database = registry.GetComponentTypeDatabase();
-		for (auto& [id, type] : database->RegisteredTypes)
+		registry.ForEachSceneComponent([this](SceneComponent* component)
 		{
-			auto& componentType = type;
-			if (!componentType.bIsSceneComponent)
-				continue;
-
-			registry.ForEachComponentOfType(id, [this, &componentType](Component* component)
+			// @TODO: this is here only because AssetManager doesn't do its job...
+			if (component->IsOfType<MeshComponent>())
 			{
-				SceneComponent* sceneComponent = (SceneComponent*)component;
-
-				// @TODO: this is here only because AssetManager doesn't do its job...
-				if (sceneComponent->IsOfType<MeshComponent>())
+				MeshComponent* meshComponent = (MeshComponent*)component;
+				// Don't draw the billboard if the component has a mesh
+				if (meshComponent->GetMesh())
 				{
-					MeshComponent* meshComponent = (MeshComponent*)sceneComponent;
-					// Don't draw the billboard if the component has a mesh
-					if (meshComponent->GetMesh())
-					{
-						m_EditorPassData->Primitives.push_back(CreateEditorPassPrimitive(sceneComponent));
-						return;
-					}
+					m_EditorPassData->Primitives.push_back(CreateEditorPassPrimitive(component));
+					return;
 				}
-				m_EditorPassData->Billboards.push_back(CreateEditorPassBillboard(sceneComponent));
-			});
-		}
+			}
+			m_EditorPassData->Billboards.push_back(CreateEditorPassBillboard(component));
+		});
 
 		if (m_SelectedEntity)
 		{

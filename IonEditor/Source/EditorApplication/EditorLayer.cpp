@@ -252,13 +252,13 @@ namespace Ion::Editor
 			ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysUseWindowPadding;
 			if (ImGui::BeginChild("InsertComponentFrame", ImVec2(0, 0), false, flags))
 			{
-				const ComponentDatabase* database = ComponentRegistry::GetComponentTypeDatabase();
-				for (auto& [id, info] : database->RegisteredTypes)
+				for (auto& [id, info] : ComponentRegistry::GetRegisteredTypes())
 				{
 					DrawInsertPanelElement<ESceneObjectType::Component>(info.ClassDisplayName,
-					[](World* context, ComponentTypeID id) -> Component* {
-						ComponentRegistry& registry = context->GetComponentRegistry();
-						return registry.CreateComponent(id);
+					// This will be called on (drag) drop
+					[](World* context, ComponentTypeID id) -> Component*
+					{
+						return context->GetComponentRegistry().CreateComponent(id);
 					}, &info);
 				}
 			}
