@@ -480,6 +480,8 @@ namespace Ion::Editor
 		m_EditorPassData->SelectedPrimitives.clear();
 		m_EditorPassData->Billboards.clear();
 		m_EditorPassData->SelectedBillboards.clear();
+
+		// Prepare ObjectID data (meshes and billboards will render with component GUIDs as their colors)
 		
 		ComponentRegistry& registry = GetEditorWorld()->GetComponentRegistry();
 		registry.ForEachSceneComponent([this](SceneComponent* component)
@@ -498,40 +500,42 @@ namespace Ion::Editor
 			m_EditorPassData->Billboards.push_back(CreateEditorPassBillboard(component));
 		});
 
+		// Prepare selected components data (for outline drawing)
+
 		if (m_SelectedEntity)
 		{
+			TArray<SceneComponent*> selectedComponents;
+
 			// If there's at least one scene component selected,
 			// don't render the whole entity, but only the selected components
 			if (m_SelectedComponent && m_SelectedComponent->IsSceneComponent())
 			{
-				if (m_SelectedComponent->IsOfType<MeshComponent>())
-				{
-					MeshComponent* meshComponent = (MeshComponent*)m_SelectedComponent;
-					// Don't draw the billboard if the component has a mesh
-					if (meshComponent->GetMesh())
-					{
-						m_EditorPassData->SelectedPrimitives.push_back(CreateEditorPassPrimitive((SceneComponent*)m_SelectedComponent));
-						return;
-					}
-				}
-				m_EditorPassData->SelectedBillboards.push_back(CreateEditorPassBillboard((SceneComponent*)m_SelectedComponent));
+				selectedComponents.push_back((SceneComponent*)m_SelectedComponent);
 			}
 			else
 			{
-				for (SceneComponent* comp : m_SelectedEntity->GetAllOwnedSceneComponents())
+				TArray<SceneComponent*> entityComponents = m_SelectedEntity->GetAllOwnedSceneComponents();
+				selectedComponents.reserve(entityComponents.size());
+				for (SceneComponent* comp : entityComponents)
 				{
-					if (comp->IsOfType<MeshComponent>())
-					{
-						MeshComponent* meshComponent = (MeshComponent*)comp;
-						// Don't draw the billboard if the component has a mesh
-						if (meshComponent->GetMesh())
-						{
-							m_EditorPassData->SelectedPrimitives.push_back(CreateEditorPassPrimitive(comp));
-							continue;
-						}
-					}
-					m_EditorPassData->SelectedBillboards.push_back(CreateEditorPassBillboard(comp));
+					selectedComponents.push_back(comp);
 				}
+			}
+
+			// Add the selected components to the Editor Render Pass Data structure
+			for (SceneComponent* comp : selectedComponents)
+			{
+				if (comp->IsOfType<MeshComponent>())
+				{
+					MeshComponent* meshComponent = (MeshComponent*)comp;
+					// Don't draw the billboard if the mesh component has a mesh
+					if (meshComponent->GetMesh())
+					{
+						m_EditorPassData->SelectedPrimitives.push_back(CreateEditorPassPrimitive(comp));
+						continue;
+					}
+				}
+				m_EditorPassData->SelectedBillboards.push_back(CreateEditorPassBillboard(comp));
 			}
 		}
 	}
