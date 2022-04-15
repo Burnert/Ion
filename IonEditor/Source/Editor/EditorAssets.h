@@ -23,4 +23,14 @@ namespace Ion::Editor
 
 		static const TShared<Texture>& GetComponentBillboardTexture(ComponentTypeID id);
 	};
+
+	class EDITOR_API EditorMeshes
+	{
+	public:
+		static inline TShared<Mesh> MeshGrid;
+
+		static inline TShared<Shader> ShaderGrid;
+
+		static void Init();
+	};
 }

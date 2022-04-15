@@ -47,6 +47,7 @@ namespace Ion::Editor
 		GetWindow()->Maximize();
 
 		EditorBillboards::LoadTextures();
+		EditorMeshes::Init();
 
 		m_EditorLayer = GetLayerStack()->PushLayer<EditorLayer>("EditorLayer");
 

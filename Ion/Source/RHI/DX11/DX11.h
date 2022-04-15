@@ -4,7 +4,7 @@
 
 #include "Core/Platform/Windows/WindowsCore.h"
 
-#include <d3d11.h>
+#include <d3d11_1.h>
 #include <dxgidebug.h>
 
 #if ION_LOG_ENABLED
@@ -177,11 +177,12 @@ namespace Ion
 	private:
 		static char s_DisplayName[120];
 
-		static ID3D11Device* s_Device;
-		static ID3D11DeviceContext* s_Context;
+		static ID3D11Device1* s_Device;
+		static ID3D11DeviceContext1* s_Context;
 		static IDXGISwapChain* s_SwapChain;
 		static ID3D11DepthStencilState* s_DepthStencilState;
 		static ID3D11RasterizerState* s_RasterizerState;
+		static ID3D11BlendState1* s_BlendState;
 
 		static uint32 s_SwapInterval;
 

@@ -91,6 +91,8 @@ namespace Ion
 			flags |= D3D11_CREATE_DEVICE_DEBUG /*| D3D11_CREATE_DEVICE_DEBUGGABLE*/;
 #endif
 
+			ID3D11Device* device;
+			ID3D11DeviceContext* context;
 			dxcall_f(
 				D3D11CreateDeviceAndSwapChain(nullptr,
 					D3D_DRIVER_TYPE_HARDWARE,
@@ -101,10 +103,12 @@ namespace Ion
 					D3D11_SDK_VERSION,
 					&scd,
 					&s_SwapChain,
-					&s_Device,
+					&device,
 					&s_FeatureLevel,
-					&s_Context),
+					&context),
 				"Cannot create D3D Device and Swap Chain.");
+			dxcall_f(device->QueryInterface(IID_PPV_ARGS(&s_Device)));
+			dxcall_f(context->QueryInterface(IID_PPV_ARGS(&s_Context)));
 		}
 		// Create Render Target
 
@@ -122,6 +126,26 @@ namespace Ion
 
 			dxcall_f(s_Device->CreateRasterizerState(&rd, &s_RasterizerState));
 			dxcall_v(s_Context->RSSetState(s_RasterizerState));
+		}
+		// Create Blend State
+		{
+			TRACE_SCOPE("DX11::Init - Create Blend State");
+
+			D3D11_BLEND_DESC1 blendDesc { };
+			blendDesc.RenderTarget[0].BlendEnable = true;
+			// Enable alpha blending
+			blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+			blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+			blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+			blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+			blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+			blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+			blendDesc.RenderTarget[0].LogicOp = D3D11_LOGIC_OP_NOOP;
+			blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+			dxcall_f(s_Device->CreateBlendState1(&blendDesc, &s_BlendState));
+
+			s_Context->OMSetBlendState(s_BlendState, nullptr, 0xFFFFFFFF);
 		}
 		// Create Depth / Stencil Buffer
 		{
@@ -437,11 +461,12 @@ namespace Ion
 
 	char DX11::s_DisplayName[120] = "DirectX ";
 
-	ID3D11Device* DX11::s_Device = nullptr;
-	ID3D11DeviceContext* DX11::s_Context = nullptr;
+	ID3D11Device1* DX11::s_Device = nullptr;
+	ID3D11DeviceContext1* DX11::s_Context = nullptr;
 	IDXGISwapChain* DX11::s_SwapChain = nullptr;
 	ID3D11DepthStencilState* DX11::s_DepthStencilState = nullptr;
 	ID3D11RasterizerState* DX11::s_RasterizerState = nullptr;
+	ID3D11BlendState1* DX11::s_BlendState = nullptr;
 
 	uint32 DX11::s_SwapInterval = 0;
 

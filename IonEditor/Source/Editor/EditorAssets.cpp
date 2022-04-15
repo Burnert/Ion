@@ -7,6 +7,10 @@
 #include "Engine/Components/MeshComponent.h"
 
 #include "Renderer/Texture.h"
+#include "Renderer/Mesh.h"
+#include "Renderer/Shader.h"
+
+#include "RHI/RHI.h"
 
 #include "Core/Asset/AssetManager.h"
 
@@ -53,5 +57,74 @@ namespace Ion::Editor
 			return BillboardNoMesh;
 
 		return BillboardCircle;
+	}
+
+	static void CreateGridMesh()
+	{
+		float gridVertices[] = {
+			/*   location               texcoord    normal       */
+				-100.0f, 0.0f, -100.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+				 100.0f, 0.0f, -100.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+				 100.0f, 0.0f,  100.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+				-100.0f, 0.0f,  100.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+		};
+
+		uint32 gridIndices[] = {
+			0, 2, 1,
+			2, 0, 3,
+			0, 1, 2,
+			2, 3, 0,
+		};
+
+		TShared<VertexLayout> gridLayout = MakeShared<VertexLayout>(2);
+		gridLayout->AddAttribute(EVertexAttributeSemantic::Position, EVertexAttributeType::Float, 3, false);
+		gridLayout->AddAttribute(EVertexAttributeSemantic::TexCoord, EVertexAttributeType::Float, 2, false);
+		gridLayout->AddAttribute(EVertexAttributeSemantic::Normal, EVertexAttributeType::Float, 3, true);
+
+		TShared<VertexBuffer> gridVB = VertexBuffer::Create(gridVertices, sizeof(gridVertices) / sizeof(float));
+		gridVB->SetLayout(gridLayout);
+		gridVB->SetLayoutShader(EditorMeshes::ShaderGrid);
+
+		TShared<IndexBuffer> gridIB = IndexBuffer::Create(gridIndices, sizeof(gridIndices) / sizeof(uint32));
+
+		EditorMeshes::MeshGrid = Mesh::Create();
+		EditorMeshes::MeshGrid->SetVertexBuffer(gridVB);
+		EditorMeshes::MeshGrid->SetIndexBuffer(gridIB);
+	}
+
+	static void CreateGridShader()
+	{
+		String vertexSrc;
+		String pixelSrc;
+
+		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
+
+		// @TODO: This needs a refactor
+		if (RHI::GetCurrent() == ERHI::DX11)
+		{
+			File::ReadToString(shadersPath + L"Editor/EditorGridVS.hlsl", vertexSrc);
+			File::ReadToString(shadersPath + L"Editor/EditorGridPS.hlsl", pixelSrc);
+		}
+		else
+		{
+			File::ReadToString(shadersPath + L"Basic.vert", vertexSrc);
+			File::ReadToString(shadersPath + L"Basic.frag", pixelSrc);
+		}
+
+		EditorMeshes::ShaderGrid = Shader::Create();
+		EditorMeshes::ShaderGrid->AddShaderSource(EShaderType::Vertex, vertexSrc);
+		EditorMeshes::ShaderGrid->AddShaderSource(EShaderType::Pixel, pixelSrc);
+
+		if (!EditorMeshes::ShaderGrid->Compile())
+		{
+			LOG_ERROR("Could not compile the Editor Grid Shader.");
+			debugbreak();
+		}
+	}
+
+	void EditorMeshes::Init()
+	{
+		CreateGridShader();
+		CreateGridMesh();
 	}
 }

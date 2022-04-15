@@ -50,6 +50,7 @@ namespace Ion::Editor
 		bool ObtainClickedObject(GUID& outGuid);
 		void DispatchOnClicked(const GUID& clickedGuid) const;
 
+		void RenderEditorGrid();
 		void RenderEditorBillboards();
 
 		void CreateFramebuffers(const UVector2& size);

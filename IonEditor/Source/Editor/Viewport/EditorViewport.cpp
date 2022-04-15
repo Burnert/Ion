@@ -23,7 +23,7 @@ namespace Ion::Editor
 		m_CameraTransform.SetLocation(Vector3(1.0f, 0.5f, 1.0f));
 		m_CameraTransform.SetRotation(Rotator(Vector3(-10.0f, 45.0f, 0.0f)));
 		m_Camera->SetFOV(Math::Radians(100.0f));
-		m_Camera->SetNearClip(0.1f);
+		m_Camera->SetNearClip(0.05f);
 		m_Camera->SetFarClip(100.0f);
 
 		CreateFramebuffers(initialSize);
@@ -82,6 +82,7 @@ namespace Ion::Editor
 			Renderer::Get()->SetDepthStencil(m_ViewportTextures.SceneFinalDepth);
 			Renderer::Get()->Clear(Vector4(0.1f, 0.1f, 0.1f, 1.0f));
 			Renderer::Get()->RenderScene(editorScene);
+			RenderEditorGrid();
 			RenderEditorBillboards();
 
 			// Render editor pass
@@ -187,6 +188,19 @@ namespace Ion::Editor
 	{
 		if (m_OnClicked)
 			m_OnClicked(clickedGuid);
+	}
+
+	void EditorViewport::RenderEditorGrid()
+	{
+		RPrimitiveRenderProxy grid { };
+		grid.Transform     = Transform().GetMatrix();
+		grid.Material      = nullptr;
+		grid.Shader        = EditorMeshes::ShaderGrid.get();
+		grid.VertexBuffer  = EditorMeshes::MeshGrid->GetVertexBufferRaw();
+		grid.IndexBuffer   = EditorMeshes::MeshGrid->GetIndexBufferRaw();
+		grid.UniformBuffer = EditorMeshes::MeshGrid->GetUniformBufferRaw();
+
+		Renderer::Get()->Draw(grid, EditorApplication::Get()->GetEditorScene());
 	}
 
 	void EditorViewport::RenderEditorBillboards()
