@@ -550,7 +550,7 @@ namespace Ion
 
 		if (!data.SelectedBillboards.empty())
 		{
-			for (const REditorPassBillboardPrimitive& billboardPrim : data.Billboards)
+			for (const REditorPassBillboardPrimitive& billboardPrim : data.SelectedBillboards)
 			{
 				DrawBillboard(billboardPrim.BillboardRenderProxy, GetEditorSelectedShader().get(), scene);
 			}
