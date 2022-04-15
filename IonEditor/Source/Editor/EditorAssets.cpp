@@ -30,6 +30,8 @@ namespace Ion::Editor
 			desc.bCreateSampler = true;
 			//desc.InitialData = msg.PoolLocation;
 			desc.DebugName = StringConverter::WStringToString(path.LastElement());
+			desc.MagFilter = ETextureFilteringMethod::Linear;
+			desc.MinFilter = ETextureFilteringMethod::Linear;
 			texture = Texture::Create(desc);
 
 			Image texImage((uint8*)msg.PoolLocation, assetDesc->Width, assetDesc->Height, assetDesc->NumChannels);
