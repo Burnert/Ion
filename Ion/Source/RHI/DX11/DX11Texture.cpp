@@ -146,10 +146,12 @@ namespace Ion
 
 		// Create Texture2D
 
+		int32 mipLevels = desc.bGenerateMips ? 0 : 1;
+
 		D3D11_TEXTURE2D_DESC tex2DDesc { };
 		tex2DDesc.Width = desc.Dimensions.Width;
 		tex2DDesc.Height = desc.Dimensions.Height;
-		tex2DDesc.MipLevels = 1; // @TODO: fix the missing mipmaps thing
+		tex2DDesc.MipLevels = mipLevels;
 		tex2DDesc.ArraySize = 1;
 		tex2DDesc.Format = FormatToDX11Format(desc.Format, EDX11FormatUsage::Resource);
 		tex2DDesc.Usage = UsageToDX11Usage(desc.Usage);
