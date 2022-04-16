@@ -19,7 +19,8 @@ namespace Ion::Editor
 		m_CameraMoveSpeed(5.0f),
 		m_ClickedPoint({ -1, -1 }),
 		m_bCaptured(false),
-		m_bEnableMSAA(false)
+		m_bEnableMSAA(false),
+		m_bEnableFXAA(false)
 	{
 		m_CameraTransform.SetLocation(Vector3(1.0f, 0.5f, 1.0f));
 		m_CameraTransform.SetRotation(Rotator(Vector3(-10.0f, 45.0f, 0.0f)));
