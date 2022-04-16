@@ -1,3 +1,6 @@
+#ifndef __SHADER_COMMON_HLSL__
+#define __SHADER_COMMON_HLSL__
+
 // Scene data
 
 #define MAX_LIGHTS 100
@@ -94,3 +97,31 @@ float4 SampleFloat4MS(in Texture2DMS<float4> tex, uint2 location, uint nSamples)
 	}
 	return color / (float4)nSamples;
 }
+
+// float4 SampleByPixel(in Texture2D tex, in SamplerState smp, uint2 location)
+// {
+// 	uint2 dimensions;
+// 	tex.GetDimensions(dimensions.x, dimensions.y);
+// 	return tex.Sample(smp, (float2)location / (float2)dimensions);
+// }
+
+// uint2 TexCoordAsPixelLocation(in Texture2D tex, float2 location)
+// {
+// 	uint2 dimensions;
+// 	tex.GetDimensions(dimensions.x, dimensions.y);
+// 	return (uint2)(location * (float2)dimensions);
+// }
+
+float2 GetTextureDimensions(in Texture2D tex)
+{
+	float2 dimensions;
+	tex.GetDimensions(dimensions.x, dimensions.y);
+	return dimensions;
+}
+
+float GetLuminosityRec709(float3 rgb)
+{
+	return 0.2126f * rgb.r + 0.7152f * rgb.g + 0.0722f * rgb.b;
+}
+
+#endif // __SHADER_COMMON_HLSL__

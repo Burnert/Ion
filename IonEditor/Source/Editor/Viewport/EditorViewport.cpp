@@ -18,7 +18,8 @@ namespace Ion::Editor
 		m_Camera(Camera::Create()),
 		m_CameraMoveSpeed(5.0f),
 		m_ClickedPoint({ -1, -1 }),
-		m_bCaptured(false)
+		m_bCaptured(false),
+		m_bEnableMSAA(false)
 	{
 		m_CameraTransform.SetLocation(Vector3(1.0f, 0.5f, 1.0f));
 		m_CameraTransform.SetRotation(Rotator(Vector3(-10.0f, 45.0f, 0.0f)));
@@ -45,11 +46,17 @@ namespace Ion::Editor
 			}
 			m_ClickedPoint = { -1, -1 };
 		}
+
+		// Update the framebuffers when the MSAA mode changes
+		if (m_ViewportTextures.SceneFinalColor->GetDescription().IsMultiSampled() != m_bEnableMSAA)
+		{
+			ResizeFramebuffers(m_ViewportSize);
+		}
 	}
 
 	void EditorViewport::Render()
 	{
-		if (m_ViewportColor)
+		if (m_ViewportFinalColor)
 		{
 			// Assume other textures are initialized as well
 			ionassert(m_ObjectIDColor);
@@ -91,12 +98,33 @@ namespace Ion::Editor
 
 			Renderer::Get()->RenderEditorPass(editorScene, *editorPassData);
 
-			// Render to viewport framebuffer
+			// Render the viewport to the pre-fx viewport framebuffer
 
-			Renderer::Get()->SetRenderTarget(m_ViewportColor);
-			Renderer::Get()->SetDepthStencil(nullptr);
+			Renderer::Get()->SetRenderTarget(m_ViewportPreFX);
 			Renderer::Get()->Clear();
-			Renderer::Get()->RenderEditorViewport(m_ViewportTextures);
+			m_ViewportTextures.SceneFinalDepth->Bind(1);
+			m_ViewportTextures.SelectedDepth->Bind(2);
+			TShared<Shader> viewportShader =
+				// Select the proper shader
+				m_ViewportTextures.SceneFinalColor->GetDescription().IsMultiSampled() ?
+				Renderer::Get()->GetEditorViewportMSShader() :
+				Renderer::Get()->GetEditorViewportShader();
+			Renderer::Get()->DrawScreenTexture(m_ViewportTextures.SceneFinalColor, viewportShader.get());
+			Renderer::Get()->UnbindResources();
+
+			// Render to the final viewport framebuffer
+
+			Renderer::Get()->SetRenderTarget(m_ViewportFinalColor);
+			Renderer::Get()->Clear();
+			if (m_bEnableFXAA)
+			{
+				Renderer::Get()->DrawScreenTexture(m_ViewportPreFX, Renderer::Get()->GetFXAAShader().get());
+			}
+			else
+			{
+				Renderer::Get()->DrawScreenTexture(m_ViewportPreFX);
+			}
+			Renderer::Get()->UnbindResources();
 		}
 	}
 
@@ -143,6 +171,16 @@ namespace Ion::Editor
 			m_CameraTransform.GetForwardVector() * axisValues.z);
 
 		m_CameraTransform += direction * deltaTime * m_CameraMoveSpeed;
+	}
+
+	void EditorViewport::SetMSAAEnabled(bool bEnabled)
+	{
+		m_bEnableMSAA = bEnabled;
+	}
+
+	void EditorViewport::SetFXAAEnabled(bool bEnabled)
+	{
+		m_bEnableFXAA = bEnabled;
 	}
 
 	void EditorViewport::DispatchOnCaptured()
@@ -250,7 +288,19 @@ namespace Ion::Editor
 		desc.VWrapMode = ETextureWrapMode::Clamp;
 		desc.SetFilterAll(ETextureFilteringMethod::Linear);
 
-		m_ViewportColor = Texture::Create(desc);
+		m_ViewportFinalColor = Texture::Create(desc);
+
+		desc = { };
+		desc.DebugName = "ViewportPreFX";
+		desc.Dimensions.Width = size.x;
+		desc.Dimensions.Height = size.y;
+		desc.bUseAsRenderTarget = true;
+		desc.bCreateSampler = true;
+		desc.UWrapMode = ETextureWrapMode::Clamp;
+		desc.VWrapMode = ETextureWrapMode::Clamp;
+		desc.SetFilterAll(ETextureFilteringMethod::Linear);
+
+		m_ViewportPreFX = Texture::Create(desc);
 
 		CreateFinalSceneFramebuffer(size);
 		CreateEditorPassFramebuffers(size);
@@ -262,25 +312,30 @@ namespace Ion::Editor
 
 		m_ViewportSize = size;
 
-		TextureDescription desc = m_ViewportColor->GetDescription();
+		TextureDescription desc = m_ViewportFinalColor->GetDescription();
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
-		m_ViewportColor = Texture::Create(desc);
+		m_ViewportFinalColor = Texture::Create(desc);
+
+		desc = m_ViewportPreFX->GetDescription();
+		desc.Dimensions.Width = size.x;
+		desc.Dimensions.Height = size.y;
+		m_ViewportPreFX = Texture::Create(desc);
 
 		ResizeFinalSceneFramebuffer(size);
 		ResizeEditorPassFramebuffers(size);
+
+		m_Camera->SetAspectRatio((float)size.x / (float)size.y);
 	}
 
 	void EditorViewport::TryResizeFramebuffers(const UVector2& size)
 	{
 		if (size.x && size.y)
 		{
-			TextureDimensions viewportDimensions = m_ViewportColor->GetDimensions();
+			TextureDimensions viewportDimensions = m_ViewportFinalColor->GetDimensions();
 			if (size != UVector2(viewportDimensions.Width, viewportDimensions.Height))
 			{
 				ResizeFramebuffers(size);
-
-				m_Camera->SetAspectRatio((float)size.x / (float)size.y);
 			}
 		}
 	}
@@ -295,7 +350,7 @@ namespace Ion::Editor
 		desc.Dimensions.Height = size.y;
 		desc.bUseAsRenderTarget = true;
 		desc.bCreateSampler = true;
-		desc.MultiSampling = ETextureMSMode::X4;
+		desc.MultiSampling = m_bEnableMSAA ? ETextureMSMode::X4 : ETextureMSMode::X1;
 		desc.UWrapMode = ETextureWrapMode::Clamp;
 		desc.VWrapMode = ETextureWrapMode::Clamp;
 		desc.SetFilterAll(ETextureFilteringMethod::Linear);
@@ -308,7 +363,7 @@ namespace Ion::Editor
 		desc.Dimensions.Height = size.y;
 		desc.bUseAsDepthStencil = true;
 		desc.bCreateSampler = true;
-		desc.MultiSampling = ETextureMSMode::X4;
+		desc.MultiSampling = m_bEnableMSAA ? ETextureMSMode::X4 : ETextureMSMode::X1;
 		desc.Format = ETextureFormat::D24S8;
 		desc.UWrapMode = ETextureWrapMode::Clamp;
 		desc.VWrapMode = ETextureWrapMode::Clamp;
@@ -324,11 +379,13 @@ namespace Ion::Editor
 		TextureDescription desc = m_ViewportTextures.SceneFinalColor->GetDescription();
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
+		desc.MultiSampling = m_bEnableMSAA ? ETextureMSMode::X4 : ETextureMSMode::X1;
 		m_ViewportTextures.SceneFinalColor = Texture::Create(desc);
 
 		desc = m_ViewportTextures.SceneFinalDepth->GetDescription();
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
+		desc.MultiSampling = m_bEnableMSAA ? ETextureMSMode::X4 : ETextureMSMode::X1;
 		m_ViewportTextures.SceneFinalDepth = Texture::Create(desc);
 	}
 

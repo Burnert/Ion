@@ -117,10 +117,6 @@ namespace Ion
 	{
 	}
 
-	void OpenGLRenderer::RenderEditorViewport(const EditorViewportTextures& editorViewportTextures) const
-	{
-	}
-
 	void OpenGLRenderer::SetBlendingEnabled(bool bEnable) const
 	{
 	}

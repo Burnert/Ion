@@ -184,6 +184,17 @@ namespace Ion
 		DrawIndexed(6);
 	}
 
+	void Renderer::DrawScreenTexture(const TShared<Texture>& texture, const Shader* shader) const
+	{
+		TRACE_FUNCTION();
+
+		BindScreenTexturePrimitives(shader);
+		texture->Bind(0);
+
+		// Index count is always 6 (2 triangles)
+		DrawIndexed(6);
+	}
+
 	void Renderer::CreateScreenTexturePrimitives()
 	{
 		TRACE_FUNCTION();
@@ -293,7 +304,7 @@ namespace Ion
 		BindScreenTexturePrimitives(m_ScreenTextureRenderData.Shader.get());
 	}
 
-	void Renderer::BindScreenTexturePrimitives(Shader* customShader) const
+	void Renderer::BindScreenTexturePrimitives(const Shader* customShader) const
 	{
 		TRACE_FUNCTION();
 
@@ -309,9 +320,11 @@ namespace Ion
 	{
 		InitBasicShader();
 		InitBasicUnlitMaskedShader();
+		InitFXAAShader();
 		InitEditorObjectIDShader();
 		InitEditorSelectedShader();
 		InitEditorViewportShader();
+		InitEditorViewportMSShader();
 	}
 
 	void Renderer::InitBasicShader()
@@ -370,6 +383,36 @@ namespace Ion
 		if (!m_BasicUnlitMaskedShader->Compile())
 		{
 			LOG_ERROR("Could not compile the Basic Unlit Masked Shader.");
+			debugbreak();
+		}
+	}
+
+	void Renderer::InitFXAAShader()
+	{
+		String vertexSrc;
+		String pixelSrc;
+
+		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
+
+		// @TODO: This needs a refactor
+		if (RHI::GetCurrent() == ERHI::DX11)
+		{
+			File::ReadToString(shadersPath + L"TextureRenderVS.hlsl", vertexSrc);
+			File::ReadToString(shadersPath + L"PP_FXAAPS.hlsl", pixelSrc);
+		}
+		else
+		{
+			File::ReadToString(shadersPath + L"TextureRender.vert", vertexSrc);
+			File::ReadToString(shadersPath + L"PP_FXAA.frag", pixelSrc);
+		}
+
+		m_PPFXAAShader = Shader::Create();
+		m_PPFXAAShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
+		m_PPFXAAShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
+
+		if (!m_PPFXAAShader->Compile())
+		{
+			LOG_ERROR("Could not compile the PostProcess FXAA Shader.");
 			debugbreak();
 		}
 	}
@@ -459,6 +502,36 @@ namespace Ion
 		if (!m_EditorViewportShader->Compile())
 		{
 			LOG_ERROR("Could not compile the EditorViewport Shader.");
+			debugbreak();
+		}
+	}
+
+	void Renderer::InitEditorViewportMSShader()
+	{
+		String vertexSrc;
+		String pixelSrc;
+
+		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
+
+		// @TODO: This needs a refactor
+		if (RHI::GetCurrent() == ERHI::DX11)
+		{
+			File::ReadToString(shadersPath + L"Editor/EditorViewportVS.hlsl", vertexSrc);
+			File::ReadToString(shadersPath + L"Editor/EditorViewportMSPS.hlsl", pixelSrc);
+		}
+		else
+		{
+			File::ReadToString(shadersPath + L"Editor/EditorViewport.vert", vertexSrc);
+			File::ReadToString(shadersPath + L"Editor/EditorViewport.frag", pixelSrc);
+		}
+
+		m_EditorViewportMSShader = Shader::Create();
+		m_EditorViewportMSShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
+		m_EditorViewportMSShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
+
+		if (!m_EditorViewportMSShader->Compile())
+		{
+			LOG_ERROR("Could not compile the EditorViewportMS Shader.");
 			debugbreak();
 		}
 	}

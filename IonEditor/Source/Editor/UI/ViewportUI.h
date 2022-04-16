@@ -46,6 +46,8 @@ namespace Ion::Editor
 		bool m_bWindowOpen;
 		bool m_bHovered;
 		bool m_bCaptured;
+		bool m_bMSAA;
+		bool m_bFXAA;
 
 		friend class EditorViewport;
 	};

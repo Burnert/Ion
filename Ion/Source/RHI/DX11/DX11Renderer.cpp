@@ -76,21 +76,6 @@ namespace Ion
 		dxcall_v(context->PSSetShaderResources(0, D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, c_nullViews));
 	}
 
-	void DX11Renderer::RenderEditorViewport(const EditorViewportTextures& editorViewportTextures) const
-	{
-		TRACE_FUNCTION();
-
-		ID3D11DeviceContext* context = DX11::GetContext();
-
-		BindScreenTexturePrimitives(GetEditorViewportShader().get());
-		editorViewportTextures.SceneFinalColor->Bind(0);
-		editorViewportTextures.SceneFinalDepth->Bind(1);
-		editorViewportTextures.SelectedDepth->Bind(2);
-
-		// Index count is always 6 (2 triangles)
-		DrawIndexed(6);
-	}
-
 	void DX11Renderer::SetBlendingEnabled(bool bEnable) const
 	{
 		ID3D11DeviceContext* context = DX11::GetContext();

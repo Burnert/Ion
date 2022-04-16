@@ -96,11 +96,16 @@ namespace Ion
 		ETextureWrapMode VWrapMode;
 		ETextureWrapMode WWrapMode;
 
-		void SetFilterAll(ETextureFilteringMethod filter)
+		inline void SetFilterAll(ETextureFilteringMethod filter)
 		{
 			MinFilter = filter;
 			MagFilter = filter;
 			MipFilter = filter;
+		}
+
+		inline bool IsMultiSampled() const
+		{
+			return !(MultiSampling == ETextureMSMode::Default || MultiSampling == ETextureMSMode::X1);
 		}
 	};
 

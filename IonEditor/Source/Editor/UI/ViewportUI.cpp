@@ -18,7 +18,9 @@ namespace Ion::Editor
 		m_Index(index),
 		m_bWindowOpen(false),
 		m_bHovered(false),
-		m_bCaptured(false)
+		m_bCaptured(false),
+		m_bMSAA(false),
+		m_bFXAA(false)
 	{
 	}
 
@@ -59,6 +61,8 @@ namespace Ion::Editor
 				TShared<Texture> viewportFramebuffer = m_Owner->GetViewportFramebuffer();
 				if (viewportFramebuffer)
 				{
+					ImVec2 startCursor = ImGui::GetCursorPos();
+
 					const TextureDimensions& viewportDimensions = viewportFramebuffer->GetDimensions();
 					ImGui::Image(viewportFramebuffer->GetNativeID(),
 						ImVec2((float)viewportDimensions.Width, (float)viewportDimensions.Height));
@@ -94,6 +98,16 @@ namespace Ion::Editor
 					if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
 					{
 						Release();
+					}
+
+					ImGui::SetCursorPos(startCursor);
+					if (ImGui::Checkbox("MSAA", &m_bMSAA))
+					{
+						m_Owner->SetMSAAEnabled(m_bMSAA);
+					}
+					if (ImGui::Checkbox("FXAA", &m_bFXAA))
+					{
+						m_Owner->SetFXAAEnabled(m_bFXAA);
 					}
 				}
 			}

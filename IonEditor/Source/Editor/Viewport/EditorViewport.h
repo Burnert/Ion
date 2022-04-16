@@ -30,6 +30,9 @@ namespace Ion::Editor
 		/* X - right/left, Y - up/down, Z - forward/backward */
 		void DriveCamera(const Vector3& axisValues, float deltaTime);
 
+		void SetMSAAEnabled(bool bEnabled);
+		void SetFXAAEnabled(bool bEnabled);
+
 		const TShared<Texture>& GetViewportFramebuffer() const;
 		const TShared<Camera>& GetCamera() const;
 		const Transform& GetCameraTransform() const;
@@ -72,7 +75,8 @@ namespace Ion::Editor
 
 		TShared<EditorUIViewport> m_UI;
 
-		TShared<Texture> m_ViewportColor;
+		TShared<Texture> m_ViewportFinalColor;
+		TShared<Texture> m_ViewportPreFX;
 		TShared<Texture> m_ObjectIDColor;
 		TShared<Texture> m_ObjectIDDepthStencil;
 		TShared<Texture> m_ObjectIDStaging;
@@ -86,6 +90,8 @@ namespace Ion::Editor
 		IVector2 m_ClickedPoint;
 
 		bool m_bCaptured;
+		bool m_bEnableMSAA;
+		bool m_bEnableFXAA;
 
 		friend class EditorUIViewport;
 	};
@@ -112,7 +118,7 @@ namespace Ion::Editor
 
 	inline const TShared<Texture>& EditorViewport::GetViewportFramebuffer() const
 	{
-		return m_ViewportColor;
+		return m_ViewportFinalColor;
 	}
 
 	inline UVector2 EditorViewport::GetSize() const

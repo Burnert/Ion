@@ -103,14 +103,13 @@ namespace Ion
 		/** Draw a screen aligned quad positioned in world space. */
 		void DrawBillboard(const RBillboardRenderProxy& billboard, const Shader* shader, const Scene* targetScene) const;
 		void DrawScreenTexture(const TShared<Texture>& texture) const;
+		void DrawScreenTexture(const TShared<Texture>& texture, const Shader* shader) const;
 
 		virtual void Clear(const RendererClearOptions& options) const = 0;
 
 		virtual void DrawIndexed(uint32 indexCount) const = 0;
 
 		virtual void UnbindResources() const = 0;
-
-		virtual void RenderEditorViewport(const EditorViewportTextures& editorViewportTextures) const = 0; // @TODO: this is a bad idea
 
 		virtual void SetBlendingEnabled(bool bEnable) const = 0;
 
@@ -155,6 +154,16 @@ namespace Ion
 			return Renderer::Get()->m_EditorViewportShader;
 		}
 
+		inline static const TShared<Shader>& GetEditorViewportMSShader()
+		{
+			return Renderer::Get()->m_EditorViewportMSShader;
+		}
+
+		inline static const TShared<Shader>& GetFXAAShader()
+		{
+			return Renderer::Get()->m_PPFXAAShader;
+		}
+
 		inline static const TShared<Mesh>& GetBillboardMesh()
 		{
 			return Renderer::Get()->m_BillboardMesh;
@@ -172,14 +181,16 @@ namespace Ion
 
 		void InitScreenTextureRendering();
 		void BindScreenTexturePrimitives() const;
-		void BindScreenTexturePrimitives(Shader* customShader) const;
+		void BindScreenTexturePrimitives(const Shader* customShader) const;
 
 		void InitShaders();
 		void InitBasicShader();
 		void InitBasicUnlitMaskedShader();
+		void InitFXAAShader();
 		void InitEditorObjectIDShader();
 		void InitEditorSelectedShader();
 		void InitEditorViewportShader();
+		void InitEditorViewportMSShader();
 
 	private:
 		void CreateScreenTexturePrimitives();
@@ -190,9 +201,12 @@ namespace Ion
 		TShared<Shader> m_BasicShader;
 		TShared<Shader> m_BasicUnlitMaskedShader;
 
+		TShared<Shader> m_PPFXAAShader;
+
 		TShared<Shader> m_EditorObjectIDShader;
 		TShared<Shader> m_EditorSelectedShader;
 		TShared<Shader> m_EditorViewportShader;
+		TShared<Shader> m_EditorViewportMSShader;
 
 		TShared<Mesh> m_BillboardMesh;
 
