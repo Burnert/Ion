@@ -165,6 +165,9 @@ project "IonExample"
 	cppdialect "C++17"
 	characterset "Unicode"
 
+	pchheader "IonPCH.h"
+	pchsource "IonExample/Source/PCH.cpp"
+
 	targetdir ("Build/" .. outputdir .. "/%{prj.name}")
 	objdir ("Intermediate/" .. outputdir .. "/%{prj.name}")
 
