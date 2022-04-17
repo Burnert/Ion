@@ -18,23 +18,23 @@ namespace Ion
 	{
 	}
 
-	bool Mesh::LoadFromAsset(AssetHandle& asset)
+	bool Mesh::LoadFromAsset(Asset& asset)
 	{
-		ionassert(asset->GetType() == EAssetType::Mesh, "The asset is not a mesh.");
+		//ionassert(asset->GetType() == EAssetType::Mesh, "The asset is not a mesh.");
 
-		if (!asset.IsValid() || !asset->IsLoaded())
-			return false;
+		//if (!asset.IsValid() || !asset->IsLoaded())
+		//	return false;
 
-		const AssetDescription::Mesh* meshDesc = asset->GetDescription<EAssetType::Mesh>();
-		float* vertexAttributesPtr = (float*)((uint8*)asset->Data() + meshDesc->VerticesOffset);
-		uint32* indicesPtr = (uint32*)((uint8*)asset->Data() + meshDesc->IndicesOffset);
+		//const AssetDescription::Mesh* meshDesc = asset->GetDescription<EAssetType::Mesh>();
+		//float* vertexAttributesPtr = (float*)((uint8*)asset->Data() + meshDesc->VerticesOffset);
+		//uint32* indicesPtr = (uint32*)((uint8*)asset->Data() + meshDesc->IndicesOffset);
 
-		TShared<VertexBuffer> vb = VertexBuffer::Create(vertexAttributesPtr, meshDesc->VertexCount);
-		TShared<IndexBuffer> ib = IndexBuffer::Create(indicesPtr, (uint32)meshDesc->IndexCount);
-		vb->SetLayout(meshDesc->VertexLayout);
+		//TShared<VertexBuffer> vb = VertexBuffer::Create(vertexAttributesPtr, meshDesc->VertexCount);
+		//TShared<IndexBuffer> ib = IndexBuffer::Create(indicesPtr, (uint32)meshDesc->IndexCount);
+		//vb->SetLayout(meshDesc->VertexLayout);
 
-		SetVertexBuffer(vb);
-		SetIndexBuffer(ib);
+		//SetVertexBuffer(vb);
+		//SetIndexBuffer(ib);
 
 		return true;
 	}

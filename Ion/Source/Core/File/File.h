@@ -550,6 +550,11 @@ namespace Ion
 			return Exists() && !IsDirectory();
 		}
 
+		inline bool IsEmpty() const
+		{
+			return m_Path.empty();
+		}
+
 		FileList ListFiles() const;
 		//WString Find(const wchar* name) const;
 		//WString FindRecursive(const wchar* name) const;
@@ -653,10 +658,12 @@ namespace Ion
 	inline FilePath& FilePath::operator=(const WString& str)
 	{
 		Set(str);
+		return *this;
 	}
 
 	inline FilePath& FilePath::operator=(WString&& str)
 	{
 		Set(str);
+		return *this;
 	}
 }

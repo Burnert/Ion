@@ -14,6 +14,7 @@
 #include "UserInterface/ImGui.h"
 
 #include "Core/File/Collada.h"
+#include "Core/Asset/Asset.h"
 
 #include "Engine/Engine.h"
 #include "Engine/Entity/MeshEntity.h"
@@ -47,8 +48,8 @@ public:
 		TShared<Material> Material;
 		TShared<Texture> Texture;
 
-		AssetHandle MeshAsset;
-		AssetHandle TextureAsset;
+		Asset MeshAsset;
+		Asset TextureAsset;
 
 		String Name;
 	};
@@ -210,46 +211,46 @@ public:
 	template<EExampleModelName Type>
 	void ImGuiExampleModelOps(ExampleModelData<Type>& model)
 	{
-		ImGui::PushID(model.Name.c_str());
+		//ImGui::PushID(model.Name.c_str());
 
-		if (!model.MeshAsset->IsLoaded() && !model.MeshAsset->IsLoading())
-			ImGui::TextDisabled(model.Name.c_str());
-		else
-			ImGui::TextColored(model.MeshAsset->IsLoading() ? ImVec4(1.0f, 1.0f, 0.2f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f), model.Name.c_str());
+		//if (!model.MeshAsset->IsLoaded() && !model.MeshAsset->IsLoading())
+		//	ImGui::TextDisabled(model.Name.c_str());
+		//else
+		//	ImGui::TextColored(model.MeshAsset->IsLoading() ? ImVec4(1.0f, 1.0f, 0.2f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f), model.Name.c_str());
 
-		ImGui::SameLine(70);
-		if (ImGui::Button("Load"))
-		{
-			model.MeshAsset->LoadAssetData();
-			model.TextureAsset->LoadAssetData();
-		} ImGui::SameLine();
-		if (ImGui::Button("Unload"))
-		{
-			model.MeshAsset->UnloadAssetData();
-			model.TextureAsset->UnloadAssetData();
-		}
-		ImGui::PopID();
+		//ImGui::SameLine(70);
+		//if (ImGui::Button("Load"))
+		//{
+		//	model.MeshAsset->LoadAssetData();
+		//	model.TextureAsset->LoadAssetData();
+		//} ImGui::SameLine();
+		//if (ImGui::Button("Unload"))
+		//{
+		//	model.MeshAsset->UnloadAssetData();
+		//	model.TextureAsset->UnloadAssetData();
+		//}
+		//ImGui::PopID();
 	}
 
-	template<EAssetType Type>
-	void ImGuiAssetMemoryPoolControls()
-	{
-		ImGui::PushID(AssetTypeToString(Type));
-		ImGui::Text("%s Pool", AssetTypeToString(Type));
-		ImGui::SameLine(100);
-		if (ImGui::Button("Print"))
-		{
-			AssetManager::PrintAssetPool<Type>();
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Defragment"))
-		{
-			AssetManager::DefragmentAssetPool<Type>();
-		}
-		ImGui::SameLine();
-		ImGui::Text("Size: %.2f MB", AssetManager::GetAssetMemoryPool<Type>().GetSize() / (float)(1 << 20));
-		ImGui::PopID();
-	}
+	//template<EAssetType Type>
+	//void ImGuiAssetMemoryPoolControls()
+	//{
+	//	ImGui::PushID(AssetTypeToString(Type));
+	//	ImGui::Text("%s Pool", AssetTypeToString(Type));
+	//	ImGui::SameLine(100);
+	//	if (ImGui::Button("Print"))
+	//	{
+	//		AssetManager::PrintAssetPool<Type>();
+	//	}
+	//	ImGui::SameLine();
+	//	if (ImGui::Button("Defragment"))
+	//	{
+	//		AssetManager::DefragmentAssetPool<Type>();
+	//	}
+	//	ImGui::SameLine();
+	//	ImGui::Text("Size: %.2f MB", AssetManager::GetAssetMemoryPool<Type>().GetSize() / (float)(1 << 20));
+	//	ImGui::PopID();
+	//}
 
 	virtual void OnInit() override;
 

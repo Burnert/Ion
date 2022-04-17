@@ -4,7 +4,7 @@
 #include "Core/Event/InputEvent.h"
 #include "Core/Event/WindowEvent.h"
 #include "Core/Layer/LayerStack.h"
-#include "Core/Asset/AssetManager.h"
+//#include "Core/Asset/AssetManager.h"
 
 #include "Application/Window/GenericWindow.h"
 #include "Application/EnginePath.h"

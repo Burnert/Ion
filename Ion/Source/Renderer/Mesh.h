@@ -4,6 +4,7 @@
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "Material.h"
+#include "Core/Asset/Asset.h"
 
 namespace Ion
 {
@@ -40,7 +41,7 @@ namespace Ion
 
 		MeshUniforms& GetUniformsDataRef();
 
-		bool LoadFromAsset(AssetHandle& asset);
+		bool LoadFromAsset(Asset& asset);
 
 		// IDrawable:
 

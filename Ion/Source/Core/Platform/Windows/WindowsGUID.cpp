@@ -99,7 +99,7 @@ namespace Ion
 
 		if (status != RPC_S_OK)
 		{
-			LOG_WARN("Could not convert string to UUID.");
+			LOG_WARN("Could not convert UUID to String.");
 			return "00000000-0000-0000-0000-000000000000";
 		}
 

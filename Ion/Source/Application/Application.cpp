@@ -86,7 +86,7 @@ namespace Ion
 		renderer->Init();
 		renderer->SetVSyncEnabled(false);
 
-		AssetManager::Init();
+		//AssetManager::Init();
 
 		InitImGui();
 		LoadFonts();
@@ -118,7 +118,7 @@ namespace Ion
 		m_ClientApp->OnShutdown();
 		TRACE_END(0);
 
-		AssetManager::Shutdown();
+		//AssetManager::Shutdown();
 
 		RHI::Get()->Shutdown();
 
@@ -155,7 +155,7 @@ namespace Ion
 		// @TODO: This is broken and kills CPU
 		//UpdateWindowTitle(deltaTime);
 
-		AssetManager::Update();
+		//AssetManager::Update();
 		
 		TRACE_BEGIN(0, "Application - Client::OnUpdate");
 		OnUpdate(deltaTime);

@@ -11,62 +11,74 @@ IonExample::IonExample() :
 void IonExample::CreateExampleAssets()
 {
 	m_4Pak.Name = "4Pak";
-	m_4Pak.MeshAsset = AssetManager::CreateAsset(EAssetType::Mesh, FilePath(L"Assets/models/4pak.dae"));
-	m_4Pak.TextureAsset = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/4pak.png"));
+	//m_4Pak.MeshAsset    = AssetManager::CreateAsset(EAssetType::Mesh, FilePath(L"Assets/models/4pak.dae"));
+	//m_4Pak.TextureAsset = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/4pak.png"));
+	m_4Pak.MeshAsset    = AssetFinder(FilePath(L"Assets/models/4pak.iasset")).Resolve();
+	m_4Pak.TextureAsset = AssetFinder(FilePath(L"Assets/textures/4pak.iasset")).Resolve();
 
 	m_Piwsko.Name = "Piwsko";
-	m_Piwsko.MeshAsset = AssetManager::CreateAsset(EAssetType::Mesh, FilePath(L"Assets/models/piwsko.dae"));
-	m_Piwsko.TextureAsset = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/piwsko.png"));
+	//m_Piwsko.MeshAsset    = AssetManager::CreateAsset(EAssetType::Mesh, FilePath(L"Assets/models/piwsko.dae"));
+	//m_Piwsko.TextureAsset = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/piwsko.png"));
+	m_Piwsko.MeshAsset    = AssetFinder(FilePath(L"Assets/models/piwsko.iasset")).Resolve();
+	m_Piwsko.TextureAsset = AssetFinder(FilePath(L"Assets/textures/piwsko.iasset")).Resolve();
 
 	m_Oscypek.Name = "Oscypek";
-	m_Oscypek.MeshAsset = AssetManager::CreateAsset(EAssetType::Mesh, FilePath(L"Assets/models/oscypek.dae"));
-	m_Oscypek.TextureAsset = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/oscypek.png"));
+	//m_Oscypek.MeshAsset    = AssetManager::CreateAsset(EAssetType::Mesh, FilePath(L"Assets/models/oscypek.dae"));
+	//m_Oscypek.TextureAsset = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/oscypek.png"));
+	m_Oscypek.MeshAsset    = AssetFinder(FilePath(L"Assets/models/oscypek.iasset")).Resolve();
+	m_Oscypek.TextureAsset = AssetFinder(FilePath(L"Assets/textures/oscypek.iasset")).Resolve();
 
 	m_Ciupaga.Name = "Ciupaga";
-	m_Ciupaga.MeshAsset = AssetManager::CreateAsset(EAssetType::Mesh, FilePath(L"Assets/models/ciupaga.dae"));
-	m_Ciupaga.TextureAsset = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/ciupaga.png"));
+	//m_Ciupaga.MeshAsset    = AssetManager::CreateAsset(EAssetType::Mesh, FilePath(L"Assets/models/ciupaga.dae"));
+	//m_Ciupaga.TextureAsset = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/ciupaga.png"));
+	m_Ciupaga.MeshAsset    = AssetFinder(FilePath(L"Assets/models/ciupaga.iasset")).Resolve();
+	m_Ciupaga.TextureAsset = AssetFinder(FilePath(L"Assets/textures/ciupaga.iasset")).Resolve();
 
 	m_Slovak.Name = "Slovak";
-	m_Slovak.MeshAsset = AssetManager::CreateAsset(EAssetType::Mesh, FilePath(L"Assets/models/slovak.dae"));
-	m_Slovak.TextureAsset = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/slovak.png"));
+	//m_Slovak.MeshAsset    = AssetManager::CreateAsset(EAssetType::Mesh, FilePath(L"Assets/models/slovak.dae"));
+	//m_Slovak.TextureAsset = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/slovak.png"));
+	m_Slovak.MeshAsset    = AssetFinder(FilePath(L"Assets/models/slovak.iasset")).Resolve();
+	m_Slovak.TextureAsset = AssetFinder(FilePath(L"Assets/textures/slovak.iasset")).Resolve();
 
 	m_Stress.Name = "Stress";
-	m_Stress.MeshAsset = AssetManager::CreateAsset(EAssetType::Mesh, FilePath(L"spherestresstest_uv.dae"));
-	m_Stress.TextureAsset = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/test_4k.png"));
+	//m_Stress.MeshAsset    = AssetManager::CreateAsset(EAssetType::Mesh, FilePath(L"spherestresstest_uv.dae"));
+	//m_Stress.TextureAsset = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/test_4k.png"));
+	m_Stress.MeshAsset    = AssetFinder(FilePath(L"spherestresstest_uv.iasset")).Resolve();
+	m_Stress.TextureAsset = AssetFinder(FilePath(L"Assets/test_4k.iasset")).Resolve();
 
 	//m_BigSphere.Name = "BigSphere";
 	//m_BigSphere.MeshAsset = AssetManager::Get()->CreateAsset(EAssetType::Mesh, FilePath(L"Assets/big_sphere.dae"));
 	//m_BigSphere.TextureAsset = AssetManager::Get()->CreateAsset(EAssetType::Texture, FilePath(L"Assets/test_4k.png"));
 
-	m_4Pak.MeshAsset->AssignEvent(
-		[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_4Pak); });
-	m_4Pak.TextureAsset->AssignEvent(
-		[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_4Pak); });
+	//m_4Pak.MeshAsset->AssignEvent(
+	//	[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_4Pak); });
+	//m_4Pak.TextureAsset->AssignEvent(
+	//	[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_4Pak); });
 
-	m_Piwsko.MeshAsset->AssignEvent(
-		[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Piwsko); });
-	m_Piwsko.TextureAsset->AssignEvent(
-		[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Piwsko); });
+	//m_Piwsko.MeshAsset->AssignEvent(
+	//	[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Piwsko); });
+	//m_Piwsko.TextureAsset->AssignEvent(
+	//	[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Piwsko); });
 
-	m_Oscypek.MeshAsset->AssignEvent(
-		[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Oscypek); });
-	m_Oscypek.TextureAsset->AssignEvent(
-		[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Oscypek); });
+	//m_Oscypek.MeshAsset->AssignEvent(
+	//	[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Oscypek); });
+	//m_Oscypek.TextureAsset->AssignEvent(
+	//	[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Oscypek); });
 
-	m_Ciupaga.MeshAsset->AssignEvent(
-		[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Ciupaga); });
-	m_Ciupaga.TextureAsset->AssignEvent(
-		[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Ciupaga); });
+	//m_Ciupaga.MeshAsset->AssignEvent(
+	//	[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Ciupaga); });
+	//m_Ciupaga.TextureAsset->AssignEvent(
+	//	[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Ciupaga); });
 
-	m_Slovak.MeshAsset->AssignEvent(
-		[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Slovak); });
-	m_Slovak.TextureAsset->AssignEvent(
-		[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Slovak); });
+	//m_Slovak.MeshAsset->AssignEvent(
+	//	[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Slovak); });
+	//m_Slovak.TextureAsset->AssignEvent(
+	//	[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Slovak); });
 
-	m_Stress.MeshAsset->AssignEvent(
-		[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Stress); });
-	m_Stress.TextureAsset->AssignEvent(
-		[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Stress); });
+	//m_Stress.MeshAsset->AssignEvent(
+	//	[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Stress); });
+	//m_Stress.TextureAsset->AssignEvent(
+	//	[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_Stress); });
 
 	//m_BigSphere.MeshAsset->AssignEvent(
 	//	[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_BigSphere); });
@@ -76,52 +88,52 @@ void IonExample::CreateExampleAssets()
 
 void IonExample::LoadExampleAssets()
 {
-	m_4Pak.MeshAsset->LoadAssetData();
-	m_4Pak.TextureAsset->LoadAssetData();
-	m_Piwsko.MeshAsset->LoadAssetData();
-	m_Piwsko.TextureAsset->LoadAssetData();
-	m_Oscypek.MeshAsset->LoadAssetData();
-	m_Oscypek.TextureAsset->LoadAssetData();
-	m_Ciupaga.MeshAsset->LoadAssetData();
-	m_Ciupaga.TextureAsset->LoadAssetData();
-	m_Slovak.MeshAsset->LoadAssetData();
-	m_Slovak.TextureAsset->LoadAssetData();
-	m_Stress.MeshAsset->LoadAssetData();
-	m_Stress.TextureAsset->LoadAssetData();
+	//m_4Pak.MeshAsset->LoadAssetData();
+	//m_4Pak.TextureAsset->LoadAssetData();
+	//m_Piwsko.MeshAsset->LoadAssetData();
+	//m_Piwsko.TextureAsset->LoadAssetData();
+	//m_Oscypek.MeshAsset->LoadAssetData();
+	//m_Oscypek.TextureAsset->LoadAssetData();
+	//m_Ciupaga.MeshAsset->LoadAssetData();
+	//m_Ciupaga.TextureAsset->LoadAssetData();
+	//m_Slovak.MeshAsset->LoadAssetData();
+	//m_Slovak.TextureAsset->LoadAssetData();
+	//m_Stress.MeshAsset->LoadAssetData();
+	//m_Stress.TextureAsset->LoadAssetData();
 
 	// @FIXME: There once was a bug where one of the assets went into the wrong memory pool (I think?).
 	// No idea what could cause it, I can't seem to reproduce it.
 }
 
-static void BenchmarkMemory()
-{
-	char name[100];
-	int iters = 100;
-	size_t size = 1 << 21;
-
-	MemoryPool pool;
-	pool.AllocPool(1 << 30, 64); // 1GB
-
-	DebugTimer timer1;
-	for (int i = 0; i < iters; ++i)
-	{
-		void* ptr = malloc(size);
-	}
-	timer1.Stop();
-	sprintf_s(name, "malloc     (%d * %zuB)", iters, size);
-	timer1.PrintTimer(name, EDebugTimerTimeUnit::Millisecond);
-
-	DebugTimer timer2;
-	for (int i = 0; i < iters; ++i)
-	{
-		void* ptr = pool.Alloc(size);
-	}
-	timer2.Stop();
-	sprintf_s(name, "pool alloc (%d * %zuB)", iters, size);
-	timer2.PrintTimer(name, EDebugTimerTimeUnit::Millisecond);
-
-	pool.FreePool();
-}
+//static void BenchmarkMemory()
+//{
+//	char name[100];
+//	int iters = 100;
+//	size_t size = 1 << 21;
+//
+//	MemoryPool pool;
+//	pool.AllocPool(1 << 30, 64); // 1GB
+//
+//	DebugTimer timer1;
+//	for (int i = 0; i < iters; ++i)
+//	{
+//		void* ptr = malloc(size);
+//	}
+//	timer1.Stop();
+//	sprintf_s(name, "malloc     (%d * %zuB)", iters, size);
+//	timer1.PrintTimer(name, EDebugTimerTimeUnit::Millisecond);
+//
+//	DebugTimer timer2;
+//	for (int i = 0; i < iters; ++i)
+//	{
+//		void* ptr = pool.Alloc(size);
+//	}
+//	timer2.Stop();
+//	sprintf_s(name, "pool alloc (%d * %zuB)", iters, size);
+//	timer2.PrintTimer(name, EDebugTimerTimeUnit::Millisecond);
+//
+//	pool.FreePool();
+//}
 
 void IonExample::OnInit()
 {
@@ -133,7 +145,7 @@ void IonExample::OnInit()
 	m_World = g_Engine->CreateWorld(worldInitializer);
 
 	CreateExampleAssets();
-	LoadExampleAssets();
+	//LoadExampleAssets();
 
 	bool bResult;
 
@@ -437,8 +449,8 @@ void IonExample::OnUpdate(float deltaTime)
 
 		ImGui::Begin("Asset Manager");
 		{
-			ImGuiAssetMemoryPoolControls<EAssetType::Mesh>();
-			ImGuiAssetMemoryPoolControls<EAssetType::Texture>();
+			//ImGuiAssetMemoryPoolControls<EAssetType::Mesh>();
+			//ImGuiAssetMemoryPoolControls<EAssetType::Texture>();
 
 			ImGui::Separator();
 

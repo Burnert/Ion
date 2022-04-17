@@ -77,6 +77,11 @@ namespace Ion
 			};
 		}
 
+		inline rapidxml::xml_document<char>& XML()
+		{
+			return m_XML;
+		}
+
 	protected:
 		void InitXML(char* xml);
 

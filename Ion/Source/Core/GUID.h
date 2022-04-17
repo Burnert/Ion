@@ -7,17 +7,25 @@ namespace Ion
 	class ION_API GUID
 	{
 		struct ZeroInitializerT { };
+		struct InvalidInitializerT { };
+
 	public:
+		/* {00000000-0000-0000-0000-000000000000} */
 		inline static constexpr ZeroInitializerT Zero = { };
+		/* {ffffffff-ffff-ffff-ffff-ffffffffffff} */
+		inline static constexpr InvalidInitializerT Invalid = { };
 
 		GUID();
+		explicit GUID(const uint8 bytes[16]);
 		explicit GUID(const String& guidStr);
 		GUID(GUID::ZeroInitializerT);
+		GUID(GUID::InvalidInitializerT);
 		GUID(const GUID& other);
 		GUID(GUID&& other) noexcept;
 
 		String ToString() const;
 		bool IsZero() const;
+		bool IsInvalid() const;
 
 		GUID& operator=(const GUID& other);
 		GUID& operator=(GUID&& other) noexcept;
@@ -45,6 +53,12 @@ namespace Ion
 		PlatformGenerateGUID();
 	}
 
+	inline GUID::GUID(const uint8 bytes[16]) :
+		m_Bytes()
+	{
+		memcpy(m_Bytes, bytes, sizeof(m_Bytes));
+	}
+
 	inline GUID::GUID(const String& guidStr) :
 		m_Bytes()
 	{
@@ -54,6 +68,12 @@ namespace Ion
 	inline GUID::GUID(GUID::ZeroInitializerT) :
 		m_Bytes()
 	{
+	}
+
+	inline GUID::GUID(GUID::InvalidInitializerT) :
+		m_Bytes()
+	{
+		memset(m_Bytes, 0xFF, sizeof(m_Bytes));
 	}
 
 	inline GUID::GUID(const GUID& other)
@@ -75,6 +95,11 @@ namespace Ion
 	inline bool GUID::IsZero() const
 	{
 		return !(((uint64*)m_Bytes)[0] | ((uint64*)m_Bytes)[1]);
+	}
+
+	inline bool GUID::IsInvalid() const
+	{
+		return (((uint64*)m_Bytes)[0] + ((uint64*)m_Bytes)[1] + 2) == 0;
 	}
 
 	inline GUID& GUID::operator=(const GUID& other)
@@ -109,7 +134,7 @@ namespace Ion
 
 	inline GUID::operator bool() const
 	{
-		return !IsZero();
+		return !IsZero() && !IsInvalid();
 	}
 
 	inline void GUID::GetRawBytes(uint8(&outBytes)[16]) const

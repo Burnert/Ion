@@ -12,6 +12,7 @@
 
 #include "Config.h"
 
+#include "Core/CoreFwd.h"
 #include "Core/CoreApi.h"
 #include "Core/CoreAsserts.h"
 #include "Core/CoreMacros.h"
@@ -25,7 +26,7 @@
 #include "Core/Event/Event.h"
 #include "Core/StringUtils.h"
 #include "Core/StringConverter.h"
-#include "Core/Asset/AssetCore.h"
+//#include "Core/Asset.old/AssetCore.h"
 #include "Core/File/File.h"
 #include "Core/File/Image.h"
 #include "Core/GUID.h"
