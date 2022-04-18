@@ -1,6 +1,7 @@
 #include "IonPCH.h"
 
 #include "Example.h"
+#include "Core/Asset/AssetRegistry.h"
 
 IonExample::IonExample() :
 	m_TextureFileNameBuffer(""),
@@ -86,20 +87,38 @@ void IonExample::CreateExampleAssets()
 	//	[this](const OnAssetLoadedMessage&) { InitModelIfReady(m_BigSphere); });
 }
 
+static void LoadMesh(Asset& asset, TShared<Mesh>& mesh)
+{
+	TOptional<AssetData> data = asset->Load([](const AssetData& data)
+	{
+		LOG_INFO("Loaded: {0}, size: {1}", (const char*)data.Data, data.Size);
+	});
+	ionassert(!data);
+}
+
+static void LoadTxtr(Asset& asset, TShared<Texture>& texture)
+{
+	TOptional<AssetData> data = asset->Load([](const AssetData& data)
+	{
+		LOG_INFO("Loaded: {0}, size: {1}", (const char*)data.Data, data.Size);
+	});
+	ionassert(!data);
+}
+
 void IonExample::LoadExampleAssets()
 {
-	//m_4Pak.MeshAsset->LoadAssetData();
-	//m_4Pak.TextureAsset->LoadAssetData();
-	//m_Piwsko.MeshAsset->LoadAssetData();
-	//m_Piwsko.TextureAsset->LoadAssetData();
-	//m_Oscypek.MeshAsset->LoadAssetData();
-	//m_Oscypek.TextureAsset->LoadAssetData();
-	//m_Ciupaga.MeshAsset->LoadAssetData();
-	//m_Ciupaga.TextureAsset->LoadAssetData();
-	//m_Slovak.MeshAsset->LoadAssetData();
-	//m_Slovak.TextureAsset->LoadAssetData();
-	//m_Stress.MeshAsset->LoadAssetData();
-	//m_Stress.TextureAsset->LoadAssetData();
+	LoadMesh(m_4Pak.MeshAsset, m_4Pak.Mesh);
+	LoadTxtr(m_4Pak.TextureAsset, m_4Pak.Texture);
+	LoadMesh(m_Piwsko.MeshAsset, m_Piwsko.Mesh);
+	LoadTxtr(m_Piwsko.TextureAsset, m_Piwsko.Texture);
+	LoadMesh(m_Oscypek.MeshAsset, m_Oscypek.Mesh);
+	LoadTxtr(m_Oscypek.TextureAsset, m_Oscypek.Texture);
+	LoadMesh(m_Ciupaga.MeshAsset, m_Ciupaga.Mesh);
+	LoadTxtr(m_Ciupaga.TextureAsset, m_Ciupaga.Texture);
+	LoadMesh(m_Slovak.MeshAsset, m_Slovak.Mesh);
+	LoadTxtr(m_Slovak.TextureAsset, m_Slovak.Texture);
+	LoadMesh(m_Stress.MeshAsset, m_Stress.Mesh);
+	LoadTxtr(m_Stress.TextureAsset, m_4Pak.Texture);
 
 	// @FIXME: There once was a bug where one of the assets went into the wrong memory pool (I think?).
 	// No idea what could cause it, I can't seem to reproduce it.
@@ -145,7 +164,7 @@ void IonExample::OnInit()
 	m_World = g_Engine->CreateWorld(worldInitializer);
 
 	CreateExampleAssets();
-	//LoadExampleAssets();
+	LoadExampleAssets();
 
 	bool bResult;
 
@@ -506,6 +525,7 @@ void IonExample::OnUpdate(float deltaTime)
 
 void IonExample::OnRender()
 {
+	Renderer::Get()->UnbindResources();
 	// @TODO: Resize the render target on window resize
 	Renderer::Get()->SetRenderTarget(m_RenderTarget);
 	Renderer::Get()->SetDepthStencil(m_DepthStencil);

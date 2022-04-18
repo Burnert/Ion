@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AssetCommon.h"
+#include "AssetWorkQueue.h"
 
 namespace Ion
 {
@@ -54,8 +55,6 @@ namespace Ion
 
 		void ParseAssetDefinitionFile();
 
-		void LoadData();
-
 	private:
 		GUID m_Guid;
 		/** @brief Path of the loaded .iasset file. */
@@ -82,33 +81,49 @@ namespace Ion
 	public:
 		using AssetMap = THashMap<GUID, AssetDefinition>;
 
+		/**
+		 * @brief Calls the work queue DispatchMessages function.
+		 */
+		static void Update();
+
+		/**
+		 * @brief Registers an asset. Creates an AssetDefinition
+		 * in the asset collection using the specified initializer.
+		 * 
+		 * @param initializer Asset description
+		 * @return Reference to the asset definition
+		 */
 		static AssetDefinition& Register(const AssetInitializer& initializer);
 
+		/**
+		 * @brief Find an asset definition by GUID.
+		 * 
+		 * @param guid GUID to use
+		 * @return If found, the AssetDefinition pointer, else nullptr
+		 */
 		static AssetDefinition* Find(const GUID& guid);
+
+		/**
+		 * @brief Add a work to the work queue, which will be executed
+		 * by a free worker thread.
+		 * 
+		 * @tparam T Work type - must inherit from IAssetWork
+		 * @param work Work object
+		 */
+		template<typename T>
+		static void ScheduleWork(T& work);
 
 		static const AssetMap& GetAllRegisteredAssets();
 
 	private:
+		AssetRegistry();
+
 		static AssetRegistry& Get();
 
 		AssetMap m_Assets;
 		// @TODO: Variable memory pool allocator here
-	};
 
-	class ION_API AssetWorker
-	{
-	public:
-		AssetWorker();
-
-	private:
-		void Start();
-		void Exit();
-
-		// Worker Thread Functions ------------------------------------------------
-
-		void WorkerProc();
-
-		friend class AssetRegistry;
+		AssetWorkQueue m_WorkQueue;
 	};
 
 	// AssetDefinition class inline implementation --------------------------------
@@ -116,18 +131,31 @@ namespace Ion
 	template<typename Lambda>
 	inline TOptional<AssetData> AssetDefinition::Load(Lambda onLoad)
 	{
-		static_assert(TIsConvertibleV<Lambda, TFunction<void(AssetData)>>);
+		static_assert(TIsConvertibleV<Lambda, TFunction<void(const AssetData&)>>);
 
 		ionassertnd(IsValid());
 
+		// Return right away if the asset is loaded
 		if (m_bIsLoaded)
 		{
-			TOptional<AssetData>();
+			return m_AssetData;
 		}
 
-		LoadData();
+		// Prepare the work
+		AssetLoadWork work = AssetLoadWork(m_AssetReferencePath);
+		work.OnLoad = [this, onLoad](const AssetData& data)
+		{
+			m_AssetData = Move(data);
+			onLoad(m_AssetData);
+		};
+		work.OnError = []
+		{
+			LOG_ERROR("Error!");
+		};
 
-		return TOptional<AssetData>();
+		AssetRegistry::ScheduleWork(work);
+
+		return NullOpt;
 	}
 
 	inline EAssetType AssetDefinition::GetType() const
@@ -146,6 +174,13 @@ namespace Ion
 	}
 
 	// AssetRegistry class inline implementation ------------------------------
+
+	template<typename T>
+	inline void AssetRegistry::ScheduleWork(T& work)
+	{
+		LOG_INFO("Work scheduled!");
+		Get().m_WorkQueue.Schedule(work);
+	}
 
 	inline const AssetRegistry::AssetMap& AssetRegistry::GetAllRegisteredAssets()
 	{

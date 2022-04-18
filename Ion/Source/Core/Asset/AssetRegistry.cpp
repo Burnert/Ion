@@ -27,15 +27,17 @@ namespace Ion
 		// @TODO: Parse the rest of the file here
 	}
 
-	void AssetDefinition::LoadData()
-	{
-	}
-
 	// AssetRegistry ----------------------------------------------------------------
 
 	Asset AssetDefinition::GetHandle() const
 	{
 		return Asset(m_Guid);
+	}
+
+	void AssetRegistry::Update()
+	{
+		// Dispatch all the messages at the beginning of each frame.
+		Get().m_WorkQueue.DispatchMessages();
 	}
 
 	AssetDefinition& AssetRegistry::Register(const AssetInitializer& initializer)
@@ -61,6 +63,10 @@ namespace Ion
 		}
 
 		return &it->second;
+	}
+
+	AssetRegistry::AssetRegistry()
+	{
 	}
 
 	AssetRegistry& AssetRegistry::Get()

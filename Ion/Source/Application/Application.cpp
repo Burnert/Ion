@@ -8,6 +8,7 @@
 #include "Core/Event/EventQueue.h"
 #include "Core/Event/EventDispatcher.h"
 #include "Core/Input/Input.h"
+#include "Core/Asset/AssetRegistry.h"
 
 #include "Engine/Engine.h"
 
@@ -146,6 +147,8 @@ namespace Ion
 			// Reset the cursor
 			SetCursor(ECursorType::Arrow);
 		}
+
+		AssetRegistry::Update();
 
 		g_Engine->Update(deltaTime);
 

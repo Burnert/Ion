@@ -122,11 +122,20 @@ namespace Ion
 			CHECK_ATTR(import_attrPath, IASSET_ATTR_ImportExternal_path, IASSET_NODE_ImportExternal);
 
 			char* csPath = import_attrPath->value();
-			outInitializer.AssetReferencePath = StringConverter::StringToWString(csPath);
-			if (outInitializer.AssetReferencePath.IsEmpty())
+			FilePath importPath = StringConverter::StringToWString(csPath);
+			ionexcept(!importPath.IsEmpty(), "Asset Import External path is empty.")
+				return false;
+
+			// If the import path is relative, it means it begins in the directory
+			// the .iasset file is in. Append the paths in that case.
+			if (importPath.IsRelative())
 			{
-				LOG_WARN(L"Asset Import External path is empty. (\"{0}\")", m_Path.ToString());
+				FilePath actualPath = m_Path;
+				actualPath.Back();
+				importPath = Move(actualPath += importPath);
 			}
+
+			outInitializer.AssetReferencePath = importPath;
 		}
 
 		return true;

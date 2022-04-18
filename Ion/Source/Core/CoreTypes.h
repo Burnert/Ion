@@ -105,6 +105,7 @@ using TFunction = std::function<T>;
 
 template<typename T>
 using TOptional = std::optional<T>;
+constexpr inline std::nullopt_t NullOpt = std::nullopt;
 
 // Thread
 
