@@ -24,7 +24,7 @@ namespace Ion
 	class AssetRegistry;
 	class AssetDefinition;
 	// AssetWorkQueue.h
-	struct IMessageQueueProvider;
+	struct IAssetMessageQueueProvider;
 	struct IAssetWork;
 	struct AssetLoadWork;
 	struct AssetMessage;

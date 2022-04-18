@@ -11,7 +11,7 @@ namespace Ion
 	{
 	}
 
-	void AssetLoadWork::Execute(IMessageQueueProvider& messageQueue) const
+	void AssetLoadWork::Execute(IAssetMessageQueueProvider& messageQueue) const
 	{
 		ionassert(OnLoad);
 		ionassert(OnError);

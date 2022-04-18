@@ -6,7 +6,7 @@
 
 namespace Ion
 {
-	struct IMessageQueueProvider
+	struct IAssetMessageQueueProvider
 	{
 		/**
 		 * @brief Call this in an overloaded IAssetWork::Execute method
@@ -28,7 +28,7 @@ namespace Ion
 
 	struct IAssetWork
 	{
-		virtual void Execute(IMessageQueueProvider& messageQueue) const = 0;
+		virtual void Execute(IAssetMessageQueueProvider& messageQueue) const = 0;
 		virtual EAssetWork GetType() const = 0;
 	};
 
@@ -54,7 +54,7 @@ virtual EAssetWork GetType() const override \
 		 * 
 		 * @param messageQueue Queue provider to push the messages to (OnLoad, OnError, etc.).
 		 */
-		virtual void Execute(IMessageQueueProvider& messageQueue) const override;
+		virtual void Execute(IAssetMessageQueueProvider& messageQueue) const override;
 
 		ASSET_WORK_TYPE(EAssetWork::Load)
 
@@ -97,7 +97,7 @@ virtual EAssetWork GetType() const override \
 		friend class AssetWorkQueue;
 	};
 
-	class ION_API AssetWorkQueue : public IMessageQueueProvider
+	class ION_API AssetWorkQueue : public IAssetMessageQueueProvider
 	{
 	public:
 		AssetWorkQueue();

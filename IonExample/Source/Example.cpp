@@ -3,6 +3,8 @@
 #include "Example.h"
 #include "Core/Asset/AssetRegistry.h"
 
+#include "Core/Task/TaskQueue.h"
+
 IonExample::IonExample() :
 	m_TextureFileNameBuffer(""),
 	m_EventDispatcher(this)
@@ -154,6 +156,8 @@ void IonExample::LoadExampleAssets()
 //	pool.FreePool();
 //}
 
+static TaskQueue g_Queue;
+
 void IonExample::OnInit()
 {
 #pragma warning(disable:6001)
@@ -167,6 +171,18 @@ void IonExample::OnInit()
 	LoadExampleAssets();
 
 	bool bResult;
+
+
+	
+	g_Queue.Schedule(FTaskWork([](IMessageQueueProvider& queue)
+	{
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+		queue.PushMessage(FTaskMessage([]
+		{
+			LOG_INFO("Message!");
+		}));
+	}));
+
 
 	//m_Triangle.Shader = Shader::Create();
 	//m_Triangle.Shader->AddShaderSource(EShaderType::Vertex, vertexSrc);
@@ -330,6 +346,8 @@ void IonExample::OnInit()
 
 void IonExample::OnUpdate(float deltaTime)
 {
+	g_Queue.DispatchMessages();
+
 	float cameraMoveSpeed = 5.0f;
 
 	if (GetInputManager()->IsMouseButtonPressed(Mouse::Right))
@@ -542,7 +560,7 @@ void IonExample::OnRender()
 
 void IonExample::OnShutdown()
 {
-
+	g_Queue.Shutdown();
 }
 
 void IonExample::OnEvent(const Event& event)
