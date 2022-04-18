@@ -42,6 +42,15 @@ namespace Ion
 		 * @see TaskWorker::WorkerProc()
 		 */
 		TFuncWorkExecute Execute;
+
+	protected:
+		/**
+		 * @brief Construct a new FTaskWork object
+		 * with an empty Execute functor.
+		 */
+		FTaskWork()
+		{
+		}
 	};
 
 	using TFuncMessageOnDispatch = TFunction<void()>;
@@ -70,6 +79,15 @@ namespace Ion
 		 * @see TaskQueue::DispatchMessages()
 		 */
 		TFuncMessageOnDispatch OnDispatch;
+
+	protected:
+		/**
+		 * @brief Construct a new FTaskMessage object
+		 * with an empty OnDispatch functor.
+		 */
+		FTaskMessage()
+		{
+		}
 	};
 
 	class ION_API TaskWorker

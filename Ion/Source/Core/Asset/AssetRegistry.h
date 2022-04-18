@@ -79,19 +79,23 @@ namespace Ion
 	/**
 	 * @brief Loads the asset from the file specified on construction.
 	 */
-	//struct FAssetLoadWork : FTaskWork
-	//{
-	//	FAssetLoadWork(const FilePath& assetPath);
-	//	FAssetLoadWork(FAssetLoadWork&& other) noexcept;
+	struct FAssetLoadWork : FTaskWork
+	{
+		FAssetLoadWork(const FilePath& assetPath);
 
-	//	TFunction<void(const AssetData&)> OnLoad;
-	//	TFunction<void(/*ErrorDesc*/)> OnError;
+		TFunction<void(const AssetData&)> OnLoad;
+		TFunction<void(/*ErrorDesc*/)> OnError;
 
-	//	void Execute(IMessageQueueProvider& queue);
+		/**
+		 * Sets this work's Execute function and sends the work to the AssetRegistry.
+		 * The OnLoad and OnError functors must be set first.
+		 * Call this instead of passing the object to AssetRegistry::ScheduleWork.
+		 */
+		void Schedule();
 
-	//private:
-	//	FilePath m_AssetPath;
-	//};
+	private:
+		FilePath m_AssetPath;
+	};
 
 	class ION_API AssetRegistry
 	{
@@ -154,38 +158,17 @@ namespace Ion
 		}
 
 		// Prepare the work
-		//FAssetLoadWork work = FAssetLoadWork(m_AssetReferencePath);
-		FTaskWork work = [this, onLoad](IMessageQueueProvider& queue)
+		FAssetLoadWork work = FAssetLoadWork(m_AssetReferencePath);
+		work.OnLoad = [this, onLoad](const AssetData& data)
 		{
-			// @TODO: Fix, temporary memory leak
-			char* path = new char[200];
-			strcpy_s(path, 200, StringConverter::WStringToString(m_AssetReferencePath.ToString()).c_str());
-
-			// @TODO: Load
-			AssetData data;
-			data.Data = path;
-			data.Size = 200;
-
-			std::this_thread::sleep_for(std::chrono::seconds(2));
-
-			queue.PushMessage(FTaskMessage([this, onLoad, data]
-			{
-				LOG_INFO("Load Message!");
-				m_AssetData = Move(data);
-				onLoad(m_AssetData);
-			}));
+			m_AssetData = Move(data);
+			onLoad(m_AssetData);
 		};
-		//work.OnLoad = [this, onLoad](const AssetData& data)
-		//{
-		//	m_AssetData = Move(data);
-		//	onLoad(m_AssetData);
-		//};
-		//work.OnError = []
-		//{
-		//	LOG_ERROR("Error!");
-		//};
-
-		AssetRegistry::ScheduleWork(work);
+		work.OnError = []
+		{
+			LOG_ERROR("Error!");
+		};
+		work.Schedule();
 
 		return NullOpt;
 	}

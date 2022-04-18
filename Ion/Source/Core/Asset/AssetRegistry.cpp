@@ -30,42 +30,37 @@ namespace Ion
 
 	// FAssetLoadWork -----------------------------------------------
 
-	//FAssetLoadWork::FAssetLoadWork(const FilePath& assetPath) :
-	//	FTaskWork(Bind_1Param(&FAssetLoadWork::Execute)),
-	//	m_AssetPath(assetPath)
-	//{
-	//}
+	FAssetLoadWork::FAssetLoadWork(const FilePath& assetPath) :
+		m_AssetPath(assetPath)
+	{
+	}
 
-	//FAssetLoadWork::FAssetLoadWork(FAssetLoadWork&& other) noexcept :
-	//	FTaskWork(Bind_1Param(&FAssetLoadWork::Execute)),
-	//	m_AssetPath(Move(other.m_AssetPath)),
-	//	OnLoad(Move(other.OnLoad)),
-	//	OnError(Move(other.OnError))
-	//{
-	//}
+	void FAssetLoadWork::Schedule()
+	{
+		Execute = [Copy = *this](IMessageQueueProvider& queue)
+		{
+			ionassert(Copy.OnLoad);
+			ionassert(Copy.OnError);
 
-	//void FAssetLoadWork::Execute(IMessageQueueProvider& queue)
-	//{
-	//	ionassert(OnLoad);
-	//	ionassert(OnError);
+			// @TODO: Fix, temporary memory leak
+			char* path = new char[200];
+			strcpy_s(path, 200, StringConverter::WStringToString(Copy.m_AssetPath.ToString()).c_str());
 
-	//	// @TODO: Fix, temporary memory leak
-	//	char* path = new char[200];
-	//	strcpy_s(path, 200, StringConverter::WStringToString(m_AssetPath.ToString()).c_str());
+			// @TODO: Load
+			AssetData data;
+			data.Data = path;
+			data.Size = 200;
 
-	//	// @TODO: Load
-	//	AssetData data;
-	//	data.Data = path;
-	//	data.Size = 200;
+			std::this_thread::sleep_for(std::chrono::seconds(2));
 
-	//	std::this_thread::sleep_for(std::chrono::seconds(2));
+			queue.PushMessage(FTaskMessage([OnLoad = Copy.OnLoad, data]
+			{
+				OnLoad(data);
+			}));
+		};
 
-	//	queue.PushMessage(FTaskMessage([OnLoad = this->OnLoad, data]
-	//	{
-	//		LOG_INFO("Hello from the main thread!");
-	//		OnLoad(data);
-	//	}));
-	//}
+		AssetRegistry::ScheduleWork(*this);
+	}
 
 	// AssetRegistry ----------------------------------------------------------------
 
