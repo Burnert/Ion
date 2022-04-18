@@ -129,4 +129,13 @@ namespace Ion
 		UniqueLock lock(m_MessageQueueMutex);
 		m_MessageQueue.push(message);
 	}
+
+	TaskQueue::~TaskQueue()
+	{
+		// Shutdown if it hasn't been called yet.
+		if (!m_Workers.empty())
+		{
+			Shutdown();
+		}
+	}
 }

@@ -172,6 +172,8 @@ namespace Ion
 
 		// End of IMessageQueueProvider overrides
 
+		~TaskQueue();
+
 	private:
 		TArray<TaskWorker> m_Workers;
 
