@@ -8,6 +8,7 @@
 
 #include "Application/Window/GenericWindow.h"
 #include "Application/EnginePath.h"
+#include "Core/Task/TaskFwd.h"
 
 struct ImDrawData;
 struct ImFont;

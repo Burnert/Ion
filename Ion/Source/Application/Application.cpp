@@ -9,6 +9,7 @@
 #include "Core/Event/EventDispatcher.h"
 #include "Core/Input/Input.h"
 #include "Core/Asset/AssetRegistry.h"
+#include "Core/Task/EngineTaskQueue.h"
 
 #include "Engine/Engine.h"
 
@@ -71,6 +72,8 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
+		EngineTaskQueue::Init();
+
 		m_InputManager = InputManager::Create();
 
 		// Create a platform specific window.
@@ -124,6 +127,8 @@ namespace Ion
 		RHI::Get()->Shutdown();
 
 		g_Engine->Shutdown();
+
+		EngineTaskQueue::Shutdown();
 	}
 
 	void Application::Exit()
@@ -140,6 +145,8 @@ namespace Ion
 	void Application::Update(float deltaTime)
 	{
 		TRACE_FUNCTION();
+
+		EngineTaskQueue::Update();
 
 		// Don't reset the cursor if the mouse is being held
 		if (!InputManager::IsMouseButtonPressed(Mouse::Left))
