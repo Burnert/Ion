@@ -573,6 +573,7 @@ void IonExample::OnRender()
 
 void IonExample::OnShutdown()
 {
+	Queue.Shutdown();
 }
 
 void IonExample::OnEvent(const Event& event)

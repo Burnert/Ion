@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AssetCommon.h"
-#include "AssetWorkQueue.h"
+#include "Core/Task/TaskQueue.h"
 
 namespace Ion
 {
@@ -76,15 +76,27 @@ namespace Ion
 		friend class AssetRegistry;
 	};
 
+	/**
+	 * @brief Loads the asset from the file specified on construction.
+	 */
+	//struct FAssetLoadWork : FTaskWork
+	//{
+	//	FAssetLoadWork(const FilePath& assetPath);
+	//	FAssetLoadWork(FAssetLoadWork&& other) noexcept;
+
+	//	TFunction<void(const AssetData&)> OnLoad;
+	//	TFunction<void(/*ErrorDesc*/)> OnError;
+
+	//	void Execute(IMessageQueueProvider& queue);
+
+	//private:
+	//	FilePath m_AssetPath;
+	//};
+
 	class ION_API AssetRegistry
 	{
 	public:
 		using AssetMap = THashMap<GUID, AssetDefinition>;
-
-		/**
-		 * @brief Calls the work queue DispatchMessages function.
-		 */
-		static void Update();
 
 		/**
 		 * @brief Registers an asset. Creates an AssetDefinition
@@ -107,7 +119,7 @@ namespace Ion
 		 * @brief Add a work to the work queue, which will be executed
 		 * by a free worker thread.
 		 * 
-		 * @tparam T Work type - must inherit from IAssetWork
+		 * @tparam T Work type - must be FTaskWork or inherit from it
 		 * @param work Work object
 		 */
 		template<typename T>
@@ -123,7 +135,7 @@ namespace Ion
 		AssetMap m_Assets;
 		// @TODO: Variable memory pool allocator here
 
-		AssetWorkQueue m_WorkQueue;
+		TaskQueue& m_WorkQueue;
 	};
 
 	// AssetDefinition class inline implementation --------------------------------
@@ -142,16 +154,36 @@ namespace Ion
 		}
 
 		// Prepare the work
-		AssetLoadWork work = AssetLoadWork(m_AssetReferencePath);
-		work.OnLoad = [this, onLoad](const AssetData& data)
+		//FAssetLoadWork work = FAssetLoadWork(m_AssetReferencePath);
+		FTaskWork work = [this, onLoad](IMessageQueueProvider& queue)
 		{
-			m_AssetData = Move(data);
-			onLoad(m_AssetData);
+			// @TODO: Fix, temporary memory leak
+			char* path = new char[200];
+			strcpy_s(path, 200, StringConverter::WStringToString(m_AssetReferencePath.ToString()).c_str());
+
+			// @TODO: Load
+			AssetData data;
+			data.Data = path;
+			data.Size = 200;
+
+			std::this_thread::sleep_for(std::chrono::seconds(2));
+
+			queue.PushMessage(FTaskMessage([this, onLoad, data]
+			{
+				LOG_INFO("Load Message!");
+				m_AssetData = Move(data);
+				onLoad(m_AssetData);
+			}));
 		};
-		work.OnError = []
-		{
-			LOG_ERROR("Error!");
-		};
+		//work.OnLoad = [this, onLoad](const AssetData& data)
+		//{
+		//	m_AssetData = Move(data);
+		//	onLoad(m_AssetData);
+		//};
+		//work.OnError = []
+		//{
+		//	LOG_ERROR("Error!");
+		//};
 
 		AssetRegistry::ScheduleWork(work);
 

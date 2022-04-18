@@ -2,6 +2,7 @@
 
 #include "AssetRegistry.h"
 #include "Asset.h"
+#include "Core/Task/EngineTaskQueue.h"
 
 namespace Ion
 {
@@ -27,17 +28,50 @@ namespace Ion
 		// @TODO: Parse the rest of the file here
 	}
 
+	// FAssetLoadWork -----------------------------------------------
+
+	//FAssetLoadWork::FAssetLoadWork(const FilePath& assetPath) :
+	//	FTaskWork(Bind_1Param(&FAssetLoadWork::Execute)),
+	//	m_AssetPath(assetPath)
+	//{
+	//}
+
+	//FAssetLoadWork::FAssetLoadWork(FAssetLoadWork&& other) noexcept :
+	//	FTaskWork(Bind_1Param(&FAssetLoadWork::Execute)),
+	//	m_AssetPath(Move(other.m_AssetPath)),
+	//	OnLoad(Move(other.OnLoad)),
+	//	OnError(Move(other.OnError))
+	//{
+	//}
+
+	//void FAssetLoadWork::Execute(IMessageQueueProvider& queue)
+	//{
+	//	ionassert(OnLoad);
+	//	ionassert(OnError);
+
+	//	// @TODO: Fix, temporary memory leak
+	//	char* path = new char[200];
+	//	strcpy_s(path, 200, StringConverter::WStringToString(m_AssetPath.ToString()).c_str());
+
+	//	// @TODO: Load
+	//	AssetData data;
+	//	data.Data = path;
+	//	data.Size = 200;
+
+	//	std::this_thread::sleep_for(std::chrono::seconds(2));
+
+	//	queue.PushMessage(FTaskMessage([OnLoad = this->OnLoad, data]
+	//	{
+	//		LOG_INFO("Hello from the main thread!");
+	//		OnLoad(data);
+	//	}));
+	//}
+
 	// AssetRegistry ----------------------------------------------------------------
 
 	Asset AssetDefinition::GetHandle() const
 	{
 		return Asset(m_Guid);
-	}
-
-	void AssetRegistry::Update()
-	{
-		// Dispatch all the messages at the beginning of each frame.
-		Get().m_WorkQueue.DispatchMessages();
 	}
 
 	AssetDefinition& AssetRegistry::Register(const AssetInitializer& initializer)
@@ -65,7 +99,8 @@ namespace Ion
 		return &it->second;
 	}
 
-	AssetRegistry::AssetRegistry()
+	AssetRegistry::AssetRegistry() :
+		m_WorkQueue(EngineTaskQueue::Get())
 	{
 	}
 

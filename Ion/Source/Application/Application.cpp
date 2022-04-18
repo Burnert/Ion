@@ -155,8 +155,6 @@ namespace Ion
 			SetCursor(ECursorType::Arrow);
 		}
 
-		AssetRegistry::Update();
-
 		g_Engine->Update(deltaTime);
 
 		ImGuiNewFramePlatform();

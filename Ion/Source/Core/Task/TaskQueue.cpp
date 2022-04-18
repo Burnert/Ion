@@ -77,11 +77,6 @@ namespace Ion
 		}
 	}
 
-	void TaskQueue::Schedule(FTaskWork& work)
-	{
-		Schedule(MakeShared<FTaskWork>(Move(work)));
-	}
-
 	void TaskQueue::Schedule(const TShared<FTaskWork>& work)
 	{
 		// Lock the queue, notify a free worker

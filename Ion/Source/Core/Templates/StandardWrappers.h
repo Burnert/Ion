@@ -120,13 +120,29 @@ inline constexpr bool TIsConvertibleV = std::is_convertible_v<FromT, ToT>;
 template<typename T>
 inline constexpr bool TIsFunctionV = std::is_function_v<T>;
 
-// Remove *
+// IsPointer
+
+template<typename T>
+inline constexpr bool TIsPointerV = std::is_pointer_v<T>;
+
+// IsReference
+
+template<typename T>
+inline constexpr bool TIsReferenceV = std::is_reference_v<T>;
+
+// Remove X
+
+template<typename T>
+using TRemoveConst = std::remove_const_t<T>;
 
 template<typename T>
 using TRemoveRef = std::remove_reference_t<T>;
 
 template<typename T>
 using TRemovePtr = std::remove_pointer_t<T>;
+
+template<typename T>
+using TRemoveConstRef = TRemoveConst<TRemoveRef<T>>;
 
 template<typename T>
 using TRemoveExtent = std::remove_extent_t<T>;

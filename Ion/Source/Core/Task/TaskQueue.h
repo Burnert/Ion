@@ -124,9 +124,11 @@ namespace Ion
 		 * the queue. Don't modify its contents after a call to
 		 * this function.
 		 *
+		 * @tparam T must inherit from FTaskWork
 		 * @param work Work object
 		 */
-		void Schedule(FTaskWork& work);
+		template<typename T, TEnableIfT<!TIsSharedV<TRemoveConstRef<T>>>* = 0>
+		void Schedule(T& work);
 
 		/**
 		 * @brief Same as Schedule(FTaskWork& work), but uses
@@ -183,4 +185,13 @@ namespace Ion
 
 		friend class TaskWorker;
 	};
+
+	template<typename T, TEnableIfT<!TIsSharedV<TRemoveConstRef<T>>>*>
+	inline void TaskQueue::Schedule(T& work)
+	{
+		static_assert(TIsBaseOfV<FTaskWork, T>);
+
+		TShared<T> workPtr = MakeShared<T>(Move(work));
+		Schedule(workPtr);
+	}
 }

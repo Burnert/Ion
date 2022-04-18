@@ -23,13 +23,6 @@ namespace Ion
 	// AssetRegistry.h
 	class AssetRegistry;
 	class AssetDefinition;
-	// AssetWorkQueue.h
-	struct IAssetMessageQueueProvider;
-	struct IAssetWork;
-	struct AssetLoadWork;
-	struct AssetMessage;
-	class AssetWorker;
-	class AssetWorkQueue;
 
 	/* Used in .iasset file (e.g. <Info type="Ion.Image">) */
 	enum class EAssetType : uint8

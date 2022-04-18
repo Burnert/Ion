@@ -246,6 +246,22 @@ struct TTypeSize<TTypePack<>> : public TTypeSize<> { };
 template<typename... Types>
 struct TTypeSize<TTypePack<Types...>> : public TTypeSize<Types...> { };
 
+// TIsShared -------------------------------------------------------------------------
+
+template<typename T>
+inline constexpr bool TIsSharedV = false;
+
+template<typename T>
+inline constexpr bool TIsSharedV<TShared<T>> = true;
+
+// TIsUnique -------------------------------------------------------------------------
+
+template<typename T>
+inline constexpr bool TIsUniqueV = false;
+
+template<typename T>
+inline constexpr bool TIsUniqueV<TUnique<T>> = true;
+
 // -------------------------------------------------------------------------------------
 // - Has Function Test
 // -------------------------------------------------------------------------------------

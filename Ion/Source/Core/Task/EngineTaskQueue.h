@@ -27,11 +27,13 @@ namespace Ion
 		 * @brief Add a work to the Engine Task Queue, which will be executed
 		 * by a free worker thread.
 		 * 
-		 * @see TaskQueue::Schedule(FTaskWork& work)
+		 * @see TaskQueue::Schedule(T& work)
 		 *
+		 * @tparam T must inherit from FTaskWork
 		 * @param work Work object
 		 */
-		void Schedule(FTaskWork& work);
+		template<typename T>
+		void Schedule(T& work);
 
 		/**
 		 * @brief Same as Schedule(FTaskWork& work), but uses
@@ -80,5 +82,12 @@ namespace Ion
 		 * @return TaskQueue reference
 		 */
 		TaskQueue& Get();
+
+		template<typename T>
+		inline void Schedule(T& work)
+		{
+			ionassert(g_EngineTaskQueue, "The Engine Task Queue has not been initialized yet.");
+			g_EngineTaskQueue->Schedule(work);
+		}
 	}
 }
