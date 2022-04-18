@@ -63,7 +63,12 @@ namespace Ion
 	// TaskQueue ---------------------------------------------------
 
 	TaskQueue::TaskQueue() :
-		m_Workers(std::thread::hardware_concurrency())
+		TaskQueue(std::thread::hardware_concurrency())
+	{
+	}
+
+	TaskQueue::TaskQueue(int32 nThreads) :
+		m_Workers(nThreads)
 	{
 		for (TaskWorker& worker : m_Workers)
 		{
@@ -74,10 +79,15 @@ namespace Ion
 
 	void TaskQueue::Schedule(FTaskWork& work)
 	{
+		Schedule(MakeShared<FTaskWork>(Move(work)));
+	}
+
+	void TaskQueue::Schedule(const TShared<FTaskWork>& work)
+	{
 		// Lock the queue, notify a free worker
 		{
 			UniqueLock lock(m_WorkQueueMutex);
-			m_WorkQueue.emplace(MakeShared<FTaskWork>(Move(work)));
+			m_WorkQueue.emplace(work);
 		}
 		m_WorkQueueWorkersCV.notify_one();
 	}

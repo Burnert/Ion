@@ -4,6 +4,7 @@
 #include "Core/Asset/AssetRegistry.h"
 
 #include "Core/Task/EngineTaskQueue.h"
+#include "Core/Task/Task.h"
 
 IonExample::IonExample() :
 	m_TextureFileNameBuffer(""),
@@ -156,6 +157,8 @@ void IonExample::LoadExampleAssets()
 //	pool.FreePool();
 //}
 
+TaskQueue Queue(4);
+
 void IonExample::OnInit()
 {
 #pragma warning(disable:6001)
@@ -179,6 +182,22 @@ void IonExample::OnInit()
 		}));
 	}));
 
+	AsyncTask task([](IMessageQueueProvider& queue)
+	{
+		LOG_INFO("AsyncTask!");
+		std::this_thread::sleep_for(std::chrono::milliseconds(1300));
+		queue.PushMessage(FTaskMessage([]
+		{
+			// Not printed by Queue because Queue.DispatchMessages() is not called
+			LOG_INFO("AsyncMessage!");
+		}));
+	});
+
+	task.Schedule();
+	task.Schedule(Queue);
+	std::this_thread::sleep_for(std::chrono::milliseconds(400));
+	task.Schedule();
+	task.Schedule(Queue);
 
 	//m_Triangle.Shader = Shader::Create();
 	//m_Triangle.Shader->AddShaderSource(EShaderType::Vertex, vertexSrc);

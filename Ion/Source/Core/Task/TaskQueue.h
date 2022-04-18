@@ -22,7 +22,7 @@ namespace Ion
 	using TFuncWorkExecute = TFunction<void(IMessageQueueProvider&)>;
 
 	/**
-	 * @brief Execure Functor wrapper that can be inserted into the work queue
+	 * @brief Execute Functor wrapper that can be inserted into the work queue
 	 */
 	struct FTaskWork
 	{
@@ -100,7 +100,21 @@ namespace Ion
 	class ION_API TaskQueue : public IMessageQueueProvider
 	{
 	public:
+		/**
+		 * @brief Construct a new Task Queue object
+		 * with maximum number of workers
+		 * (std::thread::hardware_concurrency())
+		 * 
+		 */
 		TaskQueue();
+
+		/**
+		 * @brief Construct a new Task Queue object
+		 * with nThreads workers
+		 * 
+		 * @param nThreads Number of workers
+		 */
+		TaskQueue(int32 nThreads);
 
 		/**
 		 * @brief Add a work to the queue, which will be executed
@@ -113,6 +127,16 @@ namespace Ion
 		 * @param work Work object
 		 */
 		void Schedule(FTaskWork& work);
+
+		/**
+		 * @brief Same as Schedule(FTaskWork& work), but uses
+		 * an existing shader pointer.
+		 * 
+		 * @param work Work pointer
+		 * 
+		 * @see Schedule(FTaskWork& work)
+		 */
+		void Schedule(const TShared<FTaskWork>& work);
 
 		/**
 		 * @brief Dispach all the messages, which are currently in

@@ -34,10 +34,23 @@ namespace Ion
 		void Schedule(FTaskWork& work);
 
 		/**
+		 * @brief Same as Schedule(FTaskWork& work), but uses
+		 * an existing shader pointer.
+		 * 
+		 * @see TaskQueue::Schedule(const TShared<FTaskWork>& work)
+		 * @see Schedule(FTaskWork& work)
+		 *
+		 * @param work Work pointer
+		 */
+		void Schedule(const TShared<FTaskWork>& work);
+
+		/**
 		 * @brief Creates the Engine Task Queue object, which will then be
 		 * available in the g_EngineTaskQueue global variable.
 		 * 
-		 * @details Functions in this namespace should be used instead of
+		 * @details The Task Queue will have maximum number of workers.
+		 * (std::thread::hardware_concurrency())
+		 * Functions in this namespace should be used instead of
 		 * accessing the g_EngineTaskQueue variable directly.
 		 * 
 		 * @see TaskQueue::TaskQueue()
@@ -60,5 +73,12 @@ namespace Ion
 		 * @see TaskQueue::DispatchMessages()
 		 */
 		void Update();
+
+		/**
+		 * @brief Get the Engine Task Queue object reference
+		 * 
+		 * @return TaskQueue reference
+		 */
+		TaskQueue& Get();
 	}
 }

@@ -8,6 +8,18 @@ namespace Ion
 
 	namespace EngineTaskQueue
 	{
+		void Schedule(FTaskWork& work)
+		{
+			ionassert(g_EngineTaskQueue, "The Engine Task Queue has not been initialized yet.");
+			g_EngineTaskQueue->Schedule(work);
+		}
+
+		void Schedule(const TShared<FTaskWork>& work)
+		{
+			ionassert(g_EngineTaskQueue, "The Engine Task Queue has not been initialized yet.");
+			g_EngineTaskQueue->Schedule(work);
+		}
+
 		void Init()
 		{
 			ionassert(!g_EngineTaskQueue, "The Engine Task Queue has already been initialized.");
@@ -26,10 +38,10 @@ namespace Ion
 			g_EngineTaskQueue->DispatchMessages();
 		}
 
-		void Schedule(FTaskWork& work)
+		TaskQueue& Get()
 		{
-			ionassert(g_EngineTaskQueue, "The Engine Task Queue has not been initialized yet.");
-			g_EngineTaskQueue->Schedule(work);
+			ionassertnd(g_EngineTaskQueue, "The Engine Task Queue has not been initialized yet.");
+			return *g_EngineTaskQueue.get();
 		}
 	}
 }

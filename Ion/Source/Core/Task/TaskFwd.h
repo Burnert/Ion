@@ -8,4 +8,6 @@ namespace Ion
 	struct FTaskMessage;
 	class TaskWorker;
 	class TaskQueue;
+	// Task.h
+	class AsyncTask;
 }
