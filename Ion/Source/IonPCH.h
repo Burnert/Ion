@@ -12,6 +12,7 @@
 #include <chrono>
 #include <algorithm>
 #include <optional>
+#include <variant>
 #include <type_traits>
 #include <filesystem>
 #include <random>

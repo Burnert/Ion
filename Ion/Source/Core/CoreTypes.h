@@ -107,6 +107,33 @@ template<typename T>
 using TOptional = std::optional<T>;
 constexpr inline std::nullopt_t NullOpt = std::nullopt;
 
+template<typename... Types>
+using TVariant = std::variant<Types...>;
+
+template<typename T, typename V>
+NODISCARD constexpr T VariantCast(V& variant)
+{
+	return std::get<T>(variant);
+}
+
+template<typename T, typename V>
+NODISCARD constexpr T VariantCast(V&& variant)
+{
+	return std::get<T>(Move(variant));
+}
+
+template<typename T, typename V>
+NODISCARD constexpr T VariantCast(const V& variant)
+{
+	return std::get<T>(variant);
+}
+
+template<typename T, typename V>
+NODISCARD constexpr T VariantCast(const V&& variant)
+{
+	return std::get<T>(Move(variant)); 
+}
+
 // Thread
 
 using Thread = std::thread;

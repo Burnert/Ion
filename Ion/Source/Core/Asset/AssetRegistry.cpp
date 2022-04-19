@@ -2,7 +2,9 @@
 
 #include "AssetRegistry.h"
 #include "Asset.h"
+
 #include "Core/Task/EngineTaskQueue.h"
+#include "Core/File/Collada.h"
 
 namespace Ion
 {
@@ -14,7 +16,8 @@ namespace Ion
 		m_AssetReferencePath(initializer.AssetReferencePath),
 		m_Type(initializer.Type),
 		m_bImportExternal(initializer.bImportExternal),
-		m_bIsLoaded(false)
+		m_bIsLoaded(false),
+		m_AssetData(EAssetType::None)
 	{
 		ParseAssetDefinitionFile();
 	}
@@ -30,32 +33,67 @@ namespace Ion
 
 	// FAssetLoadWork -----------------------------------------------
 
-	FAssetLoadWork::FAssetLoadWork(const FilePath& assetPath) :
-		m_AssetPath(assetPath)
-	{
-	}
-
 	void FAssetLoadWork::Schedule()
 	{
-		Execute = [Copy = *this](IMessageQueueProvider& queue)
+		Execute = [*this](IMessageQueueProvider& queue)
 		{
-			ionassert(Copy.OnLoad);
-			ionassert(Copy.OnError);
+			ionassert(OnLoad);
+			ionassert(OnError);
 
-			// @TODO: Fix, temporary memory leak
-			char* path = new char[200];
-			strcpy_s(path, 200, StringConverter::WStringToString(Copy.m_AssetPath.ToString()).c_str());
+			ionassert(AssetPath.IsFile());
+			ionassert(AssetType != EAssetType::Invalid);
 
-			// @TODO: Load
-			AssetData data;
-			data.Data = path;
-			data.Size = 200;
+			File assetFile(AssetPath, EFileMode::Read | EFileMode::DoNotOpen);
 
-			std::this_thread::sleep_for(std::chrono::seconds(2));
+			AssetData assetData(AssetType);
 
-			queue.PushMessage(FTaskMessage([OnLoad = Copy.OnLoad, data]
+			// @TODO: Use the memory pool here instead of normal allocations
+
+			switch (AssetType)
 			{
-				OnLoad(data);
+				case EAssetType::Mesh:
+				{
+					String collada;
+					File::ReadToString(AssetPath, collada);
+
+					// @TODO: Refactor the ColladaDocument class a bit
+					TUnique<ColladaDocument> colladaDoc = MakeUnique<ColladaDocument>(collada);
+					const ColladaData& colladaData = colladaDoc->GetData();
+
+					TShared<MeshAssetData> mesh = MakeShared<MeshAssetData>();
+					mesh->Layout = colladaData.Layout;
+					
+					mesh->Vertices.Ptr = new float[colladaData.VertexAttributeCount];
+					mesh->Vertices.Count = colladaData.VertexAttributeCount;
+
+					mesh->Indices.Ptr = new uint32[colladaData.IndexCount];
+					mesh->Indices.Count = colladaData.IndexCount;
+
+					memcpy(mesh->Vertices.Ptr, colladaData.VertexAttributes, colladaData.VertexAttributeCount * sizeof(float));
+					memcpy(mesh->Indices.Ptr, colladaData.Indices, colladaData.IndexCount * sizeof(uint32));
+
+					assetData.Variant = mesh;
+					break;
+				}
+				case EAssetType::Image:
+				{
+					TShared<Image> image = MakeShared<Image>();
+					image->Load(assetFile);
+					if (!image->IsLoaded())
+					{
+						queue.PushMessage(FTaskMessage([*this]
+						{
+							OnError();
+						}));
+					}
+					assetData.Variant = image;
+					break;
+				}
+			}
+
+			queue.PushMessage(FTaskMessage([*this, assetData]
+			{
+				OnLoad(assetData);
 			}));
 		};
 

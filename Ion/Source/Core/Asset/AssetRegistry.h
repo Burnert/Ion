@@ -5,6 +5,28 @@
 
 namespace Ion
 {
+	using TFuncAssetOnLoad = TFunction<void(const AssetData&)>;
+
+	/**
+	 * @brief Loads the asset from the file specified on construction.
+	 */
+	struct FAssetLoadWork : FTaskWork
+	{
+		TFuncAssetOnLoad OnLoad;
+		TFunction<void(/*ErrorDesc*/)> OnError;
+
+		FilePath AssetPath;
+		EAssetType AssetType;
+		bool bImportExternal;
+
+		/**
+		 * Sets this work's Execute function and sends the work to the AssetRegistry.
+		 * The OnLoad and OnError functors must be set first.
+		 * Call this instead of passing the object to AssetRegistry::ScheduleWork.
+		 */
+		void Schedule();
+	};
+
 	/**
 	 * @brief Asset definition class
 	 *
@@ -74,27 +96,7 @@ namespace Ion
 		bool m_bIsLoaded;
 
 		friend class AssetRegistry;
-	};
-
-	/**
-	 * @brief Loads the asset from the file specified on construction.
-	 */
-	struct FAssetLoadWork : FTaskWork
-	{
-		FAssetLoadWork(const FilePath& assetPath);
-
-		TFunction<void(const AssetData&)> OnLoad;
-		TFunction<void(/*ErrorDesc*/)> OnError;
-
-		/**
-		 * Sets this work's Execute function and sends the work to the AssetRegistry.
-		 * The OnLoad and OnError functors must be set first.
-		 * Call this instead of passing the object to AssetRegistry::ScheduleWork.
-		 */
-		void Schedule();
-
-	private:
-		FilePath m_AssetPath;
+		friend TFuncAssetOnLoad;
 	};
 
 	class ION_API AssetRegistry
@@ -139,6 +141,9 @@ namespace Ion
 		AssetMap m_Assets;
 		// @TODO: Variable memory pool allocator here
 
+		/**
+		 * @brief By default - the Engine Task Queue
+		 */
 		TaskQueue& m_WorkQueue;
 	};
 
@@ -147,7 +152,7 @@ namespace Ion
 	template<typename Lambda>
 	inline TOptional<AssetData> AssetDefinition::Load(Lambda onLoad)
 	{
-		static_assert(TIsConvertibleV<Lambda, TFunction<void(const AssetData&)>>);
+		static_assert(TIsConvertibleV<Lambda, TFuncAssetOnLoad>);
 
 		ionassertnd(IsValid());
 
@@ -158,11 +163,16 @@ namespace Ion
 		}
 
 		// Prepare the work
-		FAssetLoadWork work = FAssetLoadWork(m_AssetReferencePath);
-		work.OnLoad = [this, onLoad](const AssetData& data)
+		FAssetLoadWork work;
+		work.AssetPath = m_AssetReferencePath;
+		work.AssetType = m_Type;
+		work.bImportExternal = m_bImportExternal;
+		work.OnLoad = [guid = this->m_Guid, onLoad](const AssetData& data) mutable
 		{
-			m_AssetData = Move(data);
-			onLoad(m_AssetData);
+			AssetDefinition* asset = AssetRegistry::Find(guid);
+
+			asset->m_AssetData = Move(data);
+			onLoad(asset->m_AssetData);
 		};
 		work.OnError = []
 		{

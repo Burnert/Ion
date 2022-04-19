@@ -33,14 +33,38 @@ namespace Ion
 		Invalid = 0xFF,
 	};
 
+	struct MeshAssetData
+	{
+		TMemoryBlock<float> Vertices;
+		TMemoryBlock<uint32> Indices;
+		TShared<VertexLayout> Layout;
+	};
+
 	/**
 	 * @brief Structure returned by the AssetDefinition class
 	 * @see AssetDefinition::Load()
 	 */
 	struct AssetData
 	{
-		const void* Data;
-		size_t Size;
+		TVariant<
+			TShared<void>,
+			TShared<Image>,
+			TShared<MeshAssetData>
+		// @TODO: Support a custom type
+		> Variant;
+
+		AssetData(EAssetType type);
+
+		EAssetType GetType() const;
+
+		bool IsValid() const;
+		operator bool() const;
+
+	private:
+		void Reset();
+
+	private:
+		EAssetType m_Type;
 	};
 
 	/**
@@ -76,4 +100,57 @@ namespace Ion
 		{
 		}
 	};
+
+	// AssetData class inline implementation
+
+	inline AssetData::AssetData(EAssetType type) :
+		m_Type(type)
+	{
+		ionassert(type != EAssetType::Invalid);
+
+		if (type != EAssetType::None)
+			Reset();
+	}
+
+	inline EAssetType AssetData::GetType() const
+	{
+		return m_Type;
+	}
+
+	inline bool AssetData::IsValid() const
+	{
+		return m_Type != EAssetType::None;
+	}
+
+	inline AssetData::operator bool() const
+	{
+		return IsValid();
+	}
+
+	inline void AssetData::Reset()
+	{
+		switch (m_Type)
+		{
+		case EAssetType::Image:
+			Variant = TShared<Image>();
+			break;
+		case EAssetType::Mesh:
+			Variant = TShared<MeshAssetData>();
+			break;
+		}
+	}
+}
+
+template<>
+NODISCARD FORCEINLINE String ToString<Ion::EAssetType>(Ion::EAssetType value)
+{
+	switch (value)
+	{
+	case Ion::EAssetType::None:    return "None";
+	case Ion::EAssetType::Invalid: return "Invalid";
+	case Ion::EAssetType::Mesh:    return "Mesh";
+	case Ion::EAssetType::Image:   return "Image";
+	}
+	ionassert(0, "Invalid enum value.");
+	return "";
 }

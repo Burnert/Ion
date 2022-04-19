@@ -15,38 +15,26 @@ IonExample::IonExample() :
 void IonExample::CreateExampleAssets()
 {
 	m_4Pak.Name = "4Pak";
-	//m_4Pak.MeshAsset    = AssetManager::CreateAsset(EAssetType::Mesh, FilePath(L"Assets/models/4pak.dae"));
-	//m_4Pak.TextureAsset = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/4pak.png"));
 	m_4Pak.MeshAsset    = AssetFinder(FilePath(L"Assets/models/4pak.iasset")).Resolve();
 	m_4Pak.TextureAsset = AssetFinder(FilePath(L"Assets/textures/4pak.iasset")).Resolve();
 
 	m_Piwsko.Name = "Piwsko";
-	//m_Piwsko.MeshAsset    = AssetManager::CreateAsset(EAssetType::Mesh, FilePath(L"Assets/models/piwsko.dae"));
-	//m_Piwsko.TextureAsset = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/piwsko.png"));
 	m_Piwsko.MeshAsset    = AssetFinder(FilePath(L"Assets/models/piwsko.iasset")).Resolve();
 	m_Piwsko.TextureAsset = AssetFinder(FilePath(L"Assets/textures/piwsko.iasset")).Resolve();
 
 	m_Oscypek.Name = "Oscypek";
-	//m_Oscypek.MeshAsset    = AssetManager::CreateAsset(EAssetType::Mesh, FilePath(L"Assets/models/oscypek.dae"));
-	//m_Oscypek.TextureAsset = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/oscypek.png"));
 	m_Oscypek.MeshAsset    = AssetFinder(FilePath(L"Assets/models/oscypek.iasset")).Resolve();
 	m_Oscypek.TextureAsset = AssetFinder(FilePath(L"Assets/textures/oscypek.iasset")).Resolve();
 
 	m_Ciupaga.Name = "Ciupaga";
-	//m_Ciupaga.MeshAsset    = AssetManager::CreateAsset(EAssetType::Mesh, FilePath(L"Assets/models/ciupaga.dae"));
-	//m_Ciupaga.TextureAsset = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/ciupaga.png"));
 	m_Ciupaga.MeshAsset    = AssetFinder(FilePath(L"Assets/models/ciupaga.iasset")).Resolve();
 	m_Ciupaga.TextureAsset = AssetFinder(FilePath(L"Assets/textures/ciupaga.iasset")).Resolve();
 
 	m_Slovak.Name = "Slovak";
-	//m_Slovak.MeshAsset    = AssetManager::CreateAsset(EAssetType::Mesh, FilePath(L"Assets/models/slovak.dae"));
-	//m_Slovak.TextureAsset = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/textures/slovak.png"));
 	m_Slovak.MeshAsset    = AssetFinder(FilePath(L"Assets/models/slovak.iasset")).Resolve();
 	m_Slovak.TextureAsset = AssetFinder(FilePath(L"Assets/textures/slovak.iasset")).Resolve();
 
 	m_Stress.Name = "Stress";
-	//m_Stress.MeshAsset    = AssetManager::CreateAsset(EAssetType::Mesh, FilePath(L"spherestresstest_uv.dae"));
-	//m_Stress.TextureAsset = AssetManager::CreateAsset(EAssetType::Texture, FilePath(L"Assets/test_4k.png"));
 	m_Stress.MeshAsset    = AssetFinder(FilePath(L"spherestresstest_uv.iasset")).Resolve();
 	m_Stress.TextureAsset = AssetFinder(FilePath(L"Assets/test_4k.iasset")).Resolve();
 
@@ -92,20 +80,57 @@ void IonExample::CreateExampleAssets()
 
 static void LoadMesh(Asset& asset, TShared<Mesh>& mesh)
 {
-	TOptional<AssetData> data = asset->Load([](const AssetData& data)
+	ionassert(asset->GetType() == EAssetType::Mesh);
+
+	TOptional<AssetData> data = asset->Load([mesh](const AssetData& data) mutable
 	{
-		LOG_INFO("Loaded: {0}, size: {1}", (const char*)data.Data, data.Size);
+		TShared<MeshAssetData> meshData = VariantCast<TShared<MeshAssetData>>(data.Variant);
+
+		mesh = Mesh::Create();
+
+		TShared<VertexBuffer> vb = VertexBuffer::Create(meshData->Vertices.Ptr, meshData->Vertices.Count);
+		TShared<IndexBuffer> ib = IndexBuffer::Create(meshData->Indices.Ptr, (uint32)meshData->Indices.Count);
+		vb->SetLayout(meshData->Layout);
+
+		mesh->SetVertexBuffer(vb);
+		mesh->SetIndexBuffer(ib);
+
+		LOG_TRACE("Loaded Mesh");
 	});
 	ionassert(!data);
 }
 
 static void LoadTxtr(Asset& asset, TShared<Texture>& texture)
 {
-	TOptional<AssetData> data = asset->Load([](const AssetData& data)
+	ionassert(asset->GetType() == EAssetType::Image);
+
+	TOptional<AssetData> data = asset->Load([texture](const AssetData& data) mutable
 	{
-		LOG_INFO("Loaded: {0}, size: {1}", (const char*)data.Data, data.Size);
+		TShared<Image> image = VariantCast<TShared<Image>>(data.Variant);
+
+		ionassert(image);
+
+		TextureDescription desc { };
+		desc.Dimensions.Width = image->GetWidth();
+		desc.Dimensions.Height = image->GetHeight();
+		desc.bGenerateMips = true;
+		desc.bCreateSampler = true;
+		desc.bUseAsRenderTarget = true;
+		texture = Texture::Create(desc);
+
+		texture->UpdateSubresource(image.get());
+
+		LOG_TRACE("Loaded Texture");
 	});
 	ionassert(!data);
+}
+
+static auto GetInitMeshFunc()
+{
+	return []
+	{
+
+	};
 }
 
 void IonExample::LoadExampleAssets()
@@ -170,8 +195,6 @@ void IonExample::OnInit()
 
 	CreateExampleAssets();
 	LoadExampleAssets();
-
-	bool bResult;
 
 	EngineTaskQueue::Schedule(FTaskWork([](IMessageQueueProvider& queue)
 	{
