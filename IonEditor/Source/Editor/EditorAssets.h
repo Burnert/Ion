@@ -9,10 +9,10 @@ namespace Ion::Editor
 	class EDITOR_API EditorBillboards
 	{
 	public:
-		static const inline FilePath PathCircle    = L"Icons/Circle.png";
-		static const inline FilePath PathLightbulb = L"Icons/Lightbulb.png";
-		static const inline FilePath PathSun       = L"Icons/Sun.png";
-		static const inline FilePath PathNoMesh    = L"Icons/NoMesh.png";
+		static const inline FilePath PathCircle    = L"Icons/Circle.iasset";
+		static const inline FilePath PathLightbulb = L"Icons/Lightbulb.iasset";
+		static const inline FilePath PathSun       = L"Icons/Sun.iasset";
+		static const inline FilePath PathNoMesh    = L"Icons/NoMesh.iasset";
 
 		static inline TShared<Texture> BillboardCircle;
 		static inline TShared<Texture> BillboardLightbulb;

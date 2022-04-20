@@ -12,7 +12,9 @@ namespace Ion
 	 */
 	struct FAssetLoadWork : FTaskWork
 	{
+		// OnLoad Message
 		TFuncAssetOnLoad OnLoad;
+		// OnError Message
 		TFunction<void(/*ErrorDesc*/)> OnError;
 
 		FilePath AssetPath;
@@ -26,6 +28,134 @@ namespace Ion
 		 */
 		void Schedule();
 	};
+
+	/**
+	 * @brief Asset properties (fields) that can be accessed by multiple threads
+	 */
+	struct AssetProps
+	{
+		bool bLoaded;
+
+		AssetProps() :
+			bLoaded(false)
+		{
+		}
+	};
+
+	/**
+	 * @brief AssetProps structure with a mutex
+	 */
+	struct AssetPropsThreadSafe : AssetProps
+	{
+		/**
+		 * @brief Construct a new Asset Props Thread Safe object
+		 */
+		AssetPropsThreadSafe() { }
+
+		/**
+		 * @brief Thread safe copy constructor
+		 * 
+		 * @param other AssetPropsThreadSafe object to copy from
+		 */
+		AssetPropsThreadSafe(const AssetPropsThreadSafe& other) :
+			AssetProps()
+		{
+			// Current thread has to own the mutex before copying
+			UniqueLock lock(other.m_PropsMutex);
+			bLoaded = other.bLoaded;
+		}
+
+	private:
+		mutable Mutex m_PropsMutex;
+
+		template<typename T>
+		friend struct TAssetPropsScopedAccessor;
+	};
+
+	/**
+	 * @brief A primitive used for accessing the AssetProps structure
+	 * in the AssetDefinition class in a thread safe manner.
+	 * 
+	 * @details Automatically locks the mutex on construction
+	 * and unlocks it on destruction.
+	 * 
+	 * @tparam T AssetDefinition class (const or non-const)
+	 */
+	template<typename T>
+	struct TAssetPropsScopedAccessor
+	{
+		static_assert(TIsSameV<TRemoveConst<T>, AssetDefinition>);
+		using TPropsType = TIf<TIsConstV<T>, const AssetPropsThreadSafe, AssetPropsThreadSafe>;
+
+		/**
+		 * @brief Construct a new TAssetPropsScopedAccessor object
+		 * 
+		 * @details By default, tries to lock the mutex, and if it does not
+		 * succeed, the props cannot be accessed. If the flag is specified,
+		 * it waits for the mutex to be available.
+		 * If multiple properties have to be set throughout a long timespan,
+		 * it is adviced to first, gather all the data, and then access
+		 * the props and set all of them at the same time.
+		 * The same applies for getting the props.
+		 * 
+		 * @param assetDefinition AssetDefinition object to access
+		 * @param bWait Whether to block the thread if the mutex cannot be owned
+		 */
+		TAssetPropsScopedAccessor(T& assetDefinition, bool bWait = false);
+
+		/**
+		 * @brief Acces the props. Don't call it if the props
+		 * could not be accessed by the current thread.
+		 * 
+		 * @return Asset Props reference
+		 */
+		inline TPropsType& Access() const
+		{
+			ionassertnd(m_Props);
+			return *m_Props;
+		}
+
+		/**
+		 * @brief Same as Access()
+		 */
+		inline TPropsType* operator->() const
+		{
+			ionassertnd(m_Props);
+			return m_Props;
+		}
+
+		/**
+		 * @brief Checks if the props can be accessed
+		 * by the current thread.
+		 */
+		inline operator bool() const
+		{
+			return m_Props;
+		}
+
+	private:
+		TPropsType* m_Props;
+		UniqueLock m_Lock;
+	};
+
+	// TAssetPropsScopedAccessor inline implementation -----------------------------------
+
+	template<typename T>
+	FORCEINLINE TAssetPropsScopedAccessor<T>::TAssetPropsScopedAccessor(T& assetDefinition, bool bWait) :
+		m_Lock(assetDefinition.m_Props.m_PropsMutex, LockProp::DeferLock),
+		m_Props(nullptr)
+	{
+		// Props can't be accessed by multiple threads
+		if (bWait)
+		{
+			m_Lock.lock();
+		}
+		else if (!m_Lock.try_lock())
+		{
+			return;
+		}
+		m_Props = &assetDefinition.m_Props;
+	}
 
 	/**
 	 * @brief Asset definition class
@@ -44,7 +174,9 @@ namespace Ion
 		 * into the asset pool, or returns the existing data.
 		 *
 		 * @param onLoad Lambda that will be executed once the asset is fully
-		 * loaded. Has to be of type @code (AssetData) -> void @endcode
+		 * loaded. Has to be of type @code (const AssetData&) -> void @endcode
+		 * 
+		 * @see TFuncAssetOnLoad
 		 *
 		 * @return If the asset is already loaded, an optional of AssetData,
 		 * containing the pointer to the raw asset data and its size.
@@ -55,11 +187,16 @@ namespace Ion
 
 		EAssetType GetType() const;
 
+		const FilePath& GetPath() const;
+		const FilePath& GetDefinitionPath() const;
+
 		/**
 		 * @brief Checks if the path specified in the .iasset file
 		 * is valid, and whether the asset can be loaded from the file.
 		 */
 		bool IsValid() const;
+
+		bool IsLoaded() const;
 
 		~AssetDefinition();
 
@@ -93,9 +230,11 @@ namespace Ion
 		 */
 		uint8 m_bImportExternal : 1;
 		
-		bool m_bIsLoaded;
+		AssetPropsThreadSafe m_Props;
 
 		friend class AssetRegistry;
+		template<typename T>
+		friend struct TAssetPropsScopedAccessor;
 		friend TFuncAssetOnLoad;
 	};
 
@@ -157,7 +296,12 @@ namespace Ion
 		ionassertnd(IsValid());
 
 		// Return right away if the asset is loaded
-		if (m_bIsLoaded)
+		bool bLoaded = false;
+		{
+			TAssetPropsScopedAccessor accessor(*this);
+			bLoaded = accessor->bLoaded;
+		}
+		if (bLoaded)
 		{
 			return m_AssetData;
 		}
@@ -171,7 +315,17 @@ namespace Ion
 		{
 			AssetDefinition* asset = AssetRegistry::Find(guid);
 
+			if (!asset)
+			{
+				LOG_ERROR("Asset {{{0}}} had already been deleted before the data could be loaded.", guid.ToString());
+				return;
+			}
+
 			asset->m_AssetData = Move(data);
+			{
+				TAssetPropsScopedAccessor props(*asset);
+				props->bLoaded = true;
+			}
 			onLoad(asset->m_AssetData);
 		};
 		work.OnError = []
@@ -188,9 +342,29 @@ namespace Ion
 		return m_Type;
 	}
 
+	inline const FilePath& Ion::AssetDefinition::GetPath() const
+	{
+		return m_AssetReferencePath;
+	}
+
+	inline const FilePath& AssetDefinition::GetDefinitionPath() const
+	{
+		return m_AssetDefinitionPath;
+	}
+
 	inline bool AssetDefinition::IsValid() const
 	{
 		return m_AssetReferencePath.IsFile();
+	}
+
+	inline bool AssetDefinition::IsLoaded() const
+	{
+		bool bLoaded = false;
+		{
+			TAssetPropsScopedAccessor accessor(*this);
+			bLoaded = accessor->bLoaded;
+		}
+		return bLoaded;
 	}
 
 	inline AssetDefinition::operator bool() const

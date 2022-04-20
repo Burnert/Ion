@@ -16,7 +16,6 @@ namespace Ion
 		m_AssetReferencePath(initializer.AssetReferencePath),
 		m_Type(initializer.Type),
 		m_bImportExternal(initializer.bImportExternal),
-		m_bIsLoaded(false),
 		m_AssetData(EAssetType::None)
 	{
 		ParseAssetDefinitionFile();

@@ -941,7 +941,7 @@ namespace Ion::Editor
 			{
 				if (model.Mesh == meshComponent.GetMesh())
 				{
-					previewName = StringConverter::WStringToString(model.MeshAsset->GetLocation());
+					previewName = StringConverter::WStringToString(model.MeshAsset->GetPath());
 					break;
 				}
 			}
@@ -966,10 +966,10 @@ namespace Ion::Editor
 					bool bDisabled = !model.IsLoaded();
 					bool bSelected = model.Mesh == meshComponent.GetMesh();
 
-					AssetHandle& asset = model.MeshAsset;
+					Asset& asset = model.MeshAsset;
 
 					ImGuiSelectableFlags flags2 = FlagsIf(bDisabled, ImGuiSelectableFlags_Disabled);
-					String assetName = StringConverter::WStringToString(asset->GetLocation().ToString());
+					String assetName = StringConverter::WStringToString(asset->GetPath().ToString());
 					if (ImGui::Selectable(assetName.c_str(), bSelected, flags2))
 					{
 						meshComponent.SetMesh(model.Mesh);

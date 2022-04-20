@@ -130,6 +130,11 @@ inline constexpr bool TIsPointerV = std::is_pointer_v<T>;
 template<typename T>
 inline constexpr bool TIsReferenceV = std::is_reference_v<T>;
 
+// IsConst
+
+template<typename T>
+inline constexpr bool TIsConstV = std::is_const_v<T>;
+
 // Remove X
 
 template<typename T>

@@ -55,6 +55,9 @@ namespace Ion
 
 		AssetData(EAssetType type);
 
+		template<typename T>
+		TShared<T> Get() const;
+
 		EAssetType GetType() const;
 
 		bool IsValid() const;
@@ -110,6 +113,12 @@ namespace Ion
 
 		if (type != EAssetType::None)
 			Reset();
+	}
+
+	template<typename T>
+	inline TShared<T> AssetData::Get() const
+	{
+		return VariantCast<TShared<T>>(Variant);
 	}
 
 	inline EAssetType AssetData::GetType() const

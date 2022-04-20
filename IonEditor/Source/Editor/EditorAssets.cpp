@@ -12,20 +12,21 @@
 
 #include "RHI/RHI.h"
 
-#include "Core/Asset/AssetManager.h"
+#include "Core/Asset/AssetRegistry.h"
 
 namespace Ion::Editor
 {
 	static void LoadTexture(TShared<Texture>& texture, const FilePath& path)
 	{
-		AssetHandle textureAsset = AssetManager::CreateAsset(EAssetType::Texture, path);
-		textureAsset->AssignEvent([&, path](const OnAssetLoadedMessage& msg)
+		//AssetHandle textureAsset = AssetManager::CreateAsset(EAssetType::Texture, path);
+		Asset textureAsset = AssetFinder(path).Resolve();
+		textureAsset->Load([&, path](const AssetData& asset)
 		{
-			AssetDescription::Texture* assetDesc = msg.RefPtr->GetDescription<EAssetType::Texture>();
+			TShared<Image> image = asset.Get<Image>();
 
 			TextureDescription desc { };
-			desc.Dimensions.Width = assetDesc->Width;
-			desc.Dimensions.Height = assetDesc->Height;
+			desc.Dimensions.Width = image->GetWidth();
+			desc.Dimensions.Height = image->GetHeight();
 			desc.bUseAsRenderTarget = true;
 			desc.bCreateSampler = true;
 			//desc.InitialData = msg.PoolLocation;
@@ -34,11 +35,8 @@ namespace Ion::Editor
 			desc.MinFilter = ETextureFilteringMethod::Linear;
 			texture = Texture::Create(desc);
 
-			Image texImage((uint8*)msg.PoolLocation, assetDesc->Width, assetDesc->Height, assetDesc->NumChannels);
-			texture->UpdateSubresource(&texImage);
+			texture->UpdateSubresource(image.get());
 		});
-
-		textureAsset->LoadAssetData();
 	}
 
 	void EditorBillboards::LoadTextures()
