@@ -1,7 +1,7 @@
 #include "IonPCH.h"
 
 #include "Mesh.h"
-#include "UniformBuffer.h"
+#include "RHI/UniformBuffer.h"
 
 namespace Ion
 {
@@ -13,7 +13,6 @@ namespace Ion
 	Mesh::Mesh() :
 		m_VertexCount(0),
 		m_TriangleCount(0),
-		m_TransformMatrix(Matrix4(1.0f)),
 		m_UniformBuffer(MakeShareable(UniformBuffer::Create<MeshUniforms>()))
 	{
 	}
@@ -37,11 +36,6 @@ namespace Ion
 		//SetIndexBuffer(ib);
 
 		return true;
-	}
-
-	void Mesh::SetTransform(const Matrix4& transform)
-	{
-		m_TransformMatrix = transform;
 	}
 
 	void Mesh::SetVertexBuffer(const TShared<VertexBuffer>& vertexBuffer)
@@ -82,8 +76,6 @@ namespace Ion
 		return m_UniformBuffer->DataRef<MeshUniforms>();
 	}
 
-	// IDrawable:
-
 	const VertexBuffer* Mesh::GetVertexBufferRaw() const
 	{
 		return m_VertexBuffer.get();
@@ -103,11 +95,4 @@ namespace Ion
 	{
 		return m_Material.lock().get();
 	}
-
-	const Matrix4& Mesh::GetTransformMatrix() const
-	{
-		return m_TransformMatrix;
-	}
-
-	// End of IDrawable
 }

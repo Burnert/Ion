@@ -6,11 +6,10 @@
 #include "Engine/Components/SceneComponent.h"
 #include "Engine/Components/MeshComponent.h"
 
-#include "Renderer/Texture.h"
-#include "Renderer/Mesh.h"
-#include "Renderer/Shader.h"
-
+#include "RHI/Texture.h"
+#include "RHI/Shader.h"
 #include "RHI/RHI.h"
+#include "Renderer/Mesh.h"
 
 #include "Core/Asset/AssetRegistry.h"
 

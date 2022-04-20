@@ -17,8 +17,7 @@ namespace Ion
 
 	void ResourceManager::Unregister(Resource* resource)
 	{
-		// @TODO: Yeah sure
-		Get().m_Resources.erase(GUID());
+		Get().m_Resources.erase(resource->m_Asset.GetGuid());
 	}
 
 	TShared<Resource> ResourceManager::Find(const Asset& asset)

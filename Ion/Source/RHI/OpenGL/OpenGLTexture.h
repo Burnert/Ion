@@ -1,7 +1,7 @@
 #pragma once
 
 #include "OpenGL.h"
-#include "Renderer/Texture.h"
+#include "RHI/Texture.h"
 
 namespace Ion
 {

@@ -41,5 +41,6 @@
 #include "Core/Diagnostics/Tracing.h"
 #include "Core/Diagnostics/DebugTime.h"
 #include "Core/Platform/Platform.h"
+#include "RHI/RHIBaseFwd.h"
 #include "Renderer/RendererFwd.h"
 #include "Engine/EngineFwd.h"

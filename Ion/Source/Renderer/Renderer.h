@@ -1,17 +1,15 @@
 #pragma once
 
-#include "VertexBuffer.h"
-#include "IndexBuffer.h"
-#include "UniformBuffer.h"
-#include "Shader.h"
-#include "Texture.h"
 #include "Material.h"
 #include "Mesh.h"
 #include "Light.h"
 #include "Camera.h"
 #include "Scene.h"
-
-#include "Drawable.h"
+#include "RHI/VertexBuffer.h"
+#include "RHI/IndexBuffer.h"
+#include "RHI/UniformBuffer.h"
+#include "RHI/Shader.h"
+#include "RHI/Texture.h"
 
 namespace Ion
 {

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Renderer/VertexBuffer.h"
-#include "Renderer/IndexBuffer.h"
-#include "Renderer/UniformBuffer.h"
+#include "RHI/VertexBuffer.h"
+#include "RHI/IndexBuffer.h"
+#include "RHI/UniformBuffer.h"
 #include "DX11.h"
 
 namespace Ion

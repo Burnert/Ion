@@ -1,7 +1,7 @@
 #pragma once
 
 #include "DX11.h"
-#include "Renderer/Texture.h"
+#include "RHI/Texture.h"
 
 namespace Ion
 {

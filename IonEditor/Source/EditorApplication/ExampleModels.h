@@ -44,11 +44,11 @@ namespace Ion::Editor
 
 		data.Mesh->SetMaterial(data.Material);
 
-		Vector3 location;
-		location.x = Random::Float(-2.0f, 2.0f);
-		location.y = Random::Float(-0.5f, 0.5f);
-		location.z = Random::Float(-2.0f, 2.0f);
-		data.Mesh->SetTransform(Math::Translate(location) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 90.0f, 0.0f)))));
+		//Vector3 location;
+		//location.x = Random::Float(-2.0f, 2.0f);
+		//location.y = Random::Float(-0.5f, 0.5f);
+		//location.z = Random::Float(-2.0f, 2.0f);
+		//data.Mesh->SetTransform(Math::Translate(location) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 90.0f, 0.0f)))));
 	}
 
 	static void CreateExampleModels()
@@ -129,7 +129,7 @@ namespace Ion::Editor
 		{
 			model.SetOnInit([scene](ExampleModelData& model)
 			{
-				scene->AddDrawableObject(model.Mesh.get());
+				//scene->AddDrawableObject(model.Mesh.get());
 			});
 		}
 	}

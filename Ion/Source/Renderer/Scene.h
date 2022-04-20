@@ -43,17 +43,8 @@ namespace Ion
 		inline const THashSet<Light*>& GetLights() const { return m_Lights; }
 		inline uint32 GetLightNumber() const { return (uint32)m_Lights.size(); }
 
-		// @TODO: For now, adding object to scene is going to be done this way.
-		// Later, the World is going to pass renderable objects to the scene automatically.
-		void AddDrawableObject(IDrawable* drawable);
-		bool RemoveDrawableObject(IDrawable* drawable);
-		FORCEINLINE const THashSet<IDrawable*>& GetDrawableObjects() const { return m_DrawableObjects; }
-
 		Scene();
 		~Scene() { }
-
-		/* BROKEN DON'T USE */
-		void UpdateRenderData();
 
 		void LoadSceneData(const RRendererData& data);
 		void LoadCamera(const TShared<Camera>& camera);
@@ -69,8 +60,6 @@ namespace Ion
 
 	private:
 		World* m_OwningWorld;
-
-		THashSet<IDrawable*> m_DrawableObjects;
 
 		TShared<Camera> m_ActiveCamera;
 

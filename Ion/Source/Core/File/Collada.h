@@ -1,7 +1,7 @@
 #pragma once
 
 #include "XML.h"
-#include "Renderer/VertexAttribute.h"
+#include "RHI/VertexAttribute.h"
 
 namespace Ion
 {

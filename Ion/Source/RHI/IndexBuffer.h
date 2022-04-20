@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Drawable.h"
-
 namespace Ion
 {
 	class ION_API IndexBuffer

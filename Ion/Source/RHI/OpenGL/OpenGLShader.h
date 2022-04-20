@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Renderer/Shader.h"
+#include "RHI/Shader.h"
 #include "OpenGL.h"
 
 namespace Ion
