@@ -972,7 +972,7 @@ namespace Ion::Editor
 					String assetName = StringConverter::WStringToString(asset->GetPath().ToString());
 					if (ImGui::Selectable(assetName.c_str(), bSelected, flags2))
 					{
-						meshComponent.SetMesh(model.Mesh);
+						meshComponent.SetMeshFromAsset(model.MeshAsset);
 						bChanged = true;
 					}
 				}

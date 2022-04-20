@@ -24,6 +24,8 @@ namespace Ion
 		 */
 		AssetDefinition* FindAssetDefinition() const;
 
+		const GUID& GetGuid() const;
+
 		/**
 		 * @see FindAssetDefinition() 
 		 */
@@ -33,6 +35,8 @@ namespace Ion
 		 * @see FindAssetDefinition() 
 		 */
 		AssetDefinition& operator*();
+
+		operator bool() const;
 
 		/**
 		 * @brief An Asset Handle initialized with an invalid GUID.
@@ -89,6 +93,11 @@ namespace Ion
 
 	// Asset class inline implementation
 
+	inline const GUID& Asset::GetGuid() const
+	{
+		return m_Guid;
+	}
+
 	inline AssetDefinition* Asset::operator->()
 	{
 		return FindAssetDefinition();
@@ -99,6 +108,11 @@ namespace Ion
 		AssetDefinition* def = FindAssetDefinition();
 		ionassertnd(def, "Cannot dereference an asset handle of an non-existing asset. {%s}", m_Guid);
 		return *def;
+	}
+
+	inline Asset::operator bool() const
+	{
+		return !m_Guid.IsInvalid();
 	}
 
 	// AssetFinder class inline implementation

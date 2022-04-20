@@ -67,6 +67,18 @@ namespace Ion
 		delete world;
 	}
 
+	World* Engine::FindWorld(const GUID& worldGuid) const
+	{
+		auto it = std::find_if(m_RegisteredWorlds.begin(), m_RegisteredWorlds.end(), [&worldGuid](World* world)
+		{
+			return world->GetGuid() == worldGuid;
+		});
+		if (it == m_RegisteredWorlds.end())
+			return nullptr;
+
+		return *it;
+	}
+
 	void Engine::BuildRendererData(float deltaTime)
 	{
 		TRACE_FUNCTION();

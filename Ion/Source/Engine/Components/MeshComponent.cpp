@@ -1,6 +1,7 @@
 #include "IonPCH.h"
 
 #include "MeshComponent.h"
+#include "Engine/Engine.h"
 #include "Engine/Entity/Entity.h"
 #include "Renderer/Renderer.h"
 
@@ -30,6 +31,20 @@ namespace Ion
 			data.AddPrimitive(AsRenderProxy());
 	}
 
+	void MeshComponent::SetMeshFromAsset(const Asset& asset)
+	{
+		m_MeshAsset = asset;
+		m_MeshResource = MeshResource::Query(asset);
+		m_MeshResource->Take([worldGuid = this->GetWorldContext()->GetGuid(), guid = this->GetGUID()](TShared<Mesh> mesh)
+		{
+			World* world = g_Engine->FindWorld(worldGuid);
+			Component* component = world->GetComponentRegistry().FindComponentByGUID(guid);
+			ionassert(component->IsOfType<MeshComponent>());
+			MeshComponent* meshComponent = (MeshComponent*)component;
+			meshComponent->SetMesh(mesh);
+		});
+	}
+
 	//void MeshComponent::Tick(float deltaTime)
 	//{
 	//	Component::Tick(deltaTime);
@@ -53,10 +68,14 @@ namespace Ion
 		Material* material = m_Mesh->GetMaterial().lock().get();
 		Transform worldTransform = GetWorldTransform();
 
+		Shader* shader = material ?
+			material->GetShader().get() :
+			Renderer::Get()->GetBasicShader().get();
+
 		RPrimitiveRenderProxy mesh { };
 		mesh.Transform     = worldTransform.GetMatrix();
 		mesh.Material      = material;
-		mesh.Shader        = material->GetShader().get();
+		mesh.Shader        = shader;
 		mesh.VertexBuffer  = m_Mesh->GetVertexBufferRaw();
 		mesh.IndexBuffer   = m_Mesh->GetIndexBufferRaw();
 		mesh.UniformBuffer = m_Mesh->GetUniformBufferRaw();

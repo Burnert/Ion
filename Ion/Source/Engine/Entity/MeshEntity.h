@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Entity.h"
+#include "Core/Asset/AssetCommon.h"
 
 namespace Ion
 {
@@ -11,6 +12,8 @@ namespace Ion
 		MeshEntity(const GUID& guid);
 
 		MeshComponent* GetMeshComponent() const;
+
+		void SetMeshFromAsset(const Asset& asset);
 
 		void SetMesh(const TShared<Mesh>& mesh);
 		TShared<Mesh> GetMesh() const;

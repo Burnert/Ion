@@ -1,6 +1,8 @@
 #pragma once
 
 #include "SceneComponent.h"
+#include "Core/Asset/Asset.h"
+#include "Core/Resource/Resource.h"
 
 namespace Ion
 {
@@ -12,6 +14,8 @@ namespace Ion
 
 		void SERIALCALL BuildRendererData(RRendererData& data);
 
+		void SetMeshFromAsset(const Asset& asset);
+
 		void SetMesh(const TShared<Mesh>& mesh);
 		TShared<Mesh> GetMesh() const;
 
@@ -21,6 +25,8 @@ namespace Ion
 		MeshComponent();
 
 	private:
+		Asset m_MeshAsset;
+		TShared<MeshResource> m_MeshResource;
 		TShared<Mesh> m_Mesh;
 	};
 }

@@ -25,6 +25,11 @@ namespace Ion
 		return (MeshComponent*)GetRootComponent();
 	}
 
+	void MeshEntity::SetMeshFromAsset(const Asset& asset)
+	{
+		GetMeshComponent()->SetMeshFromAsset(asset);
+	}
+
 	void MeshEntity::SetMesh(const TShared<Mesh>& mesh)
 	{
 		GetMeshComponent()->SetMesh(mesh);

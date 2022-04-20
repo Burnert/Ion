@@ -14,6 +14,7 @@ namespace Ion
 
 		World* CreateWorld(const WorldInitializer& initializer);
 		void DestroyWorld(World* world);
+		World* FindWorld(const GUID& worldGuid) const;
 
 		void BuildRendererData(float deltaTime);
 
