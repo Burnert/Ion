@@ -12,29 +12,18 @@
 #include "Renderer/Mesh.h"
 
 #include "Core/Asset/AssetRegistry.h"
+#include "Core/Resource/TextureResource.h"
 
 namespace Ion::Editor
 {
 	static void LoadTexture(TShared<RHITexture>& texture, const FilePath& path)
 	{
-		//AssetHandle textureAsset = AssetManager::CreateAsset(EAssetType::Texture, path);
-		Asset textureAsset = AssetFinder(path).Resolve();
-		textureAsset->Load([&, path](const AssetData& asset)
+		Asset asset = AssetFinder(path).Resolve();
+		TShared<TextureResource> resource = TextureResource::Query(asset);
+
+		resource->Take([&texture](const TextureResourceRenderData& data)
 		{
-			TShared<Image> image = asset.Get<Image>();
-
-			TextureDescription desc { };
-			desc.Dimensions.Width = image->GetWidth();
-			desc.Dimensions.Height = image->GetHeight();
-			desc.bUseAsRenderTarget = true;
-			desc.bCreateSampler = true;
-			//desc.InitialData = msg.PoolLocation;
-			desc.DebugName = StringConverter::WStringToString(path.LastElement());
-			desc.MagFilter = ETextureFilteringMethod::Linear;
-			desc.MinFilter = ETextureFilteringMethod::Linear;
-			texture = RHITexture::Create(desc);
-
-			texture->UpdateSubresource(image.get());
+			texture = data.Texture;
 		});
 	}
 
