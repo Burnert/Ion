@@ -17,15 +17,6 @@ ionexcept(attr, IASSET_STR_INVALID_FILE attrName " attribute could not be found 
 #define IASSET_ATTR_value                "value"
 #define IASSET_ATTR_guid                 "guid"
 
-// TextureResource ----------------------------------------------------
-
-#define IASSET_NODE_TextureResource         "TextureResource"
-#define IASSET_NODE_TextureResource_Filter  "Filter"
-
-// MeshResource ----------------------------------------------------
-
-#define IASSET_NODE_MeshResource            "MeshResource"
-
 namespace Ion
 {
 	// Fwd

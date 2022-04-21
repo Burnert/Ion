@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ResourceFwd.h"
+#include "ResourceCommon.h"
 #include "Core/Asset/Asset.h"
 #include "Core/Asset/AssetRegistry.h"
 
