@@ -2,7 +2,7 @@
 
 #include "SceneComponent.h"
 #include "Core/Asset/Asset.h"
-#include "Core/Resource/Resource.h"
+#include "Core/Resource/MeshResource.h"
 
 namespace Ion
 {

@@ -15,14 +15,4 @@ namespace Ion
 		m_Asset(asset)
 	{
 	}
-
-	TShared<TextureResource> TextureResource::Query(const Asset& asset)
-	{
-		return Resource::Query<TextureResource>(asset);
-	}
-
-	TShared<MeshResource> MeshResource::Query(const Asset& asset)
-	{
-		return Resource::Query<MeshResource>(asset);
-	}
 }
