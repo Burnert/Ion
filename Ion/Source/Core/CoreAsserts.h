@@ -20,9 +20,9 @@ namespace Ion
 	{
 		// @TODO: Add call stack logging
 	public:
-		static constexpr const char* AssertFailedLog = "Assertion failed: {0}\n{4}  function: {1}\n  in {2}:{3}";
-		static constexpr const char* AssertFailedExLog = "Assertion exception: {0}\n{4}  function: {1}\n  in {2}:{3}";
-		static constexpr const char* AssertFailedPrintf = "Assertion failed: %s\n%s  function: %s\n  in %s:%d";
+		static constexpr const char* AssertFailedLog = "Assertion failed: {0}\n{4}function: {1}\nin {2}:{3}";
+		static constexpr const char* AssertFailedExLog = "Assertion exception: {0}\n{4}function: {1}\nin {2}:{3}";
+		static constexpr const char* AssertFailedPrintf = "Assertion failed: %s\n%sfunction: %s\nin %s:%d";
 
 		inline static int32 ShowMessageBox(const char* expression, const char* function,
 			const char* file, int32 line, const char* message = "")
@@ -41,8 +41,8 @@ namespace Ion
 		{
 			if (format != nullptr)
 			{
-				char message[500] = "  ";
-				sprintf_s(message + 2, 497, format, args...);
+				char message[500] = "";
+				sprintf_s(message, 499, format, args...);
 				strcat_s(message, "\n");
 				LOG_CRITICAL(AssertFailedLog, expression, function, file, line, message);
 #if !ION_LOG_ENABLED || ION_FORCE_ASSERT_MSGBOX
@@ -64,14 +64,14 @@ namespace Ion
 		{
 			if (format != nullptr)
 			{
-				char message[500] = "  ";
-				sprintf_s(message + 2, 497, format, args...);
+				char message[500] = "";
+				sprintf_s(message, 499, format, args...);
 				strcat_s(message, "\n");
-				LOG_WARN(AssertFailedExLog, expression, function, file, line, message);
+				LOG_ERROR(AssertFailedExLog, expression, function, file, line, message);
 			}
 			else
 			{
-				LOG_WARN(AssertFailedExLog, expression, function, file, line, "");
+				LOG_ERROR(AssertFailedExLog, expression, function, file, line, "");
 			}
 			return 0;
 		}
@@ -79,7 +79,7 @@ namespace Ion
 		inline static int32 PrintLocationInfo(const char* function, const char* file, int32 line)
 		{
 			char message[500] = "";
-			sprintf_s(message, "^ At: function: %s\n  in %s:%d\n", function, file, line);
+			sprintf_s(message, "^ At: function: %s\nin %s:%d\n", function, file, line);
 			LOG_WARN(message);
 			return 0;
 		}
