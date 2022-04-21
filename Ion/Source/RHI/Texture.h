@@ -13,7 +13,9 @@ namespace Ion
 	enum class ETextureFilteringMethod : uint8
 	{
 		Nearest = 0,
-		Linear  = 1
+		Linear  = 1,
+
+		Default = 0,
 	};
 
 	enum class ETextureWrapMode : uint8

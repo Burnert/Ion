@@ -6,12 +6,21 @@ ionexcept(node, IASSET_STR_INVALID_FILE "<" nodeName "> node could not be found.
 #define IASSET_CHECK_ATTR(attr, attrName, nodeName, path) \
 ionexcept(attr, IASSET_STR_INVALID_FILE attrName " attribute could not be found in node<" nodeName ">.\n", path.ToString()) return false
 
+// Asset Commons ----------------------------------------------------
+
 #define IASSET_NODE_IonAsset            "IonAsset"
 #define IASSET_NODE_Info                "Info"
 #define IASSET_ATTR_Info_type           "type"
 #define IASSET_ATTR_Info_guid           "guid"
 #define IASSET_NODE_ImportExternal      "ImportExternal"
 #define IASSET_ATTR_ImportExternal_path "path"
+
+#define IASSET_ATTR_value               "value"
+
+// TextureResource ----------------------------------------------------
+
+#define IASSET_NODE_TextureResource         "TextureResource"
+#define IASSET_NODE_TextureResource_Filter  "Filter"
 
 namespace Ion
 {

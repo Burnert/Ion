@@ -1,4 +1,7 @@
 <IonAsset>
 	<Info type="Ion.Image" guid="5d09ede8-cd21-41f1-8721-786d34a8cdb1" />
 	<ImportExternal path="Sun.png" />
+	<TextureResource>
+		<Filter value="Linear" />
+	</TextureResource>
 </IonAsset>

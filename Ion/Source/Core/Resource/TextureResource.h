@@ -9,6 +9,14 @@ namespace Ion
 	// Texture Resource
 	// ------------------------------------------------------------
 
+	/**
+	 * @brief Resource description representation from the asset file.
+	 */
+	struct TextureResourceDescription
+	{
+		ETextureFilteringMethod Filter;
+	};
+
 	struct TextureResourceRenderData
 	{
 		// @TODO: this shouldn't be shader ptr
@@ -58,6 +66,16 @@ namespace Ion
 		}
 
 	private:
+		/**
+		 * @brief Parses the TextureResource node in the .iasset file
+		 * 
+		 * @param path .iasset file path
+		 * @param outDescription TextureResourceDescription object to write to
+		 * @return True if the file has been parsed successfully.
+		 */
+		static bool ParseAssetFile(const FilePath& path, TextureResourceDescription& outDescription);
+
+	private:
 		TextureResourceRenderData m_RenderData;
 
 		friend class Resource;
@@ -87,6 +105,13 @@ namespace Ion
 			desc.bCreateSampler = true;
 			desc.bUseAsRenderTarget = true;
 			desc.DebugName = StringConverter::WStringToString(m_Asset->GetDefinitionPath().ToString());
+
+			// Read the asset file and set the texture description to match the file.
+			TextureResourceDescription resDesc { };
+			if (ParseAssetFile(m_Asset->GetDefinitionPath(), resDesc))
+			{
+				desc.SetFilterAll(resDesc.Filter);
+			}
 
 			m_RenderData.Texture = RHITexture::Create(desc);
 
