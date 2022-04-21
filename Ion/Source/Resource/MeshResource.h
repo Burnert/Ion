@@ -10,6 +10,14 @@ namespace Ion
 	// Mesh Resource
 	// ------------------------------------------------------------
 
+	/**
+	 * @brief Resource description representation from the asset file.
+	 */
+	struct MeshResourceDescription
+	{
+		int8 Unused;
+	};
+
 	struct MeshResourceRenderData
 	{
 		// @TODO: these shouldn't be shader ptrs
@@ -26,6 +34,8 @@ namespace Ion
 	class ION_API MeshResource : public Resource
 	{
 	public:
+		using TResourceDescription = MeshResourceDescription;
+
 		static TShared<MeshResource> Query(const Asset& asset);
 
 		/**
@@ -44,14 +54,29 @@ namespace Ion
 
 		virtual bool IsLoaded() const override;
 
+		/**
+		 * @brief Parses the MeshResource node in the .iasset file.
+		 * Called by Resource::Query
+		 *
+		 * @see Resource::Query
+		 *
+		 * @param path .iasset file path
+		 * @param outGuid GUID object to write the resource Guid to.
+		 * @param outDescription MeshResourceDescription object to write to
+		 * @return True if the file has been parsed successfully.
+		 */
+		static bool ParseAssetFile(const FilePath& path, GUID& outGuid, MeshResourceDescription& outDescription);
+
 	protected:
-		MeshResource(const Asset& asset) :
-			Resource(asset)
+		MeshResource(const GUID& guid, const Asset& asset, const MeshResourceDescription& desc) :
+			Resource(guid, asset),
+			m_Description(desc)
 		{
 		}
 
 	private:
 		MeshResourceRenderData m_RenderData;
+		MeshResourceDescription m_Description;
 
 		friend class Resource;
 	};

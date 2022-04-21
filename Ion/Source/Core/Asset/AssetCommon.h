@@ -8,19 +8,23 @@ ionexcept(attr, IASSET_STR_INVALID_FILE attrName " attribute could not be found 
 
 // Asset Commons ----------------------------------------------------
 
-#define IASSET_NODE_IonAsset            "IonAsset"
-#define IASSET_NODE_Info                "Info"
-#define IASSET_ATTR_Info_type           "type"
-#define IASSET_ATTR_Info_guid           "guid"
-#define IASSET_NODE_ImportExternal      "ImportExternal"
-#define IASSET_ATTR_ImportExternal_path "path"
+#define IASSET_NODE_IonAsset             "IonAsset"
+#define IASSET_NODE_Info                 "Info"
+#define IASSET_ATTR_Info_type            "type"
+#define IASSET_NODE_ImportExternal       "ImportExternal"
+#define IASSET_ATTR_ImportExternal_path  "path"
 
-#define IASSET_ATTR_value               "value"
+#define IASSET_ATTR_value                "value"
+#define IASSET_ATTR_guid                 "guid"
 
 // TextureResource ----------------------------------------------------
 
 #define IASSET_NODE_TextureResource         "TextureResource"
 #define IASSET_NODE_TextureResource_Filter  "Filter"
+
+// MeshResource ----------------------------------------------------
+
+#define IASSET_NODE_MeshResource            "MeshResource"
 
 namespace Ion
 {

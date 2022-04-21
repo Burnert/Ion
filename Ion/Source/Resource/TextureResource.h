@@ -32,6 +32,8 @@ namespace Ion
 	class ION_API TextureResource : public Resource
 	{
 	public:
+		using TResourceDescription = TextureResourceDescription;
+
 		/**
 		 * @brief Query the Resource Manager for a Texture Resource
 		 * associated with the specified asset.
@@ -59,24 +61,29 @@ namespace Ion
 
 		virtual bool IsLoaded() const override;
 
+		/**
+		 * @brief Parses the TextureResource node in the .iasset file.
+		 * Called by Resource::Query
+		 *
+		 * @see Resource::Query
+		 *
+		 * @param path .iasset file path
+		 * @param outGuid GUID object to write the resource Guid to.
+		 * @param outDescription TextureResourceDescription object to write to
+		 * @return True if the file has been parsed successfully.
+		 */
+		static bool ParseAssetFile(const FilePath& path, GUID& outGuid, TextureResourceDescription& outDescription);
+
 	protected:
-		TextureResource(const Asset& asset) :
-			Resource(asset)
+		TextureResource(const GUID& guid, const Asset& asset, const TextureResourceDescription& desc) :
+			Resource(guid, asset),
+			m_Description(desc)
 		{
 		}
 
 	private:
-		/**
-		 * @brief Parses the TextureResource node in the .iasset file
-		 * 
-		 * @param path .iasset file path
-		 * @param outDescription TextureResourceDescription object to write to
-		 * @return True if the file has been parsed successfully.
-		 */
-		static bool ParseAssetFile(const FilePath& path, TextureResourceDescription& outDescription);
-
-	private:
 		TextureResourceRenderData m_RenderData;
+		TextureResourceDescription m_Description;
 
 		friend class Resource;
 	};
@@ -106,13 +113,8 @@ namespace Ion
 			desc.bUseAsRenderTarget = true;
 			desc.DebugName = StringConverter::WStringToString(m_Asset->GetDefinitionPath().ToString());
 
-			// Read the asset file and set the texture description to match the file.
-			TextureResourceDescription resDesc { };
-			if (ParseAssetFile(m_Asset->GetDefinitionPath(), resDesc))
-			{
-				desc.SetFilterAll(resDesc.Filter);
-			}
-
+			desc.SetFilterAll(m_Description.Filter);
+				
 			m_RenderData.Texture = RHITexture::Create(desc);
 
 			m_RenderData.Texture->UpdateSubresource(image.get());

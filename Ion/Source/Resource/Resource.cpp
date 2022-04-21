@@ -11,7 +11,8 @@ namespace Ion
 		ResourceManager::Unregister(this);
 	}
 
-	Resource::Resource(const Asset& asset) :
+	Resource::Resource(const GUID& guid, const Asset& asset) :
+		m_Guid(guid),
 		m_Asset(asset)
 	{
 	}

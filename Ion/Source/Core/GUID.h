@@ -4,8 +4,18 @@ namespace Ion
 {
 	using GUIDBytesArray = TFixedArray<uint8, 16>;
 
+	/**
+	 * @brief Globally Unique Identifier class
+	 * 
+	 * @details Don't call sizeof() on this class, if you want to
+	 * get the size of the GUID bytes. This class has an additional
+	 * String field in debug mode. Use GUID::Size instead.
+	 * 
+	 * @see GUID::Size
+	 */
 	class ION_API GUID
 	{
+	private:
 		struct ZeroInitializerT { };
 		struct InvalidInitializerT { };
 
@@ -17,6 +27,7 @@ namespace Ion
 
 		GUID();
 		explicit GUID(const uint8 bytes[16]);
+		explicit GUID(const GUIDBytesArray& bytes);
 		explicit GUID(const String& guidStr);
 		GUID(GUID::ZeroInitializerT);
 		GUID(GUID::InvalidInitializerT);
@@ -43,48 +54,74 @@ namespace Ion
 
 	private:
 		uint8 m_Bytes[16];
+#if ION_DEBUG
+		String m_AsString;
+		void CacheString();
+#endif
+	public:
+		static inline constexpr size_t Size = sizeof(m_Bytes);
 	};
 
 	// Inline definitions
+
+#if ION_DEBUG
+#define CACHE_STRING() CacheString();
+#else
+#define CACHE_STRING()
+#endif
 
 	inline GUID::GUID() :
 		m_Bytes()
 	{
 		PlatformGenerateGUID();
+		CACHE_STRING()
 	}
 
 	inline GUID::GUID(const uint8 bytes[16]) :
 		m_Bytes()
 	{
 		memcpy(m_Bytes, bytes, sizeof(m_Bytes));
+		CACHE_STRING()
+	}
+
+	inline GUID::GUID(const GUIDBytesArray& bytes) :
+		m_Bytes()
+	{
+		memcpy(m_Bytes, &bytes, sizeof(bytes));
+		CACHE_STRING()
 	}
 
 	inline GUID::GUID(const String& guidStr) :
 		m_Bytes()
 	{
 		PlatformGenerateGUIDFromString(guidStr);
+		CACHE_STRING()
 	}
 
 	inline GUID::GUID(GUID::ZeroInitializerT) :
 		m_Bytes()
 	{
+		CACHE_STRING()
 	}
 
 	inline GUID::GUID(GUID::InvalidInitializerT) :
 		m_Bytes()
 	{
 		memset(m_Bytes, 0xFF, sizeof(m_Bytes));
+		CACHE_STRING()
 	}
 
 	inline GUID::GUID(const GUID& other)
 	{
-		memcpy(m_Bytes, other.m_Bytes, sizeof(GUID));
+		memcpy(m_Bytes, other.m_Bytes, sizeof(m_Bytes));
+		CACHE_STRING()
 	}
 
 	inline GUID::GUID(GUID&& other) noexcept
 	{
-		memcpy(m_Bytes, other.m_Bytes, sizeof(GUID));
+		memcpy(m_Bytes, other.m_Bytes, sizeof(m_Bytes));
 		memset(other.m_Bytes, 0, sizeof(other.m_Bytes));
+		CACHE_STRING()
 	}
 
 	inline String GUID::ToString() const
@@ -104,14 +141,16 @@ namespace Ion
 
 	inline GUID& GUID::operator=(const GUID& other)
 	{
-		memcpy(m_Bytes, other.m_Bytes, sizeof(GUID));
+		memcpy(m_Bytes, other.m_Bytes, sizeof(m_Bytes));
+		CACHE_STRING()
 		return *this;
 	}
 
 	inline GUID& GUID::operator=(GUID&& other) noexcept
 	{
-		memcpy(m_Bytes, other.m_Bytes, sizeof(GUID));
+		memcpy(m_Bytes, other.m_Bytes, sizeof(m_Bytes));
 		memset(other.m_Bytes, 0, sizeof(other.m_Bytes));
+		CACHE_STRING()
 		return *this;
 	}
 
@@ -139,13 +178,13 @@ namespace Ion
 
 	inline void GUID::GetRawBytes(uint8(&outBytes)[16]) const
 	{
-		memcpy(outBytes, m_Bytes, sizeof(GUID));
+		memcpy(outBytes, m_Bytes, sizeof(m_Bytes));
 	}
 
 	inline GUIDBytesArray GUID::GetRawBytes() const
 	{
 		GUIDBytesArray bytes;
-		memcpy(bytes.data(), m_Bytes, sizeof(GUID));
+		memcpy(bytes.data(), m_Bytes, sizeof(m_Bytes));
 
 		return bytes;
 	}
@@ -154,8 +193,8 @@ namespace Ion
 template<>
 struct std::hash<Ion::GUID>
 {
-	size_t operator()(const Ion::GUID& guid) const noexcept {
-
+	size_t operator()(const Ion::GUID& guid) const noexcept
+	{
 		uint8 bytes[16];
 		guid.GetRawBytes(bytes);
 		uint64 bytes64[2] = { *(uint64*)&bytes[0], *(uint64*)&bytes[8] };

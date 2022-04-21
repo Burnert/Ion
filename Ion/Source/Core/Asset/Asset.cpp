@@ -13,12 +13,18 @@ namespace Ion
 
 	Asset::Asset() :
 		m_Guid(GUID::Zero)
+#if ION_DEBUG
+		, m_DebugDefinition(nullptr)
+#endif
 	{
 		// Null asset handle (not invalid!)
 	}
 
 	Asset::Asset(const GUID& guid) :
 		m_Guid(guid)
+#if ION_DEBUG
+		, m_DebugDefinition(guid.IsInvalid() ? nullptr : AssetRegistry::Find(guid))
+#endif
 	{
 	}
 
@@ -103,11 +109,11 @@ namespace Ion
 			return false;
 
 		// guid=
-		XMLAttribute* info_attrGuid = nodeInfo->first_attribute(IASSET_ATTR_Info_guid);
-		CHECK_ATTR(info_attrGuid, IASSET_ATTR_Info_guid, IASSET_NODE_Info);
+		XMLAttribute* info_attrGuid = nodeInfo->first_attribute(IASSET_ATTR_guid);
+		CHECK_ATTR(info_attrGuid, IASSET_ATTR_guid, IASSET_NODE_Info);
 
-		char* csGuid = info_attrGuid->value();
-		outInitializer.Guid = GUID(csGuid);
+		String sGuid = info_attrGuid->value();
+		outInitializer.Guid = GUID(sGuid);
 		ionexcept(outInitializer.Guid, "Invalid GUID.")
 			return false;
 

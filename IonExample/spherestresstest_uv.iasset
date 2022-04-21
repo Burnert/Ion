@@ -1,4 +1,6 @@
 <IonAsset>
 	<Info type="Ion.Mesh" guid="1b502fd8-e72d-42f2-b81e-725807e51bb4" />
 	<ImportExternal path="spherestresstest_uv.dae" />
+	<MeshResource guid="81cdff38-8f53-4e9a-9cc8-608e6f3bc926">
+	</MeshResource>
 </IonAsset>

@@ -3,6 +3,7 @@
 #include "TextureResource.h"
 #include "ResourceManager.h"
 
+#include "Core/Asset/AssetRegistry.h"
 #include "Core/File/XML.h"
 
 namespace Ion
@@ -27,7 +28,7 @@ namespace Ion
 		return (ETextureFilteringMethod)0xFF;
 	}
 
-	bool TextureResource::ParseAssetFile(const FilePath& path, TextureResourceDescription& outDescription)
+	bool TextureResource::ParseAssetFile(const FilePath& path, GUID& outGuid, TextureResourceDescription& outDescription)
 	{
 		String assetDefinition;
 		File::ReadToString(path, assetDefinition);
@@ -40,29 +41,41 @@ namespace Ion
 
 		// <TextureResource>
 		XMLNode* nodeTextureResource = nodeIonAsset->first_node(IASSET_NODE_TextureResource);
-		if (nodeTextureResource)
+		ionexcept(nodeTextureResource,
+			"Asset \"%s\" cannot be used as a Texture Resource.\n"
+			"Node <" IASSET_NODE_TextureResource "> not found.\n",
+			StringConverter::WStringToString(path.ToString()).c_str())
+			return false;
+
+		// guid=
+		XMLAttribute* texResource_attrGuid = nodeTextureResource->first_attribute(IASSET_ATTR_guid);
+		IASSET_CHECK_ATTR(texResource_attrGuid, IASSET_ATTR_guid, IASSET_NODE_TextureResource, path);
+
+		String sGuid = texResource_attrGuid->value();
+		outGuid = GUID(sGuid);
+		ionexcept(outGuid, "Invalid GUID.")
+			return false;
+
+		// <Filter>
+		XMLNode* nodeFilter = nodeTextureResource->first_node(IASSET_NODE_TextureResource_Filter);
+		if (nodeFilter)
 		{
-			// <Filter>
-			XMLNode* nodeFilter = nodeTextureResource->first_node(IASSET_NODE_TextureResource_Filter);
-			if (nodeFilter)
-			{
-				// value=
-				XMLAttribute* filter_attrValue = nodeFilter->first_attribute(IASSET_ATTR_value);
-				IASSET_CHECK_ATTR(filter_attrValue, IASSET_ATTR_value, IASSET_NODE_TextureResource_Filter, path);
+			// value=
+			XMLAttribute* filter_attrValue = nodeFilter->first_attribute(IASSET_ATTR_value);
+			IASSET_CHECK_ATTR(filter_attrValue, IASSET_ATTR_value, IASSET_NODE_TextureResource_Filter, path);
 
-				char* csFilter = filter_attrValue->value();
-				ETextureFilteringMethod filter = ParseFilterString(csFilter);
-				// 0xFF means the value could not be parsed
-				ionexcept(filter != (ETextureFilteringMethod)0xFF, "Invalid filtering mode. (\"%s\")",
-					StringConverter::WStringToString(path.ToString()).c_str())
-					return false;
+			char* csFilter = filter_attrValue->value();
+			ETextureFilteringMethod filter = ParseFilterString(csFilter);
+			// 0xFF means the value could not be parsed
+			ionexcept(filter != (ETextureFilteringMethod)0xFF, "Invalid filtering mode. (\"%s\")",
+				StringConverter::WStringToString(path.ToString()).c_str())
+				return false;
 
-				outDescription.Filter = filter;
-			}
-			else
-			{
-				outDescription.Filter = ETextureFilteringMethod::Default;
-			}
+			outDescription.Filter = filter;
+		}
+		else
+		{
+			outDescription.Filter = ETextureFilteringMethod::Default;
 		}
 
 		return true;

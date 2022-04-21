@@ -109,4 +109,11 @@ namespace Ion
 
 		return uuidStr;
 	}
+
+#if ION_DEBUG
+	void GUID::CacheString()
+	{
+		m_AsString = ToString();
+	}
+#endif
 }

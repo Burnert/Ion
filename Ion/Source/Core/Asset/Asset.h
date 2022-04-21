@@ -27,16 +27,27 @@ namespace Ion
 		const GUID& GetGuid() const;
 
 		/**
-		 * @see FindAssetDefinition() 
+		 * @see FindAssetDefinition()
 		 */
-		AssetDefinition* operator->();
+		AssetDefinition* operator->() const;
 		
 		/**
-		 * @see FindAssetDefinition() 
+		 * @see FindAssetDefinition()
 		 */
-		AssetDefinition& operator*();
+		AssetDefinition& operator*() const;
 
+		/**
+		 * @brief Is the Asset handle valid
+		 */
 		operator bool() const;
+
+		/**
+		 * @brief Checks if the asset handles are the same.
+		 * (if GUIDs are the same)
+		 * 
+		 * @param other Other asset
+		 */
+		bool operator==(const Asset& other) const;
 
 		/**
 		 * @brief An Asset Handle initialized with an invalid GUID.
@@ -49,9 +60,21 @@ namespace Ion
 
 	private:
 		GUID m_Guid;
+#if ION_DEBUG
+		AssetDefinition* m_DebugDefinition;
+#endif
 
 		friend class AssetRegistry;
 		friend class AssetDefinition;
+
+	public:
+		struct Hasher
+		{
+			size_t operator()(const Asset& asset) const noexcept
+			{
+				return THash<GUID>()(asset.GetGuid());
+			}
+		};
 	};
 
 	/**
@@ -98,12 +121,12 @@ namespace Ion
 		return m_Guid;
 	}
 
-	inline AssetDefinition* Asset::operator->()
+	inline AssetDefinition* Asset::operator->() const
 	{
 		return FindAssetDefinition();
 	}
 
-	inline AssetDefinition& Asset::operator*()
+	inline AssetDefinition& Asset::operator*() const
 	{
 		AssetDefinition* def = FindAssetDefinition();
 		ionassertnd(def, "Cannot dereference an asset handle of an non-existing asset. {%s}", m_Guid);
@@ -113,6 +136,11 @@ namespace Ion
 	inline Asset::operator bool() const
 	{
 		return !m_Guid.IsInvalid();
+	}
+
+	inline bool Asset::operator==(const Asset& other) const
+	{
+		return m_Guid == other.m_Guid;
 	}
 
 	// AssetFinder class inline implementation
@@ -127,3 +155,15 @@ namespace Ion
 		return Exists();
 	}
 }
+
+/**
+ * @brief std::hash specialization for Asset handle type
+ */
+template<>
+struct std::hash<Ion::Asset>
+{
+	size_t operator()(const Ion::Asset& asset) const noexcept {
+
+		return Ion::Asset::Hasher()(asset);
+	}
+};

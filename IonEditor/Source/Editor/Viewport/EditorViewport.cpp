@@ -213,11 +213,12 @@ namespace Ion::Editor
 		void* buffer = nullptr;
 		int32 lineSize = 0;
 		m_ObjectIDStaging->Map(buffer, lineSize, ETextureMapType::Read);
-		ionassert(lineSize / sizeof(GUID) >= m_ObjectIDStaging->GetDimensions().Width);
+		ionassert(lineSize / GUID::Size >= m_ObjectIDStaging->GetDimensions().Width);
 
 		// Get the pixel as GUID bytes
-		outGuid = GUID::Zero;
-		memcpy(&outGuid, (GUID*)buffer + ((int32)m_ClickedPoint.y * (lineSize / sizeof(GUID)) + (int32)m_ClickedPoint.x), sizeof(GUID));
+		GUIDBytesArray guidBytes;
+		memcpy(&guidBytes, (GUIDBytesArray*)buffer + ((int32)m_ClickedPoint.y * (lineSize / GUID::Size) + (int32)m_ClickedPoint.x), GUID::Size);
+		outGuid = GUID(guidBytes);
 
 		// Cleanup
 		m_ObjectIDStaging->Unmap();
