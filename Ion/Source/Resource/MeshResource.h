@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Resource.h"
+#include "RHI/VertexBuffer.h"
+#include "RHI/IndexBuffer.h"
 
 namespace Ion
 {

@@ -1,7 +1,8 @@
 #pragma once
 
 #include "Core/Asset/Asset.h"
-#include "Core/Resource/MeshResource.h"
+
+#include "Resource/MeshResource.h"
 
 #include "RendererCore.h"
 #include "Material.h"

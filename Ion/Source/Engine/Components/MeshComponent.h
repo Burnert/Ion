@@ -1,8 +1,10 @@
 #pragma once
 
 #include "SceneComponent.h"
+
 #include "Core/Asset/Asset.h"
-#include "Core/Resource/MeshResource.h"
+
+#include "Resource/MeshResource.h"
 
 namespace Ion
 {

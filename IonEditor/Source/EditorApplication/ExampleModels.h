@@ -1,8 +1,9 @@
 #pragma once
 
 #include "Core/Asset/AssetRegistry.h"
-#include "Core/Resource/MeshResource.h"
-#include "Core/Resource/TextureResource.h"
+
+#include "Resource/MeshResource.h"
+#include "Resource/TextureResource.h"
 
 namespace Ion::Editor
 {

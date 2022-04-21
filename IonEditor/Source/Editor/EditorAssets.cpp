@@ -12,7 +12,8 @@
 #include "Renderer/Mesh.h"
 
 #include "Core/Asset/AssetRegistry.h"
-#include "Core/Resource/TextureResource.h"
+
+#include "Resource/TextureResource.h"
 
 namespace Ion::Editor
 {
