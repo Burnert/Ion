@@ -9,4 +9,9 @@ namespace Ion
 	{
 		return Resource::Query<TextureResource>(asset);
 	}
+
+	bool TextureResource::IsLoaded() const
+	{
+		return m_RenderData.IsAvailable();
+	}
 }

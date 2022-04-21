@@ -1,10 +1,13 @@
 #pragma once
 
+#include "Core/Asset/Asset.h"
+#include "Core/Resource/MeshResource.h"
+
 #include "RendererCore.h"
+#include "Material.h"
+
 #include "RHI/VertexBuffer.h"
 #include "RHI/IndexBuffer.h"
-#include "Material.h"
-#include "Core/Asset/Asset.h"
 
 namespace Ion
 {
@@ -23,6 +26,7 @@ namespace Ion
 	{
 	public:
 		static TShared<Mesh> Create();
+		static TShared<Mesh> CreateFromResource(const TShared<MeshResource>& resource);
 
 		virtual ~Mesh() { }
 

@@ -34,7 +34,7 @@ namespace Ion::Editor
 		}
 		bool IsLoaded() const
 		{
-			return m_bLoaded;
+			return MeshResource->IsLoaded() && TextureResource->IsLoaded();
 		}
 	};
 	inline TArray<ExampleModelData> g_ExampleModels;
@@ -44,8 +44,6 @@ namespace Ion::Editor
 	{
 		ionassert(data.Texture);
 		ionassert(data.Mesh);
-
-		data.Mesh->SetMaterial(data.Material);
 	}
 
 	static void CreateExampleModels()
@@ -84,27 +82,19 @@ namespace Ion::Editor
 			model.MeshResource = MeshResource::Query(model.MeshAsset);
 			model.TextureResource = TextureResource::Query(model.TextureAsset);
 
-			model.Mesh = Mesh::Create();
+			model.Mesh = Mesh::CreateFromResource(model.MeshResource);
 
 			model.Material = Material::Create();
 			model.Material->SetShader(Renderer::GetBasicShader());
 			model.Material->CreateParameter("Texture", EMaterialParameterType::Texture2D);
 
-			model.MeshResource->Take([&model](const MeshResourceRenderData& renderData)
-			{
-				model.Mesh->SetVertexBuffer(renderData.VertexBuffer);
-				model.Mesh->SetIndexBuffer(renderData.IndexBuffer);
-
-				model.TryInit();
-			});
+			model.Mesh->SetMaterial(model.Material);
 
 			model.TextureResource->Take([&model](const TextureResourceRenderData& renderData)
 			{
 				model.Texture = renderData.Texture;
 
 				model.Material->SetParameter("Texture", model.Texture);
-
-				model.TryInit();
 			});
 		}
 	}

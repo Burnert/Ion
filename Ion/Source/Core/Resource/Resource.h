@@ -35,6 +35,8 @@ namespace Ion
 		template<typename T>
 		static TShared<T> Query(const Asset& asset);
 
+		virtual bool IsLoaded() const = 0;
+
 	protected:
 		Asset m_Asset;
 

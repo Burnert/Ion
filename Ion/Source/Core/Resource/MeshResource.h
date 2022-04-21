@@ -40,6 +40,8 @@ namespace Ion
 		template<typename Lambda>
 		bool Take(Lambda onTake);
 
+		virtual bool IsLoaded() const override;
+
 	protected:
 		MeshResource(const Asset& asset) :
 			Resource(asset)

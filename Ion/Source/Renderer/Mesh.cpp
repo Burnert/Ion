@@ -10,6 +10,19 @@ namespace Ion
 		return MakeShareable(new Mesh);
 	}
 
+	TShared<Mesh> Mesh::CreateFromResource(const TShared<MeshResource>& resource)
+	{
+		TShared<Mesh> mesh = Mesh::Create();
+
+		resource->Take([mesh](const MeshResourceRenderData& renderData)
+		{
+			mesh->SetVertexBuffer(renderData.VertexBuffer);
+			mesh->SetIndexBuffer(renderData.IndexBuffer);
+		});
+
+		return mesh;
+	}
+
 	Mesh::Mesh() :
 		m_VertexCount(0),
 		m_TriangleCount(0),
@@ -42,6 +55,12 @@ namespace Ion
 	{
 		m_VertexBuffer = vertexBuffer;
 		m_VertexCount = vertexBuffer->GetVertexCount();
+
+		// Set the layout if the material has been set before the VB.
+		if (TShared<Material> material = m_Material.lock())
+		{
+			m_VertexBuffer->SetLayoutShader(material->GetShader());
+		}
 	}
 
 	void Mesh::SetIndexBuffer(const TShared<RHIIndexBuffer>& indexBuffer)
@@ -53,7 +72,12 @@ namespace Ion
 	void Mesh::SetMaterial(const TShared<Material>& material)
 	{
 		m_Material = material;
-		m_VertexBuffer->SetLayoutShader(material->GetShader());
+
+		// Vertex Buffer might not have been set yet.
+		if (m_VertexBuffer)
+		{
+			m_VertexBuffer->SetLayoutShader(material->GetShader());
+		}
 	}
 
 	const TShared<RHIVertexBuffer>& Mesh::GetVertexBuffer() const

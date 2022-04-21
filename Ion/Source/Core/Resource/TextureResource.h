@@ -49,6 +49,8 @@ namespace Ion
 		template<typename Lambda>
 		bool Take(Lambda onTake);
 
+		virtual bool IsLoaded() const override;
+
 	protected:
 		TextureResource(const Asset& asset) :
 			Resource(asset)

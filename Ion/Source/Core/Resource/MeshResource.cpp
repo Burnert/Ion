@@ -9,4 +9,9 @@ namespace Ion
 	{
 		return Resource::Query<MeshResource>(asset);
 	}
+
+	bool MeshResource::IsLoaded() const
+	{
+		return m_RenderData.IsAvailable();
+	}
 }
