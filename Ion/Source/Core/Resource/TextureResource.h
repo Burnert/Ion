@@ -1,12 +1,25 @@
 #pragma once
 
 #include "Resource.h"
+#include "RHI/Texture.h"
 
 namespace Ion
 {
 	// ------------------------------------------------------------
 	// Texture Resource
 	// ------------------------------------------------------------
+
+	struct TextureResourceRenderData
+	{
+		// @TODO: this shouldn't be shader ptr
+
+		TShared<RHITexture> Texture;
+
+		bool IsAvailable() const
+		{
+			return (bool)Texture;
+		}
+	};
 
 	class ION_API TextureResource : public Resource
 	{
@@ -25,11 +38,11 @@ namespace Ion
 		/**
 		 * @brief Used to access the Texture owned by the Resource.
 		 * 
-		 * @tparam Lambda Must be convertible to TFuncResourceOnTake<Texture>
+		 * @tparam Lambda params - (const TextureResourceRenderData&)
 		 * @see TFuncResourceOnTake
 		 * 
 		 * @param onTake If the resource is ready, called immediately,
-		 * else, called when the asset and the resource get loaded.
+		 * else, called as soon as the resource is loaded.
 		 * 
 		 * @return Returns true if the resource is available instantly.
 		 */
@@ -43,7 +56,7 @@ namespace Ion
 		}
 
 	private:
-		TShared<RHITexture> m_Texture;
+		TextureResourceRenderData m_RenderData;
 
 		friend class Resource;
 	};
@@ -51,9 +64,11 @@ namespace Ion
 	template<typename Lambda>
 	inline bool TextureResource::Take(Lambda onTake)
 	{
-		if (m_Texture)
+		static_assert(TIsConvertibleV<Lambda, TFuncResourceOnTake<TextureResourceRenderData>>);
+
+		if (m_RenderData.IsAvailable())
 		{
-			onTake(m_Texture);
+			onTake(m_RenderData);
 			return true;
 		}
 
@@ -71,9 +86,11 @@ namespace Ion
 			desc.bUseAsRenderTarget = true;
 			desc.DebugName = StringConverter::WStringToString(m_Asset->GetDefinitionPath().ToString());
 
-			m_Texture = RHITexture::Create(desc);
+			m_RenderData.Texture = RHITexture::Create(desc);
 
-			onTake(m_Texture);
+			m_RenderData.Texture->UpdateSubresource(image.get());
+;
+			onTake(m_RenderData);
 		};
 
 		TOptional<AssetData> data = m_Asset->Load(initTexture);

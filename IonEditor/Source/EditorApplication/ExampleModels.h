@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Core/Asset/AssetRegistry.h"
+#include "Core/Resource/MeshResource.h"
+#include "Core/Resource/TextureResource.h"
 
 namespace Ion::Editor
 {
@@ -12,6 +14,9 @@ namespace Ion::Editor
 
 		Asset MeshAsset;
 		Asset TextureAsset;
+
+		TShared<MeshResource> MeshResource;
+		TShared<TextureResource> TextureResource;
 
 		String Name;
 
@@ -37,18 +42,10 @@ namespace Ion::Editor
 
 	static void InitExampleModel(ExampleModelData& data)
 	{
-		ionassert(data.TextureAsset->IsLoaded());
-		ionassert(data.MeshAsset->IsLoaded());
 		ionassert(data.Texture);
 		ionassert(data.Mesh);
 
 		data.Mesh->SetMaterial(data.Material);
-
-		//Vector3 location;
-		//location.x = Random::Float(-2.0f, 2.0f);
-		//location.y = Random::Float(-0.5f, 0.5f);
-		//location.z = Random::Float(-2.0f, 2.0f);
-		//data.Mesh->SetTransform(Math::Translate(location) * Math::ToMat4(Quaternion(Math::Radians(Vector3(-90.0f, 90.0f, 0.0f)))));
 	}
 
 	static void CreateExampleModels()
@@ -84,39 +81,28 @@ namespace Ion::Editor
 	{
 		for (ExampleModelData& model : g_ExampleModels)
 		{
-			model.TextureAsset->Load([&model](const AssetData& asset)
+			model.MeshResource = MeshResource::Query(model.MeshAsset);
+			model.TextureResource = TextureResource::Query(model.TextureAsset);
+
+			model.Mesh = Mesh::Create();
+
+			model.Material = Material::Create();
+			model.Material->SetShader(Renderer::GetBasicShader());
+			model.Material->CreateParameter("Texture", EMaterialParameterType::Texture2D);
+
+			model.MeshResource->Take([&model](const MeshResourceRenderData& renderData)
 			{
-				TShared<Image> image = asset.Get<Image>();
-
-				TextureDescription texDesc { };
-				texDesc.Dimensions.Width = image->GetWidth();
-				texDesc.Dimensions.Height = image->GetHeight();
-				texDesc.bGenerateMips = true;
-				texDesc.bUseAsRenderTarget = true;
-				texDesc.bCreateSampler = true;
-				model.Texture = RHITexture::Create(texDesc);
-
-				model.Texture->UpdateSubresource(image.get());
-
-				model.Material = Material::Create();
-				model.Material->SetShader(Renderer::GetBasicShader());
-				model.Material->CreateParameter("Texture", EMaterialParameterType::Texture2D);
-				model.Material->SetParameter("Texture", model.Texture);
+				model.Mesh->SetVertexBuffer(renderData.VertexBuffer);
+				model.Mesh->SetIndexBuffer(renderData.IndexBuffer);
 
 				model.TryInit();
 			});
-			model.MeshAsset->Load([&model](const AssetData& asset)
+
+			model.TextureResource->Take([&model](const TextureResourceRenderData& renderData)
 			{
-				TShared<MeshAssetData> mesh = asset.Get<MeshAssetData>();
+				model.Texture = renderData.Texture;
 
-				model.Mesh = Mesh::Create();
-
-				TShared<RHIVertexBuffer> vb = RHIVertexBuffer::Create(mesh->Vertices.Ptr, mesh->Vertices.Count);
-				TShared<RHIIndexBuffer> ib = RHIIndexBuffer::Create(mesh->Indices.Ptr, (uint32)mesh->Indices.Count);
-				vb->SetLayout(mesh->Layout);
-
-				model.Mesh->SetVertexBuffer(vb);
-				model.Mesh->SetIndexBuffer(ib);
+				model.Material->SetParameter("Texture", model.Texture);
 
 				model.TryInit();
 			});
@@ -169,7 +155,7 @@ namespace Ion::Editor
 
 	inline void ExampleModelData::TryInit()
 	{
-		if (!m_bLoaded && MeshAsset->IsLoaded() && TextureAsset->IsLoaded())
+		if (!m_bLoaded && Mesh->GetVertexBufferRaw() && Mesh->GetIndexBufferRaw() && Texture)
 		{
 			InitExampleModel(*this);
 			for (auto& func : m_OnInit)

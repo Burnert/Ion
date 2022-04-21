@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ResourceFwd.h"
 #include "Core/Asset/Asset.h"
 #include "Core/Asset/AssetRegistry.h"
 
@@ -10,7 +11,7 @@ namespace Ion
 	// ------------------------------------------------------------
 
 	template<typename T>
-	using TFuncResourceOnTake = TFunction<void(TShared<T>)>;
+	using TFuncResourceOnTake = TFunction<void(const T&)>;
 
 	/**
 	 * @brief Base Resource class
@@ -53,6 +54,7 @@ namespace Ion
 		{
 			// Register the new resource, if it doesn't exist.
 			TShared<T> newResource = MakeShareable(new T(asset));
+			// Register the resource using the asset's Guid.
 			ResourceManager::Register(asset.GetGuid(), newResource);
 			return newResource;
 		}

@@ -8,19 +8,32 @@ namespace Ion
 	// Mesh Resource
 	// ------------------------------------------------------------
 
+	struct MeshResourceRenderData
+	{
+		// @TODO: these shouldn't be shader ptrs
+
+		TShared<RHIVertexBuffer> VertexBuffer;
+		TShared<RHIIndexBuffer> IndexBuffer;
+
+		bool IsAvailable() const
+		{
+			return VertexBuffer && IndexBuffer;
+		}
+	};
+
 	class ION_API MeshResource : public Resource
 	{
 	public:
 		static TShared<MeshResource> Query(const Asset& asset);
 
 		/**
-		 * @brief Used to access the Mesh owned by the Resource.
+		 * @brief Used to access the mesh render data owned by the Resource.
 		 * 
-		 * @tparam Lambda Must be convertible to TFuncResourceOnTake<Mesh>
+		 * @tparam Lambda params - (const MeshResourceRenderData&)
 		 * @see TFuncResourceOnTake
 		 * 
 		 * @param onTake If the resource is ready, called immediately,
-		 * else, called when the asset and the resource get loaded.
+		 * else, called as soon as the resource is loaded.
 		 * 
 		 * @return Returns true if the resource is available instantly.
 		 */
@@ -34,7 +47,7 @@ namespace Ion
 		}
 
 	private:
-		TShared<Mesh> m_Mesh;
+		MeshResourceRenderData m_RenderData;
 
 		friend class Resource;
 	};
@@ -42,9 +55,11 @@ namespace Ion
 	template<typename Lambda>
 	inline bool MeshResource::Take(Lambda onTake)
 	{
-		if (m_Mesh)
+		static_assert(TIsConvertibleV<Lambda, TFuncResourceOnTake<MeshResourceRenderData>>);
+
+		if (m_RenderData.IsAvailable())
 		{
-			onTake(m_Mesh);
+			onTake(m_RenderData);
 			return true;
 		}
 
@@ -52,18 +67,14 @@ namespace Ion
 		{
 			ionassert(m_Asset->GetType() == EAssetType::Mesh);
 
-			TShared<MeshAssetData> mesh = data.Get<MeshAssetData>();
+			TShared<MeshAssetData> meshData = data.Get<MeshAssetData>();
 
-			m_Mesh = Mesh::Create();
+			m_RenderData.VertexBuffer = RHIVertexBuffer::Create(meshData->Vertices.Ptr, meshData->Vertices.Count);
+			m_RenderData.VertexBuffer->SetLayout(meshData->Layout);
 
-			TShared<RHIVertexBuffer> vb = RHIVertexBuffer::Create(mesh->Vertices.Ptr, mesh->Vertices.Count);
-			TShared<RHIIndexBuffer> ib = RHIIndexBuffer::Create(mesh->Indices.Ptr, (uint32)mesh->Indices.Count);
-			vb->SetLayout(mesh->Layout);
+			m_RenderData.IndexBuffer = RHIIndexBuffer::Create(meshData->Indices.Ptr, (uint32)meshData->Indices.Count);
 
-			m_Mesh->SetVertexBuffer(vb);
-			m_Mesh->SetIndexBuffer(ib);
-
-			onTake(m_Mesh);
+			onTake(m_RenderData);
 		};
 
 		TOptional<AssetData> data = m_Asset->Load(initMesh);

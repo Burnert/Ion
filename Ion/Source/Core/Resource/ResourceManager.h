@@ -24,6 +24,7 @@ namespace Ion
 		static void Unregister(Resource* resource);
 
 		static TShared<Resource> Find(const Asset& asset);
+		static TShared<Resource> Find(const GUID& guid);
 
 		/**
 		 * @brief Checks if the Asset is in use by a Resource

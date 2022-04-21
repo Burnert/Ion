@@ -33,16 +33,16 @@ namespace Ion
 
 	void MeshComponent::SetMeshFromAsset(const Asset& asset)
 	{
-		m_MeshAsset = asset;
-		m_MeshResource = MeshResource::Query(asset);
-		m_MeshResource->Take([worldGuid = this->GetWorldContext()->GetGuid(), guid = this->GetGUID()](TShared<Mesh> mesh)
-		{
-			World* world = g_Engine->FindWorld(worldGuid);
-			Component* component = world->GetComponentRegistry().FindComponentByGUID(guid);
-			ionassert(component->IsOfType<MeshComponent>());
-			MeshComponent* meshComponent = (MeshComponent*)component;
-			meshComponent->SetMesh(mesh);
-		});
+		//m_MeshAsset = asset;
+		//m_MeshResource = MeshResource::Query(asset);
+		//m_MeshResource->Take([worldGuid = this->GetWorldContext()->GetGuid(), guid = this->GetGUID()](TShared<Mesh> mesh)
+		//{
+		//	World* world = g_Engine->FindWorld(worldGuid);
+		//	Component* component = world->GetComponentRegistry().FindComponentByGUID(guid);
+		//	ionassert(component->IsOfType<MeshComponent>());
+		//	MeshComponent* meshComponent = (MeshComponent*)component;
+		//	meshComponent->SetMesh(mesh);
+		//});
 	}
 
 	//void MeshComponent::Tick(float deltaTime)
