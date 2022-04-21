@@ -8,7 +8,7 @@
 
 namespace Ion
 {
-	TShared<Shader> Shader::Create()
+	TShared<RHIShader> RHIShader::Create()
 	{
 		switch (RHI::GetCurrent())
 		{
@@ -17,7 +17,7 @@ namespace Ion
 		case ERHI::DX11:
 			return MakeShared<DX11Shader>();
 		default:
-			return TShared<Shader>(nullptr);
+			return TShared<RHIShader>(nullptr);
 		}
 	}
 }

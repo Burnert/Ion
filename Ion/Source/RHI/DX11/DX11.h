@@ -161,8 +161,8 @@ namespace Ion
 	protected:
 		static void SetDisplayVersion(const char* version);
 
-		static void CreateRenderTarget(TShared<Texture>& texture);
-		static void CreateDepthStencil(TShared<Texture>& texture, uint32 width, uint32 height);
+		static void CreateRenderTarget(TShared<RHITexture>& texture);
+		static void CreateDepthStencil(TShared<RHITexture>& texture, uint32 width, uint32 height);
 
 	private:
 		virtual void InitImGuiBackend() override;

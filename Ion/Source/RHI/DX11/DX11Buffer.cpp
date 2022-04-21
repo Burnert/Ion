@@ -58,7 +58,7 @@ namespace Ion
 		COMRelease(m_InputLayout);
 	}
 
-	void DX11VertexBuffer::SetLayout(const TShared<VertexLayout>& layout)
+	void DX11VertexBuffer::SetLayout(const TShared<RHIVertexLayout>& layout)
 	{
 		TRACE_FUNCTION();
 
@@ -83,7 +83,7 @@ namespace Ion
 		}
 	}
 
-	void DX11VertexBuffer::SetLayoutShader(const TShared<Shader>& shader)
+	void DX11VertexBuffer::SetLayoutShader(const TShared<RHIShader>& shader)
 	{
 		CreateDX11Layout(TStaticCast<DX11Shader>(shader));
 	}
@@ -228,7 +228,7 @@ namespace Ion
 	}
 
 	DX11UniformBuffer::DX11UniformBuffer(void* data, size_t size, const UniformDataMap& uniforms) :
-		UniformBuffer(uniforms),
+		RHIUniformBuffer(uniforms),
 		m_Data(nullptr),
 		m_DataSize(size),
 		m_Buffer(nullptr)

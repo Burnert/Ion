@@ -97,7 +97,7 @@ namespace Ion
 		}
 
 	private:
-		TShared<Texture> m_Texture;
+		TShared<RHITexture> m_Texture;
 
 		friend class Resource;
 	};
@@ -125,7 +125,7 @@ namespace Ion
 			desc.bUseAsRenderTarget = true;
 			desc.DebugName = StringConverter::WStringToString(m_Asset->GetDefinitionPath().ToString());
 
-			m_Texture = Texture::Create(desc);
+			m_Texture = RHITexture::Create(desc);
 
 			onTake(m_Texture);
 		};
@@ -193,8 +193,8 @@ namespace Ion
 
 			m_Mesh = Mesh::Create();
 
-			TShared<VertexBuffer> vb = VertexBuffer::Create(mesh->Vertices.Ptr, mesh->Vertices.Count);
-			TShared<IndexBuffer> ib = IndexBuffer::Create(mesh->Indices.Ptr, (uint32)mesh->Indices.Count);
+			TShared<RHIVertexBuffer> vb = RHIVertexBuffer::Create(mesh->Vertices.Ptr, mesh->Vertices.Count);
+			TShared<RHIIndexBuffer> ib = RHIIndexBuffer::Create(mesh->Indices.Ptr, (uint32)mesh->Indices.Count);
 			vb->SetLayout(mesh->Layout);
 
 			m_Mesh->SetVertexBuffer(vb);

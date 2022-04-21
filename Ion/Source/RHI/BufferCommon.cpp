@@ -11,7 +11,7 @@
 namespace Ion
 {
 	// Vertex Buffer
-	TShared<VertexBuffer> VertexBuffer::Create(float* vertexAttributes, uint64 count)
+	TShared<RHIVertexBuffer> RHIVertexBuffer::Create(float* vertexAttributes, uint64 count)
 	{
 		switch (RHI::GetCurrent())
 		{
@@ -20,12 +20,12 @@ namespace Ion
 		case ERHI::DX11:
 			return MakeShared<DX11VertexBuffer>(vertexAttributes, count);
 		default:
-			return TShared<VertexBuffer>(nullptr);
+			return TShared<RHIVertexBuffer>(nullptr);
 		}
 	}
 
 	// Index Buffer
-	TShared<IndexBuffer> IndexBuffer::Create(uint32* indices, uint32 count)
+	TShared<RHIIndexBuffer> RHIIndexBuffer::Create(uint32* indices, uint32 count)
 	{
 		switch (RHI::GetCurrent())
 		{
@@ -34,12 +34,12 @@ namespace Ion
 		case ERHI::DX11:
 			return MakeShared<DX11IndexBuffer>(indices, count);
 		default:
-			return TShared<IndexBuffer>(nullptr);
+			return TShared<RHIIndexBuffer>(nullptr);
 		}
 	}
 
 	// Uniform Buffer
-	UniformBuffer* UniformBuffer::Create(void* initialData, size_t size)
+	RHIUniformBuffer* RHIUniformBuffer::Create(void* initialData, size_t size)
 	{
 		switch (RHI::GetCurrent())
 		{
@@ -52,7 +52,7 @@ namespace Ion
 		}
 	}
 
-	UniformBuffer* UniformBuffer::Create(void* data, size_t size, const UniformDataMap& uniforms)
+	RHIUniformBuffer* RHIUniformBuffer::Create(void* data, size_t size, const UniformDataMap& uniforms)
 	{
 		switch (RHI::GetCurrent())
 		{

@@ -136,7 +136,7 @@ namespace Ion
 		DrawIndexed(primitive.IndexBuffer->GetIndexCount());
 	}
 
-	void Renderer::DrawBillboard(const RBillboardRenderProxy& billboard, const Shader* shader, const Scene* targetScene) const
+	void Renderer::DrawBillboard(const RBillboardRenderProxy& billboard, const RHIShader* shader, const Scene* targetScene) const
 	{
 		TRACE_FUNCTION();
 
@@ -145,8 +145,8 @@ namespace Ion
 		TShared<Mesh> billboardMesh = GetBillboardMesh();
 		ionassert(billboardMesh);
 
-		TShared<VertexBuffer> vb = billboardMesh->GetVertexBuffer();
-		TShared<IndexBuffer> ib = billboardMesh->GetIndexBuffer();
+		TShared<RHIVertexBuffer> vb = billboardMesh->GetVertexBuffer();
+		TShared<RHIIndexBuffer> ib = billboardMesh->GetIndexBuffer();
 
 		shader->Bind();
 		vb->Bind();
@@ -173,7 +173,7 @@ namespace Ion
 		DrawIndexed(ib->GetIndexCount());
 	}
 
-	void Renderer::DrawScreenTexture(const TShared<Texture>& texture) const
+	void Renderer::DrawScreenTexture(const TShared<RHITexture>& texture) const
 	{
 		TRACE_FUNCTION();
 
@@ -184,7 +184,7 @@ namespace Ion
 		DrawIndexed(6);
 	}
 
-	void Renderer::DrawScreenTexture(const TShared<Texture>& texture, const Shader* shader) const
+	void Renderer::DrawScreenTexture(const TShared<RHITexture>& texture, const RHIShader* shader) const
 	{
 		TRACE_FUNCTION();
 
@@ -214,7 +214,7 @@ namespace Ion
 			File::ReadToString(EnginePath::GetCheckedShadersPath() + L"TextureRender.frag", pixelSrc);
 		}
 
-		m_ScreenTextureRenderData.Shader = Shader::Create();
+		m_ScreenTextureRenderData.Shader = RHIShader::Create();
 		m_ScreenTextureRenderData.Shader->AddShaderSource(EShaderType::Vertex, vertexSrc);
 		m_ScreenTextureRenderData.Shader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
@@ -235,15 +235,15 @@ namespace Ion
 			2, 0, 3,
 		};
 
-		TShared<VertexLayout> quadLayout = MakeShared<VertexLayout>(2);
+		TShared<RHIVertexLayout> quadLayout = MakeShared<RHIVertexLayout>(2);
 		quadLayout->AddAttribute(EVertexAttributeSemantic::Position, EVertexAttributeType::Float, 3, false);
 		quadLayout->AddAttribute(EVertexAttributeSemantic::TexCoord, EVertexAttributeType::Float, 2, false);
 
-		m_ScreenTextureRenderData.VertexBuffer = VertexBuffer::Create(quadVertices, sizeof(quadVertices) / sizeof(float));
+		m_ScreenTextureRenderData.VertexBuffer = RHIVertexBuffer::Create(quadVertices, sizeof(quadVertices) / sizeof(float));
 		m_ScreenTextureRenderData.VertexBuffer->SetLayout(quadLayout);
 		m_ScreenTextureRenderData.VertexBuffer->SetLayoutShader(m_ScreenTextureRenderData.Shader);
 
-		m_ScreenTextureRenderData.IndexBuffer = IndexBuffer::Create(quadIndices, sizeof(quadIndices) / sizeof(uint32));
+		m_ScreenTextureRenderData.IndexBuffer = RHIIndexBuffer::Create(quadIndices, sizeof(quadIndices) / sizeof(uint32));
 	}
 
 	void Renderer::InitUtilityPrimitives()
@@ -263,16 +263,16 @@ namespace Ion
 			2, 0, 3,
 		};
 
-		TShared<VertexLayout> quadLayout = MakeShared<VertexLayout>(2);
+		TShared<RHIVertexLayout> quadLayout = MakeShared<RHIVertexLayout>(2);
 		quadLayout->AddAttribute(EVertexAttributeSemantic::Position, EVertexAttributeType::Float, 3, false);
 		quadLayout->AddAttribute(EVertexAttributeSemantic::TexCoord, EVertexAttributeType::Float, 2, false);
 		quadLayout->AddAttribute(EVertexAttributeSemantic::Normal,   EVertexAttributeType::Float, 3, true);
 
-		TShared<VertexBuffer> vb = VertexBuffer::Create(quadVertices, sizeof(quadVertices) / sizeof(float));
+		TShared<RHIVertexBuffer> vb = RHIVertexBuffer::Create(quadVertices, sizeof(quadVertices) / sizeof(float));
 		vb->SetLayout(quadLayout);
 		vb->SetLayoutShader(m_BasicUnlitMaskedShader);
 
-		TShared<IndexBuffer> ib = IndexBuffer::Create(quadIndices, sizeof(quadIndices) / sizeof(uint32));
+		TShared<RHIIndexBuffer> ib = RHIIndexBuffer::Create(quadIndices, sizeof(quadIndices) / sizeof(uint32));
 
 		m_BillboardMesh = Mesh::Create();
 		m_BillboardMesh->SetVertexBuffer(vb);
@@ -289,7 +289,7 @@ namespace Ion
 		whiteDesc.bCreateSampler = true;
 		whiteDesc.DebugName = "WhiteTex";
 		whiteDesc.InitialData = whiteTex;
-		m_WhiteTexture = Texture::Create(whiteDesc);
+		m_WhiteTexture = RHITexture::Create(whiteDesc);
 	}
 
 	void Renderer::InitScreenTextureRendering()
@@ -304,7 +304,7 @@ namespace Ion
 		BindScreenTexturePrimitives(m_ScreenTextureRenderData.Shader.get());
 	}
 
-	void Renderer::BindScreenTexturePrimitives(const Shader* customShader) const
+	void Renderer::BindScreenTexturePrimitives(const RHIShader* customShader) const
 	{
 		TRACE_FUNCTION();
 
@@ -346,7 +346,7 @@ namespace Ion
 			File::ReadToString(shadersPath + L"Basic.frag", pixelSrc);
 		}
 
-		m_BasicShader = Shader::Create();
+		m_BasicShader = RHIShader::Create();
 		m_BasicShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
 		m_BasicShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
@@ -376,7 +376,7 @@ namespace Ion
 			File::ReadToString(shadersPath + L"BasicUnlitMasked.frag", pixelSrc);
 		}
 
-		m_BasicUnlitMaskedShader = Shader::Create();
+		m_BasicUnlitMaskedShader = RHIShader::Create();
 		m_BasicUnlitMaskedShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
 		m_BasicUnlitMaskedShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
@@ -406,7 +406,7 @@ namespace Ion
 			File::ReadToString(shadersPath + L"PP_FXAA.frag", pixelSrc);
 		}
 
-		m_PPFXAAShader = Shader::Create();
+		m_PPFXAAShader = RHIShader::Create();
 		m_PPFXAAShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
 		m_PPFXAAShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
@@ -436,7 +436,7 @@ namespace Ion
 			File::ReadToString(shadersPath + L"Editor/EditorObjectID.frag", pixelSrc);
 		}
 
-		m_EditorObjectIDShader = Shader::Create();
+		m_EditorObjectIDShader = RHIShader::Create();
 		m_EditorObjectIDShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
 		m_EditorObjectIDShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
@@ -465,7 +465,7 @@ namespace Ion
 			File::ReadToString(shadersPath + L"Editor/EditorSelected.vert", vertexSrc);
 		}
 
-		m_EditorSelectedShader = Shader::Create();
+		m_EditorSelectedShader = RHIShader::Create();
 		m_EditorSelectedShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
 		m_EditorSelectedShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
@@ -495,7 +495,7 @@ namespace Ion
 			File::ReadToString(shadersPath + L"Editor/EditorViewport.frag", pixelSrc);
 		}
 
-		m_EditorViewportShader = Shader::Create();
+		m_EditorViewportShader = RHIShader::Create();
 		m_EditorViewportShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
 		m_EditorViewportShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
@@ -525,7 +525,7 @@ namespace Ion
 			File::ReadToString(shadersPath + L"Editor/EditorViewport.frag", pixelSrc);
 		}
 
-		m_EditorViewportMSShader = Shader::Create();
+		m_EditorViewportMSShader = RHIShader::Create();
 		m_EditorViewportMSShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
 		m_EditorViewportMSShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 

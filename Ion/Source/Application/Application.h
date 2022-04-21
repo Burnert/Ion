@@ -24,7 +24,7 @@ namespace Ion
 
 	class Renderer;
 
-	class Shader;
+	class RHIShader;
 	class IndexBuffer;
 
 	enum class ECursorType : int8

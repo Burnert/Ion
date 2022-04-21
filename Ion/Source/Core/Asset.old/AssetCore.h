@@ -9,7 +9,7 @@ namespace Ion
 	class AssetManager;
 	class AssetWorker;
 	class AssetReference;
-	class VertexLayout;
+	class RHIVertexLayout;
 
 	// @TODO: Make this a GUID
 	using AssetID = uint64;
@@ -55,7 +55,7 @@ namespace Ion
 			uint64 IndicesOffset;
 			uint64 VertexCount;
 			uint64 IndexCount;
-			TShared<VertexLayout> VertexLayout;
+			TShared<RHIVertexLayout> VertexLayout;
 		};
 
 		struct Texture

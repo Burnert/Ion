@@ -14,7 +14,7 @@ namespace Ion
 		AuxSRV,
 	};
 
-	class ION_API DX11Texture : public Texture
+	class ION_API DX11Texture : public RHITexture
 	{
 	public:
 		virtual ~DX11Texture() override;
@@ -25,7 +25,7 @@ namespace Ion
 		virtual void Bind(uint32 slot = 0) const override;
 		virtual void Unbind() const override;
 
-		virtual void CopyTo(const TShared<Texture>& destination) const override;
+		virtual void CopyTo(const TShared<RHITexture>& destination) const override;
 		virtual void Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType) override;
 		virtual void Unmap() override;
 
@@ -185,7 +185,7 @@ namespace Ion
 		ID3D11ShaderResourceView* m_SRV;
 		ID3D11SamplerState* m_SamplerState;
 
-		friend class Texture;
+		friend class RHITexture;
 		friend class DX11Renderer;
 		friend class DX11;
 	};

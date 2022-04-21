@@ -15,7 +15,7 @@ namespace Ion
 		EShaderType Type;
 	};
 
-	class ION_API DX11Shader : public Shader
+	class ION_API DX11Shader : public RHIShader
 	{
 	public:
 		DX11Shader();

@@ -176,7 +176,7 @@ namespace Ion
 		return GLPolygonModeToPolygonDrawMode(polygonMode);
 	}
 
-	void OpenGLRenderer::SetRenderTarget(const TShared<Texture>& targetTexture)
+	void OpenGLRenderer::SetRenderTarget(const TShared<RHITexture>& targetTexture)
 	{
 		ionassert(!targetTexture || targetTexture->GetDescription().bUseAsRenderTarget);
 
@@ -185,7 +185,7 @@ namespace Ion
 		glBindFramebuffer(GL_FRAMEBUFFER, m_CurrentRenderTarget);
 	}
 
-	void OpenGLRenderer::SetDepthStencil(const TShared<Texture>& targetTexture)
+	void OpenGLRenderer::SetDepthStencil(const TShared<RHITexture>& targetTexture)
 	{
 	}
 }

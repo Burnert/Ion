@@ -8,7 +8,7 @@ namespace Ion::Editor
 	{
 		TShared<Mesh> Mesh;
 		TShared<Material> Material;
-		TShared<Texture> Texture;
+		TShared<RHITexture> Texture;
 
 		Asset MeshAsset;
 		Asset TextureAsset;
@@ -94,7 +94,7 @@ namespace Ion::Editor
 				texDesc.bGenerateMips = true;
 				texDesc.bUseAsRenderTarget = true;
 				texDesc.bCreateSampler = true;
-				model.Texture = Texture::Create(texDesc);
+				model.Texture = RHITexture::Create(texDesc);
 
 				model.Texture->UpdateSubresource(image.get());
 
@@ -111,8 +111,8 @@ namespace Ion::Editor
 
 				model.Mesh = Mesh::Create();
 
-				TShared<VertexBuffer> vb = VertexBuffer::Create(mesh->Vertices.Ptr, mesh->Vertices.Count);
-				TShared<IndexBuffer> ib = IndexBuffer::Create(mesh->Indices.Ptr, (uint32)mesh->Indices.Count);
+				TShared<RHIVertexBuffer> vb = RHIVertexBuffer::Create(mesh->Vertices.Ptr, mesh->Vertices.Count);
+				TShared<RHIIndexBuffer> ib = RHIIndexBuffer::Create(mesh->Indices.Ptr, (uint32)mesh->Indices.Count);
 				vb->SetLayout(mesh->Layout);
 
 				model.Mesh->SetVertexBuffer(vb);

@@ -37,7 +37,7 @@ namespace Ion
 	{
 		TMemoryBlock<float> Vertices;
 		TMemoryBlock<uint32> Indices;
-		TShared<VertexLayout> Layout;
+		TShared<RHIVertexLayout> Layout;
 	};
 
 	/**

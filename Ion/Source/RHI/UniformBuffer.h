@@ -39,7 +39,7 @@ namespace Ion
 
 	using UniformDataMap = THashMap<String, UniformData>;
 
-	class UniformBuffer;
+	class RHIUniformBuffer;
 
 	class ION_API UniformBufferFactory
 	{
@@ -47,34 +47,34 @@ namespace Ion
 		void Add(const String& name, EUniformType type);
 		void Remove(const String& name);
 
-		void Construct(TShared<UniformBuffer>& outUniformBuffer);
-		void Construct(UniformBuffer*& outUniformBuffer);
+		void Construct(TShared<RHIUniformBuffer>& outUniformBuffer);
+		void Construct(RHIUniformBuffer*& outUniformBuffer);
 
 	private:
 		UniformDataMap m_Uniforms;
 	};
 
-	class ION_API UniformBuffer
+	class ION_API RHIUniformBuffer
 	{
 	public:
-		static UniformBuffer* Create(void* initialData, size_t size);
+		static RHIUniformBuffer* Create(void* initialData, size_t size);
 
 		/* Creates a UniformBuffer with specified struct data. */
 		template<typename T>
-		static UniformBuffer* Create(T& initialData)
+		static RHIUniformBuffer* Create(T& initialData)
 		{
 			return Create(&initialData, sizeof(T));
 		}
 
 		/* Creates a UniformBuffer with a specified struct type. */
 		template<typename T>
-		static UniformBuffer* Create()
+		static RHIUniformBuffer* Create()
 		{
 			T initialData { };
 			return Create(&initialData, sizeof(T));
 		}
 
-		virtual ~UniformBuffer() { }
+		virtual ~RHIUniformBuffer() { }
 
 		virtual void Bind(uint32 slot = 0) const = 0;
 
@@ -125,10 +125,10 @@ namespace Ion
 		}
 
 	protected:
-		static UniformBuffer* Create(void* data, size_t size, const UniformDataMap& uniforms);
+		static RHIUniformBuffer* Create(void* data, size_t size, const UniformDataMap& uniforms);
 
-		UniformBuffer() { };
-		UniformBuffer(const UniformDataMap& uniforms);
+		RHIUniformBuffer() { };
+		RHIUniformBuffer(const UniformDataMap& uniforms);
 
 		virtual void* GetDataPtr() const = 0;
 		virtual void UpdateData() const = 0;

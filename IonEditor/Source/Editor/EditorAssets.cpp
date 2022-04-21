@@ -15,7 +15,7 @@
 
 namespace Ion::Editor
 {
-	static void LoadTexture(TShared<Texture>& texture, const FilePath& path)
+	static void LoadTexture(TShared<RHITexture>& texture, const FilePath& path)
 	{
 		//AssetHandle textureAsset = AssetManager::CreateAsset(EAssetType::Texture, path);
 		Asset textureAsset = AssetFinder(path).Resolve();
@@ -32,7 +32,7 @@ namespace Ion::Editor
 			desc.DebugName = StringConverter::WStringToString(path.LastElement());
 			desc.MagFilter = ETextureFilteringMethod::Linear;
 			desc.MinFilter = ETextureFilteringMethod::Linear;
-			texture = Texture::Create(desc);
+			texture = RHITexture::Create(desc);
 
 			texture->UpdateSubresource(image.get());
 		});
@@ -46,7 +46,7 @@ namespace Ion::Editor
 		LoadTexture(BillboardNoMesh,    EnginePath::GetEditorContentPath() + PathNoMesh);
 	}
 
-	const TShared<Texture>& EditorBillboards::GetComponentBillboardTexture(ComponentTypeID id)
+	const TShared<RHITexture>& EditorBillboards::GetComponentBillboardTexture(ComponentTypeID id)
 	{
 		if (id == LightComponent::GetTypeID())
 			return BillboardLightbulb;
@@ -75,16 +75,16 @@ namespace Ion::Editor
 			2, 3, 0,
 		};
 
-		TShared<VertexLayout> gridLayout = MakeShared<VertexLayout>(2);
+		TShared<RHIVertexLayout> gridLayout = MakeShared<RHIVertexLayout>(2);
 		gridLayout->AddAttribute(EVertexAttributeSemantic::Position, EVertexAttributeType::Float, 3, false);
 		gridLayout->AddAttribute(EVertexAttributeSemantic::TexCoord, EVertexAttributeType::Float, 2, false);
 		gridLayout->AddAttribute(EVertexAttributeSemantic::Normal, EVertexAttributeType::Float, 3, true);
 
-		TShared<VertexBuffer> gridVB = VertexBuffer::Create(gridVertices, sizeof(gridVertices) / sizeof(float));
+		TShared<RHIVertexBuffer> gridVB = RHIVertexBuffer::Create(gridVertices, sizeof(gridVertices) / sizeof(float));
 		gridVB->SetLayout(gridLayout);
 		gridVB->SetLayoutShader(EditorMeshes::ShaderGrid);
 
-		TShared<IndexBuffer> gridIB = IndexBuffer::Create(gridIndices, sizeof(gridIndices) / sizeof(uint32));
+		TShared<RHIIndexBuffer> gridIB = RHIIndexBuffer::Create(gridIndices, sizeof(gridIndices) / sizeof(uint32));
 
 		EditorMeshes::MeshGrid = Mesh::Create();
 		EditorMeshes::MeshGrid->SetVertexBuffer(gridVB);
@@ -110,7 +110,7 @@ namespace Ion::Editor
 			File::ReadToString(shadersPath + L"Basic.frag", pixelSrc);
 		}
 
-		EditorMeshes::ShaderGrid = Shader::Create();
+		EditorMeshes::ShaderGrid = RHIShader::Create();
 		EditorMeshes::ShaderGrid->AddShaderSource(EShaderType::Vertex, vertexSrc);
 		EditorMeshes::ShaderGrid->AddShaderSource(EShaderType::Pixel, pixelSrc);
 

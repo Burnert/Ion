@@ -77,8 +77,8 @@ namespace Ion
 
 		Vector2 GetCenterPosition() const;
 
-		const TShared<Texture>& GetWindowColorTexture() const;
-		const TShared<Texture>& GetWindowDepthStencilTexture() const;
+		const TShared<RHITexture>& GetWindowColorTexture() const;
+		const TShared<RHITexture>& GetWindowDepthStencilTexture() const;
 
 	public:
 		// Implemented per platform.
@@ -89,8 +89,8 @@ namespace Ion
 		GenericWindow();
 
 	private:
-		TShared<Texture> m_WindowColorTexture;
-		TShared<Texture> m_WindowDepthStencilTexture;
+		TShared<RHITexture> m_WindowColorTexture;
+		TShared<RHITexture> m_WindowDepthStencilTexture;
 
 	protected:
 		bool m_bCursorLocked;
@@ -99,12 +99,12 @@ namespace Ion
 		friend class DX11;
 	};
 
-	inline const TShared<Texture>& GenericWindow::GetWindowColorTexture() const
+	inline const TShared<RHITexture>& GenericWindow::GetWindowColorTexture() const
 	{
 		return m_WindowColorTexture;
 	}
 
-	inline const TShared<Texture>& GenericWindow::GetWindowDepthStencilTexture() const
+	inline const TShared<RHITexture>& GenericWindow::GetWindowDepthStencilTexture() const
 	{
 		return m_WindowDepthStencilTexture;
 	}

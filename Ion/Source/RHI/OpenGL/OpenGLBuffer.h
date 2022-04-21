@@ -7,15 +7,15 @@
 
 namespace Ion
 {
-	class ION_API OpenGLVertexBuffer : public VertexBuffer
+	class ION_API OpenGLVertexBuffer : public RHIVertexBuffer
 	{
 		friend class OpenGLRenderer;
 	public:
 		OpenGLVertexBuffer(float* vertexAttributes, uint64 count);
 		virtual ~OpenGLVertexBuffer() override;
 
-		virtual void SetLayout(const TShared<VertexLayout>& layout) override;
-		virtual void SetLayoutShader(const TShared<Shader>& shader) override;
+		virtual void SetLayout(const TShared<RHIVertexLayout>& layout) override;
+		virtual void SetLayoutShader(const TShared<RHIShader>& shader) override;
 
 		virtual uint32 GetVertexCount() const override;
 
@@ -44,10 +44,10 @@ namespace Ion
 	private:
 		uint32 m_ID;
 		uint32 m_VertexCount;
-		TShared<VertexLayout> m_VertexLayout;
+		TShared<RHIVertexLayout> m_VertexLayout;
 	};
 
-	class ION_API OpenGLIndexBuffer : public IndexBuffer
+	class ION_API OpenGLIndexBuffer : public RHIIndexBuffer
 	{
 		friend class OpenGLRenderer;
 	public:
@@ -67,7 +67,7 @@ namespace Ion
 		uint32 m_TriangleCount;
 	};
 
-	class ION_API OpenGLUniformBuffer : public UniformBuffer
+	class ION_API OpenGLUniformBuffer : public RHIUniformBuffer
 	{
 	public:
 		virtual ~OpenGLUniformBuffer() override;
@@ -87,6 +87,6 @@ namespace Ion
 		uint32 m_ID;
 
 		friend class OpenGLRenderer;
-		friend class UniformBuffer;
+		friend class RHIUniformBuffer;
 	};
 }

@@ -475,11 +475,11 @@ namespace Ion
 		return stride;
 	}
 
-	TShared<VertexLayout> ColladaDocument::TrianglesNodeData::CreateLayout() const
+	TShared<RHIVertexLayout> ColladaDocument::TrianglesNodeData::CreateLayout() const
 	{
 		TRACE_FUNCTION();
 
-		TShared<VertexLayout> layout = MakeShareable(new VertexLayout((uint32)m_TriangleInputs.size()));
+		TShared<RHIVertexLayout> layout = MakeShareable(new RHIVertexLayout((uint32)m_TriangleInputs.size()));
 		for (const TriangleInput& input : m_TriangleInputs)
 		{
 			EVertexAttributeSemantic semantic = EVertexAttributeSemantic::Null;

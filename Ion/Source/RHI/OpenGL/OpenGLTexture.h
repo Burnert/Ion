@@ -5,7 +5,7 @@
 
 namespace Ion
 {
-	class ION_API OpenGLTexture : public Texture
+	class ION_API OpenGLTexture : public RHITexture
 	{
 	public:
 		virtual ~OpenGLTexture() override;
@@ -16,7 +16,7 @@ namespace Ion
 		virtual void Bind(uint32 slot = 0) const override;
 		virtual void Unbind() const override;
 
-		virtual void CopyTo(const TShared<Texture>& destination) const override;
+		virtual void CopyTo(const TShared<RHITexture>& destination) const override;
 		virtual void Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType) override;
 		virtual void Unmap() override;
 
@@ -66,7 +66,7 @@ namespace Ion
 		uint32 m_FramebufferID;
 		mutable int32 m_BoundSlot;
 
-		friend class Texture;
+		friend class RHITexture;
 		friend class OpenGLRenderer;
 	};
 }

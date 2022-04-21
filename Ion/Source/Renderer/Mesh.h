@@ -19,8 +19,6 @@ namespace Ion
 		UVector4 RenderGuid;
 	};
 
-	class UniformBuffer;
-
 	class ION_API Mesh
 	{
 	public:
@@ -28,30 +26,30 @@ namespace Ion
 
 		virtual ~Mesh() { }
 
-		void SetVertexBuffer(const TShared<VertexBuffer>& vertexBuffer);
-		void SetIndexBuffer(const TShared<IndexBuffer>& indexBuffer);
+		void SetVertexBuffer(const TShared<RHIVertexBuffer>& vertexBuffer);
+		void SetIndexBuffer(const TShared<RHIIndexBuffer>& indexBuffer);
 		void SetMaterial(const TShared<Material>& material);
 
-		const TShared<VertexBuffer>& GetVertexBuffer() const;
-		const TShared<IndexBuffer>& GetIndexBuffer() const;
+		const TShared<RHIVertexBuffer>& GetVertexBuffer() const;
+		const TShared<RHIIndexBuffer>& GetIndexBuffer() const;
 		const TWeak<Material>& GetMaterial() const;
 
 		MeshUniforms& GetUniformsDataRef();
 
 		bool LoadFromAsset(Asset& asset);
 
-		const VertexBuffer* GetVertexBufferRaw() const;
-		const IndexBuffer* GetIndexBufferRaw() const;
-		const UniformBuffer* GetUniformBufferRaw() const;
+		const RHIVertexBuffer* GetVertexBufferRaw() const;
+		const RHIIndexBuffer* GetIndexBufferRaw() const;
+		const RHIUniformBuffer* GetUniformBufferRaw() const;
 		const Material* GetMaterialRaw() const;
 
 	private:
 		Mesh();
 
 	private:
-		TShared<VertexBuffer> m_VertexBuffer;
-		TShared<IndexBuffer> m_IndexBuffer;
-		TShared<UniformBuffer> m_UniformBuffer;
+		TShared<RHIVertexBuffer> m_VertexBuffer;
+		TShared<RHIIndexBuffer> m_IndexBuffer;
+		TShared<RHIUniformBuffer> m_UniformBuffer;
 		TWeak<Material> m_Material;
 
 		uint32 m_VertexCount;

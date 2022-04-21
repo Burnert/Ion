@@ -5,7 +5,7 @@
 
 namespace Ion
 {
-	class VertexLayout;
+	class RHIVertexLayout;
 
 	struct ColladaData
 	{
@@ -13,7 +13,7 @@ namespace Ion
 		uint32* Indices;
 		uint64 VertexAttributeCount;
 		uint64 IndexCount;
-		TShared<VertexLayout> Layout;
+		TShared<RHIVertexLayout> Layout;
 	};
 
 	class ION_API ColladaDocument : public XMLDocument
@@ -37,7 +37,7 @@ namespace Ion
 
 			TriangleInput* AddTriangleInput(XMLNode* meshNode, XMLNode* inputNode);
 			uint32 GetFullStride() const;
-			TShared<VertexLayout> CreateLayout() const;
+			TShared<RHIVertexLayout> CreateLayout() const;
 
 			TArray<TriangleInput> m_TriangleInputs;
 			uint32 m_AttributeCount = 0;

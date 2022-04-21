@@ -7,14 +7,14 @@
 
 namespace Ion
 {
-	class ION_API DX11VertexBuffer : public VertexBuffer
+	class ION_API DX11VertexBuffer : public RHIVertexBuffer
 	{
 	public:
 		DX11VertexBuffer(float* vertexAttributes, uint64 count);
 		virtual ~DX11VertexBuffer() override;
 
-		virtual void SetLayout(const TShared<VertexLayout>& layout) override;
-		virtual void SetLayoutShader(const TShared<Shader>& shader) override;
+		virtual void SetLayout(const TShared<RHIVertexLayout>& layout) override;
+		virtual void SetLayoutShader(const TShared<RHIShader>& shader) override;
 
 		void CreateDX11Layout(const TShared<class DX11Shader>& shader);
 
@@ -117,7 +117,7 @@ namespace Ion
 	private:
 		uint32 m_ID;
 		uint32 m_VertexCount;
-		TShared<VertexLayout> m_VertexLayout;
+		TShared<RHIVertexLayout> m_VertexLayout;
 		TArray<D3D11_INPUT_ELEMENT_DESC> m_IEDArray;
 
 		ID3D11Buffer* m_Buffer;
@@ -126,7 +126,7 @@ namespace Ion
 		friend class DX11Renderer;
 	};
 
-	class ION_API DX11IndexBuffer : public IndexBuffer
+	class ION_API DX11IndexBuffer : public RHIIndexBuffer
 	{
 	public:
 		DX11IndexBuffer(uint32* indices, uint32 count);
@@ -149,7 +149,7 @@ namespace Ion
 		friend class DX11Renderer;
 	};
 
-	class ION_API DX11UniformBuffer : public UniformBuffer
+	class ION_API DX11UniformBuffer : public RHIUniformBuffer
 	{
 	public:
 		virtual ~DX11UniformBuffer() override;
@@ -169,6 +169,6 @@ namespace Ion
 		ID3D11Buffer* m_Buffer;
 
 		friend class DX11Renderer;
-		friend class UniformBuffer;
+		friend class RHIUniformBuffer;
 	};
 }

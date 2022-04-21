@@ -15,9 +15,9 @@ namespace Ion
 {
 	struct EditorViewportTextures
 	{
-		TShared<Texture> SceneFinalColor;
-		TShared<Texture> SceneFinalDepth;
-		TShared<Texture> SelectedDepth;
+		TShared<RHITexture> SceneFinalColor;
+		TShared<RHITexture> SceneFinalDepth;
+		TShared<RHITexture> SelectedDepth;
 	};
 
 	struct ViewportDescription
@@ -63,27 +63,27 @@ namespace Ion
 
 	struct RBillboardRenderProxy
 	{
-		const Texture* Texture;
+		const RHITexture* Texture;
 		Vector3 LocationWS;
 		float Scale;
 	};
 
 	struct RPrimitiveRenderProxy
 	{
-		const VertexBuffer* VertexBuffer;
-		const IndexBuffer* IndexBuffer;
-		const UniformBuffer* UniformBuffer;
+		const RHIVertexBuffer* VertexBuffer;
+		const RHIIndexBuffer* IndexBuffer;
+		const RHIUniformBuffer* UniformBuffer;
 		const Material* Material;
-		const Shader* Shader;
+		const RHIShader* Shader;
 		Matrix4 Transform;
 	};
 
 	struct REditorPassPrimitive
 	{
 		GUID Guid = GUID::Zero;
-		const VertexBuffer* VertexBuffer;
-		const IndexBuffer* IndexBuffer;
-		const UniformBuffer* UniformBuffer;
+		const RHIVertexBuffer* VertexBuffer;
+		const RHIIndexBuffer* IndexBuffer;
+		const RHIUniformBuffer* UniformBuffer;
 		Matrix4 Transform;
 	};
 

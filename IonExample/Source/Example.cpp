@@ -88,8 +88,8 @@ static void LoadMesh(Asset& asset, TShared<Mesh>& mesh)
 
 		mesh = Mesh::Create();
 
-		TShared<VertexBuffer> vb = VertexBuffer::Create(meshData->Vertices.Ptr, meshData->Vertices.Count);
-		TShared<IndexBuffer> ib = IndexBuffer::Create(meshData->Indices.Ptr, (uint32)meshData->Indices.Count);
+		TShared<RHIVertexBuffer> vb = RHIVertexBuffer::Create(meshData->Vertices.Ptr, meshData->Vertices.Count);
+		TShared<RHIIndexBuffer> ib = RHIIndexBuffer::Create(meshData->Indices.Ptr, (uint32)meshData->Indices.Count);
 		vb->SetLayout(meshData->Layout);
 
 		mesh->SetVertexBuffer(vb);
@@ -100,7 +100,7 @@ static void LoadMesh(Asset& asset, TShared<Mesh>& mesh)
 	ionassert(!data);
 }
 
-static void LoadTxtr(Asset& asset, TShared<Texture>& texture)
+static void LoadTxtr(Asset& asset, TShared<RHITexture>& texture)
 {
 	ionassert(asset->GetType() == EAssetType::Image);
 
@@ -116,7 +116,7 @@ static void LoadTxtr(Asset& asset, TShared<Texture>& texture)
 		desc.bGenerateMips = true;
 		desc.bCreateSampler = true;
 		desc.bUseAsRenderTarget = true;
-		texture = Texture::Create(desc);
+		texture = RHITexture::Create(desc);
 
 		texture->UpdateSubresource(image.get());
 
@@ -656,11 +656,11 @@ void IonExample::CreateRenderTargetTexture(TextureDimensions dimensions)
 	renderTargetDesc.Dimensions = dimensions;
 	renderTargetDesc.bUseAsRenderTarget = true;
 	renderTargetDesc.bCreateSampler = true;
-	m_RenderTarget = Texture::Create(renderTargetDesc);
+	m_RenderTarget = RHITexture::Create(renderTargetDesc);
 
 	TextureDescription depthStencilDesc { };
 	depthStencilDesc.Dimensions = dimensions;
 	depthStencilDesc.bUseAsDepthStencil = true;
 	depthStencilDesc.Format = ETextureFormat::D24S8;
-	m_DepthStencil = Texture::Create(depthStencilDesc);
+	m_DepthStencil = RHITexture::Create(depthStencilDesc);
 }

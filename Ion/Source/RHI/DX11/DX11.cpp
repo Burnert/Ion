@@ -396,7 +396,7 @@ namespace Ion
 		strcpy_s((s_DisplayName + length), 120 - length, version);
 	}
 
-	void DX11::CreateRenderTarget(TShared<Texture>& texture)
+	void DX11::CreateRenderTarget(TShared<RHITexture>& texture)
 	{
 		TRACE_FUNCTION();
 
@@ -418,7 +418,7 @@ namespace Ion
 		texture = MakeShareable(new DX11Texture(desc, backBuffer));
 	}
 
-	void DX11::CreateDepthStencil(TShared<Texture>& texture, uint32 width, uint32 height)
+	void DX11::CreateDepthStencil(TShared<RHITexture>& texture, uint32 width, uint32 height)
 	{
 		TRACE_FUNCTION();
 
@@ -427,7 +427,7 @@ namespace Ion
 		desc.bUseAsDepthStencil = true;
 		desc.Dimensions = { width, height };
 
-		texture = Texture::Create(desc);
+		texture = RHITexture::Create(desc);
 	}
 
 	void DX11::InitImGuiBackend()

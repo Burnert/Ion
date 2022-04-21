@@ -109,12 +109,12 @@ namespace Ion
 		}
 	};
 
-	class ION_API Texture
+	class ION_API RHITexture
 	{
 	public:
-		static TShared<Texture> Create(const TextureDescription& desc);
+		static TShared<RHITexture> Create(const TextureDescription& desc);
 
-		virtual ~Texture();
+		virtual ~RHITexture();
 
 		virtual void SetDimensions(TextureDimensions dimensions) = 0;
 		virtual void UpdateSubresource(Image* image) = 0;
@@ -122,7 +122,7 @@ namespace Ion
 		virtual void Bind(uint32 slot = 0) const = 0;
 		virtual void Unbind() const = 0;
 
-		virtual void CopyTo(const TShared<Texture>& destination) const = 0;
+		virtual void CopyTo(const TShared<RHITexture>& destination) const = 0;
 		virtual void Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType) = 0;
 		virtual void Unmap() = 0;
 
@@ -134,28 +134,28 @@ namespace Ion
 		FORCEINLINE bool IsDepthStencil() const;
 
 	protected:
-		Texture(const TextureDescription& desc);
+		RHITexture(const TextureDescription& desc);
 
 	protected:
 		TextureDescription m_Description;
 	};
 
-	FORCEINLINE TextureDimensions Texture::GetDimensions() const
+	FORCEINLINE TextureDimensions RHITexture::GetDimensions() const
 	{
 		return m_Description.Dimensions;
 	}
 
-	FORCEINLINE const TextureDescription& Texture::GetDescription() const
+	FORCEINLINE const TextureDescription& RHITexture::GetDescription() const
 	{
 		return m_Description;
 	}
 
-	FORCEINLINE bool Texture::IsRenderTarget() const
+	FORCEINLINE bool RHITexture::IsRenderTarget() const
 	{
 		return m_Description.bUseAsRenderTarget;
 	}
 
-	FORCEINLINE bool Texture::IsDepthStencil() const
+	FORCEINLINE bool RHITexture::IsDepthStencil() const
 	{
 		return m_Description.bUseAsDepthStencil;
 	}

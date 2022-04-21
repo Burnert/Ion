@@ -122,13 +122,13 @@ namespace Ion
 		bool m_Value;
 	};
 
-	class Texture;
+	class RHITexture;
 
 	// Texture2D Material Parameter specialization
 	template<typename T>
 	class TMaterialParameter<T,
 		// @TODO: This TShared<Texture> is weird but necessary with this kind of implementation
-		typename TEnableIfT<TIsSameV<T, TShared<Texture>>>>
+		typename TEnableIfT<TIsSameV<T, TShared<RHITexture>>>>
 	{
 		friend class Material;
 	public:
@@ -137,23 +137,23 @@ namespace Ion
 			m_ReservedSlot(slot)
 		{ }
 
-		FORCEINLINE void SetValue(const TShared<Texture>& texture)
+		FORCEINLINE void SetValue(const TShared<RHITexture>& texture)
 		{
 			m_Texture = texture;
 		}
 
-		FORCEINLINE const TWeak<Texture>& GetValue() const
+		FORCEINLINE const TWeak<RHITexture>& GetValue() const
 		{
 			return m_Texture;
 		}
 
 	private:
 		EMaterialParameterType m_Type;
-		TWeak<Texture> m_Texture;
+		TWeak<RHITexture> m_Texture;
 		uint32 m_ReservedSlot;
 	};
 
-	class Shader;
+	class RHIShader;
 
 	class ION_API Material
 	{
@@ -168,8 +168,8 @@ namespace Ion
 
 		~Material();
 
-		void SetShader(const TShared<Shader>& shader);
-		FORCEINLINE const TShared<Shader>& GetShader() const { return m_Shader; }
+		void SetShader(const TShared<RHIShader>& shader);
+		FORCEINLINE const TShared<RHIShader>& GetShader() const { return m_Shader; }
 
 		FORCEINLINE bool HasParameter(const String& name) const
 		{
@@ -218,13 +218,13 @@ namespace Ion
 				TIsSameV<Type, Vector3>  && type == EMaterialParameterType::Float3 ||
 				TIsSameV<Type, Vector4>  && type == EMaterialParameterType::Float4 ||
 				TIsSameV<Type, bool>     && type == EMaterialParameterType::Bool   ||
-				TIsSameV<Type, TShared<Texture>>  && type == EMaterialParameterType::Texture2D;
+				TIsSameV<Type, TShared<RHITexture>>  && type == EMaterialParameterType::Texture2D;
 		}
 
 		template<typename Lambda>
 		void ForEachTexture(Lambda func) const
 		{
-			for (TMaterialParameter<TShared<Texture>>* const& textureParam : m_TextureParameters)
+			for (TMaterialParameter<TShared<RHITexture>>* const& textureParam : m_TextureParameters)
 			{
 				func(textureParam->m_Texture.lock(), textureParam->m_ReservedSlot);
 			}
@@ -268,15 +268,15 @@ namespace Ion
 			return *(EMaterialParameterType*)paramPtr;
 		}
 
-		FORCEINLINE const Shader* GetShaderRaw() const { return m_Shader.get(); }
+		FORCEINLINE const RHIShader* GetShaderRaw() const { return m_Shader.get(); }
 
 	private:
 		// @TODO: Make it so that each type has its own collection (should be faster this way)
 
-		TShared<Shader> m_Shader;
+		TShared<RHIShader> m_Shader;
 		THashMap<String, void*> m_Parameters;
 		THashMap<String, String> m_UniformLinks;
-		THashSet<TMaterialParameter<TShared<Texture>>*> m_TextureParameters;
+		THashSet<TMaterialParameter<TShared<RHITexture>>*> m_TextureParameters;
 	};
 }
 

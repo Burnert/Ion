@@ -16,12 +16,12 @@ namespace Ion
 		EShaderType Type;
 	};
 
-	class ION_API Shader
+	class ION_API RHIShader
 	{
 	public:
-		static TShared<Shader> Create();
+		static TShared<RHIShader> Create();
 
-		virtual ~Shader() { }
+		virtual ~RHIShader() { }
 
 		virtual void AddShaderSource(EShaderType type, const String& source) = 0;
 
@@ -62,7 +62,7 @@ namespace Ion
 		}
 
 	protected:
-		Shader() { }
+		RHIShader() { }
 
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;

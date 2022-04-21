@@ -67,7 +67,7 @@ namespace Ion
 		DirectionalLight* m_ActiveDirectionalLight;
 		THashSet<Light*> m_Lights;
 
-		TShared<UniformBuffer> m_SceneUniformBuffer;
+		TShared<RHIUniformBuffer> m_SceneUniformBuffer;
 
 		// Render Thread: -------------------------------------
 

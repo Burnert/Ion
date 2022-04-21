@@ -64,7 +64,7 @@ namespace Ion
 		// @TODO: Implement a texture manager with some indication which slots are bound by which textures
 	}
 
-	void OpenGLTexture::CopyTo(const TShared<Texture>& destination) const
+	void OpenGLTexture::CopyTo(const TShared<RHITexture>& destination) const
 	{
 	}
 
@@ -82,7 +82,7 @@ namespace Ion
 	}
 
 	OpenGLTexture::OpenGLTexture(const TextureDescription& desc) :
-		Texture(desc),
+		RHITexture(desc),
 		m_BoundSlot(-1),
 		m_ID((uint32)-1),
 		m_FramebufferID((uint32)-1)

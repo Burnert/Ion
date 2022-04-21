@@ -33,7 +33,7 @@ namespace Ion::Editor
 		void SetMSAAEnabled(bool bEnabled);
 		void SetFXAAEnabled(bool bEnabled);
 
-		const TShared<Texture>& GetViewportFramebuffer() const;
+		const TShared<RHITexture>& GetViewportFramebuffer() const;
 		const TShared<Camera>& GetCamera() const;
 		const Transform& GetCameraTransform() const;
 
@@ -75,11 +75,11 @@ namespace Ion::Editor
 
 		TShared<EditorUIViewport> m_UI;
 
-		TShared<Texture> m_ViewportFinalColor;
-		TShared<Texture> m_ViewportPreFX;
-		TShared<Texture> m_ObjectIDColor;
-		TShared<Texture> m_ObjectIDDepthStencil;
-		TShared<Texture> m_ObjectIDStaging;
+		TShared<RHITexture> m_ViewportFinalColor;
+		TShared<RHITexture> m_ViewportPreFX;
+		TShared<RHITexture> m_ObjectIDColor;
+		TShared<RHITexture> m_ObjectIDDepthStencil;
+		TShared<RHITexture> m_ObjectIDStaging;
 		EditorViewportTextures m_ViewportTextures;
 		UVector2 m_ViewportSize;
 
@@ -116,7 +116,7 @@ namespace Ion::Editor
 		return m_ViewportGuid;
 	}
 
-	inline const TShared<Texture>& EditorViewport::GetViewportFramebuffer() const
+	inline const TShared<RHITexture>& EditorViewport::GetViewportFramebuffer() const
 	{
 		return m_ViewportFinalColor;
 	}

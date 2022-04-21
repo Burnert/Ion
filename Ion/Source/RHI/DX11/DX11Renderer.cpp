@@ -167,7 +167,7 @@ namespace Ion
 		return rd.FillMode == D3D11_FILL_WIREFRAME ? EPolygonDrawMode::Lines : EPolygonDrawMode::Fill;
 	}
 
-	void DX11Renderer::SetRenderTarget(const TShared<Texture>& targetTexture)
+	void DX11Renderer::SetRenderTarget(const TShared<RHITexture>& targetTexture)
 	{
 		ionassert(!targetTexture || targetTexture->GetDescription().bUseAsRenderTarget);
 		ionassert(!targetTexture || UVector2(targetTexture->GetDimensions()) == m_CurrentViewport.GetSize());
@@ -202,7 +202,7 @@ namespace Ion
 		dxcall_v(DX11::GetContext()->OMSetRenderTargets(1, &m_CurrentRTV, m_CurrentDSV));
 	}
 
-	void DX11Renderer::SetDepthStencil(const TShared<Texture>& targetTexture)
+	void DX11Renderer::SetDepthStencil(const TShared<RHITexture>& targetTexture)
 	{
 		ionassert(!targetTexture || targetTexture->GetDescription().bUseAsDepthStencil);
 		ionassert(!targetTexture || UVector2(targetTexture->GetDimensions()) == m_CurrentViewport.GetSize());

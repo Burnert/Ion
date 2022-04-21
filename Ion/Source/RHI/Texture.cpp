@@ -9,7 +9,7 @@
 
 namespace Ion
 {
-	TShared<Texture> Texture::Create(const TextureDescription& desc)
+	TShared<RHITexture> RHITexture::Create(const TextureDescription& desc)
 	{
 		switch (RHI::GetCurrent())
 		{
@@ -18,16 +18,16 @@ namespace Ion
 			case ERHI::DX11:
 				return MakeShareable(new DX11Texture(desc));
 			default:
-				return TShared<Texture>();
+				return TShared<RHITexture>();
 		}
 	}
 
-	Texture::Texture(const TextureDescription& desc)
+	RHITexture::RHITexture(const TextureDescription& desc)
 		: m_Description(desc)
 	{
 	}
 
-	Texture::~Texture()
+	RHITexture::~RHITexture()
 	{
 	}
 }

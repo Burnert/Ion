@@ -5,7 +5,7 @@
 
 namespace Ion
 {
-	UniformBuffer::UniformBuffer(const UniformDataMap& uniforms) :
+	RHIUniformBuffer::RHIUniformBuffer(const UniformDataMap& uniforms) :
 		m_Uniforms(MakeUnique<const UniformDataMap>(uniforms))
 	{ }
 
@@ -33,18 +33,18 @@ namespace Ion
 #endif
 	}
 
-	void UniformBufferFactory::Construct(TShared<UniformBuffer>& outUniformBuffer)
+	void UniformBufferFactory::Construct(TShared<RHIUniformBuffer>& outUniformBuffer)
 	{
-		UniformBuffer* buffer = nullptr;
+		RHIUniformBuffer* buffer = nullptr;
 		Construct(buffer);
 		outUniformBuffer.reset(buffer);
 	}
 
-	void UniformBufferFactory::Construct(UniformBuffer*& outUniformBuffer)
+	void UniformBufferFactory::Construct(RHIUniformBuffer*& outUniformBuffer)
 	{
 		size_t size = 0;
 
 		void* data = malloc(size);
-		outUniformBuffer = UniformBuffer::Create(data, size, m_Uniforms);
+		outUniformBuffer = RHIUniformBuffer::Create(data, size, m_Uniforms);
 	}
 }

@@ -46,7 +46,7 @@ public:
 
 		TShared<Mesh> Mesh;
 		TShared<Material> Material;
-		TShared<Texture> Texture;
+		TShared<RHITexture> Texture;
 
 		Asset MeshAsset;
 		Asset TextureAsset;
@@ -55,7 +55,7 @@ public:
 	};
 
 	template<EExampleModelName Type>
-	static void InitExampleModel(ExampleModelData<Type>& data, const TShared<Shader>& shader, World* world, const Matrix4& transform)
+	static void InitExampleModel(ExampleModelData<Type>& data, const TShared<RHIShader>& shader, World* world, const Matrix4& transform)
 	{
 		// Texture
 		AssetDescription::Texture* texAssetDesc = data.TextureAsset->GetDescription<EAssetType::Texture>();
@@ -65,7 +65,7 @@ public:
 		texDesc.bGenerateMips = true;
 		texDesc.bCreateSampler = true;
 		texDesc.bUseAsRenderTarget = true;
-		data.Texture = Texture::Create(texDesc);
+		data.Texture = RHITexture::Create(texDesc);
 
 		Image texImage((uint8*)data.TextureAsset->Data(), texAssetDesc->Width, texAssetDesc->Height, texAssetDesc->NumChannels);
 		data.Texture->UpdateSubresource(&texImage);
@@ -122,7 +122,7 @@ public:
 	{
 		if (!(data.MeshAsset->IsLoaded() && data.TextureAsset->IsLoaded()) || data.Mesh) return;
 
-		TShared<Shader> shader = Renderer::Get()->GetBasicShader();
+		TShared<RHIShader> shader = Renderer::Get()->GetBasicShader();
 
 		if constexpr (N == EExampleModelName::FourPak)
 		{
@@ -201,11 +201,11 @@ public:
 
 	struct Triangle
 	{
-		TShared<VertexBuffer> VB;
+		TShared<RHIVertexBuffer> VB;
 		TShared<IndexBuffer> IB;
-		TShared<UniformBuffer> UB;
-		TShared<Shader> Shader;
-		TShared<Texture> Texture;
+		TShared<RHIUniformBuffer> UB;
+		TShared<RHIShader> Shader;
+		TShared<RHITexture> Texture;
 	} m_Triangle;
 
 	template<EExampleModelName Type>
@@ -283,7 +283,7 @@ private:
 	TShared<Camera> m_Camera;
 	TShared<Camera> m_AuxCamera;
 	TShared<Material> m_Material;
-	TShared<Texture> m_TextureCollada;
+	TShared<RHITexture> m_TextureCollada;
 	World* m_World;
 
 	ExampleModelData<EExampleModelName::FourPak> m_4Pak;
@@ -294,8 +294,8 @@ private:
 	ExampleModelData<EExampleModelName::Stress>  m_Stress;
 	//ExampleModelData<EExampleModelName::BigSphere> m_BigSphere;
 
-	TShared<Texture> m_RenderTarget;
-	TShared<Texture> m_DepthStencil;
+	TShared<RHITexture> m_RenderTarget;
+	TShared<RHITexture> m_DepthStencil;
 
 	Vector4 m_CameraLocation = { 0.0f, 0.0f, 2.0f, 1.0f };
 	Vector3 m_CameraRotation = { 0.0f, 0.0f, 0.0f };

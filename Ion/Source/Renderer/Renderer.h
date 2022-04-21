@@ -33,9 +33,9 @@ namespace Ion
 
 	struct ScreenTextureRenderData
 	{
-		TShared<Shader> Shader;
-		TShared<VertexBuffer> VertexBuffer;
-		TShared<IndexBuffer> IndexBuffer;
+		TShared<RHIShader> Shader;
+		TShared<RHIVertexBuffer> VertexBuffer;
+		TShared<RHIIndexBuffer> IndexBuffer;
 	};
 
 	struct RendererClearOptions
@@ -69,10 +69,10 @@ namespace Ion
 	struct EditorPassData
 	{
 		/* UInt128GUID */
-		TShared<Texture> RTObjectID;
-		TShared<Texture> RTObjectIDDepth;
+		TShared<RHITexture> RTObjectID;
+		TShared<RHITexture> RTObjectIDDepth;
 		/* Mainly Depth */
-		TShared<Texture> RTSelectionDepth;
+		TShared<RHITexture> RTSelectionDepth;
 
 		TArray<REditorPassPrimitive> Primitives;
 		TArray<REditorPassPrimitive> SelectedPrimitives;
@@ -99,9 +99,9 @@ namespace Ion
 
 		void Draw(const RPrimitiveRenderProxy& primitive, const Scene* targetScene = nullptr) const;
 		/** Draw a screen aligned quad positioned in world space. */
-		void DrawBillboard(const RBillboardRenderProxy& billboard, const Shader* shader, const Scene* targetScene) const;
-		void DrawScreenTexture(const TShared<Texture>& texture) const;
-		void DrawScreenTexture(const TShared<Texture>& texture, const Shader* shader) const;
+		void DrawBillboard(const RBillboardRenderProxy& billboard, const RHIShader* shader, const Scene* targetScene) const;
+		void DrawScreenTexture(const TShared<RHITexture>& texture) const;
+		void DrawScreenTexture(const TShared<RHITexture>& texture, const RHIShader* shader) const;
 
 		virtual void Clear(const RendererClearOptions& options) const = 0;
 
@@ -121,43 +121,43 @@ namespace Ion
 		virtual EPolygonDrawMode GetPolygonDrawMode() const = 0;
 
 		/* Sets the render target (resets the depth stencil to null) */
-		virtual void SetRenderTarget(const TShared<Texture>& targetTexture) = 0;
+		virtual void SetRenderTarget(const TShared<RHITexture>& targetTexture) = 0;
 		/* Sets the depth stencil target (call this only after SetRenderTarget) */
-		virtual void SetDepthStencil(const TShared<Texture>& targetTexture) = 0;
+		virtual void SetDepthStencil(const TShared<RHITexture>& targetTexture) = 0;
 
 		void RenderEditorPass(const Scene* scene, const EditorPassData& data);
 
-		inline static const TShared<Shader>& GetBasicShader()
+		inline static const TShared<RHIShader>& GetBasicShader()
 		{
 			return Renderer::Get()->m_BasicShader;
 		}
 
-		inline static const TShared<Shader>& GetBasicUnlitMaskedShader()
+		inline static const TShared<RHIShader>& GetBasicUnlitMaskedShader()
 		{
 			return Renderer::Get()->m_BasicUnlitMaskedShader;
 		}
 
-		inline static const TShared<Shader>& GetEditorObjectIDShader()
+		inline static const TShared<RHIShader>& GetEditorObjectIDShader()
 		{
 			return Renderer::Get()->m_EditorObjectIDShader;
 		}
 
-		inline static const TShared<Shader>& GetEditorSelectedShader()
+		inline static const TShared<RHIShader>& GetEditorSelectedShader()
 		{
 			return Renderer::Get()->m_EditorSelectedShader;
 		}
 
-		inline static const TShared<Shader>& GetEditorViewportShader()
+		inline static const TShared<RHIShader>& GetEditorViewportShader()
 		{
 			return Renderer::Get()->m_EditorViewportShader;
 		}
 
-		inline static const TShared<Shader>& GetEditorViewportMSShader()
+		inline static const TShared<RHIShader>& GetEditorViewportMSShader()
 		{
 			return Renderer::Get()->m_EditorViewportMSShader;
 		}
 
-		inline static const TShared<Shader>& GetFXAAShader()
+		inline static const TShared<RHIShader>& GetFXAAShader()
 		{
 			return Renderer::Get()->m_PPFXAAShader;
 		}
@@ -167,7 +167,7 @@ namespace Ion
 			return Renderer::Get()->m_BillboardMesh;
 		}
 
-		inline static const TShared<Texture>& GetWhiteTexture()
+		inline static const TShared<RHITexture>& GetWhiteTexture()
 		{
 			return Renderer::Get()->m_WhiteTexture;
 		}
@@ -179,7 +179,7 @@ namespace Ion
 
 		void InitScreenTextureRendering();
 		void BindScreenTexturePrimitives() const;
-		void BindScreenTexturePrimitives(const Shader* customShader) const;
+		void BindScreenTexturePrimitives(const RHIShader* customShader) const;
 
 		void InitShaders();
 		void InitBasicShader();
@@ -196,19 +196,19 @@ namespace Ion
 	private:
 		ScreenTextureRenderData m_ScreenTextureRenderData;
 
-		TShared<Shader> m_BasicShader;
-		TShared<Shader> m_BasicUnlitMaskedShader;
+		TShared<RHIShader> m_BasicShader;
+		TShared<RHIShader> m_BasicUnlitMaskedShader;
 
-		TShared<Shader> m_PPFXAAShader;
+		TShared<RHIShader> m_PPFXAAShader;
 
-		TShared<Shader> m_EditorObjectIDShader;
-		TShared<Shader> m_EditorSelectedShader;
-		TShared<Shader> m_EditorViewportShader;
-		TShared<Shader> m_EditorViewportMSShader;
+		TShared<RHIShader> m_EditorObjectIDShader;
+		TShared<RHIShader> m_EditorSelectedShader;
+		TShared<RHIShader> m_EditorViewportShader;
+		TShared<RHIShader> m_EditorViewportMSShader;
 
 		TShared<Mesh> m_BillboardMesh;
 
-		TShared<Texture> m_WhiteTexture;
+		TShared<RHITexture> m_WhiteTexture;
 
 		static Renderer* s_Instance;
 	};

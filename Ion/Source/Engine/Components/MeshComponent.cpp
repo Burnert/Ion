@@ -68,7 +68,7 @@ namespace Ion
 		Material* material = m_Mesh->GetMaterial().lock().get();
 		Transform worldTransform = GetWorldTransform();
 
-		Shader* shader = material ?
+		RHIShader* shader = material ?
 			material->GetShader().get() :
 			Renderer::Get()->GetBasicShader().get();
 

@@ -5,22 +5,22 @@
 
 namespace Ion
 {
-	class Shader;
+	class RHIShader;
 
-	class ION_API VertexBuffer
+	class ION_API RHIVertexBuffer
 	{
 	public:
-		static TShared<VertexBuffer> Create(float* vertexAttributes, uint64 count);
+		static TShared<RHIVertexBuffer> Create(float* vertexAttributes, uint64 count);
 
-		virtual ~VertexBuffer() { }
+		virtual ~RHIVertexBuffer() { }
 
-		virtual void SetLayout(const TShared<VertexLayout>& layout) = 0;
-		virtual void SetLayoutShader(const TShared<Shader>& shader) = 0;
+		virtual void SetLayout(const TShared<RHIVertexLayout>& layout) = 0;
+		virtual void SetLayoutShader(const TShared<RHIShader>& shader) = 0;
 
 		virtual uint32 GetVertexCount() const = 0;
 
 	protected:
-		VertexBuffer() { }
+		RHIVertexBuffer() { }
 
 		virtual void Bind() const = 0;
 		virtual void BindLayout() const = 0;

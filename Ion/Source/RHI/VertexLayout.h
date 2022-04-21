@@ -2,11 +2,11 @@
 
 namespace Ion
 {
-	class ION_API VertexLayout
+	class ION_API RHIVertexLayout
 	{
-		friend class VertexBuffer;
+		friend class RHIVertexBuffer;
 	public:
-		VertexLayout(uint32 initialAttributeCount);
+		RHIVertexLayout(uint32 initialAttributeCount);
 
 		void AddAttribute(EVertexAttributeType attributeType, uint8 elementCount, bool bNormalized = false);
 		void AddAttribute(EVertexAttributeSemantic semantic, EVertexAttributeType attributeType, uint8 elementCount, bool bNormalized = false);

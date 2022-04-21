@@ -2,18 +2,18 @@
 
 namespace Ion
 {
-	class ION_API IndexBuffer
+	class ION_API RHIIndexBuffer
 	{
 	public:
-		static TShared<IndexBuffer> Create(uint32* indices, uint32 count);
+		static TShared<RHIIndexBuffer> Create(uint32* indices, uint32 count);
 
-		virtual ~IndexBuffer() { }
+		virtual ~RHIIndexBuffer() { }
 
 		virtual uint32 GetIndexCount() const = 0;
 		virtual uint32 GetTriangleCount() const = 0;
 
 	protected:
-		IndexBuffer() { }
+		RHIIndexBuffer() { }
 
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;

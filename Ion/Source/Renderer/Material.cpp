@@ -21,7 +21,7 @@ namespace Ion
 		}
 	}
 
-	void Material::SetShader(const TShared<Shader>& shader)
+	void Material::SetShader(const TShared<RHIShader>& shader)
 	{
 		m_Shader = shader;
 	}
@@ -52,7 +52,7 @@ namespace Ion
 			{
 				uint32 slot = (uint32)m_TextureParameters.size();
 				ionassert(slot < 16, "There can't be more than 16 textures in one material!");
-				TMaterialParameter<TShared<Texture>>* param = new TMaterialParameter<TShared<Texture>>(slot);
+				TMaterialParameter<TShared<RHITexture>>* param = new TMaterialParameter<TShared<RHITexture>>(slot);
 				m_Parameters.insert({ name, param });
 				m_TextureParameters.insert(param);
 
@@ -85,7 +85,7 @@ namespace Ion
 
 			if (ExtractParameterType(paramPtr) == EMaterialParameterType::Texture2D)
 			{
-				m_TextureParameters.erase((TMaterialParameter<TShared<Texture>>*)paramPtr);
+				m_TextureParameters.erase((TMaterialParameter<TShared<RHITexture>>*)paramPtr);
 			}
 
 			// Free the memory
@@ -163,7 +163,7 @@ namespace Ion
 				break;
 				case EMaterialParameterType::Texture2D:
 				{
-					TMaterialParameter<TShared<Texture>>* parameter = reinterpret_cast<TMaterialParameter<TShared<Texture>>*>(paramPtr);
+					TMaterialParameter<TShared<RHITexture>>* parameter = reinterpret_cast<TMaterialParameter<TShared<RHITexture>>*>(paramPtr);
 					m_Shader->SetUniform1i(uniformName, parameter->m_ReservedSlot);
 				}
 			}
@@ -172,11 +172,11 @@ namespace Ion
 
 	void Material::BindTextures() const
 	{
-		for (TMaterialParameter<TShared<Texture>>* param : m_TextureParameters)
+		for (TMaterialParameter<TShared<RHITexture>>* param : m_TextureParameters)
 		{
 			if (!param->GetValue().expired())
 			{
-				const TShared<Texture> texture = param->GetValue().lock();
+				const TShared<RHITexture> texture = param->GetValue().lock();
 				texture->Bind(param->m_ReservedSlot);
 			}
 			else

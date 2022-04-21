@@ -5,7 +5,7 @@
 
 namespace Ion
 {
-	class ION_API OpenGLShader : public Shader
+	class ION_API OpenGLShader : public RHIShader
 	{
 		friend class OpenGLRenderer;
 	public:

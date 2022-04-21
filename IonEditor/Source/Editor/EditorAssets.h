@@ -14,14 +14,14 @@ namespace Ion::Editor
 		static const inline FilePath PathSun       = L"Icons/Sun.iasset";
 		static const inline FilePath PathNoMesh    = L"Icons/NoMesh.iasset";
 
-		static inline TShared<Texture> BillboardCircle;
-		static inline TShared<Texture> BillboardLightbulb;
-		static inline TShared<Texture> BillboardSun;
-		static inline TShared<Texture> BillboardNoMesh;
+		static inline TShared<RHITexture> BillboardCircle;
+		static inline TShared<RHITexture> BillboardLightbulb;
+		static inline TShared<RHITexture> BillboardSun;
+		static inline TShared<RHITexture> BillboardNoMesh;
 
 		static void LoadTextures();
 
-		static const TShared<Texture>& GetComponentBillboardTexture(ComponentTypeID id);
+		static const TShared<RHITexture>& GetComponentBillboardTexture(ComponentTypeID id);
 	};
 
 	class EDITOR_API EditorMeshes
@@ -29,7 +29,7 @@ namespace Ion::Editor
 	public:
 		static inline TShared<Mesh> MeshGrid;
 
-		static inline TShared<Shader> ShaderGrid;
+		static inline TShared<RHIShader> ShaderGrid;
 
 		static void Init();
 	};

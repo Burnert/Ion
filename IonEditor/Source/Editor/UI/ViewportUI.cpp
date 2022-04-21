@@ -58,7 +58,7 @@ namespace Ion::Editor
 					DispatchOnResize(m_Size);
 				}
 
-				TShared<Texture> viewportFramebuffer = m_Owner->GetViewportFramebuffer();
+				TShared<RHITexture> viewportFramebuffer = m_Owner->GetViewportFramebuffer();
 				if (viewportFramebuffer)
 				{
 					ImVec2 startCursor = ImGui::GetCursorPos();

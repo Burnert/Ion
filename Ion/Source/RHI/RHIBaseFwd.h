@@ -4,20 +4,20 @@ namespace Ion
 {
 	// Shader.h
 	struct ShaderInfo;
-	class Shader;
+	class RHIShader;
 	// Texture.h
 	struct TextureDimensions;
 	struct TextureDescription;
-	class Texture;
+	class RHITexture;
 	// VertexAttribute.h
 	struct VertexAttribute;
 	// VertexBuffer.h
-	class VertexBuffer;
+	class RHIVertexBuffer;
 	// VertexLayout.h
-	class VertexLayout;
+	class RHIVertexLayout;
 	// IndexBuffer.h
-	class IndexBuffer;
+	class RHIIndexBuffer;
 	// UniformBuffer.h
 	struct UniformData;
-	class UniformBuffer;
+	class RHIUniformBuffer;
 }

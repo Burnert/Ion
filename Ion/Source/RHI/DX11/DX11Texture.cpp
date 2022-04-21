@@ -66,7 +66,7 @@ namespace Ion
 		dxcall_v(DX11::GetContext()->PSSetSamplers(0, 0, nullptr));
 	}
 
-	void DX11Texture::CopyTo(const TShared<Texture>& destination) const
+	void DX11Texture::CopyTo(const TShared<RHITexture>& destination) const
 	{
 		ID3D11DeviceContext* context = DX11::GetContext();
 
@@ -101,7 +101,7 @@ namespace Ion
 	}
 
 	DX11Texture::DX11Texture(const TextureDescription& desc) :
-		Texture(desc),
+		RHITexture(desc),
 		m_Texture(nullptr),
 		m_RTV(nullptr),
 		m_DSV(nullptr),
@@ -118,7 +118,7 @@ namespace Ion
 	}
 
 	DX11Texture::DX11Texture(const TextureDescription& desc, ID3D11Texture2D* existingResource) :
-		Texture(desc),
+		RHITexture(desc),
 		m_Texture(existingResource),
 		m_RTV(nullptr),
 		m_DSV(nullptr),

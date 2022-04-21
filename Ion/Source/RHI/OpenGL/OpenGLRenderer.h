@@ -30,8 +30,8 @@ namespace Ion
 		virtual void SetPolygonDrawMode(EPolygonDrawMode drawMode) const override;
 		virtual EPolygonDrawMode GetPolygonDrawMode() const override;
 
-		virtual void SetRenderTarget(const TShared<Texture>& targetTexture) override;
-		virtual void SetDepthStencil(const TShared<Texture>& targetTexture) override;
+		virtual void SetRenderTarget(const TShared<RHITexture>& targetTexture) override;
+		virtual void SetDepthStencil(const TShared<RHITexture>& targetTexture) override;
 
 		FORCEINLINE static uint32 PolygonDrawModeToGLPolygonMode(EPolygonDrawMode drawMode)
 		{
