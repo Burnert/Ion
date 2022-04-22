@@ -2,5 +2,8 @@
 	<Info type="Ion.Mesh" guid="2b5d0983-fd44-40cf-b3b9-2979f76290a2" />
 	<ImportExternal path="ciupaga.dae" />
 	<MeshResource guid="dd684d85-61c6-4d44-9dc4-79ba5675ad5a">
+		<Defaults>
+			<Texture asset="79351854-92ff-43f9-a5ec-7826061f8de0" />
+		</Defaults>
 	</MeshResource>
 </IonAsset>

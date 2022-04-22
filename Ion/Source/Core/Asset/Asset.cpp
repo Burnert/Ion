@@ -32,6 +32,16 @@ namespace Ion
 	{
 	}
 
+	Asset Asset::Find(const GUID& guid)
+	{
+		AssetDefinition* def = AssetRegistry::Find(guid);
+		if (!def)
+		{
+			return InvalidHandle;
+		}
+		return def->GetHandle();
+	}
+
 	AssetDefinition* Asset::FindAssetDefinition() const
 	{
 		ionassertnd(m_Guid, "Cannot access a null handle.");

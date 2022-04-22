@@ -22,6 +22,22 @@ namespace Ion
 	public:
 		~Resource();
 
+		virtual bool IsLoaded() const = 0;
+
+		/**
+		 * @brief Get the Resource Guid
+		 *
+		 * @return Resource Guid
+		 */
+		const GUID& GetGuid() const;
+
+		/**
+		 * @brief Get the Asset handle associated with the Resource
+		 *
+		 * @return Asset handle
+		 */
+		Asset GetAssetHandle() const;
+
 	protected:
 		Resource(const GUID& guid, const Asset& asset);
 
@@ -35,22 +51,6 @@ namespace Ion
 		 */
 		template<typename T>
 		static TShared<T> Query(const Asset& asset);
-
-		virtual bool IsLoaded() const = 0;
-
-		/**
-		 * @brief Get the Resource Guid
-		 * 
-		 * @return Resource Guid
-		 */
-		const GUID& GetGuid() const;
-
-		/**
-		 * @brief Get the Asset handle associated with the Resource
-		 * 
-		 * @return Asset handle
-		 */
-		Asset GetAssetHandle() const;
 
 	protected:
 		GUID m_Guid;

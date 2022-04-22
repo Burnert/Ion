@@ -2,5 +2,8 @@
 	<Info type="Ion.Mesh" guid="3dfe1409-ff9e-4a77-8a94-8339ca89412c" />
 	<ImportExternal path="4pak.dae" />
 	<MeshResource guid="1dbad45b-a2ab-4ea1-ae03-d6c860b035ef">
+		<Defaults>
+			<Texture asset="69aae926-88fd-4b47-9125-3fc5ecad2dc6" />
+		</Defaults>
 	</MeshResource>
 </IonAsset>

@@ -137,7 +137,6 @@ namespace Ion
 		auto it = Get().m_Assets.find(guid);
 		if (it == Get().m_Assets.end())
 		{
-			LOG_WARN("Cannot find asset with GUID {{{0}}}.", guid.ToString());
 			return nullptr;
 		}
 

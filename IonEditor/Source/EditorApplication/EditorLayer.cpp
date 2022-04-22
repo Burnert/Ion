@@ -13,6 +13,8 @@
 
 #include "UserInterface/ImGui.h"
 
+#include "Resource/ResourceManager.h"
+
 #include "ExampleModels.h"
 
 namespace Ion::Editor
@@ -277,7 +279,29 @@ namespace Ion::Editor
 
 			ImGui::PushID("ContentBrowser");
 
-			ImGui::Text("Test");
+			ImGui::Text("Mesh Resources");
+			ImGui::Indent();
+			{
+				TArray<TShared<MeshResource>> meshes = ResourceManager::GetResourcesOfType<MeshResource>();
+				for (TShared<MeshResource>& mesh : meshes)
+				{
+					WString assetPath = mesh->GetAssetHandle()->GetPath().ToString();
+					ImGui::Selectable(StringConverter::WStringToString(assetPath).c_str());
+				}
+			}
+			ImGui::Unindent();
+
+			ImGui::Text("Texture Resources");
+			ImGui::Indent();
+			{
+				TArray<TShared<TextureResource>> textures = ResourceManager::GetResourcesOfType<TextureResource>();
+				for (TShared<TextureResource>& texture : textures)
+				{
+					WString assetPath = texture->GetAssetHandle()->GetPath().ToString();
+					ImGui::Selectable(StringConverter::WStringToString(assetPath).c_str());
+				}
+			}
+			ImGui::Unindent();
 
 			ImGui::PopID();
 
@@ -935,44 +959,22 @@ namespace Ion::Editor
 		{
 			ImGui::PushID("MeshSettings");
 
-			// @TODO: Not the most elegant solution
-			String previewName;
-			for (ExampleModelData& model : g_ExampleModels)
-			{
-				if (model.Mesh == meshComponent.GetMesh())
-				{
-					previewName = StringConverter::WStringToString(model.MeshAsset->GetPath());
-					break;
-				}
-			}
+			// @TODO: Somehow find the name of the resource
+			String previewName = "Mesh Resource";
 
 			ImGuiComboFlags flags = ImGuiComboFlags_HeightLargest;
 			if (ImGui::BeginCombo("Mesh Asset", previewName.c_str(), flags))
 			{
-				// @TODO: I think this asset manager was written on drugs
-				//TArray<AssetHandle> meshAssets = AssetManager::ListAssets(EAssetType::Mesh);
-
-				//for (AssetHandle& asset : meshAssets)
-				//{
-				//	asset->
-				//	bool bDisabled = !asset->IsLoaded() && !asset->IsLoading();
-				//	ImGuiSelectableFlags flags2 = FlagsIf(bDisabled, ImGuiSelectableFlags_Disabled);
-				//	String assetName = StringConverter::WStringToString(asset->GetLocation().ToString());
-				//	ImGui::Selectable(assetName.c_str(), );
-				//}
-
-				for (ExampleModelData& model : g_ExampleModels)
+				TArray<TShared<MeshResource>> meshResources = ResourceManager::GetResourcesOfType<MeshResource>();
+				for (TShared<MeshResource>& resource : meshResources)
 				{
-					bool bDisabled = !model.IsLoaded();
-					bool bSelected = model.Mesh == meshComponent.GetMesh();
+					String name = StringConverter::WStringToString(resource->GetAssetHandle()->GetPath().ToString());
 
-					Asset& asset = model.MeshAsset;
-
-					ImGuiSelectableFlags flags2 = FlagsIf(bDisabled, ImGuiSelectableFlags_Disabled);
-					String assetName = StringConverter::WStringToString(asset->GetPath().ToString());
-					if (ImGui::Selectable(assetName.c_str(), bSelected, flags2))
+					if (ImGui::Selectable(name.c_str(), false))
 					{
-						meshComponent.SetMesh(model.Mesh);
+						TShared<Mesh> mesh = Mesh::CreateFromResource(resource);
+
+						meshComponent.SetMesh(mesh);
 						bChanged = true;
 					}
 				}

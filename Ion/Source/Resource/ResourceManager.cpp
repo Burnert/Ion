@@ -90,6 +90,13 @@ namespace Ion
 		return it != instance.m_AssetToResources.end();
 	}
 
+	const THashMap<GUID, TShared<Resource>>& ResourceManager::GetAllRegisteredResources()
+	{
+		ResourceManager& instance = Get();
+
+		return instance.m_Resources;
+	}
+
 	TShared<Resource> ResourceManager::Find(const GUID& guid)
 	{
 		ResourceManager& instance = Get();

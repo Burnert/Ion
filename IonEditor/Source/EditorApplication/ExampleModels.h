@@ -49,7 +49,7 @@ namespace Ion::Editor
 
 	static void CreateExampleModels()
 	{
-		g_ExampleModels.resize(6);
+		g_ExampleModels.resize(5);
 
 		g_ExampleModels[0].Name            = "4Pak";
 		g_ExampleModels[0].MeshAsset       = AssetFinder(FilePath(L"../IonExample/Assets/models/4pak.iasset")).Resolve();
@@ -71,9 +71,9 @@ namespace Ion::Editor
 		g_ExampleModels[4].MeshAsset       = AssetFinder(FilePath(L"../IonExample/Assets/models/slovak.iasset")).Resolve();
 		g_ExampleModels[4].TextureAsset    = AssetFinder(FilePath(L"../IonExample/Assets/textures/slovak.iasset")).Resolve();
 
-		g_ExampleModels[5].Name            = "Stress";
-		g_ExampleModels[5].MeshAsset       = AssetFinder(FilePath(L"../IonExample/spherestresstest_uv.iasset")).Resolve();
-		g_ExampleModels[5].TextureAsset    = AssetFinder(FilePath(L"../IonExample/Assets/test_4k.iasset")).Resolve();
+		//g_ExampleModels[5].Name            = "Stress";
+		//g_ExampleModels[5].MeshAsset       = AssetFinder(FilePath(L"../IonExample/spherestresstest_uv.iasset")).Resolve();
+		//g_ExampleModels[5].TextureAsset    = AssetFinder(FilePath(L"../IonExample/Assets/test_4k.iasset")).Resolve();
 	}
 
 	static void LoadExampleModels()
@@ -81,22 +81,22 @@ namespace Ion::Editor
 		for (ExampleModelData& model : g_ExampleModels)
 		{
 			model.MeshResource = MeshResource::Query(model.MeshAsset);
-			model.TextureResource = TextureResource::Query(model.TextureAsset);
+			//model.TextureResource = TextureResource::Query(model.TextureAsset);
 
-			model.Mesh = Mesh::CreateFromResource(model.MeshResource);
+			//model.Mesh = Mesh::CreateFromResource(model.MeshResource);
 
-			model.Material = Material::Create();
-			model.Material->SetShader(Renderer::GetBasicShader());
-			model.Material->CreateParameter("Texture", EMaterialParameterType::Texture2D);
+			//model.Material = Material::Create();
+			//model.Material->SetShader(Renderer::GetBasicShader());
+			//model.Material->CreateParameter("Texture", EMaterialParameterType::Texture2D);
 
-			model.Mesh->SetMaterial(model.Material);
+			//model.Mesh->SetMaterial(model.Material);
 
-			model.TextureResource->Take([&model](const TextureResourceRenderData& renderData)
-			{
-				model.Texture = renderData.Texture;
+			//model.TextureResource->Take([&model](const TextureResourceRenderData& renderData)
+			//{
+			//	model.Texture = renderData.Texture;
 
-				model.Material->SetParameter("Texture", model.Texture);
-			});
+			//	model.Material->SetParameter("Texture", model.Texture);
+			//});
 		}
 	}
 

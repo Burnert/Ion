@@ -27,6 +27,10 @@ namespace Ion
 		if (!m_Mesh)
 			return;
 
+		// @TODO: Make a check to see if the mesh can be rendered.
+		if (!m_Mesh->GetVertexBufferRaw() || !m_Mesh->GetIndexBufferRaw())
+			return;
+
 		if (ShouldBeRendered())
 			data.AddPrimitive(AsRenderProxy());
 	}
@@ -65,7 +69,7 @@ namespace Ion
 	{
 		ionassert(m_Mesh);
 
-		Material* material = m_Mesh->GetMaterial().lock().get();
+		Material* material = m_Mesh->GetMaterial().get();
 		Transform worldTransform = GetWorldTransform();
 
 		RHIShader* shader = material ?

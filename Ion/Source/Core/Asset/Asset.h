@@ -17,6 +17,14 @@ namespace Ion
 		~Asset();
 
 		/**
+		 * @brief Find the existing asset by GUID.
+		 * 
+		 * @param guid GUID of the asset
+		 * @return Asset handle, invalid handle if the asset with that GUID does not exist.
+		 */
+		static Asset Find(const GUID& guid);
+
+		/**
 		 * @brief Queries the AssetRegistry for the AssetDefinition object
 		 * 
 		 * @return If exists, a pointer to AssetDefinition associated
@@ -38,6 +46,11 @@ namespace Ion
 
 		/**
 		 * @brief Is the Asset handle valid
+		 */
+		bool IsValid() const;
+
+		/**
+		 * @brief Same as IsValid
 		 */
 		operator bool() const;
 
@@ -133,9 +146,14 @@ namespace Ion
 		return *def;
 	}
 
-	inline Asset::operator bool() const
+	inline bool Asset::IsValid() const
 	{
 		return !m_Guid.IsInvalid();
+	}
+
+	inline Asset::operator bool() const
+	{
+		return IsValid();
 	}
 
 	inline bool Asset::operator==(const Asset& other) const

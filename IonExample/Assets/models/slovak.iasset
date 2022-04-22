@@ -2,5 +2,8 @@
 	<Info type="Ion.Mesh" guid="d1f48ba1-dd1e-4f3b-9467-0af44ca47336" />
 	<ImportExternal path="slovak.dae" />
 	<MeshResource guid="803618f2-f257-4e4c-8e33-a1393506a9a3">
+		<Defaults>
+			<Texture asset="43d20398-4402-4ca4-8230-af98ba409a51" />
+		</Defaults>
 	</MeshResource>
 </IonAsset>

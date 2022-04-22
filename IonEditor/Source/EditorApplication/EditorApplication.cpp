@@ -494,7 +494,8 @@ namespace Ion::Editor
 			{
 				MeshComponent* meshComponent = (MeshComponent*)component;
 				// Don't draw the billboard if the component has a mesh
-				if (meshComponent->GetMesh())
+				// @TODO: Make some kind of a function to check if the mesh can be rendered
+				if (meshComponent->GetMesh() && meshComponent->GetMesh()->GetVertexBufferRaw())
 				{
 					m_EditorPassData->Primitives.push_back(CreateEditorPassPrimitive(component));
 					return;
@@ -532,7 +533,7 @@ namespace Ion::Editor
 				{
 					MeshComponent* meshComponent = (MeshComponent*)comp;
 					// Don't draw the billboard if the mesh component has a mesh
-					if (meshComponent->GetMesh())
+					if (meshComponent->GetMesh() && meshComponent->GetMesh()->GetVertexBufferRaw())
 					{
 						m_EditorPassData->SelectedPrimitives.push_back(CreateEditorPassPrimitive(comp));
 						continue;

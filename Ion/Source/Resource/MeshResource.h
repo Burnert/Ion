@@ -10,11 +10,17 @@ namespace Ion
 	// Mesh Resource
 	// ------------------------------------------------------------
 
+	struct MeshResourceDefaults
+	{
+		Asset TextureAsset;
+	};
+
 	/**
 	 * @brief Resource description representation from the asset file.
 	 */
 	struct MeshResourceDescription
 	{
+		MeshResourceDefaults Defaults;
 		int8 Unused;
 	};
 
@@ -51,6 +57,8 @@ namespace Ion
 		 */
 		template<typename Lambda>
 		bool Take(Lambda onTake);
+
+		const MeshResourceDefaults& GetDefaults() const;
 
 		virtual bool IsLoaded() const override;
 
@@ -115,5 +123,10 @@ namespace Ion
 		}
 
 		return false;
+	}
+
+	inline const MeshResourceDefaults& MeshResource::GetDefaults() const
+	{
+		return m_Description.Defaults;
 	}
 }

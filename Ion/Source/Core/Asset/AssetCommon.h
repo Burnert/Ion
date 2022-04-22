@@ -2,9 +2,9 @@
 
 #define IASSET_STR_INVALID_FILE "%s is not a valid Ion Asset file.\n\n"
 #define IASSET_CHECK_NODE(node, nodeName, path) \
-ionexcept(node, IASSET_STR_INVALID_FILE "<" nodeName "> node could not be found.\n", path.ToString()) return false
+ionexcept(node, IASSET_STR_INVALID_FILE "<" nodeName "> node has not ben found.\n", StringConverter::WStringToString(path.ToString()).c_str()) return false
 #define IASSET_CHECK_ATTR(attr, attrName, nodeName, path) \
-ionexcept(attr, IASSET_STR_INVALID_FILE attrName " attribute could not be found in node<" nodeName ">.\n", path.ToString()) return false
+ionexcept(attr, IASSET_STR_INVALID_FILE attrName " attribute could not be found in node <" nodeName ">.\n", StringConverter::WStringToString(path.ToString()).c_str()) return false
 
 // Asset Commons ----------------------------------------------------
 

@@ -2,5 +2,8 @@
 	<Info type="Ion.Mesh" guid="ce0012bc-bde2-47bc-9954-2d1f00956fe0" />
 	<ImportExternal path="piwsko.dae" />
 	<MeshResource guid="a2df451d-e016-46d5-a8b1-b7d8233c5599">
+		<Defaults>
+			<Texture asset="84f1e66c-1b62-40a0-bf3b-10eb996a9e62" />
+		</Defaults>
 	</MeshResource>
 </IonAsset>

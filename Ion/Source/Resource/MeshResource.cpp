@@ -18,6 +18,22 @@ namespace Ion
 		return m_RenderData.IsAvailable();
 	}
 
+	static bool ParseDefaults(XMLNode* nodeDefaults, MeshResourceDefaults& outDefaults, const FilePath& path)
+	{
+		// <Texture>
+		XMLNode* nodeTexture = nodeDefaults->first_node(IASSET_NODE_Defaults_Texture);
+		if (nodeTexture)
+		{
+			XMLAttribute* texture_attrAsset = nodeTexture->first_attribute(IASSET_ATTR_asset);
+			IASSET_CHECK_ATTR(texture_attrAsset, IASSET_ATTR_asset, IASSET_NODE_Defaults_Texture, path);
+
+			String sAsset = texture_attrAsset->value();
+			GUID assetGuid(sAsset);
+			outDefaults.TextureAsset = Asset::Find(assetGuid);
+		}
+		return true;
+	}
+
 	bool MeshResource::ParseAssetFile(const FilePath& path, GUID& outGuid, MeshResourceDescription& outDescription)
 	{
 		String assetDefinition;
@@ -45,6 +61,15 @@ namespace Ion
 		outGuid = GUID(sGuid);
 		ionexcept(outGuid, "Invalid GUID.")
 			return false;
+
+		// <Defaults>
+		XMLNode* nodeDefaults = nodeMeshResource->first_node(IASSET_NODE_Defaults);
+		if (nodeDefaults)
+		{
+			// Check if the resource has any default settings
+			ionexcept(ParseDefaults(nodeDefaults, outDescription.Defaults, path), "Could not parse the <Defaults> node.")
+				return false;
+		}
 
 		return true;
 	}

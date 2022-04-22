@@ -37,7 +37,7 @@ namespace Ion
 
 		const TShared<RHIVertexBuffer>& GetVertexBuffer() const;
 		const TShared<RHIIndexBuffer>& GetIndexBuffer() const;
-		const TWeak<Material>& GetMaterial() const;
+		const TShared<Material>& GetMaterial() const;
 
 		MeshUniforms& GetUniformsDataRef();
 
@@ -55,7 +55,7 @@ namespace Ion
 		TShared<RHIVertexBuffer> m_VertexBuffer;
 		TShared<RHIIndexBuffer> m_IndexBuffer;
 		TShared<RHIUniformBuffer> m_UniformBuffer;
-		TWeak<Material> m_Material;
+		TShared<Material> m_Material;
 
 		uint32 m_VertexCount;
 		uint32 m_TriangleCount;

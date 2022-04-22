@@ -2,6 +2,8 @@
 
 #include "Mesh.h"
 #include "RHI/UniformBuffer.h"
+#include "Resource/TextureResource.h"
+#include "Renderer/Renderer.h"
 
 namespace Ion
 {
@@ -19,6 +21,27 @@ namespace Ion
 			mesh->SetVertexBuffer(renderData.VertexBuffer);
 			mesh->SetIndexBuffer(renderData.IndexBuffer);
 		});
+
+		// Set the defaults
+		const MeshResourceDefaults& defaults = resource->GetDefaults();
+		// All assets should have been loaded by now.
+		if (defaults.TextureAsset.IsValid())
+		{
+			// @TODO: Do something so it makes more sense when the material system is done
+
+			TShared<Material> material = Material::Create();
+			material->SetShader(Renderer::GetBasicShader());
+			material->CreateParameter("Texture", EMaterialParameterType::Texture2D);
+
+			mesh->SetMaterial(material);
+
+			TShared<TextureResource> texture = TextureResource::Query(defaults.TextureAsset);
+
+			texture->Take([material](const TextureResourceRenderData& data)
+			{
+				material->SetParameter("Texture", data.Texture);
+			});
+		}
 
 		return mesh;
 	}
@@ -57,9 +80,9 @@ namespace Ion
 		m_VertexCount = vertexBuffer->GetVertexCount();
 
 		// Set the layout if the material has been set before the VB.
-		if (TShared<Material> material = m_Material.lock())
+		if (m_Material)
 		{
-			m_VertexBuffer->SetLayoutShader(material->GetShader());
+			m_VertexBuffer->SetLayoutShader(m_Material->GetShader());
 		}
 	}
 
@@ -90,7 +113,7 @@ namespace Ion
 		return m_IndexBuffer;
 	}
 
-	const TWeak<Material>& Mesh::GetMaterial() const
+	const TShared<Material>& Mesh::GetMaterial() const
 	{
 		return m_Material;
 	}
@@ -117,6 +140,6 @@ namespace Ion
 
 	const Material* Mesh::GetMaterialRaw() const
 	{
-		return m_Material.lock().get();
+		return m_Material.get();
 	}
 }
