@@ -195,7 +195,7 @@ namespace Ion
 				break;
 			case ECursorType::Grab:
 				// @TODO: unhardcode these paths
-				cursorPath = (EnginePath::GetContentPath() + L"Cursor/openhand.cur").ToString();
+				cursorPath = (EnginePath::GetEngineContentPath() + L"Cursor/openhand.cur").ToString();
 				handle = LoadCursorFromFile(cursorPath.c_str());
 				if (!handle)
 				{
@@ -204,7 +204,7 @@ namespace Ion
 				}
 				break;
 			case ECursorType::GrabClosed:
-				cursorPath = (EnginePath::GetContentPath() + L"Cursor/closedhand.cur").ToString();
+				cursorPath = (EnginePath::GetEngineContentPath() + L"Cursor/closedhand.cur").ToString();
 				handle = LoadCursorFromFile(cursorPath.c_str());
 				if (!handle)
 				{

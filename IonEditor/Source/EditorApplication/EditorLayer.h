@@ -15,7 +15,7 @@ namespace Ion::Editor
 	class EDITOR_API EditorLayer : public Layer
 	{
 	public:
-		using WorldTreeNode = TTreeNode<WorldTreeNodeData>;
+		using WorldTreeNode = TFastTreeNode<WorldTreeNodeData>;
 
 		EditorLayer(const char* name);
 

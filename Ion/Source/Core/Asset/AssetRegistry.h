@@ -276,6 +276,8 @@ namespace Ion
 
 		static const AssetMap& GetAllRegisteredAssets();
 
+		static void RegisterEngineAssets();
+
 	private:
 		AssetRegistry();
 
@@ -288,6 +290,8 @@ namespace Ion
 		 * @brief By default - the Engine Task Queue
 		 */
 		TaskQueue& m_WorkQueue;
+
+		TShared<TTreeNode<FileInfo>> m_EngineContent;
 	};
 
 	// AssetDefinition class inline implementation --------------------------------

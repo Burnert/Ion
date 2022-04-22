@@ -487,8 +487,10 @@ namespace Ion
 
 		do
 		{
-			wchar fullPath[MaxPathLength + 1];
-			GetFullPathName(ffd.cFileName, MaxPathLength + 1, fullPath, nullptr);
+			//wchar fullPath[MaxPathLength + 1];
+			//GetFullPathName(ffd.cFileName, MaxPathLength + 1, fullPath, nullptr);
+
+			WString fullPath = m_PathName + L"/" + ffd.cFileName;
 
 			LARGE_INTEGER fileSize;
 			fileSize.LowPart = ffd.nFileSizeLow;

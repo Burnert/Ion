@@ -92,6 +92,8 @@ namespace Ion
 
 		//AssetManager::Init();
 
+		AssetRegistry::RegisterEngineAssets();
+
 		InitImGui();
 		LoadFonts();
 

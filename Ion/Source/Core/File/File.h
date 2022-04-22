@@ -226,6 +226,9 @@ namespace Ion
 
 		FileInfoArray Files;
 
+		template<typename Pred>
+		FileList Filter(Pred pred) const;
+
 		uint32 GetCount() const { return (uint32)Files.size(); }
 		bool IsEmpty() const { return Files.empty(); }
 
@@ -251,6 +254,22 @@ namespace Ion
 		inline ConstReverseIterator rbegin() const { return Files.rbegin(); }
 		inline ConstReverseIterator rend() const   { return Files.rend();   }
 	};
+
+	template<typename Pred>
+	inline FileList FileList::Filter(Pred pred) const
+	{
+		FileInfoArray filtered;
+		filtered.reserve(Files.size());
+		for (const FileInfo& info : Files)
+		{
+			if (pred(info))
+			{
+				filtered.push_back(info);
+			}
+		}
+		filtered.shrink_to_fit();
+		return FileList(Move(filtered));
+	}
 
 #if ION_PLATFORM_WINDOWS
 	struct WindowsFileData
@@ -559,6 +578,8 @@ namespace Ion
 		//WString Find(const wchar* name) const;
 		//WString FindRecursive(const wchar* name) const;
 
+		TShared<TTreeNode<FileInfo>> Tree() const;
+
 		bool IsRelative() const;
 
 		inline WString LastElement() const
@@ -637,6 +658,8 @@ namespace Ion
 	private:
 		static TArray<WString> SplitPathName(const WString& path);
 		static WStringView StripSlashes(const WString& name);
+
+		TTreeNode<FileInfo>& Tree_Internal() const;
 
 		// Platform specific
 

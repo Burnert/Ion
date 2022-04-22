@@ -105,7 +105,10 @@ namespace Ion
 
 		/**
 		 * @brief Tries to parse the .iasset (asset definition) file
-		 * specified in the constructor
+		 * specified in the constructor.
+		 * 
+		 * @details If the asset is found and successfully parsed,
+		 * it is added to the Asset Registry.
 		 * 
 		 * @return Asset handle - if the path is invalid or some other
 		 * error occurs, the returned handle will be invalid.

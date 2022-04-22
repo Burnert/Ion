@@ -28,7 +28,7 @@ namespace Ion
 			return GetCheckedEnginePath() + L"Shaders";
 		}
 
-		static inline FilePath GetContentPath()
+		static inline FilePath GetEngineContentPath()
 		{
 			return s_EnginePath + L"Content";
 		}
@@ -40,7 +40,7 @@ namespace Ion
 
 		static inline FilePath GetFontsPath()
 		{
-			return GetContentPath() + L"Fonts";
+			return GetEngineContentPath() + L"Fonts";
 		}
 
 		static inline FilePath GetCheckedFontsPath()
@@ -50,7 +50,7 @@ namespace Ion
 
 		static inline FilePath GetEditorContentPath()
 		{
-			return GetContentPath() + L"Editor";
+			return GetEngineContentPath() + L"Editor";
 		}
 
 		static inline FilePath GetCheckedEditorContentPath()

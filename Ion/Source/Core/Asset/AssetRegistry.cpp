@@ -6,6 +6,8 @@
 #include "Core/Task/EngineTaskQueue.h"
 #include "Core/File/Collada.h"
 
+#include "Application/EnginePath.h"
+
 namespace Ion
 {
 	// AssetDefinition ----------------------------------------------------------------
@@ -109,8 +111,10 @@ namespace Ion
 
 	AssetDefinition& AssetRegistry::Register(const AssetInitializer& initializer)
 	{
-		auto it = Get().m_Assets.find(initializer.Guid);
-		if (it != Get().m_Assets.end())
+		AssetRegistry& instance = Get();
+
+		auto it = instance.m_Assets.find(initializer.Guid);
+		if (it != instance.m_Assets.end())
 		{
 			LOG_ERROR("Cannot register the asset. An asset with the same GUID {{{0}}} already exists.", initializer.Guid);
 			return it->second;
@@ -134,13 +138,37 @@ namespace Ion
 
 	AssetDefinition* AssetRegistry::Find(const GUID& guid)
 	{
-		auto it = Get().m_Assets.find(guid);
-		if (it == Get().m_Assets.end())
+		AssetRegistry& instance = Get();
+
+		auto it = instance.m_Assets.find(guid);
+		if (it == instance.m_Assets.end())
 		{
 			return nullptr;
 		}
 
 		return &it->second;
+	}
+
+	void AssetRegistry::RegisterEngineAssets()
+	{
+		AssetRegistry& instance = Get();
+
+		FilePath engineContentPath = EnginePath::GetEngineContentPath();
+
+		instance.m_EngineContent = engineContentPath.Tree();
+
+		TArray<TTreeNode<FileInfo>*> assets = instance.m_EngineContent->FindAllNodesRecursiveDF([](FileInfo& fileInfo)
+		{
+			File file(fileInfo.Filename);
+			WString extension = file.GetExtension();
+			return extension == L"iasset";
+		});
+
+		for (TTreeNode<FileInfo>*& assetNode : assets)
+		{
+			Asset asset = AssetFinder(assetNode->Get().FullPath).Resolve();
+			LOG_TRACE(L"Loaded Engine Asset \"{0}\".", asset->GetDefinitionPath().ToString());
+		}
 	}
 
 	AssetRegistry::AssetRegistry() :

@@ -312,6 +312,11 @@ namespace Ion
 		return list;
 	}
 
+	TShared<TTreeNode<FileInfo>> FilePath::Tree() const
+	{
+		return MakeShareable(&Tree_Internal());
+	}
+
 	bool FilePath::IsRelative() const
 	{
 		// @TODO: Implement this
@@ -436,6 +441,42 @@ namespace Ion
 		}
 
 		return WStringView(name).substr(start, end - start);
+	}
+
+	TTreeNode<FileInfo>& FilePath::Tree_Internal() const
+	{
+		ionassert(Exists() && IsDirectory());
+
+		FileInfo thisDir = { LastElement(), m_PathName, 0, true };
+
+		FileList thisDirList = ListFiles();
+		// Filter the files
+		FileList thisDirFiles = thisDirList.Filter([](const FileInfo& file)
+		{
+			return !file.bDirectory;
+		});
+		// Filter the directories
+		FileList thisDirDirs = thisDirList.Filter([](const FileInfo& file)
+		{
+			return file.bDirectory && file.Filename != L"." && file.Filename != L"..";
+		});
+
+		TTreeNode<FileInfo>& thisDirNode = TTreeNode<FileInfo>::Make(thisDir);
+
+		// Insert the files
+		for (const FileInfo& file : thisDirFiles)
+		{
+			thisDirNode.Insert(TTreeNode<FileInfo>::Make(file));
+		}
+
+		// Recursively get the sub-directories.
+		for (const FileInfo& dir : thisDirDirs)
+		{
+			FilePath subDir = *this + dir.Filename;
+			thisDirNode.Insert(subDir.Tree_Internal());
+		}
+
+		return thisDirNode;
 	}
 
 	void FilePath::UpdatePathName() const

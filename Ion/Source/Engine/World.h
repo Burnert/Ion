@@ -87,7 +87,7 @@ namespace Ion
 		using EntityMap   = THashMap<GUID, Entity*>;
 
 		using WorldTreeNodeFactory = TTreeNodeFactory<WorldTreeNodeData>;
-		using WorldTreeNode        = TTreeNode<WorldTreeNodeData>;
+		using WorldTreeNode        = TFastTreeNode<WorldTreeNodeData>;
 
 	protected:
 		static World* Create(const WorldInitializer& initializer);
