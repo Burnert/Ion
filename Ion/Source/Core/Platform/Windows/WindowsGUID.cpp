@@ -60,7 +60,7 @@ namespace Ion
 		UUID uuid;
 		RPC_STATUS status = UuidCreate(&uuid);
 		
-		ConvertWindowsUUIDToBytes(uuid, m_Bytes);
+		ConvertWindowsUUIDToBytes(uuid, (uint8*)&m_Bytes);
 
 		if (status == RPC_S_UUID_LOCAL_ONLY)
 		{
@@ -77,7 +77,7 @@ namespace Ion
 		UUID uuid;
 		RPC_STATUS status = UuidFromStringA((unsigned char*)str.c_str(), &uuid);
 
-		ConvertWindowsUUIDToBytes(uuid, m_Bytes);
+		ConvertWindowsUUIDToBytes(uuid, (uint8*)&m_Bytes);
 
 		if (status == RPC_S_UUID_LOCAL_ONLY)
 		{
@@ -92,7 +92,7 @@ namespace Ion
 	String GUID::PlatformGUIDToString() const
 	{
 		UUID uuid;
-		ConvertBytesToWindowsUUID(m_Bytes, uuid);
+		ConvertBytesToWindowsUUID((uint8*)&m_Bytes, uuid);
 
 		RPC_CSTR rpcUuidStr;
 		RPC_STATUS status = UuidToStringA(&uuid, &rpcUuidStr);

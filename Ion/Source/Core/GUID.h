@@ -26,7 +26,6 @@ namespace Ion
 		inline static constexpr InvalidInitializerT Invalid = { };
 
 		GUID();
-		explicit GUID(const uint8 bytes[16]);
 		explicit GUID(const GUIDBytesArray& bytes);
 		explicit GUID(const String& guidStr);
 		GUID(GUID::ZeroInitializerT);
@@ -53,7 +52,7 @@ namespace Ion
 		String PlatformGUIDToString() const;
 
 	private:
-		uint8 m_Bytes[16];
+		GUIDBytesArray m_Bytes;
 #if ION_DEBUG
 		String m_AsString;
 		void CacheString();
@@ -77,17 +76,9 @@ namespace Ion
 		CACHE_STRING()
 	}
 
-	inline GUID::GUID(const uint8 bytes[16]) :
-		m_Bytes()
-	{
-		memcpy(m_Bytes, bytes, sizeof(m_Bytes));
-		CACHE_STRING()
-	}
-
 	inline GUID::GUID(const GUIDBytesArray& bytes) :
-		m_Bytes()
+		m_Bytes(bytes)
 	{
-		memcpy(m_Bytes, &bytes, sizeof(bytes));
 		CACHE_STRING()
 	}
 
@@ -107,20 +98,19 @@ namespace Ion
 	inline GUID::GUID(GUID::InvalidInitializerT) :
 		m_Bytes()
 	{
-		memset(m_Bytes, 0xFF, sizeof(m_Bytes));
+		m_Bytes.fill(0xFF);
 		CACHE_STRING()
 	}
 
-	inline GUID::GUID(const GUID& other)
+	inline GUID::GUID(const GUID& other) :
+		m_Bytes(other.m_Bytes)
 	{
-		memcpy(m_Bytes, other.m_Bytes, sizeof(m_Bytes));
 		CACHE_STRING()
 	}
 
-	inline GUID::GUID(GUID&& other) noexcept
+	inline GUID::GUID(GUID&& other) noexcept :
+		m_Bytes(Move(other.m_Bytes))
 	{
-		memcpy(m_Bytes, other.m_Bytes, sizeof(m_Bytes));
-		memset(other.m_Bytes, 0, sizeof(other.m_Bytes));
 		CACHE_STRING()
 	}
 
@@ -131,25 +121,24 @@ namespace Ion
 
 	inline bool GUID::IsZero() const
 	{
-		return !(((uint64*)m_Bytes)[0] | ((uint64*)m_Bytes)[1]);
+		return !(((uint64*)&m_Bytes)[0] | ((uint64*)&m_Bytes)[1]);
 	}
 
 	inline bool GUID::IsInvalid() const
 	{
-		return (((uint64*)m_Bytes)[0] + ((uint64*)m_Bytes)[1] + 2) == 0;
+		return (((uint64*)&m_Bytes)[0] + ((uint64*)&m_Bytes)[1] + 2) == 0;
 	}
 
 	inline GUID& GUID::operator=(const GUID& other)
 	{
-		memcpy(m_Bytes, other.m_Bytes, sizeof(m_Bytes));
+		m_Bytes = other.m_Bytes;
 		CACHE_STRING()
 		return *this;
 	}
 
 	inline GUID& GUID::operator=(GUID&& other) noexcept
 	{
-		memcpy(m_Bytes, other.m_Bytes, sizeof(m_Bytes));
-		memset(other.m_Bytes, 0, sizeof(other.m_Bytes));
+		m_Bytes = Move(other.m_Bytes);
 		CACHE_STRING()
 		return *this;
 	}
@@ -160,8 +149,8 @@ namespace Ion
 		// and comparing two 64-bit numbers should be faster
 		// than comparing sixteen 8-bit numbers.
 		return
-			((uint64*)m_Bytes)[0] == ((uint64*)other.m_Bytes)[0] &&
-			((uint64*)m_Bytes)[1] == ((uint64*)other.m_Bytes)[1];
+			((uint64*)&m_Bytes)[0] == ((uint64*)&other.m_Bytes)[0] &&
+			((uint64*)&m_Bytes)[1] == ((uint64*)&other.m_Bytes)[1];
 		// (but it actually isn't when optimized...)
 		// (whatever, it looks cool)
 	}
@@ -178,15 +167,12 @@ namespace Ion
 
 	inline void GUID::GetRawBytes(uint8(&outBytes)[16]) const
 	{
-		memcpy(outBytes, m_Bytes, sizeof(m_Bytes));
+		memcpy(outBytes, &m_Bytes, sizeof(m_Bytes));
 	}
 
 	inline GUIDBytesArray GUID::GetRawBytes() const
 	{
-		GUIDBytesArray bytes;
-		memcpy(bytes.data(), m_Bytes, sizeof(m_Bytes));
-
-		return bytes;
+		return m_Bytes;
 	}
 }
 
