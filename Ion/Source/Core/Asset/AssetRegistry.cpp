@@ -34,6 +34,7 @@ namespace Ion
 
 	void FAssetLoadWork::Schedule()
 	{
+		// Executes on a worker thread
 		Execute = [*this](IMessageQueueProvider& queue)
 		{
 			ionassert(OnLoad);
@@ -117,6 +118,18 @@ namespace Ion
 
 		auto& [guid, assetDef] = *Get().m_Assets.emplace(initializer.Guid, AssetDefinition(initializer)).first;
 		return assetDef;
+	}
+
+	void AssetRegistry::Unregister(const AssetDefinition& asset)
+	{
+		AssetRegistry& instance = Get();
+
+		const GUID& guid = asset.GetGuid();
+
+		ionassert(instance.m_Assets.find(guid) != instance.m_Assets.end(),
+			"Asset \"%ls\" does not exist in the registry.", asset.GetDefinitionPath().ToString().c_str());
+
+		instance.m_Assets.erase(guid);
 	}
 
 	AssetDefinition* AssetRegistry::Find(const GUID& guid)

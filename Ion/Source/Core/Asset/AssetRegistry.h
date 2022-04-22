@@ -190,6 +190,8 @@ namespace Ion
 		const FilePath& GetPath() const;
 		const FilePath& GetDefinitionPath() const;
 
+		const GUID& GetGuid() const;
+
 		/**
 		 * @brief Checks if the path specified in the .iasset file
 		 * is valid, and whether the asset can be loaded from the file.
@@ -251,6 +253,8 @@ namespace Ion
 		 * @return Reference to the asset definition
 		 */
 		static AssetDefinition& Register(const AssetInitializer& initializer);
+
+		static void Unregister(const AssetDefinition& asset);
 
 		/**
 		 * @brief Find an asset definition by GUID.
@@ -350,6 +354,11 @@ namespace Ion
 	inline const FilePath& AssetDefinition::GetDefinitionPath() const
 	{
 		return m_AssetDefinitionPath;
+	}
+
+	inline const GUID& AssetDefinition::GetGuid() const
+	{
+		return m_Guid;
 	}
 
 	inline bool AssetDefinition::IsValid() const

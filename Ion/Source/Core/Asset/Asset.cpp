@@ -69,6 +69,12 @@ namespace Ion
 			return Asset::InvalidHandle;
 		}
 
+		// The asset might have already been registered.
+		if (AssetDefinition* asset = AssetRegistry::Find(initializer.Guid))
+		{
+			return asset->GetHandle();
+		}
+
 		return AssetRegistry::Register(initializer).GetHandle();
 	}
 
