@@ -1,0 +1,4 @@
+<IonAsset>
+	<Info type="Ion.Mesh" guid="d327c9ae-23d6-453d-b4a4-38b350a1802f" />
+	<ImportExternal path="Plane.dae" />
+</IonAsset>

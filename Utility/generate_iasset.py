@@ -6,11 +6,10 @@ if len(sys.argv) < 2:
 	error("Wrong usage!\nSpecify a file to generate an .iasset file for.\n\ngenerate_iasset.py <filename>\n")
 	exit()
 
-file = sys.argv[1]
+path = sys.argv[1]
 
-path = file.split("\\")[-1]
-name = path.split(".")[0]
-extension = path.split(".")[-1]
+file = path.split("\\")[-1]
+name, extension = tuple(file.split(".", 1))
 
 try:
 	type = {
@@ -24,11 +23,12 @@ guid = uuid.uuid4()
 
 asset = f"""<IonAsset>
 	<Info type="{type}" guid="{guid}" />
-	<ImportExternal path="{path}" />
+	<ImportExternal path="{file}" />
 </IonAsset>
 """
 
-assetPath = f"{path.split('.')[0]}.iasset"
+assetDir = "\\".join([d for d in path.split('\\') if d != file])
+assetPath = f"{assetDir}\\{file.split('.')[0]}.iasset"
 
 with open(assetPath, 'w') as file:
 	file.write(asset)

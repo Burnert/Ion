@@ -1,0 +1,4 @@
+<IonAsset>
+	<Info type="Ion.Mesh" guid="d312df59-c64b-42e0-ac1a-720a733775ef" />
+	<ImportExternal path="Cube.dae" />
+</IonAsset>
