@@ -56,26 +56,33 @@ namespace Ion
 		ionexcept(outGuid, "Invalid GUID.")
 			return false;
 
-		// <Filter>
-		XMLNode* nodeFilter = nodeTextureResource->first_node(IASSET_NODE_TextureResource_Filter);
-		if (nodeFilter)
-		{
-			// value=
-			XMLAttribute* filter_attrValue = nodeFilter->first_attribute(IASSET_ATTR_value);
-			IASSET_CHECK_ATTR(filter_attrValue, IASSET_ATTR_value, IASSET_NODE_TextureResource_Filter, path);
+		outDescription.Properties = { };
 
-			char* csFilter = filter_attrValue->value();
-			ETextureFilteringMethod filter = ParseFilterString(csFilter);
-			// 0xFF means the value could not be parsed
-			ionexcept(filter != (ETextureFilteringMethod)0xFF, "Invalid filtering mode. (\"%s\")",
-				StringConverter::WStringToString(path.ToString()).c_str())
-				return false;
-
-			outDescription.Filter = filter;
-		}
-		else
+		// <Properties>
+		XMLNode* nodeProperties = nodeTextureResource->first_node(IASSET_NODE_Properties);
+		if (nodeProperties)
 		{
-			outDescription.Filter = ETextureFilteringMethod::Default;
+			// <Filter>
+			XMLNode* nodeFilter = nodeProperties->first_node(IASSET_NODE_TextureResource_Prop_Filter);
+			if (nodeFilter)
+			{
+				// value=
+				XMLAttribute* filter_attrValue = nodeFilter->first_attribute(IASSET_ATTR_value);
+				IASSET_CHECK_ATTR(filter_attrValue, IASSET_ATTR_value, IASSET_NODE_TextureResource_Prop_Filter, path);
+
+				char* csFilter = filter_attrValue->value();
+				ETextureFilteringMethod filter = ParseFilterString(csFilter);
+				// 0xFF means the value could not be parsed
+				ionexcept(filter != (ETextureFilteringMethod)0xFF, "Invalid filtering mode. (\"%s\")",
+					StringConverter::WStringToString(path.ToString()).c_str())
+					return false;
+
+				outDescription.Properties.Filter = filter;
+			}
+			else
+			{
+				outDescription.Properties.Filter = ETextureFilteringMethod::Default;
+			}
 		}
 
 		return true;

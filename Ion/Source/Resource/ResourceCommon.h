@@ -2,15 +2,16 @@
 
 // Common -------------------------------------------------------------
 
-#define IASSET_NODE_Defaults                "Defaults"
-#define IASSET_NODE_Defaults_Texture        "Texture"
-#define IASSET_ATTR_asset                   "asset"
+#define IASSET_NODE_Properties                   "Properties"
+#define IASSET_NODE_Defaults                     "Defaults"
+#define IASSET_NODE_Defaults_Texture             "Texture"
+#define IASSET_ATTR_asset                        "asset"
 
 // TextureResource ----------------------------------------------------
 
-#define IASSET_NODE_TextureResource         "TextureResource"
-#define IASSET_NODE_TextureResource_Filter  "Filter"
+#define IASSET_NODE_TextureResource              "TextureResource"
+#define IASSET_NODE_TextureResource_Prop_Filter  "Filter"
 
 // MeshResource ----------------------------------------------------
 
-#define IASSET_NODE_MeshResource            "MeshResource"
+#define IASSET_NODE_MeshResource                 "MeshResource"

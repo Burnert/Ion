@@ -10,11 +10,19 @@ namespace Ion
 	// ------------------------------------------------------------
 
 	/**
+	 * @brief Texture Resource properties representation from the asset file.
+	 */
+	struct TextureResourceProperties
+	{
+		ETextureFilteringMethod Filter;
+	};
+
+	/**
 	 * @brief Resource description representation from the asset file.
 	 */
 	struct TextureResourceDescription
 	{
-		ETextureFilteringMethod Filter;
+		TextureResourceProperties Properties;
 	};
 
 	struct TextureResourceRenderData
@@ -114,7 +122,7 @@ namespace Ion
 			desc.bUseAsRenderTarget = true;
 			desc.DebugName = StringConverter::WStringToString(m_Asset->GetDefinitionPath().ToString());
 
-			desc.SetFilterAll(m_Description.Filter);
+			desc.SetFilterAll(m_Description.Properties.Filter);
 				
 			m_RenderData.Texture = RHITexture::Create(desc);
 

@@ -2,6 +2,8 @@
 	<Info type="Ion.Image" guid="3f144f98-3748-4402-9245-28eeca6faa0c" />
 	<ImportExternal path="Lightbulb.png" />
 	<TextureResource guid="b1fe61f3-d508-4dc9-9d77-2d048dc732ab">
-		<Filter value="Linear" />
+		<Properties>
+			<Filter value="Linear" />
+		</Properties>
 	</TextureResource>
 </IonAsset>
