@@ -42,7 +42,7 @@ namespace Ion
 	public:
 		using TResourceDescription = MeshResourceDescription;
 
-		static TShared<MeshResource> Query(const Asset& asset);
+		static TResourcePtr<MeshResource> Query(const Asset& asset);
 
 		/**
 		 * @brief Used to access the mesh render data owned by the Resource.

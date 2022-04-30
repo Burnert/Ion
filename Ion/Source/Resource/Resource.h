@@ -2,6 +2,7 @@
 
 #include "ResourceFwd.h"
 #include "ResourceCommon.h"
+#include "ResourceMemory.h"
 #include "Core/Asset/Asset.h"
 #include "Core/Asset/AssetRegistry.h"
 
@@ -50,7 +51,7 @@ namespace Ion
 		 * @return Shared pointer to the Resource
 		 */
 		template<typename T>
-		static TShared<T> Query(const Asset& asset);
+		static TResourcePtr<T> Query(const Asset& asset);
 
 	protected:
 		GUID m_Guid;
@@ -60,20 +61,20 @@ namespace Ion
 	};
 
 	template<typename T>
-	inline TShared<T> Resource::Query(const Asset& asset)
+	inline TResourcePtr<T> Resource::Query(const Asset& asset)
 	{
 		static_assert(TIsBaseOfV<Resource, T>);
 
-		TShared<Resource> resource;
+		ResourcePtr resource;
 
 		// Find a resource of type T
 		if (ResourceManager::IsAnyResourceAvailable(asset))
 		{
-			TArray<TShared<Resource>> resources = ResourceManager::FindAssociatedResources(asset);
-			for (TShared<Resource>& res : resources)
+			TArray<ResourcePtr> resources = ResourceManager::FindAssociatedResources(asset);
+			for (ResourcePtr& res : resources)
 			{
 				// Check the actual type of the resource
-				if (dynamic_cast<T*>(res.get()))
+				if (dynamic_cast<T*>(res.GetRaw()))
 				{
 					resource = res;
 				}
@@ -82,7 +83,7 @@ namespace Ion
 
 		if (resource)
 		{
-			return TStaticCast<T>(resource);
+			return TStaticResourcePtrCast<T>(resource);
 		}
 		else
 		{
@@ -91,9 +92,12 @@ namespace Ion
 			if (T::ParseAssetFile(asset->GetDefinitionPath(), guid, desc))
 			{
 				// Register the new resource, if it doesn't exist.
-				TShared<T> newResource = MakeShareable(new T(guid, asset, desc));
+				//TShared<T> newResource = MakeShareable(new T(guid, asset, desc));
+				TResourcePtr<T> newResource(new T(guid, asset, desc));
+
 				// Register the resource using the asset's Guid.
 				ResourceManager::Register(guid, asset, newResource);
+
 				return newResource;
 			}
 			return nullptr;

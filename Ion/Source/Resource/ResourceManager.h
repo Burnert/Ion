@@ -4,8 +4,6 @@
 
 namespace Ion
 {
-	class ResourceRefCount;
-
 	/**
 	 * @brief Resource Manager class
 	 * 
@@ -20,18 +18,18 @@ namespace Ion
 		 */
 		static ResourceManager& Get();
 
-		static void Register(const GUID& guid, const Asset& asset, const TShared<Resource>& resource);
+		static void Register(const GUID& guid, const Asset& asset, const ResourcePtr& resource);
 		static void Unregister(Resource* resource);
 
-		static TShared<Resource> Find(const GUID& guid);
-		static TArray<TShared<Resource>> FindAssociatedResources(const Asset& asset);
+		static ResourcePtr Find(const GUID& guid);
+		static TArray<ResourcePtr> FindAssociatedResources(const Asset& asset);
 		static const TArray<GUID>* FindAssociatedResourcesGUIDs(const Asset& asset);
 		static bool IsAnyResourceAvailable(const Asset& asset);
 
 		template<typename T>
-		static TArray<TShared<T>> GetResourcesOfType();
+		static TArray<TResourcePtr<T>> GetResourcesOfType();
 
-		static const THashMap<GUID, TShared<Resource>>& GetAllRegisteredResources();
+		static const THashMap<GUID, ResourceWeakPtr>& GetAllRegisteredResources();
 
 		/**
 		 * @brief Checks if the Asset is in use by a Resource
@@ -46,27 +44,28 @@ namespace Ion
 		ResourceManager();
 
 	private:
-		THashMap<GUID, TShared<Resource>> m_Resources;
+		THashMap<GUID, ResourceWeakPtr> m_Resources;
 		THashMap<Asset, TArray<GUID>> m_AssetToResources;
 	};
 
 	// ResourceManager inline implementation
 
 	template<typename T>
-	inline TArray<TShared<T>> ResourceManager::GetResourcesOfType()
+	inline TArray<TResourcePtr<T>> ResourceManager::GetResourcesOfType()
 	{
 		ResourceManager& instance = Get();
 
 		// @TODO: all the types should be indexed somewhere,
 		// so that no searching is needed.
 
-		TArray<TShared<T>> resources;
+		TArray<TResourcePtr<T>> resources;
 	
 		for (auto& [guid, res] : instance.m_Resources)
 		{
-			if (dynamic_cast<T*>(res.get()))
+			ResourcePtr ref = res.Lock();
+			if (dynamic_cast<T*>(ref.GetRaw()))
 			{
-				resources.push_back(TStaticCast<T>(res));
+				resources.push_back(TStaticResourcePtrCast<T>(ref));
 			}
 		}
 

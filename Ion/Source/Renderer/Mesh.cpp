@@ -12,7 +12,7 @@ namespace Ion
 		return MakeShareable(new Mesh);
 	}
 
-	TShared<Mesh> Mesh::CreateFromResource(const TShared<MeshResource>& resource)
+	TShared<Mesh> Mesh::CreateFromResource(const TResourcePtr<MeshResource>& resource)
 	{
 		TShared<Mesh> mesh = Mesh::Create();
 
@@ -35,9 +35,10 @@ namespace Ion
 
 			mesh->SetMaterial(material);
 
-			TShared<TextureResource> texture = TextureResource::Query(defaults.TextureAsset);
+			// @TODO: Temporary -> the material system will load and instantiate the textures
+			mesh->m_Texture = TextureResource::Query(defaults.TextureAsset);
 
-			texture->Take([material](const TextureResourceRenderData& data)
+			mesh->m_Texture->Take([material](const TextureResourceRenderData& data)
 			{
 				material->SetParameter("Texture", data.Texture);
 			});

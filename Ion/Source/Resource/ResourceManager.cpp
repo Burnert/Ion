@@ -10,7 +10,7 @@ namespace Ion
 		return *c_Instance;
 	}
 
-	void ResourceManager::Register(const GUID& guid, const Asset& asset, const TShared<Resource>& resource)
+	void ResourceManager::Register(const GUID& guid, const Asset& asset, const ResourcePtr& resource)
 	{
 		ResourceManager& instance = Get();
 
@@ -22,6 +22,8 @@ namespace Ion
 		instance.m_Resources.emplace(guid, resource);
 		// Associate the resource with the asset
 		instance.m_AssetToResources[asset].push_back(guid);
+
+		LOG_TRACE(L"Resource has been registered (asset \"{0}\").", asset->GetDefinitionPath().ToString());
 	}
 
 	void ResourceManager::Unregister(Resource* resource)
@@ -48,18 +50,21 @@ namespace Ion
 		}
 
 		instance.m_Resources.erase(resourceGuid);
+
+		// @TODO: Fix - Gets called twice for some reason
+		LOG_TRACE(L"Resource has been unregistered (asset \"{0}\").", assetHandle->GetDefinitionPath().ToString());
 	}
 
-	TArray<TShared<Resource>> ResourceManager::FindAssociatedResources(const Asset& asset)
+	TArray<ResourcePtr> ResourceManager::FindAssociatedResources(const Asset& asset)
 	{
 		const TArray<GUID>* guids = FindAssociatedResourcesGUIDs(asset);
 		if (guids)
 		{
 			// Get all the resources for the specified asset.
-			TArray<TShared<Resource>> resources;
+			TArray<ResourcePtr> resources;
 			for (const GUID& guid : *guids)
 			{
-				TShared<Resource> resource = Find(guid);
+				ResourcePtr resource = Find(guid);
 				if (resource)
 				{
 					resources.push_back(resource);
@@ -67,7 +72,7 @@ namespace Ion
 			}
 			return resources;
 		}
-		return TArray<TShared<Resource>>();
+		return TArray<ResourcePtr>();
 	}
 
 	const TArray<GUID>* ResourceManager::FindAssociatedResourcesGUIDs(const Asset& asset)
@@ -90,23 +95,23 @@ namespace Ion
 		return it != instance.m_AssetToResources.end();
 	}
 
-	const THashMap<GUID, TShared<Resource>>& ResourceManager::GetAllRegisteredResources()
+	const THashMap<GUID, ResourceWeakPtr>& ResourceManager::GetAllRegisteredResources()
 	{
 		ResourceManager& instance = Get();
 
 		return instance.m_Resources;
 	}
 
-	TShared<Resource> ResourceManager::Find(const GUID& guid)
+	ResourcePtr ResourceManager::Find(const GUID& guid)
 	{
 		ResourceManager& instance = Get();
 
 		auto it = instance.m_Resources.find(guid);
 		if (it != instance.m_Resources.end())
 		{
-			return it->second;
+			return it->second.Lock();
 		}
-		return TShared<Resource>();
+		return ResourcePtr();
 	}
 
 	bool ResourceManager::IsRegistered(const GUID& guid)

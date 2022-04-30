@@ -43,7 +43,7 @@ namespace Ion
 		 * @param asset Asset associated with the Resource
 		 * @return Shared pointer to the Resource
 		 */
-		static TShared<TextureResource> Query(const Asset& asset);
+		static TResourcePtr<TextureResource> Query(const Asset& asset);
 
 		/**
 		 * @brief Used to access the Texture owned by the Resource.
@@ -77,6 +77,7 @@ namespace Ion
 	protected:
 		TextureResource(const GUID& guid, const Asset& asset, const TextureResourceDescription& desc) :
 			Resource(guid, asset),
+			m_RenderData({ }),
 			m_Description(desc)
 		{
 		}

@@ -3,6 +3,7 @@
 #include "Core/Asset/Asset.h"
 
 #include "Resource/MeshResource.h"
+#include "Resource/TextureResource.h"
 
 #include "RendererCore.h"
 #include "Material.h"
@@ -27,7 +28,7 @@ namespace Ion
 	{
 	public:
 		static TShared<Mesh> Create();
-		static TShared<Mesh> CreateFromResource(const TShared<MeshResource>& resource);
+		static TShared<Mesh> CreateFromResource(const TResourcePtr<MeshResource>& resource);
 
 		virtual ~Mesh() { }
 
@@ -56,6 +57,8 @@ namespace Ion
 		TShared<RHIIndexBuffer> m_IndexBuffer;
 		TShared<RHIUniformBuffer> m_UniformBuffer;
 		TShared<Material> m_Material;
+
+		TResourcePtr<TextureResource> m_Texture;
 
 		uint32 m_VertexCount;
 		uint32 m_TriangleCount;

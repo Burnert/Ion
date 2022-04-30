@@ -17,10 +17,10 @@
 
 namespace Ion::Editor
 {
-	static void LoadTexture(TShared<RHITexture>& texture, const FilePath& path)
+	static void LoadTexture(TResourcePtr<TextureResource>& resource, TShared<RHITexture>& texture, const FilePath& path)
 	{
 		Asset asset = AssetFinder(path).Resolve();
-		TShared<TextureResource> resource = TextureResource::Query(asset);
+		resource = TextureResource::Query(asset);
 
 		resource->Take([&texture](const TextureResourceRenderData& data)
 		{
@@ -30,10 +30,10 @@ namespace Ion::Editor
 
 	void EditorBillboards::LoadTextures()
 	{
-		LoadTexture(BillboardCircle,    EnginePath::GetEditorContentPath() + PathCircle);
-		LoadTexture(BillboardLightbulb, EnginePath::GetEditorContentPath() + PathLightbulb);
-		LoadTexture(BillboardSun,       EnginePath::GetEditorContentPath() + PathSun);
-		LoadTexture(BillboardNoMesh,    EnginePath::GetEditorContentPath() + PathNoMesh);
+		LoadTexture(ResourceBillboardCircle,    BillboardCircle,    EnginePath::GetEditorContentPath() + PathCircle);
+		LoadTexture(ResourceBillboardLightbulb, BillboardLightbulb, EnginePath::GetEditorContentPath() + PathLightbulb);
+		LoadTexture(ResourceBillboardSun,       BillboardSun,       EnginePath::GetEditorContentPath() + PathSun);
+		LoadTexture(ResourceBillboardNoMesh,    BillboardNoMesh,    EnginePath::GetEditorContentPath() + PathNoMesh);
 	}
 
 	const TShared<RHITexture>& EditorBillboards::GetComponentBillboardTexture(ComponentTypeID id)

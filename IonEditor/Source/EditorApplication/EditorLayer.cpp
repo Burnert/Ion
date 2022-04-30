@@ -282,8 +282,8 @@ namespace Ion::Editor
 			ImGui::Text("Mesh Resources");
 			ImGui::Indent();
 			{
-				TArray<TShared<MeshResource>> meshes = ResourceManager::GetResourcesOfType<MeshResource>();
-				for (TShared<MeshResource>& mesh : meshes)
+				TArray<TResourcePtr<MeshResource>> meshes = ResourceManager::GetResourcesOfType<MeshResource>();
+				for (TResourcePtr<MeshResource>& mesh : meshes)
 				{
 					WString assetPath = mesh->GetAssetHandle()->GetPath().ToString();
 					ImGui::Selectable(StringConverter::WStringToString(assetPath).c_str());
@@ -294,8 +294,8 @@ namespace Ion::Editor
 			ImGui::Text("Texture Resources");
 			ImGui::Indent();
 			{
-				TArray<TShared<TextureResource>> textures = ResourceManager::GetResourcesOfType<TextureResource>();
-				for (TShared<TextureResource>& texture : textures)
+				TArray<TResourcePtr<TextureResource>> textures = ResourceManager::GetResourcesOfType<TextureResource>();
+				for (TResourcePtr<TextureResource>& texture : textures)
 				{
 					WString assetPath = texture->GetAssetHandle()->GetPath().ToString();
 					ImGui::Selectable(StringConverter::WStringToString(assetPath).c_str());
@@ -965,8 +965,8 @@ namespace Ion::Editor
 			ImGuiComboFlags flags = ImGuiComboFlags_HeightLargest;
 			if (ImGui::BeginCombo("Mesh Asset", previewName.c_str(), flags))
 			{
-				TArray<TShared<MeshResource>> meshResources = ResourceManager::GetResourcesOfType<MeshResource>();
-				for (TShared<MeshResource>& resource : meshResources)
+				TArray<TResourcePtr<MeshResource>> meshResources = ResourceManager::GetResourcesOfType<MeshResource>();
+				for (TResourcePtr<MeshResource>& resource : meshResources)
 				{
 					String name = StringConverter::WStringToString(resource->GetAssetHandle()->GetPath().ToString());
 

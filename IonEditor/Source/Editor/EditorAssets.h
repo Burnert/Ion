@@ -4,6 +4,8 @@
 #include "Application/EnginePath.h"
 #include "Engine/Components/Component.h"
 
+#include "Resource/TextureResource.h"
+
 namespace Ion::Editor
 {
 	class EDITOR_API EditorBillboards
@@ -13,6 +15,11 @@ namespace Ion::Editor
 		static const inline FilePath PathLightbulb = L"Icons/Lightbulb.iasset";
 		static const inline FilePath PathSun       = L"Icons/Sun.iasset";
 		static const inline FilePath PathNoMesh    = L"Icons/NoMesh.iasset";
+
+		static inline TResourcePtr<TextureResource> ResourceBillboardCircle;
+		static inline TResourcePtr<TextureResource> ResourceBillboardLightbulb;
+		static inline TResourcePtr<TextureResource> ResourceBillboardSun;
+		static inline TResourcePtr<TextureResource> ResourceBillboardNoMesh;
 
 		static inline TShared<RHITexture> BillboardCircle;
 		static inline TShared<RHITexture> BillboardLightbulb;

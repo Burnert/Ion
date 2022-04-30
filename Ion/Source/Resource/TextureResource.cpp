@@ -8,7 +8,7 @@
 
 namespace Ion
 {
-	TShared<TextureResource> TextureResource::Query(const Asset& asset)
+	TResourcePtr<TextureResource> TextureResource::Query(const Asset& asset)
 	{
 		return Resource::Query<TextureResource>(asset);
 	}
