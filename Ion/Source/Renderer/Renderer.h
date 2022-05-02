@@ -34,8 +34,8 @@ namespace Ion
 	struct ScreenTextureRenderData
 	{
 		TShared<RHIShader> Shader;
-		TShared<RHIVertexBuffer> VertexBuffer;
-		TShared<RHIIndexBuffer> IndexBuffer;
+		RHIVertexBuffer* VertexBuffer;
+		RHIIndexBuffer* IndexBuffer;
 	};
 
 	struct RendererClearOptions

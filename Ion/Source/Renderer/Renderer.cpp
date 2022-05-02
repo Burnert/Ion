@@ -145,8 +145,8 @@ namespace Ion
 		TShared<Mesh> billboardMesh = GetBillboardMesh();
 		ionassert(billboardMesh);
 
-		TShared<RHIVertexBuffer> vb = billboardMesh->GetVertexBuffer();
-		TShared<RHIIndexBuffer> ib = billboardMesh->GetIndexBuffer();
+		RHIVertexBuffer* vb = billboardMesh->GetVertexBuffer();
+		RHIIndexBuffer* ib = billboardMesh->GetIndexBuffer();
 
 		shader->Bind();
 		vb->Bind();
@@ -268,11 +268,11 @@ namespace Ion
 		quadLayout->AddAttribute(EVertexAttributeSemantic::TexCoord, EVertexAttributeType::Float, 2, false);
 		quadLayout->AddAttribute(EVertexAttributeSemantic::Normal,   EVertexAttributeType::Float, 3, true);
 
-		TShared<RHIVertexBuffer> vb = RHIVertexBuffer::Create(quadVertices, sizeof(quadVertices) / sizeof(float));
+		RHIVertexBuffer* vb = RHIVertexBuffer::Create(quadVertices, sizeof(quadVertices) / sizeof(float));
 		vb->SetLayout(quadLayout);
 		vb->SetLayoutShader(m_BasicUnlitMaskedShader);
 
-		TShared<RHIIndexBuffer> ib = RHIIndexBuffer::Create(quadIndices, sizeof(quadIndices) / sizeof(uint32));
+		RHIIndexBuffer* ib = RHIIndexBuffer::Create(quadIndices, sizeof(quadIndices) / sizeof(uint32));
 
 		m_BillboardMesh = Mesh::Create();
 		m_BillboardMesh->SetVertexBuffer(vb);

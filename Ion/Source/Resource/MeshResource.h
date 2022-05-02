@@ -28,13 +28,22 @@ namespace Ion
 	{
 		// @TODO: these shouldn't be shader ptrs
 
-		TShared<RHIVertexBuffer> VertexBuffer;
-		TShared<RHIIndexBuffer> IndexBuffer;
+		RHIVertexBuffer* VertexBuffer;
+		RHIIndexBuffer* IndexBuffer;
 
 		bool IsAvailable() const
 		{
 			return VertexBuffer && IndexBuffer;
 		}
+
+	private:
+		void Delete()
+		{
+			checked_delete(VertexBuffer);
+			checked_delete(IndexBuffer);
+		}
+
+		friend class MeshResource;
 	};
 
 	class ION_API MeshResource : public Resource
@@ -75,9 +84,15 @@ namespace Ion
 		 */
 		static bool ParseAssetFile(const FilePath& path, GUID& outGuid, MeshResourceDescription& outDescription);
 
+		~MeshResource()
+		{
+			m_RenderData.Delete();
+		}
+
 	protected:
 		MeshResource(const GUID& guid, const Asset& asset, const MeshResourceDescription& desc) :
 			Resource(guid, asset),
+			m_RenderData({ }),
 			m_Description(desc)
 		{
 		}

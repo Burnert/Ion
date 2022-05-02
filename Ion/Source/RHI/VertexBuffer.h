@@ -10,7 +10,7 @@ namespace Ion
 	class ION_API RHIVertexBuffer
 	{
 	public:
-		static TShared<RHIVertexBuffer> Create(float* vertexAttributes, uint64 count);
+		static RHIVertexBuffer* Create(float* vertexAttributes, uint64 count);
 
 		virtual ~RHIVertexBuffer() { }
 

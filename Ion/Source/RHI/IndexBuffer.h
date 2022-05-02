@@ -5,7 +5,7 @@ namespace Ion
 	class ION_API RHIIndexBuffer
 	{
 	public:
-		static TShared<RHIIndexBuffer> Create(uint32* indices, uint32 count);
+		static RHIIndexBuffer* Create(uint32* indices, uint32 count);
 
 		virtual ~RHIIndexBuffer() { }
 

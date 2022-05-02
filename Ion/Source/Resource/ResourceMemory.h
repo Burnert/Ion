@@ -392,6 +392,12 @@ namespace Ion
 			}
 		}
 
+		void Swap(TResourcePtrBase& other)
+		{
+			std::swap(m_Ptr, other.m_Ptr);
+			std::swap(m_RefCount, other.m_RefCount);
+		}
+
 		/**
 		 * @brief Delete the shared pointer
 		 * 
@@ -472,6 +478,11 @@ namespace Ion
 			ConstructShared(ptr);
 		}
 
+		TResourcePtr(const TResourcePtr& other)
+		{
+			CopyConstructShared(other);
+		}
+
 		/**
 		 * @brief Make a copy of another shared resource pointer.
 		 * 
@@ -483,6 +494,11 @@ namespace Ion
 		{
 			_DEBUG_LOG("TResourcePtr {0} Copy constructor", (void*)other.m_Ptr)
 			CopyConstructShared(other);
+		}
+
+		TResourcePtr(TResourcePtr&& other) noexcept
+		{
+			MoveConstruct(Move(other));
 		}
 
 		/**
@@ -515,6 +531,12 @@ namespace Ion
 			AliasConstructShared(other, ptr);
 		}
 
+		TResourcePtr& operator=(const TResourcePtr& other)
+		{
+			TResourcePtr(other).Swap(*this);
+			return *this;
+		}
+
 		/**
 		 * @brief Copy assign other shared pointer to this pointer
 		 * 
@@ -526,8 +548,13 @@ namespace Ion
 		TResourcePtr& operator=(const TResourcePtr<T0>& other)
 		{
 			_DEBUG_LOG("TResourcePtr {0} Copy assignment operator", (void*)other.m_Ptr)
-			DeleteShared();
-			CopyConstructShared(other);
+			TResourcePtr(other).Swap(*this);
+			return *this;
+		}
+
+		TResourcePtr& operator=(TResourcePtr&& other)
+		{
+			TResourcePtr(Move(other)).Swap(*this);
 			return *this;
 		}
 
@@ -542,8 +569,7 @@ namespace Ion
 		TResourcePtr& operator=(TResourcePtr<T0>&& other)
 		{
 			_DEBUG_LOG("TResourcePtr {0} Move assignment operator", (void*)other.m_Ptr)
-			DeleteShared();
-			MoveConstruct(Move(other));
+			TResourcePtr(Move(other)).Swap(*this);
 			return *this;
 		}
 
@@ -628,6 +654,11 @@ namespace Ion
 			ConstructWeak(ptr);
 		}
 
+		TResourceWeakPtr(const TResourceWeakPtr& other)
+		{
+			CopyConstructWeak(other);
+		}
+
 		/**
 		 * @brief Make a copy of another weak resource pointer.
 		 * 
@@ -639,6 +670,11 @@ namespace Ion
 		{
 			_DEBUG_LOG("TResourceWeakPtr {0} Copy constructor", (void*)other.m_Ptr)
 			CopyConstructWeak(other);
+		}
+
+		TResourceWeakPtr(TResourceWeakPtr&& other)
+		{
+			MoveConstruct(Move(other));
 		}
 
 		/**
@@ -654,6 +690,12 @@ namespace Ion
 			MoveConstruct(Move(other));
 		}
 
+		TResourceWeakPtr& operator=(const TResourceWeakPtr& other)
+		{
+			TResourceWeakPtr(other).Swap(*this);
+			return *this;
+		}
+
 		/**
 		 * @brief Copy assign other weak pointer to this pointer
 		 * 
@@ -665,8 +707,13 @@ namespace Ion
 		TResourceWeakPtr& operator=(const TResourceWeakPtr<T0>& other)
 		{
 			_DEBUG_LOG("TResourceWeakPtr {0} Copy assignment operator", (void*)other.m_Ptr)
-			DeleteWeak();
-			CopyConstructWeak(other);
+			TResourceWeakPtr(other).Swap(*this);
+			return *this;
+		}
+
+		TResourceWeakPtr& operator=(TResourceWeakPtr&& other)
+		{
+			TResourceWeakPtr(Move(other)).Swap(*this);
 			return *this;
 		}
 
@@ -681,8 +728,7 @@ namespace Ion
 		TResourceWeakPtr& operator=(TResourceWeakPtr<T0>&& other)
 		{
 			_DEBUG_LOG("TResourceWeakPtr {0} Move assignment operator", (void*)other.m_Ptr)
-			DeleteWeak();
-			MoveConstruct(Move(other));
+			TResourceWeakPtr(Move(other)).Swap(*this);
 			return *this;
 		}
 
