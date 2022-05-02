@@ -427,7 +427,7 @@ namespace Ion
 		desc.bUseAsDepthStencil = true;
 		desc.Dimensions = { width, height };
 
-		texture = RHITexture::Create(desc);
+		texture = RHITexture::CreateShared(desc);
 	}
 
 	void DX11::InitImGuiBackend()

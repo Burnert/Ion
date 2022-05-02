@@ -43,9 +43,13 @@ namespace Ion
 	private:
 		ResourceManager();
 
+		static ResourcePtr Find();
+
 	private:
 		THashMap<GUID, ResourceWeakPtr> m_Resources;
 		THashMap<Asset, TArray<GUID>> m_AssetToResources;
+
+		friend class ResourceMemory;
 	};
 
 	// ResourceManager inline implementation

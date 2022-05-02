@@ -198,6 +198,8 @@ namespace Ion
 
 		template<typename T0>
 		friend class TResourcePtrBase;
+
+		friend class ResourceMemory;
 	};
 
 	template<typename T>
@@ -442,6 +444,8 @@ namespace Ion
 
 		template<typename T0>
 		friend class TResourcePtrBase;
+
+		friend class ResourceMemory;
 	};
 
 	template<typename T>
@@ -811,4 +815,43 @@ namespace Ion
 	 * @brief Generic weak resource pointer
 	 */
 	using ResourceWeakPtr = TResourceWeakPtr<Resource>;
+
+	/**
+	 * @brief Helper class for Resource pointers
+	 */
+	class ResourceMemory
+	{
+	public:
+		/**
+		 * @brief Manually increment the pointer reference count
+		 * 
+		 * @param ptr Pointer to increment the ref count of.
+		 * @return Reference count after the operation.
+		 */
+		static uint32 IncRef(const TResourcePtrBase<Resource>& ptr);
+
+		/**
+		 * @brief Manually increment the reference count for a registered resource.
+		 * 
+		 * @param resource Resource reference to find a pointer to
+		 * @return Reference count after the operation ((uint32)-1 if the resource does not exist)
+		 */
+		static uint32 IncRef(const Resource& resource);
+
+		/**
+		 * @brief Manually decrement the pointer reference count
+		 * 
+		 * @param ptr Pointer to decrement the ref count of.
+		 * @return Reference count after the operation.
+		 */
+		static uint32 DecRef(const TResourcePtrBase<Resource>& ptr);
+
+		/**
+		 * @brief Manually decrement the reference count for a registered resource.
+		 * 
+		 * @param resource Resource reference to find a pointer to
+		 * @return Reference count after the operation ((uint32)-1 if the resource does not exist)
+		 */
+		static uint32 DecRef(const Resource& resource);
+	};
 }

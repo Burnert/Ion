@@ -123,8 +123,17 @@ namespace Ion
 			desc.DebugName = StringConverter::WStringToString(m_Asset->GetDefinitionPath().ToString());
 
 			desc.SetFilterAll(m_Description.Properties.Filter);
-				
-			m_RenderData.Texture = RHITexture::Create(desc);
+			
+			// The shared RHITexture has to reference the resource without actually using a ResourcePtr.
+			// This is to make sure the resource won't be deleted before the object is destroyed.
+			ResourceMemory::IncRef(*this);
+
+			m_RenderData.Texture = TShared<RHITexture>(RHITexture::Create(desc), [this](RHITexture* ptr)
+			{
+				// Decrement the ref count when the actual RHITexture object gets destroyed.
+				ResourceMemory::DecRef(*this);
+				delete ptr;
+			});
 
 			m_RenderData.Texture->UpdateSubresource(image.get());
 ;

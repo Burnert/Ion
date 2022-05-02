@@ -114,7 +114,8 @@ namespace Ion
 	class ION_API RHITexture
 	{
 	public:
-		static TShared<RHITexture> Create(const TextureDescription& desc);
+		static RHITexture* Create(const TextureDescription& desc);
+		static TShared<RHITexture> CreateShared(const TextureDescription& desc);
 
 		virtual ~RHITexture();
 

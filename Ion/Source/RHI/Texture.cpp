@@ -9,17 +9,22 @@
 
 namespace Ion
 {
-	TShared<RHITexture> RHITexture::Create(const TextureDescription& desc)
+	RHITexture* RHITexture::Create(const TextureDescription& desc)
 	{
 		switch (RHI::GetCurrent())
 		{
 			case ERHI::OpenGL:
-				return MakeShareable(new OpenGLTexture(desc));
+				return new OpenGLTexture(desc);
 			case ERHI::DX11:
-				return MakeShareable(new DX11Texture(desc));
+				return new DX11Texture(desc);
 			default:
-				return TShared<RHITexture>();
+				return nullptr;
 		}
+	}
+
+	TShared<RHITexture> RHITexture::CreateShared(const TextureDescription& desc)
+	{
+		return MakeShareable(Create(desc));
 	}
 
 	RHITexture::RHITexture(const TextureDescription& desc)
