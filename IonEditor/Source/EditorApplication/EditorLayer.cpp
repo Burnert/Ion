@@ -33,7 +33,8 @@ namespace Ion::Editor
 		m_bImGuiMetricsOpen(false),
 		m_bImGuiDemoOpen(false),
 		m_DraggedWorldTreeNodeInfo(0),
-		m_HoveredWorldTreeNodeDragTarget(nullptr)
+		m_HoveredWorldTreeNodeDragTarget(nullptr),
+		m_SelectedAsset()
 	{
 	}
 
@@ -313,7 +314,12 @@ namespace Ion::Editor
 					// Place the image in the same place the selectable is
 					ImVec2 selectableCursor = ImGui::GetCursorPos();
 
-					ImGui::Selectable(("##" + sType + sName).c_str(), false, ImGuiSelectableFlags_None, assetIconSize);
+					bool bSelected = m_SelectedAsset == asset;
+
+					if (ImGui::Selectable(("##" + sType + sName).c_str(), bSelected, ImGuiSelectableFlags_None, assetIconSize))
+					{
+						m_SelectedAsset = asset;
+					}
 					if (ImGui::IsItemHovered())
 					{
 						EditorApplication::Get()->SetCursor(ECursorType::Hand);
@@ -354,6 +360,10 @@ namespace Ion::Editor
 				}
 			}
 			ImGui::EndChild();
+			if (ImGui::IsItemClicked())
+			{
+				m_SelectedAsset = Asset();
+			}
 
 			ImGui::PopID();
 

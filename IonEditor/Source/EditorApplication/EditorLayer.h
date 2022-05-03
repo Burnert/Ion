@@ -117,6 +117,8 @@ namespace Ion::Editor
 
 		TArray<Asset> m_RegisteredAssetsCache;
 
+		Asset m_SelectedAsset;
+
 		/* bit 0 - keep the hovered node set */
 		TMetaPointer<const WorldTreeNode> m_HoveredWorldTreeNodeDragTarget;
 		/* bit 0 - is dragging, bit 1 - start/keep dragging? */
