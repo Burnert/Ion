@@ -77,7 +77,7 @@ namespace Ion
 		return true;
 	}
 
-	void Mesh::SetVertexBuffer(RHIVertexBuffer* vertexBuffer)
+	void Mesh::SetVertexBuffer(const TShared<RHIVertexBuffer>& vertexBuffer)
 	{
 		m_VertexBuffer = vertexBuffer;
 		m_VertexCount = vertexBuffer->GetVertexCount();
@@ -89,7 +89,7 @@ namespace Ion
 		}
 	}
 
-	void Mesh::SetIndexBuffer(RHIIndexBuffer* indexBuffer)
+	void Mesh::SetIndexBuffer(const TShared<RHIIndexBuffer>& indexBuffer)
 	{
 		m_IndexBuffer = indexBuffer;
 		m_TriangleCount = indexBuffer->GetTriangleCount();
@@ -106,12 +106,12 @@ namespace Ion
 		}
 	}
 
-	RHIVertexBuffer* Mesh::GetVertexBuffer() const
+	const TShared<RHIVertexBuffer>& Mesh::GetVertexBuffer() const
 	{
 		return m_VertexBuffer;
 	}
 
-	RHIIndexBuffer* Mesh::GetIndexBuffer() const
+	const TShared<RHIIndexBuffer>& Mesh::GetIndexBuffer() const
 	{
 		return m_IndexBuffer;
 	}
@@ -128,12 +128,12 @@ namespace Ion
 
 	const RHIVertexBuffer* Mesh::GetVertexBufferRaw() const
 	{
-		return m_VertexBuffer;
+		return m_VertexBuffer.get();
 	}
 
 	const RHIIndexBuffer* Mesh::GetIndexBufferRaw() const
 	{
-		return m_IndexBuffer;
+		return m_IndexBuffer.get();
 	}
 
 	const RHIUniformBuffer* Mesh::GetUniformBufferRaw() const

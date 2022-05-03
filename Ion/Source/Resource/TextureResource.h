@@ -27,8 +27,6 @@ namespace Ion
 
 	struct TextureResourceRenderData
 	{
-		// @TODO: this shouldn't be shader ptr
-
 		TShared<RHITexture> Texture;
 
 		bool IsAvailable() const

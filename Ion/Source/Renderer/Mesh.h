@@ -32,12 +32,12 @@ namespace Ion
 
 		virtual ~Mesh() { }
 
-		void SetVertexBuffer(RHIVertexBuffer* vertexBuffer);
-		void SetIndexBuffer(RHIIndexBuffer* indexBuffer);
+		void SetVertexBuffer(const TShared<RHIVertexBuffer>& vertexBuffer);
+		void SetIndexBuffer(const TShared<RHIIndexBuffer>& indexBuffer);
 		void SetMaterial(const TShared<Material>& material);
 
-		RHIVertexBuffer* GetVertexBuffer() const;
-		RHIIndexBuffer* GetIndexBuffer() const;
+		const TShared<RHIVertexBuffer>& GetVertexBuffer() const;
+		const TShared<RHIIndexBuffer>& GetIndexBuffer() const;
 		const TShared<Material>& GetMaterial() const;
 
 		MeshUniforms& GetUniformsDataRef();
@@ -53,8 +53,8 @@ namespace Ion
 		Mesh();
 
 	private:
-		RHIVertexBuffer* m_VertexBuffer;
-		RHIIndexBuffer* m_IndexBuffer;
+		TShared<RHIVertexBuffer> m_VertexBuffer;
+		TShared<RHIIndexBuffer> m_IndexBuffer;
 		TShared<RHIUniformBuffer> m_UniformBuffer;
 		TShared<Material> m_Material;
 

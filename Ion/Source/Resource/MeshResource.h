@@ -26,24 +26,13 @@ namespace Ion
 
 	struct MeshResourceRenderData
 	{
-		// @TODO: these shouldn't be shader ptrs
-
-		RHIVertexBuffer* VertexBuffer;
-		RHIIndexBuffer* IndexBuffer;
+		TShared<RHIVertexBuffer> VertexBuffer;
+		TShared<RHIIndexBuffer> IndexBuffer;
 
 		bool IsAvailable() const
 		{
 			return VertexBuffer && IndexBuffer;
 		}
-
-	private:
-		void Delete()
-		{
-			checked_delete(VertexBuffer);
-			checked_delete(IndexBuffer);
-		}
-
-		friend class MeshResource;
 	};
 
 	class ION_API MeshResource : public Resource
@@ -84,11 +73,6 @@ namespace Ion
 		 */
 		static bool ParseAssetFile(const FilePath& path, GUID& outGuid, MeshResourceDescription& outDescription);
 
-		~MeshResource()
-		{
-			m_RenderData.Delete();
-		}
-
 	protected:
 		MeshResource(const GUID& guid, const Asset& asset, const MeshResourceDescription& desc) :
 			Resource(guid, asset),
@@ -121,10 +105,27 @@ namespace Ion
 
 			TShared<MeshAssetData> meshData = data.Get<MeshAssetData>();
 
-			m_RenderData.VertexBuffer = RHIVertexBuffer::Create(meshData->Vertices.Ptr, meshData->Vertices.Count);
-			m_RenderData.VertexBuffer->SetLayout(meshData->Layout);
+			// The same manual reference counting as in TextureResource.
 
-			m_RenderData.IndexBuffer = RHIIndexBuffer::Create(meshData->Indices.Ptr, (uint32)meshData->Indices.Count);
+			// RHIVertexBuffer:
+			ResourceMemory::IncRef(*this);
+			RHIVertexBuffer* vb = RHIVertexBuffer::Create(meshData->Vertices.Ptr, meshData->Vertices.Count);
+			m_RenderData.VertexBuffer = TShared<RHIVertexBuffer>(vb, [this](RHIVertexBuffer* ptr)
+			{
+				ResourceMemory::DecRef(*this);
+				delete ptr;
+			});
+
+			// RHIIndexBuffer:
+			ResourceMemory::IncRef(*this);
+			RHIIndexBuffer* ib = RHIIndexBuffer::Create(meshData->Indices.Ptr, (uint32)meshData->Indices.Count);
+			m_RenderData.IndexBuffer = TShared<RHIIndexBuffer>(ib, [this](RHIIndexBuffer* ptr)
+			{
+				ResourceMemory::DecRef(*this);
+				delete ptr;
+			});
+
+			m_RenderData.VertexBuffer->SetLayout(meshData->Layout);
 
 			onTake(m_RenderData);
 		};

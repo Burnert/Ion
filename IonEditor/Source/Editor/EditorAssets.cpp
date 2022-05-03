@@ -70,11 +70,11 @@ namespace Ion::Editor
 		gridLayout->AddAttribute(EVertexAttributeSemantic::TexCoord, EVertexAttributeType::Float, 2, false);
 		gridLayout->AddAttribute(EVertexAttributeSemantic::Normal, EVertexAttributeType::Float, 3, true);
 
-		RHIVertexBuffer* gridVB = RHIVertexBuffer::Create(gridVertices, sizeof(gridVertices) / sizeof(float));
+		TShared<RHIVertexBuffer> gridVB = RHIVertexBuffer::CreateShared(gridVertices, sizeof(gridVertices) / sizeof(float));
 		gridVB->SetLayout(gridLayout);
 		gridVB->SetLayoutShader(EditorMeshes::ShaderGrid);
 
-		RHIIndexBuffer* gridIB = RHIIndexBuffer::Create(gridIndices, sizeof(gridIndices) / sizeof(uint32));
+		TShared<RHIIndexBuffer> gridIB = RHIIndexBuffer::CreateShared(gridIndices, sizeof(gridIndices) / sizeof(uint32));
 
 		EditorMeshes::MeshGrid = Mesh::Create();
 		EditorMeshes::MeshGrid->SetVertexBuffer(gridVB);

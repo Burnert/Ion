@@ -24,6 +24,11 @@ namespace Ion
 		}
 	}
 
+	TShared<RHIVertexBuffer> RHIVertexBuffer::CreateShared(float* vertexAttributes, uint64 count)
+	{
+		return MakeShareable(Create(vertexAttributes, count));
+	}
+
 	// Index Buffer
 	RHIIndexBuffer* RHIIndexBuffer::Create(uint32* indices, uint32 count)
 	{
@@ -36,6 +41,11 @@ namespace Ion
 		default:
 			return nullptr;
 		}
+	}
+
+	TShared<RHIIndexBuffer> RHIIndexBuffer::CreateShared(uint32* indices, uint32 count)
+	{
+		return MakeShareable(Create(indices, count));
 	}
 
 	// Uniform Buffer

@@ -88,8 +88,8 @@ static void LoadMesh(Asset& asset, TShared<Mesh>& mesh)
 
 		mesh = Mesh::Create();
 
-		TShared<RHIVertexBuffer> vb = RHIVertexBuffer::Create(meshData->Vertices.Ptr, meshData->Vertices.Count);
-		TShared<RHIIndexBuffer> ib = RHIIndexBuffer::Create(meshData->Indices.Ptr, (uint32)meshData->Indices.Count);
+		TShared<RHIVertexBuffer> vb = RHIVertexBuffer::CreateShared(meshData->Vertices.Ptr, meshData->Vertices.Count);
+		TShared<RHIIndexBuffer> ib = RHIIndexBuffer::CreateShared(meshData->Indices.Ptr, (uint32)meshData->Indices.Count);
 		vb->SetLayout(meshData->Layout);
 
 		mesh->SetVertexBuffer(vb);

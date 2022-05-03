@@ -145,8 +145,8 @@ namespace Ion
 		TShared<Mesh> billboardMesh = GetBillboardMesh();
 		ionassert(billboardMesh);
 
-		RHIVertexBuffer* vb = billboardMesh->GetVertexBuffer();
-		RHIIndexBuffer* ib = billboardMesh->GetIndexBuffer();
+		const RHIVertexBuffer* vb = billboardMesh->GetVertexBufferRaw();
+		const RHIIndexBuffer* ib = billboardMesh->GetIndexBufferRaw();
 
 		shader->Bind();
 		vb->Bind();
@@ -239,11 +239,11 @@ namespace Ion
 		quadLayout->AddAttribute(EVertexAttributeSemantic::Position, EVertexAttributeType::Float, 3, false);
 		quadLayout->AddAttribute(EVertexAttributeSemantic::TexCoord, EVertexAttributeType::Float, 2, false);
 
-		m_ScreenTextureRenderData.VertexBuffer = RHIVertexBuffer::Create(quadVertices, sizeof(quadVertices) / sizeof(float));
+		m_ScreenTextureRenderData.VertexBuffer = RHIVertexBuffer::CreateShared(quadVertices, sizeof(quadVertices) / sizeof(float));
 		m_ScreenTextureRenderData.VertexBuffer->SetLayout(quadLayout);
 		m_ScreenTextureRenderData.VertexBuffer->SetLayoutShader(m_ScreenTextureRenderData.Shader);
 
-		m_ScreenTextureRenderData.IndexBuffer = RHIIndexBuffer::Create(quadIndices, sizeof(quadIndices) / sizeof(uint32));
+		m_ScreenTextureRenderData.IndexBuffer = RHIIndexBuffer::CreateShared(quadIndices, sizeof(quadIndices) / sizeof(uint32));
 	}
 
 	void Renderer::InitUtilityPrimitives()
@@ -268,11 +268,11 @@ namespace Ion
 		quadLayout->AddAttribute(EVertexAttributeSemantic::TexCoord, EVertexAttributeType::Float, 2, false);
 		quadLayout->AddAttribute(EVertexAttributeSemantic::Normal,   EVertexAttributeType::Float, 3, true);
 
-		RHIVertexBuffer* vb = RHIVertexBuffer::Create(quadVertices, sizeof(quadVertices) / sizeof(float));
+		TShared<RHIVertexBuffer> vb = RHIVertexBuffer::CreateShared(quadVertices, sizeof(quadVertices) / sizeof(float));
 		vb->SetLayout(quadLayout);
 		vb->SetLayoutShader(m_BasicUnlitMaskedShader);
 
-		RHIIndexBuffer* ib = RHIIndexBuffer::Create(quadIndices, sizeof(quadIndices) / sizeof(uint32));
+		TShared<RHIIndexBuffer> ib = RHIIndexBuffer::CreateShared(quadIndices, sizeof(quadIndices) / sizeof(uint32));
 
 		m_BillboardMesh = Mesh::Create();
 		m_BillboardMesh->SetVertexBuffer(vb);

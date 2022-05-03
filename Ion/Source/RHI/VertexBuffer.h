@@ -11,6 +11,7 @@ namespace Ion
 	{
 	public:
 		static RHIVertexBuffer* Create(float* vertexAttributes, uint64 count);
+		static TShared<RHIVertexBuffer> CreateShared(float* vertexAttributes, uint64 count);
 
 		virtual ~RHIVertexBuffer() { }
 
