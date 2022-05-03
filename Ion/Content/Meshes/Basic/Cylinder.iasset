@@ -1,4 +1,9 @@
 <IonAsset>
 	<Info type="Ion.Mesh" guid="90761ce5-2e56-4f96-95b0-16c74693d95b" />
+	<Name>Cylinder</Name>
 	<ImportExternal path="Cylinder.dae" />
+	<Resource>
+		<Mesh guid="a48a2d59-acb2-4c8b-93fb-ac728fa6eded">
+		</Mesh>
+	</Resource>
 </IonAsset>

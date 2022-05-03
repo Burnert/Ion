@@ -124,7 +124,7 @@ namespace Ion
 		operator bool() const;
 
 	private:
-		bool Parse(TUnique<XMLDocument>& xml, AssetInitializer& outInitializer) const;
+		bool Parse(TShared<XMLDocument>& xml, AssetInitializer& outInitializer) const;
 
 	private:
 		FilePath m_Path;

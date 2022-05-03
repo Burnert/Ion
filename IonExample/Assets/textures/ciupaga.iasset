@@ -1,6 +1,9 @@
 <IonAsset>
 	<Info type="Ion.Image" guid="79351854-92ff-43f9-a5ec-7826061f8de0" />
 	<ImportExternal path="ciupaga.png" />
-	<TextureResource guid="38314780-0b2b-47e7-90a3-6235d40a6855">
-	</TextureResource>
+	<Name>T_Ciupaga</Name>
+	<Resource>
+		<Texture guid="38314780-0b2b-47e7-90a3-6235d40a6855">
+		</Texture>
+	</Resource>
 </IonAsset>

@@ -68,9 +68,10 @@ namespace Ion
 		String assetDefinition;
 		File::ReadToString(m_Path, assetDefinition);
 
-		TUnique<XMLDocument> assetDefinitionDoc = MakeUnique<XMLDocument>(assetDefinition);
+		TShared<XMLDocument> assetDefinitionDoc = MakeShared<XMLDocument>(assetDefinition);
 
 		AssetInitializer initializer;
+		initializer.IAssetXML = assetDefinitionDoc;
 		initializer.AssetDefinitionPath = m_Path;
 
 		if (!Parse(assetDefinitionDoc, initializer))
@@ -105,7 +106,7 @@ namespace Ion
 		return EAssetType::Invalid;
 	}
 
-	bool AssetFinder::Parse(TUnique<XMLDocument>& xml, AssetInitializer& outInitializer) const
+	bool AssetFinder::Parse(TShared<XMLDocument>& xml, AssetInitializer& outInitializer) const
 	{
 		// <IonAsset>
 		XMLNode* nodeIonAsset = xml->XML().first_node(IASSET_NODE_IonAsset);

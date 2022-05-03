@@ -9,9 +9,7 @@
 
 // TextureResource ----------------------------------------------------
 
-#define IASSET_NODE_TextureResource              "TextureResource"
-#define IASSET_NODE_TextureResource_Prop_Filter  "Filter"
+#define IASSET_NODE_Resource_Texture_Prop_Filter  "Filter"
 
 // MeshResource ----------------------------------------------------
 
-#define IASSET_NODE_MeshResource                 "MeshResource"

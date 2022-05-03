@@ -1,9 +1,12 @@
 <IonAsset>
 	<Info type="Ion.Mesh" guid="89685929-4132-408f-9f51-1ba2f310d204" />
 	<ImportExternal path="oscypek.dae" />
-	<MeshResource guid="7175041c-51dc-415b-9fe2-c6b4c3565565">
-		<Defaults>
-			<Texture asset="3b89ae94-c892-46e8-a2e0-aaa17595dc65" />
-		</Defaults>
-	</MeshResource>
+	<Name>SM_Oscypek</Name>
+	<Resource>
+		<Mesh guid="7175041c-51dc-415b-9fe2-c6b4c3565565">
+			<Defaults>
+				<Texture asset="3b89ae94-c892-46e8-a2e0-aaa17595dc65" />
+			</Defaults>
+		</Mesh>
+	</Resource>
 </IonAsset>

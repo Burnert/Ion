@@ -190,6 +190,8 @@ namespace Ion
 		const FilePath& GetPath() const;
 		const FilePath& GetDefinitionPath() const;
 
+		const AssetInfo& GetInfo() const;
+
 		const GUID& GetGuid() const;
 
 		/**
@@ -214,7 +216,7 @@ namespace Ion
 	private:
 		explicit AssetDefinition(const AssetInitializer& initializer);
 
-		void ParseAssetDefinitionFile();
+		bool ParseAssetDefinitionFile(const TShared<XMLDocument>& xml);
 
 	private:
 		GUID m_Guid;
@@ -222,6 +224,8 @@ namespace Ion
 		FilePath m_AssetDefinitionPath;
 		/** @brief Path specified in the asset definition file. */
 		FilePath m_AssetReferencePath;
+
+		AssetInfo m_Info;
 
 		AssetData m_AssetData;
 
@@ -364,6 +368,11 @@ namespace Ion
 	inline const FilePath& AssetDefinition::GetDefinitionPath() const
 	{
 		return m_AssetDefinitionPath;
+	}
+
+	inline const AssetInfo& AssetDefinition::GetInfo() const
+	{
+		return m_Info;
 	}
 
 	inline const GUID& AssetDefinition::GetGuid() const

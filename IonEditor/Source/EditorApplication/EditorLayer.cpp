@@ -306,14 +306,14 @@ namespace Ion::Editor
 					float assetIconSeparation = 8;
 
 					String sType = ToString(asset->GetType());
-					String sName = StringConverter::WStringToString(asset->GetDefinitionPath().LastElement());
+					String sName = asset->GetInfo().Name;
 
 					ImVec2 avail = ImGui::GetContentRegionAvail();
 
 					// Place the image in the same place the selectable is
 					ImVec2 selectableCursor = ImGui::GetCursorPos();
 
-					ImGui::Selectable(("##" + sType + "\n" + sName).c_str(), false, ImGuiSelectableFlags_None, assetIconSize);
+					ImGui::Selectable(("##" + sType + sName).c_str(), false, ImGuiSelectableFlags_None, assetIconSize);
 					if (ImGui::IsItemHovered())
 					{
 						EditorApplication::Get()->SetCursor(ECursorType::Hand);

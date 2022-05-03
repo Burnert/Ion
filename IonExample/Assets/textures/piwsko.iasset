@@ -1,6 +1,9 @@
 <IonAsset>
 	<Info type="Ion.Image" guid="84f1e66c-1b62-40a0-bf3b-10eb996a9e62" />
 	<ImportExternal path="piwsko.png" />
-	<TextureResource guid="f9c29b2b-1584-4ae7-b499-daf787c04ae1">
-	</TextureResource>
+	<Name>T_Piwsko</Name>
+	<Resource>
+		<Texture guid="f9c29b2b-1584-4ae7-b499-daf787c04ae1">
+		</Texture>
+	</Resource>
 </IonAsset>

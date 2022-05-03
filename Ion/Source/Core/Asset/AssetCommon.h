@@ -13,9 +13,16 @@ ionexcept(attr, IASSET_STR_INVALID_FILE attrName " attribute could not be found 
 #define IASSET_ATTR_Info_type            "type"
 #define IASSET_NODE_ImportExternal       "ImportExternal"
 #define IASSET_ATTR_ImportExternal_path  "path"
+#define IASSET_NODE_Name                 "Name"
 
 #define IASSET_ATTR_value                "value"
 #define IASSET_ATTR_guid                 "guid"
+
+// Resource Usage -----------------------------------------------------
+
+#define IASSET_NODE_Resource          "Resource"
+#define IASSET_NODE_Resource_Mesh     "Mesh"
+#define IASSET_NODE_Resource_Texture  "Texture"
 
 namespace Ion
 {
@@ -32,9 +39,17 @@ namespace Ion
 	enum class EAssetType : uint8
 	{
 		None = 0,
+		Generic,
 		Image,
 		Mesh,
+		Data,
 		Invalid = 0xFF,
+	};
+
+	struct AssetInfo
+	{
+		String Name;
+		TArray<String> ResourceUsage;
 	};
 
 	struct MeshAssetData
@@ -79,6 +94,8 @@ namespace Ion
 	 */
 	struct AssetInitializer
 	{
+		TShared<XMLDocument> IAssetXML;
+
 		GUID Guid;
 		FilePath AssetDefinitionPath;
 		FilePath AssetReferencePath;

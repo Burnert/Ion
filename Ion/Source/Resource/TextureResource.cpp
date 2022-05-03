@@ -39,17 +39,21 @@ namespace Ion
 		XMLNode* nodeIonAsset = xml->XML().first_node(IASSET_NODE_IonAsset);
 		IASSET_CHECK_NODE(nodeIonAsset, IASSET_NODE_IonAsset, path);
 
-		// <TextureResource>
-		XMLNode* nodeTextureResource = nodeIonAsset->first_node(IASSET_NODE_TextureResource);
+		// <Resource>
+		XMLNode* nodeResource = nodeIonAsset->first_node(IASSET_NODE_Resource);
+		IASSET_CHECK_NODE(nodeResource, IASSET_NODE_Resource, path);
+
+		// <Texture>
+		XMLNode* nodeTextureResource = nodeResource->first_node(IASSET_NODE_Resource_Texture);
 		ionexcept(nodeTextureResource,
 			"Asset \"%s\" cannot be used as a Texture Resource.\n"
-			"Node <" IASSET_NODE_TextureResource "> not found.\n",
+			"Node <" IASSET_NODE_Resource_Texture "> not found.\n",
 			StringConverter::WStringToString(path.ToString()).c_str())
 			return false;
 
 		// guid=
 		XMLAttribute* texResource_attrGuid = nodeTextureResource->first_attribute(IASSET_ATTR_guid);
-		IASSET_CHECK_ATTR(texResource_attrGuid, IASSET_ATTR_guid, IASSET_NODE_TextureResource, path);
+		IASSET_CHECK_ATTR(texResource_attrGuid, IASSET_ATTR_guid, IASSET_NODE_Resource_Texture, path);
 
 		String sGuid = texResource_attrGuid->value();
 		outGuid = GUID(sGuid);
@@ -63,12 +67,12 @@ namespace Ion
 		if (nodeProperties)
 		{
 			// <Filter>
-			XMLNode* nodeFilter = nodeProperties->first_node(IASSET_NODE_TextureResource_Prop_Filter);
+			XMLNode* nodeFilter = nodeProperties->first_node(IASSET_NODE_Resource_Texture_Prop_Filter);
 			if (nodeFilter)
 			{
 				// value=
 				XMLAttribute* filter_attrValue = nodeFilter->first_attribute(IASSET_ATTR_value);
-				IASSET_CHECK_ATTR(filter_attrValue, IASSET_ATTR_value, IASSET_NODE_TextureResource_Prop_Filter, path);
+				IASSET_CHECK_ATTR(filter_attrValue, IASSET_ATTR_value, IASSET_NODE_Resource_Texture_Prop_Filter, path);
 
 				char* csFilter = filter_attrValue->value();
 				ETextureFilteringMethod filter = ParseFilterString(csFilter);

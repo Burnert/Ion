@@ -1,6 +1,9 @@
 <IonAsset>
 	<Info type="Ion.Image" guid="3b89ae94-c892-46e8-a2e0-aaa17595dc65" />
 	<ImportExternal path="oscypek.png" />
-	<TextureResource guid="b203d0d2-e49f-4618-91bb-8290ee1bdf22">
-	</TextureResource>
+	<Name>T_Oscypek</Name>
+	<Resource>
+		<Texture guid="b203d0d2-e49f-4618-91bb-8290ee1bdf22">
+		</Texture>
+	</Resource>
 </IonAsset>
