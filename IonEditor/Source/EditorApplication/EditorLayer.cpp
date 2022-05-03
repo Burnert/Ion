@@ -316,18 +316,14 @@ namespace Ion::Editor
 
 					bool bSelected = m_SelectedAsset == asset;
 
+					// Draw an empty selectable
 					if (ImGui::Selectable(("##" + sType + sName).c_str(), bSelected, ImGuiSelectableFlags_None, assetIconSize))
 					{
 						m_SelectedAsset = asset;
 					}
-					if (ImGui::IsItemHovered())
-					{
-						EditorApplication::Get()->SetCursor(ECursorType::Hand);
-					}
 
 					// Where to place the next item
 					ImVec2 nextCursor;
-
 					if (avail.x - assetIconSize.x - assetIconSeparation > assetIconSize.x)
 					{
 						ImGui::SameLine();
@@ -339,6 +335,14 @@ namespace Ion::Editor
 						nextCursor = ImGui::GetCursorPos();
 						nextCursor.y += assetIconSeparation;
 					}
+
+					bool bHovered;
+					if (bHovered = ImGui::IsItemHovered())
+					{
+						EditorApplication::Get()->SetCursor(ECursorType::Hand);
+					}
+
+					// Draw the asset icon
 
 					ImGui::SetCursorPos(selectableCursor);
 
@@ -352,6 +356,38 @@ namespace Ion::Editor
 
 					ImGui::Image(iconTexture, ImVec2(assetIconSize.x, assetIconSize.x), ImVec2(0, 1), ImVec2(1, 0));
 
+					// Draw resource usage icons
+
+					if (bHovered || bSelected)
+					{
+						ImGui::SetCursorPos(selectableCursor);
+
+						for (const String& resource : asset->GetInfo().ResourceUsage)
+						{
+							TShared<RHITexture> resourceIconTexture;
+
+							if (resource == "Mesh")
+							{
+								resourceIconTexture = EditorIcons::IconMeshResource.Texture;
+							}
+							else if (resource == "Texture")
+							{
+								resourceIconTexture = EditorIcons::IconTextureResource.Texture;
+							}
+
+							ImGui::Image(resourceIconTexture->GetNativeID(), ImVec2(32, 32), ImVec2(0, 1), ImVec2(1, 0));
+							if (ImGui::IsItemHovered())
+							{
+								ImGui::BeginTooltip();
+								ImGui::Text("The asset can be used as a %s resource.", resource.c_str());
+								ImGui::EndTooltip();
+							}
+							ImGui::SameLine();
+						}
+					}
+
+					// Draw the label
+
 					ImVec2 textSize = ImGui::CalcTextSize(sName.c_str());
 					ImGui::SetCursorPos(ImVec2(selectableCursor.x + (assetIconSize.x - textSize.x) * 0.5f, selectableCursor.y + assetIconSize.x));
 					ImGui::Text(sName.c_str());
@@ -360,6 +396,7 @@ namespace Ion::Editor
 				}
 			}
 			ImGui::EndChild();
+			// Deselect the asset on empty space click
 			if (ImGui::IsItemClicked())
 			{
 				m_SelectedAsset = Asset();
