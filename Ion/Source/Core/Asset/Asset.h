@@ -45,12 +45,12 @@ namespace Ion
 		AssetDefinition& operator*() const;
 
 		/**
-		 * @brief Is the Asset handle valid
+		 * @brief Is the Asset handle valid (can be null)
 		 */
 		bool IsValid() const;
 
 		/**
-		 * @brief Same as IsValid
+		 * @brief Checks if the Asset handle is valid and not null
 		 */
 		operator bool() const;
 
@@ -156,7 +156,7 @@ namespace Ion
 
 	inline Asset::operator bool() const
 	{
-		return IsValid();
+		return IsValid() && !m_Guid.IsZero();
 	}
 
 	inline bool Asset::operator==(const Asset& other) const

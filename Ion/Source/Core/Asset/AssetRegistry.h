@@ -284,6 +284,14 @@ namespace Ion
 		 */
 		static TArray<Asset> GetAllRegisteredAssets();
 
+		/**
+		 * Creates an array of handles to all the registered assets of single type.
+		 * Don't call it too many times.
+		 * 
+		 * @param type Asset type
+		 */
+		static TArray<Asset> GetAllRegisteredAssets(EAssetType type);
+
 		static const AssetMap& GetAssetsMap();
 
 		static void RegisterEngineAssets();

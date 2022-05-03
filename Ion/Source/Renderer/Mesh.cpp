@@ -16,32 +16,36 @@ namespace Ion
 	{
 		TShared<Mesh> mesh = Mesh::Create();
 
-		resource->Take([mesh](const MeshResourceRenderData& renderData)
+		resource->Take([mesh](const MeshResourceRenderDataShared& renderData)
 		{
 			mesh->SetVertexBuffer(renderData.VertexBuffer);
 			mesh->SetIndexBuffer(renderData.IndexBuffer);
 		});
 
+		TShared<Material> material = Material::Create();
+		material->SetShader(Renderer::GetBasicShader());
+		material->CreateParameter("Texture", EMaterialParameterType::Texture2D);
+
+		mesh->SetMaterial(material);
+
 		// Set the defaults
 		const MeshResourceDefaults& defaults = resource->GetDefaults();
 		// All assets should have been loaded by now.
-		if (defaults.TextureAsset.IsValid())
+		if (defaults.TextureAsset)
 		{
 			// @TODO: Do something so it makes more sense when the material system is done
-
-			TShared<Material> material = Material::Create();
-			material->SetShader(Renderer::GetBasicShader());
-			material->CreateParameter("Texture", EMaterialParameterType::Texture2D);
-
-			mesh->SetMaterial(material);
 
 			// @TODO: Temporary -> the material system will load and instantiate the textures
 			mesh->m_Texture = TextureResource::Query(defaults.TextureAsset);
 
-			mesh->m_Texture->Take([material](const TextureResourceRenderData& data)
+			mesh->m_Texture->Take([material](const TextureResourceRenderDataShared& data)
 			{
 				material->SetParameter("Texture", data.Texture);
 			});
+		}
+		else
+		{
+			material->SetParameter("Texture", Renderer::GetWhiteTexture());
 		}
 
 		return mesh;

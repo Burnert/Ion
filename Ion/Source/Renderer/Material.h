@@ -142,14 +142,14 @@ namespace Ion
 			m_Texture = texture;
 		}
 
-		FORCEINLINE const TWeak<RHITexture>& GetValue() const
+		FORCEINLINE const TShared<RHITexture>& GetValue() const
 		{
 			return m_Texture;
 		}
 
 	private:
 		EMaterialParameterType m_Type;
-		TWeak<RHITexture> m_Texture;
+		TShared<RHITexture> m_Texture;
 		uint32 m_ReservedSlot;
 	};
 

@@ -80,7 +80,7 @@ namespace Ion::Editor
 	{
 		for (ExampleModelData& model : g_ExampleModels)
 		{
-			model.MeshResource = MeshResource::Query(model.MeshAsset);
+			//model.MeshResource = MeshResource::Query(model.MeshAsset);
 			//model.TextureResource = TextureResource::Query(model.TextureAsset);
 
 			//model.Mesh = Mesh::CreateFromResource(model.MeshResource);

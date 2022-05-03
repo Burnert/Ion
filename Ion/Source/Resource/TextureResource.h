@@ -25,13 +25,34 @@ namespace Ion
 		TextureResourceProperties Properties;
 	};
 
-	struct TextureResourceRenderData
+	struct TextureResourceRenderDataShared
 	{
 		TShared<RHITexture> Texture;
+	};
+
+	struct TextureResourceRenderData
+	{
+		TWeak<RHITexture> Texture;
 
 		bool IsAvailable() const
 		{
-			return (bool)Texture;
+			return !Texture.expired();
+		}
+
+		TextureResourceRenderDataShared Lock() const
+		{
+			TextureResourceRenderDataShared data { };
+			if (IsAvailable())
+			{
+				data.Texture = Texture.lock();
+			}
+			return data;
+		}
+
+		TextureResourceRenderData& operator=(const TextureResourceRenderDataShared& shared)
+		{
+			Texture = shared.Texture;
+			return *this;
 		}
 	};
 
@@ -98,11 +119,11 @@ namespace Ion
 	template<typename Lambda>
 	inline bool TextureResource::Take(Lambda onTake)
 	{
-		static_assert(TIsConvertibleV<Lambda, TFuncResourceOnTake<TextureResourceRenderData>>);
+		static_assert(TIsConvertibleV<Lambda, TFuncResourceOnTake<TextureResourceRenderDataShared>>);
 
 		if (m_RenderData.IsAvailable())
 		{
-			onTake(m_RenderData);
+			onTake(m_RenderData.Lock());
 			return true;
 		}
 
@@ -111,6 +132,8 @@ namespace Ion
 			ionassert(m_Asset->GetType() == EAssetType::Image);
 
 			TShared<Image> image = data.Get<Image>();
+
+			TextureResourceRenderDataShared sharedRenderData { };
 
 			TextureDescription desc { };
 			desc.Dimensions.Width = image->GetWidth();
@@ -126,16 +149,18 @@ namespace Ion
 			// This is to make sure the resource won't be deleted before the object is destroyed.
 			ResourceMemory::IncRef(*this);
 
-			m_RenderData.Texture = TShared<RHITexture>(RHITexture::Create(desc), [this](RHITexture* ptr)
+			sharedRenderData.Texture = TShared<RHITexture>(RHITexture::Create(desc), [this](RHITexture* ptr)
 			{
 				// Decrement the ref count when the actual RHITexture object gets destroyed.
 				ResourceMemory::DecRef(*this);
 				delete ptr;
 			});
 
-			m_RenderData.Texture->UpdateSubresource(image.get());
+			sharedRenderData.Texture->UpdateSubresource(image.get());
 ;
-			onTake(m_RenderData);
+			onTake(sharedRenderData);
+
+			m_RenderData = sharedRenderData;
 		};
 
 		TOptional<AssetData> data = m_Asset->Load(initTexture);

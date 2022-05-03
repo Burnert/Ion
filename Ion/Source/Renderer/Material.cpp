@@ -16,8 +16,15 @@ namespace Ion
 		for (auto& param : m_Parameters)
 		{
 			void* paramPtr = param.second;
+
 			if (paramPtr)
-				delete paramPtr;
+			{
+				auto textureParamPtr = (TMaterialParameter<TShared<RHITexture>>*)paramPtr;
+				if (m_TextureParameters.find(textureParamPtr) != m_TextureParameters.end())
+					delete textureParamPtr;
+				else
+					delete paramPtr;
+			}
 		}
 	}
 
@@ -174,9 +181,9 @@ namespace Ion
 	{
 		for (TMaterialParameter<TShared<RHITexture>>* param : m_TextureParameters)
 		{
-			if (!param->GetValue().expired())
+			if (param->GetValue())
 			{
-				const TShared<RHITexture> texture = param->GetValue().lock();
+				const TShared<RHITexture> texture = param->GetValue();
 				texture->Bind(param->m_ReservedSlot);
 			}
 			else

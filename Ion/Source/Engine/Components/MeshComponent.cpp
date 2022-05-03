@@ -55,6 +55,16 @@ namespace Ion
 	//	LOG_INFO("MeshComponent::Tick({0})", deltaTime);
 	//}
 
+	void MeshComponent::SetMeshAsset(const Asset& asset)
+	{
+		m_MeshAsset = asset;
+	}
+
+	void MeshComponent::SetMeshResource(const TResourcePtr<MeshResource>& resource)
+	{
+		m_MeshResource = resource;
+	}
+
 	void MeshComponent::SetMesh(const TShared<Mesh>& mesh)
 	{
 		m_Mesh = mesh;

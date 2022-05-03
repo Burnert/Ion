@@ -4,9 +4,16 @@
 
 namespace Ion
 {
+#if ION_DEBUG
+	ResourceManager* g_Debug_ResourceManagerInstance;
+#endif
+
 	ResourceManager& ResourceManager::Get()
 	{
 		static ResourceManager* c_Instance = new ResourceManager;
+#if ION_DEBUG
+		g_Debug_ResourceManagerInstance = c_Instance;
+#endif
 		return *c_Instance;
 	}
 

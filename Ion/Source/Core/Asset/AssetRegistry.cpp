@@ -208,6 +208,23 @@ namespace Ion
 		return assets;
 	}
 
+	TArray<Asset> AssetRegistry::GetAllRegisteredAssets(EAssetType type)
+	{
+		AssetRegistry& instance = Get();
+
+		TArray<Asset> assets;
+
+		for (auto& [guid, asset] : instance.m_Assets)
+		{
+			if (asset.GetType() == type)
+			{
+				assets.emplace_back(asset.GetHandle());
+			}
+		}
+
+		return assets;
+	}
+
 	AssetRegistry::AssetRegistry() :
 		m_WorkQueue(EngineTaskQueue::Get())
 	{

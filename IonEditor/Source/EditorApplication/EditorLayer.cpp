@@ -1092,22 +1092,30 @@ namespace Ion::Editor
 		{
 			ImGui::PushID("MeshSettings");
 
-			// @TODO: Somehow find the name of the resource
-			String previewName = "Mesh Resource";
+			Asset currentMeshAsset = meshComponent.GetMeshAsset();
+
+			String previewName = currentMeshAsset ?
+				currentMeshAsset->GetInfo().Name :
+				"[None]";
 
 			ImGuiComboFlags flags = ImGuiComboFlags_HeightLargest;
 			if (ImGui::BeginCombo("Mesh Asset", previewName.c_str(), flags))
 			{
-				TArray<TResourcePtr<MeshResource>> meshResources = ResourceManager::GetResourcesOfType<MeshResource>();
-				for (TResourcePtr<MeshResource>& resource : meshResources)
+				TArray<Asset> meshAssets = AssetRegistry::GetAllRegisteredAssets(EAssetType::Mesh);
+				for (Asset& meshAsset : meshAssets)
 				{
-					String name = StringConverter::WStringToString(resource->GetAssetHandle()->GetPath().ToString());
-
-					if (ImGui::Selectable(name.c_str(), false))
+					bool bSelected = meshAsset == currentMeshAsset;
+					if (ImGui::Selectable(meshAsset->GetInfo().Name.c_str(), bSelected))
 					{
-						TShared<Mesh> mesh = Mesh::CreateFromResource(resource);
+						TResourcePtr<MeshResource> meshResource = MeshResource::Query(meshAsset);
 
+						TShared<Mesh> mesh = Mesh::CreateFromResource(meshResource);
+
+						// @TODO: Yeah well this is a bit too much
+						meshComponent.SetMeshAsset(meshAsset);
+						meshComponent.SetMeshResource(meshResource);
 						meshComponent.SetMesh(mesh);
+
 						bChanged = true;
 					}
 				}

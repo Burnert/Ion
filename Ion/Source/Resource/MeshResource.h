@@ -21,17 +21,40 @@ namespace Ion
 	struct MeshResourceDescription
 	{
 		MeshResourceDefaults Defaults;
-		int8 Unused;
+	};
+
+	struct MeshResourceRenderDataShared
+	{
+		TShared<RHIVertexBuffer> VertexBuffer;
+		TShared<RHIIndexBuffer> IndexBuffer;
 	};
 
 	struct MeshResourceRenderData
 	{
-		TShared<RHIVertexBuffer> VertexBuffer;
-		TShared<RHIIndexBuffer> IndexBuffer;
+		TWeak<RHIVertexBuffer> VertexBuffer;
+		TWeak<RHIIndexBuffer> IndexBuffer;
 
 		bool IsAvailable() const
 		{
-			return VertexBuffer && IndexBuffer;
+			return !VertexBuffer.expired() && !IndexBuffer.expired();
+		}
+
+		MeshResourceRenderDataShared Lock() const
+		{
+			MeshResourceRenderDataShared data { };
+			if (IsAvailable())
+			{
+				data.VertexBuffer = VertexBuffer.lock();
+				data.IndexBuffer = IndexBuffer.lock();
+			}
+			return data;
+		}
+
+		MeshResourceRenderData& operator=(const MeshResourceRenderDataShared& shared)
+		{
+			VertexBuffer = shared.VertexBuffer;
+			IndexBuffer = shared.IndexBuffer;
+			return *this;
 		}
 	};
 
@@ -91,11 +114,11 @@ namespace Ion
 	template<typename Lambda>
 	inline bool MeshResource::Take(Lambda onTake)
 	{
-		static_assert(TIsConvertibleV<Lambda, TFuncResourceOnTake<MeshResourceRenderData>>);
+		static_assert(TIsConvertibleV<Lambda, TFuncResourceOnTake<MeshResourceRenderDataShared>>);
 
 		if (m_RenderData.IsAvailable())
 		{
-			onTake(m_RenderData);
+			onTake(m_RenderData.Lock());
 			return true;
 		}
 
@@ -105,12 +128,14 @@ namespace Ion
 
 			TShared<MeshAssetData> meshData = data.Get<MeshAssetData>();
 
+			MeshResourceRenderDataShared sharedRenderData { };
+
 			// The same manual reference counting as in TextureResource.
 
 			// RHIVertexBuffer:
 			ResourceMemory::IncRef(*this);
 			RHIVertexBuffer* vb = RHIVertexBuffer::Create(meshData->Vertices.Ptr, meshData->Vertices.Count);
-			m_RenderData.VertexBuffer = TShared<RHIVertexBuffer>(vb, [this](RHIVertexBuffer* ptr)
+			sharedRenderData.VertexBuffer = TShared<RHIVertexBuffer>(vb, [this](RHIVertexBuffer* ptr)
 			{
 				ResourceMemory::DecRef(*this);
 				delete ptr;
@@ -119,15 +144,17 @@ namespace Ion
 			// RHIIndexBuffer:
 			ResourceMemory::IncRef(*this);
 			RHIIndexBuffer* ib = RHIIndexBuffer::Create(meshData->Indices.Ptr, (uint32)meshData->Indices.Count);
-			m_RenderData.IndexBuffer = TShared<RHIIndexBuffer>(ib, [this](RHIIndexBuffer* ptr)
+			sharedRenderData.IndexBuffer = TShared<RHIIndexBuffer>(ib, [this](RHIIndexBuffer* ptr)
 			{
 				ResourceMemory::DecRef(*this);
 				delete ptr;
 			});
 
-			m_RenderData.VertexBuffer->SetLayout(meshData->Layout);
+			sharedRenderData.VertexBuffer->SetLayout(meshData->Layout);
 
-			onTake(m_RenderData);
+			onTake(sharedRenderData);
+
+			m_RenderData = sharedRenderData;
 		};
 
 		TOptional<AssetData> data = m_Asset->Load(initMesh);

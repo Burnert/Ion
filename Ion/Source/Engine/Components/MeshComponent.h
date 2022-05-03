@@ -18,6 +18,12 @@ namespace Ion
 
 		void SetMeshFromAsset(const Asset& asset);
 
+		void SetMeshAsset(const Asset& asset);
+		Asset GetMeshAsset() const;
+
+		void SetMeshResource(const TResourcePtr<MeshResource>& resource);
+		Asset GetMeshResource() const;
+
 		void SetMesh(const TShared<Mesh>& mesh);
 		TShared<Mesh> GetMesh() const;
 
@@ -28,7 +34,17 @@ namespace Ion
 
 	private:
 		Asset m_MeshAsset;
-		TShared<MeshResource> m_MeshResource;
+		TResourcePtr<MeshResource> m_MeshResource;
 		TShared<Mesh> m_Mesh;
 	};
+
+	inline Asset MeshComponent::GetMeshAsset() const
+	{
+		return m_MeshAsset;
+	}
+
+	inline Asset MeshComponent::GetMeshResource() const
+	{
+		return Asset();
+	}
 }
