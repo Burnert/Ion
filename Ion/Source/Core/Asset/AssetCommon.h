@@ -57,6 +57,23 @@ namespace Ion
 		TMemoryBlock<float> Vertices;
 		TMemoryBlock<uint32> Indices;
 		TShared<RHIVertexLayout> Layout;
+
+		MeshAssetData() :
+			Vertices({ }),
+			Indices({ })
+		{
+		}
+
+		~MeshAssetData()
+		{
+			Vertices.Free();
+			Indices.Free();
+		}
+
+		MeshAssetData(const MeshAssetData&) = delete;
+		MeshAssetData(MeshAssetData&&) = delete;
+		MeshAssetData& operator=(const MeshAssetData&) = delete;
+		MeshAssetData& operator=(MeshAssetData&&) = delete;
 	};
 
 	/**

@@ -19,6 +19,11 @@ namespace Ion
 		{
 			return Count * sizeof(T);
 		}
+
+		inline void Free()
+		{
+			checked_delete(Ptr);
+		}
 	};
 
 	template<>
@@ -30,6 +35,11 @@ namespace Ion
 		inline void* End() const
 		{
 			return (uint8*)Ptr + Size;
+		}
+
+		inline void Free()
+		{
+			checked_delete(Ptr);
 		}
 	};
 
