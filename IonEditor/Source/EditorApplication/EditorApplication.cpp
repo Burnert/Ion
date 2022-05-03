@@ -46,6 +46,7 @@ namespace Ion::Editor
 		SetApplicationTitle(L"Ion Editor");
 		GetWindow()->Maximize();
 
+		EditorIcons::LoadTextures();
 		EditorBillboards::LoadTextures();
 		EditorMeshes::Init();
 

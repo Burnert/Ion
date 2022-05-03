@@ -17,15 +17,30 @@
 
 namespace Ion::Editor
 {
-	static void LoadTexture(TResourcePtr<TextureResource>& resource, TShared<RHITexture>& texture, const FilePath& path)
+	static void LoadTexture(TResourcePtr<TextureResource>& outResource, TShared<RHITexture>& texture, const FilePath& path)
 	{
 		Asset asset = AssetFinder(path).Resolve();
-		resource = TextureResource::Query(asset);
+		outResource = TextureResource::Query(asset);
 
-		resource->Take([&texture](const TextureResourceRenderData& data)
+		outResource->Take([&texture](const TextureResourceRenderData& data)
 		{
 			texture = data.Texture;
 		});
+	}
+
+	void EditorIcon::Load()
+	{
+		LoadTexture(Resource, Texture, EnginePath::GetEditorContentPath() + Path);
+	}
+
+	void EditorIcons::LoadTextures()
+	{
+		IconTextureResource.Load();
+		IconMeshResource.Load();
+
+		IconDataAsset.Load();
+		IconImageAsset.Load();
+		IconMeshAsset.Load();
 	}
 
 	void EditorBillboards::LoadTextures()

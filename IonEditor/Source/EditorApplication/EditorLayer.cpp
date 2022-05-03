@@ -2,6 +2,7 @@
 
 #include "EditorLayer.h"
 #include "EditorApplication.h"
+#include "Editor/EditorAssets.h"
 
 #include "Engine/World.h"
 #include "Engine/Entity/Entity.h"
@@ -301,16 +302,57 @@ namespace Ion::Editor
 			{
 				for (Asset& asset : m_RegisteredAssetsCache)
 				{
-					ImVec2 assetIconSize = { 60, 80 };
+					ImVec2 assetIconSize = { 96, 128 };
+					float assetIconSeparation = 8;
 
-					String name = StringConverter::WStringToString(asset->GetDefinitionPath().LastElement());
+					String sType = ToString(asset->GetType());
+					String sName = StringConverter::WStringToString(asset->GetDefinitionPath().LastElement());
 
 					ImVec2 avail = ImGui::GetContentRegionAvail();
-					ImGui::Selectable(name.c_str(), false, ImGuiSelectableFlags_None, assetIconSize);
-					if (avail.x - assetIconSize.x > assetIconSize.x)
+
+					// Place the image in the same place the selectable is
+					ImVec2 selectableCursor = ImGui::GetCursorPos();
+
+					ImGui::Selectable(("##" + sType + "\n" + sName).c_str(), false, ImGuiSelectableFlags_None, assetIconSize);
+					if (ImGui::IsItemHovered())
+					{
+						EditorApplication::Get()->SetCursor(
+							ImGui::IsItemActive() ?
+							ECursorType::GrabClosed :
+							ECursorType::Grab);
+					}
+
+					ImVec2 nextCursor;
+
+					if (avail.x - assetIconSize.x - assetIconSeparation > assetIconSize.x)
 					{
 						ImGui::SameLine();
+						nextCursor = ImGui::GetCursorPos();
+						nextCursor.x += assetIconSeparation;
 					}
+					else
+					{
+						nextCursor = ImGui::GetCursorPos();
+						nextCursor.y += assetIconSeparation;
+					}
+
+					ImGui::SetCursorPos(selectableCursor);
+
+					void* texture;
+					switch (asset->GetType())
+					{
+					case EAssetType::Mesh:  texture = EditorIcons::IconMeshAsset.Texture->GetNativeID();  break;
+					case EAssetType::Image: texture = EditorIcons::IconImageAsset.Texture->GetNativeID(); break;
+					default:                texture = EditorIcons::IconDataAsset.Texture->GetNativeID();  break;
+					}
+
+					ImGui::Image(texture, ImVec2(assetIconSize.x, assetIconSize.x), ImVec2(0, 1), ImVec2(1, 0));
+
+					ImVec2 textSize = ImGui::CalcTextSize(sName.c_str());
+					ImGui::SetCursorPos(ImVec2(selectableCursor.x + (assetIconSize.x - textSize.x) * 0.5f, selectableCursor.y + assetIconSize.x));
+					ImGui::Text(sName.c_str());
+
+					ImGui::SetCursorPos(nextCursor);
 				}
 			}
 			ImGui::EndChild();

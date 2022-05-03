@@ -8,6 +8,33 @@
 
 namespace Ion::Editor
 {
+	struct EditorIcon
+	{
+		FilePath Path;
+		TResourcePtr<TextureResource> Resource;
+		TShared<RHITexture> Texture;
+
+		EditorIcon(const FilePath& path) :
+			Path(path)
+		{
+		}
+
+		void Load();
+	};
+
+	class EDITOR_API EditorIcons
+	{
+	public:
+		static inline EditorIcon IconTextureResource = FilePath(L"Icons/Resource/Texture.iasset");
+		static inline EditorIcon IconMeshResource    = FilePath(L"Icons/Resource/Mesh.iasset");
+
+		static inline EditorIcon IconDataAsset       = FilePath(L"Icons/Asset/Data.iasset");
+		static inline EditorIcon IconImageAsset      = FilePath(L"Icons/Asset/Image.iasset");
+		static inline EditorIcon IconMeshAsset       = FilePath(L"Icons/Asset/Mesh.iasset");
+
+		static void LoadTextures();
+	};
+
 	class EDITOR_API EditorBillboards
 	{
 	public:

@@ -1,0 +1,9 @@
+<IonAsset>
+	<Info type="Ion.Image" guid="9d2e1216-e454-42cb-99dc-f6d64fbe94bc" />
+	<ImportExternal path="Mesh.png" />
+	<TextureResource guid="2506a651-a818-430e-8101-a518d7c8a791">
+		<Properties>
+			<Filter value="Linear" />
+		</Properties>
+	</TextureResource>
+</IonAsset>
