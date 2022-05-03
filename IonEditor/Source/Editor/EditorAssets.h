@@ -28,6 +28,7 @@ namespace Ion::Editor
 		static inline EditorIcon IconTextureResource = FilePath(L"Icons/Resource/Texture.iasset");
 		static inline EditorIcon IconMeshResource    = FilePath(L"Icons/Resource/Mesh.iasset");
 
+		static inline EditorIcon IconAsset           = FilePath(L"Icons/Asset/Asset.iasset");
 		static inline EditorIcon IconDataAsset       = FilePath(L"Icons/Asset/Data.iasset");
 		static inline EditorIcon IconImageAsset      = FilePath(L"Icons/Asset/Image.iasset");
 		static inline EditorIcon IconMeshAsset       = FilePath(L"Icons/Asset/Mesh.iasset");

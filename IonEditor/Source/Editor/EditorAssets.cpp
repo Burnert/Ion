@@ -38,6 +38,7 @@ namespace Ion::Editor
 		IconTextureResource.Load();
 		IconMeshResource.Load();
 
+		IconAsset.Load();
 		IconDataAsset.Load();
 		IconImageAsset.Load();
 		IconMeshAsset.Load();

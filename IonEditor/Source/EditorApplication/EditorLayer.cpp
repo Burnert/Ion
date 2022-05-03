@@ -316,12 +316,10 @@ namespace Ion::Editor
 					ImGui::Selectable(("##" + sType + "\n" + sName).c_str(), false, ImGuiSelectableFlags_None, assetIconSize);
 					if (ImGui::IsItemHovered())
 					{
-						EditorApplication::Get()->SetCursor(
-							ImGui::IsItemActive() ?
-							ECursorType::GrabClosed :
-							ECursorType::Grab);
+						EditorApplication::Get()->SetCursor(ECursorType::Hand);
 					}
 
+					// Where to place the next item
 					ImVec2 nextCursor;
 
 					if (avail.x - assetIconSize.x - assetIconSeparation > assetIconSize.x)
@@ -338,15 +336,15 @@ namespace Ion::Editor
 
 					ImGui::SetCursorPos(selectableCursor);
 
-					void* texture;
+					void* iconTexture;
 					switch (asset->GetType())
 					{
-					case EAssetType::Mesh:  texture = EditorIcons::IconMeshAsset.Texture->GetNativeID();  break;
-					case EAssetType::Image: texture = EditorIcons::IconImageAsset.Texture->GetNativeID(); break;
-					default:                texture = EditorIcons::IconDataAsset.Texture->GetNativeID();  break;
+					case EAssetType::Mesh:  iconTexture = EditorIcons::IconMeshAsset.Texture->GetNativeID();  break;
+					case EAssetType::Image: iconTexture = EditorIcons::IconImageAsset.Texture->GetNativeID(); break;
+					default:                iconTexture = EditorIcons::IconAsset.Texture->GetNativeID();      break;
 					}
 
-					ImGui::Image(texture, ImVec2(assetIconSize.x, assetIconSize.x), ImVec2(0, 1), ImVec2(1, 0));
+					ImGui::Image(iconTexture, ImVec2(assetIconSize.x, assetIconSize.x), ImVec2(0, 1), ImVec2(1, 0));
 
 					ImVec2 textSize = ImGui::CalcTextSize(sName.c_str());
 					ImGui::SetCursorPos(ImVec2(selectableCursor.x + (assetIconSize.x - textSize.x) * 0.5f, selectableCursor.y + assetIconSize.x));
