@@ -25,6 +25,7 @@ namespace Ion::Editor
 		m_bMainViewportOpenPtr(nullptr),
 		m_bInsertPanelOpen(true),
 		m_bContentBrowserOpen(true),
+		m_bResourcesPanelOpen(false),
 		m_bWorldTreePanelOpen(true),
 		m_bDetailsPanelOpen(true),
 		m_bDiagnosticsPanelOpen(false),
@@ -111,6 +112,7 @@ namespace Ion::Editor
 		DrawViewportWindows();
 		DrawInsertPanel();
 		DrawContentBrowser();
+		DrawResourcesPanel();
 		DrawWorldTreePanel();
 		DrawDetailsPanel();
 		DrawDiagnosticsPanel();
@@ -168,6 +170,7 @@ namespace Ion::Editor
 				ImGui::MenuItem("Main Viewport", nullptr, m_bMainViewportOpenPtr);
 				ImGui::MenuItem("Insert", nullptr, &m_bInsertPanelOpen);
 				ImGui::MenuItem("Content Browser", nullptr, &m_bContentBrowserOpen);
+				ImGui::MenuItem("Resources", nullptr, &m_bResourcesPanelOpen);
 				ImGui::MenuItem("World Tree", nullptr, &m_bWorldTreePanelOpen);
 				ImGui::MenuItem("Details", nullptr, &m_bDetailsPanelOpen);
 
@@ -279,6 +282,51 @@ namespace Ion::Editor
 
 			ImGui::PushID("ContentBrowser");
 
+			// @TODO: Make some kind of a directory tree here.
+
+			ImGui::BeginChild("AssetTree", ImVec2(160, 0));
+			{
+				if (ImGui::Button("Refresh"))
+				{
+					UpdateRegisteredAssetsCache();
+				}
+
+				ImGui::Text("Asset Tree Lol");
+			}
+			ImGui::EndChild();
+
+			ImGui::SameLine();
+
+			ImGui::BeginChild("Assets");
+			{
+				for (Asset& asset : m_RegisteredAssetsCache)
+				{
+					ImVec2 assetIconSize = { 60, 80 };
+
+					String name = StringConverter::WStringToString(asset->GetDefinitionPath().LastElement());
+
+					ImVec2 avail = ImGui::GetContentRegionAvail();
+					ImGui::Selectable(name.c_str(), false, ImGuiSelectableFlags_None, assetIconSize);
+					if (avail.x - assetIconSize.x > assetIconSize.x)
+					{
+						ImGui::SameLine();
+					}
+				}
+			}
+			ImGui::EndChild();
+
+			ImGui::PopID();
+
+			ImGui::End();
+		}
+	}
+
+	void EditorLayer::DrawResourcesPanel()
+	{
+		if (m_bResourcesPanelOpen)
+		{
+			ImGui::Begin("Resources", &m_bResourcesPanelOpen);
+
 			ImGui::Text("Mesh Resources");
 			ImGui::Indent();
 			{
@@ -302,8 +350,6 @@ namespace Ion::Editor
 				}
 			}
 			ImGui::Unindent();
-
-			ImGui::PopID();
 
 			ImGui::End();
 		}
@@ -1198,6 +1244,12 @@ namespace Ion::Editor
 	void EditorLayer::SetMainViewportOpenFlagPtr(bool* flagPtr)
 	{
 		m_bMainViewportOpenPtr = flagPtr;
+	}
+
+	void EditorLayer::UpdateRegisteredAssetsCache()
+	{
+		m_RegisteredAssetsCache = AssetRegistry::GetAllRegisteredAssets();
+		// @TODO: Update the tree
 	}
 
 	void EditorLayer::OnMouseButtonPressedEvent(const MouseButtonPressedEvent& event)

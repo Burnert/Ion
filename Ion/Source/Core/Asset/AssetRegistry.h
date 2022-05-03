@@ -274,7 +274,13 @@ namespace Ion
 		template<typename T>
 		static void ScheduleWork(T& work);
 
-		static const AssetMap& GetAllRegisteredAssets();
+		/**
+		 * Creates an array of handles to all the registered assets.
+		 * Don't call it too many times.
+		 */
+		static TArray<Asset> GetAllRegisteredAssets();
+
+		static const AssetMap& GetAssetsMap();
 
 		static void RegisterEngineAssets();
 
@@ -394,7 +400,7 @@ namespace Ion
 		Get().m_WorkQueue.Schedule(work);
 	}
 
-	inline const AssetRegistry::AssetMap& AssetRegistry::GetAllRegisteredAssets()
+	inline const AssetRegistry::AssetMap& AssetRegistry::GetAssetsMap()
 	{
 		return Get().m_Assets;
 	}

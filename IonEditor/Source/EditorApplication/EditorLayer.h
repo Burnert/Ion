@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/Components/Component.h"
+#include "Core/Asset/Asset.h"
 
 namespace Ion::Editor
 {
@@ -45,6 +46,8 @@ namespace Ion::Editor
 
 		void DrawContentBrowser();
 
+		void DrawResourcesPanel();
+
 		void DrawWorldTreePanel();
 		void DrawWorldTreeNodes();
 		void DrawWorldTreeNodeChildren(const WorldTreeNode& node, WorldTreeNode* nextExpandNode = nullptr);
@@ -86,6 +89,8 @@ namespace Ion::Editor
 
 		void SetMainViewportOpenFlagPtr(bool* flagPtr);
 
+		void UpdateRegisteredAssetsCache();
+
 		void OnMouseButtonPressedEvent(const MouseButtonPressedEvent& event);
 		void OnMouseButtonReleasedEvent(const MouseButtonReleasedEvent& event);
 		void OnMouseDoubleClickEvent(const MouseDoubleClickEvent& event);
@@ -110,6 +115,8 @@ namespace Ion::Editor
 		TArray<Entity*> m_EntitiesToDestroy;
 		TArray<Component*> m_ComponentsToDestroy;
 
+		TArray<Asset> m_RegisteredAssetsCache;
+
 		/* bit 0 - keep the hovered node set */
 		TMetaPointer<const WorldTreeNode> m_HoveredWorldTreeNodeDragTarget;
 		/* bit 0 - is dragging, bit 1 - start/keep dragging? */
@@ -118,6 +125,7 @@ namespace Ion::Editor
 		bool* m_bMainViewportOpenPtr;
 		bool m_bInsertPanelOpen;
 		bool m_bContentBrowserOpen;
+		bool m_bResourcesPanelOpen;
 		bool m_bWorldTreePanelOpen;
 		bool m_bDetailsPanelOpen;
 
