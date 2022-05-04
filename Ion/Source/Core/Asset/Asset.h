@@ -61,6 +61,7 @@ namespace Ion
 		 * @param other Other asset
 		 */
 		bool operator==(const Asset& other) const;
+		bool operator!=(const Asset& other) const;
 
 		/**
 		 * @brief An Asset Handle initialized with an invalid GUID.
@@ -162,6 +163,11 @@ namespace Ion
 	inline bool Asset::operator==(const Asset& other) const
 	{
 		return m_Guid == other.m_Guid;
+	}
+
+	inline bool Asset::operator!=(const Asset& other) const
+	{
+		return m_Guid != other.m_Guid;
 	}
 
 	// AssetFinder class inline implementation

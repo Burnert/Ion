@@ -350,12 +350,12 @@ namespace Ion
 
 			PollEvents();
 
-			float deltaTime = CalculateFrameTime();
-			Update(deltaTime);
+			m_GlobalDeltaTime = CalculateFrameTime();
+			Update(m_GlobalDeltaTime);
 			m_ClientApp->PostUpdate();
 			// This will eventually need to be called after Update,
 			// but during the time the render thread is rendering
-			g_Engine->BuildRendererData(deltaTime);
+			g_Engine->BuildRendererData(m_GlobalDeltaTime);
 
 			Render();
 

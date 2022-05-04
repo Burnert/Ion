@@ -99,6 +99,11 @@ namespace Ion
 			return Get()->m_LayerStack.get();
 		}
 
+		FORCEINLINE static float GetGlobalDeltaTime()
+		{
+			return Get()->m_GlobalDeltaTime;
+		}
+
 	protected:
 		Application(App* clientApp);
 
@@ -244,6 +249,8 @@ namespace Ion
 		WString m_ApplicationTitle;
 
 		EngineFonts m_Fonts;
+
+		float m_GlobalDeltaTime;
 
 		bool m_bRunning;
 

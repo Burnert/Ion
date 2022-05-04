@@ -301,6 +301,11 @@ namespace Ion::Editor
 
 			ImGui::BeginChild("Assets");
 			{
+				static float c_ResIconsOpacity = 0.0f;
+				c_ResIconsOpacity = Math::Min(c_ResIconsOpacity + EditorApplication::Get()->GetGlobalDeltaTime() / 0.15f, 1.0f);
+				static Asset c_HoveredAsset;
+				Asset hoveredAsset;
+
 				for (Asset& asset : m_RegisteredAssetsCache)
 				{
 					ImVec2 assetIconSize = { 96, 128 };
@@ -322,6 +327,19 @@ namespace Ion::Editor
 						m_SelectedAsset = asset;
 					}
 
+					bool bHovered;
+					if (bHovered = ImGui::IsItemHovered())
+					{
+						EditorApplication::Get()->SetCursor(ECursorType::Hand);
+
+						hoveredAsset = asset;
+						if (c_HoveredAsset != hoveredAsset)
+						{
+							c_ResIconsOpacity = 0.0f;
+							c_HoveredAsset = hoveredAsset;
+						}
+					}
+
 					// Where to place the next item
 					ImVec2 nextCursor;
 					if (avail.x - assetIconSize.x - assetIconSeparation > assetIconSize.x)
@@ -334,12 +352,6 @@ namespace Ion::Editor
 					{
 						nextCursor = ImGui::GetCursorPos();
 						nextCursor.y += assetIconSeparation;
-					}
-
-					bool bHovered;
-					if (bHovered = ImGui::IsItemHovered())
-					{
-						EditorApplication::Get()->SetCursor(ECursorType::Hand);
 					}
 
 					// Draw the asset icon
@@ -375,7 +387,9 @@ namespace Ion::Editor
 								resourceIconTexture = EditorIcons::IconTextureResource.Texture;
 							}
 
-							ImGui::Image(resourceIconTexture->GetNativeID(), ImVec2(32, 32), ImVec2(0, 1), ImVec2(1, 0));
+							float opacity = bSelected ? 1.0f : c_ResIconsOpacity;
+
+							ImGui::Image(resourceIconTexture->GetNativeID(), ImVec2(32, 32), ImVec2(0, 1), ImVec2(1, 0), ImVec4(1, 1, 1, opacity));
 							if (ImGui::IsItemHovered())
 							{
 								ImGui::BeginTooltip();
@@ -393,6 +407,11 @@ namespace Ion::Editor
 					ImGui::Text(sName.c_str());
 
 					ImGui::SetCursorPos(nextCursor);
+				}
+				if (!hoveredAsset)
+				{
+					c_HoveredAsset = Asset();
+					c_ResIconsOpacity = 0.0f;
 				}
 			}
 			ImGui::EndChild();
