@@ -3,6 +3,7 @@
 #include "EditorLayer.h"
 #include "EditorApplication.h"
 #include "Editor/EditorAssets.h"
+#include "Editor/ContentBrowser/ContentBrowser.h"
 
 #include "Engine/World.h"
 #include "Engine/Entity/Entity.h"
@@ -25,7 +26,6 @@ namespace Ion::Editor
 		m_EventDispatcher(this),
 		m_bMainViewportOpenPtr(nullptr),
 		m_bInsertPanelOpen(true),
-		m_bContentBrowserOpen(true),
 		m_bResourcesPanelOpen(false),
 		m_bWorldTreePanelOpen(true),
 		m_bDetailsPanelOpen(true),
@@ -33,8 +33,7 @@ namespace Ion::Editor
 		m_bImGuiMetricsOpen(false),
 		m_bImGuiDemoOpen(false),
 		m_DraggedWorldTreeNodeInfo(0),
-		m_HoveredWorldTreeNodeDragTarget(nullptr),
-		m_SelectedAsset()
+		m_HoveredWorldTreeNodeDragTarget(nullptr)
 	{
 	}
 
@@ -111,9 +110,11 @@ namespace Ion::Editor
 		// The rest
 
 		DrawMainMenuBar();
+
 		DrawViewportWindows();
+		EditorApplication::Get()->m_ContentBrowser->DrawUI();
+		
 		DrawInsertPanel();
-		DrawContentBrowser();
 		DrawResourcesPanel();
 		DrawWorldTreePanel();
 		DrawDetailsPanel();
@@ -171,7 +172,7 @@ namespace Ion::Editor
 			{
 				ImGui::MenuItem("Main Viewport", nullptr, m_bMainViewportOpenPtr);
 				ImGui::MenuItem("Insert", nullptr, &m_bInsertPanelOpen);
-				ImGui::MenuItem("Content Browser", nullptr, &m_bContentBrowserOpen);
+				ImGui::MenuItem("Content Browser", nullptr, &EditorApplication::Get()->m_ContentBrowser->GetUIWindowOpenFlag());
 				ImGui::MenuItem("Resources", nullptr, &m_bResourcesPanelOpen);
 				ImGui::MenuItem("World Tree", nullptr, &m_bWorldTreePanelOpen);
 				ImGui::MenuItem("Details", nullptr, &m_bDetailsPanelOpen);
@@ -271,159 +272,6 @@ namespace Ion::Editor
 			}
 			ImGui::EndChild();
 			ImGui::EndTabItem();
-		}
-	}
-
-	void EditorLayer::DrawContentBrowser()
-	{
-		TRACE_FUNCTION();
-
-		if (m_bContentBrowserOpen)
-		{
-			ImGui::Begin("Content Browser", &m_bContentBrowserOpen);
-
-			ImGui::PushID("ContentBrowser");
-
-			// @TODO: Make some kind of a directory tree here.
-
-			ImGui::BeginChild("AssetTree", ImVec2(160, 0));
-			{
-				if (ImGui::Button("Refresh"))
-				{
-					UpdateRegisteredAssetsCache();
-				}
-
-				ImGui::Text("Asset Tree Lol");
-			}
-			ImGui::EndChild();
-
-			ImGui::SameLine();
-
-			ImGui::BeginChild("Assets");
-			{
-				static float c_ResIconsOpacity = 0.0f;
-				c_ResIconsOpacity = Math::Min(c_ResIconsOpacity + EditorApplication::Get()->GetGlobalDeltaTime() / 0.15f, 1.0f);
-				static Asset c_HoveredAsset;
-				Asset hoveredAsset;
-
-				for (Asset& asset : m_RegisteredAssetsCache)
-				{
-					ImVec2 assetIconSize = { 96, 128 };
-					float assetIconSeparation = 8;
-
-					String sType = ToString(asset->GetType());
-					String sName = asset->GetInfo().Name;
-
-					ImVec2 avail = ImGui::GetContentRegionAvail();
-
-					// Place the image in the same place the selectable is
-					ImVec2 selectableCursor = ImGui::GetCursorPos();
-
-					bool bSelected = m_SelectedAsset == asset;
-
-					// Draw an empty selectable
-					if (ImGui::Selectable(("##" + sType + sName).c_str(), bSelected, ImGuiSelectableFlags_None, assetIconSize))
-					{
-						m_SelectedAsset = asset;
-					}
-
-					bool bHovered;
-					if (bHovered = ImGui::IsItemHovered())
-					{
-						EditorApplication::Get()->SetCursor(ECursorType::Hand);
-
-						hoveredAsset = asset;
-						if (c_HoveredAsset != hoveredAsset)
-						{
-							c_ResIconsOpacity = 0.0f;
-							c_HoveredAsset = hoveredAsset;
-						}
-					}
-
-					// Where to place the next item
-					ImVec2 nextCursor;
-					if (avail.x - assetIconSize.x - assetIconSeparation > assetIconSize.x)
-					{
-						ImGui::SameLine();
-						nextCursor = ImGui::GetCursorPos();
-						nextCursor.x += assetIconSeparation;
-					}
-					else
-					{
-						nextCursor = ImGui::GetCursorPos();
-						nextCursor.y += assetIconSeparation;
-					}
-
-					// Draw the asset icon
-
-					ImGui::SetCursorPos(selectableCursor);
-
-					void* iconTexture;
-					switch (asset->GetType())
-					{
-					case EAssetType::Mesh:  iconTexture = EditorIcons::IconMeshAsset.Texture->GetNativeID();  break;
-					case EAssetType::Image: iconTexture = EditorIcons::IconImageAsset.Texture->GetNativeID(); break;
-					default:                iconTexture = EditorIcons::IconAsset.Texture->GetNativeID();      break;
-					}
-
-					ImGui::Image(iconTexture, ImVec2(assetIconSize.x, assetIconSize.x), ImVec2(0, 1), ImVec2(1, 0));
-
-					// Draw resource usage icons
-
-					if (bHovered || bSelected)
-					{
-						ImGui::SetCursorPos(selectableCursor);
-
-						for (const String& resource : asset->GetInfo().ResourceUsage)
-						{
-							TShared<RHITexture> resourceIconTexture;
-
-							if (resource == "Mesh")
-							{
-								resourceIconTexture = EditorIcons::IconMeshResource.Texture;
-							}
-							else if (resource == "Texture")
-							{
-								resourceIconTexture = EditorIcons::IconTextureResource.Texture;
-							}
-
-							float opacity = bSelected ? 1.0f : c_ResIconsOpacity;
-
-							ImGui::Image(resourceIconTexture->GetNativeID(), ImVec2(32, 32), ImVec2(0, 1), ImVec2(1, 0), ImVec4(1, 1, 1, opacity));
-							if (ImGui::IsItemHovered())
-							{
-								ImGui::BeginTooltip();
-								ImGui::Text("The asset can be used as a %s resource.", resource.c_str());
-								ImGui::EndTooltip();
-							}
-							ImGui::SameLine();
-						}
-					}
-
-					// Draw the label
-
-					ImVec2 textSize = ImGui::CalcTextSize(sName.c_str());
-					ImGui::SetCursorPos(ImVec2(selectableCursor.x + (assetIconSize.x - textSize.x) * 0.5f, selectableCursor.y + assetIconSize.x));
-					ImGui::Text(sName.c_str());
-
-					ImGui::SetCursorPos(nextCursor);
-				}
-				if (!hoveredAsset)
-				{
-					c_HoveredAsset = Asset();
-					c_ResIconsOpacity = 0.0f;
-				}
-			}
-			ImGui::EndChild();
-			// Deselect the asset on empty space click
-			if (ImGui::IsItemClicked())
-			{
-				m_SelectedAsset = Asset();
-			}
-
-			ImGui::PopID();
-
-			ImGui::End();
 		}
 	}
 
@@ -1358,12 +1206,6 @@ namespace Ion::Editor
 	void EditorLayer::SetMainViewportOpenFlagPtr(bool* flagPtr)
 	{
 		m_bMainViewportOpenPtr = flagPtr;
-	}
-
-	void EditorLayer::UpdateRegisteredAssetsCache()
-	{
-		m_RegisteredAssetsCache = AssetRegistry::GetAllRegisteredAssets();
-		// @TODO: Update the tree
 	}
 
 	void EditorLayer::OnMouseButtonPressedEvent(const MouseButtonPressedEvent& event)

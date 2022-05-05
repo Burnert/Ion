@@ -5,6 +5,7 @@
 
 #include "Editor/Viewport/EditorViewport.h"
 #include "Editor/UI/ViewportUI.h"
+#include "Editor/ContentBrowser/ContentBrowser.h"
 
 #include "Editor/EditorAssets.h"
 
@@ -62,6 +63,9 @@ namespace Ion::Editor
 		m_EditorLayer->SetMainViewportOpenFlagPtr(&mainViewport->GetUI()->GetWindowOpenFlagRef());
 		mainViewport->GetUI()->SetOpen(true);
 		mainViewport->GetUI()->SetWindowName("Main Viewport");
+
+		m_ContentBrowser = MakeShared<ContentBrowser>();
+		m_ContentBrowser->AddUI();
 
 		Renderer::Get()->SetVSyncEnabled(true);
 

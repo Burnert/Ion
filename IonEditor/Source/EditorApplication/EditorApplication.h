@@ -11,6 +11,7 @@ namespace Ion::Editor
 {
 	class EditorLayer;
 	class EditorViewport;
+	class ContentBrowser;
 
 	struct ViewportObject
 	{
@@ -118,6 +119,8 @@ namespace Ion::Editor
 		THashMap<GUID, TShared<EditorViewport>> m_Viewports;
 		TWeak<EditorViewport> m_MainViewport;
 		TShared<EditorViewport> m_CapturedViewport;
+
+		TShared<ContentBrowser> m_ContentBrowser;
 
 		friend class EditorLayer;
 	};

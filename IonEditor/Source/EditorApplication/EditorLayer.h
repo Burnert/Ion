@@ -44,8 +44,6 @@ namespace Ion::Editor
 		template<ESceneObjectType ObjectType, typename Lambda>
 		void DrawInsertPanelElement(const String& name, Lambda instantiate, const ComponentDatabase::TypeInfo* info = nullptr);
 
-		void DrawContentBrowser();
-
 		void DrawResourcesPanel();
 
 		void DrawWorldTreePanel();
@@ -89,8 +87,6 @@ namespace Ion::Editor
 
 		void SetMainViewportOpenFlagPtr(bool* flagPtr);
 
-		void UpdateRegisteredAssetsCache();
-
 		void OnMouseButtonPressedEvent(const MouseButtonPressedEvent& event);
 		void OnMouseButtonReleasedEvent(const MouseButtonReleasedEvent& event);
 		void OnMouseDoubleClickEvent(const MouseDoubleClickEvent& event);
@@ -115,10 +111,6 @@ namespace Ion::Editor
 		TArray<Entity*> m_EntitiesToDestroy;
 		TArray<Component*> m_ComponentsToDestroy;
 
-		TArray<Asset> m_RegisteredAssetsCache;
-
-		Asset m_SelectedAsset;
-
 		/* bit 0 - keep the hovered node set */
 		TMetaPointer<const WorldTreeNode> m_HoveredWorldTreeNodeDragTarget;
 		/* bit 0 - is dragging, bit 1 - start/keep dragging? */
@@ -126,7 +118,6 @@ namespace Ion::Editor
 
 		bool* m_bMainViewportOpenPtr;
 		bool m_bInsertPanelOpen;
-		bool m_bContentBrowserOpen;
 		bool m_bResourcesPanelOpen;
 		bool m_bWorldTreePanelOpen;
 		bool m_bDetailsPanelOpen;
