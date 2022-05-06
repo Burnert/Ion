@@ -4,7 +4,6 @@
 #include "EditorLayer.h"
 
 #include "Editor/Viewport/EditorViewport.h"
-#include "Editor/UI/ViewportUI.h"
 #include "Editor/ContentBrowser/ContentBrowser.h"
 
 #include "Editor/EditorAssets.h"
