@@ -7,9 +7,21 @@
 
 #include "UserInterface/ImGui.h"
 
+#include "Engine/World.h"
+#include "Engine/Entity/MeshEntity.h"
+
+#include "Resource/MeshResource.h"
+
+#include "Renderer/Mesh.h"
+
 namespace Ion::Editor
 {
 	// UIContentBrowser -----------------------------------------------------------------
+
+	struct DNDMeshEntityCustomData
+	{
+		Asset MeshAsset;
+	};
 
 	UIContentBrowser::UIContentBrowser(ContentBrowser* owner) :
 		m_Owner(owner),
@@ -92,6 +104,40 @@ namespace Ion::Editor
 		float fadeInTime = 0.15f;
 		float offsetOpacityBy = EditorApplication::Get()->GetGlobalDeltaTime() / fadeInTime * (animData.bVisible ? 1.0f : -1.0f);
 		animData.IconOpacity = Math::Clamp(animData.IconOpacity + offsetOpacityBy, 0.0f, 1.0f);
+
+		ImGuiDragDropFlags dndFlags = ImGuiDragDropFlags_None;
+		if (ImGui::BeginDragDropSource(dndFlags))
+		{
+			switch (asset->GetType())
+			{
+				case EAssetType::Mesh:
+				{
+					DNDInsertEntityData data { };
+					data.CustomData = new DNDMeshEntityCustomData { asset };
+					data.Instantiate = [](World* context, void* customDataPtr) -> Entity*
+					{
+						DNDMeshEntityCustomData customData = *(DNDMeshEntityCustomData*)customDataPtr;
+						delete (DNDMeshEntityCustomData*)customDataPtr;
+
+						TShared<Mesh> mesh;
+
+						TResourcePtr<MeshResource> meshResource = MeshResource::Query(customData.MeshAsset);
+						mesh = Mesh::CreateFromResource(meshResource);
+
+						MeshEntity* meshEntity = context->SpawnEntityOfClass<MeshEntity>();
+						meshEntity->GetMeshComponent()->SetMeshResource(meshResource);
+						meshEntity->GetMeshComponent()->SetMeshAsset(customData.MeshAsset);
+						meshEntity->SetMesh(mesh);
+
+						return meshEntity;
+					};
+					ImGui::SetDragDropPayload("Ion_DND_InsertEntity", &data, sizeof(DNDInsertEntityData), ImGuiCond_Once);
+					ImGui::Text(sName.c_str());
+					break;
+				}
+			}
+			ImGui::EndDragDropSource();
+		}
 
 		// Where to place the next item
 		ImVec2 nextCursor;

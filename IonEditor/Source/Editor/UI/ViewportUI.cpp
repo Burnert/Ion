@@ -75,7 +75,7 @@ namespace Ion::Editor
 							ionassert(payload->DataSize == sizeof(DNDInsertEntityData));
 
 							DNDInsertEntityData& data = *(DNDInsertEntityData*)payload->Data;
-							data.Instantiate(EditorApplication::Get()->GetEditorWorld());
+							data.Instantiate(EditorApplication::Get()->GetEditorWorld(), data.CustomData);
 						}
 						ImGui::EndDragDropTarget();
 					}

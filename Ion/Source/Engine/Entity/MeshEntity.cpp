@@ -1,7 +1,6 @@
 #include "IonPCH.h"
 
 #include "MeshEntity.h"
-#include "Engine/Components/MeshComponent.h"
 #include "Engine/World.h"
 
 namespace Ion

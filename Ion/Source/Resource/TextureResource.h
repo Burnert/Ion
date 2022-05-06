@@ -75,7 +75,7 @@ namespace Ion
 		/**
 		 * @brief Used to access the Texture owned by the Resource.
 		 * 
-		 * @tparam Lambda params - (const TextureResourceRenderData&)
+		 * @tparam Lambda params - (const TextureResourceRenderDataShared&)
 		 * @see TFuncResourceOnTake
 		 * 
 		 * @param onTake If the resource is ready, called immediately,

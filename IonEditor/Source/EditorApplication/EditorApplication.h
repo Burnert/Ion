@@ -20,8 +20,9 @@ namespace Ion::Editor
 
 	struct DNDInsertEntityData
 	{
-		using InstantiateFunc = Entity*(World*);
+		using InstantiateFunc = Entity*(World*, void*);
 		InstantiateFunc* Instantiate;
+		void* CustomData = nullptr;
 	};
 
 	struct DNDInsertComponentData

@@ -198,7 +198,7 @@ namespace Ion::Editor
 				if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 				{
 					World* editorWorld = EditorApplication::Get()->GetEditorWorld();
-					instantiate(editorWorld);
+					instantiate(editorWorld, nullptr);
 				}
 			}
 		}

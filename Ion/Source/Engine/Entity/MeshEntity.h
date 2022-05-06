@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Entity.h"
+#include "Engine/Components/MeshComponent.h"
 #include "Core/Asset/AssetCommon.h"
 
 namespace Ion

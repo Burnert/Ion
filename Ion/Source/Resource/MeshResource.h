@@ -68,7 +68,7 @@ namespace Ion
 		/**
 		 * @brief Used to access the mesh render data owned by the Resource.
 		 * 
-		 * @tparam Lambda params - (const MeshResourceRenderData&)
+		 * @tparam Lambda params - (const MeshResourceRenderDataShared&)
 		 * @see TFuncResourceOnTake
 		 * 
 		 * @param onTake If the resource is ready, called immediately,

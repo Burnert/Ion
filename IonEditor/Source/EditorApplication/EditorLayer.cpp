@@ -239,11 +239,11 @@ namespace Ion::Editor
 			ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysUseWindowPadding;
 			if (ImGui::BeginChild("InsertEntityFrame", ImVec2(0, 0), false, flags))
 			{
-				DrawInsertPanelElement<ESceneObjectType::Entity>("Empty Entity", [](World* context) -> Entity*
+				DrawInsertPanelElement<ESceneObjectType::Entity>("Empty Entity", [](World* context, void*) -> Entity*
 				{
 					return context->SpawnEntityOfClass<Entity>();
 				});
-				DrawInsertPanelElement<ESceneObjectType::Entity>("Mesh Entity", [](World* context) -> Entity*
+				DrawInsertPanelElement<ESceneObjectType::Entity>("Mesh Entity", [](World* context, void*) -> Entity*
 				{
 					return context->SpawnEntityOfClass<MeshEntity>();
 				});
