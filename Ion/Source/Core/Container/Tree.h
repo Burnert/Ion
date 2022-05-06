@@ -92,7 +92,7 @@ struct TTreeNode
 	 */
 	inline NodeType& Remove(NodeType& node)
 	{
-		typename NodeArray::iterator it = std::find(m_Children.begin(), m_Children.end(), &node);
+		auto it = std::find(m_Children.begin(), m_Children.end(), &node);
 		ionassert(it != m_Children.end(), "Cannot find the node.");
 		m_Children.erase(it);
 		node.m_Parent = nullptr;
@@ -161,7 +161,7 @@ struct TTreeNode
 	 */
 	inline int64 FindIndex(NodeType& node) const
 	{
-		typename NodeArray::iterator it = std::find(m_Children.begin(), m_Children.end(), &node);
+		auto it = std::find(m_Children.begin(), m_Children.end(), &node);
 
 		if (it == m_Children.end())
 			return -1;
@@ -322,7 +322,7 @@ public:
 	inline NodeType& Create(const ElementType& element)
 	{
 		NodeType* nodePtr = m_NodeAllocator.Allocate();
-		*nodePtr = NodeType(element);
+		new(nodePtr) NodeType(element);
 		_TREENODEALLOC_INSERT_NODE_ALLOC_DEBUG(nodePtr);
 			return *nodePtr;
 	}
@@ -330,7 +330,7 @@ public:
 	inline NodeType& Create(ElementType&& element)
 	{
 		NodeType* nodePtr = m_NodeAllocator.Allocate();
-		*nodePtr = NodeType(Move(element));
+		new(nodePtr) NodeType(Move(element));
 		_TREENODEALLOC_INSERT_NODE_ALLOC_DEBUG(nodePtr);
 		return *nodePtr;
 	}

@@ -98,7 +98,7 @@ public:
 		chunk->Meta |= POOL_META_ALLOC_FLAG_MASK;
 
 		m_NextChunkPtr = chunk->Next();
-
+		
 		return (T*)chunk->Data;
 	}
 

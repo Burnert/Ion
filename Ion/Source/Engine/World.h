@@ -160,7 +160,7 @@ namespace Ion
 		EntityArray m_ChildEntities;
 
 		WorldTreeNodeFactory m_WorldTreeNodeFactory;
-		WorldTreeNode m_WorldTreeRoot;
+		WorldTreeNode* m_WorldTreeRoot;
 		THashMap<Entity*, WorldTreeNode*> m_EntityToWorldTreeNodeMap;
 
 		Scene* m_Scene; // World is the owner of the scene

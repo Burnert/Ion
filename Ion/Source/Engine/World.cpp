@@ -194,7 +194,7 @@ namespace Ion
 		WorldTreeNode* entityNode = FindWorldTreeNode(entity);
 		ionassertnd(entityNode, "The entity is not in the world tree.");
 
-		WorldTreeNode* parentNode = &m_WorldTreeRoot;
+		WorldTreeNode* parentNode = m_WorldTreeRoot;
 		if (parent)
 		{
 			parentNode = FindWorldTreeNode(parent);
@@ -237,7 +237,7 @@ namespace Ion
 
 	World::WorldTreeNode& World::InsertWorldTreeNode(Entity* entity)
 	{
-		return InsertWorldTreeNode(entity, m_WorldTreeRoot);
+		return InsertWorldTreeNode(entity, *m_WorldTreeRoot);
 	}
 
 	World::WorldTreeNode& World::InsertWorldTreeNode(Entity* entity, WorldTreeNode& parent)
@@ -264,7 +264,7 @@ namespace Ion
 
 	World::WorldTreeNode& World::GetWorldTreeRoot()
 	{
-		return m_WorldTreeRoot;
+		return *m_WorldTreeRoot;
 	}
 
 	void World::InitEntity(Entity* entity)
@@ -282,7 +282,7 @@ namespace Ion
 		m_bTickWorld(true),
 		m_WorldGUID(GUID::Zero),
 		m_ComponentRegistry(this),
-		m_WorldTreeRoot(m_WorldTreeNodeFactory.Create(WorldTreeNodeData()))
+		m_WorldTreeRoot(&m_WorldTreeNodeFactory.Create(WorldTreeNodeData()))
 	{
 	}
 
