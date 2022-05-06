@@ -7,6 +7,10 @@
 
 #include "EditorApplication/EditorApplication.h"
 #include "Editor/Viewport/EditorViewport.h"
+#include "Editor/ContentBrowser/ContentBrowser.h"
+
+#include "Engine/World.h"
+#include "Engine/Entity/MeshEntity.h"
 
 namespace Ion::Editor
 {
@@ -76,6 +80,27 @@ namespace Ion::Editor
 
 							DNDInsertEntityData& data = *(DNDInsertEntityData*)payload->Data;
 							data.Instantiate(EditorApplication::Get()->GetEditorWorld(), data.CustomData);
+						}
+						ImGui::EndDragDropTarget();
+					}
+					if (ImGui::BeginDragDropTarget())
+					{
+						ImGuiDragDropFlags dndFlags = ImGuiDragDropFlags_None;
+						if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(DNDID_MeshAsset, dndFlags))
+						{
+							ionassert(payload->DataSize == sizeof(DNDAssetData));
+
+							DNDAssetData& data = *(DNDAssetData*)payload->Data;
+
+							TResourcePtr<MeshResource> meshResource = MeshResource::Query(data.AssetHandle);
+							TShared<Mesh> mesh = Mesh::CreateFromResource(meshResource);
+
+							World* world = EditorApplication::Get()->GetEditorWorld();
+							MeshEntity* meshEntity = world->SpawnEntityOfClass<MeshEntity>();
+
+							meshEntity->GetMeshComponent()->SetMeshResource(meshResource);
+							meshEntity->GetMeshComponent()->SetMeshAsset(data.AssetHandle);
+							meshEntity->SetMesh(mesh);
 						}
 						ImGui::EndDragDropTarget();
 					}

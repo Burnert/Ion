@@ -12,6 +12,13 @@ namespace Ion::Editor
 		bool bVisible = false;
 	};
 
+#define DNDID_MeshAsset "Ion_DND_MeshAsset"
+
+	struct DNDAssetData
+	{
+		Asset AssetHandle;
+	};
+
 	class EDITOR_API UIContentBrowser
 	{
 	public:

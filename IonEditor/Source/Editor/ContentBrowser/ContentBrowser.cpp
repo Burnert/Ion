@@ -108,34 +108,23 @@ namespace Ion::Editor
 		ImGuiDragDropFlags dndFlags = ImGuiDragDropFlags_None;
 		if (ImGui::BeginDragDropSource(dndFlags))
 		{
+			const char* csPayloadType = nullptr;
 			switch (asset->GetType())
 			{
-				case EAssetType::Mesh:
-				{
-					DNDInsertEntityData data { };
-					data.CustomData = new DNDMeshEntityCustomData { asset };
-					data.Instantiate = [](World* context, void* customDataPtr) -> Entity*
-					{
-						DNDMeshEntityCustomData customData = *(DNDMeshEntityCustomData*)customDataPtr;
-						delete (DNDMeshEntityCustomData*)customDataPtr;
-
-						TShared<Mesh> mesh;
-
-						TResourcePtr<MeshResource> meshResource = MeshResource::Query(customData.MeshAsset);
-						mesh = Mesh::CreateFromResource(meshResource);
-
-						MeshEntity* meshEntity = context->SpawnEntityOfClass<MeshEntity>();
-						meshEntity->GetMeshComponent()->SetMeshResource(meshResource);
-						meshEntity->GetMeshComponent()->SetMeshAsset(customData.MeshAsset);
-						meshEntity->SetMesh(mesh);
-
-						return meshEntity;
-					};
-					ImGui::SetDragDropPayload("Ion_DND_InsertEntity", &data, sizeof(DNDInsertEntityData), ImGuiCond_Once);
-					ImGui::Text(sName.c_str());
-					break;
-				}
+			case EAssetType::Mesh:
+				csPayloadType = DNDID_MeshAsset;
+				break;
 			}
+
+			if (csPayloadType)
+			{
+				DNDAssetData data { };
+				data.AssetHandle = asset;
+				ImGui::SetDragDropPayload(csPayloadType, &data, sizeof(DNDAssetData), ImGuiCond_Once);
+			}
+
+			ImGui::Text(sName.c_str());
+
 			ImGui::EndDragDropSource();
 		}
 

@@ -966,7 +966,31 @@ namespace Ion::Editor
 				"[None]";
 
 			ImGuiComboFlags flags = ImGuiComboFlags_HeightLargest;
-			if (ImGui::BeginCombo("Mesh Asset", previewName.c_str(), flags))
+			bool bComboOpen = ImGui::BeginCombo("Mesh Asset", previewName.c_str(), flags);
+			if (ImGui::BeginDragDropTarget())
+			{
+				ImGuiDragDropFlags dndFlags = ImGuiDragDropFlags_None;
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(DNDID_MeshAsset, dndFlags))
+				{
+					ionassert(payload->DataSize == sizeof(DNDAssetData));
+
+					DNDAssetData& data = *(DNDAssetData*)payload->Data;
+
+					TResourcePtr<MeshResource> meshResource = MeshResource::Query(data.AssetHandle);
+
+					TShared<Mesh> mesh = Mesh::CreateFromResource(meshResource);
+
+					// @TODO: Yeah well this is a bit too much
+					meshComponent.SetMeshAsset(data.AssetHandle);
+					meshComponent.SetMeshResource(meshResource);
+					meshComponent.SetMesh(mesh);
+
+					bChanged = true;
+				}
+
+				ImGui::EndDragDropTarget();
+			}
+			if (bComboOpen)
 			{
 				TArray<Asset> meshAssets = AssetRegistry::GetAllRegisteredAssets(EAssetType::Mesh);
 				for (Asset& meshAsset : meshAssets)
