@@ -33,6 +33,13 @@ namespace Ion
 		
 	}
 
+	Component* Component::Duplicate() const
+	{
+		ionassert(m_WorldContext);
+		Component* copy = Duplicate_Internal(m_WorldContext->GetComponentRegistry());
+		return copy;
+	}
+
 	void Component::Destroy(bool bReparent)
 	{
 		ionassert(m_WorldContext);

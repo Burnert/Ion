@@ -13,7 +13,7 @@ namespace Ion
 
 	DECLARE_COMPONENT_SERIALCALL_BUILDRENDERERDATA()
 
-	MeshComponent::MeshComponent()
+	void MeshComponent::OnCreate()
 	{
 		SetTickEnabled(false);
 	}

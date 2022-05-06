@@ -108,8 +108,11 @@ namespace Ion::Editor
 		EventDispatcher<EventFunctions, EditorLayer> m_EventDispatcher;
 
 		TArray<WorldTreeNode*> m_ExpandWorldTreeChain;
+
 		TArray<Entity*> m_EntitiesToDestroy;
 		TArray<Component*> m_ComponentsToDestroy;
+
+		TArray<Entity*> m_EntitiesToDuplicate;
 
 		/* bit 0 - keep the hovered node set */
 		TMetaPointer<const WorldTreeNode> m_HoveredWorldTreeNodeDragTarget;

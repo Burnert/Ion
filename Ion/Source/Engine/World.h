@@ -102,6 +102,8 @@ namespace Ion
 		template<typename EntityT, typename... Args>
 		EntityT* SpawnAndAttachEntityOfClass(Entity* attachTo, Args&&... args);
 
+		Entity* DuplicateEntity(Entity* entity);
+
 		bool DoesOwnEntity(Entity* entity) const;
 		bool DoesOwnEntity(const GUID& guid) const;
 		Entity* FindEntity(const GUID& guid);
@@ -173,6 +175,8 @@ namespace Ion
 	template<typename EntityT, typename... Args>
 	inline EntityT* World::SpawnEntityOfClass(Args&&... args)
 	{
+		static_assert(TIsBaseOfV<Entity, EntityT>);
+
 		// @TODO: Use some sort of an allocator here
 		EntityT* entity = new EntityT(Forward<Args>(args)...);
 		AddEntity(entity);
@@ -182,6 +186,8 @@ namespace Ion
 	template<typename EntityT, typename ...Args>
 	inline EntityT* World::SpawnAndAttachEntityOfClass(Entity* attachTo, Args&& ...args)
 	{
+		static_assert(TIsBaseOfV<Entity, EntityT>);
+
 		EntityT* entity = new EntityT(Forward<Args>(args)...);
 		AddEntity(entity, attachTo);
 		return entity;

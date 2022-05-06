@@ -134,6 +134,7 @@ virtual const ComponentDatabase::TypeInfo& GetFinalTypeInfo() const override \
 /* @TODO: Add GetTypeData */ \
 virtual const String& GetClassName() const override { return ClassName; } \
 virtual const String& GetClassDisplayName() const override { return ClassDisplayName; } \
+virtual Component* Duplicate_Internal(ComponentRegistry& registry) const override; \
 friend class ComponentRegistry;
 
 /* Put in the component's .cpp file (one per file). */
@@ -195,6 +196,11 @@ Component* className::ComponentContainerImpl::ForEachHelper(void*& inOutGenericI
 	delete typedIt; \
 	typedIt = nullptr; \
 	return nullptr; \
+} \
+/* Component class overrides */ \
+Component* className::Duplicate_Internal(ComponentRegistry& registry) const \
+{ \
+	return (Component*)registry.DuplicateComponent(this); \
 } \
 /* Entity Component Property setup */ \
 using NCPropsContianerType = THashSet<INCProperty*>; \
@@ -644,6 +650,8 @@ namespace Ion
 		/* Called by the ComponentRegistry */
 		virtual void OnDestroy();
 
+		Component* Duplicate() const;
+
 		/* If bReparent is true, the children will get
 		   reparented to the parent of this component.
 		   Else they will get destroyed.
@@ -676,9 +684,10 @@ namespace Ion
 		// Overriden in final classes by ENTITY_COMPONENT_CLASS_BODY
 
 		virtual const String& GetClassDisplayName() const = 0;
-		virtual const String& GetClassName() const = 0; // @TODO: Get rid of these Windows macros
+		virtual const String& GetClassName() const = 0;
 		virtual ComponentTypeID GetFinalTypeID() const = 0;
 		virtual const ComponentDatabase::TypeInfo& GetFinalTypeInfo() const = 0;
+		virtual Component* Duplicate_Internal(ComponentRegistry& registry) const = 0;
 
 		// End of overriden in final classes ...
 
@@ -767,6 +776,9 @@ namespace Ion
 		template<typename... Args>
 		Component* CreateComponent(ComponentTypeID id, Args&&... args);
 
+		template<typename CompT>
+		CompT* DuplicateComponent(const CompT* other);
+
 		template<typename CompT, TEnableIfT<TIsComponentTypeFinal<CompT>>* = 0>
 		void DestroyComponent(CompT* component);
 		template<typename CompT, TEnableIfT<!TIsComponentTypeFinal<CompT>>* = 0>
@@ -801,9 +813,12 @@ namespace Ion
 
 		static const THashMap<ComponentTypeID, ComponentDatabase::TypeInfo>& GetRegisteredTypes();
 
+	private:
 		/* For internal use */
 		template<typename CompT, typename... Args>
 		static CompT& EmplaceComponentInContainer(TCompContainer<CompT>& container, Args&&... args);
+		template<typename CompT>
+		static CompT& EmplaceDuplicateComponentInContainer(TCompContainer<CompT>& container, const CompT* component);
 
 	private:
 		template<typename CompT>
@@ -984,6 +999,23 @@ namespace Ion
 		componentPtr->OnCreate();
 
 		return componentPtr;
+	}
+
+	template<typename CompT>
+	inline CompT* ComponentRegistry::DuplicateComponent(const CompT* other)
+	{
+		static_assert(TIsBaseOfV<Component, CompT>);
+		using CompContainer = typename CompT::RawComponentContainerType;
+
+		CompContainer& container = GetRawContainer<CompT>();
+
+		ComponentDatabase* database = GetComponentTypeDatabase_Internal();
+
+		CompT& component = EmplaceDuplicateComponentInContainer(container, other);
+
+		m_ComponentsByGUID[component.GetGUID()] = &component;
+
+		return &component;
 	}
 
 	/* Compile-time version */
@@ -1171,6 +1203,17 @@ namespace Ion
 	{
 		CompT component(Forward<Args>(args)...);
 		auto [it, bUnique] = container.emplace(component.GetGUID(), Move(component));
+		ionassert(bUnique, "GUID collision?");
+		return it->second;
+	}
+
+	template<typename CompT>
+	CompT& ComponentRegistry::EmplaceDuplicateComponentInContainer(TCompContainer<CompT>& container, const CompT* component)
+	{
+		CompT newComponent(*component);
+		// Make sure the new component has a different GUID
+		newComponent.m_GUID = GUID();
+		auto [it, bUnique] = container.emplace(newComponent.GetGUID(), Move(newComponent));
 		ionassert(bUnique, "GUID collision?");
 		return it->second;
 	}

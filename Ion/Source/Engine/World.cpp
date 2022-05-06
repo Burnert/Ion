@@ -145,6 +145,35 @@ namespace Ion
 		delete entity;
 	}
 
+	Entity* World::DuplicateEntity(Entity* entity)
+	{
+		if (entity->IsPendingKill())
+			return nullptr;
+
+		Entity* newEntity = entity->Duplicate();
+
+		AddEntityToCollection(newEntity);
+
+		if (entity->HasParent())
+		{
+			WorldTreeNode* parentNode = FindWorldTreeNode(entity->GetParent());
+			ionassertnd(parentNode, "Entity to attach to doesn't exist in the world.");
+
+			// Attach the entity to the parent node
+			InsertWorldTreeNode(newEntity, *parentNode);
+
+			// Update entities
+			entity->GetParent()->AddChild(newEntity);
+		}
+		else
+		{
+			InsertWorldTreeNode(newEntity);
+			AddChildEntity(newEntity);
+		}
+
+		return newEntity;
+	}
+
 	bool World::DoesOwnEntity(Entity* entity) const
 	{
 		return DoesOwnEntity(entity->GetGuid());

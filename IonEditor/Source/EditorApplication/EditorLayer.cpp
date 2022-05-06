@@ -61,6 +61,12 @@ namespace Ion::Editor
 			EditorApplication::Get()->DeleteObject(component);
 		}
 		m_ComponentsToDestroy.clear();
+
+		for (Entity* entity : m_EntitiesToDuplicate)
+		{
+			EditorApplication::Get()->DuplicateObject(entity);
+		}
+		m_EntitiesToDuplicate.clear();
 	}
 
 	void EditorLayer::OnRender()
@@ -504,6 +510,14 @@ namespace Ion::Editor
 		}
 		if (ImGui::BeginPopupContextItem())
 		{
+			// Duplicate
+			if (ImGui::MenuItem("Duplicate"))
+			{
+				if (entity)
+				{
+					m_EntitiesToDuplicate.push_back(entity);
+				}
+			}
 			// Delete
 			if (ImGui::MenuItem("Delete"))
 			{

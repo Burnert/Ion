@@ -347,6 +347,13 @@ namespace Ion::Editor
 		}
 	}
 
+	void EditorApplication::DuplicateObject(Entity* entity)
+	{
+		ionassert(entity);
+		Entity* newEntity = GetEditorWorld()->DuplicateEntity(entity);
+		SetSelectedEntity(newEntity);
+	}
+
 	Scene* EditorApplication::GetEditorScene() const
 	{
 		return m_EditorMainWorld->GetScene();

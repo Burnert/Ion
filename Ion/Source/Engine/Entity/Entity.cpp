@@ -273,6 +273,47 @@ namespace Ion
 		}
 	}
 
+	Entity* Entity::Duplicate() const
+	{
+		ionassert(!IsPendingKill());
+		Entity* newEntity = Duplicate_Internal();
+
+		newEntity->m_GUID = GUID();
+
+		// Children would need to be duplicated too.
+		// Delete the references from the new entity instead.
+		newEntity->m_Children.clear();
+
+		// Duplicate the non-scene components
+
+		THashSet<Component*> newComponents;
+		for (const Component* const& component : newEntity->m_Components)
+		{
+			auto [it, bUnique] = newComponents.insert(component->Duplicate());
+			(*it)->m_OwningEntity = newEntity;
+		}
+		newEntity->m_Components.swap(newComponents);
+
+		// Duplicate the scene components
+
+		newEntity->m_SceneComponents.clear();
+
+		newEntity->m_RootComponent = newEntity->m_RootComponent->DeepDuplicate();
+		newEntity->BindComponent(newEntity->m_RootComponent);
+		
+		for (SceneComponent* component : newEntity->m_RootComponent->GetAllDescendants())
+		{
+			newEntity->BindComponent(component);
+		}
+
+		return newEntity;
+	}
+
+	Entity* Entity::Duplicate_Internal() const
+	{
+		return new Entity(*this);
+	}
+
 	void Entity::Destroy(bool bReparent)
 	{
 		ionassert(m_WorldContext);

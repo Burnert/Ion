@@ -19,8 +19,14 @@ namespace Ion
 		void SetMesh(const TShared<Mesh>& mesh);
 		TShared<Mesh> GetMesh() const;
 
+		// Entity overrides
+
+		virtual Entity* Duplicate_Internal() const override;
+
 	protected:
 		virtual void OnSpawn(World* worldContext) override;
 		virtual void OnDestroy() override;
+
+		// End of Entity overrides
 	};
 }

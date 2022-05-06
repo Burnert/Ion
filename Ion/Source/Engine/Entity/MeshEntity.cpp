@@ -39,6 +39,11 @@ namespace Ion
 		return GetMeshComponent()->GetMesh();
 	}
 
+	Entity* MeshEntity::Duplicate_Internal() const
+	{
+		return new MeshEntity(*this);
+	}
+
 	void MeshEntity::OnSpawn(World* worldContext)
 	{
 		Entity::OnSpawn(worldContext);

@@ -14,6 +14,8 @@ namespace Ion
 	{
 		ENTITY_COMPONENT_CLASS_BODY(MeshComponent, "Mesh")
 
+		virtual void OnCreate() override;
+
 		void SERIALCALL BuildRendererData(RRendererData& data);
 
 		void SetMeshFromAsset(const Asset& asset);
@@ -28,9 +30,6 @@ namespace Ion
 		TShared<Mesh> GetMesh() const;
 
 		RPrimitiveRenderProxy AsRenderProxy() const;
-
-	private:
-		MeshComponent();
 
 	private:
 		Asset m_MeshAsset;

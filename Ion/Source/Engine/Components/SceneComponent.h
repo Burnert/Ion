@@ -44,6 +44,8 @@ namespace Ion
 		const TArray<SceneComponent*>& GetChildren() const;
 		TArray<SceneComponent*> GetAllDescendants() const;
 
+		SceneComponent* DeepDuplicate() const;
+
 	protected:
 		SceneComponent();
 

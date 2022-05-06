@@ -102,6 +102,17 @@ namespace Ion
 		return descendants;
 	}
 
+	SceneComponent* SceneComponent::DeepDuplicate() const
+	{
+		SceneComponent* component = (SceneComponent*)Duplicate();
+		for (SceneComponent*& child : component->m_Children)
+		{
+			child = child->DeepDuplicate();
+			child->m_Parent = component;
+		}
+		return component;
+	}
+
 	void SceneComponent::AddChild(SceneComponent* component)
 	{
 		TRACE_FUNCTION();

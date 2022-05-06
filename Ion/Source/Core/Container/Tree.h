@@ -124,12 +124,9 @@ struct TTreeNode
 		if (m_Parent)
 		{
 			m_Parent->Remove(*this);
-			if (bOutRemoved)
-				*bOutRemoved = true;
-			return *this;
 		}
 		if (bOutRemoved)
-			*bOutRemoved = false;
+			*bOutRemoved = m_Parent;
 		return *this;
 	}
 

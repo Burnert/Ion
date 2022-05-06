@@ -60,6 +60,10 @@ namespace Ion
 		void SetName(const String& name);
 		const String& GetName() const;
 
+		Entity* Duplicate() const;
+	protected:
+		virtual Entity* Duplicate_Internal() const;
+	public:
 		/* If bReparent is true, the child entities will get reparented
 		   to this entity's parent instead of the world root, unless it has no parent.
 		   Use DestroyWithChildren if you don't want to keep the children. */
@@ -88,7 +92,9 @@ namespace Ion
 		/* Returns a pointer to the World the Entity is currently in. */
 		World* GetWorldContext() const;
 
-		Entity(const Entity&) = delete;
+	protected:
+		Entity(const Entity&) = default;
+	public:
 		Entity(Entity&&) noexcept = delete;
 		Entity& operator=(const Entity&) = delete;
 		Entity& operator=(Entity&&) = delete;
