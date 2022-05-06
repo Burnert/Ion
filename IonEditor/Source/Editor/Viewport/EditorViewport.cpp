@@ -78,6 +78,7 @@ namespace Ion::Editor
 					if (ImGui::BeginDragDropTarget())
 					{
 						ImGuiDragDropFlags dndFlags = ImGuiDragDropFlags_None;
+						// From the Insert panel
 						if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Ion_DND_InsertEntity", dndFlags))
 						{
 							ionassert(payload->DataSize == sizeof(DNDInsertEntityData));
@@ -85,11 +86,7 @@ namespace Ion::Editor
 							DNDInsertEntityData& data = *(DNDInsertEntityData*)payload->Data;
 							data.Instantiate(EditorApplication::Get()->GetEditorWorld(), data.CustomData);
 						}
-						ImGui::EndDragDropTarget();
-					}
-					if (ImGui::BeginDragDropTarget())
-					{
-						ImGuiDragDropFlags dndFlags = ImGuiDragDropFlags_None;
+						// From the Content Browser
 						if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(DNDID_MeshAsset, dndFlags))
 						{
 							ionassert(payload->DataSize == sizeof(DNDAssetData));
