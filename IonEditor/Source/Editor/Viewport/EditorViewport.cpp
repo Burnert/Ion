@@ -79,7 +79,7 @@ namespace Ion::Editor
 					{
 						ImGuiDragDropFlags dndFlags = ImGuiDragDropFlags_None;
 						// From the Insert panel
-						if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Ion_DND_InsertEntity", dndFlags))
+						if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(DNDID_InsertEntity, dndFlags))
 						{
 							ionassert(payload->DataSize == sizeof(DNDInsertEntityData));
 

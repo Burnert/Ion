@@ -2,6 +2,7 @@
 
 #include "IonApp.h"
 #include "EditorCore/EditorCore.h"
+#include "Editor/EditorCommon.h"
 
 #include "Engine/Components/Component.h"
 
@@ -16,20 +17,6 @@ namespace Ion::Editor
 	struct ViewportObject
 	{
 		TShared<EditorViewport> Viewport;
-	};
-
-	struct DNDInsertEntityData
-	{
-		using InstantiateFunc = Entity*(World*, void*);
-		InstantiateFunc* Instantiate;
-		void* CustomData = nullptr;
-	};
-
-	struct DNDInsertComponentData
-	{
-		using InstantiateFunc = Component*(World*, ComponentTypeID);
-		InstantiateFunc* Instantiate;
-		ComponentTypeID ID;
 	};
 
 	class EDITOR_API EditorApplication : public App

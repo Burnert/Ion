@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Editor/EditorCommon.h"
 #include "Engine/Components/Component.h"
 #include "Core/Asset/Asset.h"
 
@@ -173,15 +174,15 @@ namespace Ion::Editor
 			{
 				DNDInsertEntityData data { };
 				data.Instantiate = instantiate;
-				ImGui::SetDragDropPayload("Ion_DND_InsertEntity", &data, sizeof(DNDInsertEntityData), ImGuiCond_Once);
+				ImGui::SetDragDropPayload(DNDID_InsertEntity, &data, sizeof(DNDInsertEntityData), ImGuiCond_Once);
 			}
 			else if constexpr (ObjectType == ESceneObjectType::Component)
 			{
 				ionassert(info);
 
 				String payloadType = info->bIsSceneComponent ?
-					"Ion_DND_InsertSceneComponent" :
-					"Ion_DND_InsertComponent";
+					DNDID_InsertSceneComponent :
+					DNDID_InsertComponent;
 				DNDInsertComponentData data { };
 				data.Instantiate = instantiate;
 				data.ID = info->ID;

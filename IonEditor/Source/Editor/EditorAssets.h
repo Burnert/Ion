@@ -8,7 +8,7 @@
 
 namespace Ion::Editor
 {
-	struct EditorIcon
+	struct EDITOR_API EditorIcon
 	{
 		FilePath Path;
 		TResourcePtr<TextureResource> Resource;

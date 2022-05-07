@@ -445,7 +445,7 @@ namespace Ion::Editor
 			m_DraggedWorldTreeNodeInfo |= Bitflag(1);
 
 			const WorldTreeNode* nodePtr = &node;
-			ImGui::SetDragDropPayload("Ion_DND_WorldTreeNode", &nodePtr, sizeof(WorldTreeNode*), ImGuiCond_Once);
+			ImGui::SetDragDropPayload(DNDID_WorldTreeNode, &nodePtr, sizeof(WorldTreeNode*), ImGuiCond_Once);
 
 			if (m_HoveredWorldTreeNodeDragTarget)
 			{
@@ -469,41 +469,31 @@ namespace Ion::Editor
 			m_HoveredWorldTreeNodeDragTarget.SetMetaFlag<0>(true);
 
 			bool bCanAttachTo = false;
+			Entity* sourceEntity = nullptr;
 
-			// First, check if the drag and drop node can even be attached to the target.
 			ImGuiDragDropFlags dndFlags = ImGuiDragDropFlags_AcceptPeekOnly;
-			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Ion_DND_WorldTreeNode", dndFlags))
+			// First, check if the drag and drop node can even be attached to the target.
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(DNDID_WorldTreeNode, dndFlags))
 			{
 				ionassert(payload->DataSize == sizeof(WorldTreeNode*));
 				WorldTreeNode* nodePtr = *(WorldTreeNode**)payload->Data;
 				if (nodePtr->Get().IsEntity())
 				{
-					Entity* source = nodePtr->Get().AsEntity();
-					ionassert(source);
+					sourceEntity = nodePtr->Get().AsEntity();
+					ionassert(sourceEntity);
 					// If the target entity is in the source entity's children,
 					// it cannot be attached to.
-					bCanAttachTo = source->CanAttachTo(entity);
+					bCanAttachTo = sourceEntity->CanAttachTo(entity);
 				}
 			}
 			if (bCanAttachTo)
 			{
-				dndFlags = ImGuiDragDropFlags_None;
-				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Ion_DND_WorldTreeNode", dndFlags))
+				// Accept again so the outline rect gets drawn
+				if (ImGui::AcceptDragDropPayload(DNDID_WorldTreeNode, ImGuiDragDropFlags_None))
 				{
-					ionassert(payload->DataSize == sizeof(WorldTreeNode*));
-					WorldTreeNode* nodePtr = *(WorldTreeNode**)payload->Data;
-
-					if (entity)
-					{
-						// Attach source entity to this node's entity
-						const WorldTreeNodeData& data = nodePtr->Get();
-						if (data.IsEntity())
-						{
-							Entity* source = data.AsEntity();
-							source->AttachTo(entity);
-							ExpandWorldTreeToEntity(source);
-						}
-					}
+					// Attach source entity to this node's entity
+					sourceEntity->AttachTo(entity);
+					ExpandWorldTreeToEntity(sourceEntity);
 				}
 			}
 			ImGui::EndDragDropTarget();
@@ -727,7 +717,7 @@ namespace Ion::Editor
 			if (ImGui::BeginDragDropTarget())
 			{
 				ImGuiDragDropFlags dndFlags = ImGuiDragDropFlags_None;
-				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Ion_DND_InsertComponent", dndFlags))
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(DNDID_InsertComponent, dndFlags))
 				{
 					ionassert(payload->DataSize == sizeof(DNDInsertComponentData));
 
@@ -1142,7 +1132,7 @@ namespace Ion::Editor
 		if (ImGui::BeginDragDropTarget())
 		{
 			ImGuiDragDropFlags dndFlags = ImGuiDragDropFlags_None;
-			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Ion_DND_InsertSceneComponent", dndFlags))
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(DNDID_InsertSceneComponent, dndFlags))
 			{
 				ionassert(payload->DataSize == sizeof(DNDInsertComponentData));
 
