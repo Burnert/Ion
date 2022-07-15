@@ -16,6 +16,7 @@
 #include <type_traits>
 #include <filesystem>
 #include <random>
+#include <bitset>
 
 #include <string>
 #include <sstream>

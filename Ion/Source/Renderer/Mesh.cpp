@@ -22,9 +22,9 @@ namespace Ion
 			mesh->SetIndexBuffer(renderData.IndexBuffer);
 		});
 
-		TShared<Material> material = Material::Create();
+		TShared<MaterialOld> material = MaterialOld::Create();
 		material->SetShader(Renderer::GetBasicShader());
-		material->CreateParameter("Texture", EMaterialParameterType::Texture2D);
+		material->CreateParameter("Texture", EMaterialParameterTypeOld::Texture2D);
 
 		mesh->SetMaterial(material);
 
@@ -99,7 +99,7 @@ namespace Ion
 		m_TriangleCount = indexBuffer->GetTriangleCount();
 	}
 
-	void Mesh::SetMaterial(const TShared<Material>& material)
+	void Mesh::SetMaterial(const TShared<MaterialOld>& material)
 	{
 		m_Material = material;
 
@@ -120,7 +120,7 @@ namespace Ion
 		return m_IndexBuffer;
 	}
 
-	const TShared<Material>& Mesh::GetMaterial() const
+	const TShared<MaterialOld>& Mesh::GetMaterial() const
 	{
 		return m_Material;
 	}
@@ -145,7 +145,7 @@ namespace Ion
 		return m_UniformBuffer.get();
 	}
 
-	const Material* Mesh::GetMaterialRaw() const
+	const MaterialOld* Mesh::GetMaterialRaw() const
 	{
 		return m_Material.get();
 	}

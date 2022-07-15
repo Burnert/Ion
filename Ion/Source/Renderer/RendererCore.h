@@ -73,7 +73,7 @@ namespace Ion
 		const RHIVertexBuffer* VertexBuffer;
 		const RHIIndexBuffer* IndexBuffer;
 		const RHIUniformBuffer* UniformBuffer;
-		const Material* Material;
+		const MaterialOld* Material;
 		const RHIShader* Shader;
 		Matrix4 Transform;
 	};

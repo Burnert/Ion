@@ -127,7 +127,7 @@ namespace Ion
 		primitive.UniformBuffer->UpdateData();
 		primitive.UniformBuffer->Bind(1);
 
-		const Material* material = primitive.Material;
+		const MaterialOld* material = primitive.Material;
 
 		if (material)
 			material->BindTextures();

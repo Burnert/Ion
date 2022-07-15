@@ -11,7 +11,7 @@ namespace Ion
 	class Light;
 	class DirectionalLight;
 	// Material.h
-	class Material;
+	class MaterialOld;
 	// Mesh.h
 	struct MeshUniforms;
 	class Mesh;

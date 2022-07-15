@@ -79,7 +79,7 @@ namespace Ion
 	{
 		ionassert(m_Mesh);
 
-		Material* material = m_Mesh->GetMaterial().get();
+		MaterialOld* material = m_Mesh->GetMaterial().get();
 		Transform worldTransform = GetWorldTransform();
 
 		RHIShader* shader = material ?

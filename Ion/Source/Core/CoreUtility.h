@@ -40,10 +40,10 @@ NODISCARD constexpr inline U GetBitflags(const T& bitmask, const U& bits) noexce
 	return bitmask & bits;
 }
 
-template<typename T>
-NODISCARD constexpr inline TEnableIfT<TIsIntegralV<T>, bool> GetBitflag(const T& bitmask, uint8 bit) noexcept
+template<typename T, typename U>
+NODISCARD constexpr inline TEnableIfT<TIsIntegralV<T>, bool> GetBitflag(const T& bitmask, U bit) noexcept
 {
-	return (bitmask >> bit) & 0x01u;
+	return (bitmask >> bit) & 1;
 }
 
 template<typename T>

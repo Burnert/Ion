@@ -117,6 +117,11 @@ namespace Ion
 		return true;
 	}
 
+	bool OpenGLShader::IsCompiled()
+	{
+		return m_bCompiled;
+	}
+
 	bool OpenGLShader::HasUniform(const String& name) const
 	{
 		TRACE_FUNCTION();

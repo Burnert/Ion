@@ -45,7 +45,7 @@ public:
 		static constexpr EExampleModelName ModelType = Type;
 
 		TShared<Mesh> Mesh;
-		TShared<Material> Material;
+		TShared<MaterialOld> Material;
 		TShared<RHITexture> Texture;
 
 		Asset MeshAsset;
@@ -71,7 +71,7 @@ public:
 		data.Texture->UpdateSubresource(&texImage);
 
 		// Material
-		data.Material = Material::Create();
+		data.Material = MaterialOld::Create();
 		data.Material->SetShader(shader);
 		data.Material->CreateParameter("Texture", EMaterialParameterType::Texture2D);
 		data.Material->SetParameter("Texture", data.Texture);
@@ -282,7 +282,7 @@ private:
 	TShared<Mesh> m_MeshCollada;
 	TShared<Camera> m_Camera;
 	TShared<Camera> m_AuxCamera;
-	TShared<Material> m_Material;
+	TShared<MaterialOld> m_Material;
 	TShared<RHITexture> m_TextureCollada;
 	World* m_World;
 

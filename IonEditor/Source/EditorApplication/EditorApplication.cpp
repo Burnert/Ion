@@ -17,6 +17,8 @@
 #include "Engine/Components/BehaviorComponent.h"
 #include "Engine/Entity/MeshEntity.h"
 
+#include "Material/Material.h"
+
 #include "ExampleModels.h"
 
 namespace Ion::Editor
@@ -75,41 +77,37 @@ namespace Ion::Editor
 
 		ComponentRegistry& registry = m_EditorMainWorld->GetComponentRegistry();
 
-		//MeshEntity* entity = m_EditorMainWorld->SpawnEntityOfClass<MeshEntity>();
-		//entity->SetTransform(Transform(Vector3(0.0f, -1.0f, 0.0f), Rotator(Vector3(-90.0f, 0.0f, 0.0f))));
-		//entity->SetName("Mesh");
-		//GetModelDeferred(g_ExampleModels[0], [entity](ExampleModelData& model)
-		//{
-		//	entity->SetMesh(model.Mesh);
-		//});
+		Asset materialAsset = AssetFinder(EnginePath::GetEngineContentPath() + L"Materials/DefaultMaterial.iasset").Resolve();
 
-		//MeshComponent* meshComp = registry.CreateComponent<MeshComponent>();
-		//Entity* emptyEntity = m_EditorMainWorld->SpawnEntityOfClass<Entity>();
-		//emptyEntity->SetName("Empty Entity");
-		//emptyEntity->SetRootComponent(meshComp);
-		//emptyEntity->SetLocation(Vector3(2.0f, 0.0f, 0.0f));
-		//GetModelDeferred(g_ExampleModels[3], [meshComp](ExampleModelData& model)
-		//{
-		//	meshComp->SetMesh(model.Mesh);
-		//});
+		TShared<Material> material = Material::CreateFromAsset(materialAsset);
+		material->AddUsage(EShaderUsage::StaticMesh);
+		material->CompileShaders();
 
-		if (0)
-		{
-			for (int32 i = 0; i < g_nHarnasSqrt * g_nHarnasSqrt; ++i)
-			{
-				MeshEntity* ent = m_EditorMainWorld->SpawnEntityOfClass<MeshEntity>();
-				GetModelDeferred(g_ExampleModels[1], [ent](ExampleModelData& model)
-				{
-					ent->SetMesh(model.Mesh);
-				});
-				float x = ((i % g_nHarnasSqrt)) * 0.2f - g_nHarnasSqrt * 0.1f;
-				float z = ((i / g_nHarnasSqrt)) * 0.2f - g_nHarnasSqrt * 0.1f;
-				ent->SetLocation(Vector3(x, -4.0f, z));
-				ent->SetRotation(Rotator(Vector3(-90.0f, 0.0f, 0.0f)));
-				ent->SetName(String("Harnas_") + ToString(i));
-				g_HarnasArray.push_back(ent);
-			}
-		}
+		TShared<MaterialInstance> materialInstance = MaterialInstance::Create(material);
+		MaterialParameterInstanceScalar* paramBrightness = materialInstance->GetMaterialParameterInstanceTyped<MaterialParameterInstanceScalar>("Brightness");
+
+		ionassert(paramBrightness->GetValue() == 1.0f);
+
+		paramBrightness->SetValue(0.5f);
+		ionassert(paramBrightness->GetValue() == 0.5f);
+
+		//if (0)
+		//{
+		//	for (int32 i = 0; i < g_nHarnasSqrt * g_nHarnasSqrt; ++i)
+		//	{
+		//		MeshEntity* ent = m_EditorMainWorld->SpawnEntityOfClass<MeshEntity>();
+		//		GetModelDeferred(g_ExampleModels[1], [ent](ExampleModelData& model)
+		//		{
+		//			ent->SetMesh(model.Mesh);
+		//		});
+		//		float x = ((i % g_nHarnasSqrt)) * 0.2f - g_nHarnasSqrt * 0.1f;
+		//		float z = ((i / g_nHarnasSqrt)) * 0.2f - g_nHarnasSqrt * 0.1f;
+		//		ent->SetLocation(Vector3(x, -4.0f, z));
+		//		ent->SetRotation(Rotator(Vector3(-90.0f, 0.0f, 0.0f)));
+		//		ent->SetName(String("Harnas_") + ToString(i));
+		//		g_HarnasArray.push_back(ent);
+		//	}
+		//}
 	}
 
 	void EditorApplication::OnUpdate(float deltaTime)

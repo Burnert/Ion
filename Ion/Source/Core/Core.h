@@ -37,6 +37,7 @@
 #include "Core/Memory/PoolAllocator.h"
 #include "Core/Profiling/DebugProfiler.h"
 #include "Core/Serialisation/Serialisation.h"
+#include "Core/Task/Task.h"
 #include "Core/Templates/Templates.h"
 #include "Core/Diagnostics/Tracing.h"
 #include "Core/Diagnostics/DebugTime.h"

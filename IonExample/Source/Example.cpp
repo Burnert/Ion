@@ -116,7 +116,7 @@ static void LoadTxtr(Asset& asset, TShared<RHITexture>& texture)
 		desc.bGenerateMips = true;
 		desc.bCreateSampler = true;
 		desc.bUseAsRenderTarget = true;
-		texture = RHITexture::Create(desc);
+		texture = RHITexture::CreateShared(desc);
 
 		texture->UpdateSubresource(image.get());
 
@@ -656,11 +656,11 @@ void IonExample::CreateRenderTargetTexture(TextureDimensions dimensions)
 	renderTargetDesc.Dimensions = dimensions;
 	renderTargetDesc.bUseAsRenderTarget = true;
 	renderTargetDesc.bCreateSampler = true;
-	m_RenderTarget = RHITexture::Create(renderTargetDesc);
+	m_RenderTarget = RHITexture::CreateShared(renderTargetDesc);
 
 	TextureDescription depthStencilDesc { };
 	depthStencilDesc.Dimensions = dimensions;
 	depthStencilDesc.bUseAsDepthStencil = true;
 	depthStencilDesc.Format = ETextureFormat::D24S8;
-	m_DepthStencil = RHITexture::Create(depthStencilDesc);
+	m_DepthStencil = RHITexture::CreateShared(depthStencilDesc);
 }

@@ -115,6 +115,11 @@ namespace Ion
 		return true;
 	}
 
+	bool DX11Shader::IsCompiled()
+	{
+		return m_bCompiled;
+	}
+
 	// @TODO: Add all that uniform related shit
 
 	bool DX11Shader::HasUniform(const String& name) const

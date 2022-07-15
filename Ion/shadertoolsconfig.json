@@ -1,7 +1,7 @@
 {
 	"hlsl.preprocessorDefinitions": {},
 	"hlsl.additionalIncludeDirectories": [
-		"."
+		"./Shaders"
 	],
 	"hlsl.virtualDirectoryMappings": {}
 }

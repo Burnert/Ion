@@ -26,6 +26,7 @@ namespace Ion
 		virtual void AddShaderSource(EShaderType type, const String& source) = 0;
 
 		virtual bool Compile() = 0;
+		virtual bool IsCompiled() = 0;
 
 		virtual bool HasUniform(const String& name) const = 0;
 

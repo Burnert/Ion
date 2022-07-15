@@ -102,6 +102,8 @@ namespace Ion
 			return EAssetType::Image;
 		if (svType == "Mesh")
 			return EAssetType::Mesh;
+		if (svType == "Material")
+			return EAssetType::Material;
 
 		return EAssetType::Invalid;
 	}
@@ -117,8 +119,8 @@ namespace Ion
 		CHECK_NODE(nodeIonAsset, IASSET_NODE_Info);
 
 		// type=
-		XMLAttribute* info_attrType = nodeInfo->first_attribute(IASSET_ATTR_Info_type);
-		CHECK_ATTR(info_attrType, IASSET_ATTR_Info_type, IASSET_NODE_Info);
+		XMLAttribute* info_attrType = nodeInfo->first_attribute(IASSET_ATTR_type);
+		CHECK_ATTR(info_attrType, IASSET_ATTR_type, IASSET_NODE_Info);
 
 		char* csType = info_attrType->value();
 		outInitializer.Type = ParseTypeString(csType);
@@ -141,8 +143,8 @@ namespace Ion
 			outInitializer.bImportExternal = true;
 
 			// path=
-			XMLAttribute* import_attrPath = nodeImportExternal->first_attribute(IASSET_ATTR_ImportExternal_path);
-			CHECK_ATTR(import_attrPath, IASSET_ATTR_ImportExternal_path, IASSET_NODE_ImportExternal);
+			XMLAttribute* import_attrPath = nodeImportExternal->first_attribute(IASSET_ATTR_path);
+			CHECK_ATTR(import_attrPath, IASSET_ATTR_path, IASSET_NODE_ImportExternal);
 
 			char* csPath = import_attrPath->value();
 			FilePath importPath = StringConverter::StringToWString(csPath);
