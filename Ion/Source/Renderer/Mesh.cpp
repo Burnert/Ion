@@ -21,6 +21,8 @@ namespace Ion
 			mesh->SetVertexBuffer(renderData.VertexBuffer);
 			mesh->SetIndexBuffer(renderData.IndexBuffer);
 		});
+		// @TODO: Is this fine?
+		mesh->m_MeshResource = resource;
 
 		TShared<MaterialOld> material = MaterialOld::Create();
 		material->SetShader(Renderer::GetBasicShader());
@@ -56,7 +58,8 @@ namespace Ion
 		m_IndexBuffer(nullptr),
 		m_VertexCount(0),
 		m_TriangleCount(0),
-		m_UniformBuffer(MakeShareable(RHIUniformBuffer::Create<MeshUniforms>()))
+		m_UniformBuffer(MakeShareable(RHIUniformBuffer::Create<MeshUniforms>())),
+		m_MaterialSlots(1, MaterialSlot())
 	{
 	}
 
@@ -123,6 +126,22 @@ namespace Ion
 	const TShared<MaterialOld>& Mesh::GetMaterial() const
 	{
 		return m_Material;
+	}
+
+	void Mesh::AssignMaterialToSlot(uint16 index, const TShared<MaterialInstance>& material)
+	{
+		ionassert(index < m_MaterialSlots.size(), "Slot %i does not exist.", index);
+
+		MaterialSlot& slot = m_MaterialSlots.at(index);
+		slot.MaterialInstance = material;
+	}
+
+	TShared<MaterialInstance> Mesh::GetMaterialInSlot(uint16 index) const
+	{
+		ionassert(index < m_MaterialSlots.size(), "Slot %i does not exist.", index);
+
+		const MaterialSlot& slot = m_MaterialSlots.at(index);
+		return slot.MaterialInstance;
 	}
 
 	MeshUniforms& Mesh::GetUniformsDataRef()

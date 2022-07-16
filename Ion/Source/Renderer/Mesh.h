@@ -11,6 +11,8 @@
 #include "RHI/VertexBuffer.h"
 #include "RHI/IndexBuffer.h"
 
+#include "Material/Material.h"
+
 namespace Ion
 {
 	struct UNIFORMBUFFER MeshUniforms
@@ -22,6 +24,20 @@ namespace Ion
 		// With Editor
 
 		UVector4 RenderGuid;
+	};
+
+	struct MaterialSlot
+	{
+		TShared<MaterialInstance> MaterialInstance;
+		uint16 Index;
+		union
+		{
+			uint16 Flags;
+			struct
+			{
+				uint16 bCastShadows : 1;
+			};
+		};
 	};
 
 	class ION_API Mesh
@@ -40,6 +56,9 @@ namespace Ion
 		const TShared<RHIIndexBuffer>& GetIndexBuffer() const;
 		const TShared<MaterialOld>& GetMaterial() const;
 
+		void AssignMaterialToSlot(uint16 index, const TShared<MaterialInstance>& material);
+		TShared<MaterialInstance> GetMaterialInSlot(uint16 slot) const;
+
 		MeshUniforms& GetUniformsDataRef();
 
 		bool LoadFromAsset(Asset& asset);
@@ -53,10 +72,15 @@ namespace Ion
 		Mesh();
 
 	private:
+		TArray<MaterialSlot> m_MaterialSlots;
+
 		TShared<RHIVertexBuffer> m_VertexBuffer;
 		TShared<RHIIndexBuffer> m_IndexBuffer;
 		TShared<RHIUniformBuffer> m_UniformBuffer;
 		TShared<MaterialOld> m_Material;
+
+		// @TODO: Is this fine?
+		TResourcePtr<MeshResource> m_MeshResource;
 
 		TResourcePtr<TextureResource> m_Texture;
 

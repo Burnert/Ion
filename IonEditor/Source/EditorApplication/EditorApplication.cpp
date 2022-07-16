@@ -91,6 +91,15 @@ namespace Ion::Editor
 		paramBrightness->SetValue(0.5f);
 		ionassert(paramBrightness->GetValue() == 0.5f);
 
+		MeshEntity* meshEntity = m_EditorMainWorld->SpawnEntityOfClass<MeshEntity>();
+
+		TResourcePtr<MeshResource> meshResource = MeshResource::Query(g_ExampleModels[0].MeshAsset);
+		TShared<Mesh> mesh = Mesh::CreateFromResource(meshResource);
+		meshEntity->SetMesh(mesh);
+		meshEntity->SetName("MaterialEx");
+
+		mesh->AssignMaterialToSlot(0, materialInstance);
+
 		//if (0)
 		//{
 		//	for (int32 i = 0; i < g_nHarnasSqrt * g_nHarnasSqrt; ++i)
