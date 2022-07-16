@@ -45,3 +45,4 @@
 #include "RHI/RHIBaseFwd.h"
 #include "Renderer/RendererFwd.h"
 #include "Engine/EngineFwd.h"
+#include "Material/MaterialFwd.h"

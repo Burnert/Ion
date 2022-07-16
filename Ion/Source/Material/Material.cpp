@@ -361,6 +361,20 @@ namespace Ion
 				}
 				case EMaterialParameterType::Texture2D:
 				{
+					MaterialParameterTexture2D* texture2dParam = (MaterialParameterTexture2D*)parameter;
+
+					GUID assetGuid(csDefault);
+					if (!assetGuid)
+						return false;
+
+					AssetDefinition* assetDef = AssetRegistry::Find(assetGuid);
+					if (!assetDef)
+					{
+						LOG_WARN("Asset {0} has not been found.", assetGuid.ToString());
+						return false;
+					}
+					texture2dParam->SetDefaultValue(assetDef->GetHandle());
+
 					break;
 				}
 			}
