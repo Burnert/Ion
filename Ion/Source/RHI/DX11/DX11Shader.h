@@ -26,6 +26,9 @@ namespace Ion
 		virtual bool Compile() override;
 		virtual bool IsCompiled() override;
 
+		virtual void Bind() const override;
+		virtual void Unbind() const override;
+
 		virtual bool HasUniform(const String& name) const override;
 
 		virtual void SetUniform1f(const String& name, float value) const override;
@@ -91,9 +94,6 @@ namespace Ion
 		}
 
 	protected:
-		virtual void Bind() const override;
-		virtual void Unbind() const override;
-
 		template<typename T>
 		void IterateShaders(T callback)
 		{

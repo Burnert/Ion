@@ -28,6 +28,9 @@ namespace Ion
 		virtual bool Compile() = 0;
 		virtual bool IsCompiled() = 0;
 
+		virtual void Bind() const = 0;
+		virtual void Unbind() const = 0;
+
 		virtual bool HasUniform(const String& name) const = 0;
 
 		virtual void SetUniform1f(const String& name, float value) const = 0;
@@ -64,9 +67,6 @@ namespace Ion
 
 	protected:
 		RHIShader() { }
-
-		virtual void Bind() const = 0;
-		virtual void Unbind() const = 0;
 
 		friend class Renderer;
 	};

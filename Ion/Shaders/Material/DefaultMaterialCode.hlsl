@@ -17,7 +17,7 @@ MaterialAttributesPS MaterialMainPS(Pixel pixel)
 {
 	MaterialAttributesPS attributes;
 
-	attributes.BaseColor = g_Texture[0].Sample(g_Sampler[0], pixel.TexCoord.xy).rgb;
+	attributes.BaseColor = g_Texture[0].Sample(g_Sampler[0], pixel.TexCoord.xy).rgb * Param_Color.rgb * Param_Brightness;
 
 	return attributes;
 }

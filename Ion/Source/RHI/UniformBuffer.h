@@ -150,9 +150,13 @@ template<> constexpr EUniformType TTypeToUniformTypeV<type> = EUniformType::name
 		virtual void Bind(uint32 slot = 0) const = 0;
 
 	protected:
+		/**
+		 * Copy the constants data from the CPU to the GPU.
+		 * Accessible in Material
+		 */
 		virtual void UpdateData() const = 0;
 
-		friend class Renderer;
+		friend class Material;
 	};
 
 	class ION_API RHIUniformBuffer : public IRHIUniformBuffer

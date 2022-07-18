@@ -107,10 +107,10 @@ namespace Ion
 	}
 
 	MaterialParameterInstanceTexture2D::MaterialParameterInstanceTexture2D(MaterialParameterTexture2D* parentParameter, Asset value) :
-		m_Parameter(parentParameter),
-		m_Value(value)
+		m_Parameter(parentParameter)
 	{
 		ionassert(m_Parameter);
+		SetValue(value);
 	}
 
 	IMaterialParameter* MaterialParameterInstanceTexture2D::GetParameter() const
@@ -121,6 +121,35 @@ namespace Ion
 	MaterialParameterTexture2D* MaterialParameterInstanceTexture2D::GetParameterTexture2D() const
 	{
 		return m_Parameter;
+	}
+
+	void MaterialParameterInstanceTexture2D::Bind(uint32 slot)
+	{
+		if (m_Texture)
+		{
+			m_Texture->Bind(slot);
+		}
+	}
+
+	void MaterialParameterInstanceTexture2D::UpdateTexture()
+	{
+		if (!m_Value)
+		{
+			m_TextureResource = nullptr;
+			return;
+		}
+
+		// The asset handle has changed
+		if (!m_TextureResource || m_Value != m_TextureResource->GetAssetHandle())
+		{
+			m_TextureResource = TextureResource::Query(m_Value);
+
+			// @TODO: Make sure the instance is not deleted before this gets done
+			m_TextureResource->Take([this](const TextureResourceRenderDataShared& data)
+			{
+				m_Texture = data.Texture;
+			});
+		}
 	}
 
 	// End of MaterialParameterInstance impl ------------------------------------------------------------------------------------
@@ -171,6 +200,16 @@ namespace Ion
 		{
 			return entry.second.bCompiled;
 		}), "Not every shader has been compiled.");
+
+		for (auto& [usage, shader] : m_Shaders)
+		{
+			shader.Shader->Bind();
+		}
+	}
+
+	void Material::UpdateConstantBuffer() const
+	{
+		m_MaterialConstants->UpdateData();
 	}
 
 	void Material::AddUsage(EShaderUsage usage)
@@ -233,6 +272,11 @@ namespace Ion
 		}
 
 		return CompileMaterialCode_Internal(usage, m_Shaders.at(usage));
+	}
+
+	Material::~Material()
+	{
+		DestroyParameters();
 	}
 
 	Material::Material() :
@@ -608,6 +652,18 @@ namespace Ion
 		return true;
 	}
 
+	void Material::DestroyParameters()
+	{
+		if (m_Parameters.empty())
+			return;
+
+		for (auto& [name, param] : m_Parameters)
+		{
+			delete param;
+		}
+		m_Parameters.clear();
+	}
+
 	void Material::BuildConstantBuffer()
 	{
 		UniformBufferFactory factory;
@@ -705,14 +761,13 @@ namespace Ion
 					constants->SetUniformValue(name, vectorParamInstance->GetValue());
 					break;
 				}
-				//case EMaterialParameterType::Texture2D:
-				//{
-				//	MaterialParameterInstanceTexture2D* textureParamInstance = (MaterialParameterInstanceTexture2D*)parameter;
-				//	MaterialParameterTexture2D* textureParam = textureParamInstance->GetParameterTexture2D();
-				//	break;
-				//}
 			}
 		}
+	}
+
+	MaterialInstance::~MaterialInstance()
+	{
+		DestroyParameterInstances();
 	}
 
 	MaterialInstance::MaterialInstance(const TShared<Material>& parentMaterial) :
@@ -725,6 +780,8 @@ namespace Ion
 
 	void MaterialInstance::CreateParameterInstances()
 	{
+		ionassert(m_ParameterInstances.empty(), "Destroy existing instances before creating new ones.");
+
 		for (auto& [name, parameter] : m_ParentMaterial->m_Parameters)
 		{
 			IMaterialParameterInstance* instance = nullptr;
@@ -747,6 +804,7 @@ namespace Ion
 				{
 					MaterialParameterTexture2D* textureParam = (MaterialParameterTexture2D*)parameter;
 					instance = new MaterialParameterInstanceTexture2D(textureParam, textureParam->GetDefaultValue());
+					m_TextureParameterInstances.emplace((MaterialParameterInstanceTexture2D*)instance);
 					break;
 				}
 			}
@@ -755,9 +813,30 @@ namespace Ion
 		}
 	}
 
+	void MaterialInstance::DestroyParameterInstances()
+	{
+		if (m_ParameterInstances.empty())
+			return;
+
+		for (auto& [name, param] : m_ParameterInstances)
+		{
+			delete param;
+		}
+		m_ParameterInstances.clear();
+		m_TextureParameterInstances.clear();
+	}
+
 	TShared<MaterialInstance> MaterialInstance::Create(const TShared<Material>& parentMaterial)
 	{
 		return MakeShareable(new MaterialInstance(parentMaterial));
+	}
+
+	void MaterialInstance::BindTextures() const
+	{
+		for (MaterialParameterInstanceTexture2D* textureParam : m_TextureParameterInstances)
+		{
+			textureParam->Bind(textureParam->GetParameterTexture2D()->GetSlot());
+		}
 	}
 
 	IMaterialParameterInstance* MaterialInstance::GetMaterialParameterInstance(const String& name) const

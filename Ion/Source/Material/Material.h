@@ -321,14 +321,23 @@ namespace Ion
 		void SetValue(Asset value);
 		Asset GetValue() const;
 
+		void Bind(uint32 slot);
+
+	private:
+		void UpdateTexture();
+
 	private:
 		MaterialParameterTexture2D* m_Parameter;
 		Asset m_Value;
+
+		TResourcePtr<TextureResource> m_TextureResource;
+		TShared<RHITexture> m_Texture;
 	};
 
 	inline void MaterialParameterInstanceTexture2D::SetValue(Asset value)
 	{
 		m_Value = value;
+		UpdateTexture();
 	}
 
 	inline Asset MaterialParameterInstanceTexture2D::GetValue() const
@@ -355,6 +364,8 @@ namespace Ion
 
 		void BindShaders() const;
 
+		void UpdateConstantBuffer() const;
+
 		void AddUsage(EShaderUsage usage);
 		void RemoveUsage(EShaderUsage usage);
 		bool IsUsableWith(EShaderUsage usage);
@@ -365,6 +376,8 @@ namespace Ion
 
 		bool CompileMaterialCode();
 		bool CompileMaterialCode(EShaderUsage usage);
+
+		~Material();
 
 	private:
 		Material();
@@ -377,6 +390,8 @@ namespace Ion
 
 		IMaterialParameter* AddParameter(const String& name, EMaterialParameterType type);
 		bool RemoveParameter(const String& name);
+
+		void DestroyParameters();
 
 		void BuildConstantBuffer();
 
@@ -416,6 +431,8 @@ namespace Ion
 	public:
 		static TShared<MaterialInstance> Create(const TShared<Material>& parentMaterial);
 
+		void BindTextures() const;
+
 		IMaterialParameterInstance* GetMaterialParameterInstance(const String& name) const;
 
 		template<typename T>
@@ -429,15 +446,19 @@ namespace Ion
 		 */
 		void TransferParameters() const;
 
+		~MaterialInstance();
+
 	private:
 		MaterialInstance(const TShared<Material>& parentMaterial);
 
 		void CreateParameterInstances();
+		void DestroyParameterInstances();
 
 	private:
 		TShared<Material> m_ParentMaterial;
 
 		THashMap<String, IMaterialParameterInstance*> m_ParameterInstances;
+		THashSet<MaterialParameterInstanceTexture2D*> m_TextureParameterInstances;
 	};
 
 	template<typename T>

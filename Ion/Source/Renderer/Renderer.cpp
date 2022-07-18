@@ -129,8 +129,8 @@ namespace Ion
 
 		const MaterialOld* materialOld = primitive.MaterialOld;
 
-		//if (materialOld)
-		//	materialOld->BindTextures();
+		if (materialOld)
+			materialOld->BindTextures();
 		//material->UpdateShaderUniforms();
 
 		const MaterialInstance* materialInstance = primitive.MaterialInstance;
@@ -139,9 +139,11 @@ namespace Ion
 			const Material* material = materialInstance->GetBaseMaterial().get();
 
 			material->BindShaders();
-			materialInstance->BindParameters();
 
-			material->m_MaterialConstants->UpdateData();
+			materialInstance->TransferParameters();
+			material->UpdateConstantBuffer();
+
+			materialInstance->BindTextures();
 		}
 
 		DrawIndexed(primitive.IndexBuffer->GetIndexCount());
