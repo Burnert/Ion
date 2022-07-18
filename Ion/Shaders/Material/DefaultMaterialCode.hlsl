@@ -2,6 +2,7 @@
 
 cbuffer MaterialParameters : register(b2)
 {
+	float4 Param_Color;
 	float Param_Brightness;
 };
 

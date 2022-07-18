@@ -149,26 +149,58 @@ namespace Ion
 		friend class DX11Renderer;
 	};
 
+	class _DX11UniformBufferCommon
+	{
+		_DX11UniformBufferCommon(void* initialData, size_t size);
+		~_DX11UniformBufferCommon();
+
+		void Bind(uint32 slot) const;
+		void UpdateData() const;
+
+		void* Data;
+		size_t DataSize;
+		ID3D11Buffer* Buffer;
+
+		friend class DX11UniformBuffer;
+		friend class DX11UniformBufferDynamic;
+	};
+
 	class ION_API DX11UniformBuffer : public RHIUniformBuffer
 	{
 	public:
-		virtual ~DX11UniformBuffer() override;
-
 		virtual void Bind(uint32 slot = 0) const override;
 
 	protected:
 		DX11UniformBuffer(void* initialData, size_t size);
-		DX11UniformBuffer(void* data, size_t size, const UniformDataMap& uniforms);
 
 		virtual void* GetDataPtr() const override;
 		virtual void UpdateData() const override;
 
 	private:
-		void* m_Data;
-		size_t m_DataSize;
-		ID3D11Buffer* m_Buffer;
+		_DX11UniformBufferCommon m_Common;
 
 		friend class DX11Renderer;
 		friend class RHIUniformBuffer;
+	};
+
+	class ION_API DX11UniformBufferDynamic : public RHIUniformBufferDynamic
+	{
+	protected:
+		DX11UniformBufferDynamic(void* initialData, size_t size, const UniformDataMap& uniforms);
+
+		virtual void Bind(uint32 slot = 0) const override;
+
+		virtual const UniformData* GetUniformData(const String& name) const override;
+
+	protected:
+		virtual void UpdateData() const override;
+
+		virtual bool SetUniformValue_Internal(const String& name, const void* value) override;
+		virtual void* GetUniformAddress(const String& name) const override;
+
+	private:
+		_DX11UniformBufferCommon m_Common;
+
+		friend class RHIUniformBufferDynamic;
 	};
 }

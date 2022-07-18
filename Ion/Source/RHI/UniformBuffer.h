@@ -30,31 +30,132 @@ namespace Ion
 		Matrix4x3
 	};
 
+#define _UNIFORM_TYPE_SIZE_HELPER(name, type) case EUniformType::name: return sizeof(type)
+	constexpr size_t GetUniformTypeSize(EUniformType type)
+	{
+		switch (type)
+		{
+			_UNIFORM_TYPE_SIZE_HELPER(Float,     float);
+			_UNIFORM_TYPE_SIZE_HELPER(Float2,    Vector2);
+			_UNIFORM_TYPE_SIZE_HELPER(Float3,    Vector3);
+			_UNIFORM_TYPE_SIZE_HELPER(Float4,    Vector4);
+			_UNIFORM_TYPE_SIZE_HELPER(Int,       int32);
+			_UNIFORM_TYPE_SIZE_HELPER(Int2,      IVector2);
+			_UNIFORM_TYPE_SIZE_HELPER(Int3,      IVector3);
+			_UNIFORM_TYPE_SIZE_HELPER(Int4,      IVector4);
+			_UNIFORM_TYPE_SIZE_HELPER(UInt,      uint32);
+			_UNIFORM_TYPE_SIZE_HELPER(UInt2,     UVector2);
+			_UNIFORM_TYPE_SIZE_HELPER(UInt3,     UVector3);
+			_UNIFORM_TYPE_SIZE_HELPER(UInt4,     UVector4);
+			_UNIFORM_TYPE_SIZE_HELPER(Matrix2,   Matrix2);
+			_UNIFORM_TYPE_SIZE_HELPER(Matrix2x3, Matrix2x3);
+			_UNIFORM_TYPE_SIZE_HELPER(Matrix2x4, Matrix2x4);
+			_UNIFORM_TYPE_SIZE_HELPER(Matrix3,   Matrix3);
+			_UNIFORM_TYPE_SIZE_HELPER(Matrix3x2, Matrix3x2);
+			_UNIFORM_TYPE_SIZE_HELPER(Matrix3x4, Matrix3x4);
+			_UNIFORM_TYPE_SIZE_HELPER(Matrix4,   Matrix4);
+			_UNIFORM_TYPE_SIZE_HELPER(Matrix4x2, Matrix4x2);
+			_UNIFORM_TYPE_SIZE_HELPER(Matrix4x3, Matrix4x3);
+		}
+		return 0;
+	}
+
+#define _UNIFORM_GET_DEFAULT_HELPER(name, type) case EUniformType::name: *(type*)outValue = type(); break;
+	inline void GetDefaultUniformValue(EUniformType type, void* outValue)
+	{
+		switch (type)
+		{
+			_UNIFORM_GET_DEFAULT_HELPER(Float,     float);
+			_UNIFORM_GET_DEFAULT_HELPER(Float2,    Vector2);
+			_UNIFORM_GET_DEFAULT_HELPER(Float3,    Vector3);
+			_UNIFORM_GET_DEFAULT_HELPER(Float4,    Vector4);
+			_UNIFORM_GET_DEFAULT_HELPER(Int,       int32);
+			_UNIFORM_GET_DEFAULT_HELPER(Int2,      IVector2);
+			_UNIFORM_GET_DEFAULT_HELPER(Int3,      IVector3);
+			_UNIFORM_GET_DEFAULT_HELPER(Int4,      IVector4);
+			_UNIFORM_GET_DEFAULT_HELPER(UInt,      uint32);
+			_UNIFORM_GET_DEFAULT_HELPER(UInt2,     UVector2);
+			_UNIFORM_GET_DEFAULT_HELPER(UInt3,     UVector3);
+			_UNIFORM_GET_DEFAULT_HELPER(UInt4,     UVector4);
+			_UNIFORM_GET_DEFAULT_HELPER(Matrix2,   Matrix2);
+			_UNIFORM_GET_DEFAULT_HELPER(Matrix2x3, Matrix2x3);
+			_UNIFORM_GET_DEFAULT_HELPER(Matrix2x4, Matrix2x4);
+			_UNIFORM_GET_DEFAULT_HELPER(Matrix3,   Matrix3);
+			_UNIFORM_GET_DEFAULT_HELPER(Matrix3x2, Matrix3x2);
+			_UNIFORM_GET_DEFAULT_HELPER(Matrix3x4, Matrix3x4);
+			_UNIFORM_GET_DEFAULT_HELPER(Matrix4,   Matrix4);
+			_UNIFORM_GET_DEFAULT_HELPER(Matrix4x2, Matrix4x2);
+			_UNIFORM_GET_DEFAULT_HELPER(Matrix4x3, Matrix4x3);
+			default: ionassert(false);
+		}
+	}
+
+	template<typename T>
+	constexpr EUniformType TTypeToUniformTypeV = EUniformType::Null;
+
+#define _UNIFORM_TYPE_TO_ENUM_HELPER(name, type) \
+template<> constexpr EUniformType TTypeToUniformTypeV<type> = EUniformType::name
+
+	_UNIFORM_TYPE_TO_ENUM_HELPER(Float,     float);
+	_UNIFORM_TYPE_TO_ENUM_HELPER(Float2,    Vector2);
+	_UNIFORM_TYPE_TO_ENUM_HELPER(Float3,    Vector3);
+	_UNIFORM_TYPE_TO_ENUM_HELPER(Float4,    Vector4);
+	_UNIFORM_TYPE_TO_ENUM_HELPER(Int,       int32);
+	_UNIFORM_TYPE_TO_ENUM_HELPER(Int2,      IVector2);
+	_UNIFORM_TYPE_TO_ENUM_HELPER(Int3,      IVector3);
+	_UNIFORM_TYPE_TO_ENUM_HELPER(Int4,      IVector4);
+	_UNIFORM_TYPE_TO_ENUM_HELPER(UInt,      uint32);
+	_UNIFORM_TYPE_TO_ENUM_HELPER(UInt2,     UVector2);
+	_UNIFORM_TYPE_TO_ENUM_HELPER(UInt3,     UVector3);
+	_UNIFORM_TYPE_TO_ENUM_HELPER(UInt4,     UVector4);
+	_UNIFORM_TYPE_TO_ENUM_HELPER(Matrix2,   Matrix2);
+	_UNIFORM_TYPE_TO_ENUM_HELPER(Matrix2x3, Matrix2x3);
+	_UNIFORM_TYPE_TO_ENUM_HELPER(Matrix2x4, Matrix2x4);
+	_UNIFORM_TYPE_TO_ENUM_HELPER(Matrix3,   Matrix3);
+	_UNIFORM_TYPE_TO_ENUM_HELPER(Matrix3x2, Matrix3x2);
+	_UNIFORM_TYPE_TO_ENUM_HELPER(Matrix3x4, Matrix3x4);
+	_UNIFORM_TYPE_TO_ENUM_HELPER(Matrix4,   Matrix4);
+	_UNIFORM_TYPE_TO_ENUM_HELPER(Matrix4x2, Matrix4x2);
+	_UNIFORM_TYPE_TO_ENUM_HELPER(Matrix4x3, Matrix4x3);
+
 	struct UniformData
 	{
-		void* Location;
 		String Name;
+		uint32 Offset;
 		EUniformType Type;
 	};
 
 	using UniformDataMap = THashMap<String, UniformData>;
 
-	class RHIUniformBuffer;
+	class RHIUniformBufferDynamic;
 
 	class ION_API UniformBufferFactory
 	{
 	public:
+		UniformBufferFactory();
+
 		void Add(const String& name, EUniformType type);
 		void Remove(const String& name);
 
-		void Construct(TShared<RHIUniformBuffer>& outUniformBuffer);
-		void Construct(RHIUniformBuffer*& outUniformBuffer);
+		TShared<RHIUniformBufferDynamic> Construct();
 
 	private:
 		UniformDataMap m_Uniforms;
+		uint32 m_CurrentSize;
 	};
 
-	class ION_API RHIUniformBuffer
+	class IRHIUniformBuffer
+	{
+	public:
+		virtual void Bind(uint32 slot = 0) const = 0;
+
+	protected:
+		virtual void UpdateData() const = 0;
+
+		friend class Renderer;
+	};
+
+	class ION_API RHIUniformBuffer : public IRHIUniformBuffer
 	{
 	public:
 		static RHIUniformBuffer* Create(void* initialData, size_t size);
@@ -76,38 +177,6 @@ namespace Ion
 
 		virtual ~RHIUniformBuffer() { }
 
-		virtual void Bind(uint32 slot = 0) const = 0;
-
-		static constexpr uint32 SizeOfUniformType(EUniformType type)
-		{
-			switch (type)
-			{
-			case EUniformType::Null:       return 0;
-			case EUniformType::Float:      return sizeof(float);
-			case EUniformType::Float2:     return sizeof(Vector2);
-			case EUniformType::Float3:     return sizeof(Vector3);
-			case EUniformType::Float4:     return sizeof(Vector4);
-			case EUniformType::Int:        return sizeof(int32);
-			case EUniformType::Int2:       return sizeof(IVector2);
-			case EUniformType::Int3:       return sizeof(IVector3);
-			case EUniformType::Int4:       return sizeof(IVector4);
-			case EUniformType::UInt:       return sizeof(uint32);
-			case EUniformType::UInt2:      return sizeof(UVector2);
-			case EUniformType::UInt3:      return sizeof(UVector3);
-			case EUniformType::UInt4:      return sizeof(UVector4);
-			case EUniformType::Matrix2:    return sizeof(Matrix2);
-			case EUniformType::Matrix2x3:  return sizeof(Matrix2x3);
-			case EUniformType::Matrix2x4:  return sizeof(Matrix2x4);
-			case EUniformType::Matrix3:    return sizeof(Matrix3);
-			case EUniformType::Matrix3x2:  return sizeof(Matrix3x2);
-			case EUniformType::Matrix3x4:  return sizeof(Matrix3x4);
-			case EUniformType::Matrix4:    return sizeof(Matrix4);
-			case EUniformType::Matrix4x2:  return sizeof(Matrix4x2);
-			case EUniformType::Matrix4x3:  return sizeof(Matrix4x3);
-			default:                       return 0;
-			}
-		}
-
 		// Returns a pointer to the uniform buffer data on the CPU side.
 		// Make sure to call this with the right type.
 		template<typename T>
@@ -125,21 +194,63 @@ namespace Ion
 		}
 
 	protected:
-		static RHIUniformBuffer* Create(void* data, size_t size, const UniformDataMap& uniforms);
-
 		RHIUniformBuffer() { };
-		RHIUniformBuffer(const UniformDataMap& uniforms);
 
 		virtual void* GetDataPtr() const = 0;
-		virtual void UpdateData() const = 0;
 
 	private:
-		// @TODO: This doesn't need to be here if it doesn't need to be here
-		const TUnique<const UniformDataMap> m_Uniforms;
+		friend class Renderer;
+		friend class OpenGLRenderer;
+		friend class DX11Renderer;
+	};
+
+	class ION_API RHIUniformBufferDynamic : public IRHIUniformBuffer
+	{
+	public:
+		static RHIUniformBufferDynamic* Create(void* initialData, size_t size, const UniformDataMap& uniforms);
+
+		const UniformDataMap& GetUniformDataMap() const;
+
+		template<typename T>
+		bool SetUniformValue(const String& name, const T& value);
+
+		virtual const UniformData* GetUniformData(const String& name) const = 0;
+
+		bool HasUniform(const String& name) const;
+
+	protected:
+		RHIUniformBufferDynamic(const UniformDataMap& uniforms);
+
+		virtual bool SetUniformValue_Internal(const String& name, const void* value) = 0;
+		virtual void* GetUniformAddress(const String& name) const = 0;
+
+	private:
+		UniformDataMap m_UniformDataMap;
 
 		friend class Renderer;
 		friend class OpenGLRenderer;
 		friend class DX11Renderer;
 		friend class UniformBufferFactory;
 	};
+
+	inline const UniformDataMap& RHIUniformBufferDynamic::GetUniformDataMap() const
+	{
+		return m_UniformDataMap;
+	}
+
+	template<typename T>
+	inline bool RHIUniformBufferDynamic::SetUniformValue(const String& name, const T& value)
+	{
+		static_assert(!TIsPointerV<T>);
+
+		ionassert(HasUniform(name));
+		ionassert(m_UniformDataMap.at(name).Type == TTypeToUniformTypeV<T>);
+
+		return SetUniformValue_Internal(name, &value);
+	}
+
+	inline bool RHIUniformBufferDynamic::HasUniform(const String& name) const
+	{
+		return m_UniformDataMap.find(name) != m_UniformDataMap.end();
+	}
 }

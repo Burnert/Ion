@@ -62,12 +62,12 @@ namespace Ion
 		}
 	}
 
-	RHIUniformBuffer* RHIUniformBuffer::Create(void* data, size_t size, const UniformDataMap& uniforms)
+	RHIUniformBufferDynamic* RHIUniformBufferDynamic::Create(void* data, size_t size, const UniformDataMap& uniforms)
 	{
 		switch (RHI::GetCurrent())
 		{
 		case ERHI::DX11:
-			return new DX11UniformBuffer(data, size, uniforms);
+			return new DX11UniformBufferDynamic(data, size, uniforms);
 		default:
 			return nullptr;
 		}

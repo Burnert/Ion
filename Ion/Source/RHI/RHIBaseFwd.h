@@ -19,5 +19,7 @@ namespace Ion
 	class RHIIndexBuffer;
 	// UniformBuffer.h
 	struct UniformData;
+	class IRHIUniformBuffer;
 	class RHIUniformBuffer;
+	class RHIUniformBufferDynamic;
 }

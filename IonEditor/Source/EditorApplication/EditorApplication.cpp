@@ -85,18 +85,21 @@ namespace Ion::Editor
 
 		TShared<MaterialInstance> materialInstance = MaterialInstance::Create(material);
 		MaterialParameterInstanceScalar* paramBrightness = materialInstance->GetMaterialParameterInstanceTyped<MaterialParameterInstanceScalar>("Brightness");
+		MaterialParameterInstanceVector* paramColor = materialInstance->GetMaterialParameterInstanceTyped<MaterialParameterInstanceVector>("Color");
 
 		ionassert(paramBrightness->GetValue() == 1.0f);
 
 		paramBrightness->SetValue(0.5f);
 		ionassert(paramBrightness->GetValue() == 0.5f);
 
+		ionassert(paramColor->GetValue() == paramColor->GetParameterVector()->GetDefaultValue());
+
 		MeshEntity* meshEntity = m_EditorMainWorld->SpawnEntityOfClass<MeshEntity>();
 
 		TResourcePtr<MeshResource> meshResource = MeshResource::Query(g_ExampleModels[0].MeshAsset);
 		TShared<Mesh> mesh = Mesh::CreateFromResource(meshResource);
 		meshEntity->SetMesh(mesh);
-		meshEntity->SetName("MaterialEx");
+		meshEntity->SetName("MaterialExampleMesh");
 
 		mesh->AssignMaterialToSlot(0, materialInstance);
 

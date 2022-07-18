@@ -1,35 +1,17 @@
 <IonAsset>
 	<Info type="Ion.Material" guid="0cb1f013-2ed6-4f52-8364-da2bac6ed211" />
 	<Name>DefaultMaterial</Name>
-	<Material>
-		<Type value="Surface" />
-		<Blend value="Opaque" />
-		<Shader value="BasicLit" />
+	<Material type="Surface" blend="Opaque" shader="BasicLit">
 		<Code source="DefaultMaterialCode.hlsl" />
-		<!-- <Code>
-
-@Parameter
-Texture2D DefaultTexture;
-
-MaterialAttributes MaterialMain()
-{
-	MaterialAttributes mat;
-
-	mat.BaseColor = (float4)1.0f;
-
-	return mat;
-}
-
-		</Code> -->
-		<Parameter type="Scalar" name="Brightness">
-			<Default>1.0</Default>
-			<Min>0.0</Min>
-			<Max>1.0</Max>
-		</Parameter>
 		<Parameter type="Vector" name="Color">
 			<Default>1.0 1.0 1.0 1.0</Default>
 			<Min>0.0 0.0 0.0 0.0</Min>
 			<Max>1.0 1.0 1.0 1.0</Max>
+		</Parameter>
+		<Parameter type="Scalar" name="Brightness">
+			<Default>1.0</Default>
+			<Min>0.0</Min>
+			<Max>1.0</Max>
 		</Parameter>
 		<Parameter type="Texture2D" name="DefaultTexture">
 			<Default>80c72dad-eb05-4209-935b-2e5730f2c053</Default>

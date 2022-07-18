@@ -127,11 +127,22 @@ namespace Ion
 		primitive.UniformBuffer->UpdateData();
 		primitive.UniformBuffer->Bind(1);
 
-		const MaterialOld* material = primitive.Material;
+		const MaterialOld* materialOld = primitive.MaterialOld;
 
-		if (material)
-			material->BindTextures();
+		//if (materialOld)
+		//	materialOld->BindTextures();
 		//material->UpdateShaderUniforms();
+
+		const MaterialInstance* materialInstance = primitive.MaterialInstance;
+		if (materialInstance)
+		{
+			const Material* material = materialInstance->GetBaseMaterial().get();
+
+			material->BindShaders();
+			materialInstance->BindParameters();
+
+			material->m_MaterialConstants->UpdateData();
+		}
 
 		DrawIndexed(primitive.IndexBuffer->GetIndexCount());
 	}
@@ -567,7 +578,7 @@ namespace Ion
 			prim.VertexBuffer = editorPrim.VertexBuffer;
 			prim.IndexBuffer = editorPrim.IndexBuffer;
 			prim.UniformBuffer = editorPrim.UniformBuffer;
-			prim.Material = nullptr;
+			prim.MaterialOld = nullptr;
 			prim.Shader = GetEditorObjectIDShader().get();
 			prim.Transform = editorPrim.Transform;
 
@@ -611,7 +622,7 @@ namespace Ion
 				prim.VertexBuffer = editorPrim.VertexBuffer;
 				prim.IndexBuffer = editorPrim.IndexBuffer;
 				prim.UniformBuffer = editorPrim.UniformBuffer;
-				prim.Material = nullptr;
+				prim.MaterialOld = nullptr;
 				prim.Shader = GetEditorSelectedShader().get();
 				prim.Transform = editorPrim.Transform;
 

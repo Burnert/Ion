@@ -2,6 +2,7 @@
 
 #include "Material.h"
 #include "RHI/Shader.h"
+#include "RHI/UniformBuffer.h"
 
 #include "Core/Asset/AssetRegistry.h"
 
@@ -16,7 +17,8 @@ namespace Ion
 	{
 	}
 
-	MaterialParameterScalar::MaterialParameterScalar(float defaultValue, float min, float max) :
+	MaterialParameterScalar::MaterialParameterScalar(const String& name, float defaultValue, float min, float max) :
+		m_Name(name),
 		m_DefaultValue(defaultValue),
 		m_MinValue(min),
 		m_MaxValue(max)
@@ -28,7 +30,13 @@ namespace Ion
 		return EMaterialParameterType::Scalar;
 	}
 
-	MaterialParameterVector::MaterialParameterVector(Vector4 defaultValue, Vector4 min, Vector4 max) :
+	const String& MaterialParameterScalar::GetName() const
+	{
+		return m_Name;
+	}
+
+	MaterialParameterVector::MaterialParameterVector(const String& name, Vector4 defaultValue, Vector4 min, Vector4 max) :
+		m_Name(name),
 		m_DefaultValue(defaultValue),
 		m_MinValue(min),
 		m_MaxValue(max)
@@ -40,7 +48,13 @@ namespace Ion
 		return EMaterialParameterType::Vector;
 	}
 
-	MaterialParameterTexture2D::MaterialParameterTexture2D(uint32 slot, Asset defaultValue) :
+	const String& MaterialParameterVector::GetName() const
+	{
+		return m_Name;
+	}
+
+	MaterialParameterTexture2D::MaterialParameterTexture2D(const String& name, uint32 slot, Asset defaultValue) :
+		m_Name(name),
 		m_DefaultValue(defaultValue),
 		m_TextureSlot(slot)
 	{
@@ -49,6 +63,11 @@ namespace Ion
 	EMaterialParameterType MaterialParameterTexture2D::GetType() const
 	{
 		return EMaterialParameterType::Texture2D;
+	}
+
+	const String& MaterialParameterTexture2D::GetName() const
+	{
+		return m_Name;
 	}
 
 	// MaterialParameterInstance impl ------------------------------------------------------------------------------------
@@ -146,6 +165,14 @@ namespace Ion
 		}
 	}
 
+	void Material::BindShaders() const
+	{
+		ionassert(std::all_of(m_Shaders.begin(), m_Shaders.end(), [](auto& entry)
+		{
+			return entry.second.bCompiled;
+		}), "Not every shader has been compiled.");
+	}
+
 	void Material::AddUsage(EShaderUsage usage)
 	{
 		m_Usage |= (uint64)usage;
@@ -221,6 +248,7 @@ namespace Ion
 		m_UsedTextureSlotsMask(0)
 	{
 		ParseAsset(materialAsset);
+		BuildConstantBuffer();
 	}
 
 	bool Material::ParseAsset(Asset materialAsset)
@@ -530,10 +558,10 @@ namespace Ion
 		switch (type)
 		{
 		case EMaterialParameterType::Scalar:
-			parameter = new MaterialParameterScalar;
+			parameter = new MaterialParameterScalar(name);
 			break;
 		case EMaterialParameterType::Vector:
-			parameter = new MaterialParameterVector;
+			parameter = new MaterialParameterVector(name);
 			break;
 		case EMaterialParameterType::Texture2D:
 			if (GetTextureParameterCount() == 16)
@@ -542,7 +570,7 @@ namespace Ion
 				return nullptr;
 			}
 			uint32 freeSlot = GetFirstFreeTextureSlot();
-			parameter = new MaterialParameterTexture2D(freeSlot);
+			parameter = new MaterialParameterTexture2D(name, freeSlot);
 
 			break;
 		}
@@ -580,6 +608,49 @@ namespace Ion
 		return true;
 	}
 
+	void Material::BuildConstantBuffer()
+	{
+		UniformBufferFactory factory;
+
+		// 1. Sort the parameters
+
+		TArray<MaterialParameterVector*> vectorParams;
+		TArray<MaterialParameterScalar*> scalarParams;
+		vectorParams.reserve(m_Parameters.size());
+		scalarParams.reserve(m_Parameters.size());
+
+		for (auto& [name, parameter] : m_Parameters)
+		{
+			switch (parameter->GetType())
+			{
+				case EMaterialParameterType::Scalar:
+				{
+					scalarParams.emplace_back((MaterialParameterScalar*)parameter);
+					break;
+				}
+				case EMaterialParameterType::Vector:
+				{
+					vectorParams.emplace_back((MaterialParameterVector*)parameter);
+					break;
+				}
+			}
+		}
+
+		// 2. Add the parameters in order
+
+		for (MaterialParameterVector* vectorParam : vectorParams)
+		{
+			factory.Add(vectorParam->GetName(), EUniformType::Float4);
+		}
+
+		for (MaterialParameterScalar* scalarParam : scalarParams)
+		{
+			factory.Add(scalarParam->GetName(), EUniformType::Float);
+		}
+
+		m_MaterialConstants = factory.Construct();
+	}
+
 	uint32 Material::GetTextureParameterCount() const
 	{
 		return (uint32)std::bitset<32>(m_UsedTextureSlotsMask).count();
@@ -608,6 +679,40 @@ namespace Ion
 		outShader.Shader->AddShaderSource(EShaderType::Pixel, pixelSource);
 
 		return true;
+	}
+
+	void MaterialInstance::TransferParameters() const
+	{
+		// Update the constant buffer fields from parameters
+		// Textures need to be loaded and bound normally
+
+		TShared<RHIUniformBufferDynamic> constants = m_ParentMaterial->m_MaterialConstants;
+		constants->Bind(2);
+
+		for (auto& [name, parameter] : m_ParameterInstances)
+		{
+			switch (parameter->GetType())
+			{
+				case EMaterialParameterType::Scalar:
+				{
+					MaterialParameterInstanceScalar* scalarParamInstance = (MaterialParameterInstanceScalar*)parameter;
+					constants->SetUniformValue(name, scalarParamInstance->GetValue());
+					break;
+				}
+				case EMaterialParameterType::Vector:
+				{
+					MaterialParameterInstanceVector* vectorParamInstance = (MaterialParameterInstanceVector*)parameter;
+					constants->SetUniformValue(name, vectorParamInstance->GetValue());
+					break;
+				}
+				//case EMaterialParameterType::Texture2D:
+				//{
+				//	MaterialParameterInstanceTexture2D* textureParamInstance = (MaterialParameterInstanceTexture2D*)parameter;
+				//	MaterialParameterTexture2D* textureParam = textureParamInstance->GetParameterTexture2D();
+				//	break;
+				//}
+			}
+		}
 	}
 
 	MaterialInstance::MaterialInstance(const TShared<Material>& parentMaterial) :

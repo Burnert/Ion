@@ -415,7 +415,7 @@ namespace Ion::Editor
 	{
 		RPrimitiveRenderProxy grid { };
 		grid.Transform     = Transform().GetMatrix();
-		grid.Material      = nullptr;
+		grid.MaterialOld   = nullptr;
 		grid.Shader        = EditorMeshes::ShaderGrid.get();
 		grid.VertexBuffer  = EditorMeshes::MeshGrid->GetVertexBufferRaw();
 		grid.IndexBuffer   = EditorMeshes::MeshGrid->GetIndexBufferRaw();

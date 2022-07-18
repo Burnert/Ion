@@ -49,6 +49,7 @@ namespace Ion
 	{
 	public:
 		virtual EMaterialParameterType GetType() const = 0;
+		virtual const String& GetName() const = 0;
 
 		virtual ~IMaterialParameter() { }
 
@@ -61,12 +62,14 @@ namespace Ion
 	{
 	public:
 		MaterialParameterScalar(
+			const String& name,
 			float defaultValue = 0.0f,
 			float min = TNumericLimits<float>::lowest(),
 			float max = TNumericLimits<float>::max()
 		);
 
 		virtual EMaterialParameterType GetType() const override;
+		virtual const String& GetName() const override;
 
 		virtual ~MaterialParameterScalar() override { }
 
@@ -83,6 +86,8 @@ namespace Ion
 		float m_DefaultValue;
 		float m_MinValue;
 		float m_MaxValue;
+
+		String m_Name;
 
 		friend class Material;
 	};
@@ -121,12 +126,14 @@ namespace Ion
 	{
 	public:
 		MaterialParameterVector(
+			const String& name,
 			Vector4 defaultValue = Vector4(0.0f),
 			Vector4 min = Vector4(TNumericLimits<float>::lowest()),
 			Vector4 max = Vector4(TNumericLimits<float>::max())
 		);
 
 		virtual EMaterialParameterType GetType() const override;
+		virtual const String& GetName() const override;
 
 		virtual ~MaterialParameterVector() override { }
 
@@ -143,6 +150,8 @@ namespace Ion
 		Vector4 m_DefaultValue;
 		Vector4 m_MinValue;
 		Vector4 m_MaxValue;
+
+		String m_Name;
 
 		friend class Material;
 	};
@@ -180,9 +189,14 @@ namespace Ion
 	class MaterialParameterTexture2D : public IMaterialParameter
 	{
 	public:
-		MaterialParameterTexture2D(uint32 slot = 0, Asset defaultValue = Asset());
+		MaterialParameterTexture2D(
+			const String& name,
+			uint32 slot = 0, 
+			Asset defaultValue = Asset()
+		);
 
 		virtual EMaterialParameterType GetType() const override;
+		virtual const String& GetName() const override;
 
 		virtual ~MaterialParameterTexture2D() override { }
 
@@ -196,6 +210,8 @@ namespace Ion
 	private:
 		Asset m_DefaultValue;
 		uint32 m_TextureSlot;
+
+		String m_Name;
 
 		friend class Material;
 	};
@@ -330,7 +346,14 @@ namespace Ion
 		static TShared<Material> Create();
 		static TShared<Material> CreateFromAsset(Asset materialAsset);
 
+		/**
+		 * @brief Compile the shaders for this material.
+		 * 
+		 * Async function - the shaders will be compiled on the worker threads.
+		 */
 		void CompileShaders();
+
+		void BindShaders() const;
 
 		void AddUsage(EShaderUsage usage);
 		void RemoveUsage(EShaderUsage usage);
@@ -355,6 +378,8 @@ namespace Ion
 		IMaterialParameter* AddParameter(const String& name, EMaterialParameterType type);
 		bool RemoveParameter(const String& name);
 
+		void BuildConstantBuffer();
+
 		uint32 GetTextureParameterCount() const;
 		uint32 GetFirstFreeTextureSlot() const;
 
@@ -364,6 +389,7 @@ namespace Ion
 		THashMap<EShaderUsage, ShaderPermutation> m_Shaders;
 		THashMap<String, IMaterialParameter*> m_Parameters;
 		THashMap<MaterialInstance*, TWeak<MaterialInstance>> m_MaterialInstances;
+		TShared<RHIUniformBufferDynamic> m_MaterialConstants;
 		uint64 m_Usage;
 		String m_MaterialCode;
 
@@ -380,6 +406,7 @@ namespace Ion
 		//friend TFuncMessageOnDispatch;
 
 		friend class MaterialInstance;
+		friend class Renderer;
 	};
 
 	// MaterialInstance Class -------------------------------------------------------------------
@@ -394,11 +421,13 @@ namespace Ion
 		template<typename T>
 		T* GetMaterialParameterInstanceTyped(const String& name) const;
 
-		template<typename T>
-		bool SetParameterValue(const String& name, const T& value) const;
+		const TShared<Material>& GetBaseMaterial() const;
 
-		template<typename T>
-		bool GetParameterValue(const String& name, T& outValue) const;
+		/**
+		 * @brief Set the values in the associated material uniform buffer
+		 * to the parameter instance values
+		 */
+		void TransferParameters() const;
 
 	private:
 		MaterialInstance(const TShared<Material>& parentMaterial);
@@ -418,43 +447,9 @@ namespace Ion
 		return (T*)GetMaterialParameterInstance(name);
 	}
 
-	template<typename T>
-	inline bool MaterialInstance::SetParameterValue(const String& name, const T& value) const
+	inline const TShared<Material>& MaterialInstance::GetBaseMaterial() const
 	{
-		IMaterialParameter* parameter = GetMaterialParameterInstance(name);
-		if (!parameter)
-			return false;
-
-		if constexpr (std::is_arithmetic_v<T>)
-		{
-			ionassert(parameter->GetType() == EMaterialParameterType::Scalar);
-			MaterialParameterScalar* scalarParam = const_cast<MaterialParameterScalar*>(parameter);
-
-
-		}
-
-		if constexpr (TIsSameV<T, Vector4>)
-		{
-			ionassert(parameter->GetType() == EMaterialParameterType::Vector);
-			MaterialParameterVector* vectorParam = const_cast<MaterialParameterVector*>(parameter);
-
-		}
-
-		if constexpr (TIsSameV<T, Asset>)
-		{
-			ionassert(value->GetType() == EAssetType::Image);
-			ionassert(parameter->GetType() == EMaterialParameterType::Texture2D);
-
-			
-		}
-
-		return true;
-	}
-
-	template<typename T>
-	inline bool MaterialInstance::GetParameterValue(const String& name, T& outValue) const
-	{
-		return false;
+		return m_ParentMaterial;
 	}
 }
 

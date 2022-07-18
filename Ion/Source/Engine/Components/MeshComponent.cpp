@@ -79,20 +79,24 @@ namespace Ion
 	{
 		ionassert(m_Mesh);
 
-		MaterialOld* material = m_Mesh->GetMaterial().get();
 		Transform worldTransform = GetWorldTransform();
+
+		MaterialOld* material = m_Mesh->GetMaterial().get();
+
+		const MaterialInstance* materialInstance = m_Mesh->GetMaterialInSlot(0).get();
 
 		RHIShader* shader = material ?
 			material->GetShader().get() :
 			Renderer::Get()->GetBasicShader().get();
 
 		RPrimitiveRenderProxy mesh { };
-		mesh.Transform     = worldTransform.GetMatrix();
-		mesh.Material      = material;
-		mesh.Shader        = shader;
-		mesh.VertexBuffer  = m_Mesh->GetVertexBufferRaw();
-		mesh.IndexBuffer   = m_Mesh->GetIndexBufferRaw();
-		mesh.UniformBuffer = m_Mesh->GetUniformBufferRaw();
+		mesh.Transform        = worldTransform.GetMatrix();
+		mesh.MaterialOld      = material;
+		mesh.MaterialInstance = materialInstance;
+		mesh.Shader           = shader;
+		mesh.VertexBuffer     = m_Mesh->GetVertexBufferRaw();
+		mesh.IndexBuffer      = m_Mesh->GetIndexBufferRaw();
+		mesh.UniformBuffer    = m_Mesh->GetUniformBufferRaw();
 
 		return mesh;
 	}
