@@ -83,7 +83,9 @@ namespace Ion::Editor
 		material->AddUsage(EShaderUsage::StaticMesh);
 		material->CompileShaders();
 
-		Asset materialInstanceAsset = AssetFinder(FilePath(L"../IonExample/Assets/Materials/4pak.iasset")).Resolve();
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+		Asset materialInstanceAsset = AssetFinder(FilePath(L"../IonExample/Assets/Materials/ciupaga.iasset")).Resolve();
 
 		TShared<MaterialInstance> materialInstance = MaterialRegistry::QueryMaterialInstance(materialInstanceAsset);
 		MaterialParameterInstanceScalar* paramBrightness = materialInstance->GetMaterialParameterInstanceTyped<MaterialParameterInstanceScalar>("Brightness");
@@ -94,7 +96,7 @@ namespace Ion::Editor
 
 		MeshEntity* meshEntity = m_EditorMainWorld->SpawnEntityOfClass<MeshEntity>();
 
-		TResourcePtr<MeshResource> meshResource = MeshResource::Query(g_ExampleModels[0].MeshAsset);
+		TResourcePtr<MeshResource> meshResource = MeshResource::Query(g_ExampleModels[3].MeshAsset);
 		TShared<Mesh> mesh = Mesh::CreateFromResource(meshResource);
 		meshEntity->SetMesh(mesh);
 		meshEntity->SetName("MaterialExampleMesh");
