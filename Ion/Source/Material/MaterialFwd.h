@@ -12,6 +12,7 @@ namespace Ion
 	class MaterialParameterInstanceScalar;
 	class MaterialParameterInstanceVector;
 	class MaterialParameterInstanceTexture2D;
+	class MaterialRegistry;
 	class Material;
 	class MaterialInstance;
 }

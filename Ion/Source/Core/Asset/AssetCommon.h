@@ -19,6 +19,7 @@ ionexcept(attr, IASSET_STR_INVALID_FILE attrName " attribute could not be found 
 #define IASSET_ATTR_guid                 "guid"
 #define IASSET_ATTR_name                 "name"
 #define IASSET_ATTR_source               "source"
+#define IASSET_ATTR_parent               "parent"
 
 // Resource Usage -----------------------------------------------------
 
@@ -46,6 +47,7 @@ namespace Ion
 		Mesh,
 		Data,
 		Material,
+		MaterialInstance,
 		Invalid = 0xFF,
 	};
 
@@ -196,13 +198,14 @@ NODISCARD FORCEINLINE String ToString<Ion::EAssetType>(Ion::EAssetType value)
 {
 	switch (value)
 	{
-	case Ion::EAssetType::None:      return "None";
-	case Ion::EAssetType::Generic:   return "Generic";
-	case Ion::EAssetType::Mesh:      return "Mesh";
-	case Ion::EAssetType::Image:     return "Image";
-	case Ion::EAssetType::Data:      return "Data";
-	case Ion::EAssetType::Material:  return "Material";
-	case Ion::EAssetType::Invalid:   return "Invalid";
+	case Ion::EAssetType::None:              return "None";
+	case Ion::EAssetType::Generic:           return "Generic";
+	case Ion::EAssetType::Mesh:              return "Mesh";
+	case Ion::EAssetType::Image:             return "Image";
+	case Ion::EAssetType::Data:              return "Data";
+	case Ion::EAssetType::Material:          return "Material";
+	case Ion::EAssetType::MaterialInstance:  return "MaterialInstance";
+	case Ion::EAssetType::Invalid:           return "Invalid";
 	}
 	ionassert(0, "Invalid enum value.");
 	return "";

@@ -317,6 +317,10 @@ namespace Ion
 	template<typename Lambda>
 	inline TOptional<AssetData> AssetDefinition::Load(Lambda onLoad)
 	{
+		// @TODO: When a call to this function is made while something's already scheduled the work,
+		// another work gets scheduled. This should not be the case. The second call should just
+		// wait for the asset and get notified when it finally loads.
+
 		static_assert(TIsConvertibleV<Lambda, TFuncAssetOnLoad>);
 
 		ionassertnd(IsValid());
@@ -413,7 +417,9 @@ namespace Ion
 	template<typename T>
 	inline void AssetRegistry::ScheduleWork(T& work)
 	{
-		LOG_INFO("Work scheduled!");
+#if ION_DEBUG
+		LOG_DEBUG("Work scheduled! {0}", work.GetDebugName());
+#endif
 		Get().m_WorkQueue.Schedule(work);
 	}
 

@@ -104,6 +104,8 @@ namespace Ion
 			return EAssetType::Mesh;
 		if (svType == "Material")
 			return EAssetType::Material;
+		if (svType == "MaterialInstance")
+			return EAssetType::MaterialInstance;
 
 		return EAssetType::Invalid;
 	}

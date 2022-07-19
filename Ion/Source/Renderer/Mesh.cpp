@@ -24,32 +24,6 @@ namespace Ion
 		// @TODO: Is this fine?
 		mesh->m_MeshResource = resource;
 
-		TShared<MaterialOld> material = MaterialOld::Create();
-		material->SetShader(Renderer::GetBasicShader());
-		material->CreateParameter("Texture", EMaterialParameterTypeOld::Texture2D);
-
-		mesh->SetMaterial(material);
-
-		// Set the defaults
-		const MeshResourceDefaults& defaults = resource->GetDefaults();
-		// All assets should have been loaded by now.
-		if (defaults.TextureAsset)
-		{
-			// @TODO: Do something so it makes more sense when the material system is done
-
-			// @TODO: Temporary -> the material system will load and instantiate the textures
-			mesh->m_Texture = TextureResource::Query(defaults.TextureAsset);
-
-			mesh->m_Texture->Take([material](const TextureResourceRenderDataShared& data)
-			{
-				material->SetParameter("Texture", data.Texture);
-			});
-		}
-		else
-		{
-			material->SetParameter("Texture", Renderer::GetWhiteTexture());
-		}
-
 		return mesh;
 	}
 
@@ -94,6 +68,13 @@ namespace Ion
 		{
 			m_VertexBuffer->SetLayoutShader(m_Material->GetShader());
 		}
+
+		// @TODO: Handle each material slot in the future
+		TShared<MaterialInstance> instance = m_MaterialSlots.at(0).MaterialInstance;
+		if (instance)
+		{
+			m_VertexBuffer->SetLayoutShader(instance->GetBaseMaterial()->GetShader(EShaderUsage::StaticMesh));
+		}
 	}
 
 	void Mesh::SetIndexBuffer(const TShared<RHIIndexBuffer>& indexBuffer)
@@ -134,6 +115,11 @@ namespace Ion
 
 		MaterialSlot& slot = m_MaterialSlots.at(index);
 		slot.MaterialInstance = material;
+
+		if (m_VertexBuffer)
+		{
+			m_VertexBuffer->SetLayoutShader(material->GetBaseMaterial()->GetShader(EShaderUsage::StaticMesh));
+		}
 	}
 
 	TShared<MaterialInstance> Mesh::GetMaterialInSlot(uint16 index) const

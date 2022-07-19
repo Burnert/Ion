@@ -154,6 +154,48 @@ namespace Ion
 
 	// End of MaterialParameterInstance impl ------------------------------------------------------------------------------------
 
+	MaterialRegistry* MaterialRegistry::s_Instance = nullptr;
+
+	TShared<Material> MaterialRegistry::QueryMaterial(Asset materialAsset)
+	{
+		MaterialRegistry& instance = Get();
+
+		TShared<Material> material;
+
+		auto it = instance.m_Materials.find(materialAsset);
+		if (it == instance.m_Materials.end() || it->second.expired())
+		{
+			material = Material::CreateFromAsset(materialAsset);
+			instance.m_Materials.emplace(materialAsset, material);
+		}
+		else
+		{
+			material = it->second.lock();
+		}
+
+		return material;
+	}
+
+	TShared<MaterialInstance> MaterialRegistry::QueryMaterialInstance(Asset materialInstanceAsset)
+	{
+		MaterialRegistry& instance = Get();
+
+		TShared<MaterialInstance> materialInstance;
+
+		auto it = instance.m_MaterialInstances.find(materialInstanceAsset);
+		if (it == instance.m_MaterialInstances.end() || it->second.expired())
+		{
+			materialInstance = MaterialInstance::CreateFromAsset(materialInstanceAsset);
+			instance.m_MaterialInstances.emplace(materialInstanceAsset, materialInstance);
+		}
+		else
+		{
+			materialInstance = it->second.lock();
+		}
+
+		return materialInstance;
+	}
+
 	TShared<Material> Material::Create()
 	{
 		return MakeShareable(new Material);
@@ -194,17 +236,19 @@ namespace Ion
 		}
 	}
 
-	void Material::BindShaders() const
+	void Material::BindShader(EShaderUsage usage) const
 	{
-		ionassert(std::all_of(m_Shaders.begin(), m_Shaders.end(), [](auto& entry)
-		{
-			return entry.second.bCompiled;
-		}), "Not every shader has been compiled.");
+		ionassert(m_Shaders.find(usage) != m_Shaders.end());
+		ionassert(m_Shaders.at(usage).bCompiled);
+		
+		m_Shaders.at(usage).Shader->Bind();
+	}
 
-		for (auto& [usage, shader] : m_Shaders)
-		{
-			shader.Shader->Bind();
-		}
+	const TShared<RHIShader>& Material::GetShader(EShaderUsage usage) const
+	{
+		ionassert(m_Shaders.find(usage) != m_Shaders.end());
+
+		return m_Shaders.at(usage).Shader;
 	}
 
 	void Material::UpdateConstantBuffer() const
@@ -298,6 +342,7 @@ namespace Ion
 	bool Material::ParseAsset(Asset materialAsset)
 	{
 		ionassert(materialAsset);
+		ionassert(materialAsset->GetType() == EAssetType::Material);
 
 		const FilePath& path = materialAsset->GetDefinitionPath();
 
@@ -398,51 +443,39 @@ namespace Ion
 				{
 					MaterialParameterScalar* scalarParam = (MaterialParameterScalar*)parameter;
 
-					char* pEnd;
-					float value = strtof(csDefault, &pEnd);
-					if (pEnd == csDefault || errno == ERANGE)
-					{
-						LOG_ERROR("Invalid default value.");
+					TOptional<float> value = ParseFloatString(csDefault);
+
+					if (!value)
 						return false;
-					}
-					scalarParam->SetDefaultValue(value);
+
+					scalarParam->SetDefaultValue(*value);
 					break;
 				}
 				case EMaterialParameterType::Vector:
 				{
 					MaterialParameterVector* vectorParam = (MaterialParameterVector*)parameter;
 
-					Vector4 value;
-					float* currentValue = (float*)&value;
-					char* pEnd;
-					// Is the currentValue still inside the Vector4
-					while (currentValue - (float*)&value < 4)
-					{
-						*currentValue++ = strtof(csDefault, &pEnd);
-						if (pEnd == csDefault || errno == ERANGE)
-						{
-							LOG_ERROR("Invalid default value.");
-							return false;
-						}
-						// Omit the space between components;
-						if (*pEnd)
-							csDefault = pEnd + 1;
-					}
-					vectorParam->SetDefaultValue(value);
+					TOptional<Vector4> value = ParseVector4String(csDefault);
+
+					if (!value)
+						return false;
+
+					vectorParam->SetDefaultValue(*value);
 					break;
 				}
 				case EMaterialParameterType::Texture2D:
 				{
 					MaterialParameterTexture2D* texture2dParam = (MaterialParameterTexture2D*)parameter;
 
-					GUID assetGuid(csDefault);
-					if (!assetGuid)
+					TOptional<GUID> value = ParseGuidString(csDefault);
+
+					if (!value)
 						return false;
 
-					AssetDefinition* assetDef = AssetRegistry::Find(assetGuid);
+					AssetDefinition* assetDef = AssetRegistry::Find(*value);
 					if (!assetDef)
 					{
-						LOG_WARN("Asset {0} has not been found.", assetGuid.ToString());
+						LOG_WARN("Asset {0} has not been found.", value->ToString());
 						return false;
 					}
 					texture2dParam->SetDefaultValue(assetDef->GetHandle());
@@ -778,6 +811,17 @@ namespace Ion
 		CreateParameterInstances();
 	}
 
+	MaterialInstance::MaterialInstance(Asset materialInstanceAsset)
+	{
+		ionassert(materialInstanceAsset);
+
+		if (!ParseAsset(materialInstanceAsset))
+		{
+			ionassert(false);
+			return;
+		}
+	}
+
 	void MaterialInstance::CreateParameterInstances()
 	{
 		ionassert(m_ParameterInstances.empty(), "Destroy existing instances before creating new ones.");
@@ -826,9 +870,165 @@ namespace Ion
 		m_TextureParameterInstances.clear();
 	}
 
+	bool MaterialInstance::ParseAsset(Asset materialInstanceAsset)
+	{
+		ionassert(materialInstanceAsset);
+		ionassert(materialInstanceAsset->GetType() == EAssetType::MaterialInstance);
+
+		const FilePath& path = materialInstanceAsset->GetDefinitionPath();
+
+		String assetDefinition;
+		File::ReadToString(path, assetDefinition);
+
+		TShared<XMLDocument> xml = MakeShared<XMLDocument>(assetDefinition);
+
+		// <IonAsset>
+		XMLNode* nodeIonAsset = xml->XML().first_node(IASSET_NODE_IonAsset);
+		IASSET_CHECK_NODE(nodeIonAsset, IASSET_NODE_IonAsset, path);
+
+		// <MaterialInstance>
+		XMLNode* nodeMaterialInstance = nodeIonAsset->first_node(IASSET_NODE_MaterialInstance);
+		IASSET_CHECK_NODE(nodeMaterialInstance, IASSET_NODE_MaterialInstance, path);
+
+		// parent=
+		XMLAttribute* attrParent = nodeMaterialInstance->first_attribute(IASSET_ATTR_parent);
+		IASSET_CHECK_ATTR(attrParent, IASSET_ATTR_parent, IASSET_NODE_MaterialInstance, path);
+
+		char* csParent = attrParent->value();
+		ionassert(csParent);
+		if (strlen(csParent) == 0)
+			return false;
+		
+		// Find the parent material asset
+
+		TOptional<GUID> parentMatGuid = ParseGuidString(csParent);
+		if (!parentMatGuid)
+			return false;
+
+		AssetDefinition* parentMatAsset = AssetRegistry::Find(*parentMatGuid);
+		if (!parentMatAsset)
+		{
+			LOG_WARN("Asset {0} has not been found.", parentMatGuid->ToString());
+			return false;
+		}
+
+		m_ParentMaterial = MaterialRegistry::QueryMaterial(parentMatAsset->GetHandle());
+		if (!m_ParentMaterial)
+			return false;
+
+		// Create the instances before assigning values
+		CreateParameterInstances();
+
+		// <ParameterInstance> nodes
+		XMLNode* nodeParameterInstance = nodeMaterialInstance->first_node(IASSET_NODE_MaterialInstance_ParameterInstance);
+		while (nodeParameterInstance)
+		{
+			if (!ParseMaterialParameterInstance(nodeParameterInstance, path))
+				return false;
+
+			// Get the next <ParameterInstance>
+			nodeParameterInstance = nodeParameterInstance->next_sibling(IASSET_NODE_MaterialInstance_ParameterInstance);
+		}
+
+		return true;
+	}
+
+	bool MaterialInstance::ParseMaterialParameterInstance(XMLNode* parameterInstanceNode, const FilePath& path)
+	{
+		ionassert(parameterInstanceNode);
+
+		// type=
+		XMLAttribute* attrParamType = parameterInstanceNode->first_attribute(IASSET_ATTR_type);
+		IASSET_CHECK_ATTR(attrParamType, IASSET_ATTR_type, IASSET_NODE_MaterialInstance_ParameterInstance, path);
+
+		char* csParamType = attrParamType->value();
+		ionassert(csParamType);
+		if (strlen(csParamType) == 0)
+			return false;
+
+		EMaterialParameterType paramType = MaterialParameterTypeFromString(csParamType);
+
+		// name=
+		XMLAttribute* attrParamName = parameterInstanceNode->first_attribute(IASSET_ATTR_name);
+		IASSET_CHECK_ATTR(attrParamName, IASSET_ATTR_name, IASSET_NODE_MaterialInstance_ParameterInstance, path);
+
+		char* csParamName = attrParamName->value();
+		ionassert(csParamName);
+		if (strlen(csParamName) == 0)
+			return false;
+
+		IMaterialParameterInstance* parameter = GetMaterialParameterInstance(csParamName);
+		if (!parameter)
+			return false;
+
+		char* csParamValue = parameterInstanceNode->value();
+		ionassert(csParamValue);
+		if (strlen(csParamValue) == 0)
+			return false;
+
+		switch (paramType)
+		{
+			case EMaterialParameterType::Scalar:
+			{
+				ionassert(dynamic_cast<MaterialParameterInstanceScalar*>(parameter));
+
+				MaterialParameterInstanceScalar* scalarParam = (MaterialParameterInstanceScalar*)parameter;
+
+				TOptional<float> value = ParseFloatString(csParamValue);
+
+				if (!value)
+					return false;
+
+				scalarParam->SetValue(*value);
+				break;
+			}
+			case EMaterialParameterType::Vector:
+			{
+				ionassert(dynamic_cast<MaterialParameterInstanceVector*>(parameter));
+
+				MaterialParameterInstanceVector* vectorParam = (MaterialParameterInstanceVector*)parameter;
+
+				TOptional<Vector4> value = ParseVector4String(csParamValue);
+
+				if (!value)
+					return false;
+
+				vectorParam->SetValue(*value);
+				break;
+			}
+			case EMaterialParameterType::Texture2D:
+			{
+				ionassert(dynamic_cast<MaterialParameterInstanceTexture2D*>(parameter));
+
+				MaterialParameterInstanceTexture2D* texture2dParam = (MaterialParameterInstanceTexture2D*)parameter;
+
+				TOptional<GUID> value = ParseGuidString(csParamValue);
+
+				if (!value)
+					return false;
+
+				AssetDefinition* assetDef = AssetRegistry::Find(*value);
+				if (!assetDef)
+				{
+					LOG_WARN("Asset {0} has not been found.", value->ToString());
+					return false;
+				}
+				texture2dParam->SetValue(assetDef->GetHandle());
+				break;
+			}
+		}
+
+		return true;
+	}
+
 	TShared<MaterialInstance> MaterialInstance::Create(const TShared<Material>& parentMaterial)
 	{
 		return MakeShareable(new MaterialInstance(parentMaterial));
+	}
+
+	TShared<MaterialInstance> MaterialInstance::CreateFromAsset(Asset materialInstanceAsset)
+	{
+		return MakeShareable(new MaterialInstance(materialInstanceAsset));
 	}
 
 	void MaterialInstance::BindTextures() const

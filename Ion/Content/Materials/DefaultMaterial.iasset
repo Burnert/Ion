@@ -4,7 +4,7 @@
 	<Material type="Surface" blend="Opaque" shader="BasicLit">
 		<Code source="DefaultMaterialCode.hlsl" />
 		<Parameter type="Vector" name="Color">
-			<Default>1.0 0.0 1.0 1.0</Default>
+			<Default>1.0 1.0 1.0 1.0</Default>
 			<Min>0.0 0.0 0.0 0.0</Min>
 			<Max>1.0 1.0 1.0 1.0</Max>
 		</Parameter>
@@ -14,8 +14,7 @@
 			<Max>1.0</Max>
 		</Parameter>
 		<Parameter type="Texture2D" name="DefaultTexture">
-			<!-- <Default>80c72dad-eb05-4209-935b-2e5730f2c053</Default> -->
-			<Default>661f6381-b701-493d-adbf-cbdfb8bd971a</Default>
+			<Default>80c72dad-eb05-4209-935b-2e5730f2c053</Default>
 		</Parameter>
 	</Material>
 </IonAsset>

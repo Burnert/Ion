@@ -111,7 +111,28 @@ namespace Ion
 
 		ionassert(targetScene);
 
-		primitive.Shader->Bind();
+		const MaterialOld* materialOld = primitive.MaterialOld;
+
+		if (materialOld)
+			materialOld->BindTextures();
+		//material->UpdateShaderUniforms();
+
+		const MaterialInstance* materialInstance = primitive.MaterialInstance;
+		if (materialInstance)
+		{
+			const Material* material = materialInstance->GetBaseMaterial().get();
+			material->BindShader(EShaderUsage::StaticMesh);
+
+			materialInstance->TransferParameters();
+			material->UpdateConstantBuffer();
+
+			materialInstance->BindTextures();
+		}
+		else
+		{
+			primitive.Shader->Bind();
+		}
+
 		primitive.VertexBuffer->Bind();
 		primitive.VertexBuffer->BindLayout();
 		primitive.IndexBuffer->Bind();
@@ -126,25 +147,6 @@ namespace Ion
 
 		primitive.UniformBuffer->UpdateData();
 		primitive.UniformBuffer->Bind(1);
-
-		const MaterialOld* materialOld = primitive.MaterialOld;
-
-		if (materialOld)
-			materialOld->BindTextures();
-		//material->UpdateShaderUniforms();
-
-		const MaterialInstance* materialInstance = primitive.MaterialInstance;
-		if (materialInstance)
-		{
-			const Material* material = materialInstance->GetBaseMaterial().get();
-
-			material->BindShaders();
-
-			materialInstance->TransferParameters();
-			material->UpdateConstantBuffer();
-
-			materialInstance->BindTextures();
-		}
 
 		DrawIndexed(primitive.IndexBuffer->GetIndexCount());
 	}

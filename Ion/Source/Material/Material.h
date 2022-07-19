@@ -35,12 +35,53 @@ namespace Ion
 	};
 
 #define _MPTFSHelper(type) if (strcmp(str, #type) == 0) return EMaterialParameterType::type
-	static EMaterialParameterType MaterialParameterTypeFromString(const char* str)
+	inline static EMaterialParameterType MaterialParameterTypeFromString(const char* str)
 	{
 		_MPTFSHelper(Scalar);
 		_MPTFSHelper(Vector);
 		_MPTFSHelper(Texture2D);
 		return EMaterialParameterType::Null;
+	}
+
+	inline static TOptional<float> ParseFloatString(const char* str)
+	{
+		char* pEnd;
+		float value = strtof(str, &pEnd);
+		if (pEnd == str || errno == ERANGE)
+		{
+			LOG_ERROR("Invalid default value.");
+			return NullOpt;
+		}
+		return value;
+	}
+
+	inline static TOptional<Vector4> ParseVector4String(const char* str)
+	{
+		Vector4 value;
+		float* currentValue = (float*)&value;
+		char* pEnd;
+		// Is the currentValue still inside the Vector4
+		while (currentValue - (float*)&value < 4)
+		{
+			*currentValue++ = strtof(str, &pEnd);
+			if (pEnd == str || errno == ERANGE)
+			{
+				LOG_ERROR("Invalid default value.");
+				return NullOpt;
+			}
+			// Omit the space between components;
+			if (*pEnd)
+				str = pEnd + 1;
+		}
+		return value;
+	}
+
+	inline static TOptional<GUID> ParseGuidString(const char* str)
+	{
+		GUID assetGuid(str);
+		if (!assetGuid)
+			return NullOpt;
+		return assetGuid;
 	}
 
 	// IMaterialParameter Interface -------------------------------------------------------
@@ -345,9 +386,28 @@ namespace Ion
 		return m_Value;
 	}
 
-	// Material Class -------------------------------------------------------------------
+	class ION_API MaterialRegistry
+	{
+	public:
+		static TShared<Material> QueryMaterial(Asset materialAsset);
+		static TShared<MaterialInstance> QueryMaterialInstance(Asset materialInstanceAsset);
 
-	class MaterialInstance;
+	private:
+		static MaterialRegistry& Get();
+
+	private:
+		THashMap<Asset, TWeak<Material>> m_Materials;
+		THashMap<Asset, TWeak<MaterialInstance>> m_MaterialInstances;
+
+		static MaterialRegistry* s_Instance;
+	};
+
+	inline MaterialRegistry& MaterialRegistry::Get()
+	{
+		return *(s_Instance ? s_Instance : s_Instance = new MaterialRegistry);
+	}
+
+	// Material Class -------------------------------------------------------------------
 
 	class ION_API Material : public std::enable_shared_from_this<Material>
 	{
@@ -362,7 +422,8 @@ namespace Ion
 		 */
 		void CompileShaders();
 
-		void BindShaders() const;
+		void BindShader(EShaderUsage usage) const;
+		const TShared<RHIShader>& GetShader(EShaderUsage usage) const;
 
 		void UpdateConstantBuffer() const;
 
@@ -430,6 +491,7 @@ namespace Ion
 	{
 	public:
 		static TShared<MaterialInstance> Create(const TShared<Material>& parentMaterial);
+		static TShared<MaterialInstance> CreateFromAsset(Asset materialInstanceAsset);
 
 		void BindTextures() const;
 
@@ -450,9 +512,13 @@ namespace Ion
 
 	private:
 		MaterialInstance(const TShared<Material>& parentMaterial);
+		MaterialInstance(Asset materialInstanceAsset);
 
 		void CreateParameterInstances();
 		void DestroyParameterInstances();
+
+		bool ParseAsset(Asset materialInstanceAsset);
+		bool ParseMaterialParameterInstance(XMLNode* parameterInstanceNode, const FilePath& path);
 
 	private:
 		TShared<Material> m_ParentMaterial;

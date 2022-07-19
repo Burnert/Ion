@@ -51,6 +51,13 @@ namespace Ion
 		FTaskWork()
 		{
 		}
+
+#if ION_DEBUG
+	protected:
+		String m_DebugName;
+	public:
+		inline const String& GetDebugName() const { return m_DebugName; }
+#endif
 	};
 
 	using TFuncMessageOnDispatch = TFunction<void()>;

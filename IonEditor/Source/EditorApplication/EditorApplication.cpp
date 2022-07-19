@@ -79,19 +79,17 @@ namespace Ion::Editor
 
 		Asset materialAsset = AssetFinder(EnginePath::GetEngineContentPath() + L"Materials/DefaultMaterial.iasset").Resolve();
 
-		TShared<Material> material = Material::CreateFromAsset(materialAsset);
+		TShared<Material> material = MaterialRegistry::QueryMaterial(materialAsset);
 		material->AddUsage(EShaderUsage::StaticMesh);
 		material->CompileShaders();
 
-		TShared<MaterialInstance> materialInstance = MaterialInstance::Create(material);
+		Asset materialInstanceAsset = AssetFinder(FilePath(L"../IonExample/Assets/Materials/4pak.iasset")).Resolve();
+
+		TShared<MaterialInstance> materialInstance = MaterialRegistry::QueryMaterialInstance(materialInstanceAsset);
 		MaterialParameterInstanceScalar* paramBrightness = materialInstance->GetMaterialParameterInstanceTyped<MaterialParameterInstanceScalar>("Brightness");
 		MaterialParameterInstanceVector* paramColor = materialInstance->GetMaterialParameterInstanceTyped<MaterialParameterInstanceVector>("Color");
 
-		ionassert(paramBrightness->GetValue() == 1.0f);
-
-		paramBrightness->SetValue(0.5f);
-		ionassert(paramBrightness->GetValue() == 0.5f);
-
+		ionassert(paramBrightness->GetValue() == paramBrightness->GetParameterScalar()->GetDefaultValue());
 		ionassert(paramColor->GetValue() == paramColor->GetParameterVector()->GetDefaultValue());
 
 		MeshEntity* meshEntity = m_EditorMainWorld->SpawnEntityOfClass<MeshEntity>();

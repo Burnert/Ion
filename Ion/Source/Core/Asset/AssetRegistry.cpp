@@ -59,6 +59,9 @@ namespace Ion
 
 	void FAssetLoadWork::Schedule()
 	{
+#if ION_DEBUG
+		m_DebugName = StringConverter::WStringToString(AssetPath.ToString());
+#endif
 		// Executes on a worker thread
 		Execute = [*this](IMessageQueueProvider& queue)
 		{
