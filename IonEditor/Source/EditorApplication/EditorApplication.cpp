@@ -83,7 +83,7 @@ namespace Ion::Editor
 		material->AddUsage(EShaderUsage::StaticMesh);
 		material->CompileShaders();
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		std::this_thread::sleep_for(std::chrono::milliseconds(60));
 
 		Asset materialInstanceAsset = AssetFinder(FilePath(L"../IonExample/Assets/Materials/ciupaga.iasset")).Resolve();
 
