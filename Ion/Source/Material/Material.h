@@ -407,6 +407,40 @@ namespace Ion
 		return *(s_Instance ? s_Instance : s_Instance = new MaterialRegistry);
 	}
 
+	// Shader compilation counter ----------------------------------------------------------
+
+	using FOnShadersCompiled = TFunction<void(const ShaderPermutation&)>;
+
+	class ShadersCompiledCounter
+	{
+	public:
+		ShadersCompiledCounter(uint32 max);
+
+		uint32 Inc();
+		bool Done() const;
+
+	public:
+		const uint32 m_Max;
+		uint32 m_Count;
+	};
+
+	inline ShadersCompiledCounter::ShadersCompiledCounter(uint32 max) :
+		m_Max(max),
+		m_Count(0)
+	{
+	}
+
+	inline uint32 ShadersCompiledCounter::Inc()
+	{
+		ionassert(m_Count < m_Max, "Counter has been incremented more than the maximum value.");
+		return ++m_Count;
+	}
+
+	inline bool ShadersCompiledCounter::Done() const
+	{
+		return m_Count == m_Max;
+	}
+
 	// Material Class -------------------------------------------------------------------
 
 	class ION_API Material : public std::enable_shared_from_this<Material>
@@ -421,8 +455,9 @@ namespace Ion
 		 * Async function - the shaders will be compiled on the worker threads.
 		 */
 		void CompileShaders();
+		void CompileShaders(const FOnShadersCompiled& onCompiled);
 
-		void BindShader(EShaderUsage usage) const;
+		bool BindShader(EShaderUsage usage) const;
 		const TShared<RHIShader>& GetShader(EShaderUsage usage) const;
 
 		void UpdateConstantBuffer() const;
@@ -437,6 +472,8 @@ namespace Ion
 
 		bool CompileMaterialCode();
 		bool CompileMaterialCode(EShaderUsage usage);
+
+		Asset GetAsset() const;
 
 		~Material();
 
@@ -469,6 +506,8 @@ namespace Ion
 		uint64 m_Usage;
 		String m_MaterialCode;
 
+		Asset m_Asset;
+
 		// Each bit corresponds to a texture slot,
 		// LSB = 0, MSB = 31 (0 - free, 1 - used)
 		uint32 m_UsedTextureSlotsMask;
@@ -484,6 +523,11 @@ namespace Ion
 		friend class MaterialInstance;
 		friend class Renderer;
 	};
+
+	inline Asset Material::GetAsset() const
+	{
+		return m_Asset;
+	}
 
 	// MaterialInstance Class -------------------------------------------------------------------
 
@@ -508,6 +552,8 @@ namespace Ion
 		 */
 		void TransferParameters() const;
 
+		Asset GetAsset() const;
+
 		~MaterialInstance();
 
 	private:
@@ -525,6 +571,8 @@ namespace Ion
 
 		THashMap<String, IMaterialParameterInstance*> m_ParameterInstances;
 		THashSet<MaterialParameterInstanceTexture2D*> m_TextureParameterInstances;
+
+		Asset m_Asset;
 	};
 
 	template<typename T>
@@ -537,6 +585,11 @@ namespace Ion
 	inline const TShared<Material>& MaterialInstance::GetBaseMaterial() const
 	{
 		return m_ParentMaterial;
+	}
+
+	inline Asset MaterialInstance::GetAsset() const
+	{
+		return m_Asset;
 	}
 }
 

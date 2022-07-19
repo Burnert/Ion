@@ -236,12 +236,54 @@ namespace Ion
 		}
 	}
 
-	void Material::BindShader(EShaderUsage usage) const
+	void Material::CompileShaders(const FOnShadersCompiled& onCompiled)
+	{
+		TShared<ShadersCompiledCounter> counter = MakeShared<ShadersCompiledCounter>((uint32)m_Shaders.size());
+
+		for (auto& [usage, shader] : m_Shaders)
+		{
+			EShaderUsage shaderUsage = usage;
+			ShaderPermutation& shaderPerm = shader;
+
+			ionassert(shaderPerm.Shader);
+			ionassert(!shaderPerm.bCompiled);
+
+			shaderPerm.Shader->AddShaderSource(EShaderType::Vertex, m_MaterialCode);
+			shaderPerm.Shader->AddShaderSource(EShaderType::Pixel, m_MaterialCode);
+
+			// Compile the shaders using the Engine Task Queue
+			AsyncTask compileTask([material = shared_from_this(), shaderUsage, &shaderPerm, counter, onCompiled](IMessageQueueProvider& queue)
+			{
+				if (shaderPerm.Shader->Compile())
+				{
+					queue.PushMessage(FTaskMessage([material, shaderUsage, &shaderPerm, counter, onCompiled]
+					{
+						ionassert(material->m_Shaders.find(shaderUsage) != material->m_Shaders.end(),
+							"Shader usage had been removed before the shader was compiled.");
+						shaderPerm.bCompiled = true;
+
+						counter->Inc();
+						if (counter->Done())
+						{
+							onCompiled(shaderPerm);
+						}
+					}));
+				}
+			});
+			compileTask.Schedule();
+		}
+	}
+
+	bool Material::BindShader(EShaderUsage usage) const
 	{
 		ionassert(m_Shaders.find(usage) != m_Shaders.end());
-		ionassert(m_Shaders.at(usage).bCompiled);
+
+		if (!m_Shaders.at(usage).bCompiled)
+			return false;
 		
 		m_Shaders.at(usage).Shader->Bind();
+
+		return true;
 	}
 
 	const TShared<RHIShader>& Material::GetShader(EShaderUsage usage) const
@@ -270,7 +312,7 @@ namespace Ion
 
 	bool Material::IsUsableWith(EShaderUsage usage)
 	{
-		return GetBitflag(m_Usage, (decltype(m_Usage))usage);
+		return m_Usage & (uint64)usage;
 	}
 
 	void Material::SetMaterialCode(const String& code)
@@ -333,7 +375,8 @@ namespace Ion
 	Material::Material(Asset materialAsset) :
 		m_Usage(0),
 		m_bInvalid(false),
-		m_UsedTextureSlotsMask(0)
+		m_UsedTextureSlotsMask(0),
+		m_Asset(materialAsset)
 	{
 		ParseAsset(materialAsset);
 		BuildConstantBuffer();
@@ -811,7 +854,8 @@ namespace Ion
 		CreateParameterInstances();
 	}
 
-	MaterialInstance::MaterialInstance(Asset materialInstanceAsset)
+	MaterialInstance::MaterialInstance(Asset materialInstanceAsset) :
+		m_Asset(materialInstanceAsset)
 	{
 		ionassert(materialInstanceAsset);
 

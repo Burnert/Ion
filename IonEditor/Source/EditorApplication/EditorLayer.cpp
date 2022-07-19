@@ -963,7 +963,11 @@ namespace Ion::Editor
 		{
 			ImGui::PushID("MeshSettings");
 
-			Asset currentMeshAsset = meshComponent.GetMeshAsset();
+			TShared<Mesh> mesh = meshComponent.GetMesh();
+
+			Asset currentMeshAsset = mesh && mesh->GetMeshResource() ?
+				mesh->GetMeshResource()->GetAssetHandle() :
+				Asset::InvalidHandle;
 
 			String previewName = currentMeshAsset ?
 				currentMeshAsset->GetInfo().Name :
@@ -1016,6 +1020,36 @@ namespace Ion::Editor
 				}
 
 				ImGui::EndCombo();
+			}
+
+			if (meshComponent.GetMesh())
+			{
+				Asset currentMaterialAsset = meshComponent.GetMesh()->GetMaterialInSlot(0) ?
+					meshComponent.GetMesh()->GetMaterialInSlot(0)->GetAsset() :
+					Asset::InvalidHandle;
+
+				previewName = currentMaterialAsset ?
+					currentMaterialAsset->GetInfo().Name :
+					"[None]";
+
+				bComboOpen = ImGui::BeginCombo("Material Asset", previewName.c_str(), flags);
+
+				if (bComboOpen)
+				{
+					TArray<Asset> materialAssets = AssetRegistry::GetAllRegisteredAssets(EAssetType::MaterialInstance);
+					for (Asset& materialAsset : materialAssets)
+					{
+						bool bSelected = materialAsset == currentMaterialAsset;
+						if (ImGui::Selectable(materialAsset->GetInfo().Name.c_str(), bSelected))
+						{
+							TShared<MaterialInstance> materialInstance = MaterialRegistry::QueryMaterialInstance(materialAsset);
+							meshComponent.GetMesh()->AssignMaterialToSlot(0, materialInstance);
+
+							bChanged = true;
+						}
+					}
+					ImGui::EndCombo();
+				}
 			}
 
 			ImGui::PopID();

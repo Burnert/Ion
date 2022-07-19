@@ -68,6 +68,8 @@ namespace Ion
 		const RHIUniformBuffer* GetUniformBufferRaw() const;
 		const MaterialOld* GetMaterialRaw() const;
 
+		const TResourcePtr<MeshResource>& GetMeshResource() const;
+
 	private:
 		Mesh();
 
@@ -87,4 +89,9 @@ namespace Ion
 		uint32 m_VertexCount;
 		uint32 m_TriangleCount;
 	};
+
+	inline const TResourcePtr<MeshResource>& Mesh::GetMeshResource() const
+	{
+		return m_MeshResource;
+	}
 }

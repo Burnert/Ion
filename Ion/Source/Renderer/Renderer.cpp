@@ -121,12 +121,17 @@ namespace Ion
 		if (materialInstance)
 		{
 			const Material* material = materialInstance->GetBaseMaterial().get();
-			material->BindShader(EShaderUsage::StaticMesh);
+			if (material->BindShader(EShaderUsage::StaticMesh))
+			{
+				materialInstance->TransferParameters();
+				material->UpdateConstantBuffer();
 
-			materialInstance->TransferParameters();
-			material->UpdateConstantBuffer();
-
-			materialInstance->BindTextures();
+				materialInstance->BindTextures();
+			}
+			else
+			{
+				m_BasicShader->Bind();
+			}
 		}
 		else
 		{
