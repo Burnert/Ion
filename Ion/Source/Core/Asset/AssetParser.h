@@ -8,6 +8,8 @@
 
 namespace Ion
 {
+	// Asset Parser Base ------------------------------------------------------------------------
+
 	class ION_API AssetParser
 	{
 	public:
@@ -26,6 +28,8 @@ namespace Ion
 		XMLParser m_Parser;
 		Asset m_Asset;
 	};
+
+	// Material Asset Parser ------------------------------------------------------------------
 
 	// MaterialAssetParser should only be used where Material.h is included.
 	class ION_API MaterialAssetParser : public AssetParser
@@ -64,7 +68,7 @@ namespace Ion
 		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_Material);
 
 		m_Parser.ParseAttributes(IASSET_NODE_Material_Code,
-			IASSET_ATTR_source, [&loadFunc](const XMLParser::Interface& iface, String source /* Shader Path */)
+			IASSET_ATTR_source, [&loadFunc](const XMLParser::MessageInterface& iface, String source /* Shader Path */)
 			{
 				if (source.empty())
 				{

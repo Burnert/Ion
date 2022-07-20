@@ -67,9 +67,9 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 	{
 	public:
 		// Message interface
-		struct Interface
+		struct MessageInterface
 		{
-			Interface(XMLParser* owner) :
+			MessageInterface(XMLParser* owner) :
 				m_Owner(owner)
 			{
 			}
@@ -94,7 +94,7 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		};
 
 		using FParseFunc = TFunction<void(String)>;
-		using FParseFuncEx = TFunction<void(const Interface&, String)>;
+		using FParseFuncEx = TFunction<void(const MessageInterface&, String)>;
 
 		using FExpectFunc = TFunction<bool(String)>;
 
@@ -151,7 +151,7 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 
 		XMLParserResult Finalize();
 
-		Interface GetInterface();
+		MessageInterface GetInterface();
 
 		bool IsOpen() const;
 
@@ -188,7 +188,7 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 
 		bool m_bFailed;
 
-		friend struct XMLParser::Interface;
+		friend struct XMLParser::MessageInterface;
 	};
 
 	// Current node functions --------------------------------------------------------
@@ -359,11 +359,11 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		return *this;
 	}
 
-	inline XMLParser::Interface XMLParser::GetInterface()
+	inline XMLParser::MessageInterface XMLParser::GetInterface()
 	{
 		ionassert(IsOpen());
 
-		return Interface(this);
+		return MessageInterface(this);
 	}
 
 	inline bool XMLParser::IsOpen() const
@@ -382,7 +382,7 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 
 		if constexpr (TIsConvertibleV<FParse, FParseFuncEx>)
 		{
-			parseFunc(XMLParser::Interface(this), node->value());
+			parseFunc(XMLParser::MessageInterface(this), node->value());
 		}
 		else
 		{
@@ -423,7 +423,7 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 
 		if constexpr (TIsConvertibleV<FParse, FParseFuncEx>)
 		{
-			parseFunc(XMLParser::Interface(this), attribute->value());
+			parseFunc(XMLParser::MessageInterface(this), attribute->value());
 		}
 		else
 		{

@@ -26,13 +26,13 @@ namespace Ion
 		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_IonAsset);
 
 		m_Parser.ParseAttributes(IASSET_NODE_Info,
-			IASSET_ATTR_type, [&outType](const XMLParser::Interface& iface, String type)
+			IASSET_ATTR_type, [&outType](const XMLParser::MessageInterface& iface, String type)
 			{
 				outType = ParseAssetTypeString(type);
 				if (outType == EAssetType::Invalid)
 					iface.SendFail("Invalid asset type.");
 			},
-			IASSET_ATTR_guid, [&outGuid](const XMLParser::Interface& iface, String guid)
+			IASSET_ATTR_guid, [&outGuid](const XMLParser::MessageInterface& iface, String guid)
 			{
 				outGuid = GUID(guid);
 				if (!outGuid)
