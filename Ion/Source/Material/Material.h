@@ -26,64 +26,6 @@ namespace Ion
 		ShaderPermutation(EShaderUsage usage);
 	};
 
-	enum class EMaterialParameterType
-	{
-		Null = 0,
-		Scalar,
-		Vector,
-		Texture2D
-	};
-
-#define _MPTFSHelper(type) if (strcmp(str, #type) == 0) return EMaterialParameterType::type
-	inline static EMaterialParameterType MaterialParameterTypeFromString(const char* str)
-	{
-		_MPTFSHelper(Scalar);
-		_MPTFSHelper(Vector);
-		_MPTFSHelper(Texture2D);
-		return EMaterialParameterType::Null;
-	}
-
-	inline static TOptional<float> ParseFloatString(const char* str)
-	{
-		char* pEnd;
-		float value = strtof(str, &pEnd);
-		if (pEnd == str || errno == ERANGE)
-		{
-			LOG_ERROR("Invalid default value.");
-			return NullOpt;
-		}
-		return value;
-	}
-
-	inline static TOptional<Vector4> ParseVector4String(const char* str)
-	{
-		Vector4 value;
-		float* currentValue = (float*)&value;
-		char* pEnd;
-		// Is the currentValue still inside the Vector4
-		while (currentValue - (float*)&value < 4)
-		{
-			*currentValue++ = strtof(str, &pEnd);
-			if (pEnd == str || errno == ERANGE)
-			{
-				LOG_ERROR("Invalid default value.");
-				return NullOpt;
-			}
-			// Omit the space between components;
-			if (*pEnd)
-				str = pEnd + 1;
-		}
-		return value;
-	}
-
-	inline static TOptional<GUID> ParseGuidString(const char* str)
-	{
-		GUID assetGuid(str);
-		if (!assetGuid)
-			return NullOpt;
-		return assetGuid;
-	}
-
 	// IMaterialParameter Interface -------------------------------------------------------
 
 	class IMaterialParameter
@@ -93,6 +35,9 @@ namespace Ion
 		virtual const String& GetName() const = 0;
 
 		virtual ~IMaterialParameter() { }
+
+	private:
+		void SetValues(const TMaterialParameterTypeVariant& def, const TMaterialParameterTypeVariant& min, const TMaterialParameterTypeVariant& max);
 
 		friend class Material;
 	};
@@ -131,6 +76,7 @@ namespace Ion
 		String m_Name;
 
 		friend class Material;
+		friend class IMaterialParameter;
 	};
 
 	inline float MaterialParameterScalar::GetDefaultValue() const
@@ -195,6 +141,7 @@ namespace Ion
 		String m_Name;
 
 		friend class Material;
+		friend class IMaterialParameter;
 	};
 
 	inline const Vector4& MaterialParameterVector::GetDefaultValue() const
@@ -255,6 +202,7 @@ namespace Ion
 		String m_Name;
 
 		friend class Material;
+		friend class IMaterialParameter;
 	};
 
 	inline uint32 MaterialParameterTexture2D::GetSlot() const
@@ -482,7 +430,6 @@ namespace Ion
 		Material(Asset materialAsset);
 
 		bool ParseAsset(Asset materialAsset);
-		bool ParseMaterialParameter(XMLNode* parameterNode, const FilePath& path);
 		bool ParseMaterialCode(const String& code);
 		bool LoadExternalMaterialCode(const FilePath& path);
 

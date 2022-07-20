@@ -37,6 +37,7 @@ namespace Ion
 		AssetDefinition* def = AssetRegistry::Find(guid);
 		if (!def)
 		{
+			LOG_WARN("Cannot find an asset with GUID: {0}", guid.ToString());
 			return InvalidHandle;
 		}
 		return def->GetHandle();
@@ -89,7 +90,7 @@ namespace Ion
 		return AssetRegistry::Register(initializer).GetHandle();
 	}
 
-	static EAssetType ParseTypeString(const String& sType)
+	EAssetType ParseAssetTypeString(const String& sType)
 	{
 		// @TODO: This should eventually parse the type string as kind of a package
 		// This way custom apps would be able to make their own asset types if needed.
@@ -98,10 +99,14 @@ namespace Ion
 			return EAssetType::Invalid;
 
 		StringView svType = StringView(sType).substr(4);
+		if (svType == "Generic")
+			return EAssetType::Generic;
 		if (svType == "Image")
 			return EAssetType::Image;
 		if (svType == "Mesh")
 			return EAssetType::Mesh;
+		if (svType == "Data")
+			return EAssetType::Data;
 		if (svType == "Material")
 			return EAssetType::Material;
 		if (svType == "MaterialInstance")
@@ -125,7 +130,7 @@ namespace Ion
 		CHECK_ATTR(info_attrType, IASSET_ATTR_type, IASSET_NODE_Info);
 
 		char* csType = info_attrType->value();
-		outInitializer.Type = ParseTypeString(csType);
+		outInitializer.Type = ParseAssetTypeString(csType);
 		ionexcept(outInitializer.Type != EAssetType::Invalid, "Invalid asset type.")
 			return false;
 

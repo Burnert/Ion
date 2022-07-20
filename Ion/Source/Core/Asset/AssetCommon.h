@@ -2,7 +2,7 @@
 
 #define IASSET_STR_INVALID_FILE "%s is not a valid Ion Asset file.\n\n"
 #define IASSET_CHECK_NODE(node, nodeName, path) \
-ionexcept(node, IASSET_STR_INVALID_FILE "<" nodeName "> node has not ben found.\n", StringConverter::WStringToString(path.ToString()).c_str()) return false
+ionexcept(node, IASSET_STR_INVALID_FILE "<" nodeName "> node has not been found.\n", StringConverter::WStringToString(path.ToString()).c_str()) return false
 #define IASSET_CHECK_ATTR(attr, attrName, nodeName, path) \
 ionexcept(attr, IASSET_STR_INVALID_FILE attrName " attribute could not be found in node <" nodeName ">.\n", StringConverter::WStringToString(path.ToString()).c_str()) return false
 
@@ -20,6 +20,8 @@ ionexcept(attr, IASSET_STR_INVALID_FILE attrName " attribute could not be found 
 #define IASSET_ATTR_name                 "name"
 #define IASSET_ATTR_source               "source"
 #define IASSET_ATTR_parent               "parent"
+#define IASSET_ATTR_blend                "blend"
+#define IASSET_ATTR_shader               "shader"
 
 // Resource Usage -----------------------------------------------------
 
@@ -50,6 +52,52 @@ namespace Ion
 		MaterialInstance,
 		Invalid = 0xFF,
 	};
+
+	EAssetType ParseAssetTypeString(const String& sType);
+
+	inline static TOptional<float> ParseFloatString(const char* str)
+	{
+		char* pEnd;
+		float value = strtof(str, &pEnd);
+		if (pEnd == str || errno == ERANGE)
+		{
+			LOG_ERROR("Invalid value.");
+			return NullOpt;
+		}
+		return value;
+	}
+
+	inline static TOptional<Vector4> ParseVector4String(const char* str)
+	{
+		Vector4 value;
+		float* currentValue = (float*)&value;
+		char* pEnd;
+		// Is the currentValue still inside the Vector4
+		while (currentValue - (float*)&value < 4)
+		{
+			*currentValue++ = strtof(str, &pEnd);
+			if (pEnd == str || errno == ERANGE)
+			{
+				LOG_ERROR("Invalid value.");
+				return NullOpt;
+			}
+			// Omit the space between components;
+			if (*pEnd)
+				str = pEnd + 1;
+		}
+		return value;
+	}
+
+	inline static TOptional<GUID> ParseGuidString(const char* str)
+	{
+		GUID assetGuid(str);
+		if (!assetGuid)
+		{
+			LOG_ERROR("Invalid value.");
+			return NullOpt;
+		}
+		return assetGuid;
+	}
 
 	struct AssetInfo
 	{

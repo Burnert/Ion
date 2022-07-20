@@ -5,6 +5,7 @@
 #include "RHI/UniformBuffer.h"
 
 #include "Core/Asset/AssetRegistry.h"
+#include "Core/Asset/AssetParser.h"
 
 #include "Application/EnginePath.h"
 
@@ -15,6 +16,38 @@ namespace Ion
 		Usage(usage),
 		bCompiled(false)
 	{
+	}
+
+	void IMaterialParameter::SetValues(const TMaterialParameterTypeVariant& def, const TMaterialParameterTypeVariant& min, const TMaterialParameterTypeVariant& max)
+	{
+		// @TODO: There should be a better way to set these values
+		
+		EMaterialParameterType type = GetType();
+		switch (type)
+		{
+			case EMaterialParameterType::Scalar:
+			{
+				MaterialParameterScalar* param = (MaterialParameterScalar*)this;
+				param->SetDefaultValue(std::get<float>(def));
+				param->SetMinValue(std::get<float>(min));
+				param->SetMaxValue(std::get<float>(max));
+				break;
+			}
+			case EMaterialParameterType::Vector:
+			{
+				MaterialParameterVector* param = (MaterialParameterVector*)this;
+				param->SetDefaultValue(std::get<Vector4>(def));
+				param->SetMinValue(std::get<Vector4>(min));
+				param->SetMaxValue(std::get<Vector4>(max));
+				break;
+			}
+			case EMaterialParameterType::Texture2D:
+			{
+				MaterialParameterTexture2D* param = (MaterialParameterTexture2D*)this;
+				param->SetDefaultValue(Asset::Find(std::get<GUID>(def)));
+				break;
+			}
+		}
 	}
 
 	MaterialParameterScalar::MaterialParameterScalar(const String& name, float defaultValue, float min, float max) :
@@ -387,148 +420,22 @@ namespace Ion
 		ionassert(materialAsset);
 		ionassert(materialAsset->GetType() == EAssetType::Material);
 
-		const FilePath& path = materialAsset->GetDefinitionPath();
-
-		String assetDefinition;
-		File::ReadToString(path, assetDefinition);
-
-		TShared<XMLDocument> xml = MakeShared<XMLDocument>(assetDefinition);
-
-		// <IonAsset>
-		XMLNode* nodeIonAsset = xml->XML().first_node(IASSET_NODE_IonAsset);
-		IASSET_CHECK_NODE(nodeIonAsset, IASSET_NODE_IonAsset, path);
-
-		// <Material>
-		XMLNode* nodeMaterial = nodeIonAsset->first_node(IASSET_NODE_Material);
-		IASSET_CHECK_NODE(nodeMaterial, IASSET_NODE_Material, path);
-
-		// <Code>
-		XMLNode* nodeMaterialCode = nodeMaterial->first_node(IASSET_NODE_Material_Code);
-		IASSET_CHECK_NODE(nodeMaterialCode, IASSET_NODE_Material_Code, path);
-
-		XMLAttribute* attrMaterialCodeSource = nodeMaterialCode->first_attribute(IASSET_ATTR_source);
-		if (attrMaterialCodeSource)
-		{
-			char* csMaterialCodeSource = attrMaterialCodeSource->value();
-			ionassert(csMaterialCodeSource);
-			if (strlen(csMaterialCodeSource) == 0)
+		XMLParserResult result = MaterialAssetParser(materialAsset)
+			.BeginAsset() // <IonAsset>
+			.BeginMaterial() // <Material>
+			.LoadCode([this](String source) // <Code>
 			{
-				LOG_ERROR("Material source code path not specified.");
-				return false;
-			}
-
-			if (!LoadExternalMaterialCode(EnginePath::GetShadersPath() + L"Material" + StringConverter::StringToWString(csMaterialCodeSource)))
-				return false;
-		}
-		else
-		{
-			char* csMaterialCode = nodeMaterialCode->value();
-			ionassert(csMaterialCode);
-
-			if (!ParseMaterialCode(csMaterialCode))
-				return false;
-		}
-
-		// <Parameter> nodes
-		XMLNode* nodeMaterialParameter = nodeMaterial->first_node(IASSET_NODE_Material_Parameter);
-		while (nodeMaterialParameter)
-		{
-			if (!ParseMaterialParameter(nodeMaterialParameter, path))
-				return false;
-
-			// Get next <Parameter>
-			nodeMaterialParameter = nodeMaterialParameter->next_sibling(IASSET_NODE_Material_Parameter);
-		}
-
-		return true;
-	}
-
-	bool Material::ParseMaterialParameter(XMLNode* parameterNode, const FilePath& path)
-	{
-		ionassert(parameterNode);
-
-		// type=
-		XMLAttribute* attrMaterialParamType = parameterNode->first_attribute(IASSET_ATTR_type);
-		IASSET_CHECK_ATTR(attrMaterialParamType, IASSET_ATTR_type, IASSET_NODE_Material_Parameter, path);
-
-		char* csParamType = attrMaterialParamType->value();
-		ionassert(csParamType);
-		if (strlen(csParamType) == 0)
-			return false;
-
-		EMaterialParameterType paramType = MaterialParameterTypeFromString(csParamType);
-
-		// name=
-		XMLAttribute* attrMaterialParamName = parameterNode->first_attribute(IASSET_ATTR_name);
-		IASSET_CHECK_ATTR(attrMaterialParamName, IASSET_ATTR_name, IASSET_NODE_Material_Parameter, path);
-
-		char* csParamName = attrMaterialParamName->value();
-		ionassert(csParamName);
-		if (strlen(csParamName) == 0)
-			return false;
-
-		IMaterialParameter* parameter = AddParameter(csParamName, paramType);
-		if (!parameter)
-		{
-			LOG_ERROR("Cannot add a material parameter.");
-			return false;
-		}
-
-		// <Default>
-		XMLNode* nodeDefault = parameterNode->first_node(IASSET_NODE_Material_Parameter_Default);
-		if (nodeDefault)
-		{
-			char* csDefault = nodeDefault->value();
-			// @TODO: Parse the default accordingly
-			switch (paramType)
+				return LoadExternalMaterialCode(EnginePath::GetShadersPath() + L"Material" + StringConverter::StringToWString(source));
+			})
+			.ParseParameters([this](String name, EMaterialParameterType type, const MaterialAssetParser::ParameterValues& values)
 			{
-				case EMaterialParameterType::Scalar:
-				{
-					MaterialParameterScalar* scalarParam = (MaterialParameterScalar*)parameter;
+				IMaterialParameter* parameter = AddParameter(name, type);
+				parameter->SetValues(values.Default, values.Min, values.Max);
+			})
+			.EndMaterial() // </Material>
+			.Finalize(); // </IonAsset>
 
-					TOptional<float> value = ParseFloatString(csDefault);
-
-					if (!value)
-						return false;
-
-					scalarParam->SetDefaultValue(*value);
-					break;
-				}
-				case EMaterialParameterType::Vector:
-				{
-					MaterialParameterVector* vectorParam = (MaterialParameterVector*)parameter;
-
-					TOptional<Vector4> value = ParseVector4String(csDefault);
-
-					if (!value)
-						return false;
-
-					vectorParam->SetDefaultValue(*value);
-					break;
-				}
-				case EMaterialParameterType::Texture2D:
-				{
-					MaterialParameterTexture2D* texture2dParam = (MaterialParameterTexture2D*)parameter;
-
-					TOptional<GUID> value = ParseGuidString(csDefault);
-
-					if (!value)
-						return false;
-
-					AssetDefinition* assetDef = AssetRegistry::Find(*value);
-					if (!assetDef)
-					{
-						LOG_WARN("Asset {0} has not been found.", value->ToString());
-						return false;
-					}
-					texture2dParam->SetDefaultValue(assetDef->GetHandle());
-
-					break;
-				}
-			}
-		}
-
-		return true;
+		return result.OverallResult != EXMLParserResultType::Fail;
 	}
 
 	// Code parsing ==============================================================
