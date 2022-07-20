@@ -69,25 +69,11 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		// Message interface
 		struct MessageInterface
 		{
-			MessageInterface(XMLParser* owner) :
-				m_Owner(owner)
-			{
-			}
+			MessageInterface(XMLParser* owner);
 
-			void SendWarning(const String& text) const
-			{
-				m_Owner->AddMessage(EXMLParserResultType::Warning, text);
-			}
-
-			void SendError(const String& text) const
-			{
-				m_Owner->AddMessage(EXMLParserResultType::Error, text);
-			}
-
-			void SendFail(const String& text) const
-			{
-				m_Owner->Fail(text);
-			}
+			void SendWarning(const String& text) const;
+			void SendError(const String& text) const;
+			void SendFail(const String& text) const;
 
 		private:
 			XMLParser* m_Owner;
@@ -190,6 +176,28 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 
 		friend struct XMLParser::MessageInterface;
 	};
+
+	// Message Interface impl --------------------------------------------------------
+
+	inline XMLParser::MessageInterface::MessageInterface(XMLParser* owner) :
+		m_Owner(owner)
+	{
+	}
+
+	inline void XMLParser::MessageInterface::SendWarning(const String& text) const
+	{
+		m_Owner->AddMessage(EXMLParserResultType::Warning, text);
+	}
+
+	inline void XMLParser::MessageInterface::SendError(const String& text) const
+	{
+		m_Owner->AddMessage(EXMLParserResultType::Error, text);
+	}
+
+	inline void XMLParser::MessageInterface::SendFail(const String& text) const
+	{
+		m_Owner->Fail(text);
+	}
 
 	// Current node functions --------------------------------------------------------
 

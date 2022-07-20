@@ -27,6 +27,10 @@ namespace Ion
 		{
 			case EMaterialParameterType::Scalar:
 			{
+				ionassert(std::holds_alternative<float>(def));
+				ionassert(std::holds_alternative<float>(min));
+				ionassert(std::holds_alternative<float>(max));
+
 				MaterialParameterScalar* param = (MaterialParameterScalar*)this;
 				param->SetDefaultValue(std::get<float>(def));
 				param->SetMinValue(std::get<float>(min));
@@ -35,6 +39,10 @@ namespace Ion
 			}
 			case EMaterialParameterType::Vector:
 			{
+				ionassert(std::holds_alternative<Vector4>(def));
+				ionassert(std::holds_alternative<Vector4>(min));
+				ionassert(std::holds_alternative<Vector4>(max));
+
 				MaterialParameterVector* param = (MaterialParameterVector*)this;
 				param->SetDefaultValue(std::get<Vector4>(def));
 				param->SetMinValue(std::get<Vector4>(min));
@@ -43,6 +51,8 @@ namespace Ion
 			}
 			case EMaterialParameterType::Texture2D:
 			{
+				ionassert(std::holds_alternative<GUID>(def));
+
 				MaterialParameterTexture2D* param = (MaterialParameterTexture2D*)this;
 				param->SetDefaultValue(Asset::Find(std::get<GUID>(def)));
 				break;
@@ -423,15 +433,22 @@ namespace Ion
 		XMLParserResult result = MaterialAssetParser(materialAsset)
 			.BeginAsset() // <IonAsset>
 			.BeginMaterial() // <Material>
+
 			.LoadCode([this](String source) // <Code>
 			{
-				return LoadExternalMaterialCode(EnginePath::GetShadersPath() + L"Material" + StringConverter::StringToWString(source));
+				FilePath path = EnginePath::GetShadersPath() + L"Material" + StringConverter::StringToWString(source);
+				return LoadExternalMaterialCode(path);
 			})
-			.ParseParameters([this](String name, EMaterialParameterType type, const MaterialAssetParser::ParameterValues& values)
+
+			.ParseParameters([this](
+				String name,
+				EMaterialParameterType type,
+				const MaterialAssetParser::ParameterValues& values)
 			{
 				IMaterialParameter* parameter = AddParameter(name, type);
 				parameter->SetValues(values.Default, values.Min, values.Max);
 			})
+
 			.EndMaterial() // </Material>
 			.Finalize(); // </IonAsset>
 

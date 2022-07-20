@@ -465,8 +465,6 @@ namespace Ion
 		 */
 		bool m_bInvalid;
 
-		//friend TFuncMessageOnDispatch;
-
 		friend class MaterialInstance;
 		friend class Renderer;
 	};
