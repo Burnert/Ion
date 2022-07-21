@@ -69,6 +69,14 @@ namespace Ion
 		return *this;
 	}
 
+	bool XMLParser::CheckNode(const String& nodeName) const
+	{
+		_PARSER_FAILED_CHECK_R(false);
+		ionassert(IsOpen());
+
+		return (bool)m_CurrentNode->first_node(nodeName.c_str());
+	}
+
 	XMLParser& XMLParser::ExpectNode(const String& nodeName)
 	{
 		_PARSER_FAILED_CHECK();

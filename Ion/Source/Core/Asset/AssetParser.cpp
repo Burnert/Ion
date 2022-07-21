@@ -194,4 +194,70 @@ namespace Ion
 		m_Parser.TryParseCurrentNodeValue([&](String val) { value.Value = _ParseParamValue(val, type, m_Parser); });
 		return value;
 	}
+
+	// Mesh Asset Parser ----------------------------------------------------------------------
+
+	MeshAssetParser::MeshAssetParser(const Asset& asset) :
+		AssetParser(asset),
+		m_bNoDefaults(false)
+	{
+	}
+
+	MeshAssetParser& MeshAssetParser::BeginAsset()
+	{
+		AssetParser::BeginAsset()
+			.ExpectType(EAssetType::Mesh);
+		return *this;
+	}
+
+	MeshAssetParser& MeshAssetParser::BeginResource()
+	{
+		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_IonAsset);
+
+		m_Parser.EnterNode(IASSET_NODE_Resource);
+		return *this;
+	}
+
+	MeshAssetParser& MeshAssetParser::EndResource()
+	{
+		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_Resource);
+
+		m_Parser.ExitNode();
+		return *this;
+	}
+	
+	MeshAssetParser& MeshAssetParser::EndMesh()
+	{
+		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_Resource_Mesh);
+
+		m_Parser.ExitNode();
+		return *this;
+	}
+
+	MeshAssetParser& MeshAssetParser::BeginDefaults()
+	{
+		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_Resource_Mesh);
+
+		if (!m_Parser.CheckNode(IASSET_NODE_Defaults))
+		{
+			m_bNoDefaults = true;
+			return *this;
+		}
+
+		m_Parser.EnterNode(IASSET_NODE_Defaults);
+		return *this;
+	}
+
+	MeshAssetParser& MeshAssetParser::EndDefaults()
+	{
+		if (m_bNoDefaults)
+		{
+			return *this;
+		}
+
+		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_Defaults);
+
+		m_Parser.ExitNode();
+		return *this;
+	}
 }

@@ -932,7 +932,7 @@ namespace Ion
 				String name,
 				EMaterialParameterType type,
 				const MaterialInstanceAssetParser::ParameterInstanceValue& value,
-				XMLParser::MessageInterface& iface) // <ParameterInstance>
+				const XMLParser::MessageInterface& iface) // <ParameterInstance>
 			{
 				IMaterialParameterInstance* parameter = GetMaterialParameterInstance(name);
 				if (!parameter)

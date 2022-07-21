@@ -89,7 +89,7 @@ namespace Ion
 		{
 			typename T::TResourceDescription desc;
 			GUID guid = GUID::Zero;
-			if (T::ParseAssetFile(asset->GetDefinitionPath(), guid, desc))
+			if (T::ParseAssetFile(asset, guid, desc))
 			{
 				// Register the new resource, if it doesn't exist.
 				//TShared<T> newResource = MakeShareable(new T(guid, asset, desc));

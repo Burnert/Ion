@@ -5,7 +5,7 @@
 	<Resource>
 		<Mesh guid="dd684d85-61c6-4d44-9dc4-79ba5675ad5a">
 			<Defaults>
-				<Texture asset="79351854-92ff-43f9-a5ec-7826061f8de0" />
+				<Material index="0" asset="b2e952bd-a91e-4168-9706-2f82d213541a" />
 			</Defaults>
 		</Mesh>
 	</Resource>

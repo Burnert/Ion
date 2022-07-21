@@ -13,6 +13,7 @@ namespace Ion
 	struct MeshResourceDefaults
 	{
 		Asset TextureAsset;
+		TArray<Asset> MaterialAssets;
 	};
 
 	/**
@@ -89,12 +90,12 @@ namespace Ion
 		 *
 		 * @see Resource::Query
 		 *
-		 * @param path .iasset file path
+		 * @param asset Asset handle
 		 * @param outGuid GUID object to write the resource Guid to.
 		 * @param outDescription MeshResourceDescription object to write to
 		 * @return True if the file has been parsed successfully.
 		 */
-		static bool ParseAssetFile(const FilePath& path, GUID& outGuid, MeshResourceDescription& outDescription);
+		static bool ParseAssetFile(const Asset& asset, GUID& outGuid, MeshResourceDescription& outDescription);
 
 	protected:
 		MeshResource(const GUID& guid, const Asset& asset, const MeshResourceDescription& desc) :

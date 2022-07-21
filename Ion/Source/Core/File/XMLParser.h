@@ -41,7 +41,8 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 #define _PARSER_CHECK_ATTR(attr, attrName, nodeName, path) _PARSER_CHECK_ATTR_R(attr, attrName, nodeName, path, *this)
 #define _PARSER_CHECK_ATTR_V(attr, attrName, nodeName, path) _PARSER_CHECK_ATTR_R(attr, attrName, nodeName, path, )
 
-#define _PARSER_FAILED_CHECK() if (m_bFailed) return *this
+#define _PARSER_FAILED_CHECK_R(ret) if (m_bFailed) return ret
+#define _PARSER_FAILED_CHECK() _PARSER_FAILED_CHECK_R(*this)
 
 	enum class EXMLParserResultType
 	{
@@ -131,6 +132,8 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		XMLParser& TryParseNodeValue(const String& nodeName, FParse parseFunc);
 		template<typename... Args>
 		XMLParser& TryParseAttributes(const String& nodeName, Args&&... args);
+
+		bool CheckNode(const String& nodeName) const;
 
 		XMLParser& ExpectNode(const String& nodeName);
 

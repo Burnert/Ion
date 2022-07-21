@@ -94,12 +94,12 @@ namespace Ion
 		 *
 		 * @see Resource::Query
 		 *
-		 * @param path .iasset file path
+		 * @param asset Asset handle
 		 * @param outGuid GUID object to write the resource Guid to.
 		 * @param outDescription TextureResourceDescription object to write to
 		 * @return True if the file has been parsed successfully.
 		 */
-		static bool ParseAssetFile(const FilePath& path, GUID& outGuid, TextureResourceDescription& outDescription);
+		static bool ParseAssetFile(const Asset& asset, GUID& outGuid, TextureResourceDescription& outDescription);
 
 	protected:
 		TextureResource(const GUID& guid, const Asset& asset, const TextureResourceDescription& desc) :

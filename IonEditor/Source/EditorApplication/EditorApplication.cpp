@@ -77,22 +77,22 @@ namespace Ion::Editor
 
 		ComponentRegistry& registry = m_EditorMainWorld->GetComponentRegistry();
 
-		Asset materialAsset = AssetFinder(EnginePath::GetEngineContentPath() + L"Materials/DefaultMaterial.iasset").Resolve();
+		//Asset materialAsset = AssetFinder(EnginePath::GetEngineContentPath() + L"Materials/DefaultMaterial.iasset").Resolve();
 
-		TShared<Material> material = MaterialRegistry::QueryMaterial(materialAsset);
-		material->AddUsage(EShaderUsage::StaticMesh);
-		material->CompileShaders();
+		//TShared<Material> material = MaterialRegistry::QueryMaterial(materialAsset);
+		//material->AddUsage(EShaderUsage::StaticMesh);
+		//material->CompileShaders();
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(60));
+		//std::this_thread::sleep_for(std::chrono::milliseconds(60));
 
-		Asset materialInstanceAsset = AssetFinder(FilePath(L"../IonExample/Assets/Materials/ciupaga.iasset")).Resolve();
+		//Asset materialInstanceAsset = AssetFinder(FilePath(L"../IonExample/Assets/Materials/ciupaga.iasset")).Resolve();
 
-		TShared<MaterialInstance> materialInstance = MaterialRegistry::QueryMaterialInstance(materialInstanceAsset);
-		MaterialParameterInstanceScalar* paramBrightness = materialInstance->GetMaterialParameterInstanceTyped<MaterialParameterInstanceScalar>("Brightness");
-		MaterialParameterInstanceVector* paramColor = materialInstance->GetMaterialParameterInstanceTyped<MaterialParameterInstanceVector>("Color");
+		//TShared<MaterialInstance> materialInstance = MaterialRegistry::QueryMaterialInstance(materialInstanceAsset);
+		//MaterialParameterInstanceScalar* paramBrightness = materialInstance->GetMaterialParameterInstanceTyped<MaterialParameterInstanceScalar>("Brightness");
+		//MaterialParameterInstanceVector* paramColor = materialInstance->GetMaterialParameterInstanceTyped<MaterialParameterInstanceVector>("Color");
 
-		ionassert(paramBrightness->GetValue() == paramBrightness->GetParameterScalar()->GetDefaultValue());
-		ionassert(paramColor->GetValue() == paramColor->GetParameterVector()->GetDefaultValue());
+		//ionassert(paramBrightness->GetValue() == paramBrightness->GetParameterScalar()->GetDefaultValue());
+		//ionassert(paramColor->GetValue() == paramColor->GetParameterVector()->GetDefaultValue());
 
 		MeshEntity* meshEntity = m_EditorMainWorld->SpawnEntityOfClass<MeshEntity>();
 
@@ -101,7 +101,7 @@ namespace Ion::Editor
 		meshEntity->SetMesh(mesh);
 		meshEntity->SetName("MaterialExampleMesh");
 
-		mesh->AssignMaterialToSlot(0, materialInstance);
+		//mesh->AssignMaterialToSlot(0, materialInstance);
 
 		//if (0)
 		//{

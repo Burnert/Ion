@@ -5,6 +5,7 @@
 
 // @TODO: Out of module include
 #include "Material/MaterialCommon.h"
+#include "Resource/ResourceCommon.h"
 
 namespace Ion
 {
@@ -147,6 +148,8 @@ namespace Ion
 	template<typename FParse>
 	inline MaterialInstanceAssetParser& MaterialInstanceAssetParser::BeginMaterialInstance(FParse parseFunc)
 	{
+		static_assert(TIsConvertibleV<FParse, TFunction<void(const Asset&)>>);
+
 		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_IonAsset);
 
 		m_Parser.EnterNode(IASSET_NODE_MaterialInstance)
@@ -171,6 +174,8 @@ namespace Ion
 	template<typename FForEach>
 	inline MaterialInstanceAssetParser& MaterialInstanceAssetParser::ParseParameterInstances(FForEach forEachPI)
 	{
+		static_assert(TIsConvertibleV<FForEach, TFunction<void(String, EMaterialParameterType, const MaterialInstanceAssetParser::ParameterInstanceValue&, const XMLParser::MessageInterface&)>>);
+
 		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_MaterialInstance);
 
 		m_Parser.EnterEachNode(IASSET_NODE_MaterialInstance_ParameterInstance, [this, &forEachPI](XMLParser& parser)
@@ -195,6 +200,104 @@ namespace Ion
 
 			ParameterInstanceValue value = ParseParameterInstanceValue(paramType);
 			forEachPI(paramName, paramType, value, parser.GetInterface());
+		});
+
+		return *this;
+	}
+
+	// Mesh Asset Parser ----------------------------------------------------------------------
+
+	class ION_API MeshAssetParser : public AssetParser
+	{
+	public:
+		struct MaterialDesc
+		{
+			Asset Asset;
+			uint32 Index;
+		};
+
+		MeshAssetParser(const Asset& asset);
+
+		MeshAssetParser& BeginAsset();
+
+		MeshAssetParser& BeginResource();
+		MeshAssetParser& EndResource();
+
+		template<typename FParse>
+		MeshAssetParser& BeginMesh(FParse parseFunc);
+		MeshAssetParser& EndMesh();
+
+		MeshAssetParser& BeginDefaults();
+		MeshAssetParser& EndDefaults();
+
+		template<typename FForEachParse>
+		MeshAssetParser& ParseMaterials(FForEachParse forEachMaterial);
+
+	private:
+		bool m_bNoDefaults;
+	};
+
+	template<typename FParse>
+	inline MeshAssetParser& MeshAssetParser::BeginMesh(FParse parseFunc)
+	{
+		static_assert(TIsConvertibleV<FParse, TFunction<void(GUID&)>>);
+
+		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_Resource);
+
+		m_Parser
+			.EnterNode(IASSET_NODE_Resource_Mesh)
+			.ParseCurrentAttributes(
+				IASSET_ATTR_guid, [&parseFunc](String sGuid)
+				{
+					TOptional<GUID> guidOpt = ParseGuidString(sGuid.c_str());
+					parseFunc(guidOpt.value_or(GUID::Zero));
+				});
+
+		return *this;
+	}
+
+	template<typename FForEachParse>
+	inline MeshAssetParser& MeshAssetParser::ParseMaterials(FForEachParse forEachMaterial)
+	{
+		static_assert(TIsConvertibleV<FForEachParse, TFunction<void(uint32, const Asset&)>>);
+
+		if (m_bNoDefaults)
+			return *this;
+
+		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_Defaults);
+
+		m_Parser.EnterEachNode(IASSET_NODE_Defaults_Material, [&forEachMaterial](XMLParser& parser)
+		{
+			uint32 index;
+			Asset asset;
+
+			parser.ParseCurrentAttributes(
+				IASSET_ATTR_index, [&index, &parser](const XMLParser::MessageInterface& iface, String sIndex)
+				{
+					TOptional<int32> indexOpt = ParseInt32String(sIndex.c_str());
+					if (!indexOpt)
+						iface.SendError("Material index invalid.");
+					index = (uint32)indexOpt.value_or(-1);
+				},
+				IASSET_ATTR_asset, [&asset, &parser](const XMLParser::MessageInterface& iface, String sGuid)
+				{
+					TOptional<GUID> guidOpt = ParseGuidString(sGuid.c_str());
+					if (guidOpt)
+					{
+						asset = Asset::Find(*guidOpt);
+					}
+					else
+					{
+						String message = fmt::format("Cannot parse the Material asset GUID string: \"{0}\" -> GUID", sGuid);
+						iface.SendError(message);
+					}
+				}
+			);
+
+			if (index != (uint32)-1 && asset.IsValid())
+			{
+				forEachMaterial(index, asset);
+			}
 		});
 
 		return *this;

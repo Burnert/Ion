@@ -22,6 +22,7 @@ ionexcept(attr, IASSET_STR_INVALID_FILE attrName " attribute could not be found 
 #define IASSET_ATTR_parent               "parent"
 #define IASSET_ATTR_blend                "blend"
 #define IASSET_ATTR_shader               "shader"
+#define IASSET_ATTR_index                "index"
 
 // Resource Usage -----------------------------------------------------
 
@@ -54,6 +55,18 @@ namespace Ion
 	};
 
 	EAssetType ParseAssetTypeString(const String& sType);
+
+	inline static TOptional<int32> ParseInt32String(const char* str)
+	{
+		char* pEnd;
+		long value = strtol(str, &pEnd, 10);
+		if (pEnd == str || errno == ERANGE)
+		{
+			LOG_ERROR("Invalid value.");
+			return NullOpt;
+		}
+		return value;
+	}
 
 	inline static TOptional<float> ParseFloatString(const char* str)
 	{

@@ -28,8 +28,10 @@ namespace Ion
 		return (ETextureFilteringMethod)0xFF;
 	}
 
-	bool TextureResource::ParseAssetFile(const FilePath& path, GUID& outGuid, TextureResourceDescription& outDescription)
+	bool TextureResource::ParseAssetFile(const Asset& asset, GUID& outGuid, TextureResourceDescription& outDescription)
 	{
+		const FilePath& path = asset->GetDefinitionPath();
+
 		String assetDefinition;
 		File::ReadToString(path, assetDefinition);
 

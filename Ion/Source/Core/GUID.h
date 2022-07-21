@@ -46,6 +46,8 @@ namespace Ion
 		void GetRawBytes(uint8(&outBytes)[16]) const;
 		GUIDBytesArray GetRawBytes() const;
 
+		void Swap(GUID& other);
+
 	private:
 		void PlatformGenerateGUID();
 		void PlatformGenerateGUIDFromString(const String& str);
@@ -173,6 +175,11 @@ namespace Ion
 	inline GUIDBytesArray GUID::GetRawBytes() const
 	{
 		return m_Bytes;
+	}
+
+	inline void GUID::Swap(GUID& other)
+	{
+		m_Bytes.swap(other.m_Bytes);
 	}
 }
 

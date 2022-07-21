@@ -24,6 +24,19 @@ namespace Ion
 		// @TODO: Is this fine?
 		mesh->m_MeshResource = resource;
 
+		const MeshResourceDefaults& defaults = resource->GetDefaults();
+
+		for (int32 i = 0; i < defaults.MaterialAssets.size(); ++i)
+		{
+			Asset asset = defaults.MaterialAssets[i];
+			if (!asset)
+				continue;
+
+			TShared<MaterialInstance> material = MaterialInstance::CreateFromAsset(asset);
+
+			mesh->AssignMaterialToSlot(i, material);
+		}
+
 		return mesh;
 	}
 
