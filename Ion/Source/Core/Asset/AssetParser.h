@@ -118,4 +118,85 @@ namespace Ion
 
 		return *this;
 	}
+
+	// Material Instance Asset Parser ------------------------------------------------------------------
+
+	class ION_API MaterialInstanceAssetParser : public AssetParser
+	{
+	public:
+		struct ParameterInstanceValue
+		{
+			TMaterialParameterTypeVariant Value;
+		};
+
+		MaterialInstanceAssetParser(const Asset& asset);
+
+		MaterialInstanceAssetParser& BeginAsset();
+
+		template<typename FParse>
+		MaterialInstanceAssetParser& BeginMaterialInstance(FParse parseFunc);
+		MaterialInstanceAssetParser& EndMaterialInstance();
+
+		template<typename FForEach>
+		MaterialInstanceAssetParser& ParseParameterInstances(FForEach forEachPI);
+
+	private:
+		ParameterInstanceValue ParseParameterInstanceValue(EMaterialParameterType type);
+	};
+
+	template<typename FParse>
+	inline MaterialInstanceAssetParser& MaterialInstanceAssetParser::BeginMaterialInstance(FParse parseFunc)
+	{
+		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_IonAsset);
+
+		m_Parser.EnterNode(IASSET_NODE_MaterialInstance)
+			.ParseCurrentAttributes(
+				IASSET_ATTR_parent, [&parseFunc](const XMLParser::MessageInterface& iface, String parent)
+				{
+					TOptional<GUID> guidOpt = ParseGuidString(parent.c_str());
+					if (guidOpt)
+					{
+						parseFunc(Asset::Find(*guidOpt));
+					}
+					else
+					{
+						String message = fmt::format("Cannot parse the Material parent GUID string: \"{0}\" -> GUID", parent);
+						iface.SendFail(message);
+					}
+				});
+
+		return *this;
+	}
+
+	template<typename FForEach>
+	inline MaterialInstanceAssetParser& MaterialInstanceAssetParser::ParseParameterInstances(FForEach forEachPI)
+	{
+		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_MaterialInstance);
+
+		m_Parser.EnterEachNode(IASSET_NODE_MaterialInstance_ParameterInstance, [this, &forEachPI](XMLParser& parser)
+		{
+			String paramName;
+			EMaterialParameterType paramType = EMaterialParameterType::Null;
+
+			parser.ParseCurrentAttributes(
+				IASSET_ATTR_type, [&paramType, &parser](String type)
+				{
+					paramType = MaterialParameterTypeFromString(type.c_str());
+					if (paramType == EMaterialParameterType::Null)
+					{
+						String message = fmt::format("Invalid Material Parameter Instance type: \"{0}\"", type);
+						parser.GetInterface().SendError(message);
+					}
+				},
+				IASSET_ATTR_name, [&paramName](String name)
+				{
+					paramName.swap(name);
+				});
+
+			ParameterInstanceValue value = ParseParameterInstanceValue(paramType);
+			forEachPI(paramName, paramType, value, parser.GetInterface());
+		});
+
+		return *this;
+	}
 }

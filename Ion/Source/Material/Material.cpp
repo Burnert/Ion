@@ -115,6 +115,40 @@ namespace Ion
 
 	// MaterialParameterInstance impl ------------------------------------------------------------------------------------
 
+	void IMaterialParameterInstance::SetValue(const TMaterialParameterTypeVariant& value)
+	{
+		// @TODO: There should be a better way to set these values
+
+		EMaterialParameterType type = GetType();
+		switch (type)
+		{
+			case EMaterialParameterType::Scalar:
+			{
+				ionassert(std::holds_alternative<float>(value));
+
+				MaterialParameterInstanceScalar* param = (MaterialParameterInstanceScalar*)this;
+				param->SetValue(std::get<float>(value));
+				break;
+			}
+			case EMaterialParameterType::Vector:
+			{
+				ionassert(std::holds_alternative<Vector4>(value));
+
+				MaterialParameterInstanceVector* param = (MaterialParameterInstanceVector*)this;
+				param->SetValue(std::get<Vector4>(value));
+				break;
+			}
+			case EMaterialParameterType::Texture2D:
+			{
+				ionassert(std::holds_alternative<GUID>(value));
+
+				MaterialParameterInstanceTexture2D* param = (MaterialParameterInstanceTexture2D*)this;
+				param->SetValue(Asset::Find(std::get<GUID>(value)));
+				break;
+			}
+		}
+	}
+
 	MaterialParameterInstanceScalar::MaterialParameterInstanceScalar(MaterialParameterScalar* parentParameter, float value) :
 		m_Parameter(parentParameter),
 		m_Value(value)
@@ -238,6 +272,8 @@ namespace Ion
 
 		return materialInstance;
 	}
+
+	// Material --------------------------------------------------------------------------------------
 
 	TShared<Material> Material::Create()
 	{
@@ -452,7 +488,7 @@ namespace Ion
 			.EndMaterial() // </Material>
 			.Finalize(); // </IonAsset>
 
-		return result.OverallResult != EXMLParserResultType::Fail;
+		return result.OK();
 	}
 
 	// Code parsing ==============================================================
@@ -615,7 +651,6 @@ namespace Ion
 			}
 			uint32 freeSlot = GetFirstFreeTextureSlot();
 			parameter = new MaterialParameterTexture2D(name, freeSlot);
-
 			break;
 		}
 
@@ -737,6 +772,39 @@ namespace Ion
 		return true;
 	}
 
+	// Material Instance ------------------------------------------------------------------------------
+
+	TShared<MaterialInstance> MaterialInstance::Create(const TShared<Material>& parentMaterial)
+	{
+		return MakeShareable(new MaterialInstance(parentMaterial));
+	}
+
+	TShared<MaterialInstance> MaterialInstance::CreateFromAsset(Asset materialInstanceAsset)
+	{
+		return MakeShareable(new MaterialInstance(materialInstanceAsset));
+	}
+
+	void MaterialInstance::BindTextures() const
+	{
+		for (MaterialParameterInstanceTexture2D* textureParam : m_TextureParameterInstances)
+		{
+			textureParam->Bind(textureParam->GetParameterTexture2D()->GetSlot());
+		}
+	}
+
+	IMaterialParameterInstance* MaterialInstance::GetMaterialParameterInstance(const String& name) const
+	{
+		ionassert(m_ParentMaterial);
+		ionassert(m_ParentMaterial->m_Parameters.find(name) != m_ParentMaterial->m_Parameters.end());
+
+		auto it = m_ParameterInstances.find(name);
+		if (it != m_ParameterInstances.end())
+		{
+			return it->second;
+		}
+		return nullptr;
+	}
+
 	void MaterialInstance::TransferParameters() const
 	{
 		// Update the constant buffer fields from parameters
@@ -790,9 +858,19 @@ namespace Ion
 		}
 	}
 
+	void MaterialInstance::SetParentMaterial(const TShared<Material>& material)
+	{
+		DestroyParameterInstances();
+		m_ParentMaterial = material;
+		CreateParameterInstances();
+	}
+
 	void MaterialInstance::CreateParameterInstances()
 	{
 		ionassert(m_ParameterInstances.empty(), "Destroy existing instances before creating new ones.");
+
+		ionexcept(m_ParentMaterial, "Cannot create parameter instances. Parent Material is not set.")
+			return;
 
 		for (auto& [name, parameter] : m_ParentMaterial->m_Parameters)
 		{
@@ -843,180 +921,32 @@ namespace Ion
 		ionassert(materialInstanceAsset);
 		ionassert(materialInstanceAsset->GetType() == EAssetType::MaterialInstance);
 
-		const FilePath& path = materialInstanceAsset->GetDefinitionPath();
-
-		String assetDefinition;
-		File::ReadToString(path, assetDefinition);
-
-		TShared<XMLDocument> xml = MakeShared<XMLDocument>(assetDefinition);
-
-		// <IonAsset>
-		XMLNode* nodeIonAsset = xml->XML().first_node(IASSET_NODE_IonAsset);
-		IASSET_CHECK_NODE(nodeIonAsset, IASSET_NODE_IonAsset, path);
-
-		// <MaterialInstance>
-		XMLNode* nodeMaterialInstance = nodeIonAsset->first_node(IASSET_NODE_MaterialInstance);
-		IASSET_CHECK_NODE(nodeMaterialInstance, IASSET_NODE_MaterialInstance, path);
-
-		// parent=
-		XMLAttribute* attrParent = nodeMaterialInstance->first_attribute(IASSET_ATTR_parent);
-		IASSET_CHECK_ATTR(attrParent, IASSET_ATTR_parent, IASSET_NODE_MaterialInstance, path);
-
-		char* csParent = attrParent->value();
-		ionassert(csParent);
-		if (strlen(csParent) == 0)
-			return false;
-		
-		// Find the parent material asset
-
-		TOptional<GUID> parentMatGuid = ParseGuidString(csParent);
-		if (!parentMatGuid)
-			return false;
-
-		AssetDefinition* parentMatAsset = AssetRegistry::Find(*parentMatGuid);
-		if (!parentMatAsset)
-		{
-			LOG_WARN("Asset {0} has not been found.", parentMatGuid->ToString());
-			return false;
-		}
-
-		m_ParentMaterial = MaterialRegistry::QueryMaterial(parentMatAsset->GetHandle());
-		if (!m_ParentMaterial)
-			return false;
-
-		// Create the instances before assigning values
-		CreateParameterInstances();
-
-		// <ParameterInstance> nodes
-		XMLNode* nodeParameterInstance = nodeMaterialInstance->first_node(IASSET_NODE_MaterialInstance_ParameterInstance);
-		while (nodeParameterInstance)
-		{
-			if (!ParseMaterialParameterInstance(nodeParameterInstance, path))
-				return false;
-
-			// Get the next <ParameterInstance>
-			nodeParameterInstance = nodeParameterInstance->next_sibling(IASSET_NODE_MaterialInstance_ParameterInstance);
-		}
-
-		return true;
-	}
-
-	bool MaterialInstance::ParseMaterialParameterInstance(XMLNode* parameterInstanceNode, const FilePath& path)
-	{
-		ionassert(parameterInstanceNode);
-
-		// type=
-		XMLAttribute* attrParamType = parameterInstanceNode->first_attribute(IASSET_ATTR_type);
-		IASSET_CHECK_ATTR(attrParamType, IASSET_ATTR_type, IASSET_NODE_MaterialInstance_ParameterInstance, path);
-
-		char* csParamType = attrParamType->value();
-		ionassert(csParamType);
-		if (strlen(csParamType) == 0)
-			return false;
-
-		EMaterialParameterType paramType = MaterialParameterTypeFromString(csParamType);
-
-		// name=
-		XMLAttribute* attrParamName = parameterInstanceNode->first_attribute(IASSET_ATTR_name);
-		IASSET_CHECK_ATTR(attrParamName, IASSET_ATTR_name, IASSET_NODE_MaterialInstance_ParameterInstance, path);
-
-		char* csParamName = attrParamName->value();
-		ionassert(csParamName);
-		if (strlen(csParamName) == 0)
-			return false;
-
-		IMaterialParameterInstance* parameter = GetMaterialParameterInstance(csParamName);
-		if (!parameter)
-			return false;
-
-		char* csParamValue = parameterInstanceNode->value();
-		ionassert(csParamValue);
-		if (strlen(csParamValue) == 0)
-			return false;
-
-		switch (paramType)
-		{
-			case EMaterialParameterType::Scalar:
+		XMLParserResult result = MaterialInstanceAssetParser(materialInstanceAsset)
+			.BeginAsset() // <IonAsset>
+			.BeginMaterialInstance([this](const Asset& asset) // <MaterialInstance>
 			{
-				ionassert(dynamic_cast<MaterialParameterInstanceScalar*>(parameter));
+				SetParentMaterial(MaterialRegistry::QueryMaterial(asset));
+			})
 
-				MaterialParameterInstanceScalar* scalarParam = (MaterialParameterInstanceScalar*)parameter;
-
-				TOptional<float> value = ParseFloatString(csParamValue);
-
-				if (!value)
-					return false;
-
-				scalarParam->SetValue(*value);
-				break;
-			}
-			case EMaterialParameterType::Vector:
+			.ParseParameterInstances([this](
+				String name,
+				EMaterialParameterType type,
+				const MaterialInstanceAssetParser::ParameterInstanceValue& value,
+				XMLParser::MessageInterface& iface) // <ParameterInstance>
 			{
-				ionassert(dynamic_cast<MaterialParameterInstanceVector*>(parameter));
-
-				MaterialParameterInstanceVector* vectorParam = (MaterialParameterInstanceVector*)parameter;
-
-				TOptional<Vector4> value = ParseVector4String(csParamValue);
-
-				if (!value)
-					return false;
-
-				vectorParam->SetValue(*value);
-				break;
-			}
-			case EMaterialParameterType::Texture2D:
-			{
-				ionassert(dynamic_cast<MaterialParameterInstanceTexture2D*>(parameter));
-
-				MaterialParameterInstanceTexture2D* texture2dParam = (MaterialParameterInstanceTexture2D*)parameter;
-
-				TOptional<GUID> value = ParseGuidString(csParamValue);
-
-				if (!value)
-					return false;
-
-				AssetDefinition* assetDef = AssetRegistry::Find(*value);
-				if (!assetDef)
+				IMaterialParameterInstance* parameter = GetMaterialParameterInstance(name);
+				if (!parameter)
 				{
-					LOG_WARN("Asset {0} has not been found.", value->ToString());
-					return false;
+					String message = fmt::format("Cannot find Parameter Instance with name \"{0}\"", name);
+					iface.SendError(message);
+					return;
 				}
-				texture2dParam->SetValue(assetDef->GetHandle());
-				break;
-			}
-		}
+				parameter->SetValue(value.Value);
+			})
 
-		return true;
-	}
+			.EndMaterialInstance() // </MaterialInstance>
+			.Finalize(); // </IonAsset>
 
-	TShared<MaterialInstance> MaterialInstance::Create(const TShared<Material>& parentMaterial)
-	{
-		return MakeShareable(new MaterialInstance(parentMaterial));
-	}
-
-	TShared<MaterialInstance> MaterialInstance::CreateFromAsset(Asset materialInstanceAsset)
-	{
-		return MakeShareable(new MaterialInstance(materialInstanceAsset));
-	}
-
-	void MaterialInstance::BindTextures() const
-	{
-		for (MaterialParameterInstanceTexture2D* textureParam : m_TextureParameterInstances)
-		{
-			textureParam->Bind(textureParam->GetParameterTexture2D()->GetSlot());
-		}
-	}
-
-	IMaterialParameterInstance* MaterialInstance::GetMaterialParameterInstance(const String& name) const
-	{
-		ionassert(m_ParentMaterial);
-		ionassert(m_ParentMaterial->m_Parameters.find(name) != m_ParentMaterial->m_Parameters.end());
-
-		auto it = m_ParameterInstances.find(name);
-		if (it != m_ParameterInstances.end())
-		{
-			return it->second;
-		}
-		return nullptr;
+		return result.OK();
 	}
 }

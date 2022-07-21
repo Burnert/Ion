@@ -233,7 +233,11 @@ namespace Ion
 
 		virtual ~IMaterialParameterInstance() { }
 
+	private:
+		void SetValue(const TMaterialParameterTypeVariant& value);
+
 		friend class Material;
+		friend class MaterialInstance;
 	};
 
 	// MaterialParameterInstance Implementations -------------------------------------------------------
@@ -505,11 +509,12 @@ namespace Ion
 		MaterialInstance(const TShared<Material>& parentMaterial);
 		MaterialInstance(Asset materialInstanceAsset);
 
+		void SetParentMaterial(const TShared<Material>& material);
+
 		void CreateParameterInstances();
 		void DestroyParameterInstances();
 
 		bool ParseAsset(Asset materialInstanceAsset);
-		bool ParseMaterialParameterInstance(XMLNode* parameterInstanceNode, const FilePath& path);
 
 	private:
 		TShared<Material> m_ParentMaterial;

@@ -61,6 +61,11 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 	{
 		EXMLParserResultType OverallResult = EXMLParserResultType::Success;
 		TArray<XMLParserMessage> Messages;
+
+		inline bool OK() const
+		{
+			return OverallResult != EXMLParserResultType::Fail;
+		}
 	};
 
 	class ION_API XMLParser
@@ -100,6 +105,8 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		template<typename... Args>
 		XMLParser& ParseCurrentAttributes(Args&&... args);
 
+		template<typename FParse>
+		XMLParser& TryParseCurrentNodeValue(FParse parseFunc);
 		template<typename... Args>
 		XMLParser& TryParseCurrentAttributes(Args&&... args);
 
@@ -223,6 +230,17 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		return *this;
 	}
 
+	template<typename FParse>
+	inline XMLParser& XMLParser::TryParseCurrentNodeValue(FParse parseFunc)
+	{
+		_PARSER_FAILED_CHECK();
+		ionassert(IsOpen());
+
+		ParseNodeValue(m_CurrentNode, parseFunc);
+
+		return *this;
+	}
+
 	template<typename ...Args>
 	inline XMLParser& XMLParser::TryParseCurrentAttributes(Args&&... args)
 	{
@@ -239,7 +257,6 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 	{
 		_PARSER_FAILED_CHECK();
 		ionassert(IsOpen());
-		ionassert(m_CurrentNode);
 
 		ExpectNodeValue(m_CurrentNode, expectFunc);
 	}

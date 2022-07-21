@@ -5,6 +5,8 @@
 
 namespace Ion
 {
+	// Asset Parser Base ------------------------------------------------------------------------
+
 	AssetParser::AssetParser(const Asset& asset) :
 		m_Parser(asset->GetDefinitionPath()),
 		m_Asset(asset)
@@ -68,6 +70,8 @@ namespace Ion
 		return m_Parser.Finalize();
 	}
 
+	// Material Asset Parser ------------------------------------------------------------------
+
 	MaterialAssetParser::MaterialAssetParser(const Asset& asset) :
 		AssetParser(asset)
 	{
@@ -103,62 +107,91 @@ namespace Ion
 		return *this;
 	}
 
+	static TMaterialParameterTypeVariant _ParseParamValue(const String& val, EMaterialParameterType type, XMLParser& parser)
+	{
+		switch (type)
+		{
+			case EMaterialParameterType::Scalar:
+			{
+				TOptional<float> value = ParseFloatString(val.c_str());
+
+				if (!value)
+				{
+					String message = fmt::format("Cannot parse the scalar parameter value string. \"{0}\" -> float", val);
+					parser.GetInterface().SendError(message);
+					return 0.0f;
+				}
+				return *value;
+			}
+			case EMaterialParameterType::Vector:
+			{
+				TOptional<Vector4> value = ParseVector4String(val.c_str());
+
+				if (!value)
+				{
+					String message = fmt::format("Cannot parse the vector parameter value string. \"{0}\" -> Vector4", val);
+					parser.GetInterface().SendError(message);
+					return Vector4(0.0f);
+				}
+				return *value;
+			}
+			case EMaterialParameterType::Texture2D:
+			{
+				TOptional<GUID> value = ParseGuidString(val.c_str());
+
+				if (!value)
+				{
+					String message = fmt::format("Cannot parse the texture2D parameter value string. \"{0}\" -> GUID", val);
+					parser.GetInterface().SendError(message);
+					return GUID::Zero;
+				}
+				return *value;
+			}
+		}
+		parser.GetInterface().SendError("Tried to parse values of an invalid material parameter type.");
+		return 0.0f;
+	}
+
 	MaterialAssetParser::ParameterValues MaterialAssetParser::ParseParameterValues(EMaterialParameterType type)
 	{
 		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_Material_Parameter);
 
-		auto parseValue = [this, type](const String& defValue) -> TMaterialParameterTypeVariant
-		{
-			switch (type)
-			{
-				case EMaterialParameterType::Scalar:
-				{
-					TOptional<float> value = ParseFloatString(defValue.c_str());
-
-					if (!value)
-					{
-						String message = fmt::format("Cannot parse the scalar parameter value string. \"{0}\" -> float", defValue);
-						m_Parser.GetInterface().SendError(message);
-						return 0.0f;
-					}
-					return *value;
-				}
-				case EMaterialParameterType::Vector:
-				{
-					TOptional<Vector4> value = ParseVector4String(defValue.c_str());
-
-					if (!value)
-					{
-						String message = fmt::format("Cannot parse the vector parameter value string. \"{0}\" -> Vector4", defValue);
-						m_Parser.GetInterface().SendError(message);
-						return Vector4(0.0f);
-					}
-					return *value;
-				}
-				case EMaterialParameterType::Texture2D:
-				{
-					TOptional<GUID> value = ParseGuidString(defValue.c_str());
-
-					if (!value)
-					{
-						String message = fmt::format("Cannot parse the texture2D parameter value string. \"{0}\" -> GUID", defValue);
-						m_Parser.GetInterface().SendError(message);
-						return GUID::Zero;
-					}
-					return *value;
-				}
-			}
-			m_Parser.GetInterface().SendError("Tried to parse values of an invalid material parameter type.");
-			return 0.0f;
-		};
-
 		ParameterValues values;
-
 		m_Parser
-			.TryParseNodeValue(IASSET_NODE_Material_Parameter_Default, [&](String def) { values.Default = parseValue(def); })
-			.TryParseNodeValue(IASSET_NODE_Material_Parameter_Min,     [&](String min) { values.Min     = parseValue(min); })
-			.TryParseNodeValue(IASSET_NODE_Material_Parameter_Max,     [&](String max) { values.Max     = parseValue(max); });
-
+			.TryParseNodeValue(IASSET_NODE_Material_Parameter_Default, [&](String def) { values.Default = _ParseParamValue(def, type, m_Parser); })
+			.TryParseNodeValue(IASSET_NODE_Material_Parameter_Min,     [&](String min) { values.Min     = _ParseParamValue(min, type, m_Parser); })
+			.TryParseNodeValue(IASSET_NODE_Material_Parameter_Max,     [&](String max) { values.Max     = _ParseParamValue(max, type, m_Parser); });
 		return values;
+	}
+
+	// Material Instance Asset Parser ------------------------------------------------------------------
+
+	MaterialInstanceAssetParser::MaterialInstanceAssetParser(const Asset& asset) :
+		AssetParser(asset)
+	{
+	}
+
+	MaterialInstanceAssetParser& MaterialInstanceAssetParser::BeginAsset()
+	{
+		AssetParser::BeginAsset()
+			.ExpectType(EAssetType::MaterialInstance);
+		return *this;
+	}
+
+	MaterialInstanceAssetParser& MaterialInstanceAssetParser::EndMaterialInstance()
+	{
+		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_MaterialInstance);
+
+		m_Parser.ExitNode();
+		return *this;
+	}
+
+	MaterialInstanceAssetParser::ParameterInstanceValue MaterialInstanceAssetParser::ParseParameterInstanceValue(EMaterialParameterType type)
+	{
+		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_MaterialInstance_ParameterInstance);
+
+		ParameterInstanceValue value;
+		m_Parser.TryParseCurrentNodeValue([&](String val) { value.Value = _ParseParamValue(val, type, m_Parser); });
+		return value;
 	}
 }
