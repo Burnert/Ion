@@ -8,7 +8,8 @@ namespace Ion
 	// Asset Parser Base ------------------------------------------------------------------------
 
 	AssetParser::AssetParser(const Asset& asset) :
-		m_Parser(asset->GetDefinitionPath()),
+		//m_Parser(asset->GetDefinitionPath()),
+		XMLParser(asset->GetDefinitionPath()),
 		m_Asset(asset)
 	{
 		ionassert(m_Asset);
@@ -16,18 +17,40 @@ namespace Ion
 
 	AssetParser& AssetParser::BeginAsset()
 	{
-		ionassert(!m_Parser.IsOpen(), "Cannot open the asset while it's already open.");
+		ionassert(!IsOpen(), "Cannot open the asset while it's already open.");
 
-		m_Parser.Open()
-			.EnterNode(IASSET_NODE_IonAsset);
+		Open();
+		EnterNode(IASSET_NODE_IonAsset);
+		return *this;
+	}
+
+	AssetParser& AssetParser::BeginAsset(EAssetType type)
+	{
+		ionassert(!IsOpen(), "Cannot open the asset while it's already open.");
+
+		Open();
+		EnterNode(IASSET_NODE_IonAsset);
+		ExpectType(type);
+		return *this;
+	}
+
+	AssetParser& AssetParser::Begin(const String& nodeName)
+	{
+		EnterNode(nodeName);
+		return *this;
+	}
+
+	AssetParser& AssetParser::End()
+	{
+		ExitNode();
 		return *this;
 	}
 
 	AssetParser& AssetParser::ParseInfo(EAssetType& outType, GUID& outGuid)
 	{
-		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_IonAsset);
+		ionassert(GetCurrentNodeName() == IASSET_NODE_IonAsset);
 
-		m_Parser.ParseAttributes(IASSET_NODE_Info,
+		ParseAttributes(IASSET_NODE_Info,
 			IASSET_ATTR_type, [&outType](const XMLParser::MessageInterface& iface, String type)
 			{
 				outType = ParseAssetTypeString(type);
@@ -46,28 +69,23 @@ namespace Ion
 
 	AssetParser& AssetParser::ParseName(String& outName)
 	{
-		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_IonAsset);
+		ionassert(GetCurrentNodeName() == IASSET_NODE_IonAsset);
 
-		m_Parser.ParseNodeValue(IASSET_NODE_Name,
+		ParseNodeValue(IASSET_NODE_Name,
 			[&outName](String name) { outName.swap(name); });
 		return *this;
 	}
 
 	AssetParser& AssetParser::ExpectType(EAssetType type)
 	{
-		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_IonAsset);
+		ionassert(GetCurrentNodeName() == IASSET_NODE_IonAsset);
 
-		m_Parser.ExpectAttributes(IASSET_NODE_Info,
+		ExpectAttributes(IASSET_NODE_Info,
 			IASSET_ATTR_type, [type](String sType)
 			{
 				return type == ParseAssetTypeString(sType);
 			});
 		return *this;
-	}
-
-	XMLParserResult AssetParser::Finalize()
-	{
-		return m_Parser.Finalize();
 	}
 
 	// Material Asset Parser ------------------------------------------------------------------
@@ -93,21 +111,21 @@ namespace Ion
 
 	MaterialAssetParser& MaterialAssetParser::BeginMaterial()
 	{
-		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_IonAsset);
+		ionassert(GetCurrentNodeName() == IASSET_NODE_IonAsset);
 
-		m_Parser.EnterNode(IASSET_NODE_Material);
+		EnterNode(IASSET_NODE_Material);
 		return *this;
 	}
 
 	MaterialAssetParser& MaterialAssetParser::EndMaterial()
 	{
-		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_Material);
+		ionassert(GetCurrentNodeName() == IASSET_NODE_Material);
 
-		m_Parser.ExitNode();
+		ExitNode();
 		return *this;
 	}
 
-	static TMaterialParameterTypeVariant _ParseParamValue(const String& val, EMaterialParameterType type, XMLParser& parser)
+	static TMaterialParameterTypeVariant _ParseParamValue(const String& val, EMaterialParameterType type, AssetParser& parser)
 	{
 		switch (type)
 		{
@@ -154,13 +172,12 @@ namespace Ion
 
 	MaterialAssetParser::ParameterValues MaterialAssetParser::ParseParameterValues(EMaterialParameterType type)
 	{
-		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_Material_Parameter);
+		ionassert(GetCurrentNodeName() == IASSET_NODE_Material_Parameter);
 
 		ParameterValues values;
-		m_Parser
-			.TryParseNodeValue(IASSET_NODE_Material_Parameter_Default, [&](String def) { values.Default = _ParseParamValue(def, type, m_Parser); })
-			.TryParseNodeValue(IASSET_NODE_Material_Parameter_Min,     [&](String min) { values.Min     = _ParseParamValue(min, type, m_Parser); })
-			.TryParseNodeValue(IASSET_NODE_Material_Parameter_Max,     [&](String max) { values.Max     = _ParseParamValue(max, type, m_Parser); });
+		TryParseNodeValue(IASSET_NODE_Material_Parameter_Default, [&](String def) { values.Default = _ParseParamValue(def, type, *this); });
+		TryParseNodeValue(IASSET_NODE_Material_Parameter_Min,     [&](String min) { values.Min     = _ParseParamValue(min, type, *this); });
+		TryParseNodeValue(IASSET_NODE_Material_Parameter_Max,     [&](String max) { values.Max     = _ParseParamValue(max, type, *this); });
 		return values;
 	}
 
@@ -180,18 +197,18 @@ namespace Ion
 
 	MaterialInstanceAssetParser& MaterialInstanceAssetParser::EndMaterialInstance()
 	{
-		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_MaterialInstance);
+		ionassert(GetCurrentNodeName() == IASSET_NODE_MaterialInstance);
 
-		m_Parser.ExitNode();
+		ExitNode();
 		return *this;
 	}
 
 	MaterialInstanceAssetParser::ParameterInstanceValue MaterialInstanceAssetParser::ParseParameterInstanceValue(EMaterialParameterType type)
 	{
-		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_MaterialInstance_ParameterInstance);
+		ionassert(GetCurrentNodeName() == IASSET_NODE_MaterialInstance_ParameterInstance);
 
 		ParameterInstanceValue value;
-		m_Parser.TryParseCurrentNodeValue([&](String val) { value.Value = _ParseParamValue(val, type, m_Parser); });
+		ParseCurrentNodeValue([&](String val) { value.Value = _ParseParamValue(val, type, *this); });
 		return value;
 	}
 
@@ -212,39 +229,39 @@ namespace Ion
 
 	MeshAssetParser& MeshAssetParser::BeginResource()
 	{
-		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_IonAsset);
+		ionassert(GetCurrentNodeName() == IASSET_NODE_IonAsset);
 
-		m_Parser.EnterNode(IASSET_NODE_Resource);
+		EnterNode(IASSET_NODE_Resource);
 		return *this;
 	}
 
 	MeshAssetParser& MeshAssetParser::EndResource()
 	{
-		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_Resource);
+		ionassert(GetCurrentNodeName() == IASSET_NODE_Resource);
 
-		m_Parser.ExitNode();
+		ExitNode();
 		return *this;
 	}
 	
 	MeshAssetParser& MeshAssetParser::EndMesh()
 	{
-		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_Resource_Mesh);
+		ionassert(GetCurrentNodeName() == IASSET_NODE_Resource_Mesh);
 
-		m_Parser.ExitNode();
+		ExitNode();
 		return *this;
 	}
 
 	MeshAssetParser& MeshAssetParser::BeginDefaults()
 	{
-		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_Resource_Mesh);
+		ionassert(GetCurrentNodeName() == IASSET_NODE_Resource_Mesh);
 
-		if (!m_Parser.CheckNode(IASSET_NODE_Defaults))
+		if (!CheckNode(IASSET_NODE_Defaults))
 		{
 			m_bNoDefaults = true;
 			return *this;
 		}
 
-		m_Parser.EnterNode(IASSET_NODE_Defaults);
+		EnterNode(IASSET_NODE_Defaults);
 		return *this;
 	}
 
@@ -255,9 +272,9 @@ namespace Ion
 			return *this;
 		}
 
-		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_Defaults);
+		ionassert(GetCurrentNodeName() == IASSET_NODE_Defaults);
 
-		m_Parser.ExitNode();
+		ExitNode();
 		return *this;
 	}
 }

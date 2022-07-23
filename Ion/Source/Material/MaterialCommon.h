@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Core/StringUtils.h"
+
 #define IASSET_NODE_Material                           "Material"
 #define IASSET_NODE_Material_Code                      "Code"
 #define IASSET_NODE_Material_Parameter                 "Parameter"
@@ -18,6 +20,24 @@ namespace Ion
 		Scalar,
 		Vector,
 		Texture2D
+	};
+
+	template<>
+	struct TEnumParser<EMaterialParameterType>
+	{
+		ENUM_PARSER_TO_STRING_BEGIN(EMaterialParameterType)
+		ENUM_PARSER_TO_STRING_HELPER(Null)
+		ENUM_PARSER_TO_STRING_HELPER(Scalar)
+		ENUM_PARSER_TO_STRING_HELPER(Vector)
+		ENUM_PARSER_TO_STRING_HELPER(Texture2D)
+		ENUM_PARSER_TO_STRING_END()
+
+		ENUM_PARSER_FROM_STRING_BEGIN(EMaterialParameterType)
+		ENUM_PARSER_FROM_STRING_HELPER(Null)
+		ENUM_PARSER_FROM_STRING_HELPER(Scalar)
+		ENUM_PARSER_FROM_STRING_HELPER(Vector)
+		ENUM_PARSER_FROM_STRING_HELPER(Texture2D)
+		ENUM_PARSER_FROM_STRING_END()
 	};
 
 #define _MPTFSHelper(type) if (strcmp(str, #type) == 0) return EMaterialParameterType::type

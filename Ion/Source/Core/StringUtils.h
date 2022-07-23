@@ -148,3 +148,30 @@ template<> NODISCARD FORCEINLINE String ToHex(uint64 value)
 	return hex;
 }
 template<> NODISCARD FORCEINLINE String ToHex(int64 value) { return ToHex((uint64)value); }
+
+// Enum-String conversion
+
+#define ENUM_PARSER_TO_STRING_BEGIN(type) inline static String ToString(type value) { switch (value) {
+#define ENUM_PARSER_TO_STRING_HELPER(val) case decltype(value)::val: return #val;
+#define ENUM_PARSER_TO_STRING_END() } LOG_ERROR("Invalid enum value."); return ""; }
+
+#define ENUM_PARSER_FROM_STRING_BEGIN(type) inline static TOptional<type> FromString(const String& str) { ionassert(!str.empty(), "The enum string is empty.");
+#define ENUM_PARSER_FROM_STRING_HELPER(val) if (str == #val) return decltype(FromString(""))::value_type::val;
+#define ENUM_PARSER_FROM_STRING_END() LOG_ERROR("Invalid enum string."); return NullOpt; }
+
+namespace Ion
+{
+	template<typename TEnum>
+	struct TEnumParser
+	{
+		inline static String ToString(TEnum value)
+		{
+			ionassert(false, "No specialization for type.");
+		}
+
+		inline static TOptional<TEnum> FromString(const String& str)
+		{
+			ionassert(false, "No specialization for type.");
+		}
+	};
+}

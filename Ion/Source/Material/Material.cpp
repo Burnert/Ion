@@ -457,8 +457,57 @@ namespace Ion
 		m_UsedTextureSlotsMask(0),
 		m_Asset(materialAsset)
 	{
-		ParseAsset(materialAsset);
+		if (!ParseAsset(materialAsset))
+		{
+			ionassert(false);
+			return;
+		}
 		BuildConstantBuffer();
+	}
+
+	static TMaterialParameterTypeVariant _ParseParamValue(const String& val, EMaterialParameterType type, AssetParser& parser)
+	{
+		switch (type)
+		{
+			case EMaterialParameterType::Scalar:
+			{
+				TOptional<float> value = ParseFloatString(val.c_str());
+
+				if (!value)
+				{
+					String message = fmt::format("Cannot parse the scalar parameter value string. \"{0}\" -> float", val);
+					parser.GetInterface().SendError(message);
+					return 0.0f;
+				}
+				return *value;
+			}
+			case EMaterialParameterType::Vector:
+			{
+				TOptional<Vector4> value = ParseVector4String(val.c_str());
+
+				if (!value)
+				{
+					String message = fmt::format("Cannot parse the vector parameter value string. \"{0}\" -> Vector4", val);
+					parser.GetInterface().SendError(message);
+					return Vector4(0.0f);
+				}
+				return *value;
+			}
+			case EMaterialParameterType::Texture2D:
+			{
+				TOptional<GUID> value = ParseGuidString(val.c_str());
+
+				if (!value)
+				{
+					String message = fmt::format("Cannot parse the texture2D parameter value string. \"{0}\" -> GUID", val);
+					parser.GetInterface().SendError(message);
+					return GUID::Zero;
+				}
+				return *value;
+			}
+		}
+		parser.GetInterface().SendError("Tried to parse values of an invalid material parameter type.");
+		return 0.0f;
 	}
 
 	bool Material::ParseAsset(Asset materialAsset)
@@ -466,29 +515,35 @@ namespace Ion
 		ionassert(materialAsset);
 		ionassert(materialAsset->GetType() == EAssetType::Material);
 
-		XMLParserResult result = MaterialAssetParser(materialAsset)
-			.BeginAsset() // <IonAsset>
-			.BeginMaterial() // <Material>
-
-			.LoadCode([this](String source) // <Code>
+		return AssetParser(materialAsset)
+			.BeginAsset(EAssetType::Material)
+			.Begin(IASSET_NODE_Material) // <Material>
+			.ParseAttributes(IASSET_NODE_Material_Code,
+				IASSET_ATTR_source, [this](String source)
+				{
+					FilePath path = EnginePath::GetShadersPath() + L"Material" + StringConverter::StringToWString(source);
+					return LoadExternalMaterialCode(path);
+				}
+			)
+			.EnterEachNode(IASSET_NODE_Material_Parameter, [this](AssetParser& parser)
 			{
-				FilePath path = EnginePath::GetShadersPath() + L"Material" + StringConverter::StringToWString(source);
-				return LoadExternalMaterialCode(path);
-			})
+				String paramName;
+				EMaterialParameterType paramType = EMaterialParameterType::Null;
 
-			.ParseParameters([this](
-				String name,
-				EMaterialParameterType type,
-				const MaterialAssetParser::ParameterValues& values)
-			{
-				IMaterialParameter* parameter = AddParameter(name, type);
+				parser.ParseCurrentEnumAttribute<EMaterialParameterType>(IASSET_ATTR_type, paramType);
+				parser.GetCurrentAttribute(IASSET_ATTR_name, paramName);
+
+				MaterialAssetParser::ParameterValues values;
+				parser.TryParseNodeValue(IASSET_NODE_Material_Parameter_Default, [&](String def) { values.Default = _ParseParamValue(def, paramType, parser); });
+				parser.TryParseNodeValue(IASSET_NODE_Material_Parameter_Min,     [&](String min) { values.Min =     _ParseParamValue(min, paramType, parser); });
+				parser.TryParseNodeValue(IASSET_NODE_Material_Parameter_Max,     [&](String max) { values.Max =     _ParseParamValue(max, paramType, parser); });
+
+				IMaterialParameter* parameter = AddParameter(paramName, paramType);
 				parameter->SetValues(values.Default, values.Min, values.Max);
 			})
-
-			.EndMaterial() // </Material>
-			.Finalize(); // </IonAsset>
-
-		return result.OK();
+			.End() // </Material>
+			.Finalize()
+			.OK();
 	}
 
 	// Code parsing ==============================================================
@@ -921,32 +976,47 @@ namespace Ion
 		ionassert(materialInstanceAsset);
 		ionassert(materialInstanceAsset->GetType() == EAssetType::MaterialInstance);
 
-		XMLParserResult result = MaterialInstanceAssetParser(materialInstanceAsset)
-			.BeginAsset() // <IonAsset>
-			.BeginMaterialInstance([this](const Asset& asset) // <MaterialInstance>
-			{
-				SetParentMaterial(MaterialRegistry::QueryMaterial(asset));
-			})
-
-			.ParseParameterInstances([this](
-				String name,
-				EMaterialParameterType type,
-				const MaterialInstanceAssetParser::ParameterInstanceValue& value,
-				const XMLParser::MessageInterface& iface) // <ParameterInstance>
-			{
-				IMaterialParameterInstance* parameter = GetMaterialParameterInstance(name);
-				if (!parameter)
+		return AssetParser(materialInstanceAsset)
+			.BeginAsset(EAssetType::MaterialInstance)
+			.Begin(IASSET_NODE_MaterialInstance) // <MaterialInstance>
+			.ParseCurrentAttributes(
+				IASSET_ATTR_parent, [this](const AssetParser::MessageInterface& iface, String parent)
 				{
-					String message = fmt::format("Cannot find Parameter Instance with name \"{0}\"", name);
-					iface.SendError(message);
-					return;
+					TOptional<GUID> guidOpt = ParseGuidString(parent.c_str());
+					if (guidOpt)
+					{
+						SetParentMaterial(MaterialRegistry::QueryMaterial(Asset::Find(*guidOpt)));
+					}
+					else
+					{
+						String message = fmt::format("Cannot parse the Material parent GUID string: \"{0}\" -> GUID", parent);
+						iface.SendFail(message);
+					}
 				}
-				parameter->SetValue(value.Value);
-			})
+			)
+			.EnterEachNode(IASSET_NODE_MaterialInstance_ParameterInstance, [this](AssetParser& parser)
+				{
+					String paramName;
+					EMaterialParameterType paramType = EMaterialParameterType::Null;
 
-			.EndMaterialInstance() // </MaterialInstance>
-			.Finalize(); // </IonAsset>
+					parser.ParseCurrentEnumAttribute(IASSET_ATTR_type, paramType);
+					parser.GetCurrentAttribute(IASSET_ATTR_name, paramName);
 
-		return result.OK();
+					MaterialInstanceAssetParser::ParameterInstanceValue value;
+					parser.ParseCurrentNodeValue([&](String val) { value.Value = _ParseParamValue(val, paramType, parser); });
+
+					IMaterialParameterInstance* parameter = GetMaterialParameterInstance(paramName);
+					if (!parameter)
+					{
+						String message = fmt::format("Cannot find Parameter Instance with name \"{0}\"", paramName);
+						parser.GetInterface().SendError(message);
+						return;
+					}
+					parameter->SetValue(value.Value);
+				}
+			)
+			.End() // </MaterialInstance>
+			.Finalize()
+			.OK();
 	}
 }

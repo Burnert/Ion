@@ -69,20 +69,24 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		}
 	};
 
+	template<typename T>
 	class ION_API XMLParser
 	{
 	public:
+		using TThis = XMLParser<T>;
+		using TFinalClass = TIf<TIsSameV<T, void>, TThis, T>;
+
 		// Message interface
 		struct MessageInterface
 		{
-			MessageInterface(XMLParser* owner);
+			MessageInterface(TThis* owner);
 
 			void SendWarning(const String& text) const;
 			void SendError(const String& text) const;
 			void SendFail(const String& text) const;
 
 		private:
-			XMLParser* m_Owner;
+			TThis* m_Owner;
 		};
 
 		using FParseFunc = TFunction<void(String)>;
@@ -90,60 +94,66 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 
 		using FExpectFunc = TFunction<bool(String)>;
 
-		using FEnterEachNodeFunc = TFunction<void(XMLParser&)>;
+		using FEnterEachNodeFunc = TFunction<void(TFinalClass&)>;
 
 		XMLParser(const FilePath& file);
 
-		XMLParser& Open();
+		TFinalClass& Open();
 
-		XMLParser& EnterNode(const String& nodeName);
-		XMLParser& ExitNode();
+		TFinalClass& EnterNode(const String& nodeName);
+		TFinalClass& ExitNode();
+
+		template<typename FEnter>
+		TFinalClass& TryEnterNode(const String& nodeName, FEnter onEnter);
 
 		// Current node functions --------------------------------------------------------
 
-		template<typename FParse>
-		XMLParser& ParseCurrentNodeValue(FParse parseFunc);
-		template<typename... Args>
-		XMLParser& ParseCurrentAttributes(Args&&... args);
+		TFinalClass& GetCurrentAttribute(const String& attrName, String& outString);
 
 		template<typename FParse>
-		XMLParser& TryParseCurrentNodeValue(FParse parseFunc);
+		TFinalClass& ParseCurrentNodeValue(FParse parseFunc);
 		template<typename... Args>
-		XMLParser& TryParseCurrentAttributes(Args&&... args);
+		TFinalClass& ParseCurrentAttributes(Args&&... args);
+
+		template<typename TEnum>
+		TFinalClass& ParseCurrentEnumAttribute(const String& attrName, TEnum& outEnum);
+
+		template<typename... Args>
+		TFinalClass& TryParseCurrentAttributes(Args&&... args);
 
 		template<typename FExpect>
-		XMLParser& ExpectCurrentNodeValue(FExpect expectFunc);
+		TFinalClass& ExpectCurrentNodeValue(FExpect expectFunc);
 		template<typename... Args>
-		XMLParser& ExpectCurrentAttributes(Args&&... args);
+		TFinalClass& ExpectCurrentAttributes(Args&&... args);
 
 		String GetCurrentNodeName() const;
-		XMLParser& GetCurrentNodeName(String& outName);
+		TFinalClass& GetCurrentNodeName(String& outName);
 
 		// Arbitrary node functions --------------------------------------------------------
 
 		template<typename FParse>
-		XMLParser& ParseNodeValue(const String& nodeName, FParse parseFunc);
+		TFinalClass& ParseNodeValue(const String& nodeName, FParse parseFunc);
 		template<typename... Args>
-		XMLParser& ParseAttributes(const String& nodeName, Args&&... args);
+		TFinalClass& ParseAttributes(const String& nodeName, Args&&... args);
 		template<typename... Args>
-		XMLParser& ParseAttributesAndEnterNode(const String& nodeName, Args&&... args);
+		TFinalClass& ParseAttributesAndEnterNode(const String& nodeName, Args&&... args);
 
 		template<typename FParse>
-		XMLParser& TryParseNodeValue(const String& nodeName, FParse parseFunc);
+		TFinalClass& TryParseNodeValue(const String& nodeName, FParse parseFunc);
 		template<typename... Args>
-		XMLParser& TryParseAttributes(const String& nodeName, Args&&... args);
+		TFinalClass& TryParseAttributes(const String& nodeName, Args&&... args);
 
 		bool CheckNode(const String& nodeName) const;
 
-		XMLParser& ExpectNode(const String& nodeName);
+		TFinalClass& ExpectNode(const String& nodeName);
 
 		template<typename FExpect>
-		XMLParser& ExpectNodeValue(const String& nodeName, FExpect expectFunc);
+		TFinalClass& ExpectNodeValue(const String& nodeName, FExpect expectFunc);
 		template<typename... Args>
-		XMLParser& ExpectAttributes(const String& nodeName, Args&&... args);
+		TFinalClass& ExpectAttributes(const String& nodeName, Args&&... args);
 
 		template<typename FForEach>
-		XMLParser& EnterEachNode(const String& nodeName, FForEach forEach);
+		TFinalClass& EnterEachNode(const String& nodeName, FForEach forEach);
 
 		XMLParserResult Finalize();
 
@@ -174,6 +184,11 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		template<typename FExpect>
 		void ExpectAttribute(XMLNode* node, const String& name, FExpect expectFunc);
 
+		inline operator TFinalClass&() const
+		{
+			return *(TFinalClass*)this;
+		}
+
 	private:
 		FilePath m_Path;
 
@@ -184,35 +199,122 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 
 		bool m_bFailed;
 
-		friend struct XMLParser::MessageInterface;
+		friend struct TThis::MessageInterface;
 	};
 
 	// Message Interface impl --------------------------------------------------------
 
-	inline XMLParser::MessageInterface::MessageInterface(XMLParser* owner) :
+	template<typename T>
+	inline XMLParser<T>::MessageInterface::MessageInterface(TThis* owner) :
 		m_Owner(owner)
 	{
 	}
 
-	inline void XMLParser::MessageInterface::SendWarning(const String& text) const
+	template<typename T>
+	inline void XMLParser<T>::MessageInterface::SendWarning(const String& text) const
 	{
 		m_Owner->AddMessage(EXMLParserResultType::Warning, text);
 	}
 
-	inline void XMLParser::MessageInterface::SendError(const String& text) const
+	template<typename T>
+	inline void XMLParser<T>::MessageInterface::SendError(const String& text) const
 	{
 		m_Owner->AddMessage(EXMLParserResultType::Error, text);
 	}
 
-	inline void XMLParser::MessageInterface::SendFail(const String& text) const
+	template<typename T>
+	inline void XMLParser<T>::MessageInterface::SendFail(const String& text) const
 	{
 		m_Owner->Fail(text);
 	}
 
+	// XMLParser ---------------------------------------------------------------------------
+
+	template<typename T>
+	XMLParser<T>::XMLParser(const FilePath& file) :
+		m_Path(file),
+		m_bFailed(false),
+		m_CurrentNode(nullptr)
+	{
+	}
+
+	template<typename T>
+	typename XMLParser<T>::TFinalClass& XMLParser<T>::Open()
+	{
+		ionassert(!IsOpen(), "Cannot open the file while it's already open.");
+		ionassert(m_Path.IsFile());
+
+		String xml;
+		File::ReadToString(m_Path, xml);
+		if (xml.empty())
+		{
+			Fail("The file is empty.");
+			return *this;
+		}
+
+		m_XML = MakeShared<XMLDocument>(xml);
+		m_CurrentNode = &m_XML->XML();
+
+		return *this;
+	}
+
+	template<typename T>
+	typename XMLParser<T>::TFinalClass& XMLParser<T>::EnterNode(const String& nodeName)
+	{
+		_PARSER_FAILED_CHECK();
+		ionassert(IsOpen());
+
+		XMLNode* node = m_CurrentNode->first_node(nodeName.c_str());
+		_PARSER_CHECK_NODE(node, nodeName, GetPath());
+		m_CurrentNode = node;
+
+		return *this;
+	}
+
+	template<typename T>
+	typename XMLParser<T>::TFinalClass& XMLParser<T>::ExitNode()
+	{
+		_PARSER_FAILED_CHECK();
+		ionassert(IsOpen());
+		ionassert(m_CurrentNode->parent());
+
+		m_CurrentNode = m_CurrentNode->parent();
+
+		return *this;
+	}
+
+	template<typename T>
+	template<typename FEnter>
+	inline typename XMLParser<T>::TFinalClass& XMLParser<T>::TryEnterNode(const String& nodeName, FEnter onEnter)
+	{
+		static_assert(TIsConvertibleV<FEnter, TFunction<void(XMLParser&)>>);
+
+		if (CheckNode(nodeName))
+		{
+			EnterNode(nodeName);
+			onEnter(*this);
+			ExitNode()
+		}
+	}
+
 	// Current node functions --------------------------------------------------------
 
+	template<typename T>
+	inline typename XMLParser<T>::TFinalClass& XMLParser<T>::GetCurrentAttribute(const String& attrName, String& outString)
+	{
+		_PARSER_FAILED_CHECK();
+		ionassert(IsOpen());
+
+		XMLAttribute* attr = m_CurrentNode->first_attribute(attrName.c_str());
+		if (attr)
+			outString = attr->value();
+
+		return *this;
+	}
+
+	template<typename T>
 	template<typename FParse>
-	inline XMLParser& XMLParser::ParseCurrentNodeValue(FParse parseFunc)
+	inline typename XMLParser<T>::TFinalClass& XMLParser<T>::ParseCurrentNodeValue(FParse parseFunc)
 	{
 		_PARSER_FAILED_CHECK();
 		ionassert(IsOpen());
@@ -222,8 +324,9 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		return *this;
 	}
 
+	template<typename T>
 	template<typename ...Args>
-	inline XMLParser& XMLParser::ParseCurrentAttributes(Args&&... args)
+	inline typename XMLParser<T>::TFinalClass& XMLParser<T>::ParseCurrentAttributes(Args&&... args)
 	{
 		_PARSER_FAILED_CHECK();
 		ionassert(IsOpen());
@@ -233,19 +336,27 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		return *this;
 	}
 
-	template<typename FParse>
-	inline XMLParser& XMLParser::TryParseCurrentNodeValue(FParse parseFunc)
+	template<typename T>
+	template<typename TEnum>
+	inline typename XMLParser<T>::TFinalClass& XMLParser<T>::ParseCurrentEnumAttribute(const String& attrName, TEnum& outEnum)
 	{
 		_PARSER_FAILED_CHECK();
 		ionassert(IsOpen());
 
-		ParseNodeValue(m_CurrentNode, parseFunc);
+		ParseCurrentAttributes(
+			attrName, [&outEnum](const MessageInterface& iface, String sValue)
+			{
+				TOptional<TEnum> opt = TEnumParser<TEnum>::FromString(sValue);
+				if (opt)
+					outEnum = *opt;
+			});
 
 		return *this;
 	}
 
+	template<typename T>
 	template<typename ...Args>
-	inline XMLParser& XMLParser::TryParseCurrentAttributes(Args&&... args)
+	inline typename XMLParser<T>::TFinalClass& XMLParser<T>::TryParseCurrentAttributes(Args&&... args)
 	{
 		_PARSER_FAILED_CHECK();
 		ionassert(IsOpen());
@@ -255,8 +366,9 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		return *this;
 	}
 
+	template<typename T>
 	template<typename FExpect>
-	inline XMLParser& XMLParser::ExpectCurrentNodeValue(FExpect expectFunc)
+	inline typename XMLParser<T>::TFinalClass& XMLParser<T>::ExpectCurrentNodeValue(FExpect expectFunc)
 	{
 		_PARSER_FAILED_CHECK();
 		ionassert(IsOpen());
@@ -264,8 +376,9 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		ExpectNodeValue(m_CurrentNode, expectFunc);
 	}
 
+	template<typename T>
 	template<typename ...Args>
-	inline XMLParser& XMLParser::ExpectCurrentAttributes(Args&&... args)
+	inline typename XMLParser<T>::TFinalClass& XMLParser<T>::ExpectCurrentAttributes(Args&&... args)
 	{
 		_PARSER_FAILED_CHECK();
 		ionassert(IsOpen());
@@ -273,10 +386,29 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		ExpectAttributesExpand(m_CurrentNode, args...);
 	}
 
+	template<typename T>
+	String XMLParser<T>::GetCurrentNodeName() const
+	{
+		ionassert(IsOpen());
+
+		return m_CurrentNode->name();
+	}
+
+	template<typename T>
+	typename XMLParser<T>::TFinalClass& XMLParser<T>::GetCurrentNodeName(String& outName)
+	{
+		ionassert(IsOpen());
+
+		outName = m_CurrentNode->name();
+
+		return *this;
+	}
+
 	// Arbitrary node functions --------------------------------------------------------
 
+	template<typename T>
 	template<typename FParse>
-	inline XMLParser& XMLParser::ParseNodeValue(const String& nodeName, FParse parseFunc)
+	inline typename XMLParser<T>::TFinalClass& XMLParser<T>::ParseNodeValue(const String& nodeName, FParse parseFunc)
 	{
 		_PARSER_FAILED_CHECK();
 		ionassert(IsOpen());
@@ -289,8 +421,9 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		return *this;
 	}
 
+	template<typename T>
 	template<typename... Args>
-	inline XMLParser& XMLParser::ParseAttributes(const String& nodeName, Args&&... args)
+	inline typename XMLParser<T>::TFinalClass& XMLParser<T>::ParseAttributes(const String& nodeName, Args&&... args)
 	{
 		_PARSER_FAILED_CHECK();
 		ionassert(IsOpen());
@@ -303,15 +436,17 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		return *this;
 	}
 
+	template<typename T>
 	template<typename... Args>
-	inline XMLParser& XMLParser::ParseAttributesAndEnterNode(const String& nodeName, Args&&... args)
+	inline typename XMLParser<T>::TFinalClass& XMLParser<T>::ParseAttributesAndEnterNode(const String& nodeName, Args&&... args)
 	{
 		ParseAttributes(nodeName, Forward<Args>(args)...);
 		return EnterNode(nodeName);
 	}
 
+	template<typename T>
 	template<typename FParse>
-	inline XMLParser& XMLParser::TryParseNodeValue(const String& nodeName, FParse parseFunc)
+	inline typename XMLParser<T>::TFinalClass& XMLParser<T>::TryParseNodeValue(const String& nodeName, FParse parseFunc)
 	{
 		_PARSER_FAILED_CHECK();
 		ionassert(IsOpen());
@@ -325,8 +460,9 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		return *this;
 	}
 
+	template<typename T>
 	template<typename ...Args>
-	inline XMLParser& XMLParser::TryParseAttributes(const String& nodeName, Args&&... args)
+	inline typename XMLParser<T>::TFinalClass& XMLParser<T>::TryParseAttributes(const String& nodeName, Args&&... args)
 	{
 		_PARSER_FAILED_CHECK();
 		ionassert(IsOpen());
@@ -340,8 +476,30 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		return *this;
 	}
 
+	template<typename T>
+	bool XMLParser<T>::CheckNode(const String& nodeName) const
+	{
+		_PARSER_FAILED_CHECK_R(false);
+		ionassert(IsOpen());
+
+		return (bool)m_CurrentNode->first_node(nodeName.c_str());
+	}
+
+	template<typename T>
+	typename XMLParser<T>::TFinalClass& XMLParser<T>::ExpectNode(const String& nodeName)
+	{
+		_PARSER_FAILED_CHECK();
+		ionassert(IsOpen());
+
+		XMLNode* node = m_CurrentNode->first_node(nodeName.c_str());
+		_PARSER_CHECK_NODE(node, nodeName, GetPath());
+
+		return *this;
+	}
+
+	template<typename T>
 	template<typename FExpect>
-	inline XMLParser& XMLParser::ExpectNodeValue(const String& nodeName, FExpect expectFunc)
+	inline typename XMLParser<T>::TFinalClass& XMLParser<T>::ExpectNodeValue(const String& nodeName, FExpect expectFunc)
 	{
 		_PARSER_FAILED_CHECK();
 		ionassert(IsOpen());
@@ -355,8 +513,9 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		return *this;
 	}
 
+	template<typename T>
 	template<typename ...Args>
-	inline XMLParser& XMLParser::ExpectAttributes(const String& nodeName, Args&&... args)
+	inline typename XMLParser<T>::TFinalClass& XMLParser<T>::ExpectAttributes(const String& nodeName, Args&&... args)
 	{
 		_PARSER_FAILED_CHECK();
 		ionassert(IsOpen());
@@ -369,8 +528,9 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		return *this;
 	}
 
+	template<typename T>
 	template<typename FForEach>
-	inline XMLParser& XMLParser::EnterEachNode(const String& nodeName, FForEach forEach)
+	inline typename XMLParser<T>::TFinalClass& XMLParser<T>::EnterEachNode(const String& nodeName, FForEach forEach)
 	{
 		static_assert(TIsConvertibleV<FForEach, FEnterEachNodeFunc>);
 
@@ -380,29 +540,71 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		XMLNode* previousNode = m_CurrentNode;
 		for (m_CurrentNode = m_CurrentNode->first_node(nodeName.c_str()); m_CurrentNode; m_CurrentNode = m_CurrentNode->next_sibling(nodeName.c_str()))
 		{
-			forEach(*this);
+			forEach(*(TFinalClass*)this);
 		}
 		m_CurrentNode = previousNode;
 
 		return *this;
 	}
 
-	inline XMLParser::MessageInterface XMLParser::GetInterface()
+	template<typename T>
+	XMLParserResult XMLParser<T>::Finalize()
+	{
+		ionassert(IsOpen());
+
+		if (m_ParseResult.OverallResult == EXMLParserResultType::Success)
+		{
+			AddMessage(EXMLParserResultType::Success, "Asset has been parsed successfully.");
+		}
+
+		m_XML.reset();
+		m_CurrentNode = nullptr;
+
+		return m_ParseResult;
+	}
+
+	template<typename T>
+	inline typename XMLParser<T>::MessageInterface XMLParser<T>::GetInterface()
 	{
 		ionassert(IsOpen());
 
 		return MessageInterface(this);
 	}
 
-	inline bool XMLParser::IsOpen() const
+	template<typename T>
+	inline bool XMLParser<T>::IsOpen() const
 	{
 		return (bool)m_XML;
 	}
 
+	template<typename T>
+	void XMLParser<T>::Fail(const String& message)
+	{
+		ionassert(IsOpen());
+
+		m_bFailed = true;
+		m_ParseResult.OverallResult = EXMLParserResultType::Fail;
+		AddMessage(EXMLParserResultType::Fail, message);
+	}
+
+	template<typename T>
+	void XMLParser<T>::AddMessage(EXMLParserResultType type, const String& message)
+	{
+		ionassert(type != EXMLParserResultType::Fail || m_bFailed, "Call the Fail function directly.");
+		m_ParseResult.Messages.emplace_back(XMLParserMessage { type, message });
+	}
+
+	template<typename T>
+	const FilePath& XMLParser<T>::GetPath() const
+	{
+		return m_Path;
+	}
+
 	// Implementation detail -------------------------------------------------------------------------------
 
+	template<typename T>
 	template<typename FParse>
-	inline void XMLParser::ParseNodeValue(XMLNode* node, FParse parseFunc)
+	inline void XMLParser<T>::ParseNodeValue(XMLNode* node, FParse parseFunc)
 	{
 		static_assert(
 			TIsConvertibleV<FParse, FParseFunc> ||
@@ -410,7 +612,7 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 
 		if constexpr (TIsConvertibleV<FParse, FParseFuncEx>)
 		{
-			parseFunc(XMLParser::MessageInterface(this), node->value());
+			parseFunc(XMLParser<T>::MessageInterface(this), node->value());
 		}
 		else
 		{
@@ -418,8 +620,9 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		}
 	}
 
+	template<typename T>
 	template<bool bTry, typename FParse, typename ...Args>
-	inline void XMLParser::ParseAttributesExpand(XMLNode* node, const String& name, FParse parseFunc, Args&&... rest)
+	inline void XMLParser<T>::ParseAttributesExpand(XMLNode* node, const String& name, FParse parseFunc, Args&&... rest)
 	{
 		ParseAttribute<bTry>(node, name, parseFunc);
 
@@ -432,8 +635,9 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		}
 	}
 
+	template<typename T>
 	template<bool bTry, typename FParse>
-	inline void XMLParser::ParseAttribute(XMLNode* node, const String& name, FParse parseFunc)
+	inline void XMLParser<T>::ParseAttribute(XMLNode* node, const String& name, FParse parseFunc)
 	{
 		static_assert(
 			TIsConvertibleV<FParse, FParseFunc> ||
@@ -451,7 +655,7 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 
 		if constexpr (TIsConvertibleV<FParse, FParseFuncEx>)
 		{
-			parseFunc(XMLParser::MessageInterface(this), attribute->value());
+			parseFunc(XMLParser<T>::MessageInterface(this), attribute->value());
 		}
 		else
 		{
@@ -459,8 +663,9 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		}
 	}
 
+	template<typename T>
 	template<typename FExpect>
-	inline void XMLParser::ExpectNodeValue(XMLNode* node, FExpect expectFunc)
+	inline void XMLParser<T>::ExpectNodeValue(XMLNode* node, FExpect expectFunc)
 	{
 		if (!expectFunc(m_CurrentNode->value()))
 		{
@@ -469,8 +674,9 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		}
 	}
 
+	template<typename T>
 	template<typename FExpect, typename ...Args>
-	inline void XMLParser::ExpectAttributesExpand(XMLNode* node, const String& name, FExpect expectFunc, Args&&... rest)
+	inline void XMLParser<T>::ExpectAttributesExpand(XMLNode* node, const String& name, FExpect expectFunc, Args&&... rest)
 	{
 		ExpectAttribute(node, name, expectFunc);
 
@@ -483,8 +689,9 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		}
 	}
 
+	template<typename T>
 	template<typename FExpect>
-	inline void XMLParser::ExpectAttribute(XMLNode* node, const String& name, FExpect expectFunc)
+	inline void XMLParser<T>::ExpectAttribute(XMLNode* node, const String& name, FExpect expectFunc)
 	{
 		static_assert(TIsConvertibleV<FExpect, FExpectFunc>);
 

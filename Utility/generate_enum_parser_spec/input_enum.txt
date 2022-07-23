@@ -1,0 +1,7 @@
+enum class EMaterialParameterType
+{
+	Null = 0,
+	Scalar,
+	Vector,
+	Texture2D
+};

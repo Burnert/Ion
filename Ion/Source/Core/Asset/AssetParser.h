@@ -11,22 +11,24 @@ namespace Ion
 {
 	// Asset Parser Base ------------------------------------------------------------------------
 
-	class ION_API AssetParser
+	class ION_API AssetParser : public XMLParser<AssetParser>
 	{
 	public:
 		AssetParser(const Asset& asset);
 
 		AssetParser& BeginAsset();
+		AssetParser& BeginAsset(EAssetType type);
+
+		AssetParser& Begin(const String& nodeName);
+		AssetParser& End();
 
 		AssetParser& ParseInfo(EAssetType& outType, GUID& outGuid);
 		AssetParser& ParseName(String& outName);
 
 		AssetParser& ExpectType(EAssetType type);
 
-		XMLParserResult Finalize();
-
 	protected:
-		XMLParser m_Parser;
+		//XMLParser m_Parser;
 		Asset m_Asset;
 	};
 
@@ -66,9 +68,9 @@ namespace Ion
 	{
 		static_assert(TIsConvertibleV<FLoad, FLoadCode>);
 
-		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_Material);
+		ionassert(GetCurrentNodeName() == IASSET_NODE_Material);
 
-		m_Parser.ParseAttributes(IASSET_NODE_Material_Code,
+		ParseAttributes(IASSET_NODE_Material_Code,
 			IASSET_ATTR_source, [&loadFunc](const XMLParser::MessageInterface& iface, String source /* Shader Path */)
 			{
 				if (source.empty())
@@ -91,9 +93,9 @@ namespace Ion
 	template<typename FForEach>
 	inline MaterialAssetParser& MaterialAssetParser::ParseParameters(FForEach forEachParam)
 	{
-		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_Material);
+		ionassert(GetCurrentNodeName() == IASSET_NODE_Material);
 
-		m_Parser.EnterEachNode(IASSET_NODE_Material_Parameter, [this, &forEachParam](XMLParser& parser)
+		EnterEachNode(IASSET_NODE_Material_Parameter, [this, &forEachParam](XMLParser& parser)
 		{
 			String paramName;
 			EMaterialParameterType paramType = EMaterialParameterType::Null;
@@ -150,9 +152,9 @@ namespace Ion
 	{
 		static_assert(TIsConvertibleV<FParse, TFunction<void(const Asset&)>>);
 
-		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_IonAsset);
+		ionassert(GetCurrentNodeName() == IASSET_NODE_IonAsset);
 
-		m_Parser.EnterNode(IASSET_NODE_MaterialInstance)
+		EnterNode(IASSET_NODE_MaterialInstance)
 			.ParseCurrentAttributes(
 				IASSET_ATTR_parent, [&parseFunc](const XMLParser::MessageInterface& iface, String parent)
 				{
@@ -176,9 +178,9 @@ namespace Ion
 	{
 		static_assert(TIsConvertibleV<FForEach, TFunction<void(String, EMaterialParameterType, const MaterialInstanceAssetParser::ParameterInstanceValue&, const XMLParser::MessageInterface&)>>);
 
-		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_MaterialInstance);
+		ionassert(GetCurrentNodeName() == IASSET_NODE_MaterialInstance);
 
-		m_Parser.EnterEachNode(IASSET_NODE_MaterialInstance_ParameterInstance, [this, &forEachPI](XMLParser& parser)
+		EnterEachNode(IASSET_NODE_MaterialInstance_ParameterInstance, [this, &forEachPI](XMLParser& parser)
 		{
 			String paramName;
 			EMaterialParameterType paramType = EMaterialParameterType::Null;
@@ -242,16 +244,15 @@ namespace Ion
 	{
 		static_assert(TIsConvertibleV<FParse, TFunction<void(GUID&)>>);
 
-		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_Resource);
+		ionassert(GetCurrentNodeName() == IASSET_NODE_Resource);
 
-		m_Parser
-			.EnterNode(IASSET_NODE_Resource_Mesh)
-			.ParseCurrentAttributes(
-				IASSET_ATTR_guid, [&parseFunc](String sGuid)
-				{
-					TOptional<GUID> guidOpt = ParseGuidString(sGuid.c_str());
-					parseFunc(guidOpt.value_or(GUID::Zero));
-				});
+		EnterNode(IASSET_NODE_Resource_Mesh);
+		ParseCurrentAttributes(
+			IASSET_ATTR_guid, [&parseFunc](String sGuid)
+			{
+				TOptional<GUID> guidOpt = ParseGuidString(sGuid.c_str());
+				parseFunc(guidOpt.value_or(GUID::Zero));
+			});
 
 		return *this;
 	}
@@ -264,9 +265,9 @@ namespace Ion
 		if (m_bNoDefaults)
 			return *this;
 
-		ionassert(m_Parser.GetCurrentNodeName() == IASSET_NODE_Defaults);
+		ionassert(GetCurrentNodeName() == IASSET_NODE_Defaults);
 
-		m_Parser.EnterEachNode(IASSET_NODE_Defaults_Material, [&forEachMaterial](XMLParser& parser)
+		EnterEachNode(IASSET_NODE_Defaults_Material, [&forEachMaterial](XMLParser& parser)
 		{
 			uint32 index;
 			Asset asset;
