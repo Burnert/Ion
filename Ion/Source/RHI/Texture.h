@@ -18,6 +18,20 @@ namespace Ion
 		Default = 0,
 	};
 
+	template<>
+	struct TEnumParser<ETextureFilteringMethod>
+	{
+		ENUM_PARSER_TO_STRING_BEGIN(ETextureFilteringMethod)
+		ENUM_PARSER_TO_STRING_HELPER(Nearest)
+		ENUM_PARSER_TO_STRING_HELPER(Linear)
+		ENUM_PARSER_TO_STRING_END()
+
+		ENUM_PARSER_FROM_STRING_BEGIN(ETextureFilteringMethod)
+		ENUM_PARSER_FROM_STRING_HELPER(Nearest)
+		ENUM_PARSER_FROM_STRING_HELPER(Linear)
+		ENUM_PARSER_FROM_STRING_END()
+	};
+
 	enum class ETextureWrapMode : uint8
 	{
 		Wrap   = 0,

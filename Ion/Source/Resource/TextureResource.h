@@ -14,7 +14,7 @@ namespace Ion
 	 */
 	struct TextureResourceProperties
 	{
-		ETextureFilteringMethod Filter;
+		ETextureFilteringMethod Filter = ETextureFilteringMethod::Default;
 	};
 
 	/**

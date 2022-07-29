@@ -538,7 +538,7 @@ namespace Ion
 				String paramName;
 				EMaterialParameterType paramType = EMaterialParameterType::Null;
 
-				parser.ParseCurrentEnumAttribute<EMaterialParameterType>(IASSET_ATTR_type, paramType);
+				parser.ParseCurrentEnumAttribute(IASSET_ATTR_type, paramType);
 				parser.GetCurrentAttribute(IASSET_ATTR_name, paramName);
 
 				MaterialAssetParser::ParameterValues values;

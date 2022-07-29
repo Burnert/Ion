@@ -25,14 +25,14 @@ namespace Ion
 			.BeginAsset(EAssetType::Mesh)
 			.Begin(IASSET_NODE_Resource) // <Resource>
 			.Begin(IASSET_NODE_Resource_Mesh) // <Mesh>
-			.ParseCurrentAttributeTyped<GUID>(IASSET_ATTR_guid, [&outGuid](const GUID& guid) { outGuid = guid; })
+			.ParseCurrentAttributeTyped(IASSET_ATTR_guid, outGuid)
 			.TryEnterNode(IASSET_NODE_Defaults, [&outDescription](AssetParser& parser) // <Defaults>
 			{
 				parser.EnterEachNode(IASSET_NODE_Defaults_Material, [&outDescription](AssetParser& parser)
 				{
 					uint32 index = (uint32)-1;
 					Asset asset = Asset::InvalidHandle;
-					parser.ParseCurrentAttributeTyped<int32>(IASSET_ATTR_index, [&](int32 idx) { index = idx; });
+					parser.ParseCurrentAttributeTyped(IASSET_ATTR_index, index);
 					parser.ParseCurrentAttributeTyped<GUID>(IASSET_ATTR_asset, [&](const GUID& guid) { asset = Asset::Find(guid); });
 
 					if (index != (uint32)-1 && asset.IsValid())

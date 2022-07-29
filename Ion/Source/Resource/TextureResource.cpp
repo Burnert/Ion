@@ -4,6 +4,7 @@
 #include "ResourceManager.h"
 
 #include "Core/Asset/AssetRegistry.h"
+#include "Core/Asset/AssetParser.h"
 #include "Core/File/XML.h"
 
 namespace Ion
@@ -30,67 +31,24 @@ namespace Ion
 
 	bool TextureResource::ParseAssetFile(const Asset& asset, GUID& outGuid, TextureResourceDescription& outDescription)
 	{
-		const FilePath& path = asset->GetDefinitionPath();
-
-		String assetDefinition;
-		File::ReadToString(path, assetDefinition);
-
-		TUnique<XMLDocument> xml = MakeUnique<XMLDocument>(assetDefinition);
-
-		// <IonAsset>
-		XMLNode* nodeIonAsset = xml->XML().first_node(IASSET_NODE_IonAsset);
-		IASSET_CHECK_NODE(nodeIonAsset, IASSET_NODE_IonAsset, path);
-
-		// <Resource>
-		XMLNode* nodeResource = nodeIonAsset->first_node(IASSET_NODE_Resource);
-		IASSET_CHECK_NODE(nodeResource, IASSET_NODE_Resource, path);
-
-		// <Texture>
-		XMLNode* nodeTextureResource = nodeResource->first_node(IASSET_NODE_Resource_Texture);
-		ionexcept(nodeTextureResource,
-			"Asset \"%s\" cannot be used as a Texture Resource.\n"
-			"Node <" IASSET_NODE_Resource_Texture "> not found.\n",
-			StringConverter::WStringToString(path.ToString()).c_str())
-			return false;
-
-		// guid=
-		XMLAttribute* texResource_attrGuid = nodeTextureResource->first_attribute(IASSET_ATTR_guid);
-		IASSET_CHECK_ATTR(texResource_attrGuid, IASSET_ATTR_guid, IASSET_NODE_Resource_Texture, path);
-
-		String sGuid = texResource_attrGuid->value();
-		outGuid = GUID(sGuid);
-		ionexcept(outGuid, "Invalid GUID.")
-			return false;
-
-		outDescription.Properties = { };
-
-		// <Properties>
-		XMLNode* nodeProperties = nodeTextureResource->first_node(IASSET_NODE_Properties);
-		if (nodeProperties)
-		{
-			// <Filter>
-			XMLNode* nodeFilter = nodeProperties->first_node(IASSET_NODE_Resource_Texture_Prop_Filter);
-			if (nodeFilter)
+		return AssetParser(asset)
+			.BeginAsset(EAssetType::Image)
+			.Begin(IASSET_NODE_Resource) // <Resource>
+			.Begin(IASSET_NODE_Resource_Texture) // <Texture>
+			.ParseCurrentAttributeTyped(IASSET_ATTR_guid, outGuid)
+			.TryEnterNode(IASSET_NODE_Properties, [&outDescription](AssetParser& parser) // <Defaults>
 			{
-				// value=
-				XMLAttribute* filter_attrValue = nodeFilter->first_attribute(IASSET_ATTR_value);
-				IASSET_CHECK_ATTR(filter_attrValue, IASSET_ATTR_value, IASSET_NODE_Resource_Texture_Prop_Filter, path);
+				parser.TryEnterNode(IASSET_NODE_Resource_Texture_Prop_Filter, [&outDescription](AssetParser& parser)
+				{
+					ETextureFilteringMethod filter = ETextureFilteringMethod::Default;
+					parser.ParseCurrentEnumAttribute(IASSET_ATTR_value, filter);
 
-				char* csFilter = filter_attrValue->value();
-				ETextureFilteringMethod filter = ParseFilterString(csFilter);
-				// 0xFF means the value could not be parsed
-				ionexcept(filter != (ETextureFilteringMethod)0xFF, "Invalid filtering mode. (\"%s\")",
-					StringConverter::WStringToString(path.ToString()).c_str())
-					return false;
-
-				outDescription.Properties.Filter = filter;
-			}
-			else
-			{
-				outDescription.Properties.Filter = ETextureFilteringMethod::Default;
-			}
-		}
-
-		return true;
+					outDescription.Properties.Filter = filter;
+				});
+			}) // </Defaults>
+			.End() // </Texture>
+			.End() // </Resource>
+			.Finalize()
+			.OK();
 	}
 }

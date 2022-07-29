@@ -121,6 +121,11 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 
 		template<typename TEnum>
 		TFinalClass& ParseCurrentEnumAttribute(const String& attrName, TEnum& outEnum);
+		template<typename TEnum, typename FParse>
+		TFinalClass& ParseCurrentEnumAttribute(const String& attrName, FParse parseFunc);
+
+		template<typename TAttr>
+		TFinalClass& ParseCurrentAttributeTyped(const String& attrName, TAttr& outValue);
 		template<typename TAttr, typename FParse>
 		TFinalClass& ParseCurrentAttributeTyped(const String& attrName, FParse parseFunc);
 
@@ -354,11 +359,70 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		ionassert(IsOpen());
 
 		ParseCurrentAttributes(
-			attrName, [&outEnum](const MessageInterface& iface, String sValue)
+			attrName, [this, &attrName, &outEnum](String sValue)
 			{
-				TOptional<TEnum> opt = TEnumParser<TEnum>::FromString(sValue);
-				if (opt)
-					outEnum = *opt;
+				TOptional<TEnum> attrValue = TEnumParser<TEnum>::FromString(sValue);
+				if (attrValue)
+				{
+					outEnum = *attrValue;
+				}
+				else
+				{
+					String message = fmt::format("Cannot parse enum attribute value: <{0} {1}=\"{2}\"> -> T", GetCurrentNodeName(), attrName, sValue);
+					AddMessage(EXMLParserResultType::Error, message);
+				}
+			});
+
+		return *this;
+	}
+
+	template<typename T>
+	template<typename TEnum, typename FParse>
+	inline typename XMLParser<T>::TFinalClass& XMLParser<T>::ParseCurrentEnumAttribute(const String& attrName, FParse parseFunc)
+	{
+		static_assert(TIsConvertibleV<FParse, TFParseFunc<TEnum>>);
+
+		_PARSER_FAILED_CHECK();
+		ionassert(IsOpen());
+
+		ParseCurrentAttributes(
+			attrName, [this, &attrName &parseFunc](String sValue)
+			{
+				TOptional<TEnum> attrValue = TEnumParser<TEnum>::FromString(sValue);
+				if (attrValue)
+				{
+					parseFunc(*attrValue);
+				}
+				else
+				{
+					String message = fmt::format("Cannot parse enum attribute value: <{0} {1}=\"{2}\"> -> T", GetCurrentNodeName(), attrName, sValue);
+					AddMessage(EXMLParserResultType::Error, message);
+				}
+			});
+
+		return *this;
+	}
+
+	template<typename T>
+	template<typename TAttr>
+	inline typename XMLParser<T>::TFinalClass& XMLParser<T>::ParseCurrentAttributeTyped(const String& attrName, TAttr& outValue)
+	{
+		_PARSER_FAILED_CHECK();
+		ionassert(IsOpen());
+
+		ParseCurrentAttributes(
+			attrName, [this, &attrName, &outValue](String sValue)
+			{
+				TOptional<TAttr> attrValue = TStringParser<TAttr>()(sValue);
+				if (attrValue)
+				{
+					outValue = *attrValue;
+				}
+				else
+				{
+					String message = fmt::format("Cannot parse attribute value: <{0} {1}=\"{2}\"> -> T", GetCurrentNodeName(), attrName, sValue);
+					AddMessage(EXMLParserResultType::Error, message);
+				}
 			});
 
 		return *this;
@@ -385,7 +449,7 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 				{
 					// @TODO: type names
 					String message = fmt::format("Cannot parse attribute value: <{0} {1}=\"{2}\"> -> T", GetCurrentNodeName(), attrName, sValue);
-					GetInterface().SendFail(message);
+					AddMessage(EXMLParserResultType::Error, message);
 				}
 			});
 
