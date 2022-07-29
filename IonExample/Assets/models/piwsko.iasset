@@ -5,7 +5,7 @@
 	<Resource>
 		<Mesh guid="a2df451d-e016-46d5-a8b1-b7d8233c5599">
 			<Defaults>
-				<Material index="0" asset="5bc28818-31d0-44fa-b701-4d146fc46250" />
+				<Material index="0" asset="[Engine]/../../IonExample/Assets/Materials/piwsko" />
 			</Defaults>
 		</Mesh>
 	</Resource>

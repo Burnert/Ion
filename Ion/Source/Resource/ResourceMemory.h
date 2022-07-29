@@ -163,7 +163,6 @@ namespace Ion
 			{
 				_DEBUG_LOG("TResourceRefCount::Delete - Unregister resource")
 
-				ResourceHelper::UnregisterResource(m_Ptr);
 				delete m_Ptr;
 			}
 		}
@@ -828,7 +827,13 @@ namespace Ion
 		 * @param ptr Pointer to increment the ref count of.
 		 * @return Reference count after the operation.
 		 */
-		static uint32 IncRef(const TResourcePtrBase<Resource>& ptr);
+		template<typename T>
+		static uint32 IncRef(const TResourcePtrBase<T>& ptr)
+		{
+			ionassert(ptr);
+
+			return ptr.m_RefCount->IncRef();
+		}
 
 		/**
 		 * @brief Manually increment the reference count for a registered resource.
@@ -844,7 +849,13 @@ namespace Ion
 		 * @param ptr Pointer to decrement the ref count of.
 		 * @return Reference count after the operation.
 		 */
-		static uint32 DecRef(const TResourcePtrBase<Resource>& ptr);
+		template<typename T>
+		static uint32 DecRef(const TResourcePtrBase<T>& ptr)
+		{
+			ionassert(ptr);
+
+			return ptr.m_RefCount->DecRef();
+		}
 
 		/**
 		 * @brief Manually decrement the reference count for a registered resource.

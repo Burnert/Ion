@@ -51,10 +51,10 @@ namespace Ion
 			}
 			case EMaterialParameterType::Texture2D:
 			{
-				ionassert(std::holds_alternative<GUID>(def));
+				ionassert(std::holds_alternative<String>(def));
 
 				MaterialParameterTexture2D* param = (MaterialParameterTexture2D*)this;
-				param->SetDefaultValue(Asset::Find(std::get<GUID>(def)));
+				param->SetDefaultValue(Asset::Find(std::get<String>(def)));
 				break;
 			}
 		}
@@ -140,10 +140,10 @@ namespace Ion
 			}
 			case EMaterialParameterType::Texture2D:
 			{
-				ionassert(std::holds_alternative<GUID>(value));
+				ionassert(std::holds_alternative<String>(value));
 
 				MaterialParameterInstanceTexture2D* param = (MaterialParameterInstanceTexture2D*)this;
-				param->SetValue(Asset::Find(std::get<GUID>(value)));
+				param->SetValue(Asset::Find(std::get<String>(value)));
 				break;
 			}
 		}
@@ -503,15 +503,16 @@ namespace Ion
 			}
 			case EMaterialParameterType::Texture2D:
 			{
-				TOptional<GUID> value = TStringParser<GUID>()(val);
+				return val;
+				//TOptional<GUID> value = TStringParser<GUID>()(val);
 
-				if (!value)
-				{
-					String message = fmt::format("Cannot parse the texture2D parameter value string. \"{0}\" -> GUID", val);
-					parser.GetInterface().SendError(message);
-					return GUID::Zero;
-				}
-				return *value;
+				//if (!value)
+				//{
+				//	String message = fmt::format("Cannot parse the texture2D parameter value string. \"{0}\" -> GUID", val);
+				//	parser.GetInterface().SendError(message);
+				//	return GUID::Zero;
+				//}
+				//return *value;
 			}
 		}
 		parser.GetInterface().SendError("Tried to parse values of an invalid material parameter type.");
@@ -987,8 +988,8 @@ namespace Ion
 		return AssetParser(materialInstanceAsset)
 			.BeginAsset(EAssetType::MaterialInstance)
 			.Begin(IASSET_NODE_MaterialInstance) // <MaterialInstance>
-			.ParseCurrentAttributeTyped<GUID>(
-				IASSET_ATTR_parent, [this](const GUID& parent)
+			.ParseCurrentAttributes(
+				IASSET_ATTR_parent, [this](String parent)
 				{
 					SetParentMaterial(MaterialRegistry::QueryMaterial(Asset::Find(parent)));
 				}

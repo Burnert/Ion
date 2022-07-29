@@ -121,14 +121,18 @@ namespace Ion
 	{
 		static_assert(TIsConvertibleV<Lambda, TFuncResourceOnTake<TextureResourceRenderDataShared>>);
 
+		ionassert(m_Asset);
+
 		if (m_RenderData.IsAvailable())
 		{
 			onTake(m_RenderData.Lock());
 			return true;
 		}
 
-		auto initTexture = [this, onTake](const AssetData& data)
+		// Store the pointer (self) so the resource doesn't get deleted before it's loaded
+		auto initTexture = [this, self = GetPointer(), onTake](const AssetData& data)
 		{
+			ionassert(m_Asset);
 			ionassert(m_Asset->GetType() == EAssetType::Image);
 
 			TShared<Image> image = data.Get<Image>();

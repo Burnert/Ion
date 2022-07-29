@@ -155,15 +155,16 @@ namespace Ion
 			}
 			case EMaterialParameterType::Texture2D:
 			{
-				TOptional<GUID> value = ParseGuidString(val.c_str());
+				return val;
+				//TOptional<GUID> value = ParseGuidString(val.c_str());
 
-				if (!value)
-				{
-					String message = fmt::format("Cannot parse the texture2D parameter value string. \"{0}\" -> GUID", val);
-					parser.GetInterface().SendError(message);
-					return GUID::Zero;
-				}
-				return *value;
+				//if (!value)
+				//{
+				//	String message = fmt::format("Cannot parse the texture2D parameter value string. \"{0}\" -> GUID", val);
+				//	parser.GetInterface().SendError(message);
+				//	return GUID::Zero;
+				//}
+				//return *value;
 			}
 		}
 		parser.GetInterface().SendError("Tried to parse values of an invalid material parameter type.");

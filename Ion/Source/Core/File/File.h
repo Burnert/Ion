@@ -554,6 +554,15 @@ namespace Ion
 
 		bool Delete(bool bForce = false);
 
+		/**
+		 * @brief Get a relative path with a specified base directory.
+		 * e.g. "C:/Programs/Base/Assets/Textures" (baseDir = "C:/Programs/Base") -> "Assets/Textures"
+		 * 
+		 * @param baseDir base directory
+		 * @return FilePath relative file path
+		 */
+		FilePath AsRelativeFrom(const FilePath& baseDir) const;
+
 		inline bool Exists() const
 		{
 			return Exists(m_PathName.c_str());

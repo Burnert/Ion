@@ -11,6 +11,12 @@ namespace Ion
 		ResourceManager::Unregister(this);
 	}
 
+
+	ResourcePtr Resource::GetPointer() const
+	{
+		return ResourceManager::Find(m_Guid);
+	}
+
 	Resource::Resource(const GUID& guid, const Asset& asset) :
 		m_Guid(guid),
 		m_Asset(asset)

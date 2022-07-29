@@ -3,6 +3,7 @@
 #include "Asset.h"
 #include "AssetRegistry.h"
 #include "Core/File/XML.h"
+#include "Application/EnginePath.h"
 
 #define CHECK_NODE(node, nodeName) IASSET_CHECK_NODE(node, nodeName, m_Path)
 #define CHECK_ATTR(attr, attrName, nodeName) IASSET_CHECK_ATTR(attr, attrName, nodeName, m_Path)
@@ -12,18 +13,28 @@ namespace Ion
 	// Asset ----------------------------------------------------------------------
 
 	Asset::Asset() :
-		m_Guid(GUID::Zero)
+		m_AssetPtr(nullptr)
 #if ION_DEBUG
-		, m_DebugDefinition(nullptr)
+		, m_DebugPtr(nullptr)
 #endif
 	{
 		// Null asset handle (not invalid!)
+		m_AssetPtr.SetMetaFlag<0>(true);
 	}
 
-	Asset::Asset(const GUID& guid) :
-		m_Guid(guid)
+	Asset::Asset(AssetDefinition* asset) :
+		m_AssetPtr(asset)
 #if ION_DEBUG
-		, m_DebugDefinition(guid.IsInvalid() ? nullptr : AssetRegistry::Find(guid))
+		, m_DebugPtr(asset)
+#endif
+	{
+		ionassert(AssetRegistry::IsRegistered(asset));
+	}
+
+	Asset::Asset(InvalidInitializerT) :
+		m_AssetPtr(nullptr)
+#if ION_DEBUG
+		, m_DebugPtr(nullptr)
 #endif
 	{
 	}
@@ -32,29 +43,61 @@ namespace Ion
 	{
 	}
 
-	Asset Asset::Find(const GUID& guid)
+	Asset Asset::Find(const String& virtualPath)
 	{
-		AssetDefinition* def = AssetRegistry::Find(guid);
+		AssetDefinition* def = AssetRegistry::Find(virtualPath);
 		if (!def)
 		{
-			LOG_WARN("Cannot find an asset with GUID: {0}", guid.ToString());
+			LOG_WARN("Cannot find an asset in a virtual path: \"{0}\"", virtualPath);
 			return InvalidHandle;
 		}
 		return def->GetHandle();
 	}
 
-	AssetDefinition* Asset::FindAssetDefinition() const
+	FilePath Asset::ResolveVirtualPath(const String& virtualPath)
 	{
-		ionassertnd(m_Guid, "Cannot access a null handle.");
-		return AssetRegistry::Find(m_Guid);
+		size_t nFirst = virtualPath.find_first_of('[', 0);
+		ionassert(nFirst == 0, "Invalid virtual path.");
+		size_t nLast = virtualPath.find_first_of(']', nFirst);
+		ionassert(nLast != String::npos, "Invalid virtual path.");
+		ionassert(nLast + 1 < virtualPath.size(), "Invalid virtual path.");
+
+		FilePath path;
+
+		StringView baseDirId = StringView(virtualPath).substr(nFirst, nLast + 1 - nFirst);
+		if (baseDirId == "[Engine]")
+			path = EnginePath::GetEngineContentPath();
+		else if (baseDirId == "[Shaders]")
+			path = EnginePath::GetShadersPath();
+		// @TODO: [Project] / [Game] path
+		else
+			return path;
+
+		String relativeVP = virtualPath.substr(nLast + 1) + ".iasset";
+		path += StringConverter::StringToWString(relativeVP);
+
+		return path;
 	}
 
-	const Asset Asset::InvalidHandle = Asset(GUID::Invalid);
+	AssetDefinition* Asset::GetAssetDefinition() const
+	{
+		ionassertnd(operator bool(), "Cannot access a null handle.");
+		return AssetRegistry::IsRegistered(*this) ? m_AssetPtr.Get() : nullptr;
+	}
+
+	const Asset Asset::InvalidHandle = Asset::InvalidInitializerT();
+	const Asset Asset::None = Asset();
 
 	// AssetFinder ----------------------------------------------------------------
 
 	AssetFinder::AssetFinder(const FilePath& path) :
 		m_Path(path)
+	{
+	}
+
+	AssetFinder::AssetFinder(const String& virtualPath) :
+		m_Path(Asset::ResolveVirtualPath(virtualPath)),
+		m_VirtualPath(virtualPath)
 	{
 	}
 
@@ -69,20 +112,19 @@ namespace Ion
 		String assetDefinition;
 		File::ReadToString(m_Path, assetDefinition);
 
-		TShared<XMLDocument> assetDefinitionDoc = MakeShared<XMLDocument>(assetDefinition);
-
 		AssetInitializer initializer;
-		initializer.IAssetXML = assetDefinitionDoc;
+		initializer.IAssetXML = MakeShared<XMLDocument>(assetDefinition);
 		initializer.AssetDefinitionPath = m_Path;
+		initializer.VirtualPath = m_VirtualPath;
 
-		if (!Parse(assetDefinitionDoc, initializer))
+		if (!Parse(initializer.IAssetXML, initializer))
 		{
 			LOG_ERROR(L"The file \"{0}\" could not be parsed.", m_Path.ToString());
 			return Asset::InvalidHandle;
 		}
 
 		// The asset might have already been registered.
-		if (AssetDefinition* asset = AssetRegistry::Find(initializer.Guid))
+		if (AssetDefinition* asset = AssetRegistry::Find(initializer.VirtualPath))
 		{
 			return asset->GetHandle();
 		}

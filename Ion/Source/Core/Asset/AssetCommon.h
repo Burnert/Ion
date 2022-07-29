@@ -179,6 +179,7 @@ namespace Ion
 	{
 		TShared<XMLDocument> IAssetXML;
 
+		String VirtualPath;
 		GUID Guid;
 		FilePath AssetDefinitionPath;
 		FilePath AssetReferencePath;
@@ -199,6 +200,7 @@ namespace Ion
 		 * @brief Construct a null Asset Initializer
 		 */
 		AssetInitializer() :
+			VirtualPath(),
 			Guid(GUID::Zero),
 			AssetDefinitionPath(),
 			AssetReferencePath(),

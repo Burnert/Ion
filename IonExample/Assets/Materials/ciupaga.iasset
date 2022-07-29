@@ -1,9 +1,9 @@
 <IonAsset>
 	<Info type="Ion.MaterialInstance" guid="b2e952bd-a91e-4168-9706-2f82d213541a" />
 	<Name>MI_Ciupaga</Name>
-	<MaterialInstance parent="0cb1f013-2ed6-4f52-8364-da2bac6ed211">
+	<MaterialInstance parent="[Engine]/Materials/DefaultMaterial">
 		<ParameterInstance type="Vector" name="Color">1.0 1.0 1.0 1.0</ParameterInstance>
 		<ParameterInstance type="Scalar" name="Brightness">1.0</ParameterInstance>
-		<ParameterInstance type="Texture2D" name="DefaultTexture">79351854-92ff-43f9-a5ec-7826061f8de0</ParameterInstance>
+		<ParameterInstance type="Texture2D" name="DefaultTexture">[Engine]/../../IonExample/Assets/textures/ciupaga</ParameterInstance>
 	</MaterialInstance>
 </IonAsset>

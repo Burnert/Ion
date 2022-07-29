@@ -5,7 +5,7 @@
 	<Resource>
 		<Mesh guid="7175041c-51dc-415b-9fe2-c6b4c3565565">
 			<Defaults>
-				<Material index="0" asset="6723ad58-3b79-46b8-a2ac-88c7a525f07b" />
+				<Material index="0" asset="[Engine]/../../IonExample/Assets/Materials/oscypek" />
 			</Defaults>
 		</Mesh>
 	</Resource>

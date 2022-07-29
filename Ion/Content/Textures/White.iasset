@@ -1,0 +1,11 @@
+<IonAsset>
+	<Info type="Ion.Image" guid="d3dfb74a-24d3-4e46-a413-8693021b8aaa" />
+	<ImportExternal path="White.png" />
+	<Resource>
+		<Texture guid="9d55215c-8089-45a8-bfd0-b2e138159753">
+			<Properties>
+				<Filter value="Nearest" />
+			</Properties>
+		</Texture>
+	</Resource>
+</IonAsset>

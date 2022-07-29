@@ -8,6 +8,8 @@
 
 #include "Application/EnginePath.h"
 
+#define ASSET_REGISTRY_ASSET_MAP_BUCKETS 256
+
 #define CHECK_NODE(node, nodeName) IASSET_CHECK_NODE(node, nodeName, m_AssetDefinitionPath)
 #define CHECK_ATTR(attr, attrName, nodeName) IASSET_CHECK_ATTR(attr, attrName, nodeName, m_AssetDefinitionPath)
 
@@ -17,6 +19,7 @@ namespace Ion
 
 	AssetDefinition::AssetDefinition(const AssetInitializer& initializer) :
 		m_Guid(initializer.Guid),
+		m_VirtualPath(initializer.VirtualPath),
 		m_AssetDefinitionPath(initializer.AssetDefinitionPath),
 		m_AssetReferencePath(initializer.AssetReferencePath),
 		m_Type(initializer.Type),
@@ -132,21 +135,24 @@ namespace Ion
 
 	Asset AssetDefinition::GetHandle() const
 	{
-		return Asset(m_Guid);
+		return Asset(const_cast<AssetDefinition*>(this));
 	}
 
 	AssetDefinition& AssetRegistry::Register(const AssetInitializer& initializer)
 	{
 		AssetRegistry& instance = Get();
 
-		auto it = instance.m_Assets.find(initializer.Guid);
+		ionassert(!initializer.VirtualPath.empty(), "Asset cannot have an empty virtual path.");
+
+		auto it = instance.m_Assets.find(initializer.VirtualPath);
 		if (it != instance.m_Assets.end())
 		{
-			LOG_ERROR("Cannot register the asset. An asset with the same GUID {{{0}}} already exists.", initializer.Guid);
+			LOG_ERROR("Cannot register the asset. An asset with the same virtual path \"{0}\" already exists.", initializer.VirtualPath);
 			return it->second;
 		}
 
-		auto& [guid, assetDef] = *Get().m_Assets.emplace(initializer.Guid, AssetDefinition(initializer)).first;
+		auto& [vp, assetDef] = *instance.m_Assets.emplace(initializer.VirtualPath, AssetDefinition(initializer)).first;
+		instance.m_AssetPtrs.emplace(&assetDef);
 		return assetDef;
 	}
 
@@ -154,25 +160,46 @@ namespace Ion
 	{
 		AssetRegistry& instance = Get();
 
-		const GUID& guid = asset.GetGuid();
+		const String& vp = asset.GetVirtualPath();
 
-		ionassert(instance.m_Assets.find(guid) != instance.m_Assets.end(),
+		ionassert(instance.m_Assets.find(vp) != instance.m_Assets.end(),
 			"Asset \"%ls\" does not exist in the registry.", asset.GetDefinitionPath().ToString().c_str());
 
-		instance.m_Assets.erase(guid);
+		instance.m_AssetPtrs.erase(&instance.m_Assets.at(vp));
+		instance.m_Assets.erase(vp);
 	}
 
-	AssetDefinition* AssetRegistry::Find(const GUID& guid)
+	AssetDefinition* AssetRegistry::Find(const String& virtualPath)
 	{
 		AssetRegistry& instance = Get();
 
-		auto it = instance.m_Assets.find(guid);
+		if (virtualPath.empty())
+			return nullptr;
+
+		auto it = instance.m_Assets.find(virtualPath);
 		if (it == instance.m_Assets.end())
 		{
 			return nullptr;
 		}
 
 		return &it->second;
+	}
+
+	bool AssetRegistry::IsRegistered(const Asset& asset)
+	{
+		if (!asset)
+			return false;
+
+		AssetRegistry& instance = Get();
+
+		return IsRegistered(asset.m_AssetPtr.Get());
+	}
+
+	bool AssetRegistry::IsRegistered(AssetDefinition* asset)
+	{
+		AssetRegistry& instance = Get();
+
+		return instance.m_AssetPtrs.find(asset) != instance.m_AssetPtrs.end();
 	}
 
 	void AssetRegistry::RegisterEngineAssets()
@@ -192,8 +219,21 @@ namespace Ion
 
 		for (TTreeNode<FileInfo>*& assetNode : assets)
 		{
-			Asset asset = AssetFinder(assetNode->Get().FullPath).Resolve();
-			LOG_TRACE(L"Loaded Engine Asset \"{0}\".", asset->GetDefinitionPath().ToString());
+			// Get the relative path
+			FilePath relativePath = FilePath(assetNode->Get().FullPath).AsRelativeFrom(EnginePath::GetEngineContentPath());
+
+			// Remove the extension
+			WString last = relativePath.LastElement();
+			last = last.substr(0, last.rfind(L".iasset"));
+			relativePath.Back();
+			relativePath.ChangeDirectory(last);
+
+			// Make a virtual path string
+			String virtualPath = "[Engine]/" + StringConverter::WStringToString(relativePath.ToString());
+
+			// Register the asset
+			Asset asset = AssetFinder(virtualPath).Resolve();
+			LOG_TRACE(L"Registered Engine Asset \"{0}\".", asset->GetDefinitionPath().ToString());
 		}
 	}
 
@@ -229,7 +269,8 @@ namespace Ion
 	}
 
 	AssetRegistry::AssetRegistry() :
-		m_WorkQueue(EngineTaskQueue::Get())
+		m_WorkQueue(EngineTaskQueue::Get()),
+		m_Assets(ASSET_REGISTRY_ASSET_MAP_BUCKETS)
 	{
 	}
 

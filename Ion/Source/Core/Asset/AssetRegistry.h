@@ -189,6 +189,7 @@ namespace Ion
 
 		const FilePath& GetPath() const;
 		const FilePath& GetDefinitionPath() const;
+		const String& GetVirtualPath() const;
 
 		const AssetInfo& GetInfo() const;
 
@@ -220,6 +221,7 @@ namespace Ion
 
 	private:
 		GUID m_Guid;
+		String m_VirtualPath;
 		/** @brief Path of the loaded .iasset file. */
 		FilePath m_AssetDefinitionPath;
 		/** @brief Path specified in the asset definition file. */
@@ -247,7 +249,11 @@ namespace Ion
 	class ION_API AssetRegistry
 	{
 	public:
-		using AssetMap = THashMap<GUID, AssetDefinition>;
+		/**
+		 * @brief K - String - stores the virtual path of an asset.
+		 * V - AssetDefinition - asset representation in memory.
+		 */
+		using AssetMap = THashMap<String, AssetDefinition>;
 
 		/**
 		 * @brief Registers an asset. Creates an AssetDefinition
@@ -266,7 +272,18 @@ namespace Ion
 		 * @param guid GUID to use
 		 * @return If found, the AssetDefinition pointer, else nullptr
 		 */
-		static AssetDefinition* Find(const GUID& guid);
+		//static AssetDefinition* Find(const GUID& guid);
+
+		/**
+		 * @brief Find an asset definition by virtual path.
+		 *
+		 * @param virtualPath a VP to an asset (e.g. "<Engine>/Materials/DefaultMaterial")
+		 * @return If found, the AssetDefinition pointer, else nullptr
+		 */
+		static AssetDefinition* Find(const String& virtualPath);
+
+		static bool IsRegistered(const Asset& asset);
+		static bool IsRegistered(AssetDefinition* asset);
 
 		/**
 		 * @brief Add a work to the work queue, which will be executed
@@ -302,6 +319,7 @@ namespace Ion
 		static AssetRegistry& Get();
 
 		AssetMap m_Assets;
+		THashSet<AssetDefinition*> m_AssetPtrs;
 		// @TODO: Variable memory pool allocator here
 
 		/**
@@ -341,13 +359,13 @@ namespace Ion
 		work.AssetPath = m_AssetReferencePath;
 		work.AssetType = m_Type;
 		work.bImportExternal = m_bImportExternal;
-		work.OnLoad = [guid = this->m_Guid, onLoad](const AssetData& data) mutable
+		work.OnLoad = [path = m_AssetDefinitionPath, handle = GetHandle(), onLoad](const AssetData& data) mutable
 		{
-			AssetDefinition* asset = AssetRegistry::Find(guid);
+			AssetDefinition* asset = handle.GetAssetDefinition();
 
 			if (!asset)
 			{
-				LOG_ERROR("Asset {{{0}}} had already been deleted before the data could be loaded.", guid.ToString());
+				LOG_ERROR(L"Asset \"{0}\" had already been deleted before the data could be loaded.", path.ToString());
 				return;
 			}
 
@@ -380,6 +398,11 @@ namespace Ion
 	inline const FilePath& AssetDefinition::GetDefinitionPath() const
 	{
 		return m_AssetDefinitionPath;
+	}
+
+	inline const String& AssetDefinition::GetVirtualPath() const
+	{
+		return m_VirtualPath;
 	}
 
 	inline const AssetInfo& AssetDefinition::GetInfo() const

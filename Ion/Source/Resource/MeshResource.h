@@ -117,14 +117,18 @@ namespace Ion
 	{
 		static_assert(TIsConvertibleV<Lambda, TFuncResourceOnTake<MeshResourceRenderDataShared>>);
 
+		ionassert(m_Asset);
+
 		if (m_RenderData.IsAvailable())
 		{
 			onTake(m_RenderData.Lock());
 			return true;
 		}
 
-		auto initMesh = [this, onTake](const AssetData& data)
+		// Store the pointer (self) so the resource doesn't get deleted before it's loaded
+		auto initMesh = [this, self = GetPointer(), onTake](const AssetData& data)
 		{
+			ionassert(m_Asset);
 			ionassert(m_Asset->GetType() == EAssetType::Mesh);
 
 			TShared<MeshAssetData> meshData = data.Get<MeshAssetData>();

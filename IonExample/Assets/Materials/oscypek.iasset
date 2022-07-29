@@ -1,9 +1,9 @@
 <IonAsset>
 	<Info type="Ion.MaterialInstance" guid="6723ad58-3b79-46b8-a2ac-88c7a525f07b" />
 	<Name>MI_Oscypek</Name>
-	<MaterialInstance parent="0cb1f013-2ed6-4f52-8364-da2bac6ed211">
+	<MaterialInstance parent="[Engine]/Materials/DefaultMaterial">
 		<ParameterInstance type="Vector" name="Color">1.0 1.0 1.0 1.0</ParameterInstance>
 		<ParameterInstance type="Scalar" name="Brightness">1.0</ParameterInstance>
-		<ParameterInstance type="Texture2D" name="DefaultTexture">3b89ae94-c892-46e8-a2e0-aaa17595dc65</ParameterInstance>
+		<ParameterInstance type="Texture2D" name="DefaultTexture">[Engine]/../../IonExample/Assets/textures/oscypek</ParameterInstance>
 	</MaterialInstance>
 </IonAsset>

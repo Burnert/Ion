@@ -14,7 +14,8 @@
 			<Max>1.0</Max>
 		</Parameter>
 		<Parameter type="Texture2D" name="DefaultTexture">
-			<Default>80c72dad-eb05-4209-935b-2e5730f2c053</Default>
+			<!-- <Default>80c72dad-eb05-4209-935b-2e5730f2c053</Default> -->
+			<Default>[Engine]/Textures/White</Default>
 		</Parameter>
 	</Material>
 </IonAsset>

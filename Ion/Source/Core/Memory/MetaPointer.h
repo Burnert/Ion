@@ -64,7 +64,7 @@ struct TMetaPointer
 		return (m_MetaBits >> (15 - Flag)) & 1;
 	}
 
-	inline operator bool()
+	inline operator bool() const
 	{
 		return (bool)Get();
 	}
@@ -90,9 +90,34 @@ struct TMetaPointer
 		return *this;
 	}
 
-	inline bool operator==(T* ptr)
+	inline bool operator==(T* ptr) const
 	{
 		return (T*)m_PtrPart == ptr;
+	}
+
+	inline bool operator==(nullptr_t) const
+	{
+		return m_PtrPart == 0;
+	}
+
+	inline bool operator!=(T* ptr) const
+	{
+		return (T*)m_PtrPart != ptr;
+	}
+
+	inline bool operator!=(nullptr_t) const
+	{
+		return m_PtrPart != 0;
+	}
+
+	inline bool operator==(const MetaPointerType& other) const
+	{
+		return m_PtrPart == other.m_PtrPart && m_MetaBits == other.m_MetaBits;
+	}
+
+	inline bool operator!=(const MetaPointerType& other) const
+	{
+		return !operator==(other);
 	}
 
 private:

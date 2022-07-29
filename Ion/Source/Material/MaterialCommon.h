@@ -49,5 +49,5 @@ namespace Ion
 		return EMaterialParameterType::Null;
 	}
 
-	using TMaterialParameterTypeVariant = TVariant<float, Vector4, GUID>;
+	using TMaterialParameterTypeVariant = TVariant<float, Vector4, String>;
 }

@@ -1,9 +1,9 @@
 <IonAsset>
 	<Info type="Ion.MaterialInstance" guid="5bc28818-31d0-44fa-b701-4d146fc46250" />
 	<Name>MI_Piwsko</Name>
-	<MaterialInstance parent="0cb1f013-2ed6-4f52-8364-da2bac6ed211">
+	<MaterialInstance parent="[Engine]/Materials/DefaultMaterial">
 		<ParameterInstance type="Vector" name="Color">1.0 1.0 1.0 1.0</ParameterInstance>
 		<ParameterInstance type="Scalar" name="Brightness">1.0</ParameterInstance>
-		<ParameterInstance type="Texture2D" name="DefaultTexture">84f1e66c-1b62-40a0-bf3b-10eb996a9e62</ParameterInstance>
+		<ParameterInstance type="Texture2D" name="DefaultTexture">[Engine]/../../IonExample/Assets/textures/piwsko</ParameterInstance>
 	</MaterialInstance>
 </IonAsset>

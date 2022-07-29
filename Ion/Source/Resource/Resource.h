@@ -39,6 +39,8 @@ namespace Ion
 		 */
 		Asset GetAssetHandle() const;
 
+		ResourcePtr GetPointer() const;
+
 	protected:
 		Resource(const GUID& guid, const Asset& asset);
 
@@ -64,6 +66,8 @@ namespace Ion
 	inline TResourcePtr<T> Resource::Query(const Asset& asset)
 	{
 		static_assert(TIsBaseOfV<Resource, T>);
+
+		ionassert(asset);
 
 		ResourcePtr resource;
 

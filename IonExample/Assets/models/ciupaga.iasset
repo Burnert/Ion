@@ -5,7 +5,7 @@
 	<Resource>
 		<Mesh guid="dd684d85-61c6-4d44-9dc4-79ba5675ad5a">
 			<Defaults>
-				<Material index="0" asset="b2e952bd-a91e-4168-9706-2f82d213541a" />
+				<Material index="0" asset="[Engine]/../../IonExample/Assets/Materials/ciupaga" />
 			</Defaults>
 		</Mesh>
 	</Resource>

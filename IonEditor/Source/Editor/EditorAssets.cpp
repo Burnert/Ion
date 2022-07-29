@@ -28,9 +28,20 @@ namespace Ion::Editor
 		});
 	}
 
+	static void LoadTexture(TResourcePtr<TextureResource>& outResource, TShared<RHITexture>& texture, const String& vp)
+	{
+		Asset asset = AssetFinder(vp).Resolve();
+		outResource = TextureResource::Query(asset);
+
+		outResource->Take([&texture](const TextureResourceRenderDataShared& data)
+		{
+			texture = data.Texture;
+		});
+	}
+
 	void EditorIcon::Load()
 	{
-		LoadTexture(Resource, Texture, EnginePath::GetEditorContentPath() + Path);
+		LoadTexture(Resource, Texture, VirtualPath);
 	}
 
 	void EditorIcons::LoadTextures()
@@ -46,10 +57,10 @@ namespace Ion::Editor
 
 	void EditorBillboards::LoadTextures()
 	{
-		LoadTexture(ResourceBillboardCircle,    BillboardCircle,    EnginePath::GetEditorContentPath() + PathCircle);
-		LoadTexture(ResourceBillboardLightbulb, BillboardLightbulb, EnginePath::GetEditorContentPath() + PathLightbulb);
-		LoadTexture(ResourceBillboardSun,       BillboardSun,       EnginePath::GetEditorContentPath() + PathSun);
-		LoadTexture(ResourceBillboardNoMesh,    BillboardNoMesh,    EnginePath::GetEditorContentPath() + PathNoMesh);
+		LoadTexture(ResourceBillboardCircle,    BillboardCircle,    VPCircle);
+		LoadTexture(ResourceBillboardLightbulb, BillboardLightbulb, VPLightbulb);
+		LoadTexture(ResourceBillboardSun,       BillboardSun,       VPSun);
+		LoadTexture(ResourceBillboardNoMesh,    BillboardNoMesh,    VPNoMesh);
 	}
 
 	const TShared<RHITexture>& EditorBillboards::GetComponentBillboardTexture(ComponentTypeID id)

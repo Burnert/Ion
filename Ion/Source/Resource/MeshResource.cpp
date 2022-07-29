@@ -33,7 +33,7 @@ namespace Ion
 					uint32 index = (uint32)-1;
 					Asset asset = Asset::InvalidHandle;
 					parser.ParseCurrentAttributeTyped(IASSET_ATTR_index, index);
-					parser.ParseCurrentAttributeTyped<GUID>(IASSET_ATTR_asset, [&](const GUID& guid) { asset = Asset::Find(guid); });
+					parser.ParseCurrentAttributes(IASSET_ATTR_asset, [&](String sAsset) { asset = Asset::Find(sAsset); });
 
 					if (index != (uint32)-1 && asset.IsValid())
 					{

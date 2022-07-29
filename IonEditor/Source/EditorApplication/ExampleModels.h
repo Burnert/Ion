@@ -53,29 +53,29 @@ namespace Ion::Editor
 		g_ExampleModels.resize(5);
 
 		g_ExampleModels[0].Name            = "4Pak";
-		g_ExampleModels[0].MeshAsset       = AssetFinder(FilePath(L"../IonExample/Assets/models/4pak.iasset")).Resolve();
-		g_ExampleModels[0].TextureAsset    = AssetFinder(FilePath(L"../IonExample/Assets/textures/4pak.iasset")).Resolve();
-		g_ExampleModels[0].MaterialAsset   = AssetFinder(FilePath(L"../IonExample/Assets/Materials/4pak.iasset")).Resolve();
+		g_ExampleModels[0].MeshAsset       = AssetFinder("[Engine]/../../IonExample/Assets/models/4pak").Resolve();
+		g_ExampleModels[0].TextureAsset    = AssetFinder("[Engine]/../../IonExample/Assets/textures/4pak").Resolve();
+		g_ExampleModels[0].MaterialAsset   = AssetFinder("[Engine]/../../IonExample/Assets/Materials/4pak").Resolve();
 
 		g_ExampleModels[1].Name            = "Piwsko";
-		g_ExampleModels[1].MeshAsset       = AssetFinder(FilePath(L"../IonExample/Assets/models/piwsko.iasset")).Resolve();
-		g_ExampleModels[1].TextureAsset    = AssetFinder(FilePath(L"../IonExample/Assets/textures/piwsko.iasset")).Resolve();
-		g_ExampleModels[1].MaterialAsset   = AssetFinder(FilePath(L"../IonExample/Assets/Materials/piwsko.iasset")).Resolve();
+		g_ExampleModels[1].MeshAsset       = AssetFinder("[Engine]/../../IonExample/Assets/models/piwsko").Resolve();
+		g_ExampleModels[1].TextureAsset    = AssetFinder("[Engine]/../../IonExample/Assets/textures/piwsko").Resolve();
+		g_ExampleModels[1].MaterialAsset   = AssetFinder("[Engine]/../../IonExample/Assets/Materials/piwsko").Resolve();
 
 		g_ExampleModels[2].Name            = "Oscypek";
-		g_ExampleModels[2].MeshAsset       = AssetFinder(FilePath(L"../IonExample/Assets/models/oscypek.iasset")).Resolve();
-		g_ExampleModels[2].TextureAsset    = AssetFinder(FilePath(L"../IonExample/Assets/textures/oscypek.iasset")).Resolve();
-		g_ExampleModels[2].MaterialAsset   = AssetFinder(FilePath(L"../IonExample/Assets/Materials/oscypek.iasset")).Resolve();
+		g_ExampleModels[2].MeshAsset       = AssetFinder("[Engine]/../../IonExample/Assets/models/oscypek").Resolve();
+		g_ExampleModels[2].TextureAsset    = AssetFinder("[Engine]/../../IonExample/Assets/textures/oscypek").Resolve();
+		g_ExampleModels[2].MaterialAsset   = AssetFinder("[Engine]/../../IonExample/Assets/Materials/oscypek").Resolve();
 
 		g_ExampleModels[3].Name            = "Ciupaga";
-		g_ExampleModels[3].MeshAsset       = AssetFinder(FilePath(L"../IonExample/Assets/models/ciupaga.iasset")).Resolve();
-		g_ExampleModels[3].TextureAsset    = AssetFinder(FilePath(L"../IonExample/Assets/textures/ciupaga.iasset")).Resolve();
-		g_ExampleModels[3].MaterialAsset   = AssetFinder(FilePath(L"../IonExample/Assets/Materials/ciupaga.iasset")).Resolve();
+		g_ExampleModels[3].MeshAsset       = AssetFinder("[Engine]/../../IonExample/Assets/models/ciupaga").Resolve();
+		g_ExampleModels[3].TextureAsset    = AssetFinder("[Engine]/../../IonExample/Assets/textures/ciupaga").Resolve();
+		g_ExampleModels[3].MaterialAsset   = AssetFinder("[Engine]/../../IonExample/Assets/Materials/ciupaga").Resolve();
 
 		g_ExampleModels[4].Name            = "Slovak";
-		g_ExampleModels[4].MeshAsset       = AssetFinder(FilePath(L"../IonExample/Assets/models/slovak.iasset")).Resolve();
-		g_ExampleModels[4].TextureAsset    = AssetFinder(FilePath(L"../IonExample/Assets/textures/slovak.iasset")).Resolve();
-		g_ExampleModels[4].MaterialAsset   = AssetFinder(FilePath(L"../IonExample/Assets/Materials/slovak.iasset")).Resolve();
+		g_ExampleModels[4].MeshAsset       = AssetFinder("[Engine]/../../IonExample/Assets/models/slovak").Resolve();
+		g_ExampleModels[4].TextureAsset    = AssetFinder("[Engine]/../../IonExample/Assets/textures/slovak").Resolve();
+		g_ExampleModels[4].MaterialAsset   = AssetFinder("[Engine]/../../IonExample/Assets/Materials/slovak").Resolve();
 
 		//g_ExampleModels[5].Name            = "Stress";
 		//g_ExampleModels[5].MeshAsset       = AssetFinder(FilePath(L"../IonExample/spherestresstest_uv.iasset")).Resolve();

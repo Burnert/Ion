@@ -285,6 +285,37 @@ namespace Ion
 		return false;
 	}
 
+	FilePath FilePath::AsRelativeFrom(const FilePath& baseDir) const
+	{
+		FilePath relative;
+
+		auto itBaseDir = baseDir.m_Path.begin();
+		auto itThisDir = m_Path.begin();
+
+		while (
+			itThisDir != m_Path.end() &&
+			itBaseDir != baseDir.m_Path.end() &&
+			*itBaseDir == *itThisDir)
+		{
+			itBaseDir++;
+			itThisDir++;
+		}
+
+		if (itBaseDir != baseDir.m_Path.end())
+		{
+			LOG_ERROR(L"Cannot find base directory \"{0}\" in path \"{1}\".", baseDir.ToString(), m_PathName);
+			return relative;
+		}
+
+		// Not the fastest approach, but it should't be a problem.
+		while (itThisDir != m_Path.end())
+		{
+			relative.ChangeDirectory(*itThisDir++);
+		}
+
+		return relative;
+	}
+
 	bool File::ReadToString(const FilePath& filePath, String& outString)
 	{
 		return ReadToString(filePath.ToString(), outString);
