@@ -17,6 +17,9 @@ struct TMetaPointer
 	inline TMetaPointer(T* ptr) :
 		m_PtrPart((int64)ptr),
 		m_MetaBits(0)
+#if ION_DEBUG
+		, m_DebugPtr(ptr)
+#endif
 	{
 	}
 
@@ -28,6 +31,9 @@ struct TMetaPointer
 	inline void Set(T* ptr)
 	{
 		m_PtrPart = (int64)ptr;
+#if ION_DEBUG
+		m_DebugPtr = ptr;
+#endif
 	}
 
 	template<typename CastT, size_t Offset>
@@ -127,5 +133,9 @@ private:
 #else
 	int64 m_PtrPart;
 	uint16 m_MetaBits;
+#endif
+
+#if ION_DEBUG
+	T* m_DebugPtr;
 #endif
 };

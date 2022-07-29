@@ -90,9 +90,6 @@ namespace Ion
 		 * If the 0-th flag is set, it means the handle is <None>.
 		 */
 		TMetaPointer<AssetDefinition> m_AssetPtr;
-#if ION_DEBUG
-		AssetDefinition* m_DebugPtr;
-#endif
 
 		friend class AssetRegistry;
 		friend class AssetDefinition;

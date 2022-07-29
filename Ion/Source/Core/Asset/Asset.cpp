@@ -14,9 +14,6 @@ namespace Ion
 
 	Asset::Asset() :
 		m_AssetPtr(nullptr)
-#if ION_DEBUG
-		, m_DebugPtr(nullptr)
-#endif
 	{
 		// Null asset handle (not invalid!)
 		m_AssetPtr.SetMetaFlag<0>(true);
@@ -24,18 +21,12 @@ namespace Ion
 
 	Asset::Asset(AssetDefinition* asset) :
 		m_AssetPtr(asset)
-#if ION_DEBUG
-		, m_DebugPtr(asset)
-#endif
 	{
 		ionassert(AssetRegistry::IsRegistered(asset));
 	}
 
 	Asset::Asset(InvalidInitializerT) :
 		m_AssetPtr(nullptr)
-#if ION_DEBUG
-		, m_DebugPtr(nullptr)
-#endif
 	{
 	}
 
