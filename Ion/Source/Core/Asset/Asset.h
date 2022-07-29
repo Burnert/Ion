@@ -30,7 +30,7 @@ namespace Ion
 		 * @param virtualPath a VP to an asset (e.g. "<Engine>/Materials/DefaultMaterial")
 		 * @return Asset handle, invalid handle if the asset with that path does not exist.
 		 */
-		static Asset Find(const String& virtualPath);
+		static Asset Resolve(const String& virtualPath);
 
 		static FilePath ResolveVirtualPath(const String& virtualPath);
 
@@ -85,6 +85,8 @@ namespace Ion
 		struct InvalidInitializerT { };
 		Asset(InvalidInitializerT);
 
+		static bool Parse(AssetInitializer& inOutInitializer);
+
 	private:
 		/**
 		 * If the 0-th flag is set, it means the handle is <None>.
@@ -102,49 +104,6 @@ namespace Ion
 				return THash<void*>()(asset.m_AssetPtr.Get());
 			}
 		};
-	};
-
-	/**
-	 * @brief Utility class to create asset handles
-	 */
-	class ION_API AssetFinder
-	{
-	public:
-		/**
-		 * @brief Construct a new Asset Finder object
-		 * 
-		 * @param path Path to the .iasset file
-		 */
-		explicit AssetFinder(const FilePath& path);
-
-		explicit AssetFinder(const String& virtualPath);
-
-		/**
-		 * @brief Tries to parse the .iasset (asset definition) file
-		 * specified in the constructor.
-		 * 
-		 * @details If the asset is found and successfully parsed,
-		 * it is added to the Asset Registry.
-		 * 
-		 * @return Asset handle - if the path is invalid or some other
-		 * error occurs, the returned handle will be invalid.
-		 */
-		Asset Resolve() const;
-
-		/**
-		 * @brief Checks if the file provided in the constructor exists.
-		 */
-		bool Exists() const;
-
-		/** @brief Same as Exists */
-		operator bool() const;
-
-	private:
-		bool Parse(TShared<XMLDocument>& xml, AssetInitializer& outInitializer) const;
-
-	private:
-		FilePath m_Path;
-		String m_VirtualPath;
 	};
 
 	// Asset class inline implementation
@@ -186,18 +145,6 @@ namespace Ion
 	inline bool Asset::operator!=(const Asset& other) const
 	{
 		return !operator==(other);
-	}
-
-	// AssetFinder class inline implementation
-
-	inline bool AssetFinder::Exists() const
-	{
-		return m_Path.IsFile();
-	}
-
-	inline AssetFinder::operator bool() const
-	{
-		return Exists();
 	}
 }
 

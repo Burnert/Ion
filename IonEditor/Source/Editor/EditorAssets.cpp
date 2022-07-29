@@ -17,20 +17,10 @@
 
 namespace Ion::Editor
 {
-	static void LoadTexture(TResourcePtr<TextureResource>& outResource, TShared<RHITexture>& texture, const FilePath& path)
-	{
-		Asset asset = AssetFinder(path).Resolve();
-		outResource = TextureResource::Query(asset);
-
-		outResource->Take([&texture](const TextureResourceRenderDataShared& data)
-		{
-			texture = data.Texture;
-		});
-	}
-
 	static void LoadTexture(TResourcePtr<TextureResource>& outResource, TShared<RHITexture>& texture, const String& vp)
 	{
-		Asset asset = AssetFinder(vp).Resolve();
+		Asset asset = Asset::Resolve(vp);
+		
 		outResource = TextureResource::Query(asset);
 
 		outResource->Take([&texture](const TextureResourceRenderDataShared& data)

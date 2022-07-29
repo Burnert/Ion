@@ -8,11 +8,15 @@ namespace Ion
 	// Asset Parser Base ------------------------------------------------------------------------
 
 	AssetParser::AssetParser(const Asset& asset) :
-		//m_Parser(asset->GetDefinitionPath()),
-		XMLParser(asset->GetDefinitionPath()),
-		m_Asset(asset)
+		XMLParser(asset->GetDefinitionPath())
 	{
-		ionassert(m_Asset);
+		ionassert(asset);
+	}
+
+	AssetParser::AssetParser(const FilePath& assetPath) :
+		XMLParser(assetPath)
+	{
+		ionassert(File(assetPath).GetExtension() == L"iasset");
 	}
 
 	AssetParser& AssetParser::BeginAsset()

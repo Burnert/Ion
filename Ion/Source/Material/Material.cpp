@@ -54,7 +54,7 @@ namespace Ion
 				ionassert(std::holds_alternative<String>(def));
 
 				MaterialParameterTexture2D* param = (MaterialParameterTexture2D*)this;
-				param->SetDefaultValue(Asset::Find(std::get<String>(def)));
+				param->SetDefaultValue(Asset::Resolve(std::get<String>(def)));
 				break;
 			}
 		}
@@ -143,7 +143,7 @@ namespace Ion
 				ionassert(std::holds_alternative<String>(value));
 
 				MaterialParameterInstanceTexture2D* param = (MaterialParameterInstanceTexture2D*)this;
-				param->SetValue(Asset::Find(std::get<String>(value)));
+				param->SetValue(Asset::Resolve(std::get<String>(value)));
 				break;
 			}
 		}
@@ -991,7 +991,7 @@ namespace Ion
 			.ParseCurrentAttributes(
 				IASSET_ATTR_parent, [this](String parent)
 				{
-					SetParentMaterial(MaterialRegistry::QueryMaterial(Asset::Find(parent)));
+					SetParentMaterial(MaterialRegistry::QueryMaterial(Asset::Resolve(parent)));
 				}
 			)
 			.EnterEachNode(IASSET_NODE_MaterialInstance_ParameterInstance, [this](AssetParser& parser)

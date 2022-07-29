@@ -166,6 +166,18 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		template<typename FForEach>
 		TFinalClass& EnterEachNode(const String& nodeName, FForEach forEach);
 
+		// Other functions -------------------------------------------------------------------
+
+		template<typename FThen>
+		TFinalClass& If(bool bCondition, FThen then);
+
+		void Fail(const String& message);
+
+		template<typename FPred>
+		TFinalClass& FailIf(FPred pred, const String& message);
+
+		void AddMessage(EXMLParserResultType type, const String& message);
+
 		XMLParserResult Finalize();
 
 		MessageInterface GetInterface();
@@ -173,10 +185,6 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		bool IsOpen() const;
 
 	private:
-		void Fail(const String& message);
-
-		void AddMessage(EXMLParserResultType type, const String& message);
-
 		const FilePath& GetPath() const;
 
 		template<typename FParse>
@@ -249,6 +257,8 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		m_bFailed(false),
 		m_CurrentNode(nullptr)
 	{
+		ionassert(!file.IsEmpty());
+		ionassert(file.IsFile());
 	}
 
 	template<typename T>
@@ -650,6 +660,36 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 	}
 
 	template<typename T>
+	template<typename FThen>
+	inline typename XMLParser<T>::TFinalClass& XMLParser<T>::If(bool bCondition, FThen then)
+	{
+		static_assert(TIsConvertibleV<FThen, TFunction<void(TFinalClass&)>);
+
+		_PARSER_FAILED_CHECK();
+		ionassert(IsOpen());
+
+		if (bCondition)
+			then(*this);
+
+		return *this;
+	}
+
+	template<typename T>
+	template<typename FPred>
+	inline typename XMLParser<T>::TFinalClass& XMLParser<T>::FailIf(FPred pred, const String& message)
+	{
+		static_assert(TIsConvertibleV<FPred, TFunction<bool()>>);
+
+		_PARSER_FAILED_CHECK();
+		ionassert(IsOpen());
+
+		if (pred())
+			Fail(message);
+
+		return *this;
+	}
+
+	template<typename T>
 	XMLParserResult XMLParser<T>::Finalize()
 	{
 		ionassert(IsOpen());
@@ -686,13 +726,14 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 
 		m_bFailed = true;
 		m_ParseResult.OverallResult = EXMLParserResultType::Fail;
-		AddMessage(EXMLParserResultType::Fail, message);
+		//AddMessage(EXMLParserResultType::Fail, message);
+		m_ParseResult.Messages.emplace_back(XMLParserMessage { EXMLParserResultType::Fail, message });
 	}
 
 	template<typename T>
 	void XMLParser<T>::AddMessage(EXMLParserResultType type, const String& message)
 	{
-		ionassert(type != EXMLParserResultType::Fail || m_bFailed, "Call the Fail function directly.");
+		ionassert(type != EXMLParserResultType::Fail, "Call the Fail function directly.");
 		m_ParseResult.Messages.emplace_back(XMLParserMessage { type, message });
 	}
 

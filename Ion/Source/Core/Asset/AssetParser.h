@@ -15,6 +15,7 @@ namespace Ion
 	{
 	public:
 		AssetParser(const Asset& asset);
+		AssetParser(const FilePath& assetPath);
 
 		AssetParser& BeginAsset();
 		AssetParser& BeginAsset(EAssetType type);
@@ -26,10 +27,6 @@ namespace Ion
 		AssetParser& ParseName(String& outName);
 
 		AssetParser& ExpectType(EAssetType type);
-
-	protected:
-		//XMLParser m_Parser;
-		Asset m_Asset;
 	};
 
 	// Material Asset Parser ------------------------------------------------------------------

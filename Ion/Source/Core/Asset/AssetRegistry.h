@@ -282,6 +282,7 @@ namespace Ion
 		 */
 		static AssetDefinition* Find(const String& virtualPath);
 
+		static bool IsRegistered(const String& virtualPath);
 		static bool IsRegistered(const Asset& asset);
 		static bool IsRegistered(AssetDefinition* asset);
 

@@ -1,7 +1,11 @@
-enum class EMaterialParameterType
-{
-	Null = 0,
-	Scalar,
-	Vector,
-	Texture2D
-};
+	enum class EAssetType : uint8
+	{
+		None = 0,
+		Generic,
+		Image,
+		Mesh,
+		Data,
+		Material,
+		MaterialInstance,
+		Invalid = 0xFF,
+	};

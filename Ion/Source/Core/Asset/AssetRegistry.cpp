@@ -185,6 +185,11 @@ namespace Ion
 		return &it->second;
 	}
 
+	bool AssetRegistry::IsRegistered(const String& virtualPath)
+	{
+		return (bool)Find(virtualPath);
+	}
+
 	bool AssetRegistry::IsRegistered(const Asset& asset)
 	{
 		if (!asset)
@@ -232,7 +237,7 @@ namespace Ion
 			String virtualPath = "[Engine]/" + StringConverter::WStringToString(relativePath.ToString());
 
 			// Register the asset
-			Asset asset = AssetFinder(virtualPath).Resolve();
+			Asset asset = Asset::Resolve(virtualPath);
 			LOG_TRACE(L"Registered Engine Asset \"{0}\".", asset->GetDefinitionPath().ToString());
 		}
 	}

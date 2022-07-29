@@ -2,6 +2,7 @@
 
 #include "Asset.h"
 #include "AssetRegistry.h"
+#include "AssetParser.h"
 #include "Core/File/XML.h"
 #include "Application/EnginePath.h"
 
@@ -30,17 +31,83 @@ namespace Ion
 	{
 	}
 
+	bool Asset::Parse(AssetInitializer& inOutInitializer)
+	{
+		return AssetParser(inOutInitializer.AssetDefinitionPath)
+			.BeginAsset()
+			.Begin(IASSET_NODE_Info) // <Info>
+			.ParseCurrentAttributes(IASSET_ATTR_type, [&inOutInitializer](String type)
+			{
+				inOutInitializer.Type = ParseAssetTypeString(type);
+			})
+			.FailIf([&inOutInitializer]
+			{
+				return inOutInitializer.Type == EAssetType::Invalid;
+			}, "Invalid asset type.")
+			.ParseCurrentAttributeTyped(IASSET_ATTR_guid, inOutInitializer.Guid)
+			.End() // </Info>
+			.TryEnterNode(IASSET_NODE_ImportExternal, [&inOutInitializer](AssetParser& parser)
+			{
+				parser.ParseCurrentAttributes(IASSET_ATTR_path, [&parser, &inOutInitializer](String sPath)
+				{
+					if (sPath.empty())
+					{
+						parser.Fail("Asset Import External path is empty.");
+						return;
+					}
+
+					FilePath path = StringConverter::StringToWString(sPath);
+
+					// If the import path is relative, it means it begins in the directory
+					// the .iasset file is in. Append the paths in that case.
+					if (path.IsRelative())
+					{
+						FilePath actualPath = inOutInitializer.AssetDefinitionPath;
+						actualPath.Back();
+						path = Move(actualPath += path);
+					}
+
+					inOutInitializer.AssetReferencePath = path;
+				});
+			})
+			.Finalize()
+			.OK();
+	}
+
 	Asset::~Asset()
 	{
 	}
 
-	Asset Asset::Find(const String& virtualPath)
+	Asset Asset::Resolve(const String& virtualPath)
 	{
 		AssetDefinition* def = AssetRegistry::Find(virtualPath);
 		if (!def)
 		{
-			LOG_WARN("Cannot find an asset in a virtual path: \"{0}\"", virtualPath);
-			return InvalidHandle;
+			//LOG_WARN("Cannot find an asset in a virtual path: \"{0}\"", virtualPath);
+			
+			FilePath path = ResolveVirtualPath(virtualPath);
+
+			if (!path.Exists())
+			{
+				LOG_ERROR(L"The file \"{0}\" does not exist.", path.ToString());
+				return InvalidHandle;
+			}
+
+			String assetDefinition;
+			File::ReadToString(path, assetDefinition);
+
+			AssetInitializer initializer;
+			initializer.IAssetXML = MakeShared<XMLDocument>(assetDefinition);
+			initializer.AssetDefinitionPath = path;
+			initializer.VirtualPath = virtualPath;
+
+			if (!Parse(/*in out*/ initializer))
+			{
+				LOG_ERROR(L"The file \"{0}\" could not be parsed.", path.ToString());
+				return Asset::InvalidHandle;
+			}
+
+			return AssetRegistry::Register(initializer).GetHandle();
 		}
 		return def->GetHandle();
 	}
@@ -79,50 +146,6 @@ namespace Ion
 	const Asset Asset::InvalidHandle = Asset::InvalidInitializerT();
 	const Asset Asset::None = Asset();
 
-	// AssetFinder ----------------------------------------------------------------
-
-	AssetFinder::AssetFinder(const FilePath& path) :
-		m_Path(path)
-	{
-	}
-
-	AssetFinder::AssetFinder(const String& virtualPath) :
-		m_Path(Asset::ResolveVirtualPath(virtualPath)),
-		m_VirtualPath(virtualPath)
-	{
-	}
-
-	Asset AssetFinder::Resolve() const
-	{
-		if (!Exists())
-		{
-			LOG_ERROR(L"The file \"{0}\" does not exist.", m_Path.ToString());
-			return Asset::InvalidHandle;
-		}
-
-		String assetDefinition;
-		File::ReadToString(m_Path, assetDefinition);
-
-		AssetInitializer initializer;
-		initializer.IAssetXML = MakeShared<XMLDocument>(assetDefinition);
-		initializer.AssetDefinitionPath = m_Path;
-		initializer.VirtualPath = m_VirtualPath;
-
-		if (!Parse(initializer.IAssetXML, initializer))
-		{
-			LOG_ERROR(L"The file \"{0}\" could not be parsed.", m_Path.ToString());
-			return Asset::InvalidHandle;
-		}
-
-		// The asset might have already been registered.
-		if (AssetDefinition* asset = AssetRegistry::Find(initializer.VirtualPath))
-		{
-			return asset->GetHandle();
-		}
-
-		return AssetRegistry::Register(initializer).GetHandle();
-	}
-
 	EAssetType ParseAssetTypeString(const String& sType)
 	{
 		// @TODO: This should eventually parse the type string as kind of a package
@@ -146,63 +169,5 @@ namespace Ion
 			return EAssetType::MaterialInstance;
 
 		return EAssetType::Invalid;
-	}
-
-	bool AssetFinder::Parse(TShared<XMLDocument>& xml, AssetInitializer& outInitializer) const
-	{
-		// <IonAsset>
-		XMLNode* nodeIonAsset = xml->XML().first_node(IASSET_NODE_IonAsset);
-		CHECK_NODE(nodeIonAsset, IASSET_NODE_IonAsset);
-
-		// <Info>
-		XMLNode* nodeInfo = nodeIonAsset->first_node(IASSET_NODE_Info);
-		CHECK_NODE(nodeIonAsset, IASSET_NODE_Info);
-
-		// type=
-		XMLAttribute* info_attrType = nodeInfo->first_attribute(IASSET_ATTR_type);
-		CHECK_ATTR(info_attrType, IASSET_ATTR_type, IASSET_NODE_Info);
-
-		char* csType = info_attrType->value();
-		outInitializer.Type = ParseAssetTypeString(csType);
-		ionexcept(outInitializer.Type != EAssetType::Invalid, "Invalid asset type.")
-			return false;
-
-		// guid=
-		XMLAttribute* info_attrGuid = nodeInfo->first_attribute(IASSET_ATTR_guid);
-		CHECK_ATTR(info_attrGuid, IASSET_ATTR_guid, IASSET_NODE_Info);
-
-		String sGuid = info_attrGuid->value();
-		outInitializer.Guid = GUID(sGuid);
-		ionexcept(outInitializer.Guid, "Invalid GUID.")
-			return false;
-
-		// <ImportExternal>
-		XMLNode* nodeImportExternal = nodeIonAsset->first_node(IASSET_NODE_ImportExternal);
-		if (nodeImportExternal)
-		{
-			outInitializer.bImportExternal = true;
-
-			// path=
-			XMLAttribute* import_attrPath = nodeImportExternal->first_attribute(IASSET_ATTR_path);
-			CHECK_ATTR(import_attrPath, IASSET_ATTR_path, IASSET_NODE_ImportExternal);
-
-			char* csPath = import_attrPath->value();
-			FilePath importPath = StringConverter::StringToWString(csPath);
-			ionexcept(!importPath.IsEmpty(), "Asset Import External path is empty.")
-				return false;
-
-			// If the import path is relative, it means it begins in the directory
-			// the .iasset file is in. Append the paths in that case.
-			if (importPath.IsRelative())
-			{
-				FilePath actualPath = m_Path;
-				actualPath.Back();
-				importPath = Move(actualPath += importPath);
-			}
-
-			outInitializer.AssetReferencePath = importPath;
-		}
-
-		return true;
 	}
 }
