@@ -92,6 +92,8 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
+		ionassert(shader);
+		ionassert(shader->IsCompiled());
 		ionassert(m_VertexLayout);
 		ionassert(!m_IEDArray.empty());
 

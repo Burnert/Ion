@@ -353,6 +353,14 @@ namespace Ion
 		}
 	}
 
+	bool Material::IsCompiled(EShaderUsage usage) const
+	{
+		if (m_Shaders.find(usage) == m_Shaders.end())
+			return false;
+
+		return m_Shaders.at(usage).bCompiled;
+	}
+
 	bool Material::BindShader(EShaderUsage usage) const
 	{
 		ionassert(m_Shaders.find(usage) != m_Shaders.end());
@@ -471,7 +479,7 @@ namespace Ion
 		{
 			case EMaterialParameterType::Scalar:
 			{
-				TOptional<float> value = ParseFloatString(val.c_str());
+				TOptional<float> value = TStringParser<float>()(val);
 
 				if (!value)
 				{
@@ -495,7 +503,7 @@ namespace Ion
 			}
 			case EMaterialParameterType::Texture2D:
 			{
-				TOptional<GUID> value = ParseGuidString(val.c_str());
+				TOptional<GUID> value = TStringParser<GUID>()(val);
 
 				if (!value)
 				{
@@ -979,19 +987,10 @@ namespace Ion
 		return AssetParser(materialInstanceAsset)
 			.BeginAsset(EAssetType::MaterialInstance)
 			.Begin(IASSET_NODE_MaterialInstance) // <MaterialInstance>
-			.ParseCurrentAttributes(
-				IASSET_ATTR_parent, [this](const AssetParser::MessageInterface& iface, String parent)
+			.ParseCurrentAttributeTyped<GUID>(
+				IASSET_ATTR_parent, [this](const GUID& parent)
 				{
-					TOptional<GUID> guidOpt = ParseGuidString(parent.c_str());
-					if (guidOpt)
-					{
-						SetParentMaterial(MaterialRegistry::QueryMaterial(Asset::Find(*guidOpt)));
-					}
-					else
-					{
-						String message = fmt::format("Cannot parse the Material parent GUID string: \"{0}\" -> GUID", parent);
-						iface.SendFail(message);
-					}
+					SetParentMaterial(MaterialRegistry::QueryMaterial(Asset::Find(parent)));
 				}
 			)
 			.EnterEachNode(IASSET_NODE_MaterialInstance_ParameterInstance, [this](AssetParser& parser)

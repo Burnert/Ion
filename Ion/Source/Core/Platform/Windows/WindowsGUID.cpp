@@ -77,16 +77,14 @@ namespace Ion
 		UUID uuid;
 		RPC_STATUS status = UuidFromStringA((unsigned char*)str.c_str(), &uuid);
 
-		ConvertWindowsUUIDToBytes(uuid, (uint8*)&m_Bytes);
+		if (status == RPC_S_INVALID_STRING_UUID)
+		{
+			m_Bytes.fill(0xFF);
+			ionassert(0, "Invalid UUID string. -> %s", str.c_str());
+			return;
+		}
 
-		if (status == RPC_S_UUID_LOCAL_ONLY)
-		{
-			LOG_WARN("The UUID is guaranteed to be unique to this computer only.");
-		}
-		if (status == RPC_S_UUID_NO_ADDRESS)
-		{
-			LOG_WARN("Cannot get Ethernet or token - ring hardware address for this computer.");
-		}
+		ConvertWindowsUUIDToBytes(uuid, (uint8*)&m_Bytes);
 	}
 
 	String GUID::PlatformGUIDToString() const

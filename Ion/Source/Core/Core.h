@@ -26,6 +26,7 @@
 #include "Core/Event/Event.h"
 #include "Core/StringUtils.h"
 #include "Core/StringConverter.h"
+#include "Core/StringParser.h"
 //#include "Core/Asset.old/AssetCore.h"
 #include "Core/File/File.h"
 #include "Core/File/Image.h"

@@ -32,7 +32,7 @@ namespace Ion
 			if (!asset)
 				continue;
 
-			TShared<MaterialInstance> material = MaterialInstance::CreateFromAsset(asset);
+			TShared<MaterialInstance> material = MaterialRegistry::QueryMaterialInstance(asset);
 
 			mesh->AssignMaterialToSlot(i, material);
 		}
@@ -84,7 +84,8 @@ namespace Ion
 
 		// @TODO: Handle each material slot in the future
 		TShared<MaterialInstance> instance = m_MaterialSlots.at(0).MaterialInstance;
-		if (instance)
+		// @TODO: This checking for compiled shit is really wrong, there should be a system that does this automatically
+		if (instance && instance->GetBaseMaterial()->IsCompiled(EShaderUsage::StaticMesh))
 		{
 			m_VertexBuffer->SetLayoutShader(instance->GetBaseMaterial()->GetShader(EShaderUsage::StaticMesh));
 		}

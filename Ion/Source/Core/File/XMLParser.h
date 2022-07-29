@@ -92,9 +92,13 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 		using FParseFunc = TFunction<void(String)>;
 		using FParseFuncEx = TFunction<void(const MessageInterface&, String)>;
 
+		template<typename TAttr>
+		using TFParseFunc = TFunction<void(TAttr)>;
+
 		using FExpectFunc = TFunction<bool(String)>;
 
 		using FEnterEachNodeFunc = TFunction<void(TFinalClass&)>;
+		using FEnterFunc = TFunction<void(TFinalClass&)>;
 
 		XMLParser(const FilePath& file);
 
@@ -117,6 +121,8 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 
 		template<typename TEnum>
 		TFinalClass& ParseCurrentEnumAttribute(const String& attrName, TEnum& outEnum);
+		template<typename TAttr, typename FParse>
+		TFinalClass& ParseCurrentAttributeTyped(const String& attrName, FParse parseFunc);
 
 		template<typename... Args>
 		TFinalClass& TryParseCurrentAttributes(Args&&... args);
@@ -201,6 +207,8 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 
 		friend struct TThis::MessageInterface;
 	};
+
+	using GenericXMLParser = XMLParser<void>;
 
 	// Message Interface impl --------------------------------------------------------
 
@@ -287,14 +295,16 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 	template<typename FEnter>
 	inline typename XMLParser<T>::TFinalClass& XMLParser<T>::TryEnterNode(const String& nodeName, FEnter onEnter)
 	{
-		static_assert(TIsConvertibleV<FEnter, TFunction<void(XMLParser&)>>);
+		static_assert(TIsConvertibleV<FEnter, FEnterFunc>);
 
 		if (CheckNode(nodeName))
 		{
 			EnterNode(nodeName);
 			onEnter(*this);
-			ExitNode()
+			ExitNode();
 		}
+
+		return *this;
 	}
 
 	// Current node functions --------------------------------------------------------
@@ -349,6 +359,34 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 				TOptional<TEnum> opt = TEnumParser<TEnum>::FromString(sValue);
 				if (opt)
 					outEnum = *opt;
+			});
+
+		return *this;
+	}
+
+	template<typename T>
+	template<typename TAttr, typename FParse>
+	inline typename XMLParser<T>::TFinalClass& XMLParser<T>::ParseCurrentAttributeTyped(const String& attrName, FParse parseFunc)
+	{
+		static_assert(TIsConvertibleV<FParse, TFParseFunc<TAttr>>);
+
+		_PARSER_FAILED_CHECK();
+		ionassert(IsOpen());
+
+		ParseCurrentAttributes(
+			attrName, [this, &attrName, &parseFunc](String sValue)
+			{
+				TOptional<TAttr> attrValue = TStringParser<TAttr>()(sValue);
+				if (attrValue)
+				{
+					parseFunc(*attrValue);
+				}
+				else
+				{
+					// @TODO: type names
+					String message = fmt::format("Cannot parse attribute value: <{0} {1}=\"{2}\"> -> T", GetCurrentNodeName(), attrName, sValue);
+					GetInterface().SendFail(message);
+				}
 			});
 
 		return *this;
@@ -700,7 +738,7 @@ ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
 
 		if (!expectFunc(attribute->value()))
 		{
-			String message = fmt::format("Unexpected attribute value: <{0}> -> ({1}=\"{2}\")", node->name(), name, attribute->value());
+			String message = fmt::format("Unexpected attribute value: <{0} {1}=\"{2}\">", node->name(), name, attribute->value());
 			Fail(message);
 		}
 	}

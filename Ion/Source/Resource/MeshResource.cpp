@@ -21,22 +21,31 @@ namespace Ion
 
 	bool MeshResource::ParseAssetFile(const Asset& asset, GUID& outGuid, MeshResourceDescription& outDescription)
 	{
-		XMLParserResult result = MeshAssetParser(asset)
-			.BeginAsset() // <IonAsset>
-			.BeginResource() // <Resource>
-			.BeginMesh([&outGuid](GUID& guid) { outGuid.Swap(guid); }) // <Mesh>
-			.BeginDefaults() // <Defaults>
-			.ParseMaterials([&outDescription](uint32 index, const Asset& asset) // Each <Material>
+		return AssetParser(asset)
+			.BeginAsset(EAssetType::Mesh)
+			.Begin(IASSET_NODE_Resource) // <Resource>
+			.Begin(IASSET_NODE_Resource_Mesh) // <Mesh>
+			.ParseCurrentAttributeTyped<GUID>(IASSET_ATTR_guid, [&outGuid](const GUID& guid) { outGuid = guid; })
+			.TryEnterNode(IASSET_NODE_Defaults, [&outDescription](AssetParser& parser) // <Defaults>
 			{
-				if (index >= outDescription.Defaults.MaterialAssets.size())
-					outDescription.Defaults.MaterialAssets.resize(index + 1);
-				outDescription.Defaults.MaterialAssets[index] = Move(asset);
-			})
-			.EndDefaults() // </Defaults>
-			.EndMesh() // </Mesh>
-			.EndResource() // </Resource>
-			.Finalize(); // </IonAsset>
+				parser.EnterEachNode(IASSET_NODE_Defaults_Material, [&outDescription](AssetParser& parser)
+				{
+					uint32 index = (uint32)-1;
+					Asset asset = Asset::InvalidHandle;
+					parser.ParseCurrentAttributeTyped<int32>(IASSET_ATTR_index, [&](int32 idx) { index = idx; });
+					parser.ParseCurrentAttributeTyped<GUID>(IASSET_ATTR_asset, [&](const GUID& guid) { asset = Asset::Find(guid); });
 
-		return result.OK();
+					if (index != (uint32)-1 && asset.IsValid())
+					{
+						if (index >= outDescription.Defaults.MaterialAssets.size())
+							outDescription.Defaults.MaterialAssets.resize(index + 1);
+						outDescription.Defaults.MaterialAssets[index] = Move(asset);
+					}
+				});
+			}) // </Defaults>
+			.End() // </Mesh>
+			.End() // </Resource>
+			.Finalize()
+			.OK();
 	}
 }

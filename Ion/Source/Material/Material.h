@@ -408,6 +408,7 @@ namespace Ion
 		 */
 		void CompileShaders();
 		void CompileShaders(const FOnShadersCompiled& onCompiled);
+		bool IsCompiled(EShaderUsage usage) const;
 
 		bool BindShader(EShaderUsage usage) const;
 		const TShared<RHIShader>& GetShader(EShaderUsage usage) const;
