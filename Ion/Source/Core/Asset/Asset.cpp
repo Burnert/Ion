@@ -3,7 +3,9 @@
 #include "Asset.h"
 #include "AssetRegistry.h"
 #include "AssetParser.h"
+#include "AssetDefinition.h"
 #include "Core/File/XML.h"
+#include "Core/File/Collada.h"
 #include "Application/EnginePath.h"
 
 #define CHECK_NODE(node, nodeName) IASSET_CHECK_NODE(node, nodeName, m_Path)
@@ -169,5 +171,30 @@ namespace Ion
 			return EAssetType::MaterialInstance;
 
 		return EAssetType::Invalid;
+	}
+
+	void AssetImporter::ImportColladaMeshAsset(const TShared<AssetFileMemoryBlock>& block, MeshAssetData& outData)
+	{
+		String collada((const char*)block->Ptr, block->Count);
+
+		// @TODO: Refactor the ColladaDocument class a bit
+		TUnique<ColladaDocument> colladaDoc = MakeUnique<ColladaDocument>(collada);
+		const ColladaData& colladaData = colladaDoc->GetData();
+
+		outData.Layout = colladaData.Layout;
+
+		outData.Vertices.Ptr = new float[colladaData.VertexAttributeCount];
+		outData.Vertices.Count = colladaData.VertexAttributeCount;
+
+		outData.Indices.Ptr = new uint32[colladaData.IndexCount];
+		outData.Indices.Count = colladaData.IndexCount;
+
+		memcpy(outData.Vertices.Ptr, colladaData.VertexAttributes, colladaData.VertexAttributeCount * sizeof(float));
+		memcpy(outData.Indices.Ptr, colladaData.Indices, colladaData.IndexCount * sizeof(uint32));
+	}
+
+	void AssetImporter::ImportImageAsset(const TShared<AssetFileMemoryBlock>& block, Image& outImage)
+	{
+		outImage.Load(block->Ptr, block->Count);
 	}
 }

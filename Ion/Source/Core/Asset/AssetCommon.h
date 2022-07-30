@@ -138,6 +138,8 @@ namespace Ion
 		return assetGuid;
 	}
 
+	using AssetFileMemoryBlock = TMemoryBlock<uint8>;
+
 	struct AssetInfo
 	{
 		String Name;

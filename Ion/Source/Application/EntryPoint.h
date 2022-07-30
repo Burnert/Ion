@@ -15,6 +15,8 @@ static int32 MainShared()
 #endif
 	DebugTimer::InitPlatform();
 
+	Platform::_Detail::SetMainThreadId();
+
 	Application* application = InstantiateApplication();
 	application->Start();
 

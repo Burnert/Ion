@@ -29,6 +29,12 @@ namespace Ion::Platform
 	int32 GetCurrentThreadId();
 	void SetCurrentThreadDescription(const WString& desc);
 	WString GetCurrentThreadDescription();
+	bool IsMainThread();
 
 	WString GetSystemDefaultFontPath();
+
+	namespace _Detail
+	{
+		void SetMainThreadId();
+	}
 }

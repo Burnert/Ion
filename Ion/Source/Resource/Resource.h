@@ -5,6 +5,7 @@
 #include "ResourceMemory.h"
 #include "Core/Asset/Asset.h"
 #include "Core/Asset/AssetRegistry.h"
+#include "Core/Asset/AssetDefinition.h"
 
 namespace Ion
 {

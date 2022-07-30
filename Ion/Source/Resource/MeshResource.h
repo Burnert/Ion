@@ -125,52 +125,48 @@ namespace Ion
 			return true;
 		}
 
-		// Store the pointer (self) so the resource doesn't get deleted before it's loaded
-		auto initMesh = [this, self = GetPointer(), onTake](const AssetData& data)
-		{
-			ionassert(m_Asset);
-			ionassert(m_Asset->GetType() == EAssetType::Mesh);
-
-			TShared<MeshAssetData> meshData = data.Get<MeshAssetData>();
-
-			MeshResourceRenderDataShared sharedRenderData { };
-
-			// The same manual reference counting as in TextureResource.
-
-			// RHIVertexBuffer:
-			ResourceMemory::IncRef(*this);
-			RHIVertexBuffer* vb = RHIVertexBuffer::Create(meshData->Vertices.Ptr, meshData->Vertices.Count);
-			sharedRenderData.VertexBuffer = TShared<RHIVertexBuffer>(vb, [this](RHIVertexBuffer* ptr)
+		TShared<MeshAssetData> meshData = MakeShared<MeshAssetData>();
+		m_Asset->Import(
+			[meshData](TShared<AssetFileMemoryBlock> block)
 			{
-				ResourceMemory::DecRef(*this);
-				delete ptr;
-			});
-
-			// RHIIndexBuffer:
-			ResourceMemory::IncRef(*this);
-			RHIIndexBuffer* ib = RHIIndexBuffer::Create(meshData->Indices.Ptr, (uint32)meshData->Indices.Count);
-			sharedRenderData.IndexBuffer = TShared<RHIIndexBuffer>(ib, [this](RHIIndexBuffer* ptr)
+				AssetImporter::ImportColladaMeshAsset(block, *meshData);
+			},
+			// Store the pointer (self) so the resource doesn't get deleted before it's loaded
+			[this, self = GetPointer(), meshData, onTake]
 			{
-				ResourceMemory::DecRef(*this);
-				delete ptr;
-			});
+				ionassert(m_Asset);
+				ionassert(m_Asset->GetType() == EAssetType::Mesh);
 
-			sharedRenderData.VertexBuffer->SetLayout(meshData->Layout);
+				MeshResourceRenderDataShared sharedRenderData { };
 
-			onTake(sharedRenderData);
+				// The same manual reference counting as in TextureResource.
 
-			m_RenderData = sharedRenderData;
-		};
+				// RHIVertexBuffer:
+				ResourceMemory::IncRef(*this);
+				RHIVertexBuffer* vb = RHIVertexBuffer::Create(meshData->Vertices.Ptr, meshData->Vertices.Count);
+				sharedRenderData.VertexBuffer = TShared<RHIVertexBuffer>(vb, [this](RHIVertexBuffer* ptr)
+				{
+					ResourceMemory::DecRef(*this);
+					delete ptr;
+				});
 
-		TOptional<AssetData> data = m_Asset->Load(initMesh);
+				// RHIIndexBuffer:
+				ResourceMemory::IncRef(*this);
+				RHIIndexBuffer* ib = RHIIndexBuffer::Create(meshData->Indices.Ptr, (uint32)meshData->Indices.Count);
+				sharedRenderData.IndexBuffer = TShared<RHIIndexBuffer>(ib, [this](RHIIndexBuffer* ptr)
+				{
+					ResourceMemory::DecRef(*this);
+					delete ptr;
+				});
 
-		if (data)
-		{
-			initMesh(data.value());
-			return true;
-		}
+				sharedRenderData.VertexBuffer->SetLayout(meshData->Layout);
 
-		return false;
+				onTake(sharedRenderData);
+
+				m_RenderData = sharedRenderData;
+			}
+		);
+		return (bool)meshData;
 	}
 
 	inline const MeshResourceDefaults& MeshResource::GetDefaults() const

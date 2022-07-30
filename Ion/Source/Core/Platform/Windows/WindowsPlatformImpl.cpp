@@ -46,6 +46,13 @@ namespace Ion::Platform
 		return descStr;
 	}
 
+	static DWORD g_MainThreadId = 0;
+
+	bool IsMainThread()
+	{
+		return g_MainThreadId == ::GetCurrentThreadId();
+	}
+
 	WString GetSystemDefaultFontPath()
 	{
 		constexpr wchar* Paths[] = {
@@ -60,5 +67,13 @@ namespace Ion::Platform
 		}
 
 		return L"";
+	}
+
+	namespace _Detail
+	{
+		void SetMainThreadId()
+		{
+			g_MainThreadId = ::GetCurrentThreadId();
+		}
 	}
 }

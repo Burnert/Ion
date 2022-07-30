@@ -22,7 +22,8 @@ namespace Ion
 
 		inline void Free()
 		{
-			checked_delete(Ptr);
+			if (Ptr)
+				delete[] Ptr;
 		}
 	};
 
@@ -39,7 +40,8 @@ namespace Ion
 
 		inline void Free()
 		{
-			checked_delete(Ptr);
+			if (Ptr)
+				delete[] Ptr;
 		}
 	};
 

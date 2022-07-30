@@ -1,6 +1,7 @@
 #include "IonPCH.h"
 
 #include "AssetRegistry.h"
+#include "AssetDefinition.h"
 #include "Asset.h"
 
 #include "Core/Task/EngineTaskQueue.h"
@@ -15,49 +16,6 @@
 
 namespace Ion
 {
-	// AssetDefinition ----------------------------------------------------------------
-
-	AssetDefinition::AssetDefinition(const AssetInitializer& initializer) :
-		m_Guid(initializer.Guid),
-		m_VirtualPath(initializer.VirtualPath),
-		m_AssetDefinitionPath(initializer.AssetDefinitionPath),
-		m_AssetReferencePath(initializer.AssetReferencePath),
-		m_Type(initializer.Type),
-		m_bImportExternal(initializer.bImportExternal),
-		m_AssetData(EAssetType::None),
-		m_Info({ })
-	{
-		ParseAssetDefinitionFile(initializer.IAssetXML);
-	}
-
-	AssetDefinition::~AssetDefinition()
-	{
-	}
-
-	bool AssetDefinition::ParseAssetDefinitionFile(const TShared<XMLDocument>& xml)
-	{
-		XMLNode* nodeIonAsset = xml->XML().first_node(IASSET_NODE_IonAsset);
-		CHECK_NODE(nodeIonAsset, IASSET_NODE_IonAsset);
-
-		XMLNode* nodeName = nodeIonAsset->first_node(IASSET_NODE_Name);
-		m_Info.Name = nodeName ?
-			nodeName->value() :
-			StringConverter::WStringToString(m_AssetDefinitionPath.LastElement());
-
-		XMLNode* nodeResource = nodeIonAsset->first_node(IASSET_NODE_Resource);
-		if (nodeResource)
-		{
-			XMLNode* nodeCurrentResource = nodeResource->first_node();
-			while (nodeCurrentResource)
-			{
-				m_Info.ResourceUsage.push_back(nodeCurrentResource->name());
-				nodeCurrentResource = nodeCurrentResource->next_sibling();
-			}
-		}
-
-		return true;
-	}
-
 	// FAssetLoadWork -----------------------------------------------
 
 	void FAssetLoadWork::Schedule()
@@ -132,11 +90,6 @@ namespace Ion
 	}
 
 	// AssetRegistry ----------------------------------------------------------------
-
-	Asset AssetDefinition::GetHandle() const
-	{
-		return Asset(const_cast<AssetDefinition*>(this));
-	}
 
 	AssetDefinition& AssetRegistry::Register(const AssetInitializer& initializer)
 	{

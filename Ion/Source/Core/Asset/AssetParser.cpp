@@ -2,6 +2,7 @@
 
 #include "AssetParser.h"
 #include "AssetRegistry.h"
+#include "AssetDefinition.h"
 
 namespace Ion
 {

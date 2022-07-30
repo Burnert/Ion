@@ -129,53 +129,49 @@ namespace Ion
 			return true;
 		}
 
-		// Store the pointer (self) so the resource doesn't get deleted before it's loaded
-		auto initTexture = [this, self = GetPointer(), onTake](const AssetData& data)
-		{
-			ionassert(m_Asset);
-			ionassert(m_Asset->GetType() == EAssetType::Image);
-
-			TShared<Image> image = data.Get<Image>();
-
-			TextureResourceRenderDataShared sharedRenderData { };
-
-			TextureDescription desc { };
-			desc.Dimensions.Width = image->GetWidth();
-			desc.Dimensions.Height = image->GetHeight();
-			desc.bGenerateMips = true;
-			desc.bCreateSampler = true;
-			desc.bUseAsRenderTarget = true;
-			desc.DebugName = StringConverter::WStringToString(m_Asset->GetDefinitionPath().ToString());
-
-			desc.SetFilterAll(m_Description.Properties.Filter);
-			
-			// The shared RHITexture has to reference the resource without actually using a ResourcePtr.
-			// This is to make sure the resource won't be deleted before the object is destroyed.
-			ResourceMemory::IncRef(*this);
-
-			sharedRenderData.Texture = TShared<RHITexture>(RHITexture::Create(desc), [this](RHITexture* ptr)
+		TShared<Image> image = MakeShared<Image>();
+		m_Asset->Import(
+			[image](TShared<AssetFileMemoryBlock> block)
 			{
-				// Decrement the ref count when the actual RHITexture object gets destroyed.
-				ResourceMemory::DecRef(*this);
-				delete ptr;
-			});
+				AssetImporter::ImportImageAsset(block, *image);
+			},
+			// Store the pointer (self) so the resource doesn't get deleted before it's loaded
+			[this, self = GetPointer(), image, onTake]
+			{
+				ionassert(m_Asset);
+				ionassert(m_Asset->GetType() == EAssetType::Image);
 
-			sharedRenderData.Texture->UpdateSubresource(image.get());
-;
-			onTake(sharedRenderData);
+				TextureResourceRenderDataShared sharedRenderData { };
 
-			m_RenderData = sharedRenderData;
-		};
+				TextureDescription desc { };
+				desc.Dimensions.Width = image->GetWidth();
+				desc.Dimensions.Height = image->GetHeight();
+				desc.bGenerateMips = true;
+				desc.bCreateSampler = true;
+				desc.bUseAsRenderTarget = true;
+				desc.DebugName = StringConverter::WStringToString(m_Asset->GetDefinitionPath().ToString());
 
-		TOptional<AssetData> data = m_Asset->Load(initTexture);
+				desc.SetFilterAll(m_Description.Properties.Filter);
 
-		if (data)
-		{
-			initTexture(data.value());
-			return true;
-		}
+				// The shared RHITexture has to reference the resource without actually using a ResourcePtr.
+				// This is to make sure the resource won't be deleted before the object is destroyed.
+				ResourceMemory::IncRef(*this);
 
-		return false;
+				sharedRenderData.Texture = TShared<RHITexture>(RHITexture::Create(desc), [this](RHITexture* ptr)
+				{
+					// Decrement the ref count when the actual RHITexture object gets destroyed.
+					ResourceMemory::DecRef(*this);
+					delete ptr;
+				});
+
+				sharedRenderData.Texture->UpdateSubresource(image.get());
+				;
+				onTake(sharedRenderData);
+
+				m_RenderData = sharedRenderData;
+			}
+		);
+		return (bool)image;
 	}
 
 }

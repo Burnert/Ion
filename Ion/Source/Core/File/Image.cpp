@@ -157,4 +157,16 @@ namespace Ion
 
 		return m_PixelData;
 	}
+
+	const uint8* Image::Load(const void* data, size_t size)
+	{
+		stbi_set_flip_vertically_on_load(1);
+
+		// Load pixel data with no desired channel number
+		m_PixelData = stbi_load_from_memory((uint8*)data, (int32)size, &m_Width, &m_Height, &m_Channels, 4);
+		_FAIL_M(m_PixelData, L"Cannot load pixel data from memory. {{{0}}}", data);
+		m_Channels = 4;
+
+		return m_PixelData;
+	}
 }

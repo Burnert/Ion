@@ -146,6 +146,13 @@ namespace Ion
 	{
 		return !operator==(other);
 	}
+
+	class ION_API AssetImporter
+	{
+	public:
+		static void ImportColladaMeshAsset(const TShared<AssetFileMemoryBlock>& block, MeshAssetData& outData);
+		static void ImportImageAsset(const TShared<AssetFileMemoryBlock>& block, Image& outImage);
+	};
 }
 
 /**
