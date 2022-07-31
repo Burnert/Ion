@@ -27,10 +27,10 @@ namespace Ion
 		/**
 		 * @brief Find the existing asset by virtual path.
 		 *
-		 * @param virtualPath a VP to an asset (e.g. "<Engine>/Materials/DefaultMaterial")
-		 * @return Asset handle, invalid handle if the asset with that path does not exist.
+		 * @param virtualPath a VP to an asset (e.g. "[Engine]/Materials/DefaultMaterial")
+		 * @return Asset handle, FileNotFoundError if the asset with that path does not exist, or IOError if the asset cannot be parsed.
 		 */
-		static Asset Resolve(const String& virtualPath);
+		static Result<Asset, IOError, FileNotFoundError> Resolve(const String& virtualPath);
 
 		static FilePath ResolveVirtualPath(const String& virtualPath);
 

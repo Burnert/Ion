@@ -68,6 +68,18 @@ namespace Ion::Editor
 		m_ContentBrowser = MakeShared<ContentBrowser>();
 		m_ContentBrowser->AddUI();
 
+		Asset::Resolve("[Engine]/Materials/DefaultMaterial").Unwrap();
+		Asset::Resolve("[Engine]/Textures/White").ValueOr(Asset::None);
+		Asset::Resolve("[Engine]/Lol/Something")
+			.Get([](const Asset& asset)
+			{
+				LOG_INFO(asset->GetDefinitionPath().ToString());
+			})
+			.Err<FileNotFoundError>([](auto& error)
+			{
+				LOG_ERROR("Cannot find asset file.");
+			});
+
 		Renderer::Get()->SetVSyncEnabled(true);
 
 		WorldInitializer worldInitializer { };

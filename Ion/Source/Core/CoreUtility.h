@@ -232,3 +232,8 @@ NODISCARD inline constexpr bool IsNoneOf(T&& item, Elements&&... elements)
 {
 	return !IsAnyOf(item, elements...);
 }
+
+// Empty constant references
+
+const String EmptyString = "";
+const WString EmptyWString = L"";

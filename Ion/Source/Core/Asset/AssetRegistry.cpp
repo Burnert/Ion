@@ -190,7 +190,7 @@ namespace Ion
 			String virtualPath = "[Engine]/" + StringConverter::WStringToString(relativePath.ToString());
 
 			// Register the asset
-			Asset asset = Asset::Resolve(virtualPath);
+			Asset asset = Asset::Resolve(virtualPath).Unwrap();
 			LOG_TRACE(L"Registered Engine Asset \"{0}\".", asset->GetDefinitionPath().ToString());
 		}
 	}

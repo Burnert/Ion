@@ -23,6 +23,7 @@
 #include "Core/Math/Transform.h"
 #include "Core/Math/Rotator.h"
 #include "Core/Math/Random.h"
+#include "Core/Error/Error.h"
 #include "Core/Event/Event.h"
 #include "Core/StringUtils.h"
 #include "Core/StringConverter.h"

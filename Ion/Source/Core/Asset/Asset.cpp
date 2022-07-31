@@ -80,7 +80,7 @@ namespace Ion
 	{
 	}
 
-	Asset Asset::Resolve(const String& virtualPath)
+	Result<Asset, IOError, FileNotFoundError> Asset::Resolve(const String& virtualPath)
 	{
 		AssetDefinition* def = AssetRegistry::Find(virtualPath);
 		if (!def)
@@ -92,7 +92,7 @@ namespace Ion
 			if (!path.Exists())
 			{
 				LOG_ERROR(L"The file \"{0}\" does not exist.", path.ToString());
-				return InvalidHandle;
+				ionthrow(FileNotFoundError, "The file \"{0}\" does not exist.", StringConverter::WStringToString(path.ToString()));
 			}
 
 			String assetDefinition;
@@ -106,7 +106,7 @@ namespace Ion
 			if (!Parse(/*in out*/ initializer))
 			{
 				LOG_ERROR(L"The file \"{0}\" could not be parsed.", path.ToString());
-				return Asset::InvalidHandle;
+				ionthrow(IOError, "The file \"{0}\" could not be parsed.", StringConverter::WStringToString(path.ToString()));
 			}
 
 			return AssetRegistry::Register(initializer).GetHandle();

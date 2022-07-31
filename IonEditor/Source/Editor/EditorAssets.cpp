@@ -19,7 +19,7 @@ namespace Ion::Editor
 {
 	static void LoadTexture(TResourcePtr<TextureResource>& outResource, TShared<RHITexture>& texture, const String& vp)
 	{
-		Asset asset = Asset::Resolve(vp);
+		Asset asset = Asset::Resolve(vp).ValueOr(Asset::None);
 		
 		outResource = TextureResource::Query(asset);
 
