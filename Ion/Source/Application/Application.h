@@ -213,7 +213,7 @@ namespace Ion
 		void CallClientAppOnEvent(const Event& event);
 		float CalculateFrameTime(); // Implemented per platform
 
-		void RenderToMainWindow();
+		void SetRenderTargetToMainWindow();
 
 		void SetupWindowTitle();
 		void UpdateWindowTitle(float deltaTime);

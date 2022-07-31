@@ -191,7 +191,7 @@ namespace Ion
 		ImGui::Render();
 
 		RHI::Get()->BeginFrame();
-		RenderToMainWindow();
+		SetRenderTargetToMainWindow();
 
 		TRACE_BEGIN(0, "Application - Client::OnRender");
 		OnRender();
@@ -201,7 +201,7 @@ namespace Ion
 		m_LayerStack->OnRender();
 
 		// Render to the window framebuffer last
-		RenderToMainWindow();
+		SetRenderTargetToMainWindow();
 
 		{
 			TRACE_SCOPE("Render ImGui");
@@ -211,7 +211,7 @@ namespace Ion
 		RHI::Get()->EndFrame(*m_Window);
 	}
 
-	void Application::RenderToMainWindow()
+	void Application::SetRenderTargetToMainWindow()
 	{
 		WindowDimensions windowSize = GetWindow()->GetDimensions();
 		if (windowSize.Width == 0 || windowSize.Height == 0)

@@ -46,6 +46,7 @@ namespace Ion
 		World* world = World::Create(initializer);
 		if (!world)
 		{
+			// This won't ever be reached...
 			LOG_ERROR("Could not create the world.");
 			return nullptr;
 		}
