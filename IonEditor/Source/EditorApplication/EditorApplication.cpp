@@ -68,9 +68,7 @@ namespace Ion::Editor
 		m_ContentBrowser = MakeShared<ContentBrowser>();
 		m_ContentBrowser->AddUI();
 
-		//ionverify(0, "Error");
-
-		Asset::Resolve("[Engine]/Materials/DefaultMateriald").Unwrap();
+		Asset::Resolve("[Engine]/Materials/DefaultMaterial").Unwrap();
 		Asset::Resolve("[Engine]/Textures/White").ValueOr(Asset::None);
 		Asset::Resolve("[Engine]/Lol/Something")
 			.Ok([](const Asset& asset)

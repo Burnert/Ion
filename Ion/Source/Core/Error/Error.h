@@ -51,7 +51,7 @@ namespace Ion
 		LOG_CRITICAL("Critical error has occured!");
 		LOG_CRITICAL("Assertion failed:\n\n" _ABORT_LOG_PATTERN, _FWD_ASSERT_ARGS);
 		if (format)
-			LOG_CRITICAL(format, args...);
+			LOG_CRITICAL(format, Forward<Args>(args)...);
 
 #if _SHOW_ABORT_MESSAGE_BOX
 		String message = format ? fmt::format(format, Forward<Args>(args)...) : EmptyString;
@@ -64,14 +64,13 @@ namespace Ion
 	{
 		LOG_CRITICAL("Critical error has occured!");
 		LOG_CRITICAL("Unwrap failed: => Result<{4}>\n\n" _ABORT_LOG_PATTERN_NOEXPR, _FWD_ASSERT_ARGS, result.GetErrorClassName());
-#if ION_DEBUG
 		String message = result.GetErrorMessage();
 		if (!message.empty())
 			LOG_CRITICAL(message);
-#endif
+
 #if _SHOW_ABORT_MESSAGE_BOX
 		String reason = fmt::format("Unwrap failed: => Result<{}>", result.GetErrorClassName());
-		AbortMessageBox<false>(_FWD_ASSERT_ARGS, reason.c_str(), "");
+		AbortMessageBox<false>(_FWD_ASSERT_ARGS, reason.c_str(), message.c_str());
 #endif
 	}
 
@@ -80,11 +79,9 @@ namespace Ion
 	{
 		LOG_ERROR("An error has occured.");
 		LOG_ERROR("Error: => Result<{4}>\n" _ABORT_LOG_PATTERN_NOEXPR, _FWD_ASSERT_ARGS, result.GetErrorClassName());
-#if ION_DEBUG
 		String message = result.GetErrorMessage();
 		if (!message.empty())
 			LOG_ERROR(message);
-#endif
 	}
 
 	template<bool bExpr>
@@ -112,29 +109,22 @@ namespace Ion
 
 #pragma region Error
 
-#if ION_DEBUG
 #define _ERROR_TYPE_CTOR_HELPER(type) type(const String& message) : Error(message) { } type() : Error() { }
-#else
-#define _ERROR_TYPE_CTOR_HELPER(type) type() : Error() { }
-#endif
-
 #define DEFINE_ERROR_TYPE(type) struct type : Error { static constexpr const char* ClassName = #type; _ERROR_TYPE_CTOR_HELPER(type) }
 
 	struct Error
 	{
 		static constexpr const char* ClassName = "Error";
-#if ION_DEBUG
+
 		const String Message;
 
 		Error(const String& message) :
 			Message(message)
 		{
 		}
-#endif
+
 		Error()
-#if ION_DEBUG
 			: Message()
-#endif
 		{
 		}
 	};
@@ -190,9 +180,7 @@ namespace Ion
 
 		private:
 			String GetErrorClassName() const;
-#if ION_DEBUG
 			String GetErrorMessage() const;
-#endif
 
 		protected:
 			TVariant<TRet, TErr...> m_Value;
@@ -276,7 +264,6 @@ namespace Ion
 			}, m_Value);
 		}
 
-#if ION_DEBUG
 		template<typename TRet, typename... TErr>
 		inline String ResultBase<TRet, TErr...>::GetErrorMessage() const
 		{
@@ -289,7 +276,6 @@ namespace Ion
 				return EmptyString;
 			}, m_Value);
 		}
-#endif
 	}
 
 	// Final Result structs ---------------------------------------------------
@@ -345,11 +331,7 @@ namespace Ion
 		inline static String _FormatThrowMessage(const String& format, Args&&... args) { return fmt::format(format, Forward<Args>(args)...); }
 	}
 
-#if ION_DEBUG
 #define ionthrow(error, ...) return error(Ion::_Detail::_FormatThrowMessage(__VA_ARGS__))
-#else
-#define ionthrow(error, ...) return error()
-#endif
 
 #pragma endregion
 
