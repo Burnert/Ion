@@ -200,10 +200,18 @@ namespace Ion
 
 			bool IsOk() const;
 
+			template<typename T>
+			bool Is() const;
+
+			template<typename E>
+			E&& ForwardThrow();
+
 			ResultBase(const ResultBase&) = delete;
 			ResultBase(ResultBase&&) = delete;
 			ResultBase& operator=(const ResultBase&) = delete;
 			ResultBase& operator=(ResultBase&&) = delete;
+
+			operator bool() const;
 
 		private:
 			String GetErrorClassName() const;
@@ -273,9 +281,38 @@ namespace Ion
 		}
 
 		template<typename TRet, typename... TErr>
+		template<typename T>
+		inline bool ResultBase<TRet, TErr...>::Is() const
+		{
+			static_assert(TIsSameV<T, TRet> || (TIsSameV<T, TErr> || ...),
+				"The type has not been specified in the Result.");
+
+			return std::holds_alternative<T>(m_Value);
+		}
+
+		template<typename TRet, typename... TErr>
+		template<typename E>
+		inline E&& ResultBase<TRet, TErr...>::ForwardThrow()
+		{
+			static_assert((TIsSameV<E, TErr> || ...), "Cannot forward throw of the Error type, because is doesn't exist in this Result.");
+
+			// Cannot forward throw if the value is not the same as the specified Error type
+			if (!std::holds_alternative<E>(m_Value))
+				abort();
+
+			return Move(std::get<E>(m_Value));
+		}
+
+		template<typename TRet, typename... TErr>
 		inline bool ResultBase<TRet, TErr...>::IsOk() const
 		{
 			return std::holds_alternative<TRet>(m_Value);
+		}
+
+		template<typename TRet, typename... TErr>
+		inline ResultBase<TRet, TErr...>::operator bool() const
+		{
+			return IsOk();
 		}
 
 		template<typename TRet, typename... TErr>
@@ -365,6 +402,9 @@ namespace Ion
 #else
 #define ionthrow(error, ...) return error(Ion::_Detail::_FormatThrowMessage(__VA_ARGS__))
 #endif
+#define ionthrowif(cond, error, ...) if ((cond)) ionthrow(error, __VA_ARGS__)
+
+#define fwdthrow(result, error) { if (result.Is<error>()) return Move(result.ForwardThrow<error>()); }
 
 // Error macro -------------------------------------------------------------------------------------------------
 

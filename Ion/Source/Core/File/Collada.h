@@ -35,7 +35,7 @@ namespace Ion
 				uint32 Stride;
 			};
 
-			TriangleInput* AddTriangleInput(XMLNode* meshNode, XMLNode* inputNode);
+			Result<TriangleInput*, IOError> AddTriangleInput(XMLNode* meshNode, XMLNode* inputNode);
 			uint32 GetFullStride() const;
 			TShared<RHIVertexLayout> CreateLayout() const;
 
@@ -123,26 +123,25 @@ namespace Ion
 		ColladaDocument() = delete;
 		~ColladaDocument();
 
-		inline const ColladaData& GetData() const { return m_Data; }
+		inline const ColladaData& GetData() const { ionbreak("DEPRECATED, Use Parse once instead."); return m_Data; }
+
+		Result<ColladaData, IOError> Parse();
 
 	protected:
-		void Load();
-		bool Parse();
-
-		static uint32* ExtractTriangles(XMLNode* trianglesNode, uint64& outIndexCount);
+		static Result<uint32*, IOError> ExtractTriangles(XMLNode* trianglesNode, uint64& outIndexCount);
 
 		static TShared<TrianglesNodeData> ExtractTriangleInputs(XMLNode* trianglesNode);
 
-		static XMLNode* ExtractSourceNode(XMLNode* meshNode, XMLNode* inputNode);
-		static XMLNode* ExtractVerticesSourceNode(XMLNode* verticesNode);
+		static Result<XMLNode*, IOError> ExtractSourceNode(XMLNode* meshNode, XMLNode* inputNode);
+		static Result<XMLNode*, IOError> ExtractVerticesSourceNode(XMLNode* verticesNode);
 		//static bool ExtractParams(const XMLNode* accessorNode);
 
-		static bool ParseTriangleInputs(const TShared<TrianglesNodeData>& layout, float scale = 1.0f);
-		static bool ParseTriangles(uint32* indices, uint64 indexCount, const TShared<TrianglesNodeData>& data, ColladaData& outMeshData);
+		static Result<void, IOError> ParseTriangleInputs(const TShared<TrianglesNodeData>& layout, float scale = 1.0f);
+		static void ParseTriangles(uint32* indices, uint64 indexCount, const TShared<TrianglesNodeData>& data, ColladaData& outMeshData);
 
-		static float* ExtractFloatArray(XMLNode* sourceNode, uint64& outSize, TransformFn transformFunction = nullptr);
+		static Result<float*, IOError> ExtractFloatArray(XMLNode* sourceNode, uint64& outSize, TransformFn transformFunction = nullptr);
 
-		static const char* CheckDocumentVersion(XMLNode* colladaNode);
+		static Result<const char*, IOError> CheckDocumentVersion(XMLNode* colladaNode);
 
 	private:
 		ColladaData m_Data;

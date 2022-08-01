@@ -179,7 +179,7 @@ namespace Ion
 
 		// @TODO: Refactor the ColladaDocument class a bit
 		TUnique<ColladaDocument> colladaDoc = MakeUnique<ColladaDocument>(collada);
-		const ColladaData& colladaData = colladaDoc->GetData();
+		ColladaData colladaData = colladaDoc->Parse().Unwrap();
 
 		outData.Layout = colladaData.Layout;
 

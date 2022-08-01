@@ -10,7 +10,6 @@ namespace Ion
 		m_Data({ }),
 		m_bParsed(false)
 	{
-		Load();
 	}
 
 	ColladaDocument::ColladaDocument(char* collada)
@@ -18,7 +17,6 @@ namespace Ion
 		m_Data({ }),
 		m_bParsed(false)
 	{
-		Load();
 	}
 
 	ColladaDocument::ColladaDocument(FileOld* colladaFile)
@@ -27,7 +25,6 @@ namespace Ion
 		m_bParsed(false)
 	{
 		ionassert(colladaFile->GetExtension() == L"dae", "The file does not have a Collada (.dae) extension. This is most likely an error.");
-		Load();
 	}
 
 	ColladaDocument::~ColladaDocument()
@@ -42,67 +39,72 @@ namespace Ion
 		}
 	}
 
-	void ColladaDocument::Load()
-	{
-		TRACE_FUNCTION();
-
-		if (!Parse())
-		{
-			LOG_ERROR("Could not parse Collada file!");
-			return;
-		}
-		m_bParsed = true;
-	}
-
-	bool ColladaDocument::Parse()
+	Result<ColladaData, IOError> ColladaDocument::Parse()
 	{
 		// @TODO: Parse the <up_axis> node
 
 		// <COLLADA>
 
 		XMLNode* colladaNode = m_XML.first_node("COLLADA");
-		_ionexcept_r(colladaNode, "The file is not a valid Collada format!");
-		_ionexcept_r(_strcmpi(CheckDocumentVersion(colladaNode), "1.4.1") == 0, "For now, only Collada version 1.4.1 supported.");
+		ionthrowif(!colladaNode, IOError, "The file is not a valid Collada format!");
+
+		{
+			auto result = CheckDocumentVersion(colladaNode);
+			fwdthrow(result, IOError);
+			ionthrowif(_strcmpi(result.Unwrap(), "1.4.1") != 0, IOError, "For now, only Collada version 1.4.1 supported.");
+		}
 
 		// <library_geometries>
 
 		XMLNode* libGeometriesNode = colladaNode->first_node("library_geometries");
-		_ionexcept_r(libGeometriesNode, "The Collada file does not have a <library_geometries> node.");
+		ionthrowif(!libGeometriesNode, IOError, "The Collada file does not have a <library_geometries> node.");
 
 		// <geometry>
 
 		XMLNode* geometryNode = libGeometriesNode->first_node("geometry");
-		_ionexcept_r(geometryNode, "The <library_geometries> node does not have a <geometry> node.");
+		ionthrowif(!geometryNode, IOError, "The <library_geometries> node does not have a <geometry> node.");
 
 		// <mesh>
 
 		XMLNode* meshNode = geometryNode->first_node("mesh");
-		_ionexcept_r(meshNode, "The <geometry> node does not have a <mesh> node.");
+		ionthrowif(!meshNode, IOError, "The <geometry> node does not have a <mesh> node.");
 
 		// <triangles>
 
 		XMLNode* trianglesNode = meshNode->first_node("triangles");
-		_ionexcept_r(trianglesNode, "The <mesh> node does not have a <triangles> node.");
+		ionthrowif(!trianglesNode, IOError, "The <mesh> node does not have a <triangles> node.");
 
 		TShared<TrianglesNodeData> trianglesData = ExtractTriangleInputs(trianglesNode);
-		if (!ParseTriangleInputs(trianglesData, 0.01f))
+
 		{
-			return false;
+			auto result = ParseTriangleInputs(trianglesData, 0.01f);
+			fwdthrow(result, IOError);
 		}
 
 		uint64 indexCount;
-		uint32* indices = ExtractTriangles(trianglesNode, indexCount);
+		uint32* indices;
+		
+		{
+			auto result = ExtractTriangles(trianglesNode, indexCount);
+			fwdthrow(result, IOError);
 
-		ParseTriangles(indices, indexCount, trianglesData, m_Data);
+			indices = result.Unwrap();
+		}
 
-		m_Data.Layout = trianglesData->CreateLayout();
+		ColladaData data;
+
+		ParseTriangles(indices, indexCount, trianglesData, data);
+
+		data.Layout = trianglesData->CreateLayout();
 
 		delete[] indices;
 
-		return true;
+		m_bParsed = true;
+
+		return data;
 	}
 
-	uint32* ColladaDocument::ExtractTriangles(XMLNode* trianglesNode, uint64& outIndexCount)
+	Result<uint32*, IOError> ColladaDocument::ExtractTriangles(XMLNode* trianglesNode, uint64& outIndexCount)
 	{
 		#pragma warning(disable:26451)
 
@@ -113,11 +115,11 @@ namespace Ion
 
 		int32 maxOffset = -1;
 		XMLNode* inputNode = trianglesNode->first_node("input");
-		_ionexcept_r(inputNode, "The <triangles> node does not have an <input> node.");
+		ionthrowif(!inputNode, IOError, "The <triangles> node does not have an <input> node.");
 		do
 		{
 			XMLAttribute* offsetAttribute = inputNode->first_attribute("offset");
-			_ionexcept_r(offsetAttribute, "The <input> node does not have an offset attribute.");
+			ionthrowif(!offsetAttribute, IOError, "The <input> node does not have an offset attribute.");
 
 			char* offsetStr = offsetAttribute->value();
 			maxOffset = glm::max((int32)strtol(offsetStr, nullptr, 10), maxOffset);
@@ -125,15 +127,15 @@ namespace Ion
 		while (inputNode = inputNode->next_sibling("input"));
 
 		XMLNode* primitiveNode = trianglesNode->first_node("p");
-		_ionexcept_r(primitiveNode, "The <triangles> node does not have a <p> node.");
+		ionthrowif(!primitiveNode, IOError, "The <triangles> node does not have a <p> node.");
 
 		uint64 primitiveSize = primitiveNode->value_size();
 
 		XMLAttribute* triangleCountAttribute = trianglesNode->first_attribute("count");
-		_ionexcept_r(triangleCountAttribute, "The <triangles> node does not have a count attribute.");
+		ionthrowif(!triangleCountAttribute, IOError, "The <triangles> node does not have a count attribute.");
 		char* triangleCountStr = triangleCountAttribute->value();
 		uint32 triangleCount = strtol(triangleCountStr, nullptr, 10);
-		_ionexcept_r(triangleCount != 0);
+		ionthrowif(triangleCount == 0, IOError);
 
 		outIndexCount = (uint64)triangleCount * 3 * (maxOffset + 1);
 
@@ -141,7 +143,7 @@ namespace Ion
 		uint32* currentIndexPtr = indices;
 		
 		char* indexCharPtr = primitiveNode->value();
-		_ionexcept_r(*indexCharPtr);
+		ionthrowif(!*indexCharPtr, IOError);
 		char* indexStartPtr = indexCharPtr;
 		DEBUG(uint64 debugIndexCount = 0);
 		do
@@ -180,41 +182,41 @@ namespace Ion
 		return layout;
 	}
 
-	XMLNode* ColladaDocument::ExtractSourceNode(XMLNode* meshNode, XMLNode* inputNode)
+	Result<XMLNode*, IOError> ColladaDocument::ExtractSourceNode(XMLNode* meshNode, XMLNode* inputNode)
 	{
 		TRACE_FUNCTION();
 
 		XMLAttribute* sourceAttribute = inputNode->first_attribute("source");
-		_ionexcept_r(sourceAttribute, "The <input> node does not have a source attribute.");
+		ionthrowif(!sourceAttribute, IOError, "The <input> node does not have a source attribute.");
 		char* source = sourceAttribute->value();
 
 		// Find the correct source node based on id attribute
 		// Add 1 to the pointer because there is a # symbol at the start
 		XMLNode* sourceNode = FindNode(meshNode, "source", WithAttributeValuePredicate("id", source + 1));
-		_ionexcept_r(sourceNode, "The <mesh> node does not have a <source> node.");
+		ionthrowif(!sourceNode, IOError, "The <mesh> node does not have a <source> node.");
 
 		return sourceNode;
 	}
 
-	XMLNode* ColladaDocument::ExtractVerticesSourceNode(XMLNode* verticesNode)
+	Result<XMLNode*, IOError> ColladaDocument::ExtractVerticesSourceNode(XMLNode* verticesNode)
 	{
 		TRACE_FUNCTION();
 
 		XMLNode* inputNode = verticesNode->first_node("input");
-		_ionexcept_r(inputNode, "The <vertices> node does not have an <input> node.");
+		ionthrowif(!inputNode, IOError, "The <vertices> node does not have an <input> node.");
 
 		XMLAttribute* semanticAttribute = inputNode->first_attribute("semantic");
-		_ionexcept_r(semanticAttribute, "The <input> node does not have a semantic attribute.");
+		ionthrowif(!semanticAttribute, IOError, "The <input> node does not have a semantic attribute.");
 
 		char* semantic = semanticAttribute->value();
 		char* source = nullptr;
 		if (strstr(semantic, "POSITION"))
 		{
 			XMLAttribute* sourceAttribute = inputNode->first_attribute("source");
-			_ionexcept_r(sourceAttribute, "The <input> node does not have a source attribute.");
+			ionthrowif(!sourceAttribute, IOError, "The <input> node does not have a source attribute.");
 			source = sourceAttribute->value();
 		}
-		_ionexcept_r(source, "The source attribute does not have a value.");
+		ionthrowif(!source, IOError, "The source attribute does not have a value.");
 
 		XMLNode* meshNode = verticesNode->parent();
 		ionassert(meshNode);
@@ -224,19 +226,19 @@ namespace Ion
 		return sourceNode;
 	}
 
-	const char* ColladaDocument::CheckDocumentVersion(XMLNode* colladaNode)
+	Result<const char*, IOError> ColladaDocument::CheckDocumentVersion(XMLNode* colladaNode)
 	{
 		XMLAttribute* versionAttribute = colladaNode->first_attribute("version");
-		_ionexcept_r(versionAttribute, "Cannot find version of the Collada file.");
+		ionthrowif(!versionAttribute, IOError, "Cannot find version of the Collada file.");
 		const char* version = versionAttribute->value();
 		return version;
 	}
 
-	bool ColladaDocument::ParseTriangleInputs(const TShared<TrianglesNodeData>& layout, float scale)
+	Result<void, IOError> ColladaDocument::ParseTriangleInputs(const TShared<TrianglesNodeData>& layout, float scale)
 	{
 		TRACE_FUNCTION();
 
-		_ionexcept_r(!layout->m_TriangleInputs.empty(), "The layout is empty.");
+		ionthrowif(layout->m_TriangleInputs.empty(), IOError, "The layout is empty.");
 		for (TrianglesNodeData::TriangleInput& input : layout->m_TriangleInputs)
 		{
 			XMLNode*& sourceNode = input.LinkedSourceNode;
@@ -245,7 +247,10 @@ namespace Ion
 			bool bVertexInput = strcmp(input.Semantic, "VERTEX") == 0;
 			if (bVertexInput)
 			{
-				sourceNode = ExtractVerticesSourceNode(sourceNode);
+				auto result = ExtractVerticesSourceNode(sourceNode);
+				fwdthrow(result, IOError);
+
+				sourceNode = result.Unwrap();
 			}
 
 			XMLNode* techniqueNode = sourceNode->first_node("technique_common");
@@ -260,21 +265,27 @@ namespace Ion
 			if (bVertexInput)
 			{
 				// Scale the vertices by the specified scale
-				floatArray = ExtractFloatArray(sourceNode, dataSize, [=](float value) { return value * scale; });
+				auto result = ExtractFloatArray(sourceNode, dataSize, [=](float value) { return value * scale; });
+				fwdthrow(result, IOError);
+
+				floatArray = result.Unwrap();
 			}
 			else
 			{
-				floatArray = ExtractFloatArray(sourceNode, dataSize);
+				auto result = ExtractFloatArray(sourceNode, dataSize);
+				fwdthrow(result, IOError);
+
+				floatArray = result.Unwrap();
 			}
 			// Set remaining fields
 			input.Data = floatArray;
 			input.DataSize = dataSize;
 			input.Stride = stride;
 		}
-		return true;
+		return Void();
 	}
 
-	bool ColladaDocument::ParseTriangles(uint32* indices, uint64 indexCount, const TShared<TrianglesNodeData>& data, ColladaData& outMeshData)
+	void ColladaDocument::ParseTriangles(uint32* indices, uint64 indexCount, const TShared<TrianglesNodeData>& data, ColladaData& outMeshData)
 	{
 		TRACE_FUNCTION();
 
@@ -376,16 +387,14 @@ namespace Ion
 		outMeshData.Indices = new uint32[finalIndexCount];
 
 		memcpy(outMeshData.Indices, &finalIndices[0], finalIndexCount * sizeof(uint32));
-
-		return true;
 	}
 
-	float* ColladaDocument::ExtractFloatArray(XMLNode* sourceNode, uint64& outSize, TransformFn transformFunction)
+	Result<float*, IOError> ColladaDocument::ExtractFloatArray(XMLNode* sourceNode, uint64& outSize, TransformFn transformFunction)
 	{
 		TRACE_FUNCTION();
 
 		XMLNode* floatArrayNode = sourceNode->first_node("float_array");
-		_ionexcept_r(floatArrayNode, "The <source> node does not have a <float_array> node.");
+		ionthrowif(!floatArrayNode, IOError, "The <source> node does not have a <float_array> node.");
 
 		// Node structure
 		// <float_array id="mesh-positions-array" count="1234">1.123456 -5.282121 10.33126</float_array>
@@ -393,11 +402,11 @@ namespace Ion
 		uint64 floatArraySize = floatArrayNode->value_size();
 
 		XMLAttribute* countAttribute = floatArrayNode->first_attribute("count");
-		_ionexcept_r(countAttribute);
+		ionthrowif(!countAttribute, IOError);
 
 		const char* countStr = countAttribute->value();
 		uint32 count = strtoul(countStr, nullptr, 10);
-		_ionexcept_r(count != 0);
+		ionthrowif(count == 0, IOError);
 
 		outSize = count;
 
@@ -406,7 +415,7 @@ namespace Ion
 
 		// Extract vertices one by one
 		char* valueCharPtr = floatArrayNode->value();
-		_ionexcept_r(*valueCharPtr);
+		ionthrowif(!*valueCharPtr, IOError);
 		char* valueStartPtr = valueCharPtr;
 		DEBUG(uint64 debugValueCount = 0);
 		do
@@ -432,20 +441,20 @@ namespace Ion
 		return floatArray;
 	}
 
-	ColladaDocument::TrianglesNodeData::TriangleInput* ColladaDocument::TrianglesNodeData::AddTriangleInput(XMLNode* meshNode, XMLNode* inputNode)
+	Result<ColladaDocument::TrianglesNodeData::TriangleInput*, IOError> ColladaDocument::TrianglesNodeData::AddTriangleInput(XMLNode* meshNode, XMLNode* inputNode)
 	{
 		TRACE_FUNCTION();
 
 		XMLAttribute* semanticAttribute = inputNode->first_attribute("semantic");
-		_ionexcept_r(semanticAttribute, "The <input> node does not have a semantic attribute.");
+		ionthrowif(!semanticAttribute, IOError, "The <input> node does not have a semantic attribute.");
 		char* semantic = semanticAttribute->value();
 
 		XMLAttribute* sourceAttribute = inputNode->first_attribute("source");
-		_ionexcept_r(sourceAttribute, "The <input> node does not have a source attribute.");
+		ionthrowif(!sourceAttribute, IOError, "The <input> node does not have a source attribute.");
 		char* source = sourceAttribute->value();
 
 		XMLAttribute* offsetAttribute = inputNode->first_attribute("offset");
-		_ionexcept_r(offsetAttribute, "The <input> node does not have an offset attribute.");
+		ionthrowif(!offsetAttribute, IOError, "The <input> node does not have an offset attribute.");
 		char* offsetStr = offsetAttribute->value();
 		uint32 offset = (uint32)strtoul(offsetStr, nullptr, 10);
 
@@ -457,7 +466,13 @@ namespace Ion
 			set = (int32)strtol(setStr, nullptr, 10);
 		}
 
-		XMLNode* sourceNode = ExtractSourceNode(meshNode, inputNode);
+		XMLNode* sourceNode;
+		{
+			auto result = ExtractSourceNode(meshNode, inputNode);
+			fwdthrow(result, IOError);
+
+			sourceNode = result.Unwrap();
+		}
 
 		TriangleInput* triangleInput = &m_TriangleInputs.emplace_back(TriangleInput { inputNode, sourceNode, semantic, source, offset, set, nullptr, 0, 0 });
 		return triangleInput;
