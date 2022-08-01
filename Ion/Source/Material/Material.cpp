@@ -479,7 +479,7 @@ namespace Ion
 	{
 		if (!ParseAsset(materialAsset))
 		{
-			ionassert(false);
+			ionbreak("Could not parse Material asset.");
 			return;
 		}
 		BuildConstantBuffer();

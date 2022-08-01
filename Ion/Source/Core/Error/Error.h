@@ -34,7 +34,13 @@ namespace Ion
 		static void UnwrapAbort(_ASSERT_ARGS, const TResult& result);
 
 		template<typename TError>
+		static void ErrorAbort(_ASSERT_ARGS, const TError& error);
+
+		template<typename TError>
 		static void PrintErrorThrow(_ASSERT_ARGS, const TError& error);
+
+		template<typename... Args>
+		static void Break(const char* format = nullptr, Args&&... args);
 
 		ErrorHandler() = delete;
 
@@ -75,12 +81,34 @@ namespace Ion
 	}
 
 	template<typename TError>
+	inline void ErrorHandler::ErrorAbort(_ASSERT_ARGS, const TError& error)
+	{
+		LOG_CRITICAL("Critical error has occured!");
+		LOG_CRITICAL("Error: => {4}\n\n" _ABORT_LOG_PATTERN_NOEXPR, _FWD_ASSERT_ARGS, TError::ClassName);
+		if (!error.Message.empty())
+			LOG_CRITICAL(error.Message);
+
+#if _SHOW_ABORT_MESSAGE_BOX
+		String reason = fmt::format("Error: => {}", TError::ClassName);
+		AbortMessageBox<false>(_FWD_ASSERT_ARGS, reason.c_str(), message.c_str());
+#endif
+	}
+
+	template<typename TError>
 	inline void ErrorHandler::PrintErrorThrow(_ASSERT_ARGS, const TError& error)
 	{
 		LOG_ERROR("An error has been thrown.");
 		LOG_ERROR("Error: => Result<{4}>\n\n" _ABORT_LOG_PATTERN_NOEXPR, _FWD_ASSERT_ARGS, TError::ClassName);
 		if (!error.Message.empty())
 			LOG_ERROR(error.Message);
+	}
+
+	template<typename... Args>
+	inline void ErrorHandler::Break(const char* format, Args&&... args)
+	{
+		LOG_ERROR("A debugger break has been called.");
+		if (format)
+			LOG_ERROR(format, Forward<Args>(args)...);
 	}
 
 	template<bool bExpr>
@@ -310,7 +338,9 @@ namespace Ion
 
 // Assertion macros ---------------------------------------------------------------------------------------
 
-#pragma region Assertion
+#pragma region Assertion / Errors
+
+#define ionbreak(...) (void)((Ion::ErrorHandler::Break(__VA_ARGS__), 0) || (debugbreak(), 0))
 
 #undef ionassert
 #if ION_DEBUG
@@ -319,7 +349,7 @@ namespace Ion
 #define ionassert(x, ...) ((void)0)
 #endif
 
-#define ionverify(x, ...) (void)(!!(x) || (Ion::ErrorHandler::AssertAbort(_PASS_ASSERT_ARGS(#x), __VA_ARGS__), 0) || (abort(), 0))
+#define ionverify(x, ...) (void)(!!(x) || (Ion::ErrorHandler::AssertAbort(_PASS_ASSERT_ARGS(#x), __VA_ARGS__), 0) || (debugbreak(), 0) || (abort(), 0))
 
 // Throw macro -------------------------------------------------------------------------------------------------
 
@@ -335,6 +365,10 @@ namespace Ion
 #else
 #define ionthrow(error, ...) return error(Ion::_Detail::_FormatThrowMessage(__VA_ARGS__))
 #endif
+
+// Error macro -------------------------------------------------------------------------------------------------
+
+#define ionerror(error, ...) (void)((Ion::ErrorHandler::ErrorAbort(_PASS_ASSERT_ARGS(0), error(Ion::_Detail::_FormatThrowMessage(__VA_ARGS__))), 0) || (debugbreak(), 0) || (abort(), 0))
 
 #pragma endregion
 

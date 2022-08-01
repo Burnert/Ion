@@ -131,7 +131,10 @@ namespace Ion
 			path = EnginePath::GetShadersPath();
 		// @TODO: [Project] / [Game] path
 		else
+		{
+			ionbreak("Incorrect base dir was specified.");
 			return path;
+		}
 
 		String relativeVP = virtualPath.substr(nLast + 1) + ".iasset";
 		path += StringConverter::StringToWString(relativeVP);

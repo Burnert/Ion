@@ -4,15 +4,11 @@
 
 namespace Ion
 {
-#define _PARSER_NODE_EXCEPT_MESSAGE \
-"<%s> node has not been found.\n"
-#define _PARSER_NODE_ERROR_MESSAGE(nodeStr) \
-nodeStr + " node has not been found.\n"
+#define _PARSER_NODE_ERROR_MSG_PATTERN \
+"<{}> node has not been found.\nIn file: \"{}\"\n"
 
-#define _PARSER_ATTR_EXCEPT_MESSAGE \
-"%s attribute could not be found in node <%s>.\n"
-#define _PARSER_ATTR_ERROR_MESSAGE(attrStr, nodeStr) \
-attrStr + " attribute could not be found in node <" + nodeStr + ">.\n"
+#define _PARSER_ATTR_ERROR_MSG_PATTERN \
+"{} attribute could not be found in node <{}>.\nIn file: \"{}\"\n"
 
 	template<typename T>
 	static const char* _ParserCheckNodeHelper(T str) { return nullptr; }
@@ -24,19 +20,27 @@ attrStr + " attribute could not be found in node <" + nodeStr + ">.\n"
 	static const char* _ParserCheckNodeHelper(const String& str) { return str.c_str(); }
 
 #define _PARSER_CHECK_NODE_R(node, nodeName, path, ret) \
-ionexcept(node, _PARSER_NODE_EXCEPT_MESSAGE, \
-	StringConverter::WStringToString(path.ToString()).c_str(), \
-	_ParserCheckNodeHelper(nodeName)) \
-	{ Fail(_PARSER_NODE_ERROR_MESSAGE(nodeName)); return ret; }
+if (!(node)) \
+{ \
+	String sPath = StringConverter::WStringToString(path.ToString()); \
+	String sMsg = fmt::format(_PARSER_NODE_ERROR_MSG_PATTERN, nodeName, sPath); \
+	LOG_ERROR("XMLParser error:\n{0}", sMsg); \
+	Fail(sMsg); \
+	return ret; \
+}
 
 #define _PARSER_CHECK_NODE(node, nodeName, path) _PARSER_CHECK_NODE_R(node, nodeName, path, *this)
 #define _PARSER_CHECK_NODE_V(node, nodeName, path) _PARSER_CHECK_NODE_R(node, nodeName, path, )
 
 #define _PARSER_CHECK_ATTR_R(attr, attrName, nodeName, path, ret) \
-ionexcept(attr, _PARSER_ATTR_EXCEPT_MESSAGE, \
-	StringConverter::WStringToString(path.ToString()).c_str(), \
-	_ParserCheckNodeHelper(attrName), _ParserCheckNodeHelper(nodeName)) \
-	{ Fail(_PARSER_ATTR_ERROR_MESSAGE(attrName, nodeName)); return ret; }
+if (!(attr)) \
+{ \
+	String sPath = StringConverter::WStringToString(path.ToString()); \
+	String sMsg = fmt::format(_PARSER_ATTR_ERROR_MSG_PATTERN, attrName, nodeName, sPath); \
+	LOG_ERROR("XMLParser error:\n{0}", sMsg); \
+	Fail(sMsg); \
+	return ret; \
+}
 
 #define _PARSER_CHECK_ATTR(attr, attrName, nodeName, path) _PARSER_CHECK_ATTR_R(attr, attrName, nodeName, path, *this)
 #define _PARSER_CHECK_ATTR_V(attr, attrName, nodeName, path) _PARSER_CHECK_ATTR_R(attr, attrName, nodeName, path, )
