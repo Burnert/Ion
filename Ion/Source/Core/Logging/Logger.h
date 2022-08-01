@@ -89,10 +89,10 @@ namespace Ion
 	#define ION_LOG_ERROR(...)
 	#define ION_LOG_CRITICAL(...)
 
-	#define LOG_TRACE(...)   
-	#define LOG_DEBUG(...)   
-	#define LOG_INFO(...)    
-	#define LOG_WARN(...)    
-	#define LOG_ERROR(...)   
-	#define LOG_CRITICAL(...)
+	#define LOG_TRACE(...)    ((void)0)
+	#define LOG_DEBUG(...)    ((void)0)
+	#define LOG_INFO(...)     ((void)0)
+	#define LOG_WARN(...)     ((void)0)
+	#define LOG_ERROR(...)    ((void)0)
+	#define LOG_CRITICAL(...) ((void)0)
 #endif

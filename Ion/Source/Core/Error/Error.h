@@ -3,17 +3,27 @@
 #include "Core/CoreApi.h"
 #include "Core/CoreMacros.h"
 #include "Core/CoreTypes.h"
+#include "Core/Platform/Platform.h"
+#include "Core/Logging/Logger.h"
 
 namespace Ion
 {
-// Error handler ----------------------------------------------------------------------------------------
+// Error handler ------------------------------------------------------------------------------------------
+
+#pragma region Error Handler
 
 #define _ASSERT_ARGS const char* expr, const char* func, const char* file, int32 line
 #define _FWD_ASSERT_ARGS expr, func, file, line
 #define _PASS_ASSERT_ARGS(expr) expr, __FUNCSIG__, __FILE__, __LINE__
 
-#define _ABORT_LOG_PATTERN        "({0}) => false\nFunction: {1}\nAt {2}:{3}\n"
+#define _ABORT_LOG_PATTERN        "({0}) => false\n\nFunction: {1}\nAt {2}:{3}\n"
 #define _ABORT_LOG_PATTERN_NOEXPR "Function: {1}\nAt {2}:{3}\n"
+
+#if ION_RELEASE || ION_DIST
+#define _SHOW_ABORT_MESSAGE_BOX 1
+#else
+#define _SHOW_ABORT_MESSAGE_BOX 0
+#endif
 
 	struct ErrorHandler
 	{
@@ -27,26 +37,41 @@ namespace Ion
 		static void PrintError(_ASSERT_ARGS, const TResult& result);
 
 		ErrorHandler() = delete;
+
+	private:
+		template<bool bExpr = true>
+		static void AbortMessageBox(_ASSERT_ARGS, const char* reason, const char* message);
 	};
+
+	// Error handler impl -----------------------------------------------------------
 
 	template<typename... Args>
 	inline void ErrorHandler::AssertAbort(_ASSERT_ARGS, const char* format, Args&&... args)
 	{
 		LOG_CRITICAL("Critical error has occured!");
-		LOG_CRITICAL("Assertion failed: \n" _ABORT_LOG_PATTERN, _FWD_ASSERT_ARGS);
+		LOG_CRITICAL("Assertion failed:\n\n" _ABORT_LOG_PATTERN, _FWD_ASSERT_ARGS);
 		if (format)
 			LOG_CRITICAL(format, args...);
+
+#if _SHOW_ABORT_MESSAGE_BOX
+		String message = format ? fmt::format(format, Forward<Args>(args)...) : EmptyString;
+		AbortMessageBox(_FWD_ASSERT_ARGS, "Assertion failed", message.c_str());
+#endif
 	}
 
 	template<typename TResult>
 	inline void ErrorHandler::UnwrapAbort(_ASSERT_ARGS, const TResult& result)
 	{
 		LOG_CRITICAL("Critical error has occured!");
-		LOG_CRITICAL("Unwrap failed: => Result<{4}>\n" _ABORT_LOG_PATTERN_NOEXPR, _FWD_ASSERT_ARGS, result.GetErrorClassName());
+		LOG_CRITICAL("Unwrap failed: => Result<{4}>\n\n" _ABORT_LOG_PATTERN_NOEXPR, _FWD_ASSERT_ARGS, result.GetErrorClassName());
 #if ION_DEBUG
 		String message = result.GetErrorMessage();
 		if (!message.empty())
 			LOG_CRITICAL(message);
+#endif
+#if _SHOW_ABORT_MESSAGE_BOX
+		String reason = fmt::format("Unwrap failed: => Result<{}>", result.GetErrorClassName());
+		AbortMessageBox<false>(_FWD_ASSERT_ARGS, reason.c_str(), "");
 #endif
 	}
 
@@ -62,7 +87,30 @@ namespace Ion
 #endif
 	}
 
+	template<bool bExpr>
+	inline void ErrorHandler::AbortMessageBox(_ASSERT_ARGS, const char* reason, const char* message)
+	{
+#define _MESSAGE_BOX_FORMAT_STRING(pattern) \
+		"Critical error has occured!\n" \
+		"{4}\n\n" /* Reason */ \
+		pattern   /* (Expr) Function X At File:Line */ \
+		"\n{5}"   /* Message */
+
+		constexpr const char* format = bExpr ?
+			_MESSAGE_BOX_FORMAT_STRING(_ABORT_LOG_PATTERN) :
+			_MESSAGE_BOX_FORMAT_STRING(_ABORT_LOG_PATTERN_NOEXPR);
+
+		String content = fmt::format(format, _FWD_ASSERT_ARGS, reason, message);
+
+		Platform::MessageBox(StringConverter::StringToWString(content), StringConverter::StringToWString(reason),
+			Platform::MBT_RetryCancel, Platform::MBI_Error);
+	}
+
+#pragma endregion
+
 // Error struct -------------------------------------------------------------------------------------------
+
+#pragma region Error
 
 #if ION_DEBUG
 #define _ERROR_TYPE_CTOR_HELPER(type) type(const String& message) : Error(message) { } type() : Error() { }
@@ -96,7 +144,11 @@ namespace Ion
 	DEFINE_ERROR_TYPE(IOError);
 	DEFINE_ERROR_TYPE(FileNotFoundError);
 
-// Result struct -----------------------------------------------------------------------------------
+#pragma endregion
+
+// Result struct ------------------------------------------------------------------------------------------
+
+#pragma region Result
 
 	namespace _Detail
 	{
@@ -269,7 +321,11 @@ namespace Ion
 
 	using Void = std::monostate;
 
-// Assertion macros ----------------------------------------------------------------------------------------------
+#pragma endregion
+
+// Assertion macros ---------------------------------------------------------------------------------------
+
+#pragma region Assertion
 
 #undef ionassert
 #if ION_DEBUG
@@ -294,5 +350,7 @@ namespace Ion
 #else
 #define ionthrow(error, ...) return error()
 #endif
+
+#pragma endregion
 
 }
