@@ -33,8 +33,8 @@ namespace Ion
 		template<typename TResult>
 		static void UnwrapAbort(_ASSERT_ARGS, const TResult& result);
 
-		template<typename TResult>
-		static void PrintError(_ASSERT_ARGS, const TResult& result);
+		template<typename TError>
+		static void PrintErrorThrow(_ASSERT_ARGS, const TError& error);
 
 		ErrorHandler() = delete;
 
@@ -74,14 +74,13 @@ namespace Ion
 #endif
 	}
 
-	template<typename TResult>
-	inline void ErrorHandler::PrintError(_ASSERT_ARGS, const TResult& result)
+	template<typename TError>
+	inline void ErrorHandler::PrintErrorThrow(_ASSERT_ARGS, const TError& error)
 	{
-		LOG_ERROR("An error has occured.");
-		LOG_ERROR("Error: => Result<{4}>\n" _ABORT_LOG_PATTERN_NOEXPR, _FWD_ASSERT_ARGS, result.GetErrorClassName());
-		String message = result.GetErrorMessage();
-		if (!message.empty())
-			LOG_ERROR(message);
+		LOG_ERROR("An error has been thrown.");
+		LOG_ERROR("Error: => Result<{4}>\n\n" _ABORT_LOG_PATTERN_NOEXPR, _FWD_ASSERT_ARGS, TError::ClassName);
+		if (!error.Message.empty())
+			LOG_ERROR(error.Message);
 	}
 
 	template<bool bExpr>
@@ -331,7 +330,11 @@ namespace Ion
 		inline static String _FormatThrowMessage(const String& format, Args&&... args) { return fmt::format(format, Forward<Args>(args)...); }
 	}
 
+#if ION_DEBUG
+#define ionthrow(error, ...) return [&] { auto err = error(Ion::_Detail::_FormatThrowMessage(__VA_ARGS__)); Ion::ErrorHandler::PrintErrorThrow(_PASS_ASSERT_ARGS(0), err); return err; }()
+#else
 #define ionthrow(error, ...) return error(Ion::_Detail::_FormatThrowMessage(__VA_ARGS__))
+#endif
 
 #pragma endregion
 
