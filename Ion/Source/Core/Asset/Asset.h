@@ -111,14 +111,14 @@ namespace Ion
 	inline AssetDefinition* Asset::operator->() const
 	{
 		AssetDefinition* def = GetAssetDefinition();
-		ionassertnd(def, "Cannot dereference an asset handle of a non-existing asset. {%p}", m_AssetPtr.Get());
+		ionverify(def, "Cannot dereference an asset handle of a non-existing asset. {{{}}}", (void*)m_AssetPtr.Get());
 		return def;
 	}
 
 	inline AssetDefinition& Asset::operator*() const
 	{
 		AssetDefinition* def = GetAssetDefinition();
-		ionassertnd(def, "Cannot dereference an asset handle of a non-existing asset. {%p}", m_AssetPtr.Get());
+		ionverify(def, "Cannot dereference an asset handle of a non-existing asset. {{{}}}", (void*)m_AssetPtr.Get());
 		return *def;
 	}
 

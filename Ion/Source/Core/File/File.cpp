@@ -85,7 +85,7 @@ namespace Ion
 
 		if (!(m_Mode & EFileMode::DoNotOpen))
 		{
-			ionassertnd(Open(mode));
+			ionverify(Open(mode));
 		}
 	}
 

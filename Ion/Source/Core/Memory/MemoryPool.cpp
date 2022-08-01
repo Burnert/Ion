@@ -118,7 +118,7 @@ namespace Ion
 		UniqueLock lock(m_PoolMutex);
 
 		auto& it = m_AllocDataByPtr.find(data);
-		ionassertnd(it != m_AllocDataByPtr.end());
+		ionverify(it != m_AllocDataByPtr.end());
 
 		size_t deleteIndex = it->second;
 

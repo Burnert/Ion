@@ -613,14 +613,14 @@ namespace Ion
 
 		const TypeInfo& GetTypeInfo(ComponentTypeID id) const
 		{
-			ionassertnd(IsTypeRegistered(id));
+			ionverify(IsTypeRegistered(id));
 			return RegisteredTypes.find(id)->second;
 		}
 
 	private:
 		TypeInfo& GetTypeInfo_Internal(ComponentTypeID id)
 		{
-			ionassertnd(IsTypeRegistered(id));
+			ionverify(IsTypeRegistered(id));
 			return RegisteredTypes.find(id)->second;
 		}
 
@@ -919,7 +919,7 @@ namespace Ion
 		// Don't register the same component twice.
 		if (it != typeDB->RegisteredTypes.end())
 		{
-			ionassertnd(it->second.ClassName == CompT::ClassName,
+			ionverify(it->second.ClassName == CompT::ClassName,
 				"The class name hash already exists. Use a different class name."); // If it ever happens
 			return CompT::GetTypeID();
 		}
@@ -984,10 +984,10 @@ namespace Ion
 		ComponentDatabase* database = GetComponentTypeDatabase_Internal();
 
 		InstantiateComponentFPtr instantiateFPtr = database->GetTypeInfo(id).m_InstantiateType;
-		ionassertnd(instantiateFPtr);
+		ionverify(instantiateFPtr);
 		// This will add the component to the registry container
 		Component* componentPtr = instantiateFPtr(this);
-		ionassertnd(componentPtr);
+		ionverify(componentPtr);
 
 		m_ComponentsByGUID[componentPtr->GetGUID()] = componentPtr;
 
@@ -1154,9 +1154,9 @@ namespace Ion
 		LOG_DEBUG("ComponentRegistry::InitializeComponentContainter({0}) <- Runtime", database->GetTypeInfo(id).ClassName);
 
 		InstantiateComponentContainerFPtr instantiateContianerFPtr = database->GetTypeInfo(id).m_InstantiateContainer;
-		ionassertnd(instantiateContianerFPtr);
+		ionverify(instantiateContianerFPtr);
 		IComponentContainer* containerPtr = instantiateContianerFPtr(this);
-		ionassertnd(containerPtr);
+		ionverify(containerPtr);
 
 		m_Containers.insert({ containerPtr->GetTypeID(), containerPtr });
 		m_InvalidComponents.insert({ containerPtr->GetTypeID(), TArray<Component*>() });

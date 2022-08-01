@@ -39,7 +39,7 @@ namespace Ion
 		//ionassertnd(bResult, "Session dump file cannot be opened!");
 
 		bResult = s_SessionDumpFile->Write("{\"traceEvents\":["); // Header
-		ionassertnd(bResult, "Session dump file cannot be written!");
+		ionverify(bResult, "Session dump file cannot be written!");
 	}
 
 	void DebugTracing::EndSession()

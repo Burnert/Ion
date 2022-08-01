@@ -141,7 +141,7 @@ namespace Ion
 
 	AssetDefinition* Asset::GetAssetDefinition() const
 	{
-		ionassertnd(operator bool(), "Cannot access a null handle.");
+		ionverify(operator bool(), "Cannot access a null handle.");
 		return AssetRegistry::IsRegistered(*this) ? m_AssetPtr.Get() : nullptr;
 	}
 

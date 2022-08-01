@@ -34,7 +34,7 @@ namespace Ion
 
 		TaskQueue& Get()
 		{
-			ionassertnd(g_EngineTaskQueue, "The Engine Task Queue has not been initialized yet.");
+			ionassert(g_EngineTaskQueue, "The Engine Task Queue has not been initialized yet.");
 			return *g_EngineTaskQueue.get();
 		}
 	}

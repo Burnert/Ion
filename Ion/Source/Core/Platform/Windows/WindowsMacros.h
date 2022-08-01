@@ -2,13 +2,14 @@
 
 #include "Core/Platform/Windows/WindowsHeaders.h"
 #include "Core/CoreMacros.h"
-#include "Core/CoreAsserts.h"
+#include "Core/Error/Error.h"
+
+// @TODO: Refactor this to use new errors/asserts
 
 #define win_check(cond, ...) \
 if (!(cond)) \
 { \
 	Ion::Windows::PrintLastError(__VA_ARGS__); \
-	ionlocation(); \
 	return; \
 }
 
@@ -16,7 +17,6 @@ if (!(cond)) \
 if (!(cond)) \
 { \
 	Ion::Windows::PrintLastError(__VA_ARGS__); \
-	ionlocation(); \
 	return ret; \
 }
 
@@ -24,7 +24,6 @@ if (!(cond)) \
 if (FAILED((hr))) \
 { \
 	Ion::Windows::PrintHResultError(hr, __VA_ARGS__); \
-	ionlocation(); \
 	return; \
 }
 
@@ -32,7 +31,6 @@ if (FAILED((hr))) \
 if (FAILED((hr))) \
 { \
 	Ion::Windows::PrintHResultError(hr, __VA_ARGS__); \
-	ionlocation(); \
 	return ret; \
 }
 
@@ -40,7 +38,6 @@ if (FAILED((hr))) \
 if (FAILED((hr))) \
 { \
 	Ion::Windows::PrintHResultError(hr, __VA_ARGS__); \
-	ionlocation(); \
 	{ onfailed } \
 }
 

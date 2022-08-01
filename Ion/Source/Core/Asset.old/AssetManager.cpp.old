@@ -197,7 +197,7 @@ namespace Ion
 			case EAssetType::Mesh:    return &m_MeshAssetPool;
 			case EAssetType::Texture: return &m_TextureAssetPool;
 		}
-		ionassertnd(false, "An Asset Memory Pool of that type does not exist.");
+		ionbreak("An Asset Memory Pool of that type does not exist.");
 		return nullptr;
 	}
 

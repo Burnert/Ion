@@ -30,7 +30,7 @@ namespace Ion
 
 	void TaskWorker::WorkerProc()
 	{
-		ionassertnd(m_Owner);
+		ionverify(m_Owner);
 
 		Platform::SetCurrentThreadDescription(L"AssetWorker");
 

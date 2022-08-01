@@ -17,7 +17,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		ionassertnd(vertexAttributes);
+		ionverify(vertexAttributes);
 		ionassert(count <= std::numeric_limits<uint64>::max() / 4);
 		ionassert(count * sizeof(float) <= std::numeric_limits<UINT>::max());
 
@@ -144,7 +144,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		ionassertnd(indices);
+		ionverify(indices);
 
 		HRESULT hResult = S_OK;
 

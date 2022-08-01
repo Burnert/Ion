@@ -2,7 +2,7 @@
 
 #include "Core/CoreTypes.h"
 #include "Core/CoreMacros.h"
-#include "Core/CoreAsserts.h"
+#include "Core/Error/Error.h"
 
 #pragma warning(disable:6011)
 
@@ -105,10 +105,10 @@ public:
 	inline void Free(void* ptr)
 	{
 		BlockType* block = FindBlockByPtr(ptr);
-		ionassertnd(block, "The pointer has not been allocated by this allocator.");
+		ionverify(block, "The pointer has not been allocated by this allocator.");
 
 		ChunkType* chunk = (ChunkType*)ptr;
-		ionassertnd(chunk->IsAllocated(), "The chunk has not been allocated.");
+		ionverify(chunk->IsAllocated(), "The chunk has not been allocated.");
 
 		chunk->Meta = (uint64)GET_POOL_META_POINTER((uint64)m_NextChunkPtr);
 		

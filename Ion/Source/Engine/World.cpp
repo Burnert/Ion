@@ -112,7 +112,7 @@ namespace Ion
 		ionassert(!DoesOwnEntity(entity), "Entity already exists in the world.");
 
 		WorldTreeNode* parentNode = FindWorldTreeNode(attachTo);
-		ionassertnd(parentNode, "Entity to attach to doesn't exist in the world.");
+		ionverify(parentNode, "Entity to attach to doesn't exist in the world.");
 
 		Entity* parent = parentNode->Get().AsEntity();
 
@@ -157,7 +157,7 @@ namespace Ion
 		if (entity->HasParent())
 		{
 			WorldTreeNode* parentNode = FindWorldTreeNode(entity->GetParent());
-			ionassertnd(parentNode, "Entity to attach to doesn't exist in the world.");
+			ionverify(parentNode, "Entity to attach to doesn't exist in the world.");
 
 			// Attach the entity to the parent node
 			InsertWorldTreeNode(newEntity, *parentNode);
@@ -192,13 +192,13 @@ namespace Ion
 
 		// Find the nodes
 		WorldTreeNode* entityNode = FindWorldTreeNode(entity);
-		ionassertnd(entityNode, "The entity is not in the world tree.");
+		ionverify(entityNode, "The entity is not in the world tree.");
 
 		WorldTreeNode* parentNode = m_WorldTreeRoot;
 		if (parent)
 		{
 			parentNode = FindWorldTreeNode(parent);
-			ionassertnd(parentNode, "The parent entity is not in the world tree.");
+			ionverify(parentNode, "The parent entity is not in the world tree.");
 
 			RemoveChildEntity(entity);
 		}
@@ -256,7 +256,7 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		WorldTreeNode* node = FindWorldTreeNode(entity);
-		ionassertnd(node, "The entity was not in the world tree.");
+		ionverify(node, "The entity was not in the world tree.");
 
 		m_WorldTreeNodeFactory.Destroy(node->RemoveFromParent());
 		m_EntityToWorldTreeNodeMap.erase(entity);

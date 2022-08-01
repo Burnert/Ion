@@ -2,7 +2,7 @@
 
 #include "Core/Platform/Windows/WindowsHeaders.h"
 #include "Core/StringConverter.h"
-#include "Core/CoreAsserts.h"
+#include "Core/Error/Error.h"
 
 #pragma warning(disable:6386)
 

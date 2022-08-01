@@ -87,7 +87,7 @@ namespace Ion
 		 */
 		inline TPropsType& Access() const
 		{
-			ionassertnd(m_Props);
+			ionverify(m_Props);
 			return *m_Props;
 		}
 
@@ -96,7 +96,7 @@ namespace Ion
 		 */
 		inline TPropsType* operator->() const
 		{
-			ionassertnd(m_Props);
+			ionverify(m_Props);
 			return m_Props;
 		}
 
@@ -241,7 +241,7 @@ namespace Ion
 
 		static_assert(TIsConvertibleV<Lambda, TFuncAssetOnLoad>);
 
-		ionassertnd(IsValid());
+		ionverify(IsValid());
 
 		// Return right away if the asset is loaded
 		bool bLoaded = false;
