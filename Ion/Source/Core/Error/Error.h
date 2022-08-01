@@ -23,6 +23,9 @@ namespace Ion
 		template<typename TResult>
 		static void UnwrapAbort(_ASSERT_ARGS, const TResult& result);
 
+		template<typename TResult>
+		static void PrintError(_ASSERT_ARGS, const TResult& result);
+
 		ErrorHandler() = delete;
 	};
 
@@ -38,13 +41,24 @@ namespace Ion
 	template<typename TResult>
 	inline void ErrorHandler::UnwrapAbort(_ASSERT_ARGS, const TResult& result)
 	{
-
 		LOG_CRITICAL("Critical error has occured!");
 		LOG_CRITICAL("Unwrap failed: => Result<{4}>\n" _ABORT_LOG_PATTERN_NOEXPR, _FWD_ASSERT_ARGS, result.GetErrorClassName());
 #if ION_DEBUG
 		String message = result.GetErrorMessage();
 		if (!message.empty())
 			LOG_CRITICAL(message);
+#endif
+	}
+
+	template<typename TResult>
+	inline void ErrorHandler::PrintError(_ASSERT_ARGS, const TResult& result)
+	{
+		LOG_ERROR("An error has occured.");
+		LOG_ERROR("Error: => Result<{4}>\n" _ABORT_LOG_PATTERN_NOEXPR, _FWD_ASSERT_ARGS, result.GetErrorClassName());
+#if ION_DEBUG
+		String message = result.GetErrorMessage();
+		if (!message.empty())
+			LOG_ERROR(message);
 #endif
 	}
 
@@ -56,7 +70,7 @@ namespace Ion
 #define _ERROR_TYPE_CTOR_HELPER(type) type() : Error() { }
 #endif
 
-#define ERROR_TYPE(type) struct type : Error { static constexpr const char* ClassName = #type; _ERROR_TYPE_CTOR_HELPER(type) }
+#define DEFINE_ERROR_TYPE(type) struct type : Error { static constexpr const char* ClassName = #type; _ERROR_TYPE_CTOR_HELPER(type) }
 
 	struct Error
 	{
@@ -79,8 +93,8 @@ namespace Ion
 
 // Engine Error types --------------------------------------
 
-	ERROR_TYPE(IOError);
-	ERROR_TYPE(FileNotFoundError);
+	DEFINE_ERROR_TYPE(IOError);
+	DEFINE_ERROR_TYPE(FileNotFoundError);
 
 // Result struct -----------------------------------------------------------------------------------
 
@@ -91,6 +105,9 @@ namespace Ion
 		{
 			static_assert(!TIsBaseOfV<TRet, Error>, "Primary Result type cannot be derived from Error.");
 			static_assert((TIsBaseOfV<Error, TErr> && ...), "All secondary Result types must be derived from Error.");
+
+			using TVoid = std::monostate;
+			static constexpr bool IsVoid = TIsSameV<TRet, TVoid>;
 
 			template<typename T>
 			ResultBase(const T& value) :
@@ -108,11 +125,11 @@ namespace Ion
 			TRet ValueOr(const TRet& fallback) const;
 
 			template<typename F>
-			ResultBase& Get(F lambda);
+			ResultBase& Ok(F lambda);
 			template<typename E, typename F>
 			ResultBase& Err(F lambda);
 
-			bool OK() const;
+			bool IsOk() const;
 
 			ResultBase(const ResultBase&) = delete;
 			ResultBase(ResultBase&&) = delete;
@@ -152,6 +169,8 @@ namespace Ion
 		template<typename TRet, typename... TErr>
 		inline TRet ResultBase<TRet, TErr...>::ValueOr(const TRet& fallback) const
 		{
+			static_assert(!IsVoid, "Cannot get a void value.");
+
 			if (!std::holds_alternative<TRet>(m_Value))
 				return fallback;
 
@@ -160,12 +179,15 @@ namespace Ion
 
 		template<typename TRet, typename... TErr>
 		template<typename F>
-		inline ResultBase<TRet, TErr...>& ResultBase<TRet, TErr...>::Get(F lambda)
+		inline ResultBase<TRet, TErr...>& ResultBase<TRet, TErr...>::Ok(F lambda)
 		{
-			static_assert(TIsConvertibleV<F, TFunction<void(const TRemoveConst<TRet>&)>>);
+			static_assert(TIsConvertibleV<F, TFunction<void(TIf<IsVoid, void, const TRemoveConst<TRet>&>)>>);
 
 			if (std::holds_alternative<TRet>(m_Value))
-				lambda(std::get<TRet>(m_Value));
+				if constexpr (!IsVoid)
+					lambda(std::get<TRet>(m_Value));
+				else
+					lambda();
 
 			return *this;
 		}
@@ -184,7 +206,7 @@ namespace Ion
 		}
 
 		template<typename TRet, typename... TErr>
-		inline bool ResultBase<TRet, TErr...>::OK() const
+		inline bool ResultBase<TRet, TErr...>::IsOk() const
 		{
 			return std::holds_alternative<TRet>(m_Value);
 		}
@@ -234,7 +256,7 @@ namespace Ion
 	struct Result<void, TErr...> : _Detail::ResultBase<std::monostate, TErr...>
 	{
 		Result() :
-			ResultBase(std::monostate)
+			ResultBase(std::monostate())
 		{
 		}
 
@@ -244,6 +266,8 @@ namespace Ion
 		{
 		}
 	};
+
+	using Void = std::monostate;
 
 // Assertion macros ----------------------------------------------------------------------------------------------
 

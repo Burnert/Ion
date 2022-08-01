@@ -3,6 +3,8 @@
 #include "Core/Platform/Platform.h"
 #include "WindowsHeaders.h"
 
+#undef MessageBox
+
 namespace Ion::Platform
 {
 	static UINT MessageBoxTypeToWindowsType(EMessageBoxType type)
@@ -18,7 +20,7 @@ namespace Ion::Platform
 	int32 MessageBox(const WString& text, const WString& caption,
 		EMessageBoxType type, EMessageBoxIcon icon)
 	{
-		return ::MessageBox(nullptr, text.c_str(), caption.c_str(),
+		return ::MessageBoxW(nullptr, text.c_str(), caption.c_str(),
 			MessageBoxTypeToWindowsType(type) | MessageBoxIconToWindowsType(icon));
 	}
 

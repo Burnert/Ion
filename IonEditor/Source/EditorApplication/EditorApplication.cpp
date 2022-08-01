@@ -71,7 +71,7 @@ namespace Ion::Editor
 		Asset::Resolve("[Engine]/Materials/DefaultMaterial").Unwrap();
 		Asset::Resolve("[Engine]/Textures/White").ValueOr(Asset::None);
 		Asset::Resolve("[Engine]/Lol/Something")
-			.Get([](const Asset& asset)
+			.Ok([](const Asset& asset)
 			{
 				LOG_INFO(asset->GetDefinitionPath().ToString());
 			})

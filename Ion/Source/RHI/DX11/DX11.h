@@ -19,6 +19,13 @@
 	win_check_hresult_c(hResult, { Ion::DX11::PrintDebugMessages(); debugbreak(); return ret; }, __VA_ARGS__) \
 	Ion::DX11::PrintDebugMessages(); \
 }
+#define dxcall_t(call, err, ...) \
+{ \
+	Ion::DX11::PrepareDebugMessageQueue(); \
+	hResult = call; \
+	win_check_hresult_c(hResult, { Ion::DX11::PrintDebugMessages(); debugbreak(); err; }, __VA_ARGS__) \
+	Ion::DX11::PrintDebugMessages(); \
+}
 #define dxcall_v(call, ...) \
 { \
 	Ion::DX11::PrepareDebugMessageQueue(); \
@@ -27,6 +34,7 @@
 }
 #else
 #define dxcall_r(call, ret, ...) hResult = call
+#define dxcall_t(call, err, ...) hResult = call
 #define dxcall_v(call, ...) call
 #endif
 

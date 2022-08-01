@@ -238,8 +238,7 @@ namespace Ion
 		m_ScreenTextureRenderData.Shader->AddShaderSource(EShaderType::Vertex, vertexSrc);
 		m_ScreenTextureRenderData.Shader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
-		bool bResult = m_ScreenTextureRenderData.Shader->Compile();
-		ionassert(bResult);
+		m_ScreenTextureRenderData.Shader->Compile().Unwrap();
 
 		// Setup quad buffers
 
@@ -370,11 +369,9 @@ namespace Ion
 		m_BasicShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
 		m_BasicShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
-		if (!m_BasicShader->Compile())
-		{
-			LOG_ERROR("Could not compile the Basic Shader.");
-			debugbreak();
-		}
+		m_BasicShader->Compile()
+			.Err<ShaderCompilationError>([](auto& err) { LOG_ERROR("Could not compile the Basic Shader."); })
+			.Unwrap();
 	}
 
 	void Renderer::InitBasicUnlitMaskedShader()
@@ -400,11 +397,9 @@ namespace Ion
 		m_BasicUnlitMaskedShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
 		m_BasicUnlitMaskedShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
-		if (!m_BasicUnlitMaskedShader->Compile())
-		{
-			LOG_ERROR("Could not compile the Basic Unlit Masked Shader.");
-			debugbreak();
-		}
+		m_BasicUnlitMaskedShader->Compile()
+			.Err<ShaderCompilationError>([](auto& err) { LOG_ERROR("Could not compile the Basic Unlit Masked Shader."); })
+			.Unwrap();
 	}
 
 	void Renderer::InitFXAAShader()
@@ -430,11 +425,9 @@ namespace Ion
 		m_PPFXAAShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
 		m_PPFXAAShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
-		if (!m_PPFXAAShader->Compile())
-		{
-			LOG_ERROR("Could not compile the PostProcess FXAA Shader.");
-			debugbreak();
-		}
+		m_PPFXAAShader->Compile()
+			.Err<ShaderCompilationError>([](auto& err) { LOG_ERROR("Could not compile the PostProcess FXAA Shader."); })
+			.Unwrap();
 	}
 
 	void Renderer::InitEditorObjectIDShader()
@@ -460,11 +453,9 @@ namespace Ion
 		m_EditorObjectIDShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
 		m_EditorObjectIDShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
-		if (!m_EditorObjectIDShader->Compile())
-		{
-			LOG_ERROR("Could not compile the EditorObjectID Shader.");
-			debugbreak();
-		}
+		m_EditorObjectIDShader->Compile()
+			.Err<ShaderCompilationError>([](auto& err) { LOG_ERROR("Could not compile the EditorObjectID Shader."); })
+			.Unwrap();
 	}
 
 	void Renderer::InitEditorSelectedShader()
@@ -489,11 +480,9 @@ namespace Ion
 		m_EditorSelectedShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
 		m_EditorSelectedShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
-		if (!m_EditorSelectedShader->Compile())
-		{
-			LOG_ERROR("Could not compile the EditorSelected Shader.");
-			debugbreak();
-		}
+		m_EditorSelectedShader->Compile()
+			.Err<ShaderCompilationError>([](auto& err) { LOG_ERROR("Could not compile the EditorSelected Shader."); })
+			.Unwrap();
 	}
 
 	void Renderer::InitEditorViewportShader()
@@ -519,11 +508,9 @@ namespace Ion
 		m_EditorViewportShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
 		m_EditorViewportShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
-		if (!m_EditorViewportShader->Compile())
-		{
-			LOG_ERROR("Could not compile the EditorViewport Shader.");
-			debugbreak();
-		}
+		m_EditorViewportShader->Compile()
+			.Err<ShaderCompilationError>([](auto& err) { LOG_ERROR("Could not compile the EditorViewport Shader."); })
+			.Unwrap();
 	}
 
 	void Renderer::InitEditorViewportMSShader()
@@ -549,11 +536,9 @@ namespace Ion
 		m_EditorViewportMSShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
 		m_EditorViewportMSShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
-		if (!m_EditorViewportMSShader->Compile())
-		{
-			LOG_ERROR("Could not compile the EditorViewportMS Shader.");
-			debugbreak();
-		}
+		m_EditorViewportMSShader->Compile()
+			.Err<ShaderCompilationError>([](auto& err) { LOG_ERROR("Could not compile the EditorViewportMS Shader."); })
+			.Unwrap();
 	}
 
 	void Renderer::RenderEditorPass(const Scene* scene, const EditorPassData& data)

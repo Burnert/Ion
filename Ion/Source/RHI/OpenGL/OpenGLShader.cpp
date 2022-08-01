@@ -43,7 +43,7 @@ namespace Ion
 		}
 	}
 
-	bool OpenGLShader::Compile()
+	Result<void, ShaderCompilationError> OpenGLShader::Compile()
 	{
 		TRACE_FUNCTION();
 
@@ -59,7 +59,7 @@ namespace Ion
 			int32 bCompiled = 0;
 			glGetShaderiv(shader.ID, GL_COMPILE_STATUS, &bCompiled);
 
-			ionexcept(bCompiled, "Shader compilation failure! (%s)", ShaderTypeToString(shader.Type))
+			if (!bCompiled)
 			{
 				LOG_ERROR("Could not compile shader! ({0})", ShaderTypeToString(shader.Type));
 
@@ -72,7 +72,8 @@ namespace Ion
 				LOG_TRACE("Shader compilation log: \n{0}", message);
 
 				CleanupDeleteShaders();
-				return false;
+				
+				ionthrow(ShaderCompilationError, "{0} could not be compiled!\n{1}", ShaderTypeToString(shader.Type), message);
 			}
 		}
 		TRACE_END(0);
@@ -95,13 +96,13 @@ namespace Ion
 		int32 bLinked = 0;
 		glGetProgramiv(m_ProgramID, GL_LINK_STATUS, &bLinked);
 
-		ionexcept(bLinked, "Shader linkage failure!")
+		if (!bLinked)
 		{
 			LOG_ERROR("Could not link shader program!");
 			glDeleteProgram(m_ProgramID);
 			m_ProgramID = 0;
 
-			return false;
+			ionthrow(ShaderCompilationError, "Could not link shader program!");
 		}
 
 		TRACE_BEGIN(3, "OpenGLShader - Shader Detachment");
@@ -114,7 +115,7 @@ namespace Ion
 		}
 		TRACE_END(3);
 
-		return true;
+		return Void();
 	}
 
 	bool OpenGLShader::IsCompiled()

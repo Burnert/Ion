@@ -301,15 +301,21 @@ namespace Ion
 			// Compile the shaders using the Engine Task Queue
 			AsyncTask compileTask([material = shared_from_this(), shaderUsage, &shaderPerm](IMessageQueueProvider& queue)
 			{
-				if (shaderPerm.Shader->Compile())
-				{
-					queue.PushMessage(FTaskMessage([material, shaderUsage, &shaderPerm]
+				shaderPerm.Shader->Compile()
+					.Ok([&queue, &material, &shaderUsage, &shaderPerm]
 					{
-						ionassert(material->m_Shaders.find(shaderUsage) != material->m_Shaders.end(),
-							"Shader usage had been removed before the shader was compiled.");
-						shaderPerm.bCompiled = true;
-					}));
-				}
+						queue.PushMessage(FTaskMessage([material, shaderUsage, &shaderPerm]
+						{
+							ionassert(material->m_Shaders.find(shaderUsage) != material->m_Shaders.end(),
+								"Shader usage had been removed before the shader was compiled.");
+							shaderPerm.bCompiled = true;
+						}));
+					})
+					.Err<ShaderCompilationError>([&](auto& err)
+					{
+						// @TODO: More info
+						LOG_ERROR("Could not compile shader.");
+					});
 			});
 			compileTask.Schedule();
 		}
@@ -333,21 +339,27 @@ namespace Ion
 			// Compile the shaders using the Engine Task Queue
 			AsyncTask compileTask([material = shared_from_this(), shaderUsage, &shaderPerm, counter, onCompiled](IMessageQueueProvider& queue)
 			{
-				if (shaderPerm.Shader->Compile())
-				{
-					queue.PushMessage(FTaskMessage([material, shaderUsage, &shaderPerm, counter, onCompiled]
+				shaderPerm.Shader->Compile()
+					.Ok([&queue, &material, &shaderUsage, &shaderPerm, &counter, &onCompiled]
 					{
-						ionassert(material->m_Shaders.find(shaderUsage) != material->m_Shaders.end(),
-							"Shader usage had been removed before the shader was compiled.");
-						shaderPerm.bCompiled = true;
-
-						counter->Inc();
-						if (counter->Done())
+						queue.PushMessage(FTaskMessage([material, shaderUsage, &shaderPerm, counter, onCompiled]
 						{
-							onCompiled(shaderPerm);
-						}
-					}));
-				}
+							ionassert(material->m_Shaders.find(shaderUsage) != material->m_Shaders.end(),
+								"Shader usage had been removed before the shader was compiled.");
+							shaderPerm.bCompiled = true;
+
+							counter->Inc();
+							if (counter->Done())
+							{
+								onCompiled(shaderPerm);
+							}
+						}));
+					})
+					.Err<ShaderCompilationError>([&](auto& err)
+					{
+						// @TODO: More info
+						LOG_ERROR("Could not compile shader.");
+					});
 			});
 			compileTask.Schedule();
 		}

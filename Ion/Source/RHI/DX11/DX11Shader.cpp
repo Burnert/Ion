@@ -38,7 +38,7 @@ namespace Ion
 		}
 	}
 
-	bool DX11Shader::Compile()
+	Result<void, ShaderCompilationError> DX11Shader::Compile()
 	{
 		TRACE_FUNCTION();
 
@@ -85,7 +85,7 @@ namespace Ion
 				LOG_ERROR("{0} compilation failed!", ShaderTypeToString(shader.Type));
 				LOG_ERROR(errorMessage);
 
-				return false;
+				ionthrow(ShaderCompilationError, "{0} compilation failed!\n{1}", ShaderTypeToString(shader.Type), errorMessage);
 			}
 
 			void* blobPtr = shader.ShaderBlob->GetBufferPointer();
@@ -93,12 +93,14 @@ namespace Ion
 
 			if (shader.Type == EShaderType::Vertex)
 			{
-				dxcall_f(device->CreateVertexShader(blobPtr, blobSize, nullptr, (ID3D11VertexShader**)&shader.ShaderPtr),
+				dxcall_t(device->CreateVertexShader(blobPtr, blobSize, nullptr, (ID3D11VertexShader**)&shader.ShaderPtr),
+					ionthrow(ShaderCompilationError, "Could not create Vertex Shader"),
 					"Could not create Vertex Shader");
 			}
 			else if (shader.Type == EShaderType::Pixel)
 			{
-				dxcall_f(device->CreatePixelShader(blobPtr, blobSize, nullptr, (ID3D11PixelShader**)&shader.ShaderPtr),
+				dxcall_t(device->CreatePixelShader(blobPtr, blobSize, nullptr, (ID3D11PixelShader**)&shader.ShaderPtr),
+					ionthrow(ShaderCompilationError, "Could not create Pixel Shader"),
 					"Could not create Pixel Shader");
 			}
 			else
@@ -107,12 +109,14 @@ namespace Ion
 				debugbreak();
 				shader.ShaderBlob->Release();
 				shader.ShaderBlob = nullptr;
-				return false;
+				
+				ionthrow(ShaderCompilationError, "{0} compilation failed!\nUnknown shader type.", ShaderTypeToString(shader.Type));
 			}
 		}
 
 		m_bCompiled = true;
-		return true;
+
+		return Void();
 	}
 
 	bool DX11Shader::IsCompiled()

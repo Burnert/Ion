@@ -121,11 +121,9 @@ namespace Ion::Editor
 		EditorMeshes::ShaderGrid->AddShaderSource(EShaderType::Vertex, vertexSrc);
 		EditorMeshes::ShaderGrid->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
-		if (!EditorMeshes::ShaderGrid->Compile())
-		{
-			LOG_ERROR("Could not compile the Editor Grid Shader.");
-			debugbreak();
-		}
+		EditorMeshes::ShaderGrid->Compile()
+			.Err<ShaderCompilationError>([](auto& err) { LOG_ERROR("Could not compile the Editor Grid Shader."); })
+			.Unwrap();
 	}
 
 	void EditorMeshes::Init()
