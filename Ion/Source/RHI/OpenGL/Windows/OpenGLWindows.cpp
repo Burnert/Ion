@@ -19,7 +19,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		ionassertnd(gladLoadGLLoader((GLADloadproc)GetProcAddress), "Could not load OpenGL!");
+		ionverify(gladLoadGLLoader((GLADloadproc)GetProcAddress), "Could not load OpenGL!");
 	}
 
 	void OpenGLWindows::InitWGLLoader(HDC hdc)
@@ -27,7 +27,7 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		ionassert(hdc);
-		ionassertnd(gladLoadWGLLoader((GLADloadproc)GetProcAddress, hdc), "Could not load WGL extensions!");
+		ionverify(gladLoadWGLLoader((GLADloadproc)GetProcAddress, hdc), "Could not load WGL extensions!");
 	}
 
 	void OpenGLWindows::InitOpenGL()
@@ -80,12 +80,12 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		s_OpenGLModule = LoadLibrary(TEXT("opengl32.dll"));
-		ionassertnd(s_OpenGLModule, "Could not load opengl32.dll!");
+		ionverify(s_OpenGLModule, "Could not load opengl32.dll!");
 	}
 
 	void OpenGLWindows::FreeLibraries()
 	{
-		ionassertnd(FreeLibrary(s_OpenGLModule));
+		ionverify(FreeLibrary(s_OpenGLModule));
 	}
 
 	HGLRC OpenGLWindows::CreateGLContext(HDC hdc, HGLRC shareContext)
@@ -99,9 +99,9 @@ namespace Ion
 
 		ionassert(hdc);
 
-		ionassertnd(wglChoosePixelFormatARB);
-		ionassertnd(wglCreateContextAttribsARB);
-		ionassertnd(wglSwapIntervalEXT, "WGL_GLX_swap_control not found!");
+		ionverify(wglChoosePixelFormatARB);
+		ionverify(wglCreateContextAttribsARB);
+		ionverify(wglSwapIntervalEXT, "WGL_GLX_swap_control not found!");
 
 		PIXELFORMATDESCRIPTOR pfd { };
 		const int32 attributes[] = {
@@ -121,11 +121,11 @@ namespace Ion
 
 		TRACE_BEGIN(0, "OpenGLWindows - wglChoosePixelFormatARB");
 		wglChoosePixelFormatARB(hdc, attributes, NULL, 1, &pixelFormat, &numFormats);
-		ionassertnd(pixelFormat != 0, "No compatible pixel format exists!");
+		ionverify(pixelFormat != 0, "No compatible pixel format exists!");
 		TRACE_END(0);
 
 		TRACE_BEGIN(1, "OpenGLWindows - Win32::SetPixelFormat");
-		ionassertnd(SetPixelFormat(hdc, pixelFormat, &pfd), "Cannot set the pixel format!");
+		ionverify(SetPixelFormat(hdc, pixelFormat, &pfd), "Cannot set the pixel format!");
 		TRACE_END(1);
 
 		const int32 wglAttributes[] = {
@@ -142,7 +142,7 @@ namespace Ion
 
 		TRACE_BEGIN(2, "OpenGLWindows - wglCreateContextAttribsARB");
 		HGLRC renderingContext = wglCreateContextAttribsARB(hdc, shareContext, wglAttributes);
-		ionassertnd(renderingContext != NULL, "Cannot create an OpenGL rendering context!");
+		ionverify(renderingContext != NULL, "Cannot create an OpenGL rendering context!");
 		TRACE_END(2);
 
 		// Share the first context created
@@ -153,7 +153,7 @@ namespace Ion
 		}
 
 		TRACE_BEGIN(3, "OpenGLWindows - wglMakeCurrent");
-		ionassertnd(wglMakeCurrent(hdc, renderingContext));
+		ionverify(wglMakeCurrent(hdc, renderingContext));
 		TRACE_END(3);
 
 		glDebugMessageCallback(OpenGLWindows::DebugCallback, nullptr);
@@ -167,7 +167,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		ionassertnd(wglMakeCurrent(hdc, hglrc));
+		ionverify(wglMakeCurrent(hdc, hglrc));
 	}
 
 	void* OpenGLWindows::GetProcAddress(const char* name)
@@ -256,7 +256,7 @@ namespace Ion
 		}
 
 		m_DeviceContext = GetDC(m_WindowHandle);
-		ionassertnd(m_DeviceContext);
+		ionverify(m_DeviceContext);
 
 		PIXELFORMATDESCRIPTOR pfd { };
 		pfd.nSize      = sizeof(PIXELFORMATDESCRIPTOR);
@@ -268,20 +268,20 @@ namespace Ion
 
 		TRACE_BEGIN(2, "DummyWindow - Win32::ChoosePixelFormat");
 		int32 pixelFormat = ChoosePixelFormat(m_DeviceContext, &pfd);
-		ionassertnd(pixelFormat);
+		ionverify(pixelFormat);
 		TRACE_END(2);
 
 		TRACE_BEGIN(3, "DummyWindow - Win32::SetPixelFormat");
-		ionassertnd(SetPixelFormat(m_DeviceContext, pixelFormat, &pfd));
+		ionverify(SetPixelFormat(m_DeviceContext, pixelFormat, &pfd));
 		TRACE_END(3);
 
 		TRACE_BEGIN(4, "DummyWindow - Win32::wglCreateContext");
 		m_RenderingContext = wglCreateContext(m_DeviceContext);
-		ionassertnd(m_RenderingContext);
+		ionverify(m_RenderingContext);
 		TRACE_END(4);
 
 		TRACE_BEGIN(5, "DummyWindow - Win32::wglMakeCurrent");
-		ionassertnd(wglMakeCurrent(m_DeviceContext, m_RenderingContext));
+		ionverify(wglMakeCurrent(m_DeviceContext, m_RenderingContext));
 		TRACE_END(5);
 
 		return m_RenderingContext;
@@ -326,7 +326,7 @@ namespace Ion
 		HWND hWnd = (HWND)viewport->PlatformHandleRaw;
 
 		data->DeviceContext = GetDC(hWnd);
-		ionassertnd(data->DeviceContext);
+		ionverify(data->DeviceContext);
 
 		PIXELFORMATDESCRIPTOR pfd { };
 		pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
@@ -340,9 +340,9 @@ namespace Ion
 		pfd.iLayerType   = PFD_MAIN_PLANE;
 
 		int32 pixelFormat = ChoosePixelFormat(data->DeviceContext, &pfd);
-		ionassertnd(pixelFormat);
+		ionverify(pixelFormat);
 
-		ionassertnd(SetPixelFormat(data->DeviceContext, pixelFormat, &pfd));
+		ionverify(SetPixelFormat(data->DeviceContext, pixelFormat, &pfd));
 
 		const int32 wglAttributes[] = {
 			WGL_CONTEXT_MAJOR_VERSION_ARB, s_MajorVersion,
@@ -357,16 +357,16 @@ namespace Ion
 		};
 
 		data->RenderingContext = wglCreateContextAttribsARB(data->DeviceContext, OpenGLWindows::GetShareContext(), wglAttributes);
-		ionassertnd(data->RenderingContext);
+		ionverify(data->RenderingContext);
 
-		ionassertnd(wglMakeCurrent(data->DeviceContext, data->RenderingContext));
+		ionverify(wglMakeCurrent(data->DeviceContext, data->RenderingContext));
 
 		glEnable(GL_DEBUG_OUTPUT);
 		glDebugMessageCallback(OpenGLWindows::DebugCallback, nullptr);
 
 		FilterDebugMessages();
 
-		ionassertnd(wglSwapIntervalEXT(0));
+		ionverify(wglSwapIntervalEXT(0));
 	}
 
 	void OpenGL::ImGuiImplRendererRenderWindow(ImGuiViewport* viewport, void*)
@@ -375,7 +375,7 @@ namespace Ion
 
 		ImGuiViewportDataOpenGLWin32* data = (ImGuiViewportDataOpenGLWin32*)viewport->RendererUserData;
 
-		ionassertnd(wglMakeCurrent(data->DeviceContext, data->RenderingContext));
+		ionverify(wglMakeCurrent(data->DeviceContext, data->RenderingContext));
 	}
 
 	void OpenGL::ImGuiImplRendererSwapBuffers(ImGuiViewport* viewport, void*)
@@ -384,7 +384,7 @@ namespace Ion
 
 		ImGuiViewportDataOpenGLWin32* data = (ImGuiViewportDataOpenGLWin32*)viewport->RendererUserData;
 
-		ionassertnd(SwapBuffers(data->DeviceContext));
+		ionverify(SwapBuffers(data->DeviceContext));
 	}
 
 	void OpenGL::ImGuiImplRendererDestroyWindow(ImGuiViewport* viewport)
@@ -393,7 +393,7 @@ namespace Ion
 
 		if (ImGuiViewportDataOpenGLWin32* data = (ImGuiViewportDataOpenGLWin32*)viewport->RendererUserData)
 		{
-			ionassertnd(wglDeleteContext(data->RenderingContext));
+			ionverify(wglDeleteContext(data->RenderingContext));
 
 			ReleaseDC((HWND)viewport->PlatformHandleRaw, data->DeviceContext);
 

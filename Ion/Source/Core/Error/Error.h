@@ -91,7 +91,7 @@ namespace Ion
 		}
 	};
 
-// Engine Error types --------------------------------------
+// Core Error types --------------------------------------
 
 	DEFINE_ERROR_TYPE(IOError);
 	DEFINE_ERROR_TYPE(FileNotFoundError);
@@ -271,8 +271,12 @@ namespace Ion
 
 // Assertion macros ----------------------------------------------------------------------------------------------
 
-//#undef ionassert
-//#define ionassert(x, ...) (void)(!!(x) || (Ion::ErrorHandler::AssertAbort(_PASS_ASSERT_ARGS(#x), __VA_ARGS__), 0) || (debugbreak(), 0))
+#undef ionassert
+#if ION_DEBUG
+#define ionassert(x, ...) (void)(!!(x) || (Ion::ErrorHandler::AssertAbort(_PASS_ASSERT_ARGS(#x), __VA_ARGS__), 0) || (debugbreak(), 0))
+#else
+#define ionassert(x, ...) ((void)0)
+#endif
 
 #define ionverify(x, ...) (void)(!!(x) || (Ion::ErrorHandler::AssertAbort(_PASS_ASSERT_ARGS(#x), __VA_ARGS__), 0) || (abort(), 0))
 

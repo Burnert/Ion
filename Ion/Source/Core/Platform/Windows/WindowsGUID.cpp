@@ -80,7 +80,7 @@ namespace Ion
 		if (status == RPC_S_INVALID_STRING_UUID)
 		{
 			m_Bytes.fill(0xFF);
-			ionassert(0, "Invalid UUID string. -> %s", str.c_str());
+			ionassert(0, "Invalid UUID string. -> {0}", str);
 			return;
 		}
 

@@ -116,7 +116,7 @@ namespace Ion
 		const String& vp = asset.GetVirtualPath();
 
 		ionassert(instance.m_Assets.find(vp) != instance.m_Assets.end(),
-			"Asset \"%ls\" does not exist in the registry.", asset.GetDefinitionPath().ToString().c_str());
+			"Asset \"{0}\" does not exist in the registry.", StringConverter::WStringToString(asset.GetDefinitionPath().ToString()));
 
 		instance.m_AssetPtrs.erase(&instance.m_Assets.at(vp));
 		instance.m_Assets.erase(vp);

@@ -125,7 +125,7 @@ namespace Ion
 
 	void Mesh::AssignMaterialToSlot(uint16 index, const TShared<MaterialInstance>& material)
 	{
-		ionassert(index < m_MaterialSlots.size(), "Slot %i does not exist.", index);
+		ionassert(index < m_MaterialSlots.size(), "Slot {0} does not exist.", index);
 
 		TShared<Material> baseMaterial = material->GetBaseMaterial();
 
@@ -159,7 +159,7 @@ namespace Ion
 
 	TShared<MaterialInstance> Mesh::GetMaterialInSlot(uint16 index) const
 	{
-		ionassert(index < m_MaterialSlots.size(), "Slot %i does not exist.", index);
+		ionassert(index < m_MaterialSlots.size(), "Slot {0} does not exist.", index);
 
 		const MaterialSlot& slot = m_MaterialSlots.at(index);
 		return slot.MaterialInstance;

@@ -747,7 +747,7 @@ namespace Ion
 			return false;
 		}
 
-		ionassert(it->second, "MaterialParameter \"%s\" is null.", name.c_str());
+		ionassert(it->second, "MaterialParameter \"{0}\" is null.", name);
 
 		if (it->second->GetType() == EMaterialParameterType::Texture2D)
 		{
@@ -945,8 +945,7 @@ namespace Ion
 	{
 		ionassert(m_ParameterInstances.empty(), "Destroy existing instances before creating new ones.");
 
-		ionexcept(m_ParentMaterial, "Cannot create parameter instances. Parent Material is not set.")
-			return;
+		ionassert(m_ParentMaterial, "Cannot create parameter instances. Parent Material is not set.");
 
 		for (auto& [name, parameter] : m_ParentMaterial->m_Parameters)
 		{

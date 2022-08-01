@@ -29,7 +29,7 @@ namespace Ion
 #endif
 		}
 		s_CurrentRHI = ERHI::None;
-		ionassert(0, "%s RHI not supported on this platform.", ERHIAsString(rhi).c_str());
+		ionassert(0, "{0} RHI not supported on this platform.", ERHIAsString(rhi));
 		return nullptr;
 	}
 

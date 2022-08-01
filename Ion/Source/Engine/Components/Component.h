@@ -216,7 +216,7 @@ static INCProperty* _FindNCProperty(INCProperty* prop) \
 static void _AddNCProperty(INCProperty* prop) \
 { \
 	ionassert(!_FindNCProperty(prop), \
-		"Property %s already exists.", _FindNCProperty(prop)->GetDisplayName().c_str()); \
+		"Property {0} already exists.", _FindNCProperty(prop)->GetDisplayName()); \
 	_GetNCPropContainer().insert(prop); \
 } \
 /* Component instantiate function for runtime creation (type not known at compile-time). */ \

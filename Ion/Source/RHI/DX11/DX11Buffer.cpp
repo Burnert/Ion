@@ -206,7 +206,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		ionassertnd(initialData);
+		ionverify(initialData);
 		ionassert(size <= std::numeric_limits<UINT>::max());
 
 		HRESULT hResult;

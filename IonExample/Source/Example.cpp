@@ -343,7 +343,7 @@ void IonExample::OnInit()
 
 	FileOld* textureFile = FileOld::Create(textureFileName);
 	Image* textureImage = new Image;
-	ionassertnd(textureImage->Load(textureFile));
+	ionverify(textureImage->Load(textureFile));
 	delete textureFile;
 
 	m_TextureCollada = Texture::Create(textureImage);
@@ -485,7 +485,7 @@ void IonExample::OnUpdate(float deltaTime)
 				if (textureFile->Exists())
 				{
 					Image* textureImage = new Image;
-					ionassertnd(textureImage->Load(textureFile));
+					ionverify(textureImage->Load(textureFile));
 					m_TextureCollada->UpdateSubresource(textureImage);
 					//m_MeshCollada->GetMaterial().lock()->SetParameter("Texture", m_TextureCollada);
 				}
