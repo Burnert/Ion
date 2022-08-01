@@ -9,7 +9,7 @@ namespace Ion
 	// Asset Parser Base ------------------------------------------------------------------------
 
 	AssetParser::AssetParser(const Asset& asset) :
-		XMLParser(asset->GetDefinitionPath())
+		AssetParser(asset->GetDefinitionPath())
 	{
 		ionassert(asset);
 	}
@@ -76,8 +76,15 @@ namespace Ion
 	{
 		ionassert(GetCurrentNodeName() == IASSET_NODE_IonAsset);
 
-		ParseNodeValue(IASSET_NODE_Name,
-			[&outName](String name) { outName.swap(name); });
+		if (CheckNode(IASSET_NODE_Name))
+		{
+			ParseNodeValue(IASSET_NODE_Name,
+				[&outName](String name) { outName.swap(name); });
+		}
+		else
+		{
+			outName = StringConverter::WStringToString(GetPath().LastElement());
+		}
 		return *this;
 	}
 

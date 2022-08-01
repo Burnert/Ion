@@ -11,9 +11,6 @@
 
 #define ASSET_REGISTRY_ASSET_MAP_BUCKETS 256
 
-#define CHECK_NODE(node, nodeName) IASSET_CHECK_NODE(node, nodeName, m_AssetDefinitionPath)
-#define CHECK_ATTR(attr, attrName, nodeName) IASSET_CHECK_ATTR(attr, attrName, nodeName, m_AssetDefinitionPath)
-
 namespace Ion
 {
 	// FAssetLoadWork -----------------------------------------------

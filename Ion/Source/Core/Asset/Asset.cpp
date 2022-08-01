@@ -8,9 +8,6 @@
 #include "Core/File/Collada.h"
 #include "Application/EnginePath.h"
 
-#define CHECK_NODE(node, nodeName) IASSET_CHECK_NODE(node, nodeName, m_Path)
-#define CHECK_ATTR(attr, attrName, nodeName) IASSET_CHECK_ATTR(attr, attrName, nodeName, m_Path)
-
 namespace Ion
 {
 	// Asset ----------------------------------------------------------------------

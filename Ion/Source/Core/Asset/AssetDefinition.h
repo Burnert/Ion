@@ -201,7 +201,7 @@ namespace Ion
 	private:
 		explicit AssetDefinition(const AssetInitializer& initializer);
 
-		bool ParseAssetDefinitionFile(const TShared<XMLDocument>& xml);
+		bool ParseAssetDefinitionFile(const FilePath& path);
 
 	private:
 		GUID m_Guid;

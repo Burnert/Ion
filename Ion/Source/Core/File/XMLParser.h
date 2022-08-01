@@ -168,6 +168,8 @@ if (!(attr)) \
 		TFinalClass& ExpectAttributes(const String& nodeName, Args&&... args);
 
 		template<typename FForEach>
+		TFinalClass& EnterEachNode(FForEach forEach);
+		template<typename FForEach>
 		TFinalClass& EnterEachNode(const String& nodeName, FForEach forEach);
 
 		// Other functions -------------------------------------------------------------------
@@ -188,9 +190,9 @@ if (!(attr)) \
 
 		bool IsOpen() const;
 
-	private:
 		const FilePath& GetPath() const;
 
+	private:
 		template<typename FParse>
 		void ParseNodeValue(XMLNode* node, FParse parseFunc);
 
@@ -640,6 +642,25 @@ if (!(attr)) \
 		_PARSER_CHECK_NODE(node, nodeName, GetPath());
 
 		ExpectAttributesExpand(node, args...);
+
+		return *this;
+	}
+
+	template<typename T>
+	template<typename FForEach>
+	inline typename XMLParser<T>::TFinalClass& XMLParser<T>::EnterEachNode(FForEach forEach)
+	{
+		static_assert(TIsConvertibleV<FForEach, FEnterEachNodeFunc>);
+
+		_PARSER_FAILED_CHECK();
+		ionassert(IsOpen());
+
+		XMLNode* previousNode = m_CurrentNode;
+		for (m_CurrentNode = m_CurrentNode->first_node(); m_CurrentNode; m_CurrentNode = m_CurrentNode->next_sibling())
+		{
+			forEach(*(TFinalClass*)this);
+		}
+		m_CurrentNode = previousNode;
 
 		return *this;
 	}
