@@ -67,13 +67,13 @@ namespace Ion
 			}
 			else if constexpr (TIsSameV<T, GUID>)
 			{
-				GUID guid(str);
-				if (guid.IsInvalid())
+				auto result = GUID::FromString(str);
+				if (!result)
 				{
 					LOG_ERROR("Cannot parse a GUID value. -> {0}", str);
 					return NullOpt;
 				}
-				return guid;
+				return result.Unwrap();
 			}
 			else
 			{

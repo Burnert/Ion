@@ -55,13 +55,11 @@ namespace Ion
 		outUUID.Data4[7] = *bytes++;
 	}
 
-	void GUID::PlatformGenerateGUID()
+	GUIDBytesArray GUID::PlatformGenerateGUID()
 	{
 		UUID uuid;
 		RPC_STATUS status = UuidCreate(&uuid);
 		
-		ConvertWindowsUUIDToBytes(uuid, (uint8*)&m_Bytes);
-
 		if (status == RPC_S_UUID_LOCAL_ONLY)
 		{
 			LOG_WARN("The UUID is guaranteed to be unique to this computer only.");
@@ -70,21 +68,25 @@ namespace Ion
 		{
 			LOG_WARN("Cannot get Ethernet or token - ring hardware address for this computer.");
 		}
+
+		GUIDBytesArray bytes;
+		ConvertWindowsUUIDToBytes(uuid, (uint8*)&bytes);
+		return bytes;
 	}
 
-	void GUID::PlatformGenerateGUIDFromString(const String& str)
+	Result<GUIDBytesArray, StringConversionError> GUID::PlatformGenerateGUIDFromString(const String& str)
 	{
 		UUID uuid;
 		RPC_STATUS status = UuidFromStringA((unsigned char*)str.c_str(), &uuid);
 
 		if (status == RPC_S_INVALID_STRING_UUID)
 		{
-			m_Bytes.fill(0xFF);
-			ionassert(0, "Invalid UUID string. -> {0}", str);
-			return;
+			ionthrow(StringConversionError, "Invalid UUID string. -> {0}", str);
 		}
 
-		ConvertWindowsUUIDToBytes(uuid, (uint8*)&m_Bytes);
+		GUIDBytesArray bytes;
+		ConvertWindowsUUIDToBytes(uuid, (uint8*)&bytes);
+		return bytes;
 	}
 
 	String GUID::PlatformGUIDToString() const

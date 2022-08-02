@@ -160,6 +160,8 @@ namespace Ion
 
 	DEFINE_ERROR_TYPE(IOError);
 	DEFINE_ERROR_TYPE(FileNotFoundError);
+	DEFINE_ERROR_TYPE(StringConversionError);
+	DEFINE_ERROR_TYPE(PlatformError);
 
 #pragma endregion
 

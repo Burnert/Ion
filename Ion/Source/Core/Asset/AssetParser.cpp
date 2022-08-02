@@ -64,9 +64,9 @@ namespace Ion
 			},
 			IASSET_ATTR_guid, [&outGuid](const XMLParser::MessageInterface& iface, String guid)
 			{
-				outGuid = GUID(guid);
-				if (!outGuid)
-					iface.SendFail("Invalid asset GUID.");
+				GUID::FromString(guid)
+					.Ok([&](const GUID& g) { outGuid = g; })
+					.Err<StringConversionError>([&](auto& err) { iface.SendFail("Invalid asset GUID."); });
 			}
 		);
 		return *this;

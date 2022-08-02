@@ -26,16 +26,21 @@ namespace Ion
 		inline static constexpr InvalidInitializerT Invalid = { };
 
 		GUID();
-		explicit GUID(const GUIDBytesArray& bytes);
-		explicit GUID(const String& guidStr);
+		GUID(const GUIDBytesArray& bytes);
 		GUID(GUID::ZeroInitializerT);
 		GUID(GUID::InvalidInitializerT);
 		GUID(const GUID& other);
 		GUID(GUID&& other) noexcept;
 
+		static Result<GUID, StringConversionError> FromString(const String& guidStr);
+
 		String ToString() const;
 		bool IsZero() const;
 		bool IsInvalid() const;
+		/**
+		 * @brief Is non-zero and not invalid
+		 */
+		bool IsApplicable() const;
 
 		GUID& operator=(const GUID& other);
 		GUID& operator=(GUID&& other) noexcept;
@@ -49,14 +54,14 @@ namespace Ion
 		void Swap(GUID& other);
 
 	private:
-		void PlatformGenerateGUID();
-		void PlatformGenerateGUIDFromString(const String& str);
+		static Result<GUIDBytesArray, StringConversionError> PlatformGenerateGUIDFromString(const String& str);
+		static GUIDBytesArray PlatformGenerateGUID();
 		String PlatformGUIDToString() const;
 
 	private:
 		GUIDBytesArray m_Bytes;
 #if ION_DEBUG
-		String m_AsString;
+		mutable String m_AsString;
 		void CacheString();
 #endif
 	public:
@@ -81,13 +86,6 @@ namespace Ion
 	inline GUID::GUID(const GUIDBytesArray& bytes) :
 		m_Bytes(bytes)
 	{
-		CACHE_STRING()
-	}
-
-	inline GUID::GUID(const String& guidStr) :
-		m_Bytes()
-	{
-		PlatformGenerateGUIDFromString(guidStr);
 		CACHE_STRING()
 	}
 
@@ -116,6 +114,14 @@ namespace Ion
 		CACHE_STRING()
 	}
 
+	inline Result<GUID, StringConversionError> GUID::FromString(const String& guidStr)
+	{
+		auto result = PlatformGenerateGUIDFromString(guidStr);
+		fwdthrow(result, StringConversionError);
+
+		return GUID(result.Unwrap());
+	}
+
 	inline String GUID::ToString() const
 	{
 		return PlatformGUIDToString();
@@ -129,6 +135,11 @@ namespace Ion
 	inline bool GUID::IsInvalid() const
 	{
 		return (((uint64*)&m_Bytes)[0] + ((uint64*)&m_Bytes)[1] + 2) == 0;
+	}
+
+	inline bool GUID::IsApplicable() const
+	{
+		return !IsZero() && !IsInvalid();;
 	}
 
 	inline GUID& GUID::operator=(const GUID& other)
@@ -164,7 +175,7 @@ namespace Ion
 
 	inline GUID::operator bool() const
 	{
-		return !IsZero() && !IsInvalid();
+		return IsApplicable();
 	}
 
 	inline void GUID::GetRawBytes(uint8(&outBytes)[16]) const

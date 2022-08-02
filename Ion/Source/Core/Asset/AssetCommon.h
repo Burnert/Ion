@@ -122,13 +122,13 @@ namespace Ion
 
 	inline static TOptional<GUID> ParseGuidString(const char* str)
 	{
-		GUID assetGuid(str);
-		if (!assetGuid)
+		auto result = GUID::FromString(str);
+		if (!result)
 		{
 			LOG_ERROR("Invalid value.");
 			return NullOpt;
 		}
-		return assetGuid;
+		return result.Unwrap();
 	}
 
 	using AssetFileMemoryBlock = TMemoryBlock<uint8>;
