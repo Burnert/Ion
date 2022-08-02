@@ -30,7 +30,6 @@ namespace Ion
 
 	// Asset.h
 	class Asset;
-	class AssetFinder;
 	// AssetRegistry.h
 	class AssetRegistry;
 	class AssetDefinition;
@@ -165,36 +164,6 @@ namespace Ion
 	};
 
 	/**
-	 * @brief Structure returned by the AssetDefinition class
-	 * @see AssetDefinition::Load()
-	 */
-	struct AssetData
-	{
-		TVariant<
-			TShared<void>,
-			TShared<Image>,
-			TShared<MeshAssetData>
-		// @TODO: Support a custom type
-		> Variant;
-
-		AssetData(EAssetType type);
-
-		template<typename T>
-		TShared<T> Get() const;
-
-		EAssetType GetType() const;
-
-		bool IsValid() const;
-		operator bool() const;
-
-	private:
-		void Reset();
-
-	private:
-		EAssetType m_Type;
-	};
-
-	/**
 	 * @brief Used internally to initialize an AssetDefinition object.
 	 */
 	struct AssetInitializer
@@ -231,51 +200,6 @@ namespace Ion
 		{
 		}
 	};
-
-	// AssetData class inline implementation
-
-	inline AssetData::AssetData(EAssetType type) :
-		m_Type(type)
-	{
-		ionassert(type != EAssetType::Invalid);
-
-		if (type != EAssetType::None)
-			Reset();
-	}
-
-	template<typename T>
-	inline TShared<T> AssetData::Get() const
-	{
-		return VariantCast<TShared<T>>(Variant);
-	}
-
-	inline EAssetType AssetData::GetType() const
-	{
-		return m_Type;
-	}
-
-	inline bool AssetData::IsValid() const
-	{
-		return m_Type != EAssetType::None;
-	}
-
-	inline AssetData::operator bool() const
-	{
-		return IsValid();
-	}
-
-	inline void AssetData::Reset()
-	{
-		switch (m_Type)
-		{
-		case EAssetType::Image:
-			Variant = TShared<Image>();
-			break;
-		case EAssetType::Mesh:
-			Variant = TShared<MeshAssetData>();
-			break;
-		}
-	}
 }
 
 template<>

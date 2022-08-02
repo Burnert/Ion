@@ -4,88 +4,12 @@
 #include "AssetDefinition.h"
 #include "Asset.h"
 
-#include "Core/Task/EngineTaskQueue.h"
-#include "Core/File/Collada.h"
-
 #include "Application/EnginePath.h"
 
 #define ASSET_REGISTRY_ASSET_MAP_BUCKETS 256
 
 namespace Ion
 {
-	// FAssetLoadWork -----------------------------------------------
-
-	void FAssetLoadWork::Schedule()
-	{
-#if ION_DEBUG
-		m_DebugName = StringConverter::WStringToString(AssetPath.ToString());
-#endif
-		// Executes on a worker thread
-		Execute = [*this](IMessageQueueProvider& queue)
-		{
-			ionassert(OnLoad);
-			ionassert(OnError);
-
-			ionassert(AssetPath.IsFile());
-			ionassert(AssetType != EAssetType::Invalid);
-
-			File assetFile(AssetPath, EFileMode::Read | EFileMode::DoNotOpen);
-
-			AssetData assetData(AssetType);
-
-			// @TODO: Use the memory pool here instead of normal allocations
-
-			switch (AssetType)
-			{
-				case EAssetType::Mesh:
-				{
-					String collada;
-					File::ReadToString(AssetPath, collada);
-
-					// @TODO: Refactor the ColladaDocument class a bit
-					TUnique<ColladaDocument> colladaDoc = MakeUnique<ColladaDocument>(collada);
-					const ColladaData& colladaData = colladaDoc->GetData();
-
-					TShared<MeshAssetData> mesh = MakeShared<MeshAssetData>();
-					mesh->Layout = colladaData.Layout;
-					
-					mesh->Vertices.Ptr = new float[colladaData.VertexAttributeCount];
-					mesh->Vertices.Count = colladaData.VertexAttributeCount;
-
-					mesh->Indices.Ptr = new uint32[colladaData.IndexCount];
-					mesh->Indices.Count = colladaData.IndexCount;
-
-					memcpy(mesh->Vertices.Ptr, colladaData.VertexAttributes, colladaData.VertexAttributeCount * sizeof(float));
-					memcpy(mesh->Indices.Ptr, colladaData.Indices, colladaData.IndexCount * sizeof(uint32));
-
-					assetData.Variant = mesh;
-					break;
-				}
-				case EAssetType::Image:
-				{
-					TShared<Image> image = MakeShared<Image>();
-					image->Load(assetFile);
-					if (!image->IsLoaded())
-					{
-						queue.PushMessage(FTaskMessage([*this]
-						{
-							OnError();
-						}));
-					}
-					assetData.Variant = image;
-					break;
-				}
-			}
-
-			queue.PushMessage(FTaskMessage([*this, assetData]
-			{
-				OnLoad(assetData);
-			}));
-		};
-
-		AssetRegistry::ScheduleWork(*this);
-	}
-
 	// AssetRegistry ----------------------------------------------------------------
 
 	AssetDefinition& AssetRegistry::Register(const AssetInitializer& initializer)
@@ -110,13 +34,13 @@ namespace Ion
 	{
 		AssetRegistry& instance = Get();
 
-		const String& vp = asset.GetVirtualPath();
+		const String& virtualPath = asset.GetVirtualPath();
 
-		ionassert(instance.m_Assets.find(vp) != instance.m_Assets.end(),
+		ionassert(instance.m_Assets.find(virtualPath) != instance.m_Assets.end(),
 			"Asset \"{0}\" does not exist in the registry.", StringConverter::WStringToString(asset.GetDefinitionPath().ToString()));
 
-		instance.m_AssetPtrs.erase(&instance.m_Assets.at(vp));
-		instance.m_Assets.erase(vp);
+		instance.m_AssetPtrs.erase(&instance.m_Assets.at(virtualPath));
+		instance.m_Assets.erase(virtualPath);
 	}
 
 	AssetDefinition* AssetRegistry::Find(const String& virtualPath)
@@ -147,10 +71,10 @@ namespace Ion
 
 		AssetRegistry& instance = Get();
 
-		return IsRegistered(asset.m_AssetPtr.Get());
+		return IsValid(asset.m_AssetPtr.Get());
 	}
 
-	bool AssetRegistry::IsRegistered(AssetDefinition* asset)
+	bool AssetRegistry::IsValid(AssetDefinition* asset)
 	{
 		AssetRegistry& instance = Get();
 
@@ -163,9 +87,9 @@ namespace Ion
 
 		FilePath engineContentPath = EnginePath::GetEngineContentPath();
 
-		instance.m_EngineContent = engineContentPath.Tree();
+		TShared<TTreeNode<FileInfo>> engineContent = engineContentPath.Tree();
 
-		TArray<TTreeNode<FileInfo>*> assets = instance.m_EngineContent->FindAllNodesRecursiveDF([](FileInfo& fileInfo)
+		TArray<TTreeNode<FileInfo>*> assets = engineContent->FindAllNodesRecursiveDF([](FileInfo& fileInfo)
 		{
 			File file(fileInfo.Filename);
 			WString extension = file.GetExtension();
@@ -224,8 +148,8 @@ namespace Ion
 	}
 
 	AssetRegistry::AssetRegistry() :
-		m_WorkQueue(EngineTaskQueue::Get()),
-		m_Assets(ASSET_REGISTRY_ASSET_MAP_BUCKETS)
+		m_Assets(ASSET_REGISTRY_ASSET_MAP_BUCKETS),
+		m_AssetPtrs(ASSET_REGISTRY_ASSET_MAP_BUCKETS)
 	{
 	}
 

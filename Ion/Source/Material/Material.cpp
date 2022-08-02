@@ -516,15 +516,6 @@ namespace Ion
 			case EMaterialParameterType::Texture2D:
 			{
 				return val;
-				//TOptional<GUID> value = TStringParser<GUID>()(val);
-
-				//if (!value)
-				//{
-				//	String message = fmt::format("Cannot parse the texture2D parameter value string. \"{0}\" -> GUID", val);
-				//	parser.GetInterface().SendError(message);
-				//	return GUID::Zero;
-				//}
-				//return *value;
 			}
 		}
 		parser.GetInterface().SendError("Tried to parse values of an invalid material parameter type.");
@@ -554,7 +545,7 @@ namespace Ion
 				parser.ParseCurrentEnumAttribute(IASSET_ATTR_type, paramType);
 				parser.GetCurrentAttribute(IASSET_ATTR_name, paramName);
 
-				MaterialAssetParser::ParameterValues values;
+				MaterialAssetParameterValues values;
 				parser.TryParseNodeValue(IASSET_NODE_Material_Parameter_Default, [&](String def) { values.Default = _ParseParamValue(def, paramType, parser); });
 				parser.TryParseNodeValue(IASSET_NODE_Material_Parameter_Min,     [&](String min) { values.Min =     _ParseParamValue(min, paramType, parser); });
 				parser.TryParseNodeValue(IASSET_NODE_Material_Parameter_Max,     [&](String max) { values.Max =     _ParseParamValue(max, paramType, parser); });
@@ -1013,8 +1004,8 @@ namespace Ion
 					parser.ParseCurrentEnumAttribute(IASSET_ATTR_type, paramType);
 					parser.GetCurrentAttribute(IASSET_ATTR_name, paramName);
 
-					MaterialInstanceAssetParser::ParameterInstanceValue value;
-					parser.ParseCurrentNodeValue([&](String val) { value.Value = _ParseParamValue(val, paramType, parser); });
+					MaterialInstanceAssetParameterInstanceValues values;
+					parser.ParseCurrentNodeValue([&](String val) { values.Value = _ParseParamValue(val, paramType, parser); });
 
 					IMaterialParameterInstance* parameter = GetMaterialParameterInstance(paramName);
 					if (!parameter)
@@ -1023,7 +1014,7 @@ namespace Ion
 						parser.GetInterface().SendError(message);
 						return;
 					}
-					parameter->SetValue(value.Value);
+					parameter->SetValue(values.Value);
 				}
 			)
 			.End() // </MaterialInstance>

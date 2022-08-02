@@ -1,34 +1,9 @@
 #pragma once
 
 #include "AssetCommon.h"
-#include "Core/Task/TaskQueue.h"
 
 namespace Ion
 {
-	using TFuncAssetOnLoad = TFunction<void(const AssetData&)>;
-
-	/**
-	 * @brief Loads the asset from the file specified on construction.
-	 */
-	struct FAssetLoadWork : FTaskWork
-	{
-		// OnLoad Message
-		TFuncAssetOnLoad OnLoad;
-		// OnError Message
-		TFunction<void(/*ErrorDesc*/)> OnError;
-
-		FilePath AssetPath;
-		EAssetType AssetType;
-		bool bImportExternal;
-
-		/**
-		 * Sets this work's Execute function and sends the work to the AssetRegistry.
-		 * The OnLoad and OnError functors must be set first.
-		 * Call this instead of passing the object to AssetRegistry::ScheduleWork.
-		 */
-		void Schedule();
-	};
-
 	class ION_API AssetRegistry
 	{
 	public:
@@ -47,15 +22,12 @@ namespace Ion
 		 */
 		static AssetDefinition& Register(const AssetInitializer& initializer);
 
-		static void Unregister(const AssetDefinition& asset);
-
 		/**
-		 * @brief Find an asset definition by GUID.
+		 * @brief Removes the asset definition object from the registry.
 		 * 
-		 * @param guid GUID to use
-		 * @return If found, the AssetDefinition pointer, else nullptr
+		 * @param asset AssetDefinition object to remove
 		 */
-		//static AssetDefinition* Find(const GUID& guid);
+		static void Unregister(const AssetDefinition& asset);
 
 		/**
 		 * @brief Find an asset definition by virtual path.
@@ -65,36 +37,49 @@ namespace Ion
 		 */
 		static AssetDefinition* Find(const String& virtualPath);
 
-		static bool IsRegistered(const String& virtualPath);
-		static bool IsRegistered(const Asset& asset);
-		static bool IsRegistered(AssetDefinition* asset);
-
 		/**
-		 * @brief Add a work to the work queue, which will be executed
-		 * by a free worker thread.
+		 * @brief Checks if the asset with a specified virtual path is registered.
 		 * 
-		 * @tparam T Work type - must be FTaskWork or inherit from it
-		 * @param work Work object
+		 * @param virtualPath Virtual path to check
 		 */
-		template<typename T>
-		static void ScheduleWork(T& work);
+		static bool IsRegistered(const String& virtualPath);
 
 		/**
-		 * Creates an array of handles to all the registered assets.
-		 * Don't call it too many times.
+		 * @brief Checks if the asset with a specified handle is registered.
+		 * 
+		 * @param asset Asset handle
+		 */
+		static bool IsRegistered(const Asset& asset);
+
+		/**
+		 * @brief Checks if the asset definition pointer is valid
+		 * 
+		 * @param asset AssetDefinition pointer
+		 */
+		static bool IsValid(AssetDefinition* asset);
+
+		/**
+		 * @brief Creates an array of handles to all the registered assets.
 		 */
 		static TArray<Asset> GetAllRegisteredAssets();
 
 		/**
-		 * Creates an array of handles to all the registered assets of single type.
-		 * Don't call it too many times.
+		 * @brief Creates an array of handles to all the registered assets of single type.
 		 * 
 		 * @param type Asset type
 		 */
 		static TArray<Asset> GetAllRegisteredAssets(EAssetType type);
 
+		/**
+		 * @brief Get the Assets Map with AssetDefinition objects
+		 * 
+		 * @return Const Asset Map reference
+		 */
 		static const AssetMap& GetAssetsMap();
 
+		/**
+		 * @brief Scans the Engine content directory for .iasset files and registers them.
+		 */
 		static void RegisterEngineAssets();
 
 	private:
@@ -102,28 +87,12 @@ namespace Ion
 
 		static AssetRegistry& Get();
 
+	private:
 		AssetMap m_Assets;
 		THashSet<AssetDefinition*> m_AssetPtrs;
-		// @TODO: Variable memory pool allocator here
-
-		/**
-		 * @brief By default - the Engine Task Queue
-		 */
-		TaskQueue& m_WorkQueue;
-
-		TShared<TTreeNode<FileInfo>> m_EngineContent;
 	};
 
 	// AssetRegistry class inline implementation ------------------------------
-
-	template<typename T>
-	inline void AssetRegistry::ScheduleWork(T& work)
-	{
-#if ION_DEBUG
-		LOG_DEBUG("Work scheduled! {0}", work.GetDebugName());
-#endif
-		Get().m_WorkQueue.Schedule(work);
-	}
 
 	inline const AssetRegistry::AssetMap& AssetRegistry::GetAssetsMap()
 	{

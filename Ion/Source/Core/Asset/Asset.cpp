@@ -22,7 +22,7 @@ namespace Ion
 	Asset::Asset(AssetDefinition* asset) :
 		m_AssetPtr(asset)
 	{
-		ionassert(AssetRegistry::IsRegistered(asset));
+		ionassert(AssetRegistry::IsValid(asset));
 	}
 
 	Asset::Asset(InvalidInitializerT) :
@@ -82,8 +82,6 @@ namespace Ion
 		AssetDefinition* def = AssetRegistry::Find(virtualPath);
 		if (!def)
 		{
-			//LOG_WARN("Cannot find an asset in a virtual path: \"{0}\"", virtualPath);
-			
 			FilePath path = ResolveVirtualPath(virtualPath);
 
 			if (!path.Exists())
@@ -141,7 +139,7 @@ namespace Ion
 
 	AssetDefinition* Asset::GetAssetDefinition() const
 	{
-		ionverify(operator bool(), "Cannot access a null handle.");
+		ionverify(IsAccessible(), "Cannot access a null handle.");
 		return AssetRegistry::IsRegistered(*this) ? m_AssetPtr.Get() : nullptr;
 	}
 
@@ -156,21 +154,7 @@ namespace Ion
 		if (ionPrefix == -1)
 			return EAssetType::Invalid;
 
-		StringView svType = StringView(sType).substr(4);
-		if (svType == "Generic")
-			return EAssetType::Generic;
-		if (svType == "Image")
-			return EAssetType::Image;
-		if (svType == "Mesh")
-			return EAssetType::Mesh;
-		if (svType == "Data")
-			return EAssetType::Data;
-		if (svType == "Material")
-			return EAssetType::Material;
-		if (svType == "MaterialInstance")
-			return EAssetType::MaterialInstance;
-
-		return EAssetType::Invalid;
+		return TEnumParser<EAssetType>::FromString(sType.substr(4)).value_or(EAssetType::Invalid);
 	}
 
 	void AssetImporter::ImportColladaMeshAsset(const TShared<AssetFileMemoryBlock>& block, MeshAssetData& outData)

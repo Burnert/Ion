@@ -59,6 +59,8 @@ namespace Ion
 
 		bool IsNone() const;
 
+		bool IsAccessible() const;
+
 		/**
 		 * @brief Checks if the Asset handle is valid and not null
 		 */
@@ -132,9 +134,14 @@ namespace Ion
 		return m_AssetPtr.GetMetaFlag<0>();
 	}
 
-	inline Asset::operator bool() const
+	inline bool Asset::IsAccessible() const
 	{
 		return m_AssetPtr && !IsNone();
+	}
+
+	inline Asset::operator bool() const
+	{
+		return IsAccessible();
 	}
 
 	inline bool Asset::operator==(const Asset& other) const

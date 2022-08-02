@@ -21,7 +21,6 @@ namespace Ion
 		m_AssetReferencePath(initializer.AssetReferencePath),
 		m_Type(initializer.Type),
 		m_bImportExternal(initializer.bImportExternal),
-		m_AssetData(EAssetType::None),
 		m_Info({ })
 	{
 		ParseAssetDefinitionFile(initializer.AssetDefinitionPath);
@@ -45,10 +44,5 @@ namespace Ion
 			})
 			.Finalize()
 			.OK();
-	}
-
-	Asset AssetDefinition::GetHandle() const
-	{
-		return Asset(const_cast<AssetDefinition*>(this));
 	}
 }
