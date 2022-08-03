@@ -169,8 +169,23 @@ namespace Ion
 
 #pragma region Result
 
+	template<typename TRet, typename... TErr>
+	struct Result;
+
 	namespace _Detail
 	{
+		template<typename T>
+		struct TIsResult
+		{
+			static constexpr bool Value = false;
+		};
+
+		template<typename T, typename... E>
+		struct TIsResult<Result<T, E...>>
+		{
+			static constexpr bool Value = true;
+		};
+
 		template<typename TRet, typename... TErr>
 		struct ResultBase
 		{
@@ -180,13 +195,11 @@ namespace Ion
 			using TVoid = std::monostate;
 			static constexpr bool IsVoid = TIsSameV<TRet, TVoid>;
 
-			template<typename T>
-			ResultBase(const T& value) :
-				m_Value(value)
-			{
-				static_assert(TIsSameV<T, TRet> || (TIsSameV<T, TErr> || ...),
-					"Returned type has not been specified in the Result.");
-			}
+			template<typename T, TEnableIfT<!TIsResult<T>::Value>* = 0>
+			ResultBase(const T& value);
+
+			template<typename T, typename... E>
+			ResultBase(Result<T, E...>&& fwdThrow);
 
 			~ResultBase() { }
 
@@ -219,11 +232,38 @@ namespace Ion
 			String GetErrorClassName() const;
 			String GetErrorMessage() const;
 
+			template<typename TCheck, typename T, typename... E>
+			bool FoldForwardThrow(Result<T, E...>& fwdThrow);
+
 		protected:
 			TVariant<TRet, TErr...> m_Value;
 
 			friend struct ErrorHandler;
+			template<typename T, typename... E>
+			friend struct ResultBase;
 		};
+
+		template<typename TRet, typename... TErr>
+		template<typename T, TEnableIfT<!TIsResult<T>::Value>*>
+		ResultBase<TRet, TErr...>::ResultBase(const T& value) :
+			m_Value(value)
+		{
+			static_assert(TIsSameV<T, TRet> || (TIsSameV<T, TErr> || ...),
+				"Returned type has not been specified in the Result.");
+		}
+
+		template<typename TRet, typename... TErr>
+		template<typename T, typename... E>
+		ResultBase<TRet, TErr...>::ResultBase(Result<T, E...>&& fwdThrow)
+		{
+			static_assert((TIsAnyOfV<E, TErr...> && ...),
+				"Cannot forward throw, because an Error type doesn't exist in this Result.");
+
+			// Make sure there is actually an error.
+			if /*unlikely*/ (fwdThrow) abort();
+
+			(FoldForwardThrow<E>(fwdThrow) || ...);
+		}
 
 		template<typename TRet, typename... TErr>
 		template<typename FExec>
@@ -342,6 +382,23 @@ namespace Ion
 				return EmptyString;
 			}, m_Value);
 		}
+
+		template<typename TRet, typename... TErr>
+		template<typename TCheck, typename T, typename... E>
+		inline bool ResultBase<TRet, TErr...>::FoldForwardThrow(Result<T, E...>& fwdThrow)
+		{
+			static_assert(TIsAnyOfV<TCheck, E...>);
+
+			if constexpr (TIsAnyOfV<TCheck, TErr...>)
+			{
+				if (std::holds_alternative<TCheck>(fwdThrow.m_Value))
+				{
+					m_Value.emplace<TCheck>(std::get<TCheck>(fwdThrow.m_Value));
+					return true;
+				}
+			}
+			return false;
+		}
 	}
 
 	// Final Result structs ---------------------------------------------------
@@ -352,6 +409,12 @@ namespace Ion
 		template<typename T>
 		Result(const T& value) :
 			ResultBase(value)
+		{
+		}
+
+		template<typename T>
+		Result(T&& value) :
+			ResultBase(Move(value))
 		{
 		}
 	};
@@ -369,6 +432,12 @@ namespace Ion
 			ResultBase(value)
 		{
 		}
+
+		template<typename T>
+		Result(T&& value) :
+			ResultBase(Move(value))
+		{
+		}
 	};
 
 	using Void = std::monostate;
@@ -377,7 +446,7 @@ namespace Ion
 
 // Assertion macros ---------------------------------------------------------------------------------------
 
-#pragma region Assertion / Errors
+#pragma region Assertion / Error macros
 
 #define ionbreak(...) (void)((Ion::ErrorHandler::Break(__VA_ARGS__), 0) || (debugbreak(), 0))
 
@@ -406,7 +475,26 @@ namespace Ion
 #endif
 #define ionthrowif(cond, error, ...) if ((cond)) ionthrow(error, __VA_ARGS__)
 
-#define fwdthrow(result, error) { if (result.Is<error>()) return Move(result.ForwardThrow<error>()); }
+#define _fwdthrow(result, error) if (result.Is<error>()) return Move(result.ForwardThrow<error>())
+#define _fwdthrowall(result) if (!result) return Move(result)
+
+#define fwdthrow(result, error) { auto& R = result; _fwdthrow(R, error); }
+#define fwdthrowall(result) { auto& R = result; _fwdthrowall(R); }
+
+// Result match -------------------------------------------------------------------------------------------------
+
+/**
+ * @brief A pattern for handling errors.
+ * Creates a scope with variable R that holds the Result type.
+ */
+#define ionmatchresult(result, cases) { auto R = result; if (0){} cases }
+
+#define rcase(type) else if (R.Is<type>())
+#define rcaseok else if (R)
+#define rcaseerr else if (!R)
+#define rfwdthrow(error) else _fwdthrow(R, error);
+#define rfwdthrowall else _fwdthrowall(R);
+#define relse else
 
 // Error macro -------------------------------------------------------------------------------------------------
 

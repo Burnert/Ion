@@ -48,11 +48,10 @@ namespace Ion
 		XMLNode* colladaNode = m_XML.first_node("COLLADA");
 		ionthrowif(!colladaNode, IOError, "The file is not a valid Collada format!");
 
-		{
-			auto result = CheckDocumentVersion(colladaNode);
-			fwdthrow(result, IOError);
-			ionthrowif(_strcmpi(result.Unwrap(), "1.4.1") != 0, IOError, "For now, only Collada version 1.4.1 supported.");
-		}
+		ionmatchresult(CheckDocumentVersion(colladaNode),
+			rfwdthrowall
+			relse ionthrowif(_strcmpi(R.Unwrap(), "1.4.1") != 0, IOError, "For now, only Collada version 1.4.1 supported.");
+		)
 
 		// <library_geometries>
 
@@ -76,20 +75,15 @@ namespace Ion
 
 		TShared<TrianglesNodeData> trianglesData = ExtractTriangleInputs(trianglesNode);
 
-		{
-			auto result = ParseTriangleInputs(trianglesData, 0.01f);
-			fwdthrow(result, IOError);
-		}
+		fwdthrowall(ParseTriangleInputs(trianglesData, 0.01f));
 
 		uint64 indexCount;
 		uint32* indices;
 		
-		{
-			auto result = ExtractTriangles(trianglesNode, indexCount);
-			fwdthrow(result, IOError);
-
-			indices = result.Unwrap();
-		}
+		ionmatchresult(ExtractTriangles(trianglesNode, indexCount),
+			rfwdthrowall
+			relse indices = R.Unwrap();
+		)
 
 		ColladaData data;
 
@@ -247,10 +241,10 @@ namespace Ion
 			bool bVertexInput = strcmp(input.Semantic, "VERTEX") == 0;
 			if (bVertexInput)
 			{
-				auto result = ExtractVerticesSourceNode(sourceNode);
-				fwdthrow(result, IOError);
-
-				sourceNode = result.Unwrap();
+				ionmatchresult(ExtractVerticesSourceNode(sourceNode),
+					rfwdthrowall
+					relse sourceNode = R.Unwrap();
+				)
 			}
 
 			XMLNode* techniqueNode = sourceNode->first_node("technique_common");
@@ -264,18 +258,17 @@ namespace Ion
 
 			if (bVertexInput)
 			{
-				// Scale the vertices by the specified scale
-				auto result = ExtractFloatArray(sourceNode, dataSize, [=](float value) { return value * scale; });
-				fwdthrow(result, IOError);
-
-				floatArray = result.Unwrap();
+				ionmatchresult(ExtractFloatArray(sourceNode, dataSize, [=](float value) { return value * scale; }),
+					rfwdthrowall
+					relse floatArray = R.Unwrap();
+				)
 			}
 			else
 			{
-				auto result = ExtractFloatArray(sourceNode, dataSize);
-				fwdthrow(result, IOError);
-
-				floatArray = result.Unwrap();
+				ionmatchresult(ExtractFloatArray(sourceNode, dataSize),
+					rfwdthrowall
+					relse floatArray = R.Unwrap();
+				)
 			}
 			// Set remaining fields
 			input.Data = floatArray;
@@ -468,10 +461,10 @@ namespace Ion
 
 		XMLNode* sourceNode;
 		{
-			auto result = ExtractSourceNode(meshNode, inputNode);
-			fwdthrow(result, IOError);
-
-			sourceNode = result.Unwrap();
+			ionmatchresult(ExtractSourceNode(meshNode, inputNode),
+				rfwdthrowall
+				relse sourceNode = R.Unwrap();
+			)
 		}
 
 		TriangleInput* triangleInput = &m_TriangleInputs.emplace_back(TriangleInput { inputNode, sourceNode, semantic, source, offset, set, nullptr, 0, 0 });

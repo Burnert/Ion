@@ -77,9 +77,8 @@ namespace Ion
 #endif
 
 	inline GUID::GUID() :
-		m_Bytes()
+		m_Bytes(PlatformGenerateGUID())
 	{
-		PlatformGenerateGUID();
 		CACHE_STRING()
 	}
 
@@ -116,10 +115,10 @@ namespace Ion
 
 	inline Result<GUID, StringConversionError> GUID::FromString(const String& guidStr)
 	{
-		auto result = PlatformGenerateGUIDFromString(guidStr);
-		fwdthrow(result, StringConversionError);
-
-		return GUID(result.Unwrap());
+		ionmatchresult(PlatformGenerateGUIDFromString(guidStr),
+			rfwdthrow(StringConversionError)
+			relse return GUID(R.Unwrap());
+		)
 	}
 
 	inline String GUID::ToString() const
@@ -139,7 +138,7 @@ namespace Ion
 
 	inline bool GUID::IsApplicable() const
 	{
-		return !IsZero() && !IsInvalid();;
+		return !IsZero() && !IsInvalid();
 	}
 
 	inline GUID& GUID::operator=(const GUID& other)
