@@ -69,7 +69,7 @@ namespace Ion::Editor
 		m_ContentBrowser->AddUI();
 
 		Asset::Resolve("[Engine]/Materials/DefaultMaterial").Unwrap();
-		Asset::Resolve("[Engine]/Textures/White").ValueOr(Asset::None);
+		Asset::Resolve("[Engine]/Textures/White").UnwrapOr(Asset::None);
 		Asset::Resolve("[Engine]/Lol/Something")
 			.Ok([](const Asset& asset)
 			{

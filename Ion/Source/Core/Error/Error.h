@@ -206,7 +206,7 @@ namespace Ion
 			template<typename FExec>
 			TRet Unwrap(_ASSERT_ARGS, FExec onFail) const;
 
-			TRet ValueOr(const TRet& fallback) const;
+			TRet UnwrapOr(const TRet& fallback) const;
 
 			template<typename F>
 			ResultBase& Ok(F lambda);
@@ -284,7 +284,7 @@ namespace Ion
 #define Unwrap() Unwrap(_PASS_ASSERT_ARGS(nullptr), [] { debugbreak(); abort(); })
 
 		template<typename TRet, typename... TErr>
-		inline TRet ResultBase<TRet, TErr...>::ValueOr(const TRet& fallback) const
+		inline TRet ResultBase<TRet, TErr...>::UnwrapOr(const TRet& fallback) const
 		{
 			static_assert(!IsVoid, "Cannot get a void value.");
 
