@@ -116,8 +116,8 @@ namespace Ion
 	inline Result<GUID, StringConversionError> GUID::FromString(const String& guidStr)
 	{
 		ionmatchresult(PlatformGenerateGUIDFromString(guidStr),
-			rfwdthrow(StringConversionError)
-			relse return GUID(R.Unwrap());
+			mfwdthrow(StringConversionError)
+			melse return GUID(R.Unwrap());
 		)
 	}
 

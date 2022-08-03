@@ -49,8 +49,8 @@ namespace Ion
 		ionthrowif(!colladaNode, IOError, "The file is not a valid Collada format!");
 
 		ionmatchresult(CheckDocumentVersion(colladaNode),
-			rfwdthrowall
-			relse ionthrowif(_strcmpi(R.Unwrap(), "1.4.1") != 0, IOError, "For now, only Collada version 1.4.1 supported.");
+			mfwdthrowall
+			melse ionthrowif(_strcmpi(R.Unwrap(), "1.4.1") != 0, IOError, "For now, only Collada version 1.4.1 supported.");
 		)
 
 		// <library_geometries>
@@ -81,8 +81,8 @@ namespace Ion
 		uint32* indices;
 		
 		ionmatchresult(ExtractTriangles(trianglesNode, indexCount),
-			rfwdthrowall
-			relse indices = R.Unwrap();
+			mfwdthrowall
+			melse indices = R.Unwrap();
 		)
 
 		ColladaData data;
@@ -242,8 +242,8 @@ namespace Ion
 			if (bVertexInput)
 			{
 				ionmatchresult(ExtractVerticesSourceNode(sourceNode),
-					rfwdthrowall
-					relse sourceNode = R.Unwrap();
+					mfwdthrowall
+					melse sourceNode = R.Unwrap();
 				)
 			}
 
@@ -259,15 +259,15 @@ namespace Ion
 			if (bVertexInput)
 			{
 				ionmatchresult(ExtractFloatArray(sourceNode, dataSize, [=](float value) { return value * scale; }),
-					rfwdthrowall
-					relse floatArray = R.Unwrap();
+					mfwdthrowall
+					melse floatArray = R.Unwrap();
 				)
 			}
 			else
 			{
 				ionmatchresult(ExtractFloatArray(sourceNode, dataSize),
-					rfwdthrowall
-					relse floatArray = R.Unwrap();
+					mfwdthrowall
+					melse floatArray = R.Unwrap();
 				)
 			}
 			// Set remaining fields
@@ -462,8 +462,8 @@ namespace Ion
 		XMLNode* sourceNode;
 		{
 			ionmatchresult(ExtractSourceNode(meshNode, inputNode),
-				rfwdthrowall
-				relse sourceNode = R.Unwrap();
+				mfwdthrowall
+				melse sourceNode = R.Unwrap();
 			)
 		}
 

@@ -150,8 +150,8 @@ namespace Ion
 		{
 		}
 
-		Error()
-			: Message()
+		Error() :
+			Message()
 		{
 		}
 	};
@@ -195,29 +195,79 @@ namespace Ion
 			using TVoid = std::monostate;
 			static constexpr bool IsVoid = TIsSameV<TRet, TVoid>;
 
+			/**
+			 * @brief Construct a new Result Base object that holds the specified value
+			 * 
+			 * @tparam T Value type, it must be one of the Result template types
+			 * @param value The value
+			 */
 			template<typename T, TEnableIfT<!TIsResult<T>::Value>* = 0>
 			ResultBase(const T& value);
 
+			/**
+			 * @brief Forward throw constructor
+			 * Use fwdthrowall / mfwdthrowall macros for this.
+			 * 
+			 * @param fwdThrow Result to copy the error from.
+			 */
 			template<typename T, typename... E>
 			ResultBase(Result<T, E...>&& fwdThrow);
 
 			~ResultBase() { }
 
+			/**
+			 * @brief Get the value of this Result.
+			 * If the Result in an Error variant, aborts the program.
+			 */
 			template<typename FExec>
 			TRet Unwrap(_ASSERT_ARGS, FExec onFail) const;
 
+			/**
+			 * @brief Get the value of this Result, or if it is an Error variant,
+			 * get the fallback value instead.
+			 * 
+			 * @param fallback The fallback value
+			 */
 			TRet UnwrapOr(const TRet& fallback) const;
 
+			/**
+			 * @brief Execute lambda on Ok variant
+			 * 
+			 * @tparam F void(const TRet&>) or void()
+			 * @param lambda Function to execute
+			 * @return ResultBase& Reference to this result (chainable)
+			 */
 			template<typename F>
 			ResultBase& Ok(F lambda);
+
+			/**
+			 * @brief Execute lambda on Err variant with the specified Error type
+			 * 
+			 * @tparam E Error type
+			 * @tparam F void(const E&)
+			 * @param lambda Function to execute
+			 * @return ResultBase& Reference to this result (chainable)
+			 */
 			template<typename E, typename F>
 			ResultBase& Err(F lambda);
 
+			/**
+			 * @brief Is this Result an Ok variant
+			 */
 			bool IsOk() const;
 
+			/**
+			 * @brief Does this Result hold type T
+			 * 
+			 * @tparam T Type to check
+			 */
 			template<typename T>
 			bool Is() const;
 
+			/**
+			 * @brief Forward throw this Result's Error
+			 * Use the fwdthrow / mfwdthrow macros for this.
+			 */
 			template<typename E>
 			E&& ForwardThrow();
 
@@ -226,6 +276,9 @@ namespace Ion
 			ResultBase& operator=(const ResultBase&) = delete;
 			ResultBase& operator=(ResultBase&&) = delete;
 
+			/**
+			 * @see ResultBase::IsOk
+			 */
 			operator bool() const;
 
 		private:
@@ -406,15 +459,27 @@ namespace Ion
 	template<typename TRet, typename... TErr>
 	struct Result : _Detail::ResultBase<TRet, TErr...>
 	{
+		/**
+		 * @brief Construct a new Result object that holds the specified value
+		 *
+		 * @tparam T Value type, it must be one of the Result template types
+		 * @param value The value
+		 */
 		template<typename T>
 		Result(const T& value) :
 			ResultBase(value)
 		{
 		}
 
+		/**
+		 * @brief Forward throw constructor
+		 * Use fwdthrowall / mfwdthrowall macros for this.
+		 * 
+		 * @param fwdThrow Result to copy the error from.
+		 */
 		template<typename T>
-		Result(T&& value) :
-			ResultBase(Move(value))
+		Result(T&& fwdThrow) :
+			ResultBase(Move(fwdThrow))
 		{
 		}
 	};
@@ -422,24 +487,43 @@ namespace Ion
 	template<typename... TErr>
 	struct Result<void, TErr...> : _Detail::ResultBase<std::monostate, TErr...>
 	{
+		/**
+		 * @brief Construct a new Result object that holds no value (void)
+		 */
 		Result() :
 			ResultBase(std::monostate())
 		{
 		}
 
+		/**
+		 * @brief Construct a new Result object that holds the specified value
+		 *
+		 * @tparam T Value type, it must be one of the Result template types
+		 * @param value The value
+		 */
 		template<typename T>
 		Result(const T& value) :
 			ResultBase(value)
 		{
 		}
 
+		/**
+		 * @brief Forward throw constructor
+		 * Use fwdthrowall / mfwdthrowall macros for this.
+		 * 
+		 * @param fwdThrow Result to copy the error from.
+		 */
 		template<typename T>
-		Result(T&& value) :
-			ResultBase(Move(value))
+		Result(T&& fwdThrow) :
+			ResultBase(Move(fwdThrow))
 		{
 		}
 	};
 
+	/**
+	 * @brief Use this to return the Result of void type at the end of the function
+	 * return Void();
+	 */
 	using Void = std::monostate;
 
 #pragma endregion
@@ -448,15 +532,29 @@ namespace Ion
 
 #pragma region Assertion / Error macros
 
+/**
+ * @brief Formats and prints the message and breaks the debugger.
+ */
 #define ionbreak(...) (void)((Ion::ErrorHandler::Break(__VA_ARGS__), 0) || (debugbreak(), 0))
 
 #undef ionassert
 #if ION_DEBUG
+/**
+ * @brief Break the debugger if the condition is not satisfied.
+ * Does nothing on non-debug builds
+ */
 #define ionassert(x, ...) (void)(!!(x) || (Ion::ErrorHandler::AssertAbort(_PASS_ASSERT_ARGS(#x), __VA_ARGS__), 0) || (debugbreak(), 0))
 #else
+/**
+ * @brief Break the debugger if the condition is not satisfied.
+ * Does nothing on non-debug builds
+ */
 #define ionassert(x, ...) ((void)0)
 #endif
 
+/**
+ * @brief Abort the program if the condition is not satisfied.
+ */
 #define ionverify(x, ...) (void)(!!(x) || (Ion::ErrorHandler::AssertAbort(_PASS_ASSERT_ARGS(#x), __VA_ARGS__), 0) || (debugbreak(), 0) || (abort(), 0))
 
 // Throw macro -------------------------------------------------------------------------------------------------
@@ -469,16 +567,33 @@ namespace Ion
 	}
 
 #if ION_DEBUG
+/**
+ * @brief Throws (returns) a Result type with a specified Error type as a value.
+ * Always prints the Error in Debug configuration
+ */
 #define ionthrow(error, ...) return [&] { auto err = error(Ion::_Detail::_FormatThrowMessage(__VA_ARGS__)); Ion::ErrorHandler::PrintErrorThrow(_PASS_ASSERT_ARGS(0), err); return err; }()
 #else
+/**
+ * @brief Throws (returns) a Result type with a specified error type as a value.
+ * Always prints the Error in Debug configuration
+ */
 #define ionthrow(error, ...) return error(Ion::_Detail::_FormatThrowMessage(__VA_ARGS__))
 #endif
+/**
+ * @brief Throws an Error if the condition is satisfied.
+ */
 #define ionthrowif(cond, error, ...) if ((cond)) ionthrow(error, __VA_ARGS__)
 
 #define _fwdthrow(result, error) if (result.Is<error>()) return Move(result.ForwardThrow<error>())
 #define _fwdthrowall(result) if (!result) return Move(result)
 
+/**
+ * @brief Forwards the Error throw if the Result is of its type.
+ */
 #define fwdthrow(result, error) { auto& R = result; _fwdthrow(R, error); }
+/**
+ * @brief Always forwards the Error throw.
+ */
 #define fwdthrowall(result) { auto& R = result; _fwdthrowall(R); }
 
 // Result match -------------------------------------------------------------------------------------------------
@@ -489,15 +604,36 @@ namespace Ion
  */
 #define ionmatchresult(result, cases) { auto R = result; if (0){} cases }
 
-#define rcase(type) else if (R.Is<type>())
-#define rcaseok else if (R)
-#define rcaseerr else if (!R)
-#define rfwdthrow(error) else _fwdthrow(R, error);
-#define rfwdthrowall else _fwdthrowall(R);
-#define relse else
+/**
+ * @brief Match on the specified type
+ */
+#define mcase(type) else if (R.Is<type>())
+/**
+ * @brief Match on the Ok variant
+ */
+#define mcaseok else if (R)
+/**
+ * @brief Match on all Err variants
+ */
+#define mcaseerr else if (!R)
+/**
+ * @brief Match on the specified Error type and forward throw
+ */
+#define mfwdthrow(error) else _fwdthrow(R, error);
+/**
+ * @brief Match on all the Error types and forward throw
+ */
+#define mfwdthrowall else _fwdthrowall(R);
+/**
+ * @brief Match on all other variants
+ */
+#define melse else
 
 // Error macro -------------------------------------------------------------------------------------------------
 
+/**
+ * @brief Throws an irrecoverable error.
+ */
 #define ionerror(error, ...) (void)((Ion::ErrorHandler::ErrorAbort(_PASS_ASSERT_ARGS(0), error(Ion::_Detail::_FormatThrowMessage(__VA_ARGS__))), 0) || (debugbreak(), 0) || (abort(), 0))
 
 #pragma endregion

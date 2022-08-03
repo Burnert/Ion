@@ -68,8 +68,8 @@ namespace Ion
 			else if constexpr (TIsSameV<T, GUID>)
 			{
 				ionmatchresult(GUID::FromString(str),
-					rcaseok return R.Unwrap();
-					relse
+					mcaseok return R.Unwrap();
+					melse
 					{
 						LOG_ERROR("Cannot parse a GUID value. -> {0}", str);
 						return NullOpt;
