@@ -533,7 +533,26 @@ namespace Ion
 
 		inline void Back()
 		{
-			m_Path.pop_back();
+			if (m_Path.empty())
+			{
+				m_Path.push_back(L"..");
+			}
+			else
+			{
+				bool bOnlyBack = true;
+				for (const WString& dir : m_Path)
+				{
+					if (dir != L"..")
+					{
+						bOnlyBack = false;
+						break;
+					}
+				}
+				if (!bOnlyBack)
+					m_Path.pop_back();
+				else
+					m_Path.push_back(L"..");
+			}
 			UpdatePathName();
 		}
 
@@ -562,6 +581,8 @@ namespace Ion
 		 * @return FilePath relative file path
 		 */
 		FilePath AsRelativeFrom(const FilePath& baseDir) const;
+
+		FilePath Fix() const;
 
 		inline bool Exists() const
 		{

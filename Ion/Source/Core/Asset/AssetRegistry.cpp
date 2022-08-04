@@ -108,10 +108,12 @@ namespace Ion
 		ionassert(!IsVirtualRootRegistered(root), "Virtual root already registered.");
 
 		AssetRegistry& instance = Get();
+		
+		FilePath fixedPath = physicalPath.Fix();
 
-		instance.m_VirtualRoots.emplace(root, physicalPath);
+		instance.m_VirtualRoots.emplace(root, fixedPath);
 
-		LOG_INFO("Registered asset virtual root: \"{}\" -> \"{}\"", root, StringConverter::WStringToString(physicalPath.ToString()));
+		LOG_INFO("Registered asset virtual root: \"{}\" -> \"{}\"", root, StringConverter::WStringToString(fixedPath.ToString()));
 	}
 
 	void AssetRegistry::RegisterAssetsInVirtualRoot(const String& virtualRoot)

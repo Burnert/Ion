@@ -316,6 +316,20 @@ namespace Ion
 		return relative;
 	}
 
+	FilePath FilePath::Fix() const
+	{
+		if (IsEmpty())
+			return FilePath();
+
+		FilePath fixed;
+		fixed.Set(m_Path.at(0));
+		for (auto it = m_Path.begin() + 1; it != m_Path.end(); ++it)
+		{
+			fixed.ChangeDirectory(*it);
+		}
+		return fixed;
+	}
+
 	bool File::ReadToString(const FilePath& filePath, String& outString)
 	{
 		return ReadToString(filePath.ToString(), outString);
@@ -409,6 +423,8 @@ namespace Ion
 	{
 #pragma warning(disable:6255)
 #pragma warning(disable:6386)
+		// @TODO: Make a string split thingy instead of this nonsense
+
 		TArray<WString> pathArray;
 
 		uint64 size = path.size();
@@ -441,7 +457,7 @@ namespace Ion
 		// Add the last element if there wasn't a slash at the end
 		if (!bEmptySegment)
 		{
-			ionassert(File::IsFileNameLegal(segment));
+			//ionassert(File::IsFileNameLegal(segment));
 			pathArray.emplace_back<WString>(segment);
 		}
 
