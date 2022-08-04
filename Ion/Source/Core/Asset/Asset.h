@@ -17,11 +17,6 @@ namespace Ion
 		static constexpr const char* FileExtension = ".iasset";
 		static constexpr const char* FileExtensionNoDot = FileExtension + 1;
 
-		/**
-		 * @brief An Asset Handle initialized with a nullptr, that cannot serve as a None handle.
-		 * Cannot be dereferenced.
-		 */
-		static const Asset InvalidHandle;
 		static const Asset None;
 
 		/**
@@ -65,16 +60,12 @@ namespace Ion
 		AssetDefinition& operator*() const;
 
 		/**
-		 * @brief Is the Asset handle valid (can be null)
+		 * @brief Is the Asset handle not None
 		 */
 		bool IsValid() const;
 
-		bool IsNone() const;
-
-		bool IsAccessible() const;
-
 		/**
-		 * @brief Checks if the Asset handle is valid and not null
+		 * @brief Checks if the Asset handle is not None
 		 */
 		operator bool() const;
 
@@ -95,18 +86,13 @@ namespace Ion
 
 	private:
 		explicit Asset(AssetDefinition* asset);
-		struct InvalidInitializerT { };
-		Asset(InvalidInitializerT);
 
 		static bool Parse(AssetInitializer& inOutInitializer);
 
 		static Result<Asset, IOError, FileNotFoundError> RegisterAsset(const FilePath& path, const String& virtualPath);
 
 	private:
-		/**
-		 * If the 0-th flag is set, it means the handle is <None>.
-		 */
-		TMetaPointer<AssetDefinition> m_AssetPtr;
+		AssetDefinition* m_AssetPtr;
 
 		friend class AssetRegistry;
 		friend class AssetDefinition;
@@ -116,7 +102,7 @@ namespace Ion
 		{
 			size_t operator()(const Asset& asset) const noexcept
 			{
-				return THash<void*>()(asset.m_AssetPtr.Get());
+				return THash<void*>()(asset.m_AssetPtr);
 			}
 		};
 	};
@@ -126,45 +112,35 @@ namespace Ion
 	inline AssetDefinition* Asset::operator->() const
 	{
 		AssetDefinition* def = GetAssetDefinition();
-		ionverify(def, "Cannot dereference an asset handle of a non-existing asset. {{{}}}", (void*)m_AssetPtr.Get());
+		ionverify(def, "Cannot dereference an asset handle of a non-existing asset. {{{}}}", (void*)m_AssetPtr);
 		return def;
 	}
 
 	inline AssetDefinition& Asset::operator*() const
 	{
 		AssetDefinition* def = GetAssetDefinition();
-		ionverify(def, "Cannot dereference an asset handle of a non-existing asset. {{{}}}", (void*)m_AssetPtr.Get());
+		ionverify(def, "Cannot dereference an asset handle of a non-existing asset. {{{}}}", (void*)m_AssetPtr);
 		return *def;
 	}
 
 	inline bool Asset::IsValid() const
 	{
-		return m_AssetPtr || IsNone();
-	}
-
-	inline bool Asset::IsNone() const
-	{
-		return m_AssetPtr.GetMetaFlag<0>();
-	}
-
-	inline bool Asset::IsAccessible() const
-	{
-		return m_AssetPtr && !IsNone();
+		return m_AssetPtr;
 	}
 
 	inline Asset::operator bool() const
 	{
-		return IsAccessible();
+		return IsValid();
 	}
 
 	inline bool Asset::operator==(const Asset& other) const
 	{
-		return (m_AssetPtr == other.m_AssetPtr) || (IsNone() && other.IsNone());
+		return m_AssetPtr == other.m_AssetPtr;
 	}
 
 	inline bool Asset::operator!=(const Asset& other) const
 	{
-		return !operator==(other);
+		return m_AssetPtr != other.m_AssetPtr;
 	}
 
 	class ION_API AssetImporter

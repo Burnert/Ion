@@ -127,30 +127,33 @@ namespace Ion
 	{
 		ionassert(index < m_MaterialSlots.size(), "Slot {0} does not exist.", index);
 
-		TShared<Material> baseMaterial = material->GetBaseMaterial();
-
-		// @TODO: I don't think there should even be an option to assign not compiled materials to meshes.
-
-		auto setLayoutShader = [this, material]
+		if (material)
 		{
-			if (m_VertexBuffer)
+			TShared<Material> baseMaterial = material->GetBaseMaterial();
+
+			// @TODO: I don't think there should even be an option to assign not compiled materials to meshes.
+
+			auto setLayoutShader = [this, material]
 			{
-				m_VertexBuffer->SetLayoutShader(material->GetBaseMaterial()->GetShader(EShaderUsage::StaticMesh));
-			}
-		};
+				if (m_VertexBuffer)
+				{
+					m_VertexBuffer->SetLayoutShader(material->GetBaseMaterial()->GetShader(EShaderUsage::StaticMesh));
+				}
+			};
 
-		// Compile the shaders first
-		if (!baseMaterial->IsUsableWith(EShaderUsage::StaticMesh))
-		{
-			baseMaterial->AddUsage(EShaderUsage::StaticMesh);
-			baseMaterial->CompileShaders([setLayoutShader](const ShaderPermutation& shader)
+			// Compile the shaders first
+			if (!baseMaterial->IsUsableWith(EShaderUsage::StaticMesh))
+			{
+				baseMaterial->AddUsage(EShaderUsage::StaticMesh);
+				baseMaterial->CompileShaders([setLayoutShader](const ShaderPermutation& shader)
+				{
+					setLayoutShader();
+				});
+			}
+			else
 			{
 				setLayoutShader();
-			});
-		}
-		else
-		{
-			setLayoutShader();
+			}
 		}
 
 		MaterialSlot& slot = m_MaterialSlots.at(index);

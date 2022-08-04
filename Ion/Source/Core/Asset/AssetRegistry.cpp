@@ -76,7 +76,7 @@ namespace Ion
 
 		AssetRegistry& instance = Get();
 
-		return IsValid(asset.m_AssetPtr.Get());
+		return IsValid(asset.m_AssetPtr);
 	}
 
 	bool AssetRegistry::IsValid(AssetDefinition* asset)

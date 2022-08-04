@@ -967,7 +967,7 @@ namespace Ion::Editor
 
 			Asset currentMeshAsset = mesh && mesh->GetMeshResource() ?
 				mesh->GetMeshResource()->GetAssetHandle() :
-				Asset::InvalidHandle;
+				Asset::None;
 
 			String previewName = currentMeshAsset ?
 				currentMeshAsset->GetInfo().Name :
@@ -1000,6 +1000,15 @@ namespace Ion::Editor
 			}
 			if (bComboOpen)
 			{
+				if (ImGui::Selectable("[None]", !currentMeshAsset))
+				{
+					meshComponent.SetMeshAsset(Asset::None);
+					meshComponent.SetMeshResource(nullptr);
+					meshComponent.SetMesh(nullptr);
+
+					bChanged = true;
+				}
+
 				TArray<Asset> meshAssets = AssetRegistry::GetAllRegisteredAssets(EAssetType::Mesh);
 				for (Asset& meshAsset : meshAssets)
 				{
@@ -1026,7 +1035,7 @@ namespace Ion::Editor
 			{
 				Asset currentMaterialAsset = meshComponent.GetMesh()->GetMaterialInSlot(0) ?
 					meshComponent.GetMesh()->GetMaterialInSlot(0)->GetAsset() :
-					Asset::InvalidHandle;
+					Asset::None;
 
 				previewName = currentMaterialAsset ?
 					currentMaterialAsset->GetInfo().Name :
@@ -1036,6 +1045,13 @@ namespace Ion::Editor
 
 				if (bComboOpen)
 				{
+					if (ImGui::Selectable("[None]", !currentMaterialAsset))
+					{
+						meshComponent.GetMesh()->AssignMaterialToSlot(0, nullptr);
+
+						bChanged = true;
+					}
+
 					TArray<Asset> materialAssets = AssetRegistry::GetAllRegisteredAssets(EAssetType::MaterialInstance);
 					for (Asset& materialAsset : materialAssets)
 					{

@@ -31,7 +31,7 @@ namespace Ion
 				parser.EnterEachNode(IASSET_NODE_Defaults_Material, [&outDescription](AssetParser& parser)
 				{
 					uint32 index = (uint32)-1;
-					Asset asset = Asset::InvalidHandle;
+					Asset asset;
 					parser.ParseCurrentAttributeTyped(IASSET_ATTR_index, index);
 					parser.ParseCurrentAttributes(IASSET_ATTR_asset, [&](String sAsset)
 					{
@@ -40,11 +40,11 @@ namespace Ion
 							.UnwrapOr(Asset::None);
 					});
 
-					if (index != (uint32)-1 && asset.IsValid())
+					if (index != (uint32)-1)
 					{
 						if (index >= outDescription.Defaults.MaterialAssets.size())
 							outDescription.Defaults.MaterialAssets.resize(index + 1);
-						outDescription.Defaults.MaterialAssets[index] = Move(asset);
+						outDescription.Defaults.MaterialAssets[index] = asset;
 					}
 				});
 			}) // </Defaults>

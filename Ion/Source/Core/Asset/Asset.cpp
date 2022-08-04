@@ -12,25 +12,17 @@ namespace Ion
 {
 	// Asset ----------------------------------------------------------------------
 
-	const Asset Asset::InvalidHandle = Asset::InvalidInitializerT();
 	const Asset Asset::None = Asset();
 
 	Asset::Asset() :
 		m_AssetPtr(nullptr)
 	{
-		// Null asset handle (not invalid!)
-		m_AssetPtr.SetMetaFlag<0>(true);
 	}
 
 	Asset::Asset(AssetDefinition* asset) :
 		m_AssetPtr(asset)
 	{
 		ionassert(AssetRegistry::IsValid(asset));
-	}
-
-	Asset::Asset(InvalidInitializerT) :
-		m_AssetPtr(nullptr)
-	{
 	}
 
 	Asset::~Asset()
@@ -74,8 +66,8 @@ namespace Ion
 
 	AssetDefinition* Asset::GetAssetDefinition() const
 	{
-		ionverify(IsAccessible(), "Cannot access a null handle.");
-		return AssetRegistry::IsRegistered(*this) ? m_AssetPtr.Get() : nullptr;
+		ionverify(IsValid(), "Cannot access a null handle.");
+		return AssetRegistry::IsValid(m_AssetPtr) ? m_AssetPtr : nullptr;
 	}
 
 	bool Asset::Parse(AssetInitializer& inOutInitializer)
