@@ -32,7 +32,7 @@ namespace Ion
 		/**
 		 * @brief Find an asset definition by virtual path.
 		 *
-		 * @param virtualPath a VP to an asset (e.g. "<Engine>/Materials/DefaultMaterial")
+		 * @param virtualPath a virtual path to an asset (e.g. "[Engine]/Materials/DefaultMaterial")
 		 * @return If found, the AssetDefinition pointer, else nullptr
 		 */
 		static AssetDefinition* Find(const String& virtualPath);
@@ -82,6 +82,16 @@ namespace Ion
 		 */
 		static void RegisterEngineAssets();
 
+		static void RegisterEngineVirtualRoots();
+
+		static void RegisterVirtualRoot(const String& root, const FilePath& physicalPath);
+
+		static void RegisterAssetsInVirtualRoot(const String& virtualRoot);
+
+		static const FilePath& ResolveVirtualRoot(const String& virtualRoot);
+
+		static bool IsVirtualRootRegistered(const String& virtualRoot);
+
 	private:
 		AssetRegistry();
 
@@ -90,6 +100,8 @@ namespace Ion
 	private:
 		AssetMap m_Assets;
 		THashSet<AssetDefinition*> m_AssetPtrs;
+
+		THashMap<String, FilePath> m_VirtualRoots;
 	};
 
 	// AssetRegistry class inline implementation ------------------------------

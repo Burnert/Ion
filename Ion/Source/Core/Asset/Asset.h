@@ -7,30 +7,42 @@ namespace Ion
 	class ION_API Asset
 	{
 	public:
+		struct VirtualRoot
+		{
+			static constexpr const char* Engine  = "[Engine]";
+			static constexpr const char* Shaders = "[Shaders]";
+			static constexpr const char* Game    = "[Game]";
+		};
+
+		static constexpr const char* FileExtension = ".iasset";
+		static constexpr const char* FileExtensionNoDot = FileExtension + 1;
+
 		/**
-		 * @brief Creates an empty (null) asset handle (not invalid!)
-		 * 
-		 * @details Use AssetFinder to create an asset handle or query
-		 * the AssetRegistry to get a handle to an existing asset.
+		 * @brief An Asset Handle initialized with a nullptr, that cannot serve as a None handle.
+		 * Cannot be dereferenced.
+		 */
+		static const Asset InvalidHandle;
+		static const Asset None;
+
+		/**
+		 * @brief Creates an empty (None) asset handle (not invalid!)
+		 * You can also use Asset::None for that purpose.
 		 */
 		Asset();
 		~Asset();
 
 		/**
-		 * @brief Find the existing asset by GUID.
+		 * @brief Retrieve an asset handle for the specified virtual path.
 		 * 
-		 * @param guid GUID of the asset
-		 * @return Asset handle, invalid handle if the asset with that GUID does not exist.
-		 */
-		//static Asset Find(const GUID& guid);
-
-		/**
-		 * @brief Find the existing asset by virtual path.
+		 * @details If the asset has not been registered yet, it will try to find the asset file on disk.
+		 * If the asset's already registered, it will just return the handle to that asset.
 		 *
-		 * @param virtualPath a VP to an asset (e.g. "[Engine]/Materials/DefaultMaterial")
+		 * @param virtualPath a virtual path to an asset (e.g. "[Engine]/Materials/DefaultMaterial")
 		 * @return Asset handle, FileNotFoundError if the asset with that path does not exist, or IOError if the asset cannot be parsed.
 		 */
 		static Result<Asset, IOError, FileNotFoundError> Resolve(const String& virtualPath);
+
+		static Result<Asset, IOError, FileNotFoundError> RegisterExternal(const FilePath& path, const String& customVirtualPath);
 
 		static FilePath ResolveVirtualPath(const String& virtualPath);
 
@@ -75,12 +87,11 @@ namespace Ion
 		bool operator==(const Asset& other) const;
 		bool operator!=(const Asset& other) const;
 
-		/**
-		 * @brief An Asset Handle initialized with a nullptr, that cannot serve as a None handle.
-		 * Cannot be dereferenced.
-		 */
-		static const Asset InvalidHandle;
-		static const Asset None;
+		static bool IsVirtualRoot(const StringView& root);
+		static bool IsStandardVirtualRoot(const StringView& root);
+		static bool IsValidVirtualPath(const String& virtualPath);
+		static String GetRootOfVirtualPath(const String& virtualPath);
+		static String GetRestOfVirtualPath(const String& virtualPath);
 
 	private:
 		explicit Asset(AssetDefinition* asset);
@@ -88,6 +99,8 @@ namespace Ion
 		Asset(InvalidInitializerT);
 
 		static bool Parse(AssetInitializer& inOutInitializer);
+
+		static Result<Asset, IOError, FileNotFoundError> RegisterAsset(const FilePath& path, const String& virtualPath);
 
 	private:
 		/**

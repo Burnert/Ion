@@ -4,6 +4,6 @@
 	<MaterialInstance parent="[Engine]/Materials/DefaultMaterial">
 		<ParameterInstance type="Vector" name="Color">1.0 1.0 1.0 1.0</ParameterInstance>
 		<ParameterInstance type="Scalar" name="Brightness">1.0</ParameterInstance>
-		<ParameterInstance type="Texture2D" name="DefaultTexture">[Engine]/../../IonExample/Assets/textures/ciupaga</ParameterInstance>
+		<ParameterInstance type="Texture2D" name="DefaultTexture">[Example]/textures/ciupaga</ParameterInstance>
 	</MaterialInstance>
 </IonAsset>

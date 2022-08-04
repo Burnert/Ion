@@ -27,6 +27,9 @@ namespace Ion
 
 		auto& [vp, assetDef] = *instance.m_Assets.emplace(initializer.VirtualPath, AssetDefinition(initializer)).first;
 		instance.m_AssetPtrs.emplace(&assetDef);
+
+		LOG_TRACE("Registered asset \"{0}\".", assetDef.GetVirtualPath());
+
 		return assetDef;
 	}
 
@@ -37,10 +40,12 @@ namespace Ion
 		const String& virtualPath = asset.GetVirtualPath();
 
 		ionassert(instance.m_Assets.find(virtualPath) != instance.m_Assets.end(),
-			"Asset \"{0}\" does not exist in the registry.", StringConverter::WStringToString(asset.GetDefinitionPath().ToString()));
+			"Asset \"{0}\" does not exist in the registry.", virtualPath);
 
 		instance.m_AssetPtrs.erase(&instance.m_Assets.at(virtualPath));
 		instance.m_Assets.erase(virtualPath);
+
+		LOG_TRACE("Unregistered asset \"{0}\".", virtualPath);
 	}
 
 	AssetDefinition* AssetRegistry::Find(const String& virtualPath)
@@ -85,35 +90,74 @@ namespace Ion
 	{
 		AssetRegistry& instance = Get();
 
-		FilePath engineContentPath = EnginePath::GetEngineContentPath();
+		instance.RegisterAssetsInVirtualRoot(Asset::VirtualRoot::Engine);
 
-		TShared<TTreeNode<FileInfo>> engineContent = engineContentPath.Tree();
+		LOG_INFO("Registered Engine Assets.");
+	}
 
-		TArray<TTreeNode<FileInfo>*> assets = engineContent->FindAllNodesRecursiveDF([](FileInfo& fileInfo)
+	void AssetRegistry::RegisterEngineVirtualRoots()
+	{
+		AssetRegistry::RegisterVirtualRoot(Asset::VirtualRoot::Engine, EnginePath::GetEngineContentPath());
+		AssetRegistry::RegisterVirtualRoot(Asset::VirtualRoot::Shaders, EnginePath::GetShadersPath());
+		// @TODO: AssetRegistry::RegisterVirtualRoot(Asset::VirtualRoot::Game, X);
+	}
+
+	void AssetRegistry::RegisterVirtualRoot(const String& root, const FilePath& physicalPath)
+	{
+		ionassert(Asset::IsVirtualRoot(root));
+		ionassert(!IsVirtualRootRegistered(root), "Virtual root already registered.");
+
+		AssetRegistry& instance = Get();
+
+		instance.m_VirtualRoots.emplace(root, physicalPath);
+
+		LOG_INFO("Registered asset virtual root: \"{}\" -> \"{}\"", root, StringConverter::WStringToString(physicalPath.ToString()));
+	}
+
+	void AssetRegistry::RegisterAssetsInVirtualRoot(const String& virtualRoot)
+	{
+		ionassert(Asset::IsVirtualRoot(virtualRoot));
+		ionassert(IsVirtualRootRegistered(virtualRoot));
+
+		AssetRegistry& instance = Get();
+
+		FilePath rootDir = instance.ResolveVirtualRoot(virtualRoot);
+
+		TShared<TTreeNode<FileInfo>> content = rootDir.Tree();
+
+		TArray<TTreeNode<FileInfo>*> assets = content->FindAllNodesRecursiveDF([](FileInfo& fileInfo)
 		{
 			File file(fileInfo.Filename);
 			WString extension = file.GetExtension();
-			return extension == L"iasset";
+			return extension == StringConverter::StringToWString(Asset::FileExtensionNoDot);
 		});
 
 		for (TTreeNode<FileInfo>*& assetNode : assets)
 		{
 			// Get the relative path
-			FilePath relativePath = FilePath(assetNode->Get().FullPath).AsRelativeFrom(EnginePath::GetEngineContentPath());
+			FilePath relativePath = FilePath(assetNode->Get().FullPath).AsRelativeFrom(rootDir);
 
 			// Remove the extension
-			WString last = relativePath.LastElement();
-			last = last.substr(0, last.rfind(L".iasset"));
+			String last = StringConverter::WStringToString(relativePath.LastElement());
+			last = last.substr(0, last.rfind(Asset::FileExtension));
 			relativePath.Back();
-			relativePath.ChangeDirectory(last);
+			String sRelative = StringConverter::WStringToString(relativePath.ToString());
 
 			// Make a virtual path string
-			String virtualPath = "[Engine]/" + StringConverter::WStringToString(relativePath.ToString());
+			String virtualPath = fmt::format("{}/{}/{}", virtualRoot, sRelative, last);
 
 			// Register the asset
-			Asset asset = Asset::Resolve(virtualPath).Unwrap();
-			LOG_TRACE(L"Registered Engine Asset \"{0}\".", asset->GetDefinitionPath().ToString());
+			Asset asset = Asset::RegisterAsset(assetNode->Get().FullPath, virtualPath).Unwrap();
 		}
+	}
+
+	const FilePath& AssetRegistry::ResolveVirtualRoot(const String& virtualRoot)
+	{
+		AssetRegistry& instance = Get();
+
+		ionverify(IsVirtualRootRegistered(virtualRoot), "Virtual root not registered.");
+
+		return instance.m_VirtualRoots.at(virtualRoot);
 	}
 
 	TArray<Asset> AssetRegistry::GetAllRegisteredAssets()
@@ -151,6 +195,15 @@ namespace Ion
 		m_Assets(ASSET_REGISTRY_ASSET_MAP_BUCKETS),
 		m_AssetPtrs(ASSET_REGISTRY_ASSET_MAP_BUCKETS)
 	{
+	}
+
+	bool AssetRegistry::IsVirtualRootRegistered(const String& virtualRoot)
+	{
+		ionassert(Asset::IsVirtualRoot(virtualRoot), "Invalid virtual root string.");
+
+		AssetRegistry& instance = Get();
+
+		return instance.m_VirtualRoots.find(virtualRoot) != instance.m_VirtualRoots.end();
 	}
 
 	AssetRegistry& AssetRegistry::Get()

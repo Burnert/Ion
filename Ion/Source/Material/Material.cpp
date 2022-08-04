@@ -54,7 +54,11 @@ namespace Ion
 				ionassert(std::holds_alternative<String>(def));
 
 				MaterialParameterTexture2D* param = (MaterialParameterTexture2D*)this;
-				param->SetDefaultValue(Asset::Resolve(std::get<String>(def)).UnwrapOr(Asset::None));
+				String sValue = std::get<String>(def);
+				Asset asset = Asset::Resolve(sValue)
+					.Err([&](auto& err) { LOG_ERROR("Could not set Material Parameter default value to \"{}\".", sValue); })
+					.UnwrapOr(Asset::None);
+				param->SetDefaultValue(asset);
 				break;
 			}
 		}
@@ -143,7 +147,11 @@ namespace Ion
 				ionassert(std::holds_alternative<String>(value));
 
 				MaterialParameterInstanceTexture2D* param = (MaterialParameterInstanceTexture2D*)this;
-				param->SetValue(Asset::Resolve(std::get<String>(value)).UnwrapOr(Asset::None));
+				const String& sValue = std::get<String>(value);
+				Asset asset = Asset::Resolve(sValue)
+					.Err([&](auto& err) { LOG_ERROR("Could not set Material Parameter Instance value to \"{}\".", sValue); })
+					.UnwrapOr(Asset::None);
+				param->SetValue(asset);
 				break;
 			}
 		}
@@ -993,7 +1001,10 @@ namespace Ion
 			.ParseCurrentAttributes(
 				IASSET_ATTR_parent, [this](String parent)
 				{
-					SetParentMaterial(MaterialRegistry::QueryMaterial(Asset::Resolve(parent).UnwrapOr(Asset::None)));
+					Asset asset = Asset::Resolve(parent)
+						.Err([&](auto& err) { LOG_ERROR("Could not set parent material to \"{}\"", parent); })
+						.UnwrapOr(Asset::None);
+					SetParentMaterial(MaterialRegistry::QueryMaterial(asset));
 				}
 			)
 			.EnterEachNode(IASSET_NODE_MaterialInstance_ParameterInstance, [this](AssetParser& parser)

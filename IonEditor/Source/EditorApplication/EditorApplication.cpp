@@ -85,7 +85,10 @@ namespace Ion::Editor
 		WorldInitializer worldInitializer { };
 		m_EditorMainWorld = g_Engine->CreateWorld(worldInitializer);
 
-		InitExample(nullptr);
+		AssetRegistry::RegisterVirtualRoot("[Example]", EnginePath::GetEnginePath() + L"../IonExample/Assets");
+		AssetRegistry::RegisterAssetsInVirtualRoot("[Example]");
+
+		//InitExample(nullptr);
 
 		ComponentRegistry& registry = m_EditorMainWorld->GetComponentRegistry();
 
@@ -108,7 +111,7 @@ namespace Ion::Editor
 
 		MeshEntity* meshEntity = m_EditorMainWorld->SpawnEntityOfClass<MeshEntity>();
 
-		TResourcePtr<MeshResource> meshResource = MeshResource::Query(g_ExampleModels[3].MeshAsset);
+		TResourcePtr<MeshResource> meshResource = MeshResource::Query(Asset::Resolve("[Example]/models/4pak").UnwrapOr(Asset::None));
 		TShared<Mesh> mesh = Mesh::CreateFromResource(meshResource);
 		meshEntity->SetMesh(mesh);
 		meshEntity->SetName("MaterialExampleMesh");

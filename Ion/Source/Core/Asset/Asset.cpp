@@ -12,6 +12,9 @@ namespace Ion
 {
 	// Asset ----------------------------------------------------------------------
 
+	const Asset Asset::InvalidHandle = Asset::InvalidInitializerT();
+	const Asset Asset::None = Asset();
+
 	Asset::Asset() :
 		m_AssetPtr(nullptr)
 	{
@@ -28,6 +31,51 @@ namespace Ion
 	Asset::Asset(InvalidInitializerT) :
 		m_AssetPtr(nullptr)
 	{
+	}
+
+	Asset::~Asset()
+	{
+	}
+
+	Result<Asset, IOError, FileNotFoundError> Asset::Resolve(const String& virtualPath)
+	{
+		AssetDefinition* def = AssetRegistry::Find(virtualPath);
+		if (!def)
+		{
+			FilePath path = ResolveVirtualPath(virtualPath);
+			return RegisterAsset(path, virtualPath);
+		}
+		return def->GetHandle();
+	}
+
+	Result<Asset, IOError, FileNotFoundError> Asset::RegisterExternal(const FilePath& path, const String& customVirtualPath)
+	{
+		ionassert(!path.IsEmpty());
+		ionassert(IsValidVirtualPath(customVirtualPath), "Invalid virtual path. -> {}", customVirtualPath);
+		ionassert(!IsStandardVirtualRoot(GetRootOfVirtualPath(customVirtualPath)), "Don't use a standard root in a custom virtual path.");
+
+		return RegisterAsset(path, customVirtualPath);
+	}
+
+	FilePath Asset::ResolveVirtualPath(const String& virtualPath)
+	{
+		ionassert(IsValidVirtualPath(virtualPath), "Invalid virtual path. -> {}", virtualPath);
+
+		String root = GetRootOfVirtualPath(virtualPath);
+		ionassert(AssetRegistry::IsVirtualRootRegistered(root), "Virtual root {} has not been registered.", root);
+
+		FilePath path = AssetRegistry::ResolveVirtualRoot(root);
+
+		String rest = GetRestOfVirtualPath(virtualPath) + Asset::FileExtension;
+		path += StringConverter::StringToWString(rest);
+
+		return path;
+	}
+
+	AssetDefinition* Asset::GetAssetDefinition() const
+	{
+		ionverify(IsAccessible(), "Cannot access a null handle.");
+		return AssetRegistry::IsRegistered(*this) ? m_AssetPtr.Get() : nullptr;
 	}
 
 	bool Asset::Parse(AssetInitializer& inOutInitializer)
@@ -73,78 +121,83 @@ namespace Ion
 			.OK();
 	}
 
-	Asset::~Asset()
+	Result<Asset, IOError, FileNotFoundError> Asset::RegisterAsset(const FilePath& path, const String& virtualPath)
 	{
-	}
-
-	Result<Asset, IOError, FileNotFoundError> Asset::Resolve(const String& virtualPath)
-	{
-		AssetDefinition* def = AssetRegistry::Find(virtualPath);
-		if (!def)
+		if (!path.Exists())
 		{
-			FilePath path = ResolveVirtualPath(virtualPath);
-
-			if (!path.Exists())
-			{
-				LOG_ERROR(L"The file \"{0}\" does not exist.", path.ToString());
-				ionthrow(FileNotFoundError, "The file \"{0}\" does not exist.", StringConverter::WStringToString(path.ToString()));
-			}
-
-			String assetDefinition;
-			File::ReadToString(path, assetDefinition);
-
-			AssetInitializer initializer;
-			initializer.IAssetXML = MakeShared<XMLDocument>(assetDefinition);
-			initializer.AssetDefinitionPath = path;
-			initializer.VirtualPath = virtualPath;
-
-			if (!Parse(/*in out*/ initializer))
-			{
-				LOG_ERROR(L"The file \"{0}\" could not be parsed.", path.ToString());
-				ionthrow(IOError, "The file \"{0}\" could not be parsed.", StringConverter::WStringToString(path.ToString()));
-			}
-
-			return AssetRegistry::Register(initializer).GetHandle();
-		}
-		return def->GetHandle();
-	}
-
-	FilePath Asset::ResolveVirtualPath(const String& virtualPath)
-	{
-		size_t nFirst = virtualPath.find_first_of('[', 0);
-		ionassert(nFirst == 0, "Invalid virtual path.");
-		size_t nLast = virtualPath.find_first_of(']', nFirst);
-		ionassert(nLast != String::npos, "Invalid virtual path.");
-		ionassert(nLast + 1 < virtualPath.size(), "Invalid virtual path.");
-
-		FilePath path;
-
-		StringView baseDirId = StringView(virtualPath).substr(nFirst, nLast + 1 - nFirst);
-		if (baseDirId == "[Engine]")
-			path = EnginePath::GetEngineContentPath();
-		else if (baseDirId == "[Shaders]")
-			path = EnginePath::GetShadersPath();
-		// @TODO: [Project] / [Game] path
-		else
-		{
-			ionbreak("Incorrect base dir was specified.");
-			return path;
+			LOG_ERROR(L"The file \"{0}\" does not exist.", path.ToString());
+			ionthrow(FileNotFoundError, "The file \"{0}\" does not exist.", StringConverter::WStringToString(path.ToString()));
 		}
 
-		String relativeVP = virtualPath.substr(nLast + 1) + ".iasset";
-		path += StringConverter::StringToWString(relativeVP);
+		String assetDefinition;
+		File::ReadToString(path, assetDefinition);
 
-		return path;
+		AssetInitializer initializer;
+		initializer.IAssetXML = MakeShared<XMLDocument>(assetDefinition);
+		initializer.AssetDefinitionPath = path;
+		initializer.VirtualPath = virtualPath;
+
+		if (!Parse(/*in out*/ initializer))
+		{
+			LOG_ERROR(L"The file \"{0}\" could not be parsed.", path.ToString());
+			ionthrow(IOError, "The file \"{0}\" could not be parsed.", StringConverter::WStringToString(path.ToString()));
+		}
+
+		return AssetRegistry::Register(initializer).GetHandle();
 	}
 
-	AssetDefinition* Asset::GetAssetDefinition() const
+	bool Asset::IsVirtualRoot(const StringView& root)
 	{
-		ionverify(IsAccessible(), "Cannot access a null handle.");
-		return AssetRegistry::IsRegistered(*this) ? m_AssetPtr.Get() : nullptr;
+		return root[0] == '[' && root[root.length() - 1] == ']';
 	}
 
-	const Asset Asset::InvalidHandle = Asset::InvalidInitializerT();
-	const Asset Asset::None = Asset();
+	bool Asset::IsStandardVirtualRoot(const StringView& root)
+	{
+		return
+			root == VirtualRoot::Engine  ||
+			root == VirtualRoot::Shaders ||
+			root == VirtualRoot::Game;
+	}
+
+	bool Asset::IsValidVirtualPath(const String& virtualPath)
+	{
+		if (virtualPath.find("../") != String::npos ||
+			virtualPath.find("/..") != String::npos)
+			return false;
+
+		size_t iSlash = virtualPath.find_first_of('/');
+		if (iSlash == String::npos)
+			return IsVirtualRoot(virtualPath);
+
+		StringView root = StringView(virtualPath).substr(0, iSlash);
+		if (!IsVirtualRoot(root))
+			return false;
+		// @TODO: Check the rest
+		return true;
+	}
+
+	String Asset::GetRootOfVirtualPath(const String& virtualPath)
+	{
+		ionassert(IsValidVirtualPath(virtualPath));
+
+		size_t iSlash = virtualPath.find_first_of('/');
+		if (iSlash == String::npos && IsVirtualRoot(virtualPath))
+			return virtualPath;
+		StringView root = StringView(virtualPath).substr(0, iSlash);
+		if (IsVirtualRoot(root))
+			return String(root);
+		return "";
+	}
+
+	String Asset::GetRestOfVirtualPath(const String& virtualPath)
+	{
+		ionassert(IsValidVirtualPath(virtualPath));
+
+		size_t iSlash = virtualPath.find_first_of('/');
+		if (iSlash == String::npos)
+			return "";
+		return virtualPath.substr(iSlash);
+	}
 
 	EAssetType ParseAssetTypeString(const String& sType)
 	{

@@ -160,6 +160,7 @@ namespace Ion
 
 	DEFINE_ERROR_TYPE(IOError);
 	DEFINE_ERROR_TYPE(FileNotFoundError);
+	DEFINE_ERROR_TYPE(BadArgumentError);
 	DEFINE_ERROR_TYPE(StringConversionError);
 	DEFINE_ERROR_TYPE(PlatformError);
 
@@ -252,6 +253,16 @@ namespace Ion
 			ResultBase& Err(F lambda);
 
 			/**
+			 * @brief Execute lambda on any Err variant
+			 *
+			 * @tparam F void(auto&)
+			 * @param lambda Function to execute
+			 * @return ResultBase& Reference to this result (chainable)
+			 */
+			template<typename F>
+			ResultBase& Err(F lambda);
+
+			/**
 			 * @brief Is this Result an Ok variant
 			 */
 			bool IsOk() const;
@@ -287,6 +298,9 @@ namespace Ion
 
 			template<typename TCheck, typename T, typename... E>
 			bool FoldForwardThrow(Result<T, E...>& fwdThrow);
+
+			template<typename TCheck, typename F>
+			bool FoldErr(F lambda);
 
 		protected:
 			TVariant<TRet, TErr...> m_Value;
@@ -376,6 +390,18 @@ namespace Ion
 		}
 
 		template<typename TRet, typename... TErr>
+		template<typename F>
+		inline ResultBase<TRet, TErr...>& ResultBase<TRet, TErr...>::Err(F lambda)
+		{
+			if (!std::holds_alternative<TRet>(m_Value))
+			{
+				(FoldErr<TErr>(lambda) || ...);
+			}
+
+			return *this;
+		}
+
+		template<typename TRet, typename... TErr>
 		template<typename T>
 		inline bool ResultBase<TRet, TErr...>::Is() const
 		{
@@ -449,6 +475,20 @@ namespace Ion
 					m_Value.emplace<TCheck>(std::get<TCheck>(fwdThrow.m_Value));
 					return true;
 				}
+			}
+			return false;
+		}
+
+		template<typename TRet, typename ...TErr>
+		template<typename TCheck, typename F>
+		inline bool ResultBase<TRet, TErr...>::FoldErr(F lambda)
+		{
+			static_assert(TIsAnyOfV<TCheck, TErr...>);
+
+			if (std::holds_alternative<TCheck>(m_Value))
+			{
+				lambda(std::get<TCheck>(m_Value));
+				return true;
 			}
 			return false;
 		}

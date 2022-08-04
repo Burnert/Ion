@@ -5,7 +5,7 @@
 	<Resource>
 		<Mesh guid="1dbad45b-a2ab-4ea1-ae03-d6c860b035ef">
 			<Defaults>
-				<Material index="0" asset="[Engine]/../../IonExample/Assets/Materials/4pak" />
+				<Material index="0" asset="[Example]/Materials/4pak" />
 			</Defaults>
 		</Mesh>
 	</Resource>

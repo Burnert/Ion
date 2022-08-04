@@ -30,7 +30,7 @@ namespace Ion
 		// Associate the resource with the asset
 		instance.m_AssetToResources[asset].push_back(guid);
 
-		LOG_TRACE(L"Resource has been registered (asset \"{0}\").", asset->GetDefinitionPath().ToString());
+		LOG_TRACE("Registered resource \"{}\".", asset->GetVirtualPath());
 	}
 
 	void ResourceManager::Unregister(Resource* resource)
@@ -58,8 +58,7 @@ namespace Ion
 
 		instance.m_Resources.erase(resourceGuid);
 
-		// @TODO: Fix - Gets called twice for some reason
-		LOG_TRACE(L"Resource has been unregistered (asset \"{0}\").", assetHandle->GetDefinitionPath().ToString());
+		LOG_TRACE("Unregistered resource \"{}\".", assetHandle->GetVirtualPath());
 	}
 
 	TArray<ResourcePtr> ResourceManager::FindAssociatedResources(const Asset& asset)
