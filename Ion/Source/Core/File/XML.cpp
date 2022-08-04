@@ -21,24 +21,6 @@ namespace Ion
 		InitXML(xml);
 	}
 
-	XMLDocument::XMLDocument(FileOld* xmlFile)
-	{
-		ionassert(xmlFile->Exists());
-
-		xmlFile->Open(IO::FM_Read);
-
-		int64 size = xmlFile->GetSize();
-		ionassert(size > 0, "XML file cannot be empty!");
-
-		char* xmlBuffer = new char[size + 1];
-		memset(xmlBuffer, 0, size + 1);
-		xmlFile->Read(xmlBuffer, size + 1);
-
-		xmlFile->Close();
-
-		InitXML(xmlBuffer);
-	}
-
 	XMLDocument::~XMLDocument()
 	{
 		delete[] m_XMLString;

@@ -4,69 +4,6 @@
 
 namespace Ion
 {
-	FileOld::FileOld()
-		: FileOld(TEXT(""))
-	{ }
-
-	FileOld::FileOld(const WString& filename) :
-		m_Filename(filename),
-		m_Type(IO::FT_Text),
-		m_Mode((IO::EFileMode)0),
-		m_FileSize(-1),
-		WriteNewLineType(IO::NLT_CRLF)
-	{ }
-
-	bool FileOld::LoadToString(const WString& filename, String& outStr)
-	{
-		bool bResult;
-		FileOld* file = FileOld::Create(filename);
-		bResult = file->Open(IO::FM_Read);
-		if (!bResult)
-			return false;
-
-		bResult = file->Read(outStr);
-		if (!bResult)
-			return false;
-
-		file->Close();
-
-		return true;
-	}
-
-	bool FileOld::SetFilename(const WString& filename)
-	{
-		if (SetFilename_Impl(m_Filename))
-		{
-			m_Filename = filename;
-			return true;
-		}
-		return false;
-	}
-
-	bool FileOld::SetFilename_Impl(const WString& filename)
-	{
-		return true;
-	}
-
-	bool FileOld::SetType(IO::EFileType type)
-	{
-		if (SetType_Impl(m_Type))
-		{
-			m_Type = type;
-			return true;
-		}
-		return false;
-	}
-
-	bool FileOld::SetType_Impl(IO::EFileType type)
-	{
-		return true;
-	}
-
-	//-----------------------------------------------
-	// New File API ---------------------------------
-	//-----------------------------------------------
-
 	File::File(const FilePath& path, uint8 mode)
 		: File(path.ToString(), mode)
 	{ }
@@ -146,7 +83,7 @@ namespace Ion
 
 	bool File::Read(String& outStr)
 	{
-		ionassert(m_Mode & IO::FM_Read, "Read access mode was not specified when opening the file.");
+		ionassert(m_Mode & EFileMode::Read, "Read access mode was not specified when opening the file.");
 
 		int64 count = GetSize();
 		outStr.resize(count);

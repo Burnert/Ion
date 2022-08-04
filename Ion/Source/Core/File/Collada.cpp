@@ -19,14 +19,6 @@ namespace Ion
 	{
 	}
 
-	ColladaDocument::ColladaDocument(FileOld* colladaFile)
-		: XMLDocument(colladaFile),
-		m_Data({ }),
-		m_bParsed(false)
-	{
-		ionassert(colladaFile->GetExtension() == L"dae", "The file does not have a Collada (.dae) extension. This is most likely an error.");
-	}
-
 	ColladaDocument::~ColladaDocument()
 	{
 		if (m_Data.VertexAttributes)

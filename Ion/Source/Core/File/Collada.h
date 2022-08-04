@@ -119,7 +119,6 @@ namespace Ion
 		ColladaDocument(const String& collada);
 		/* Takes the ownership of the xml character buffer */
 		ColladaDocument(char* collada);
-		ColladaDocument(FileOld* colladaFile);
 		ColladaDocument() = delete;
 		~ColladaDocument();
 

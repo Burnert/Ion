@@ -17,7 +17,6 @@ namespace Ion
 		XMLDocument(const String& xml);
 		/* Takes the ownership of the xml character buffer */
 		XMLDocument(char* xml);
-		XMLDocument(FileOld* xmlFile);
 		XMLDocument() = delete;
 		~XMLDocument();
 

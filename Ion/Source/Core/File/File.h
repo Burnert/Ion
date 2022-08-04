@@ -13,175 +13,6 @@
 
 namespace Ion
 {
-	namespace IO
-	{
-		enum EFileType : uint8
-		{
-			FT_Text   = 1,
-			FT_Binary = 2,
-			FT_Other  = 0xFF,
-		};
-
-		enum EFileMode : uint8
-		{
-			FM_Read      = Bitflag(0),
-			FM_Write     = Bitflag(1),
-			FM_Append    = Bitflag(2),
-			FM_Reset     = Bitflag(3),
-		};
-
-		enum ENewLineType : uint8
-		{
-			NLT_LF      = 1,
-			NLT_CR      = 2,
-			NLT_CRLF    = 3,
-		};
-	}
-
-	struct FileInfo
-	{
-		WString Filename;
-		WString FullPath;
-		int64 Size;
-		bool bDirectory;
-
-		FileInfo(const WString& filename, const WString& fullPath, int64 size, bool bDir) :
-			Filename(filename),
-			FullPath(fullPath),
-			Size(size),
-			bDirectory(bDir)
-		{ }
-	};
-
-	/* File interface */
-	class ION_API IFile
-	{
-		// @TODO: Add an option to create directories (also recursively)
-	public:
-		virtual bool Open(uint8 mode) = 0;
-		virtual void Close() = 0;
-		virtual bool Delete() = 0;
-
-		virtual bool Read(uint8* outBuffer, uint64 count) = 0;
-		virtual bool Read(String& outStr) = 0;
-		virtual bool ReadLine(char* outBuffer, uint64 count) = 0;
-		virtual bool ReadLine(String& outStr) = 0;
-		virtual bool Write(const uint8* inBuffer, uint64 count) = 0;
-		virtual bool Write(const String& inStr) = 0;
-		virtual bool WriteLine(const char* inBuffer, uint64 count) = 0;
-		virtual bool WriteLine(const String& inStr) = 0;
-
-		virtual bool AddOffset(int64 count) = 0;
-		virtual bool SetOffset(int64 count) = 0;
-		virtual int64 GetOffset() const = 0;
-
-		virtual int64 GetSize() const = 0;
-		virtual WString GetExtension() const = 0;
-
-		virtual bool IsDirectory() const = 0;
-		virtual TArray<FileInfo> GetFilesInDirectory() const = 0;
-		virtual WString FindInDirectoryRecursive(const WString& filename) const = 0;
-
-		virtual bool IsOpen() const = 0;
-		virtual bool Exists() const = 0;
-		virtual bool EndOfFile() const = 0;
-	};
-
-	/* Generic File abstract base class */
-	class ION_API FileOld : public IFile
-	{
-	public:
-		static FileOld* Create();
-		static FileOld* Create(const WString& filename);
-
-		FileOld();
-		FileOld(const WString& filename);
-		virtual ~FileOld() { }
-		
-		// @TODO: Add copy and move constructors
-
-		static bool LoadToString(const WString& filename, String& outStr);
-
-		// IFile:
-
-		virtual bool Read(uint8* outBuffer, uint64 count) = 0;
-		virtual bool Read(String& outStr) = 0;
-		virtual bool Write(const uint8* inBuffer, uint64 count) = 0;
-		virtual bool Write(const String& inStr) = 0;
-
-		// End of IFile:
-
-		// IFile wrappers:
-
-		inline bool Read(char* outBuffer, uint64 count)
-		{
-			return Read((uint8*)outBuffer, count);
-		}
-		template<uint64 Size>
-		inline bool Read(char(&outBuffer)[Size])
-		{
-			return Read((uint8*)outBuffer, Size - 1);
-		}
-
-		inline bool Write(const char* inBuffer, uint64 count)
-		{
-			return Write((const uint8*)inBuffer, count);
-		}
-		template<uint64 Size>
-		inline bool Write(const char(&inBuffer)[Size])
-		{
-			return Write((const uint8*)inBuffer, Size - 1);
-		}
-
-		// End of IFile wrappers
-
-		/* This is the type of the new line character that will be written in a text file. */
-		IO::ENewLineType WriteNewLineType;
-
-		bool SetFilename(const WString& filename);
-	protected:
-		/* If this function returns false, the filename will not be changed. */
-		virtual bool SetFilename_Impl(const WString& filename);
-	public:
-		FORCEINLINE WString GetFilename() const { return m_Filename; }
-
-		bool SetType(IO::EFileType type);
-	protected:
-		/* If this function returns false, the type will not be changed. */
-		virtual bool SetType_Impl(IO::EFileType type);
-	public: 
-		FORCEINLINE IO::EFileType GetType() const { return m_Type; }
-
-		FORCEINLINE bool IsFilenameValid() const { return m_Filename != TEXT(""); }
-
-	protected:
-		WString m_Filename;
-		IO::EFileType m_Type;
-		uint8 m_Mode;
-
-		// Caches ----------------------
-
-		mutable int64 m_FileSize;
-		/* Invalidates file size cache and retrieves the new size. */
-		FORCEINLINE void UpdateFileSizeCache() const { m_FileSize = -1; GetSize(); }
-		/* Sets the file size cache to the size specified. */
-		FORCEINLINE void UpdateFileSizeCache(int64 newFileSize) const { m_FileSize = newFileSize; }
-
-		// Debug only code -------------
-#ifdef ION_DEBUG
-		bool m_DebugLog = false;
-	public:
-		/* Do not call this in any other configuration other than Debug!
-		   You can wrap this call in a DEBUG() macro for automation.
-		   Enables low level logging for operations on this file. */
-		FORCEINLINE void EnableDebugLog() { m_DebugLog = true; }
-#endif
-	};
-
-	//-----------------------------------------------
-	// New File API ---------------------------------
-	//-----------------------------------------------
-
 #pragma region Enums
 
 	namespace EFileMode
@@ -220,6 +51,21 @@ namespace Ion
 #pragma endregion
 
 #pragma region FileList
+
+	struct FileInfo
+	{
+		WString Filename;
+		WString FullPath;
+		int64 Size;
+		bool bDirectory;
+
+		FileInfo(const WString& filename, const WString& fullPath, int64 size, bool bDir) :
+			Filename(filename),
+			FullPath(fullPath),
+			Size(size),
+			bDirectory(bDir)
+		{ }
+	};
 
 	struct FileList
 	{
@@ -294,11 +140,11 @@ namespace Ion
 	using NativeFile = WindowsFileData;
 #endif
 
-	class FilePath;
-
 // File class -------------------------------------------------------------------------------
 
 #pragma region File
+
+	class FilePath;
 
 	class ION_API File
 	{
@@ -457,7 +303,7 @@ namespace Ion
 
 	inline bool File::Read(uint8* outBuffer, uint64 count)
 	{
-		ionassert(m_Mode & IO::FM_Read, "Read access mode was not specified when opening the file.");
+		ionassert(m_Mode & EFileMode::Read, "Read access mode was not specified when opening the file.");
 
 		return Read_Native(outBuffer, count);
 	}
@@ -469,14 +315,14 @@ namespace Ion
 
 	inline bool File::ReadLine(char* outBuffer, uint64 count)
 	{
-		ionassert(m_Mode & IO::FM_Read, "Read access mode was not specified when opening the file.");
+		ionassert(m_Mode & EFileMode::Read, "Read access mode was not specified when opening the file.");
 
 		return ReadLine_Native(outBuffer, count);
 	}
 
 	inline bool File::ReadLine(String& outStr)
 	{
-		ionassert(m_Mode & IO::FM_Read, "Read access mode was not specified when opening the file.");
+		ionassert(m_Mode & EFileMode::Read, "Read access mode was not specified when opening the file.");
 
 		return ReadLine_Native(outStr);
 	}
@@ -495,7 +341,7 @@ namespace Ion
 
 	inline bool File::Write(const uint8* inBuffer, uint64 count)
 	{
-		ionassert(m_Mode & IO::FM_Write, "Write access mode was not specified when opening the file.");
+		ionassert(m_Mode & EFileMode::Write, "Write access mode was not specified when opening the file.");
 
 		return Write_Native(inBuffer, count);
 	}
@@ -512,7 +358,7 @@ namespace Ion
 
 	inline bool File::WriteLine(const char* inBuffer, uint64 count, ENewLineType newLineType)
 	{
-		ionassert(m_Mode & IO::FM_Write, "Write access mode was not specified when opening the file.");
+		ionassert(m_Mode & EFileMode::Write, "Write access mode was not specified when opening the file.");
 
 		return WriteLine_Native(inBuffer, count, newLineType);
 	}
