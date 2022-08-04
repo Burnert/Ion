@@ -125,21 +125,6 @@ namespace Ion
 
 #pragma endregion
 
-#if ION_PLATFORM_WINDOWS
-	struct WindowsFileData
-	{
-		friend class File;
-	private:
-		WindowsFileData() :
-			m_FileHandle((void*)(int64)-1 /* INVALID_HANDLE_VALUE */)
-		{ }
-		
-		void* m_FileHandle;
-	};
-
-	using NativeFile = WindowsFileData;
-#endif
-
 // File class -------------------------------------------------------------------------------
 
 #pragma region File
@@ -270,7 +255,9 @@ namespace Ion
 		bool AddOffset_Native(int64 count);
 		bool SetOffset_Native(int64 count);
 
-		NativeFile m_NativeFile;
+		void SetNativePointer_Native();
+
+		void* m_NativePointer;
 
 		static const ENewLineType s_DefaultNewLineType;
 
@@ -279,6 +266,8 @@ namespace Ion
 #else
 		static constexpr wchar File::s_IllegalCharacters[] = { L'\0' };
 #endif
+		friend void*& GetNative(File* file);
+		friend void* const& GetNative(const File* file);
 
 	// End of Platform specific
 

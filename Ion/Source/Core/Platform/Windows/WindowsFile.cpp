@@ -24,7 +24,7 @@ LOG_ERROR(TEXT("File '{0}' cannot be written because the Write access mode was n
 #endif
 
 #define _VERIFY_HANDLE(...) \
-if (m_NativeFile.m_FileHandle == INVALID_HANDLE_VALUE) \
+if (GetNative(this) == INVALID_HANDLE_VALUE) \
 { \
 	_PRINT_HANDLE_ERROR(); \
 	return __VA_ARGS__; \
@@ -36,11 +36,21 @@ if (m_NativeFile.m_FileHandle == INVALID_HANDLE_VALUE) \
 
 
 namespace Ion
-{ 
+{
+	static HANDLE& GetNative(File* file)
+	{
+		return file->m_NativePointer;
+	}
+
+	static const HANDLE& GetNative(const File* file)
+	{
+		return file->m_NativePointer;
+	}
+
 	bool File::Open_Native() // static
 	{
 		// Handle errors first
-		if (m_NativeFile.m_FileHandle != INVALID_HANDLE_VALUE)
+		if (GetNative(this) != INVALID_HANDLE_VALUE)
 		{
 			LOG_ERROR(TEXT("File '{0}' is already open!"), m_FilePath);
 			return false;
@@ -79,9 +89,9 @@ namespace Ion
 			}
 		}
 
-		m_NativeFile.m_FileHandle = CreateFile(m_FilePath.c_str(), dwDesiredAccess, 0, NULL, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, NULL);
+		GetNative(this) = CreateFile(m_FilePath.c_str(), dwDesiredAccess, 0, NULL, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, NULL);
 
-		if (m_NativeFile.m_FileHandle == INVALID_HANDLE_VALUE)
+		if (GetNative(this) == INVALID_HANDLE_VALUE)
 		{
 			DWORD lastError = GetLastError();
 			if (lastError != ERROR_FILE_NOT_FOUND)
@@ -121,11 +131,11 @@ namespace Ion
 
 	bool File::Close_Native()
 	{
-		CloseHandle(m_NativeFile.m_FileHandle);
+		CloseHandle(GetNative(this));
 		_DEBUG_LOG(LOG_TRACE(TEXT("File '{0}' was closed."), m_FilePath));
 
 		//*(size_t*)&m_NativeFile.m_FileHandle = (size_t)INVALID_HANDLE_VALUE;
-		m_NativeFile.m_FileHandle = INVALID_HANDLE_VALUE;
+		GetNative(this) = INVALID_HANDLE_VALUE;
 
 		return true;
 	}
@@ -137,7 +147,7 @@ namespace Ion
 		_VERIFY_HANDLE(false);
 
 		DWORD bytesRead;
-		if (!ReadFile(m_NativeFile.m_FileHandle, outBuffer, (DWORD)count, &bytesRead, NULL))
+		if (!ReadFile(GetNative(this), outBuffer, (DWORD)count, &bytesRead, NULL))
 		{
 			Windows::PrintLastError(TEXT("Cannot read file '{0}'!"), m_FilePath);
 			return false;
@@ -160,7 +170,7 @@ namespace Ion
 		int64 initialOffset = m_Offset;
 
 		DWORD bytesRead;
-		if (!ReadFile(m_NativeFile.m_FileHandle, outBuffer, (DWORD)count, &bytesRead, NULL))
+		if (!ReadFile(GetNative(this), outBuffer, (DWORD)count, &bytesRead, NULL))
 		{
 			Windows::PrintLastError(TEXT("Cannot read file '{0}'!"), m_FilePath);
 			return false;
@@ -304,7 +314,7 @@ namespace Ion
 		_VERIFY_HANDLE(false);
 
 		DWORD bytesWritten;
-		if (!WriteFile(m_NativeFile.m_FileHandle, inBuffer, (DWORD)count, &bytesWritten, NULL))
+		if (!WriteFile(GetNative(this), inBuffer, (DWORD)count, &bytesWritten, NULL))
 		{
 			Windows::PrintLastError(TEXT("Cannot write file '{0}'!"), m_FilePath);
 			return false;
@@ -346,7 +356,7 @@ namespace Ion
 		}
 
 		ulong bytesWritten;
-		if (!WriteFile(m_NativeFile.m_FileHandle, tempBuffer, (DWORD)count + bCRLF, &bytesWritten, NULL))
+		if (!WriteFile(GetNative(this), tempBuffer, (DWORD)count + bCRLF, &bytesWritten, NULL))
 		{
 			Windows::PrintLastError(TEXT("Cannot write file '{0}'!"), m_FilePath);
 			return false;
@@ -372,7 +382,7 @@ namespace Ion
 	{
 		_VERIFY_HANDLE(false);
 
-		if (!SetFilePointerEx(m_NativeFile.m_FileHandle, *(LARGE_INTEGER*)&count, (LARGE_INTEGER*)&m_Offset, FILE_CURRENT))
+		if (!SetFilePointerEx(GetNative(this), *(LARGE_INTEGER*)&count, (LARGE_INTEGER*)&m_Offset, FILE_CURRENT))
 		{
 			Windows::PrintLastError(TEXT("'{0}': Cannot add file offset!"), m_FilePath);
 			return false;
@@ -384,12 +394,17 @@ namespace Ion
 	{
 		_VERIFY_HANDLE(false);
 
-		if (!SetFilePointerEx(m_NativeFile.m_FileHandle, *(LARGE_INTEGER*)&m_Offset, (LARGE_INTEGER*)&m_Offset, FILE_BEGIN))
+		if (!SetFilePointerEx(GetNative(this), *(LARGE_INTEGER*)&m_Offset, (LARGE_INTEGER*)&m_Offset, FILE_BEGIN))
 		{
 			Windows::PrintLastError(TEXT("'{0}': Cannot set file offset!"), m_FilePath);
 			return false;
 		}
 		return true;
+	}
+
+	void File::SetNativePointer_Native()
+	{
+		GetNative(this) = INVALID_HANDLE_VALUE;
 	}
 
 	int64 File::GetSize() const
@@ -398,7 +413,7 @@ namespace Ion
 
 		if (m_FileSize == -1)
 		{
-			GetFileSizeEx(m_NativeFile.m_FileHandle, (LARGE_INTEGER*)&m_FileSize);
+			GetFileSizeEx(GetNative(this), (LARGE_INTEGER*)&m_FileSize);
 
 			_DEBUG_LOG(LOG_TRACE(TEXT("'{0}': New file size cache = {1} bytes."), m_FilePath, m_FileSize));
 		}

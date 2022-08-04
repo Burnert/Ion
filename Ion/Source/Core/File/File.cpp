@@ -18,6 +18,8 @@ namespace Ion
 	{
 		ionassert(!filename.empty(), "The filename cannot be empty.");
 
+		SetNativePointer_Native();
+
 		UpdateFileExtensionCache();
 
 		if (!(m_Mode & EFileMode::DoNotOpen))
