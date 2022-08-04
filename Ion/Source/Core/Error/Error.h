@@ -19,7 +19,7 @@ namespace Ion
 #define _ABORT_LOG_PATTERN        "({0}) => false\n\nFunction: {1}\nAt {2}:{3}\n"
 #define _ABORT_LOG_PATTERN_NOEXPR "Function: {1}\nAt {2}:{3}\n"
 
-#if ION_RELEASE || ION_DIST
+#if ION_FORCE_ABORT_MSGBOX || ION_RELEASE || ION_DIST
 #define _SHOW_ABORT_MESSAGE_BOX 1
 #else
 #define _SHOW_ABORT_MESSAGE_BOX 0
@@ -578,7 +578,7 @@ namespace Ion
 #define ionbreak(...) (void)((Ion::ErrorHandler::Break(__VA_ARGS__), 0) || (debugbreak(), 0))
 
 #undef ionassert
-#if ION_DEBUG
+#if ION_DEBUG && ION_ENABLE_DEBUG_ASSERTS
 /**
  * @brief Break the debugger if the condition is not satisfied.
  * Does nothing on non-debug builds
@@ -606,19 +606,24 @@ namespace Ion
 		inline static String _FormatThrowMessage(const String& format, Args&&... args) { return fmt::format(format, Forward<Args>(args)...); }
 	}
 
+#if ION_BREAK_ON_THROW
+#define _breakthrow debugbreak();
+#else
+#define _breakthrow
+#endif
+
 #if ION_DEBUG
+#define _ionthrow(error, ...) return [&](_ASSERT_ARGS) { auto err = error(Ion::_Detail::_FormatThrowMessage(__VA_ARGS__)); Ion::ErrorHandler::PrintErrorThrow(_FWD_ASSERT_ARGS, err); _breakthrow return err; }(_PASS_ASSERT_ARGS(0))
+#else
+#define _ionthrow(error, ...) return [&] { auto err = error(Ion::_Detail::_FormatThrowMessage(__VA_ARGS__)); _breakthrow return err; }()
+#endif
+
 /**
  * @brief Throws (returns) a Result type with a specified Error type as a value.
  * Always prints the Error in Debug configuration
  */
-#define ionthrow(error, ...) return [&] { auto err = error(Ion::_Detail::_FormatThrowMessage(__VA_ARGS__)); Ion::ErrorHandler::PrintErrorThrow(_PASS_ASSERT_ARGS(0), err); return err; }()
-#else
-/**
- * @brief Throws (returns) a Result type with a specified error type as a value.
- * Always prints the Error in Debug configuration
- */
-#define ionthrow(error, ...) return error(Ion::_Detail::_FormatThrowMessage(__VA_ARGS__))
-#endif
+#define ionthrow(error, ...) _ionthrow(error, __VA_ARGS__)
+
 /**
  * @brief Throws an Error if the condition is satisfied.
  */

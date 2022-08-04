@@ -26,23 +26,20 @@
 // --------------------------------------------------------------------------------------------------------
 // Assertion
 // --------------------------------------------------------------------------------------------------------
-// Default: ionassert enabled on Debug, ionassertnd enabled everywhere, ionexcept enabled everywhere
-// --------------------------------------------------------------------------------------------------------
 
 /* Enables Debug assertions
  * Debug assertions usually check for user error or unexpected edge cases.
+ * This only affects the ionassert macro.
  * Default: 1 */
 #define ION_ENABLE_DEBUG_ASSERTS 1
-/* Disables all assertions and removes ionexcept reporting
- * Not recommended as it may generate unexpected behavior
+/* Enables debug break on error throws, so they can be investigated.
+ * This only affects the ionthrow / ionthrowif macros, not the fwdthrow.
  * Default: 0 */
-#define ION_FORCE_NO_ASSERTS 0
-/* Enables debug break on exceptions, so they can be investigated
+#define ION_BREAK_ON_THROW 0
+/* Always show a platform message box on assertions.
+ * Normally, they don't show on debug builds.
  * Default: 0 */
-#define ION_BREAK_ON_EXCEPT 0
-/* Always shows platform message box on assertions
- * Default: 0 */
-#define ION_FORCE_ASSERT_MSGBOX 0
+#define ION_FORCE_ABORT_MSGBOX 0
 
 // --------------------------------------------------------------------------------------------------------
 // Renderer
