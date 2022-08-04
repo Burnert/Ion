@@ -161,7 +161,7 @@ namespace Ion
 
 	void FilePath::Set(const WString& path)
 	{
-		ionassert(path.size() < MaxPathLength);
+		//ionassert(path.size() < MaxPathLength);
 
 		m_Path = SplitPathName(path);
 		UpdatePathName();
@@ -176,7 +176,7 @@ namespace Ion
 	bool FilePath::ChangeDirectory(const WString& directory)
 	{
 		WString strippedName(StripSlashes(directory));
-		ionassert(File::IsFileNameLegal(strippedName));
+		ionassert(File::IsFileNameLegal(strippedName) || (m_Path.empty() && IsDriveLetter(strippedName)));
 
 		if (strippedName == L".")
 		{
@@ -186,20 +186,19 @@ namespace Ion
 		if (strippedName == L"..")
 		{
 			Back();
+			return true;
 		}
-		else
+
+		WString newPath = m_PathName.empty() ? strippedName : m_PathName + L"/" + strippedName;
+		if (m_bChecked && !Exists(newPath.c_str()))
 		{
-			WString newPath = m_PathName.empty() ? strippedName : m_PathName + L"/" + strippedName;
-			if (m_bChecked && !Exists(newPath.c_str()))
-			{
-				LOG_ERROR(L"Path \"{0}\" does not exist!", newPath);
-				ionassert(false, "This should not happen when using validated path operations.");
-				return false;
-			}
-			// Add the directory to the end instead of calling UpdatePathName
-			m_PathName = newPath;
-			m_Path.emplace_back(Move(strippedName));
+			LOG_ERROR(L"Path \"{0}\" does not exist!", newPath);
+			ionbreak("This should not happen when using validated path operations.");
+			return false;
 		}
+		// Add the directory to the end instead of calling UpdatePathName
+		m_PathName = newPath;
+		m_Path.emplace_back(Move(strippedName));
 
 		return true;
 	}
@@ -228,25 +227,19 @@ namespace Ion
 
 	void FilePath::Back()
 	{
-		if (m_Path.empty())
+		while (!m_Path.empty() && m_Path.back() == L".")
+			m_Path.pop_back();
+
+		if (m_Path.empty() ||
+			std::all_of(m_Path.begin(), m_Path.end(), [](const WString& dir) { return dir == L".."; }))
 		{
 			m_Path.push_back(L"..");
 		}
 		else
 		{
-			bool bOnlyBack = true;
-			for (const WString& dir : m_Path)
-			{
-				if (dir != L"..")
-				{
-					bOnlyBack = false;
-					break;
-				}
-			}
-			if (!bOnlyBack)
-				m_Path.pop_back();
-			else
-				m_Path.push_back(L"..");
+			ionassert(m_Path.size() > 1 || !IsDriveLetter(m_Path[0]),
+				"Cannot go back if the only directory is a drive letter.");
+			m_Path.pop_back();
 		}
 		UpdatePathName();
 	}
@@ -266,8 +259,11 @@ namespace Ion
 		return false;
 	}
 
-	FilePath FilePath::AsRelativeFrom(const FilePath& baseDir) const
+	FilePath FilePath::RelativeTo(const FilePath& baseDir) const
 	{
+		ionassert(IsAbsolute());
+		ionassert(baseDir.IsAbsolute());
+
 		FilePath relative;
 
 		auto itBaseDir = baseDir.m_Path.begin();
@@ -303,10 +299,9 @@ namespace Ion
 			return FilePath();
 
 		FilePath fixed;
-		fixed.Set(m_Path.at(0));
-		for (auto it = m_Path.begin() + 1; it != m_Path.end(); ++it)
+		for (const WString& dir : m_Path)
 		{
-			fixed.ChangeDirectory(*it);
+			fixed.ChangeDirectory(dir);
 		}
 		return fixed;
 	}
@@ -328,8 +323,16 @@ namespace Ion
 
 	bool FilePath::IsRelative() const
 	{
-		// @TODO: Implement this
-		return true;
+		// Empty path is like ".", so it's relative.
+		if (IsEmpty())
+			return true;
+
+		return !IsDriveLetter_Native(m_Path[0]);
+	}
+
+	bool FilePath::IsAbsolute() const
+	{
+		return !IsRelative();
 	}
 
 	FileList FilePath::ListFiles(const wchar* path)
@@ -405,6 +408,7 @@ namespace Ion
 			{
 				if (!bEmptySegment)
 				{
+					ionassert(File::IsFileNameLegal(segment) || (pathArray.empty() && IsDriveLetter(segment)));
 					pathArray.emplace_back<WString>(segment);
 					memset(segment, 0, (size + 1) * sizeof(wchar));
 				}
@@ -421,7 +425,7 @@ namespace Ion
 		// Add the last element if there wasn't a slash at the end
 		if (!bEmptySegment)
 		{
-			//ionassert(File::IsFileNameLegal(segment));
+			ionassert(File::IsFileNameLegal(segment) || (pathArray.empty() && IsDriveLetter(segment)));
 			pathArray.emplace_back<WString>(segment);
 		}
 
@@ -493,23 +497,11 @@ namespace Ion
 	void FilePath::UpdatePathName() const
 	{
 		m_PathName.clear();
-		uint32 last = (uint32)m_Path.size() - 1;
-		uint32 current = 0;
-		for (const WString& dir : m_Path)
+		for (auto it = m_Path.begin(); it != m_Path.end(); ++it)
 		{
-			uint64 sizeInWords = dir.size() + 2;
-			uint64 size = sizeInWords * sizeof(wchar);
-			wchar* segment = (wchar*)_alloca(size);
-			memset(segment, 0, size);
-
-			wcscpy_s(segment, sizeInWords, dir.c_str());
-			if (current != last)
-			{
-				wcscat_s(segment, sizeInWords, L"/");
-			}
-
-			m_PathName += segment;
-			current++;
+			m_PathName += *it;
+			if (it != m_Path.end() - 1)
+				m_PathName += L"/";
 		}
 	}
 }

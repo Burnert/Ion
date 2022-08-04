@@ -147,18 +147,14 @@ namespace Ion
 		// Read functions
 
 		bool Read(uint8* outBuffer, uint64 count);
-
 		bool Read(char* outBuffer, uint64 count);
-
 		bool Read(String& outStr);
 
 		bool ReadLine(char* outBuffer, uint64 count);
-
 		bool ReadLine(String& outStr);
 
 		template<uint64 Size>
 		bool Read(uint8(&outBuffer)[Size]);
-
 		template<uint64 Size>
 		bool Read(char(&outBuffer)[Size]);
 
@@ -168,27 +164,21 @@ namespace Ion
 		// Write functions
 
 		bool Write(const uint8* inBuffer, uint64 count);
-
 		bool Write(const char* inBuffer, uint64 count);
-
 		bool Write(const String& inStr);
 
 		bool WriteLine(const char* inBuffer, uint64 count, ENewLineType newLineType = s_DefaultNewLineType);
-
 		bool WriteLine(const String& inStr, ENewLineType newLineType = s_DefaultNewLineType);
 
 		template<uint64 Size>
 		bool Write(const uint8(&inBuffer)[Size]);
-
 		template<uint64 Size>
 		bool Write(const char(&inBuffer)[Size]);
 
 		// Other functions
 
 		bool AddOffset(int64 count);
-
 		bool SetOffset(int64 count);
-
 		int64 GetOffset() const;
 
 		int64 GetSize() const;
@@ -407,9 +397,8 @@ namespace Ion
 
 	class ION_API FilePath
 	{
-		friend class File;
 	public:
-		static constexpr const uint64 MaxPathLength = 2000;
+		//static constexpr const uint64 MaxPathLength = 2000;
 
 		FilePath();
 		FilePath(const WString& path, EFilePathValidation validation = EFilePathValidation::Unchecked);
@@ -426,27 +415,56 @@ namespace Ion
 
 		void Back();
 
+		/**
+		 * @brief Creates a directory on disk with a given name.
+		 * 
+		 * @param name Name of the directory
+		 * @return true if the directory has been made successfully.
+		 */
 		bool Make(const WString& name);
 
 		bool Rename(const WString& newName);
 
+		/**
+		 * @brief Deletes the file / directory on disk.
+		 * Doesn't delete the whole directory with files recursively, unless bForce is true.
+		 * 
+		 * @param bForce Whether to force delete the whole directory
+		 * @return true if the file has been deleted
+		 */
 		bool Delete(bool bForce = false);
 
 		/**
-		 * @brief Get a relative path with a specified base directory.
+		 * @brief Get this FilePath as a relative path to a specified base directory.
 		 * e.g. "C:/Programs/Base/Assets/Textures" (baseDir = "C:/Programs/Base") -> "Assets/Textures"
+		 * This FilePath must be absolute.
 		 * 
-		 * @param baseDir base directory
+		 * @param baseDir base directory, must be absolute
 		 * @return FilePath relative file path
 		 */
-		FilePath AsRelativeFrom(const FilePath& baseDir) const;
+		FilePath RelativeTo(const FilePath& baseDir) const;
 
+		/**
+		 * @brief Removes ".." and "." from the middle of the path, keeping the path intact.
+		 * e.g. "Ion/Ion/../IonExample/Assets" -> "Ion/IonExample/Assets"
+		 * 
+		 * @return FilePath Fixed file path
+		 */
 		FilePath Fix() const;
 
+		/**
+		 * @brief Checks if the file / directory exists on disk
+		 */
 		bool Exists() const;
 
+		/**
+		 * @brief Checks if the file path points to a directory on disk.
+		 */
 		bool IsDirectory() const;
 
+		/**
+		 * @brief Checks if the file path points to a file on disk.
+		 */
 		bool IsFile() const;
 
 		bool IsEmpty() const;
@@ -456,6 +474,7 @@ namespace Ion
 		TShared<TTreeNode<FileInfo>> Tree() const;
 
 		bool IsRelative() const;
+		bool IsAbsolute() const;
 
 		WString LastElement() const;
 
@@ -464,16 +483,15 @@ namespace Ion
 		const WString& ToString() const;
 
 		static bool Exists(const wchar* path);
-
 		static bool Exists(const WString& path);
 
 		static bool IsDirectory(const wchar* path);
-
 		static bool IsDirectory(const WString& path);
 
 		static bool IsFile(const wchar* path);
-
 		static bool IsFile(const WString& path);
+
+		static bool IsDriveLetter(const WString& drive);
 
 		static FileList ListFiles(const wchar* path);
 
@@ -507,9 +525,10 @@ namespace Ion
 		bool Make_Native(const wchar* name);
 		bool Delete_Native();
 		bool DeleteForce_Native();
+		TArray<FileInfo> ListFiles_Native() const;
 		static bool Exists_Native(const wchar* path);
 		static bool IsDirectory_Native(const wchar* path);
-		TArray<FileInfo> ListFiles_Native() const;
+		static bool IsDriveLetter_Native(const WString& drive);
 
 	private:
 		TArray<WString> m_Path;
@@ -517,6 +536,8 @@ namespace Ion
 		
 		mutable WString m_PathName;
 		void UpdatePathName() const;
+
+		friend class File;
 	};
 
 	inline bool FilePath::Make(const WString& name)
@@ -599,6 +620,11 @@ namespace Ion
 	inline bool FilePath::IsFile(const WString& path)
 	{
 		return IsFile(path.c_str());
+	}
+
+	inline bool FilePath::IsDriveLetter(const WString& drive)
+	{
+		return IsDriveLetter_Native(drive);
 	}
 
 	inline FilePath& FilePath::operator=(const WString& str)

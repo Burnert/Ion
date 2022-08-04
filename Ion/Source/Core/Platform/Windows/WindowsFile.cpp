@@ -477,16 +477,6 @@ namespace Ion
 		return Delete_Native();
 	}
 
-	bool FilePath::Exists_Native(const wchar* path)
-	{
-		return GetFileAttributes(path) != INVALID_FILE_ATTRIBUTES;
-	}
-
-	bool FilePath::IsDirectory_Native(const wchar* path)
-	{
-		return GetFileAttributes(path) & FILE_ATTRIBUTE_DIRECTORY;
-	}
-
 	TArray<FileInfo> FilePath::ListFiles_Native() const
 	{
 		TArray<FileInfo> files;
@@ -514,9 +504,29 @@ namespace Ion
 			bool bDirectory = ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
 
 			files.emplace_back(ffd.cFileName, fullPath, fileSize.QuadPart, bDirectory);
-		}
-		while (FindNextFile(hFound, &ffd));
+		} while (FindNextFile(hFound, &ffd));
 
 		return files;
+	}
+
+	bool FilePath::Exists_Native(const wchar* path)
+	{
+		return GetFileAttributes(path) != INVALID_FILE_ATTRIBUTES;
+	}
+
+	bool FilePath::IsDirectory_Native(const wchar* path)
+	{
+		return GetFileAttributes(path) & FILE_ATTRIBUTE_DIRECTORY;
+	}
+
+	bool FilePath::IsDriveLetter_Native(const WString& drive)
+	{
+		if (drive.size() != 2)
+			return false;
+
+		return 
+			((drive[0] >= L'A' && drive[0] <= L'Z')  ||
+			 (drive[0] >= L'a' && drive[0] <= L'z')) &&
+			drive[1] == L':';
 	}
 }

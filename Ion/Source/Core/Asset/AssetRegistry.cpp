@@ -137,7 +137,7 @@ namespace Ion
 		for (TTreeNode<FileInfo>*& assetNode : assets)
 		{
 			// Get the relative path
-			FilePath relativePath = FilePath(assetNode->Get().FullPath).AsRelativeFrom(rootDir);
+			FilePath relativePath = FilePath(assetNode->Get().FullPath).RelativeTo(rootDir);
 
 			// Remove the extension
 			String last = StringConverter::WStringToString(relativePath.LastElement());
