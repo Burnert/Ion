@@ -127,6 +127,23 @@ namespace Ion
 		Close_Native();
 	}
 
+	bool File::ReadToString(const FilePath& filePath, String& outString)
+	{
+		return ReadToString(filePath.ToString(), outString);
+	}
+
+	bool File::ReadToString(const WString& filePath, String& outString)
+	{
+		if (!(FilePath::Exists(filePath) && FilePath::IsFile(filePath)))
+		{
+			LOG_ERROR(L"The file \"{0}\" does not exist or is a directory.", filePath);
+			return false;
+		}
+
+		File file(filePath, EFileMode::Read);
+		return file.Read(outString);
+	}
+
 	bool File::Read(String& outStr)
 	{
 		ionassert(m_Mode & IO::FM_Read, "Read access mode was not specified when opening the file.");
@@ -270,6 +287,31 @@ namespace Ion
 		return bChanged;
 	}
 
+	void FilePath::Back()
+	{
+		if (m_Path.empty())
+		{
+			m_Path.push_back(L"..");
+		}
+		else
+		{
+			bool bOnlyBack = true;
+			for (const WString& dir : m_Path)
+			{
+				if (dir != L"..")
+				{
+					bOnlyBack = false;
+					break;
+				}
+			}
+			if (!bOnlyBack)
+				m_Path.pop_back();
+			else
+				m_Path.push_back(L"..");
+		}
+		UpdatePathName();
+	}
+
 	bool FilePath::Delete(bool bForce)
 	{
 		if (bForce)
@@ -328,23 +370,6 @@ namespace Ion
 			fixed.ChangeDirectory(*it);
 		}
 		return fixed;
-	}
-
-	bool File::ReadToString(const FilePath& filePath, String& outString)
-	{
-		return ReadToString(filePath.ToString(), outString);
-	}
-
-	bool File::ReadToString(const WString& filePath, String& outString)
-	{
-		if (!(FilePath::Exists(filePath) && FilePath::IsFile(filePath)))
-		{
-			LOG_ERROR(L"The file \"{0}\" does not exist or is a directory.", filePath);
-			return false;
-		}
-
-		File file(filePath, EFileMode::Read);
-		return file.Read(outString);
 	}
 
 	FileList FilePath::ListFiles() const

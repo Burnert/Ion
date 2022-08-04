@@ -182,6 +182,8 @@ namespace Ion
 	// New File API ---------------------------------
 	//-----------------------------------------------
 
+#pragma region Enums
+
 	namespace EFileMode
 	{
 		enum Type : uint8
@@ -214,6 +216,10 @@ namespace Ion
 		Unchecked = 0,
 		Checked   = 1,
 	};
+
+#pragma endregion
+
+#pragma region FileList
 
 	struct FileList
 	{
@@ -271,6 +277,8 @@ namespace Ion
 		return FileList(Move(filtered));
 	}
 
+#pragma endregion
+
 #if ION_PLATFORM_WINDOWS
 	struct WindowsFileData
 	{
@@ -288,9 +296,12 @@ namespace Ion
 
 	class FilePath;
 
+// File class -------------------------------------------------------------------------------
+
+#pragma region File
+
 	class ION_API File
 	{
-		friend class FilePath;
 	public:
 		File(const FilePath& path, uint8 mode = EFileMode::DoNotOpen);
 		File(const WString& filename, uint8 mode = EFileMode::DoNotOpen);
@@ -298,129 +309,62 @@ namespace Ion
 		bool Open(uint8 mode);
 
 		static bool Delete(const FilePath& path);
-		static inline bool Delete(const WString& filename)
-		{
-			return Delete_Native(filename);
-		}
+		static bool Delete(const WString& filename);
 
 		void Close();
 
 		// Read functions
 
-		inline bool Read(uint8* outBuffer, uint64 count)
-		{
-			ionassert(m_Mode & IO::FM_Read, "Read access mode was not specified when opening the file.");
+		bool Read(uint8* outBuffer, uint64 count);
 
-			return Read_Native(outBuffer, count);
-		}
-
-		inline bool Read(char* outBuffer, uint64 count)
-		{
-			return Read((uint8*)outBuffer, count);
-		}
+		bool Read(char* outBuffer, uint64 count);
 
 		bool Read(String& outStr);
 
-		inline bool ReadLine(char* outBuffer, uint64 count)
-		{
-			ionassert(m_Mode & IO::FM_Read, "Read access mode was not specified when opening the file.");
+		bool ReadLine(char* outBuffer, uint64 count);
 
-			return ReadLine_Native(outBuffer, count);
-		}
-
-		inline bool ReadLine(String& outStr)
-		{
-			ionassert(m_Mode & IO::FM_Read, "Read access mode was not specified when opening the file.");
-
-			return ReadLine_Native(outStr);
-		}
+		bool ReadLine(String& outStr);
 
 		template<uint64 Size>
-		inline bool Read(uint8(&outBuffer)[Size])
-		{
-			return Read((uint8*)outBuffer, Size);
-		}
+		bool Read(uint8(&outBuffer)[Size]);
 
 		template<uint64 Size>
-		inline bool Read(char(&outBuffer)[Size])
-		{
-			return Read((uint8*)outBuffer, Size - 1);
-		}
+		bool Read(char(&outBuffer)[Size]);
 
 		static bool ReadToString(const FilePath& filePath, String& outString);
 		static bool ReadToString(const WString& filePath, String& outString);
 
 		// Write functions
 
-		inline bool Write(const uint8* inBuffer, uint64 count)
-		{
-			ionassert(m_Mode & IO::FM_Write, "Write access mode was not specified when opening the file.");
+		bool Write(const uint8* inBuffer, uint64 count);
 
-			return Write_Native(inBuffer, count);
-		}
+		bool Write(const char* inBuffer, uint64 count);
 
-		inline bool Write(const char* inBuffer, uint64 count)
-		{
-			return Write((const uint8*)inBuffer, count);
-		}
+		bool Write(const String& inStr);
 
-		inline bool Write(const String& inStr)
-		{
-			return Write(inStr.c_str(), inStr.size());
-		}
+		bool WriteLine(const char* inBuffer, uint64 count, ENewLineType newLineType = s_DefaultNewLineType);
 
-		inline bool WriteLine(const char* inBuffer, uint64 count, ENewLineType newLineType = s_DefaultNewLineType)
-		{
-			ionassert(m_Mode & IO::FM_Write, "Write access mode was not specified when opening the file.");
-
-			return WriteLine_Native(inBuffer, count, newLineType);
-		}
-
-		inline bool WriteLine(const String& inStr, ENewLineType newLineType = s_DefaultNewLineType)
-		{
-			return WriteLine(inStr.c_str(), inStr.size() + 1, newLineType);
-		}
+		bool WriteLine(const String& inStr, ENewLineType newLineType = s_DefaultNewLineType);
 
 		template<uint64 Size>
-		inline bool Write(const uint8(&inBuffer)[Size])
-		{
-			return Write((const uint8*)inBuffer, Size);
-		}
+		bool Write(const uint8(&inBuffer)[Size]);
 
 		template<uint64 Size>
-		inline bool Write(const char(&inBuffer)[Size])
-		{
-			return Write((const uint8*)inBuffer, Size - 1);
-		}
+		bool Write(const char(&inBuffer)[Size]);
 
 		// Other functions
 
-		inline bool AddOffset(int64 count)
-		{
-			return AddOffset_Native(count);
-		}
+		bool AddOffset(int64 count);
 
-		inline bool SetOffset(int64 count)
-		{
-			return SetOffset_Native(count);
-		}
+		bool SetOffset(int64 count);
 
-		inline int64 GetOffset() const
-		{
-			return m_Offset;
-		}
+		int64 GetOffset() const;
 
 		int64 GetSize() const;
 
-		inline const WString& GetExtension() const
-		{
-			return m_FileExtension;
-		}
+		const WString& GetExtension() const;
 
-		inline bool IsOpen() const
-		{
-			return m_bOpen;
-		}
+		bool IsOpen() const;
 
 		bool Exists() const;
 
@@ -430,10 +374,7 @@ namespace Ion
 
 		FilePath GetFilePath(EFilePathValidation validation = EFilePathValidation::Unchecked) const;
 
-		inline const WString& GetFullPath() const
-		{
-			return m_FilePath;
-		}
+		const WString& GetFullPath() const;
 
 		static bool IsFileNameLegal(const WString& name);
 
@@ -451,7 +392,7 @@ namespace Ion
 		uint8 m_Mode;
 		bool m_bOpen;
 
-		int64 m_Offset; 
+		int64 m_Offset;
 
 	// Caches
 
@@ -506,11 +447,128 @@ namespace Ion
 		FORCEINLINE void EnableDebugLog() { m_DebugLog = true; }
 		FORCEINLINE void EnableGlobalDebugLog() { s_GlobalDebugLog = true; }
 #endif
+		friend class FilePath;
 	};
 
-#if ION_PLATFORM_WINDOWS
+	inline bool File::Delete(const WString& filename)
+	{
+		return Delete_Native(filename);
+	}
 
-#endif
+	inline bool File::Read(uint8* outBuffer, uint64 count)
+	{
+		ionassert(m_Mode & IO::FM_Read, "Read access mode was not specified when opening the file.");
+
+		return Read_Native(outBuffer, count);
+	}
+
+	inline bool File::Read(char* outBuffer, uint64 count)
+	{
+		return Read((uint8*)outBuffer, count);
+	}
+
+	inline bool File::ReadLine(char* outBuffer, uint64 count)
+	{
+		ionassert(m_Mode & IO::FM_Read, "Read access mode was not specified when opening the file.");
+
+		return ReadLine_Native(outBuffer, count);
+	}
+
+	inline bool File::ReadLine(String& outStr)
+	{
+		ionassert(m_Mode & IO::FM_Read, "Read access mode was not specified when opening the file.");
+
+		return ReadLine_Native(outStr);
+	}
+
+	template<uint64 Size>
+	inline bool File::Read(uint8(&outBuffer)[Size])
+	{
+		return Read((uint8*)outBuffer, Size);
+	}
+
+	template<uint64 Size>
+	inline bool File::Read(char(&outBuffer)[Size])
+	{
+		return Read((uint8*)outBuffer, Size - 1);
+	}
+
+	inline bool File::Write(const uint8* inBuffer, uint64 count)
+	{
+		ionassert(m_Mode & IO::FM_Write, "Write access mode was not specified when opening the file.");
+
+		return Write_Native(inBuffer, count);
+	}
+
+	inline bool File::Write(const char* inBuffer, uint64 count)
+	{
+		return Write((const uint8*)inBuffer, count);
+	}
+
+	inline bool File::Write(const String& inStr)
+	{
+		return Write(inStr.c_str(), inStr.size());
+	}
+
+	inline bool File::WriteLine(const char* inBuffer, uint64 count, ENewLineType newLineType)
+	{
+		ionassert(m_Mode & IO::FM_Write, "Write access mode was not specified when opening the file.");
+
+		return WriteLine_Native(inBuffer, count, newLineType);
+	}
+
+	inline bool File::WriteLine(const String& inStr, ENewLineType newLineType)
+	{
+		return WriteLine(inStr.c_str(), inStr.size() + 1, newLineType);
+	}
+
+	template<uint64 Size>
+	inline bool File::Write(const uint8(&inBuffer)[Size])
+	{
+		return Write((const uint8*)inBuffer, Size);
+	}
+
+	template<uint64 Size>
+	inline bool File::Write(const char(&inBuffer)[Size])
+	{
+		return Write((const uint8*)inBuffer, Size - 1);
+	}
+
+	inline bool File::AddOffset(int64 count)
+	{
+		return AddOffset_Native(count);
+	}
+
+	inline bool File::SetOffset(int64 count)
+	{
+		return SetOffset_Native(count);
+	}
+
+	inline int64 File::GetOffset() const
+	{
+		return m_Offset;
+	}
+
+	inline const WString& File::GetExtension() const
+	{
+		return m_FileExtension;
+	}
+
+	inline bool File::IsOpen() const
+	{
+		return m_bOpen;
+	}
+
+	inline const WString& File::GetFullPath() const
+	{
+		return m_FilePath;
+	}
+
+#pragma endregion
+
+// FilePath class -------------------------------------------------------------------------------
+
+#pragma region FilePath
 
 	class ION_API FilePath
 	{
@@ -531,45 +589,11 @@ namespace Ion
 		bool ChangeDirectory(const WString& directory);
 		bool ChangePath(const FilePath& path);
 
-		inline void Back()
-		{
-			if (m_Path.empty())
-			{
-				m_Path.push_back(L"..");
-			}
-			else
-			{
-				bool bOnlyBack = true;
-				for (const WString& dir : m_Path)
-				{
-					if (dir != L"..")
-					{
-						bOnlyBack = false;
-						break;
-					}
-				}
-				if (!bOnlyBack)
-					m_Path.pop_back();
-				else
-					m_Path.push_back(L"..");
-			}
-			UpdatePathName();
-		}
+		void Back();
 
-		inline bool Make(const WString& name)
-		{
-			ionassert(File::IsFileNameLegal(name));
+		bool Make(const WString& name);
 
-			return Make_Native(name.c_str());
-		}
-
-		inline bool Rename(const WString& newName)
-		{
-			ionassert(File::IsFileNameLegal(newName));
-
-			// @TODO: Implement this
-			return true;
-		}
+		bool Rename(const WString& newName);
 
 		bool Delete(bool bForce = false);
 
@@ -584,84 +608,39 @@ namespace Ion
 
 		FilePath Fix() const;
 
-		inline bool Exists() const
-		{
-			return Exists(m_PathName.c_str());
-		}
+		bool Exists() const;
 
-		inline bool IsDirectory() const
-		{
-			return IsDirectory(m_PathName.c_str());
-		}
+		bool IsDirectory() const;
 
-		inline bool IsFile() const
-		{
-			return Exists() && !IsDirectory();
-		}
+		bool IsFile() const;
 
-		inline bool IsEmpty() const
-		{
-			return m_Path.empty();
-		}
+		bool IsEmpty() const;
 
 		FileList ListFiles() const;
-		//WString Find(const wchar* name) const;
-		//WString FindRecursive(const wchar* name) const;
 
 		TShared<TTreeNode<FileInfo>> Tree() const;
 
 		bool IsRelative() const;
 
-		inline WString LastElement() const
-		{
-			return !m_Path.empty() ?
-				m_Path.back() :
-				L"";
-		}
+		WString LastElement() const;
 
-		inline void SetValidation(EFilePathValidation validation)
-		{
-			m_bChecked = (bool)validation;
-		}
+		void SetValidation(EFilePathValidation validation);
 
-		inline const WString& ToString() const
-		{
-			return m_PathName;
-		}
+		const WString& ToString() const;
 
-		inline static bool Exists(const wchar* path)
-		{
-			return Exists_Native(path);
-		}
+		static bool Exists(const wchar* path);
 
-		inline static bool Exists(const WString& path)
-		{
-			return Exists(path.c_str());
-		}
+		static bool Exists(const WString& path);
 
-		inline static bool IsDirectory(const wchar* path)
-		{
-			return IsDirectory_Native(path);
-		}
+		static bool IsDirectory(const wchar* path);
 
-		inline static bool IsDirectory(const WString& path)
-		{
-			return IsDirectory(path.c_str());
-		}
+		static bool IsDirectory(const WString& path);
 
-		inline static bool IsFile(const wchar* path)
-		{
-			return Exists(path) && !IsDirectory(path);
-		}
+		static bool IsFile(const wchar* path);
 
-		inline static bool IsFile(const WString& path)
-		{
-			return IsFile(path.c_str());
-		}
+		static bool IsFile(const WString& path);
 
 		static FileList ListFiles(const wchar* path);
-		//static WString Find(const wchar* path, const wchar* name);
-		//static WString FindRecursive(const wchar* path, const wchar* name);
 
 		FilePath& operator=(const FilePath&) = default;
 		FilePath& operator=(FilePath&&) = default;
@@ -680,10 +659,7 @@ namespace Ion
 		bool operator!=(const FilePath& path) const;
 		bool operator!=(const WString& path) const;
 
-		inline operator WString() const
-		{
-			return ToString();
-		}
+		operator WString() const;
 
 	private:
 		static TArray<WString> SplitPathName(const WString& path);
@@ -708,6 +684,88 @@ namespace Ion
 		void UpdatePathName() const;
 	};
 
+	inline bool FilePath::Make(const WString& name)
+	{
+		ionassert(File::IsFileNameLegal(name));
+
+		return Make_Native(name.c_str());
+	}
+
+	inline bool FilePath::Rename(const WString& newName)
+	{
+		ionassert(File::IsFileNameLegal(newName));
+
+		// @TODO: Implement this
+		return true;
+	}
+
+	inline bool FilePath::Exists() const
+	{
+		return Exists(m_PathName.c_str());
+	}
+
+	inline bool FilePath::IsDirectory() const
+	{
+		return IsDirectory(m_PathName.c_str());
+	}
+
+	inline bool FilePath::IsFile() const
+	{
+		return Exists() && !IsDirectory();
+	}
+
+	inline bool FilePath::IsEmpty() const
+	{
+		return m_Path.empty();
+	}
+
+	inline WString FilePath::LastElement() const
+	{
+		return !m_Path.empty() ?
+			m_Path.back() :
+			L"";
+	}
+
+	inline void FilePath::SetValidation(EFilePathValidation validation)
+	{
+		m_bChecked = (bool)validation;
+	}
+
+	inline const WString& FilePath::ToString() const
+	{
+		return m_PathName;
+	}
+
+	inline bool FilePath::Exists(const wchar* path)
+	{
+		return Exists_Native(path);
+	}
+
+	inline bool FilePath::Exists(const WString& path)
+	{
+		return Exists(path.c_str());
+	}
+
+	inline bool FilePath::IsDirectory(const wchar* path)
+	{
+		return IsDirectory_Native(path);
+	}
+
+	inline bool FilePath::IsDirectory(const WString& path)
+	{
+		return IsDirectory(path.c_str());
+	}
+
+	inline bool FilePath::IsFile(const wchar* path)
+	{
+		return Exists(path) && !IsDirectory(path);
+	}
+
+	inline bool FilePath::IsFile(const WString& path)
+	{
+		return IsFile(path.c_str());
+	}
+
 	inline FilePath& FilePath::operator=(const WString& str)
 	{
 		Set(str);
@@ -719,4 +777,12 @@ namespace Ion
 		Set(str);
 		return *this;
 	}
+
+	inline FilePath::operator WString() const
+	{
+		return ToString();
+	}
+
+#pragma endregion
+
 }
