@@ -13,6 +13,8 @@ namespace Ion
 
 	void Logger::Init()
 	{
+		Platform::SetConsoleOutputUTF8();
+
 		spdlog::set_pattern("%^[%n] %T : %v%$");
 
 #ifdef ION_ENGINE

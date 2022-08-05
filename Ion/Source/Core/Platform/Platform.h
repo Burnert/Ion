@@ -25,6 +25,8 @@ namespace Ion::Platform
 	int32 MessageBox(const WString& text, const WString& caption,
 		EMessageBoxType type, EMessageBoxIcon icon);
 
+	void SetConsoleOutputUTF8();
+
 	int32 GetCurrentProcessId();
 	int32 GetCurrentThreadId();
 	void SetCurrentThreadDescription(const WString& desc);

@@ -24,6 +24,11 @@ namespace Ion::Platform
 			MessageBoxTypeToWindowsType(type) | MessageBoxIconToWindowsType(icon));
 	}
 
+	void SetConsoleOutputUTF8()
+	{
+		::SetConsoleOutputCP(CP_UTF8);
+	}
+
 	int32 GetCurrentProcessId()
 	{
 		return ::GetCurrentProcessId();

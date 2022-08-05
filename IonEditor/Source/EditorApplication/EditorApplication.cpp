@@ -1,4 +1,4 @@
-#include "EditorPCH.h"
+﻿#include "EditorPCH.h"
 
 #include "EditorApplication.h"
 #include "EditorLayer.h"
@@ -87,6 +87,8 @@ namespace Ion::Editor
 
 		AssetRegistry::RegisterVirtualRoot("[Example]", EnginePath::GetEnginePath() + L"../IonExample/Assets");
 		AssetRegistry::RegisterAssetsInVirtualRoot("[Example]");
+
+		LOG_INFO("UTF8: {}", u8"żółw");
 
 		//InitExample(nullptr);
 
