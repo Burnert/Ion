@@ -9,11 +9,11 @@
 #ifdef ION_LOG_ENABLED
 
 #define _PRINT_HANDLE_ERROR() \
-LOG_ERROR(TEXT("File '{0}' cannot be accessed before it is physically opened!"), m_FilePath);
+LOG_ERROR("File '{0}' cannot be accessed before it is physically opened!", m_FilePath);
 #define _PRINT_READ_ERROR() \
-LOG_ERROR(TEXT("File '{0}' cannot be read because the Read access mode was not specified when opening the file!"), m_FilePath);
+LOG_ERROR("File '{0}' cannot be read because the Read access mode was not specified when opening the file!", m_FilePath);
 #define _PRINT_WRITE_ERROR() \
-LOG_ERROR(TEXT("File '{0}' cannot be written because the Write access mode was not specified when opening the file!"), m_FilePath);
+LOG_ERROR("File '{0}' cannot be written because the Write access mode was not specified when opening the file!", m_FilePath);
 
 #else
 
@@ -52,7 +52,7 @@ namespace Ion
 		// Handle errors first
 		if (GetNative(this) != INVALID_HANDLE_VALUE)
 		{
-			LOG_ERROR(TEXT("File '{0}' is already open!"), m_FilePath);
+			LOG_ERROR("File '{0}' is already open!", m_FilePath);
 			return false;
 		}
 
@@ -89,18 +89,19 @@ namespace Ion
 			}
 		}
 
-		GetNative(this) = CreateFile(m_FilePath.c_str(), dwDesiredAccess, 0, NULL, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, NULL);
+		WString filePath = StringConverter::StringToWString(m_FilePath);
+		GetNative(this) = CreateFile(filePath.c_str(), dwDesiredAccess, 0, NULL, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, NULL);
 
 		if (GetNative(this) == INVALID_HANDLE_VALUE)
 		{
 			DWORD lastError = GetLastError();
 			if (lastError != ERROR_FILE_NOT_FOUND)
 			{
-				Windows::PrintLastError(TEXT("File '{0}' cannot be opened!"), m_FilePath);
+				Windows::PrintLastError("File '{0}' cannot be opened!", m_FilePath);
 				return false;
 			}
 
-			_DEBUG_LOG(LOG_WARN(TEXT("File '{0}' not found!"), m_FilePath));
+			_DEBUG_LOG(LOG_WARN("File '{0}' not found!", m_FilePath));
 		}
 
 		UpdateFileSizeCache();
@@ -111,28 +112,26 @@ namespace Ion
 			SetOffset(m_FileSize);
 		}
 
-		_DEBUG_LOG(LOG_TRACE(TEXT("File '{0}' opened."), m_FilePath));
+		_DEBUG_LOG(LOG_TRACE("File '{0}' opened.", m_FilePath));
 		return true;
 	}
 
-	bool File::Delete_Native(const WString& filename) // static
+	bool File::Delete_Native(const wchar* filename) // static
 	{
-		const wchar* path = filename.c_str();
-
-		if (!DeleteFile(path))
+		if (!DeleteFile(filename))
 		{
-			Windows::PrintLastError(TEXT("Cannot delete file '{0}'!"), path);
+			Windows::PrintLastError(TEXT("Cannot delete file '{0}'!"), filename);
 			return false;
 		}
 
-		_DEBUG_STATIC_LOG(LOG_DEBUG(TEXT("File '{0}' has been deleted."), path));
+		_DEBUG_STATIC_LOG(LOG_DEBUG(TEXT("File '{0}' has been deleted."), filename));
 		return true;
 	}
 
 	bool File::Close_Native()
 	{
 		CloseHandle(GetNative(this));
-		_DEBUG_LOG(LOG_TRACE(TEXT("File '{0}' was closed."), m_FilePath));
+		_DEBUG_LOG(LOG_TRACE("File '{0}' was closed.", m_FilePath));
 
 		//*(size_t*)&m_NativeFile.m_FileHandle = (size_t)INVALID_HANDLE_VALUE;
 		GetNative(this) = INVALID_HANDLE_VALUE;
@@ -149,12 +148,12 @@ namespace Ion
 		DWORD bytesRead;
 		if (!ReadFile(GetNative(this), outBuffer, (DWORD)count, &bytesRead, NULL))
 		{
-			Windows::PrintLastError(TEXT("Cannot read file '{0}'!"), m_FilePath);
+			Windows::PrintLastError("Cannot read file '{0}'!", m_FilePath);
 			return false;
 		}
 		m_Offset += bytesRead;
 
-		_DEBUG_LOG(LOG_TRACE(TEXT("'{0}': Read {1} bytes."), m_FilePath, bytesRead));
+		_DEBUG_LOG(LOG_TRACE("'{0}': Read {1} bytes.", m_FilePath, bytesRead));
 		return true;
 	}
 
@@ -172,7 +171,7 @@ namespace Ion
 		DWORD bytesRead;
 		if (!ReadFile(GetNative(this), outBuffer, (DWORD)count, &bytesRead, NULL))
 		{
-			Windows::PrintLastError(TEXT("Cannot read file '{0}'!"), m_FilePath);
+			Windows::PrintLastError("Cannot read file '{0}'!", m_FilePath);
 			return false;
 		}
 
@@ -207,7 +206,7 @@ namespace Ion
 				}
 				else
 				{
-					_DEBUG_LOG(LOG_WARN(TEXT("'{0}': CR was found but the next byte could not be checked! {1} byte buffer was to small."), m_FilePath, count));
+					_DEBUG_LOG(LOG_WARN("'{0}': CR was found but the next byte could not be checked! {1} byte buffer was to small.", m_FilePath, count));
 					// Set the offset back to the CR character
 					// so it can be interpreted later and then exit.
 					SetOffset(initialOffset + i);
@@ -259,7 +258,7 @@ namespace Ion
 			if (bOutOverflow != nullptr)
 				*bOutOverflow = true;
 
-			_DEBUG_LOG(LOG_WARN(TEXT("'{0}': File read output buffer overflow! {1} byte buffer was to small."), m_FilePath, count));
+			_DEBUG_LOG(LOG_WARN("'{0}': File read output buffer overflow! {1} byte buffer was to small.", m_FilePath, count));
 		}
 
 		return true;
@@ -274,7 +273,7 @@ namespace Ion
 		uint64 readCount = 0;
 		bool bResult = ReadLine_Internal(outBuffer, count, &readCount, nullptr);
 
-		_DEBUG_LOG(if (bResult) LOG_TRACE(TEXT("'{0}': Read {1} bytes."), m_FilePath, readCount));
+		_DEBUG_LOG(if (bResult) LOG_TRACE("'{0}': Read {1} bytes.", m_FilePath, readCount));
 		return bResult;
 	}
 
@@ -303,7 +302,7 @@ namespace Ion
 		}
 		while (bOverflow);
 
-		_DEBUG_LOG(if (bResult) LOG_TRACE(TEXT("'{0}': Read {1} bytes."), m_FilePath, readCount));
+		_DEBUG_LOG(if (bResult) LOG_TRACE("'{0}': Read {1} bytes.", m_FilePath, readCount));
 		return bResult;
 	}
 
@@ -316,7 +315,7 @@ namespace Ion
 		DWORD bytesWritten;
 		if (!WriteFile(GetNative(this), inBuffer, (DWORD)count, &bytesWritten, NULL))
 		{
-			Windows::PrintLastError(TEXT("Cannot write file '{0}'!"), m_FilePath);
+			Windows::PrintLastError("Cannot write file '{0}'!", m_FilePath);
 			return false;
 		}
 		// Retrieves the file pointer
@@ -327,7 +326,7 @@ namespace Ion
 		int64 sizeDifference = std::max((int64)0, m_Offset - m_FileSize);
 		UpdateFileSizeCache(m_FileSize + sizeDifference);
 
-		_DEBUG_LOG(LOG_TRACE(TEXT("'{0}': Written {1} bytes."), m_FilePath, bytesWritten));
+		_DEBUG_LOG(LOG_TRACE("'{0}': Written {1} bytes.", m_FilePath, bytesWritten));
 		return true;
 	}
 
@@ -358,7 +357,7 @@ namespace Ion
 		ulong bytesWritten;
 		if (!WriteFile(GetNative(this), tempBuffer, (DWORD)count + bCRLF, &bytesWritten, NULL))
 		{
-			Windows::PrintLastError(TEXT("Cannot write file '{0}'!"), m_FilePath);
+			Windows::PrintLastError("Cannot write file '{0}'!", m_FilePath);
 			return false;
 		}
 
@@ -374,7 +373,7 @@ namespace Ion
 		int64 sizeDifference = std::max((int64)0, m_Offset - m_FileSize);
 		UpdateFileSizeCache(m_FileSize + sizeDifference);
 
-		_DEBUG_LOG(LOG_TRACE(TEXT("'{0}': Written {1} bytes."), m_FilePath, bytesWritten));
+		_DEBUG_LOG(LOG_TRACE("'{0}': Written {1} bytes.", m_FilePath, bytesWritten));
 		return true;
 	}
 
@@ -384,7 +383,7 @@ namespace Ion
 
 		if (!SetFilePointerEx(GetNative(this), *(LARGE_INTEGER*)&count, (LARGE_INTEGER*)&m_Offset, FILE_CURRENT))
 		{
-			Windows::PrintLastError(TEXT("'{0}': Cannot add file offset!"), m_FilePath);
+			Windows::PrintLastError("'{0}': Cannot add file offset!", m_FilePath);
 			return false;
 		}
 		return true;
@@ -396,7 +395,7 @@ namespace Ion
 
 		if (!SetFilePointerEx(GetNative(this), *(LARGE_INTEGER*)&m_Offset, (LARGE_INTEGER*)&m_Offset, FILE_BEGIN))
 		{
-			Windows::PrintLastError(TEXT("'{0}': Cannot set file offset!"), m_FilePath);
+			Windows::PrintLastError("'{0}': Cannot set file offset!", m_FilePath);
 			return false;
 		}
 		return true;
@@ -415,7 +414,7 @@ namespace Ion
 		{
 			GetFileSizeEx(GetNative(this), (LARGE_INTEGER*)&m_FileSize);
 
-			_DEBUG_LOG(LOG_TRACE(TEXT("'{0}': New file size cache = {1} bytes."), m_FilePath, m_FileSize));
+			_DEBUG_LOG(LOG_TRACE("'{0}': New file size cache = {1} bytes.", m_FilePath, m_FileSize));
 		}
 		
 		return m_FileSize;
@@ -423,12 +422,12 @@ namespace Ion
 
 	bool File::Exists() const
 	{
-		return GetFileAttributes(m_FilePath.c_str()) != INVALID_FILE_ATTRIBUTES;
+		return GetFileAttributes(StringConverter::StringToWString(m_FilePath).c_str()) != INVALID_FILE_ATTRIBUTES;
 	}
 
 	bool File::IsDirectory() const
 	{
-		return GetFileAttributes(m_FilePath.c_str()) & FILE_ATTRIBUTE_DIRECTORY;
+		return GetFileAttributes(StringConverter::StringToWString(m_FilePath).c_str()) & FILE_ATTRIBUTE_DIRECTORY;
 	}
 
 	FilePath File::GetFilePath(EFilePathValidation validation) const
@@ -444,19 +443,19 @@ namespace Ion
 
 	bool FilePath::Make_Native(const wchar* name)
 	{
-		WString path = m_PathName + name;
+		WString path = StringConverter::StringToWString(m_PathName) + L"/" + name;
 
 		if (!CreateDirectory(path.c_str(), NULL))
 		{
 			DWORD dwError = GetLastError();
 			if (dwError == ERROR_ALREADY_EXISTS)
 			{
-				LOG_WARN(L"The path \"{0}\" already exists!");
+				LOG_WARN(L"The path \"{}\" already exists!", path);
 				return false;
 			}
 			if (dwError == ERROR_PATH_NOT_FOUND)
 			{
-				LOG_ERROR(L"Cannot make path \"{0}\"!");
+				LOG_ERROR(L"Cannot make path \"{}\"!", path);
 				// @TODO: Make this recursive?
 				return false;
 			}
@@ -467,7 +466,7 @@ namespace Ion
 
 	bool FilePath::Delete_Native()
 	{
-		return RemoveDirectory(m_PathName.c_str());
+		return RemoveDirectory(StringConverter::StringToWString(m_PathName).c_str());
 	}
 
 	bool FilePath::DeleteForce_Native()
@@ -482,9 +481,9 @@ namespace Ion
 		TArray<FileInfo> files;
 		WIN32_FIND_DATA ffd;
 
-		WString path = m_PathName + L"/*";
+		String path = m_PathName + "/*";
 
-		HANDLE hFound = FindFirstFile(path.c_str(), &ffd);
+		HANDLE hFound = FindFirstFile(StringConverter::StringToWString(path).c_str(), &ffd);
 		if (hFound == INVALID_HANDLE_VALUE)
 		{
 			return files;
@@ -492,10 +491,8 @@ namespace Ion
 
 		do
 		{
-			//wchar fullPath[MaxPathLength + 1];
-			//GetFullPathName(ffd.cFileName, MaxPathLength + 1, fullPath, nullptr);
-
-			WString fullPath = m_PathName + L"/" + ffd.cFileName;
+			String fileName = StringConverter::WStringToString(ffd.cFileName);
+			String fullPath = m_PathName + "/" + fileName;
 
 			LARGE_INTEGER fileSize;
 			fileSize.LowPart = ffd.nFileSizeLow;
@@ -503,7 +500,7 @@ namespace Ion
 
 			bool bDirectory = ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
 
-			files.emplace_back(ffd.cFileName, fullPath, fileSize.QuadPart, bDirectory);
+			files.emplace_back(fileName, fullPath, fileSize.QuadPart, bDirectory);
 		} while (FindNextFile(hFound, &ffd));
 
 		return files;

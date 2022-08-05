@@ -17,7 +17,7 @@ namespace Ion
 	AssetParser::AssetParser(const FilePath& assetPath) :
 		XMLParser(assetPath)
 	{
-		ionassert(File(assetPath).GetExtension() == L"iasset");
+		ionassert(File(assetPath).GetExtension() == "iasset");
 	}
 
 	AssetParser& AssetParser::BeginAsset()
@@ -83,7 +83,7 @@ namespace Ion
 		}
 		else
 		{
-			outName = StringConverter::WStringToString(GetPath().LastElement());
+			outName = GetPath().LastElement();
 		}
 		return *this;
 	}

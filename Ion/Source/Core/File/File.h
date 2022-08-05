@@ -54,12 +54,12 @@ namespace Ion
 
 	struct FileInfo
 	{
-		WString Filename;
-		WString FullPath;
+		String Filename;
+		String FullPath;
 		int64 Size;
 		bool bDirectory;
 
-		FileInfo(const WString& filename, const WString& fullPath, int64 size, bool bDir) :
+		FileInfo(const String& filename, const String& fullPath, int64 size, bool bDir) :
 			Filename(filename),
 			FullPath(fullPath),
 			Size(size),
@@ -135,11 +135,13 @@ namespace Ion
 	{
 	public:
 		File(const FilePath& path, uint8 mode = EFileMode::DoNotOpen);
+		File(const String& filename, uint8 mode = EFileMode::DoNotOpen);
 		File(const WString& filename, uint8 mode = EFileMode::DoNotOpen);
 
 		bool Open(uint8 mode);
 
 		static bool Delete(const FilePath& path);
+		static bool Delete(const String& filename);
 		static bool Delete(const WString& filename);
 
 		void Close();
@@ -159,6 +161,7 @@ namespace Ion
 		bool Read(char(&outBuffer)[Size]);
 
 		static bool ReadToString(const FilePath& filePath, String& outString);
+		static bool ReadToString(const String& filePath, String& outString);
 		static bool ReadToString(const WString& filePath, String& outString);
 
 		// Write functions
@@ -183,7 +186,7 @@ namespace Ion
 
 		int64 GetSize() const;
 
-		const WString& GetExtension() const;
+		const String& GetExtension() const;
 
 		bool IsOpen() const;
 
@@ -195,8 +198,9 @@ namespace Ion
 
 		FilePath GetFilePath(EFilePathValidation validation = EFilePathValidation::Unchecked) const;
 
-		const WString& GetFullPath() const;
+		const String& GetFullPath() const;
 
+		static bool IsFileNameLegal(const String& name);
 		static bool IsFileNameLegal(const WString& name);
 
 		~File();
@@ -208,7 +212,7 @@ namespace Ion
 		File& operator=(File&&) = default;
 
 	private:
-		WString m_FilePath;
+		String m_FilePath;
 		EFileType m_Type;
 		uint8 m_Mode;
 		bool m_bOpen;
@@ -223,7 +227,7 @@ namespace Ion
 		/* Sets the file size cache to the size specified. */
 		FORCEINLINE void UpdateFileSizeCache(int64 newFileSize) const { m_FileSize = newFileSize; }
 
-		mutable WString m_FileExtension;
+		mutable String m_FileExtension;
 		void UpdateFileExtensionCache() const;
 
 	// End of Caches
@@ -232,7 +236,7 @@ namespace Ion
 
 	private:
 		bool Open_Native();
-		static bool Delete_Native(const WString& filename);
+		static bool Delete_Native(const wchar* filename);
 		bool Close_Native();
 
 		bool Read_Native(uint8* outBuffer, uint64 count);
@@ -252,9 +256,11 @@ namespace Ion
 		static const ENewLineType s_DefaultNewLineType;
 
 #if ION_PLATFORM_WINDOWS
-		static constexpr wchar File::s_IllegalCharacters[] = { L'/', L'\\', L'*', L'<', L'>', L'|', L'?', L':', L'"' };
+		static constexpr wchar s_IllegalCharactersW[] = L"/\\*<>|?:\"";
+		static constexpr char  s_IllegalCharacters[]  =  "/\\*<>|?:\"";
 #else
-		static constexpr wchar File::s_IllegalCharacters[] = { L'\0' };
+		static constexpr wchar s_IllegalCharacters[] = L"";
+		static constexpr char  s_IllegalCharacters[] =  "";
 #endif
 		friend void*& GetNative(File* file);
 		friend void* const& GetNative(const File* file);
@@ -275,9 +281,14 @@ namespace Ion
 		friend class FilePath;
 	};
 
+	inline bool File::Delete(const String& filename)
+	{
+		return Delete(StringConverter::StringToWString(filename));
+	}
+
 	inline bool File::Delete(const WString& filename)
 	{
-		return Delete_Native(filename);
+		return Delete_Native(filename.c_str());
 	}
 
 	inline bool File::Read(uint8* outBuffer, uint64 count)
@@ -374,7 +385,7 @@ namespace Ion
 		return m_Offset;
 	}
 
-	inline const WString& File::GetExtension() const
+	inline const String& File::GetExtension() const
 	{
 		return m_FileExtension;
 	}
@@ -384,7 +395,7 @@ namespace Ion
 		return m_bOpen;
 	}
 
-	inline const WString& File::GetFullPath() const
+	inline const String& File::GetFullPath() const
 	{
 		return m_FilePath;
 	}
@@ -401,15 +412,18 @@ namespace Ion
 		//static constexpr const uint64 MaxPathLength = 2000;
 
 		FilePath();
+		FilePath(const String& path, EFilePathValidation validation = EFilePathValidation::Unchecked);
 		FilePath(const WString& path, EFilePathValidation validation = EFilePathValidation::Unchecked);
 		FilePath(const FilePath& path, EFilePathValidation validation);
 
 		FilePath(const FilePath&) = default;
 		FilePath(FilePath&&) noexcept = default;
 
+		void Set(const String& path);
 		void Set(const WString& path);
 		void Set(const FilePath& path);
 
+		bool ChangeDirectory(const String& directory);
 		bool ChangeDirectory(const WString& directory);
 		bool ChangePath(const FilePath& path);
 
@@ -421,8 +435,10 @@ namespace Ion
 		 * @param name Name of the directory
 		 * @return true if the directory has been made successfully.
 		 */
+		bool Make(const String& name);
 		bool Make(const WString& name);
 
+		bool Rename(const String& newName);
 		bool Rename(const WString& newName);
 
 		/**
@@ -476,49 +492,65 @@ namespace Ion
 		bool IsRelative() const;
 		bool IsAbsolute() const;
 
-		WString LastElement() const;
+		String LastElement() const;
+		WString LastElementW() const;
 
 		void SetValidation(EFilePathValidation validation);
 
-		const WString& ToString() const;
+		const String& ToString() const;
+		WString ToWString() const;
 
 		static bool Exists(const wchar* path);
+		static bool Exists(const String& path);
 		static bool Exists(const WString& path);
 
 		static bool IsDirectory(const wchar* path);
+		static bool IsDirectory(const String& path);
 		static bool IsDirectory(const WString& path);
 
 		static bool IsFile(const wchar* path);
+		static bool IsFile(const String& path);
 		static bool IsFile(const WString& path);
 
+		static bool IsDriveLetter(const String& drive);
 		static bool IsDriveLetter(const WString& drive);
 
 		static FileList ListFiles(const wchar* path);
+		static FileList ListFiles(const String& path);
 
 		FilePath& operator=(const FilePath&) = default;
 		FilePath& operator=(FilePath&&) = default;
+		FilePath& operator=(const String&);
+		FilePath& operator=(String&&);
 		FilePath& operator=(const WString&);
 		FilePath& operator=(WString&&);
 
 		FilePath& operator+=(const FilePath& path);
+		FilePath& operator+=(const String& directory);
 		FilePath& operator+=(const WString& directory);
 
 		FilePath operator+(const FilePath& path) const;
+		FilePath operator+(const String& directory) const;
 		FilePath operator+(const WString& directory) const;
 
 		bool operator==(const FilePath& path) const;
+		bool operator==(const String& path) const;
 		bool operator==(const WString& path) const;
 
 		bool operator!=(const FilePath& path) const;
+		bool operator!=(const String& path) const;
 		bool operator!=(const WString& path) const;
 
 		operator WString() const;
+		operator String() const;
 
 	private:
-		static TArray<WString> SplitPathName(const WString& path);
-		static WStringView StripSlashes(const WString& name);
+		static TArray<String> SplitPathName(const String& path);
+		static StringView StripSlashes(const String& name);
 
 		TTreeNode<FileInfo>& Tree_Internal() const;
+
+		WString GetPathW() const;
 
 		// Platform specific
 
@@ -531,14 +563,21 @@ namespace Ion
 		static bool IsDriveLetter_Native(const WString& drive);
 
 	private:
-		TArray<WString> m_Path;
+		TArray<String> m_Path;
 		bool m_bChecked;
 		
-		mutable WString m_PathName;
+		mutable String m_PathName;
 		void UpdatePathName() const;
 
 		friend class File;
 	};
+
+	inline bool FilePath::Make(const String& name)
+	{
+		ionassert(File::IsFileNameLegal(name));
+
+		return Make(StringConverter::StringToWString(name));
+	}
 
 	inline bool FilePath::Make(const WString& name)
 	{
@@ -547,12 +586,17 @@ namespace Ion
 		return Make_Native(name.c_str());
 	}
 
-	inline bool FilePath::Rename(const WString& newName)
+	inline bool FilePath::Rename(const String& newName)
 	{
 		ionassert(File::IsFileNameLegal(newName));
 
 		// @TODO: Implement this
 		return true;
+	}
+
+	inline bool FilePath::Rename(const WString& newName)
+	{
+		return Rename(StringConverter::WStringToString(newName));
 	}
 
 	inline bool FilePath::Exists() const
@@ -575,10 +619,17 @@ namespace Ion
 		return m_Path.empty();
 	}
 
-	inline WString FilePath::LastElement() const
+	inline String FilePath::LastElement() const
 	{
 		return !m_Path.empty() ?
 			m_Path.back() :
+			"";
+	}
+
+	inline WString FilePath::LastElementW() const
+	{
+		return !m_Path.empty() ?
+			StringConverter::StringToWString(m_Path.back()) :
 			L"";
 	}
 
@@ -587,14 +638,24 @@ namespace Ion
 		m_bChecked = (bool)validation;
 	}
 
-	inline const WString& FilePath::ToString() const
+	inline const String& FilePath::ToString() const
 	{
 		return m_PathName;
+	}
+
+	inline WString FilePath::ToWString() const
+	{
+		return StringConverter::StringToWString(m_PathName);
 	}
 
 	inline bool FilePath::Exists(const wchar* path)
 	{
 		return Exists_Native(path);
+	}
+
+	inline bool FilePath::Exists(const String& path)
+	{
+		return Exists(StringConverter::StringToWString(path));
 	}
 
 	inline bool FilePath::Exists(const WString& path)
@@ -607,6 +668,11 @@ namespace Ion
 		return IsDirectory_Native(path);
 	}
 
+	inline bool FilePath::IsDirectory(const String& path)
+	{
+		return IsDirectory(StringConverter::StringToWString(path));
+	}
+
 	inline bool FilePath::IsDirectory(const WString& path)
 	{
 		return IsDirectory(path.c_str());
@@ -617,14 +683,36 @@ namespace Ion
 		return Exists(path) && !IsDirectory(path);
 	}
 
+	inline bool FilePath::IsFile(const String& path)
+	{
+		return IsFile(StringConverter::StringToWString(path));
+	}
+
 	inline bool FilePath::IsFile(const WString& path)
 	{
 		return IsFile(path.c_str());
 	}
 
+	inline bool FilePath::IsDriveLetter(const String& drive)
+	{
+		return IsDriveLetter(StringConverter::StringToWString(drive));
+	}
+
 	inline bool FilePath::IsDriveLetter(const WString& drive)
 	{
 		return IsDriveLetter_Native(drive);
+	}
+	
+	inline FilePath& FilePath::operator=(const String& str)
+	{
+		Set(str);
+		return *this;
+	}
+
+	inline FilePath& FilePath::operator=(String&& str)
+	{
+		Set(Move(str));
+		return *this;
 	}
 
 	inline FilePath& FilePath::operator=(const WString& str)
@@ -635,13 +723,18 @@ namespace Ion
 
 	inline FilePath& FilePath::operator=(WString&& str)
 	{
-		Set(str);
+		Set(Move(str));
 		return *this;
+	}
+
+	inline FilePath::operator String() const
+	{
+		return ToString();
 	}
 
 	inline FilePath::operator WString() const
 	{
-		return ToString();
+		return ToWString();
 	}
 
 #pragma endregion

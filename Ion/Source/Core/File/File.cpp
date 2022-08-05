@@ -8,7 +8,7 @@ namespace Ion
 		: File(path.ToString(), mode)
 	{ }
 
-	File::File(const WString& filename, uint8 mode) :
+	File::File(const String& filename, uint8 mode) :
 		m_FilePath(filename),
 		m_Type(EFileType::Text),
 		m_Mode(mode),
@@ -26,6 +26,11 @@ namespace Ion
 		{
 			ionverify(Open(mode));
 		}
+	}
+
+	File::File(const WString& filename, uint8 mode) :
+		File(StringConverter::WStringToString(filename), mode)
+	{
 	}
 
 	File::~File()
@@ -51,7 +56,7 @@ namespace Ion
 
 	bool File::Delete(const FilePath& path)
 	{
-		return Delete_Native(path.ToString());
+		return Delete_Native(path.ToWString().c_str());
 	}
 
 	void File::Close()
@@ -71,16 +76,21 @@ namespace Ion
 		return ReadToString(filePath.ToString(), outString);
 	}
 
-	bool File::ReadToString(const WString& filePath, String& outString)
+	bool File::ReadToString(const String& filePath, String& outString)
 	{
 		if (!(FilePath::Exists(filePath) && FilePath::IsFile(filePath)))
 		{
-			LOG_ERROR(L"The file \"{0}\" does not exist or is a directory.", filePath);
+			LOG_ERROR("The file \"{0}\" does not exist or is a directory.", filePath);
 			return false;
 		}
 
 		File file(filePath, EFileMode::Read);
 		return file.Read(outString);
+	}
+
+	bool File::ReadToString(const WString& filePath, String& outString)
+	{
+		return ReadToString(StringConverter::WStringToString(filePath), outString);
 	}
 
 	bool File::Read(String& outStr)
@@ -101,11 +111,11 @@ namespace Ion
 
 		if (dotIndex == WString::npos)
 		{
-			m_FileExtension = L"";
+			m_FileExtension = "";
 		}
 		else
 		{
-			WString extension = m_FilePath.substr(dotIndex + 1, (size_t)-1);
+			String extension = m_FilePath.substr(dotIndex + 1, (size_t)-1);
 
 			std::transform(extension.begin(), extension.end(), extension.begin(), [](wchar ch) { return std::tolower(ch); });
 			m_FileExtension = extension;
@@ -117,19 +127,28 @@ namespace Ion
 		return m_Offset >= GetSize();
 	}
 
+	bool File::IsFileNameLegal(const String& name)
+	{
+		if (name.empty())
+			return false;
+
+		for (const char& c : name)
+		{
+			if (IsAnyOf(c, s_IllegalCharacters))
+				return false;
+		}
+		return true;
+	}
+
 	bool File::IsFileNameLegal(const WString& name)
 	{
 		if (name.empty())
-		{
 			return false;
-		}
 
-		for (int32 i = 0; i < name.size(); ++i)
+		for (const wchar& c : name)
 		{
-			if (IsAnyOf(name[i], s_IllegalCharacters))
-			{
+			if (IsAnyOf(c, s_IllegalCharactersW))
 				return false;
-			}
 		}
 		return true;
 	}
@@ -147,6 +166,12 @@ namespace Ion
 	{
 	}
 
+	FilePath::FilePath(const String& path, EFilePathValidation validation) :
+		m_bChecked((bool)validation)
+	{
+		Set(path);
+	}
+
 	FilePath::FilePath(const WString& path, EFilePathValidation validation) :
 		m_bChecked((bool)validation)
 	{
@@ -159,12 +184,17 @@ namespace Ion
 		Set(path);
 	}
 
+	void FilePath::Set(const String& path)
+	{
+		m_Path = SplitPathName(path);
+		UpdatePathName();
+	}
+
 	void FilePath::Set(const WString& path)
 	{
 		//ionassert(path.size() < MaxPathLength);
 
-		m_Path = SplitPathName(path);
-		UpdatePathName();
+		Set(StringConverter::WStringToString(path));
 	}
 
 	void FilePath::Set(const FilePath& path)
@@ -173,26 +203,26 @@ namespace Ion
 		m_PathName = path.m_PathName;
 	}
 
-	bool FilePath::ChangeDirectory(const WString& directory)
+	bool FilePath::ChangeDirectory(const String& directory)
 	{
-		WString strippedName(StripSlashes(directory));
+		String strippedName(StripSlashes(directory));
 		ionassert(File::IsFileNameLegal(strippedName) || (m_Path.empty() && IsDriveLetter(strippedName)));
 
-		if (strippedName == L".")
+		if (strippedName == ".")
 		{
 			return true;
 		}
 
-		if (strippedName == L"..")
+		if (strippedName == "..")
 		{
 			Back();
 			return true;
 		}
 
-		WString newPath = m_PathName.empty() ? strippedName : m_PathName + L"/" + strippedName;
+		String newPath = m_PathName.empty() ? strippedName : m_PathName + "/" + strippedName;
 		if (m_bChecked && !Exists(newPath.c_str()))
 		{
-			LOG_ERROR(L"Path \"{0}\" does not exist!", newPath);
+			LOG_ERROR("Path \"{0}\" does not exist!", newPath);
 			ionbreak("This should not happen when using validated path operations.");
 			return false;
 		}
@@ -203,17 +233,22 @@ namespace Ion
 		return true;
 	}
 
+	bool FilePath::ChangeDirectory(const WString& directory)
+	{
+		return ChangeDirectory(StringConverter::WStringToString(directory));
+	}
+
 	bool FilePath::ChangePath(const FilePath& path)
 	{
-		WString newPath;
+		String newPath;
 		bool bChanged = false;
-		for (const WString& dir : path.m_Path)
+		for (const String& dir : path.m_Path)
 		{
-			newPath = m_PathName.empty() ? dir : m_PathName + L"/" + dir;
+			newPath = m_PathName.empty() ? dir : m_PathName + "/" + dir;
 			if (m_bChecked && !Exists(newPath.c_str()))
 			{
-				LOG_ERROR(L"Path \"{0}\" does not exist!", newPath);
-				ionassert(false, "This should not happen when using validated path operations.");
+				LOG_ERROR("Path \"{0}\" does not exist!", newPath);
+				ionbreak("This should not happen when using validated path operations.");
 				break;
 			}
 			
@@ -227,13 +262,13 @@ namespace Ion
 
 	void FilePath::Back()
 	{
-		while (!m_Path.empty() && m_Path.back() == L".")
+		while (!m_Path.empty() && m_Path.back() == ".")
 			m_Path.pop_back();
 
 		if (m_Path.empty() ||
-			std::all_of(m_Path.begin(), m_Path.end(), [](const WString& dir) { return dir == L".."; }))
+			std::all_of(m_Path.begin(), m_Path.end(), [](const String& dir) { return dir == ".."; }))
 		{
-			m_Path.push_back(L"..");
+			m_Path.push_back("..");
 		}
 		else
 		{
@@ -280,7 +315,7 @@ namespace Ion
 
 		if (itBaseDir != baseDir.m_Path.end())
 		{
-			LOG_ERROR(L"Cannot find base directory \"{0}\" in path \"{1}\".", baseDir.ToString(), m_PathName);
+			LOG_ERROR("Cannot find base directory \"{0}\" in path \"{1}\".", baseDir.ToString(), m_PathName);
 			return relative;
 		}
 
@@ -299,7 +334,7 @@ namespace Ion
 			return FilePath();
 
 		FilePath fixed;
-		for (const WString& dir : m_Path)
+		for (const String& dir : m_Path)
 		{
 			fixed.ChangeDirectory(dir);
 		}
@@ -327,7 +362,7 @@ namespace Ion
 		if (IsEmpty())
 			return true;
 
-		return !IsDriveLetter_Native(m_Path[0]);
+		return !IsDriveLetter_Native(StringConverter::StringToWString(m_Path[0]));
 	}
 
 	bool FilePath::IsAbsolute() const
@@ -340,9 +375,20 @@ namespace Ion
 		return FilePath(path).ListFiles();
 	}
 
+	FileList FilePath::ListFiles(const String& path)
+	{
+		return FilePath(path).ListFiles();
+	}
+
 	FilePath& FilePath::operator+=(const FilePath& path)
 	{
 		ChangePath(path);
+		return *this;
+	}
+
+	FilePath& FilePath::operator+=(const String& directory)
+	{
+		ChangePath(directory);
 		return *this;
 	}
 
@@ -359,6 +405,13 @@ namespace Ion
 		return newPath;
 	}
 
+	FilePath FilePath::operator+(const String& directory) const
+	{
+		FilePath newPath = *this;
+		newPath.ChangePath(directory);
+		return newPath;
+	}
+
 	FilePath FilePath::operator+(const WString& directory) const
 	{
 		FilePath newPath = *this;
@@ -371,9 +424,14 @@ namespace Ion
 		return m_PathName == path.m_PathName;
 	}
 
-	bool FilePath::operator==(const WString& path) const
+	bool FilePath::operator==(const String& path) const
 	{
 		return m_PathName == path;
+	}
+
+	bool FilePath::operator==(const WString& path) const
+	{
+		return m_PathName == StringConverter::WStringToString(path);
 	}
 
 	bool FilePath::operator!=(const FilePath& path) const
@@ -381,58 +439,62 @@ namespace Ion
 		return m_PathName != path.m_PathName;
 	}
 
-	bool FilePath::operator!=(const WString& path) const
+	bool FilePath::operator!=(const String& path) const
 	{
 		return m_PathName == path;
 	}
 
-	TArray<WString> FilePath::SplitPathName(const WString& path)
+	bool FilePath::operator!=(const WString& path) const
+	{
+		return m_PathName == StringConverter::WStringToString(path);
+	}
+
+	TArray<String> FilePath::SplitPathName(const String& path)
 	{
 #pragma warning(disable:6255)
 #pragma warning(disable:6386)
 		// @TODO: Make a string split thingy instead of this nonsense
 
-		TArray<WString> pathArray;
+		TArray<String> pathArray;
 
-		uint64 size = path.size();
-		wchar* segment = (wchar*)_alloca((size + 1) * sizeof(wchar));
-		memset(segment, 0, (size + 1) * sizeof(wchar));
+		String segment;
+		segment.reserve(path.size());
 
 		// This flag prevents adding empty directories (multiple slashes next to each other) to the list.
 		bool bEmptySegment = true;
-		int32 segmentIt = 0;
-		for (int32 i = 0; i < size; ++i)
+		//int32 segmentIt = 0;
+		for (int32 i = 0; i < path.size(); ++i)
 		{
-			wchar current = path[i];
+			char current = path[i];
 			if (IsAnyOf(current, L'/', L'\\'))
 			{
 				if (!bEmptySegment)
 				{
 					ionassert(File::IsFileNameLegal(segment) || (pathArray.empty() && IsDriveLetter(segment)));
-					pathArray.emplace_back<WString>(segment);
-					memset(segment, 0, (size + 1) * sizeof(wchar));
+					pathArray.emplace_back(segment);
+					segment.clear();
 				}
 
-				segmentIt = 0;
+				//segmentIt = 0;
 				bEmptySegment = true;
 			}
 			else
 			{
 				bEmptySegment = false;
-				segment[segmentIt++] = current;
+				segment += current;
 			}
 		}
 		// Add the last element if there wasn't a slash at the end
 		if (!bEmptySegment)
 		{
 			ionassert(File::IsFileNameLegal(segment) || (pathArray.empty() && IsDriveLetter(segment)));
-			pathArray.emplace_back<WString>(segment);
+			pathArray.emplace_back(segment);
 		}
 
 		return pathArray;
 	}
 
-	WStringView FilePath::StripSlashes(const WString& name)
+	StringView FilePath::StripSlashes(const String& name)
 	{
 #pragma warning(disable:26451)
 		uint64 size = name.size();
@@ -455,7 +517,7 @@ namespace Ion
 			}
 		}
 
-		return WStringView(name).substr(start, end - start);
+		return StringView(name).substr(start, end - start);
 	}
 
 	TTreeNode<FileInfo>& FilePath::Tree_Internal() const
@@ -473,7 +535,7 @@ namespace Ion
 		// Filter the directories
 		FileList thisDirDirs = thisDirList.Filter([](const FileInfo& file)
 		{
-			return file.bDirectory && file.Filename != L"." && file.Filename != L"..";
+			return file.bDirectory && file.Filename != "." && file.Filename != "..";
 		});
 
 		TTreeNode<FileInfo>& thisDirNode = TTreeNode<FileInfo>::Make(thisDir);
@@ -494,6 +556,11 @@ namespace Ion
 		return thisDirNode;
 	}
 
+	WString FilePath::GetPathW() const
+	{
+		return StringConverter::StringToWString(m_PathName);
+	}
+
 	void FilePath::UpdatePathName() const
 	{
 		m_PathName.clear();
@@ -501,7 +568,7 @@ namespace Ion
 		{
 			m_PathName += *it;
 			if (it != m_Path.end() - 1)
-				m_PathName += L"/";
+				m_PathName += "/";
 		}
 	}
 }

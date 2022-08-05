@@ -149,7 +149,7 @@ namespace Ion
 				desc.bGenerateMips = true;
 				desc.bCreateSampler = true;
 				desc.bUseAsRenderTarget = true;
-				desc.DebugName = StringConverter::WStringToString(m_Asset->GetDefinitionPath().ToString());
+				desc.DebugName = m_Asset->GetDefinitionPath().ToString();
 
 				desc.SetFilterAll(m_Description.Properties.Filter);
 

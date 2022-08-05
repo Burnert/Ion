@@ -150,7 +150,7 @@ namespace Ion
 	void WindowsApplication::LoadCursors()
 	{
 		constexpr size_t count = (size_t)ECursorType::_Count;
-		WString cursorPath;
+		String cursorPath;
 		for (int32 i = 0; i < count; ++i)
 		{
 			HCURSOR& handle = m_CursorHandles[i];
@@ -195,20 +195,20 @@ namespace Ion
 				break;
 			case ECursorType::Grab:
 				// @TODO: unhardcode these paths
-				cursorPath = (EnginePath::GetEngineContentPath() + L"Cursor/openhand.cur").ToString();
-				handle = LoadCursorFromFile(cursorPath.c_str());
+				cursorPath = (EnginePath::GetEngineContentPath() + "Cursor/openhand.cur").ToString();
+				handle = LoadCursorFromFile(StringConverter::StringToWString(cursorPath).c_str());
 				if (!handle)
 				{
-					LOG_WARN(L"Could not load cursor {0}. The default one will be used.", cursorPath);
+					LOG_WARN("Could not load cursor {0}. The default one will be used.", cursorPath);
 					handle = LoadCursor(NULL, IDC_ARROW);
 				}
 				break;
 			case ECursorType::GrabClosed:
-				cursorPath = (EnginePath::GetEngineContentPath() + L"Cursor/closedhand.cur").ToString();
-				handle = LoadCursorFromFile(cursorPath.c_str());
+				cursorPath = (EnginePath::GetEngineContentPath() + "Cursor/closedhand.cur").ToString();
+				handle = LoadCursorFromFile(StringConverter::StringToWString(cursorPath).c_str());
 				if (!handle)
 				{
-					LOG_WARN(L"Could not load cursor {0}. The default one will be used.", cursorPath);
+					LOG_WARN("Could not load cursor {0}. The default one will be used.", cursorPath);
 					handle = LoadCursor(NULL, IDC_ARROW);
 				}
 				break;

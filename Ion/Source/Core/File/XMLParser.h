@@ -22,7 +22,7 @@ namespace Ion
 #define _PARSER_CHECK_NODE_R(node, nodeName, path, ret) \
 if (!(node)) \
 { \
-	String sPath = StringConverter::WStringToString(path.ToString()); \
+	String sPath = path.ToString(); \
 	String sMsg = fmt::format(_PARSER_NODE_ERROR_MSG_PATTERN, nodeName, sPath); \
 	LOG_ERROR("XMLParser error:\n{0}", sMsg); \
 	Fail(sMsg); \
@@ -35,7 +35,7 @@ if (!(node)) \
 #define _PARSER_CHECK_ATTR_R(attr, attrName, nodeName, path, ret) \
 if (!(attr)) \
 { \
-	String sPath = StringConverter::WStringToString(path.ToString()); \
+	String sPath = path.ToString(); \
 	String sMsg = fmt::format(_PARSER_ATTR_ERROR_MSG_PATTERN, attrName, nodeName, sPath); \
 	LOG_ERROR("XMLParser error:\n{0}", sMsg); \
 	Fail(sMsg); \

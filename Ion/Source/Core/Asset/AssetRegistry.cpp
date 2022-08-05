@@ -113,7 +113,7 @@ namespace Ion
 
 		instance.m_VirtualRoots.emplace(root, fixedPath);
 
-		LOG_INFO("Registered asset virtual root: \"{}\" -> \"{}\"", root, StringConverter::WStringToString(fixedPath.ToString()));
+		LOG_INFO("Registered asset virtual root: \"{}\" -> \"{}\"", root, fixedPath.ToString());
 	}
 
 	void AssetRegistry::RegisterAssetsInVirtualRoot(const String& virtualRoot)
@@ -130,8 +130,8 @@ namespace Ion
 		TArray<TTreeNode<FileInfo>*> assets = content->FindAllNodesRecursiveDF([](FileInfo& fileInfo)
 		{
 			File file(fileInfo.Filename);
-			WString extension = file.GetExtension();
-			return extension == StringConverter::StringToWString(Asset::FileExtensionNoDot);
+			String extension = file.GetExtension();
+			return extension == Asset::FileExtensionNoDot;
 		});
 
 		for (TTreeNode<FileInfo>*& assetNode : assets)
@@ -140,10 +140,10 @@ namespace Ion
 			FilePath relativePath = FilePath(assetNode->Get().FullPath).RelativeTo(rootDir);
 
 			// Remove the extension
-			String last = StringConverter::WStringToString(relativePath.LastElement());
+			String last = relativePath.LastElement();
 			last = last.substr(0, last.rfind(Asset::FileExtension));
 			relativePath.Back();
-			String sRelative = StringConverter::WStringToString(relativePath.ToString());
+			String sRelative = relativePath.ToString();
 
 			// Make a virtual path string
 			String virtualPath = fmt::format("{}/{}/{}", virtualRoot, sRelative, last);

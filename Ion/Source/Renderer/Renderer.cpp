@@ -225,13 +225,13 @@ namespace Ion
 		String pixelSrc;
 		if (RHI::GetCurrent() == ERHI::DX11)
 		{
-			File::ReadToString(EnginePath::GetCheckedShadersPath() + L"TextureRenderVS.hlsl", vertexSrc);
-			File::ReadToString(EnginePath::GetCheckedShadersPath() + L"TextureRenderPS.hlsl", pixelSrc);
+			File::ReadToString(EnginePath::GetCheckedShadersPath() + "TextureRenderVS.hlsl", vertexSrc);
+			File::ReadToString(EnginePath::GetCheckedShadersPath() + "TextureRenderPS.hlsl", pixelSrc);
 		}
 		else
 		{
-			File::ReadToString(EnginePath::GetCheckedShadersPath() + L"TextureRender.vert", vertexSrc);
-			File::ReadToString(EnginePath::GetCheckedShadersPath() + L"TextureRender.frag", pixelSrc);
+			File::ReadToString(EnginePath::GetCheckedShadersPath() + "TextureRender.vert", vertexSrc);
+			File::ReadToString(EnginePath::GetCheckedShadersPath() + "TextureRender.frag", pixelSrc);
 		}
 
 		m_ScreenTextureRenderData.Shader = RHIShader::Create();
@@ -356,13 +356,13 @@ namespace Ion
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() == ERHI::DX11)
 		{
-			File::ReadToString(shadersPath + L"BasicVS.hlsl", vertexSrc);
-			File::ReadToString(shadersPath + L"BasicPS.hlsl", pixelSrc);
+			File::ReadToString(shadersPath + "BasicVS.hlsl", vertexSrc);
+			File::ReadToString(shadersPath + "BasicPS.hlsl", pixelSrc);
 		}
 		else
 		{
-			File::ReadToString(shadersPath + L"Basic.vert", vertexSrc);
-			File::ReadToString(shadersPath + L"Basic.frag", pixelSrc);
+			File::ReadToString(shadersPath + "Basic.vert", vertexSrc);
+			File::ReadToString(shadersPath + "Basic.frag", pixelSrc);
 		}
 
 		m_BasicShader = RHIShader::Create();
@@ -384,13 +384,13 @@ namespace Ion
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() == ERHI::DX11)
 		{
-			File::ReadToString(shadersPath + L"BasicVS.hlsl", vertexSrc);
-			File::ReadToString(shadersPath + L"BasicUnlitMaskedPS.hlsl", pixelSrc);
+			File::ReadToString(shadersPath + "BasicVS.hlsl", vertexSrc);
+			File::ReadToString(shadersPath + "BasicUnlitMaskedPS.hlsl", pixelSrc);
 		}
 		else
 		{
-			File::ReadToString(shadersPath + L"Basic.vert", vertexSrc);
-			File::ReadToString(shadersPath + L"BasicUnlitMasked.frag", pixelSrc);
+			File::ReadToString(shadersPath + "Basic.vert", vertexSrc);
+			File::ReadToString(shadersPath + "BasicUnlitMasked.frag", pixelSrc);
 		}
 
 		m_BasicUnlitMaskedShader = RHIShader::Create();
@@ -412,13 +412,13 @@ namespace Ion
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() == ERHI::DX11)
 		{
-			File::ReadToString(shadersPath + L"TextureRenderVS.hlsl", vertexSrc);
-			File::ReadToString(shadersPath + L"PP_FXAAPS.hlsl", pixelSrc);
+			File::ReadToString(shadersPath + "TextureRenderVS.hlsl", vertexSrc);
+			File::ReadToString(shadersPath + "PP_FXAAPS.hlsl", pixelSrc);
 		}
 		else
 		{
-			File::ReadToString(shadersPath + L"TextureRender.vert", vertexSrc);
-			File::ReadToString(shadersPath + L"PP_FXAA.frag", pixelSrc);
+			File::ReadToString(shadersPath + "TextureRender.vert", vertexSrc);
+			File::ReadToString(shadersPath + "PP_FXAA.frag", pixelSrc);
 		}
 
 		m_PPFXAAShader = RHIShader::Create();
@@ -440,13 +440,13 @@ namespace Ion
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() == ERHI::DX11)
 		{
-			File::ReadToString(shadersPath + L"Editor/EditorObjectIDVS.hlsl", vertexSrc);
-			File::ReadToString(shadersPath + L"Editor/EditorObjectIDPS.hlsl", pixelSrc);
+			File::ReadToString(shadersPath + "Editor/EditorObjectIDVS.hlsl", vertexSrc);
+			File::ReadToString(shadersPath + "Editor/EditorObjectIDPS.hlsl", pixelSrc);
 		}
 		else
 		{
-			File::ReadToString(shadersPath + L"Editor/EditorObjectID.vert", vertexSrc);
-			File::ReadToString(shadersPath + L"Editor/EditorObjectID.frag", pixelSrc);
+			File::ReadToString(shadersPath + "Editor/EditorObjectID.vert", vertexSrc);
+			File::ReadToString(shadersPath + "Editor/EditorObjectID.frag", pixelSrc);
 		}
 
 		m_EditorObjectIDShader = RHIShader::Create();
@@ -468,12 +468,12 @@ namespace Ion
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() == ERHI::DX11)
 		{
-			File::ReadToString(shadersPath + L"Editor/EditorSelectedVS.hlsl", vertexSrc);
-			File::ReadToString(shadersPath + L"BasicUnlitMaskedPS.hlsl", pixelSrc);
+			File::ReadToString(shadersPath + "Editor/EditorSelectedVS.hlsl", vertexSrc);
+			File::ReadToString(shadersPath + "BasicUnlitMaskedPS.hlsl", pixelSrc);
 		}
 		else
 		{
-			File::ReadToString(shadersPath + L"Editor/EditorSelected.vert", vertexSrc);
+			File::ReadToString(shadersPath + "Editor/EditorSelected.vert", vertexSrc);
 		}
 
 		m_EditorSelectedShader = RHIShader::Create();
@@ -495,13 +495,13 @@ namespace Ion
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() == ERHI::DX11)
 		{
-			File::ReadToString(shadersPath + L"Editor/EditorViewportVS.hlsl", vertexSrc);
-			File::ReadToString(shadersPath + L"Editor/EditorViewportPS.hlsl", pixelSrc);
+			File::ReadToString(shadersPath + "Editor/EditorViewportVS.hlsl", vertexSrc);
+			File::ReadToString(shadersPath + "Editor/EditorViewportPS.hlsl", pixelSrc);
 		}
 		else
 		{
-			File::ReadToString(shadersPath + L"Editor/EditorViewport.vert", vertexSrc);
-			File::ReadToString(shadersPath + L"Editor/EditorViewport.frag", pixelSrc);
+			File::ReadToString(shadersPath + "Editor/EditorViewport.vert", vertexSrc);
+			File::ReadToString(shadersPath + "Editor/EditorViewport.frag", pixelSrc);
 		}
 
 		m_EditorViewportShader = RHIShader::Create();
@@ -523,13 +523,13 @@ namespace Ion
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() == ERHI::DX11)
 		{
-			File::ReadToString(shadersPath + L"Editor/EditorViewportVS.hlsl", vertexSrc);
-			File::ReadToString(shadersPath + L"Editor/EditorViewportMSPS.hlsl", pixelSrc);
+			File::ReadToString(shadersPath + "Editor/EditorViewportVS.hlsl", vertexSrc);
+			File::ReadToString(shadersPath + "Editor/EditorViewportMSPS.hlsl", pixelSrc);
 		}
 		else
 		{
-			File::ReadToString(shadersPath + L"Editor/EditorViewport.vert", vertexSrc);
-			File::ReadToString(shadersPath + L"Editor/EditorViewport.frag", pixelSrc);
+			File::ReadToString(shadersPath + "Editor/EditorViewport.vert", vertexSrc);
+			File::ReadToString(shadersPath + "Editor/EditorViewport.frag", pixelSrc);
 		}
 
 		m_EditorViewportMSShader = RHIShader::Create();

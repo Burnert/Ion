@@ -59,7 +59,8 @@ namespace Ion
 		FilePath path = AssetRegistry::ResolveVirtualRoot(root);
 
 		String rest = GetRestOfVirtualPath(virtualPath) + Asset::FileExtension;
-		path += StringConverter::StringToWString(rest);
+		ionassert(rest != Asset::FileExtension);
+		path += rest;
 
 		return path;
 	}
@@ -95,7 +96,7 @@ namespace Ion
 						return;
 					}
 
-					FilePath path = StringConverter::StringToWString(sPath);
+					FilePath path = sPath;
 
 					// If the import path is relative, it means it begins in the directory
 					// the .iasset file is in. Append the paths in that case.
@@ -117,8 +118,8 @@ namespace Ion
 	{
 		if (!path.Exists())
 		{
-			LOG_ERROR(L"The file \"{0}\" does not exist.", path.ToString());
-			ionthrow(FileNotFoundError, "The file \"{0}\" does not exist.", StringConverter::WStringToString(path.ToString()));
+			LOG_ERROR("The file \"{0}\" does not exist.", path.ToString());
+			ionthrow(FileNotFoundError, "The file \"{0}\" does not exist.", path.ToString());
 		}
 
 		String assetDefinition;
@@ -131,8 +132,8 @@ namespace Ion
 
 		if (!Parse(/*in out*/ initializer))
 		{
-			LOG_ERROR(L"The file \"{0}\" could not be parsed.", path.ToString());
-			ionthrow(IOError, "The file \"{0}\" could not be parsed.", StringConverter::WStringToString(path.ToString()));
+			LOG_ERROR("The file \"{0}\" could not be parsed.", path.ToString());
+			ionthrow(IOError, "The file \"{0}\" could not be parsed.", path.ToString());
 		}
 
 		return AssetRegistry::Register(initializer).GetHandle();

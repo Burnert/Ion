@@ -20,46 +20,47 @@ namespace Ion
 
 		static inline FilePath GetShadersPath()
 		{
-			return s_EnginePath + L"Shaders";
+			return s_EnginePath + "Shaders";
 		}
 
 		static inline FilePath GetCheckedShadersPath()
 		{
-			return GetCheckedEnginePath() + L"Shaders";
+			return GetCheckedEnginePath() + "Shaders";
 		}
 
 		static inline FilePath GetEngineContentPath()
 		{
-			return s_EnginePath + L"Content";
+			return s_EnginePath + "Content";
 		}
 
 		static inline FilePath GetCheckedContentPath()
 		{
-			return GetCheckedEnginePath() + L"Content";
+			return GetCheckedEnginePath() + "Content";
 		}
 
 		static inline FilePath GetFontsPath()
 		{
-			return GetEngineContentPath() + L"Fonts";
+			return GetEngineContentPath() + "Fonts";
 		}
 
 		static inline FilePath GetCheckedFontsPath()
 		{
-			return GetCheckedContentPath() + L"Fonts";
+			return GetCheckedContentPath() + "Fonts";
 		}
 
 		static inline FilePath GetEditorContentPath()
 		{
-			return GetEngineContentPath() + L"Editor";
+			return GetEngineContentPath() + "Editor";
 		}
 
 		static inline FilePath GetCheckedEditorContentPath()
 		{
-			return GetCheckedContentPath() + L"Editor";
+			return GetCheckedContentPath() + "Editor";
 		}
 
 	protected:
-		static inline void SetEnginePath(const WString& path)
+		template<typename T>
+		static inline void SetEnginePath(const T& path)
 		{
 			s_EnginePath.Set(path);
 		}
@@ -69,7 +70,7 @@ namespace Ion
 		~EnginePath() = delete;
 
 	private:
-		static inline FilePath s_EnginePath = L"";
+		static inline FilePath s_EnginePath = "";
 
 		template<typename T>
 		friend void ParseCommandLineArgs(int32 argc, T* argv[]);

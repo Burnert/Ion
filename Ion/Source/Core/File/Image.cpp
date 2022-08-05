@@ -93,14 +93,14 @@ namespace Ion
 			return nullptr;
 		}
 
-		_FAIL_M(file.Exists(), L"Cannot load image from '{0}'.\nThe file does not exist.", file.GetFullPath());
+		_FAIL_M(file.Exists(), "Cannot load image from '{0}'.\nThe file does not exist.", file.GetFullPath());
 
 		bool bResult;
 		bResult = file.Open(EFileMode::Read);
 		_FAIL(bResult);
 
 		int64 fileSize = file.GetSize();
-		_FAIL_M(fileSize, L"Cannot load image from '{0}'.\nThe file is empty.", file.GetFullPath());
+		_FAIL_M(fileSize, "Cannot load image from '{0}'.\nThe file is empty.", file.GetFullPath());
 
 		uint8* data = new uint8[fileSize];
 		bResult = file.Read(data, fileSize);
@@ -110,7 +110,7 @@ namespace Ion
 
 		// Load pixel data with no desired channel number
 		m_PixelData = stbi_load_from_memory(data, (int32)fileSize, &m_Width, &m_Height, &m_Channels, 4);
-		_FAIL_M(m_PixelData, L"Cannot load pixel data from '{0}'.", file.GetFullPath());
+		_FAIL_M(m_PixelData, "Cannot load pixel data from '{0}'.", file.GetFullPath());
 		m_Channels = 4;
 
 		delete[] data;
@@ -125,7 +125,7 @@ namespace Ion
 
 		// Load pixel data with no desired channel number
 		m_PixelData = stbi_load_from_memory((uint8*)data, (int32)size, &m_Width, &m_Height, &m_Channels, 4);
-		_FAIL_M(m_PixelData, L"Cannot load pixel data from memory. {{{0}}}", data);
+		_FAIL_M(m_PixelData, "Cannot load pixel data from memory. {{{0}}}", data);
 		m_Channels = 4;
 
 		return m_PixelData;

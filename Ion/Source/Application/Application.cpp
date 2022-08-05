@@ -423,10 +423,10 @@ namespace Ion
 		SetCursor(actualCursor);
 	}
 
-	static ImFont* LoadFont(const WString& fontPath, float size, ImFontConfig* config)
+	static ImFont* LoadFont(const String& fontPath, float size, ImFontConfig* config)
 	{
 		ImGuiIO& io = ImGui::GetIO();
-		String path = StringConverter::WStringToString(EnginePath::GetFontsPath() + fontPath);
+		String path = EnginePath::GetFontsPath() + fontPath;
 		return io.Fonts->AddFontFromFileTTF(path.c_str(), size, config);
 	}
 
@@ -436,11 +436,11 @@ namespace Ion
 
 		ImFontConfig config;
 
-		m_Fonts.Roboto_14     = LoadFont(L"Roboto/Roboto-Regular.ttf",         14, &config);
-		m_Fonts.Roboto_16     = LoadFont(L"Roboto/Roboto-Regular.ttf",         16, &config);
-		m_Fonts.RobotoSlab_20 = LoadFont(L"RobotoSlab/RobotoSlab-Regular.ttf", 20, &config);
-		m_Fonts.Exo2_20       = LoadFont(L"Exo2/Exo2-Medium.ttf",              20, &config);
-		m_Fonts.Exo2_24       = LoadFont(L"Exo2/Exo2-Regular.ttf",             24, &config);
+		m_Fonts.Roboto_14     = LoadFont("Roboto/Roboto-Regular.ttf",         14, &config);
+		m_Fonts.Roboto_16     = LoadFont("Roboto/Roboto-Regular.ttf",         16, &config);
+		m_Fonts.RobotoSlab_20 = LoadFont("RobotoSlab/RobotoSlab-Regular.ttf", 20, &config);
+		m_Fonts.Exo2_20       = LoadFont("Exo2/Exo2-Medium.ttf",              20, &config);
+		m_Fonts.Exo2_24       = LoadFont("Exo2/Exo2-Regular.ttf",             24, &config);
 
 		strcpy_s(config.Name, "System Default, 14px");
 		String systemFontPath = StringConverter::WStringToString(Platform::GetSystemDefaultFontPath());

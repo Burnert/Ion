@@ -85,7 +85,7 @@ namespace Ion::Editor
 		WorldInitializer worldInitializer { };
 		m_EditorMainWorld = g_Engine->CreateWorld(worldInitializer);
 
-		AssetRegistry::RegisterVirtualRoot("[Example]", EnginePath::GetEnginePath() + L"../IonExample/Assets");
+		AssetRegistry::RegisterVirtualRoot("[Example]", EnginePath::GetEnginePath() + "../IonExample/Assets");
 		AssetRegistry::RegisterAssetsInVirtualRoot("[Example]");
 
 		LOG_INFO("UTF8: {}", u8"żółw");

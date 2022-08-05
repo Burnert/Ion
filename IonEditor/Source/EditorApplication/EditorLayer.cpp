@@ -293,8 +293,8 @@ namespace Ion::Editor
 				TArray<TResourcePtr<MeshResource>> meshes = ResourceManager::GetResourcesOfType<MeshResource>();
 				for (TResourcePtr<MeshResource>& mesh : meshes)
 				{
-					WString assetPath = mesh->GetAssetHandle()->GetImportPath().ToString();
-					ImGui::Selectable(StringConverter::WStringToString(assetPath).c_str());
+					String assetPath = mesh->GetAssetHandle()->GetImportPath().ToString();
+					ImGui::Selectable(assetPath.c_str());
 				}
 			}
 			ImGui::Unindent();
@@ -305,8 +305,8 @@ namespace Ion::Editor
 				TArray<TResourcePtr<TextureResource>> textures = ResourceManager::GetResourcesOfType<TextureResource>();
 				for (TResourcePtr<TextureResource>& texture : textures)
 				{
-					WString assetPath = texture->GetAssetHandle()->GetImportPath().ToString();
-					ImGui::Selectable(StringConverter::WStringToString(assetPath).c_str());
+					String assetPath = texture->GetAssetHandle()->GetImportPath().ToString();
+					ImGui::Selectable(assetPath.c_str());
 				}
 			}
 			ImGui::Unindent();

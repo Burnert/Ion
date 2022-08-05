@@ -541,7 +541,7 @@ namespace Ion
 			.ParseAttributes(IASSET_NODE_Material_Code,
 				IASSET_ATTR_source, [this](String source)
 				{
-					FilePath path = EnginePath::GetShadersPath() + L"Material" + StringConverter::StringToWString(source);
+					FilePath path = EnginePath::GetShadersPath() + "Material" + source;
 					return LoadExternalMaterialCode(path);
 				}
 			)

@@ -270,14 +270,7 @@ namespace Ion
 			T* nextArg = bHasNextArg ? argv[i + 1] : nullptr;
 			if (!tstrcmp(arg, STR_LITERAL_AS("--enginePath", T)) && bHasNextArg)
 			{
-				if constexpr (TIsSameV<T, char>)
-				{
-					EnginePath::SetEnginePath(StringConverter::StringToWString(nextArg));
-				}
-				else
-				{
-					EnginePath::SetEnginePath(nextArg);
-				}
+				EnginePath::SetEnginePath(nextArg);
 				i++;
 			}
 		}

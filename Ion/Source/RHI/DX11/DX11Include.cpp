@@ -9,7 +9,7 @@ namespace Ion
 
 	HRESULT DX11Include::Open(D3D_INCLUDE_TYPE IncludeType, LPCSTR pFileName, LPCVOID pParentData, LPCVOID* ppData, UINT* pBytes)
 	{
-		FilePath includePath(L"");
+		FilePath includePath("");
 
 		switch (IncludeType)
 		{
@@ -22,7 +22,7 @@ namespace Ion
 			return E_FAIL;
 		}
 
-		File includeFile(includePath + StringConverter::StringToWString(pFileName), EFileMode::Read);
+		File includeFile(includePath + pFileName, EFileMode::Read);
 
 		int64 size = includeFile.GetSize();
 		ionassert(size <= std::numeric_limits<UINT>::max(), "The include file is too big.");
