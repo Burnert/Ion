@@ -274,7 +274,15 @@ if (!(attr)) \
 		ionassert(m_Path.IsFile());
 
 		String xml;
-		File::ReadToString(m_Path, xml);
+		ionmatchresult(File::ReadToString(m_Path),
+			mcaseok xml = R.Unwrap();
+			melse
+			{
+				Fail("Cannot read the file.");
+				return *this;
+			}
+		);
+		
 		if (xml.empty())
 		{
 			Fail("The file is empty.");

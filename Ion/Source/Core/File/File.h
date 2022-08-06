@@ -24,7 +24,7 @@ namespace Ion
 			Append    = Bitflag(2),
 			Reset     = Bitflag(3),
 			CreateNew = Bitflag(4),
-			DoNotOpen = Bitflag(5),
+			//DoNotOpen = Bitflag(5),
 		};
 	}
 
@@ -134,11 +134,11 @@ namespace Ion
 	class ION_API File
 	{
 	public:
-		File(const FilePath& path, uint8 mode = EFileMode::DoNotOpen);
-		File(const String& filename, uint8 mode = EFileMode::DoNotOpen);
-		File(const WString& filename, uint8 mode = EFileMode::DoNotOpen);
+		File(const FilePath& path);
+		File(const String& filename);
+		File(const WString& filename);
 
-		bool Open(uint8 mode);
+		Result<void, IOError, FileNotFoundError> Open(uint8 mode = EFileMode::Read);
 
 		static bool Delete(const FilePath& path);
 		static bool Delete(const String& filename);
@@ -148,40 +148,40 @@ namespace Ion
 
 		// Read functions
 
-		bool Read(uint8* outBuffer, uint64 count);
-		bool Read(char* outBuffer, uint64 count);
-		bool Read(String& outStr);
+		Result<void, IOError> Read(uint8* outBuffer, uint64 count);
+		Result<void, IOError> Read(char* outBuffer, uint64 count);
+		Result<String, IOError> Read();
 
-		bool ReadLine(char* outBuffer, uint64 count);
-		bool ReadLine(String& outStr);
+		Result<void, IOError> ReadLine(char* outBuffer, uint64 count);
+		Result<String, IOError> ReadLine();
 
 		template<uint64 Size>
-		bool Read(uint8(&outBuffer)[Size]);
+		Result<void, IOError> Read(uint8(&outBuffer)[Size]);
 		template<uint64 Size>
-		bool Read(char(&outBuffer)[Size]);
+		Result<void, IOError> Read(char(&outBuffer)[Size]);
 
-		static bool ReadToString(const FilePath& filePath, String& outString);
-		static bool ReadToString(const String& filePath, String& outString);
-		static bool ReadToString(const WString& filePath, String& outString);
+		static Result<String, IOError, FileNotFoundError> ReadToString(const FilePath& filePath);
+		static Result<String, IOError, FileNotFoundError> ReadToString(const String& filePath);
+		static Result<String, IOError, FileNotFoundError> ReadToString(const WString& filePath);
 
 		// Write functions
 
-		bool Write(const uint8* inBuffer, uint64 count);
-		bool Write(const char* inBuffer, uint64 count);
-		bool Write(const String& inStr);
+		Result<void, IOError> Write(const uint8* inBuffer, uint64 count);
+		Result<void, IOError> Write(const char* inBuffer, uint64 count);
+		Result<void, IOError> Write(const String& inStr);
 
-		bool WriteLine(const char* inBuffer, uint64 count, ENewLineType newLineType = s_DefaultNewLineType);
-		bool WriteLine(const String& inStr, ENewLineType newLineType = s_DefaultNewLineType);
+		Result<void, IOError> WriteLine(const char* inBuffer, uint64 count, ENewLineType newLineType = s_DefaultNewLineType);
+		Result<void, IOError> WriteLine(const String& inStr, ENewLineType newLineType = s_DefaultNewLineType);
 
 		template<uint64 Size>
-		bool Write(const uint8(&inBuffer)[Size]);
+		Result<void, IOError> Write(const uint8(&inBuffer)[Size]);
 		template<uint64 Size>
-		bool Write(const char(&inBuffer)[Size]);
+		Result<void, IOError> Write(const char(&inBuffer)[Size]);
 
 		// Other functions
 
-		bool AddOffset(int64 count);
-		bool SetOffset(int64 count);
+		Result<void, IOError> AddOffset(int64 count);
+		Result<void, IOError> SetOffset(int64 count);
 		int64 GetOffset() const;
 
 		int64 GetSize() const;
@@ -213,11 +213,10 @@ namespace Ion
 
 	private:
 		String m_FilePath;
+		int64 m_Offset;
 		EFileType m_Type;
 		uint8 m_Mode;
 		bool m_bOpen;
-
-		int64 m_Offset;
 
 	// Caches
 
@@ -235,19 +234,19 @@ namespace Ion
 	// Platform specific
 
 	private:
-		bool Open_Native();
-		static bool Delete_Native(const wchar* filename);
-		bool Close_Native();
+		Result<void, IOError, FileNotFoundError> Open_Native();
+		static Result<void, IOError> Delete_Native(const wchar* filename);
+		void Close_Native();
 
-		bool Read_Native(uint8* outBuffer, uint64 count);
-		bool ReadLine_Internal(char* outBuffer, uint64 count, uint64* outReadCount, bool* bOutOverflow);
-		bool ReadLine_Native(char* outBuffer, uint64 count);
-		bool ReadLine_Native(String& outStr);
-		bool Write_Native(const uint8* inBuffer, uint64 count);
-		bool WriteLine_Native(const char* inBuffer, uint64 count, ENewLineType newLineType);
+		Result<void, IOError> Read_Native(uint8* outBuffer, uint64 count);
+		Result<void, IOError> ReadLine_Internal(char* outBuffer, uint64 count, uint64* outReadCount, bool* bOutOverflow);
+		Result<void, IOError> ReadLine_Native(char* outBuffer, uint64 count);
+		Result<String, IOError> ReadLine_Native();
+		Result<void, IOError> Write_Native(const uint8* inBuffer, uint64 count);
+		Result<void, IOError> WriteLine_Native(const char* inBuffer, uint64 count, ENewLineType newLineType);
 
-		bool AddOffset_Native(int64 count);
-		bool SetOffset_Native(int64 count);
+		Result<void, IOError> AddOffset_Native(int64 count);
+		Result<void, IOError> SetOffset_Native(int64 count);
 
 		void SetNativePointer_Native();
 
@@ -291,91 +290,96 @@ namespace Ion
 		return Delete_Native(filename.c_str());
 	}
 
-	inline bool File::Read(uint8* outBuffer, uint64 count)
+	inline Result<void, IOError> File::Read(uint8* outBuffer, uint64 count)
 	{
+		ionassert(m_bOpen);
 		ionassert(m_Mode & EFileMode::Read, "Read access mode was not specified when opening the file.");
 
 		return Read_Native(outBuffer, count);
 	}
 
-	inline bool File::Read(char* outBuffer, uint64 count)
+	inline Result<void, IOError> File::Read(char* outBuffer, uint64 count)
 	{
 		return Read((uint8*)outBuffer, count);
 	}
 
-	inline bool File::ReadLine(char* outBuffer, uint64 count)
+	inline Result<void, IOError> File::ReadLine(char* outBuffer, uint64 count)
 	{
+		ionassert(m_bOpen);
 		ionassert(m_Mode & EFileMode::Read, "Read access mode was not specified when opening the file.");
 
 		return ReadLine_Native(outBuffer, count);
 	}
 
-	inline bool File::ReadLine(String& outStr)
+	inline Result<String, IOError> File::ReadLine()
 	{
 		ionassert(m_Mode & EFileMode::Read, "Read access mode was not specified when opening the file.");
 
-		return ReadLine_Native(outStr);
+		ionmatchresult(ReadLine_Native(),
+			mfwdthrowall
+			melse return R.Unwrap();
+		);
 	}
 
 	template<uint64 Size>
-	inline bool File::Read(uint8(&outBuffer)[Size])
+	inline Result<void, IOError> File::Read(uint8(&outBuffer)[Size])
 	{
 		return Read((uint8*)outBuffer, Size);
 	}
 
 	template<uint64 Size>
-	inline bool File::Read(char(&outBuffer)[Size])
+	inline Result<void, IOError> File::Read(char(&outBuffer)[Size])
 	{
 		return Read((uint8*)outBuffer, Size - 1);
 	}
 
-	inline bool File::Write(const uint8* inBuffer, uint64 count)
+	inline Result<void, IOError> File::Write(const uint8* inBuffer, uint64 count)
 	{
 		ionassert(m_Mode & EFileMode::Write, "Write access mode was not specified when opening the file.");
 
 		return Write_Native(inBuffer, count);
 	}
 
-	inline bool File::Write(const char* inBuffer, uint64 count)
+	inline Result<void, IOError> File::Write(const char* inBuffer, uint64 count)
 	{
 		return Write((const uint8*)inBuffer, count);
 	}
 
-	inline bool File::Write(const String& inStr)
+	inline Result<void, IOError> File::Write(const String& inStr)
 	{
 		return Write(inStr.c_str(), inStr.size());
 	}
 
-	inline bool File::WriteLine(const char* inBuffer, uint64 count, ENewLineType newLineType)
+	inline Result<void, IOError> File::WriteLine(const char* inBuffer, uint64 count, ENewLineType newLineType)
 	{
 		ionassert(m_Mode & EFileMode::Write, "Write access mode was not specified when opening the file.");
 
 		return WriteLine_Native(inBuffer, count, newLineType);
 	}
 
-	inline bool File::WriteLine(const String& inStr, ENewLineType newLineType)
+	inline Result<void, IOError> File::WriteLine(const String& inStr, ENewLineType newLineType)
 	{
 		return WriteLine(inStr.c_str(), inStr.size() + 1, newLineType);
 	}
 
 	template<uint64 Size>
-	inline bool File::Write(const uint8(&inBuffer)[Size])
+	inline Result<void, IOError> File::Write(const uint8(&inBuffer)[Size])
 	{
 		return Write((const uint8*)inBuffer, Size);
 	}
 
 	template<uint64 Size>
-	inline bool File::Write(const char(&inBuffer)[Size])
+	inline Result<void, IOError> File::Write(const char(&inBuffer)[Size])
 	{
 		return Write((const uint8*)inBuffer, Size - 1);
 	}
 
-	inline bool File::AddOffset(int64 count)
+	inline Result<void, IOError> File::AddOffset(int64 count)
 	{
 		return AddOffset_Native(count);
 	}
 
-	inline bool File::SetOffset(int64 count)
+	inline Result<void, IOError> File::SetOffset(int64 count)
 	{
 		return SetOffset_Native(count);
 	}

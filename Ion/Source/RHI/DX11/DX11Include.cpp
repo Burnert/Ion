@@ -22,7 +22,8 @@ namespace Ion
 			return E_FAIL;
 		}
 
-		File includeFile(includePath + pFileName, EFileMode::Read);
+		File includeFile(includePath + pFileName);
+		includeFile.Open();
 
 		int64 size = includeFile.GetSize();
 		ionassert(size <= std::numeric_limits<UINT>::max(), "The include file is too big.");

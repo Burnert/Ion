@@ -4,14 +4,14 @@
 
 namespace Ion
 {
-	File::File(const FilePath& path, uint8 mode)
-		: File(path.ToString(), mode)
+	File::File(const FilePath& path)
+		: File(path.ToString())
 	{ }
 
-	File::File(const String& filename, uint8 mode) :
+	File::File(const String& filename) :
 		m_FilePath(filename),
 		m_Type(EFileType::Text),
-		m_Mode(mode),
+		m_Mode(EFileMode::Read),
 		m_bOpen(false),
 		m_Offset(0),
 		m_FileSize(0)
@@ -21,15 +21,10 @@ namespace Ion
 		SetNativePointer_Native();
 
 		UpdateFileExtensionCache();
-
-		if (!(m_Mode & EFileMode::DoNotOpen))
-		{
-			ionverify(Open(mode));
-		}
 	}
 
-	File::File(const WString& filename, uint8 mode) :
-		File(StringConverter::WStringToString(filename), mode)
+	File::File(const WString& filename) :
+		File(StringConverter::WStringToString(filename))
 	{
 	}
 
@@ -39,7 +34,7 @@ namespace Ion
 			Close();
 	}
 
-	bool File::Open(uint8 mode)
+	Result<void, IOError, FileNotFoundError> File::Open(uint8 mode)
 	{
 		ionassert(!IsOpen());
 		ionassert(mode & (EFileMode::Read | EFileMode::Write), "File mode has to have at least one of Read and Write flags set.");
@@ -49,7 +44,6 @@ namespace Ion
 			"Creating a new file, if it is only going to be read, is redundant.");
 
 		m_Mode = mode;
-		m_bOpen = true;
 
 		return Open_Native();
 	}
@@ -71,36 +65,42 @@ namespace Ion
 		Close_Native();
 	}
 
-	bool File::ReadToString(const FilePath& filePath, String& outString)
+	Result<String, IOError, FileNotFoundError> File::ReadToString(const FilePath& filePath)
 	{
-		return ReadToString(filePath.ToString(), outString);
+		return ReadToString(filePath.ToWString());
 	}
 
-	bool File::ReadToString(const String& filePath, String& outString)
+	Result<String, IOError, FileNotFoundError> File::ReadToString(const String& filePath)
+	{
+		return ReadToString(StringConverter::StringToWString(filePath));
+	}
+
+	Result<String, IOError, FileNotFoundError> File::ReadToString(const WString& filePath)
 	{
 		if (!(FilePath::Exists(filePath) && FilePath::IsFile(filePath)))
 		{
-			LOG_ERROR("The file \"{0}\" does not exist or is a directory.", filePath);
-			return false;
+			LOG_ERROR(L"The file \"{}\" does not exist or is a directory.", filePath);
+			ionthrow(FileNotFoundError, L"The file \"{}\" does not exist or is a directory.", filePath);
 		}
 
-		File file(filePath, EFileMode::Read);
-		return file.Read(outString);
+		File file(filePath);
+		file.Open();
+		ionmatchresult(file.Read(),
+			mfwdthrowall
+			melse return R.Unwrap();
+		);
 	}
 
-	bool File::ReadToString(const WString& filePath, String& outString)
+	Result<String, IOError> File::Read()
 	{
-		return ReadToString(StringConverter::WStringToString(filePath), outString);
-	}
-
-	bool File::Read(String& outStr)
-	{
+		ionassert(m_bOpen);
 		ionassert(m_Mode & EFileMode::Read, "Read access mode was not specified when opening the file.");
 
 		int64 count = GetSize();
-		outStr.resize(count);
+		String outStr(count, 0);
 
-		return Read(outStr.data(), count);
+		fwdthrowall(Read(outStr.data(), count));
+		return outStr;
 	}
 
 	void File::UpdateFileExtensionCache() const

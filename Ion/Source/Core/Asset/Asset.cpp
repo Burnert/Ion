@@ -123,7 +123,10 @@ namespace Ion
 		}
 
 		String assetDefinition;
-		File::ReadToString(path, assetDefinition);
+		ionmatchresult(File::ReadToString(path),
+			mfwdthrowall
+			melse assetDefinition = R.Unwrap();
+		);
 
 		AssetInitializer initializer;
 		initializer.IAssetXML = MakeShared<XMLDocument>(assetDefinition);

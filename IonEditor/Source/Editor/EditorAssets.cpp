@@ -108,13 +108,13 @@ namespace Ion::Editor
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() == ERHI::DX11)
 		{
-			File::ReadToString(shadersPath + "Editor/EditorGridVS.hlsl", vertexSrc);
-			File::ReadToString(shadersPath + "Editor/EditorGridPS.hlsl", pixelSrc);
+			vertexSrc = File::ReadToString(shadersPath + "Editor/EditorGridVS.hlsl").Unwrap();
+			pixelSrc  = File::ReadToString(shadersPath + "Editor/EditorGridPS.hlsl").Unwrap();
 		}
 		else
 		{
-			File::ReadToString(shadersPath + "Basic.vert", vertexSrc);
-			File::ReadToString(shadersPath + "Basic.frag", pixelSrc);
+			vertexSrc = File::ReadToString(shadersPath + "Basic.vert").Unwrap();
+			pixelSrc  = File::ReadToString(shadersPath + "Basic.frag").Unwrap();
 		}
 
 		EditorMeshes::ShaderGrid = RHIShader::Create();

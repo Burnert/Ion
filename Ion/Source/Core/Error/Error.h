@@ -604,6 +604,8 @@ namespace Ion
 		inline static String _FormatThrowMessage() { return ""; }
 		template<typename... Args>
 		inline static String _FormatThrowMessage(const String& format, Args&&... args) { return fmt::format(format, Forward<Args>(args)...); }
+		template<typename... Args>
+		inline static String _FormatThrowMessage(const WString& format, Args&&... args) { return StringConverter::WStringToString(fmt::format(format, Forward<Args>(args)...)); }
 	}
 
 #if ION_BREAK_ON_THROW

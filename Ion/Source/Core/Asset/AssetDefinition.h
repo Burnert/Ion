@@ -131,7 +131,8 @@ namespace Ion
 				delete ptr;
 			});
 
-			File assetFile(importData.Path, EFileMode::Read);
+			File assetFile(importData.Path);
+			assetFile.Open();
 			data->Count = assetFile.GetSize();
 			data->Ptr = new uint8[data->Count];
 			if (!assetFile.Read(data->Ptr, data->Count))

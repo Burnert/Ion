@@ -691,8 +691,10 @@ namespace Ion
 	bool Material::LoadExternalMaterialCode(const FilePath& path)
 	{
 		String source;
-		if (!File::ReadToString(path, source))
-			return false;
+		ionmatchresult(File::ReadToString(path),
+			mcaseok source = R.Unwrap();
+			melse return false;
+		);
 
 		SetMaterialCode(source);
 
