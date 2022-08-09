@@ -129,9 +129,7 @@ namespace Ion
 
 		TArray<TTreeNode<FileInfo>*> assets = content->FindAllNodesRecursiveDF([](FileInfo& fileInfo)
 		{
-			File file(fileInfo.Filename);
-			String extension = file.GetExtension();
-			return extension == Asset::FileExtensionNoDot;
+			return EqualsCI(FilePath(fileInfo.Filename).GetExtension(), StringView(Asset::FileExtension));
 		});
 
 		for (TTreeNode<FileInfo>*& assetNode : assets)

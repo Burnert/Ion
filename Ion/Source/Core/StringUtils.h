@@ -31,6 +31,22 @@ template<> inline static uint64 tstrlen<wchar>(const wchar* s) { return wcslen(s
 FORCEINLINE constexpr const char* BoolStr(bool value) { return value ? "true" : "false"; }
 FORCEINLINE constexpr const wchar* BoolWStr(bool value) { return value ? L"true" : L"false"; }
 
+// Comparison
+
+/**
+ * @brief Case insensitive string comparison
+ */
+template<typename T1, typename T2>
+static bool EqualsCI(const T1& lhs, const T2& rhs)
+{
+	return std::equal(
+		std::begin(lhs), std::end(lhs),
+		std::begin(rhs), std::end(rhs),
+		[](char a, char b) {
+			return std::tolower((unsigned char)a) == std::tolower((unsigned char)b);
+		});
+}
+
 // Type definition to String converter functions
 
 template<typename Type>

@@ -17,7 +17,7 @@ namespace Ion
 	AssetParser::AssetParser(const FilePath& assetPath) :
 		XMLParser(assetPath)
 	{
-		ionassert(File(assetPath).GetExtension() == "iasset");
+		ionassert(EqualsCI(assetPath.GetExtension(), StringView(Asset::FileExtension)));
 	}
 
 	AssetParser& AssetParser::BeginAsset()

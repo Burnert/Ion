@@ -19,8 +19,6 @@ namespace Ion
 		ionassert(!filename.empty(), "The filename cannot be empty.");
 
 		SetNativePointer_Native();
-
-		UpdateFileExtensionCache();
 	}
 
 	File::File(const WString& filename) :
@@ -101,25 +99,6 @@ namespace Ion
 
 		fwdthrowall(Read(outStr.data(), count));
 		return outStr;
-	}
-
-	void File::UpdateFileExtensionCache() const
-	{
-		ionassert(!m_FilePath.empty());
-
-		uint64 dotIndex = m_FilePath.find_last_of(L'.');
-
-		if (dotIndex == WString::npos)
-		{
-			m_FileExtension = "";
-		}
-		else
-		{
-			String extension = m_FilePath.substr(dotIndex + 1, (size_t)-1);
-
-			std::transform(extension.begin(), extension.end(), extension.begin(), [](wchar ch) { return std::tolower(ch); });
-			m_FileExtension = extension;
-		}
 	}
 
 	bool File::EndOfFile() const

@@ -14,8 +14,8 @@ namespace Ion
 			static constexpr const char* Game    = "[Game]";
 		};
 
-		static constexpr const char* FileExtension = ".iasset";
-		static constexpr const char* FileExtensionNoDot = FileExtension + 1;
+		static constexpr const char FileExtension[] = ".iasset";
+		static constexpr const char FileExtensionNoDot[] = "iasset";
 
 		static const Asset None;
 

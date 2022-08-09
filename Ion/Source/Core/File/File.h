@@ -125,6 +125,179 @@ namespace Ion
 
 #pragma endregion
 
+// FilePath class ---------------------------------------------------------------------------
+
+#pragma region FilePath
+
+	class ION_API FilePath
+	{
+	public:
+		FilePath();
+		FilePath(const String& path, EFilePathValidation validation = EFilePathValidation::Unchecked);
+		FilePath(const WString& path, EFilePathValidation validation = EFilePathValidation::Unchecked);
+		FilePath(const FilePath& path, EFilePathValidation validation);
+
+		FilePath(const FilePath&) = default;
+		FilePath(FilePath&&) noexcept = default;
+
+		void Set(const String& path);
+		void Set(const WString& path);
+		void Set(const FilePath& path);
+
+		bool ChangeDirectory(const String& directory);
+		bool ChangeDirectory(const WString& directory);
+		bool ChangePath(const FilePath& path);
+
+		void Back();
+
+		/**
+		 * @brief Creates a directory on disk with a given name.
+		 * 
+		 * @param name Name of the directory
+		 * @return true if the directory has been made successfully.
+		 */
+		bool Make(const String& name);
+		bool Make(const WString& name);
+
+		bool Rename(const String& newName);
+		bool Rename(const WString& newName);
+
+		/**
+		 * @brief Deletes the file / directory on disk.
+		 * Doesn't delete the whole directory with files recursively, unless bForce is true.
+		 * 
+		 * @param bForce Whether to force delete the whole directory
+		 * @return true if the file has been deleted
+		 */
+		bool Delete(bool bForce = false);
+
+		/**
+		 * @brief Get this FilePath as a relative path to a specified base directory.
+		 * e.g. "C:/Programs/Base/Assets/Textures" (baseDir = "C:/Programs/Base") -> "Assets/Textures"
+		 * This FilePath must be absolute.
+		 * 
+		 * @param baseDir base directory, must be absolute
+		 * @return FilePath relative file path
+		 */
+		FilePath RelativeTo(const FilePath& baseDir) const;
+
+		/**
+		 * @brief Removes ".." and "." from the middle of the path, keeping the path intact.
+		 * e.g. "Ion/Ion/../IonExample/Assets" -> "Ion/IonExample/Assets"
+		 * 
+		 * @return FilePath Fixed file path
+		 */
+		FilePath Fix() const;
+
+		/**
+		 * @brief Checks if the file / directory exists on disk
+		 */
+		bool Exists() const;
+
+		/**
+		 * @brief Checks if the file path points to a directory on disk.
+		 */
+		bool IsDirectory() const;
+
+		/**
+		 * @brief Checks if the file path points to a file on disk.
+		 */
+		bool IsFile() const;
+
+		bool IsEmpty() const;
+
+		FileList ListFiles() const;
+
+		TShared<TTreeNode<FileInfo>> Tree() const;
+
+		bool IsRelative() const;
+		bool IsAbsolute() const;
+
+		String LastElement() const;
+		WString LastElementW() const;
+
+		StringView GetExtension() const;
+		static StringView GetExtension(const StringView& name);
+
+		void SetValidation(EFilePathValidation validation);
+
+		const String& ToString() const;
+		WString ToWString() const;
+
+		static bool Exists(const wchar* path);
+		static bool Exists(const String& path);
+		static bool Exists(const WString& path);
+
+		static bool IsDirectory(const wchar* path);
+		static bool IsDirectory(const String& path);
+		static bool IsDirectory(const WString& path);
+
+		static bool IsFile(const wchar* path);
+		static bool IsFile(const String& path);
+		static bool IsFile(const WString& path);
+
+		static bool IsDriveLetter(const String& drive);
+		static bool IsDriveLetter(const WString& drive);
+
+		static FileList ListFiles(const wchar* path);
+		static FileList ListFiles(const String& path);
+
+		FilePath& operator=(const FilePath&) = default;
+		FilePath& operator=(FilePath&&) = default;
+		FilePath& operator=(const String&);
+		FilePath& operator=(String&&);
+		FilePath& operator=(const WString&);
+		FilePath& operator=(WString&&);
+
+		FilePath& operator+=(const FilePath& path);
+		FilePath& operator+=(const String& directory);
+		FilePath& operator+=(const WString& directory);
+
+		FilePath operator+(const FilePath& path) const;
+		FilePath operator+(const String& directory) const;
+		FilePath operator+(const WString& directory) const;
+
+		bool operator==(const FilePath& path) const;
+		bool operator==(const String& path) const;
+		bool operator==(const WString& path) const;
+
+		bool operator!=(const FilePath& path) const;
+		bool operator!=(const String& path) const;
+		bool operator!=(const WString& path) const;
+
+		operator WString() const;
+		operator String() const;
+
+	private:
+		static TArray<String> SplitPathName(const String& path);
+		static StringView StripSlashes(const String& name);
+
+		TTreeNode<FileInfo>& Tree_Internal() const;
+
+		WString GetPathW() const;
+
+		// Platform specific
+
+		bool Make_Native(const wchar* name);
+		bool Delete_Native();
+		bool DeleteForce_Native();
+		TArray<FileInfo> ListFiles_Native() const;
+		static bool Exists_Native(const wchar* path);
+		static bool IsDirectory_Native(const wchar* path);
+		static bool IsDriveLetter_Native(const WString& drive);
+
+	private:
+		TArray<String> m_Path;
+		bool m_bChecked;
+		
+		mutable String m_PathName;
+		void UpdatePathName() const;
+
+		friend class File;
+	};
+
+#pragma endregion
+
 // File class -------------------------------------------------------------------------------
 
 #pragma region File
@@ -186,7 +359,7 @@ namespace Ion
 
 		int64 GetSize() const;
 
-		const String& GetExtension() const;
+		StringView GetExtension() const;
 
 		bool IsOpen() const;
 
@@ -196,7 +369,7 @@ namespace Ion
 
 		bool IsDirectory() const;
 
-		FilePath GetFilePath(EFilePathValidation validation = EFilePathValidation::Unchecked) const;
+		const FilePath& GetFilePath(EFilePathValidation validation = EFilePathValidation::Unchecked) const;
 
 		const String& GetFullPath() const;
 
@@ -212,7 +385,7 @@ namespace Ion
 		File& operator=(File&&) = default;
 
 	private:
-		String m_FilePath;
+		FilePath m_FilePath;
 		int64 m_Offset;
 		EFileType m_Type;
 		uint8 m_Mode;
@@ -225,9 +398,6 @@ namespace Ion
 		FORCEINLINE void UpdateFileSizeCache() const { m_FileSize = -1; GetSize(); }
 		/* Sets the file size cache to the size specified. */
 		FORCEINLINE void UpdateFileSizeCache(int64 newFileSize) const { m_FileSize = newFileSize; }
-
-		mutable String m_FileExtension;
-		void UpdateFileExtensionCache() const;
 
 	// End of Caches
 
@@ -279,6 +449,200 @@ namespace Ion
 #endif
 		friend class FilePath;
 	};
+
+#pragma endregion
+
+// FilePath implementation ------------------------------------------------------------------
+
+#pragma region FilePath_Impl
+
+	inline bool FilePath::Make(const String& name)
+	{
+		ionassert(File::IsFileNameLegal(name));
+
+		return Make(StringConverter::StringToWString(name));
+	}
+
+	inline bool FilePath::Make(const WString& name)
+	{
+		ionassert(File::IsFileNameLegal(name));
+
+		return Make_Native(name.c_str());
+	}
+
+	inline bool FilePath::Rename(const String& newName)
+	{
+		ionassert(File::IsFileNameLegal(newName));
+
+		// @TODO: Implement this
+		return true;
+	}
+
+	inline bool FilePath::Rename(const WString& newName)
+	{
+		return Rename(StringConverter::WStringToString(newName));
+	}
+
+	inline bool FilePath::Exists() const
+	{
+		return Exists(m_PathName.c_str());
+	}
+
+	inline bool FilePath::IsDirectory() const
+	{
+		return IsDirectory(m_PathName.c_str());
+	}
+
+	inline bool FilePath::IsFile() const
+	{
+		return Exists() && !IsDirectory();
+	}
+
+	inline bool FilePath::IsEmpty() const
+	{
+		return m_Path.empty();
+	}
+
+	inline String FilePath::LastElement() const
+	{
+		return !m_Path.empty() ?
+			m_Path.back() :
+			"";
+	}
+
+	inline WString FilePath::LastElementW() const
+	{
+		return !m_Path.empty() ?
+			StringConverter::StringToWString(m_Path.back()) :
+			L"";
+	}
+
+	inline StringView FilePath::GetExtension() const
+	{
+		return GetExtension(m_PathName);
+	}
+
+	inline StringView FilePath::GetExtension(const StringView& name)
+	{
+		ionassert(!name.empty());
+
+		uint64 dotIndex = name.find_last_of(L'.');
+
+		if (dotIndex == String::npos)
+			return "";
+		
+		return name.substr(dotIndex);
+	}
+
+	inline void FilePath::SetValidation(EFilePathValidation validation)
+	{
+		m_bChecked = (bool)validation;
+	}
+
+	inline const String& FilePath::ToString() const
+	{
+		return m_PathName;
+	}
+
+	inline WString FilePath::ToWString() const
+	{
+		return StringConverter::StringToWString(m_PathName);
+	}
+
+	inline bool FilePath::Exists(const wchar* path)
+	{
+		return Exists_Native(path);
+	}
+
+	inline bool FilePath::Exists(const String& path)
+	{
+		return Exists(StringConverter::StringToWString(path));
+	}
+
+	inline bool FilePath::Exists(const WString& path)
+	{
+		return Exists(path.c_str());
+	}
+
+	inline bool FilePath::IsDirectory(const wchar* path)
+	{
+		return IsDirectory_Native(path);
+	}
+
+	inline bool FilePath::IsDirectory(const String& path)
+	{
+		return IsDirectory(StringConverter::StringToWString(path));
+	}
+
+	inline bool FilePath::IsDirectory(const WString& path)
+	{
+		return IsDirectory(path.c_str());
+	}
+
+	inline bool FilePath::IsFile(const wchar* path)
+	{
+		return Exists(path) && !IsDirectory(path);
+	}
+
+	inline bool FilePath::IsFile(const String& path)
+	{
+		return IsFile(StringConverter::StringToWString(path));
+	}
+
+	inline bool FilePath::IsFile(const WString& path)
+	{
+		return IsFile(path.c_str());
+	}
+
+	inline bool FilePath::IsDriveLetter(const String& drive)
+	{
+		return IsDriveLetter(StringConverter::StringToWString(drive));
+	}
+
+	inline bool FilePath::IsDriveLetter(const WString& drive)
+	{
+		return IsDriveLetter_Native(drive);
+	}
+	
+	inline FilePath& FilePath::operator=(const String& str)
+	{
+		Set(str);
+		return *this;
+	}
+
+	inline FilePath& FilePath::operator=(String&& str)
+	{
+		Set(Move(str));
+		return *this;
+	}
+
+	inline FilePath& FilePath::operator=(const WString& str)
+	{
+		Set(str);
+		return *this;
+	}
+
+	inline FilePath& FilePath::operator=(WString&& str)
+	{
+		Set(Move(str));
+		return *this;
+	}
+
+	inline FilePath::operator String() const
+	{
+		return ToString();
+	}
+
+	inline FilePath::operator WString() const
+	{
+		return ToWString();
+	}
+
+#pragma endregion
+
+// File implementation ----------------------------------------------------------------------
+
+#pragma region File_Impl
 
 	inline bool File::Delete(const String& filename)
 	{
@@ -389,9 +753,9 @@ namespace Ion
 		return m_Offset;
 	}
 
-	inline const String& File::GetExtension() const
+	inline StringView File::GetExtension() const
 	{
-		return m_FileExtension;
+		return GetFilePath().GetExtension();
 	}
 
 	inline bool File::IsOpen() const
@@ -399,346 +763,24 @@ namespace Ion
 		return m_bOpen;
 	}
 
-	inline const String& File::GetFullPath() const
+	inline bool File::Exists() const
+	{
+		return FilePath::Exists(StringConverter::StringToWString(m_FilePath));
+	}
+
+	inline bool File::IsDirectory() const
+	{
+		return FilePath::IsDirectory(StringConverter::StringToWString(m_FilePath));
+	}
+
+	inline const FilePath& File::GetFilePath(EFilePathValidation validation) const
 	{
 		return m_FilePath;
 	}
 
-#pragma endregion
-
-// FilePath class -------------------------------------------------------------------------------
-
-#pragma region FilePath
-
-	class ION_API FilePath
+	inline const String& File::GetFullPath() const
 	{
-	public:
-		//static constexpr const uint64 MaxPathLength = 2000;
-
-		FilePath();
-		FilePath(const String& path, EFilePathValidation validation = EFilePathValidation::Unchecked);
-		FilePath(const WString& path, EFilePathValidation validation = EFilePathValidation::Unchecked);
-		FilePath(const FilePath& path, EFilePathValidation validation);
-
-		FilePath(const FilePath&) = default;
-		FilePath(FilePath&&) noexcept = default;
-
-		void Set(const String& path);
-		void Set(const WString& path);
-		void Set(const FilePath& path);
-
-		bool ChangeDirectory(const String& directory);
-		bool ChangeDirectory(const WString& directory);
-		bool ChangePath(const FilePath& path);
-
-		void Back();
-
-		/**
-		 * @brief Creates a directory on disk with a given name.
-		 * 
-		 * @param name Name of the directory
-		 * @return true if the directory has been made successfully.
-		 */
-		bool Make(const String& name);
-		bool Make(const WString& name);
-
-		bool Rename(const String& newName);
-		bool Rename(const WString& newName);
-
-		/**
-		 * @brief Deletes the file / directory on disk.
-		 * Doesn't delete the whole directory with files recursively, unless bForce is true.
-		 * 
-		 * @param bForce Whether to force delete the whole directory
-		 * @return true if the file has been deleted
-		 */
-		bool Delete(bool bForce = false);
-
-		/**
-		 * @brief Get this FilePath as a relative path to a specified base directory.
-		 * e.g. "C:/Programs/Base/Assets/Textures" (baseDir = "C:/Programs/Base") -> "Assets/Textures"
-		 * This FilePath must be absolute.
-		 * 
-		 * @param baseDir base directory, must be absolute
-		 * @return FilePath relative file path
-		 */
-		FilePath RelativeTo(const FilePath& baseDir) const;
-
-		/**
-		 * @brief Removes ".." and "." from the middle of the path, keeping the path intact.
-		 * e.g. "Ion/Ion/../IonExample/Assets" -> "Ion/IonExample/Assets"
-		 * 
-		 * @return FilePath Fixed file path
-		 */
-		FilePath Fix() const;
-
-		/**
-		 * @brief Checks if the file / directory exists on disk
-		 */
-		bool Exists() const;
-
-		/**
-		 * @brief Checks if the file path points to a directory on disk.
-		 */
-		bool IsDirectory() const;
-
-		/**
-		 * @brief Checks if the file path points to a file on disk.
-		 */
-		bool IsFile() const;
-
-		bool IsEmpty() const;
-
-		FileList ListFiles() const;
-
-		TShared<TTreeNode<FileInfo>> Tree() const;
-
-		bool IsRelative() const;
-		bool IsAbsolute() const;
-
-		String LastElement() const;
-		WString LastElementW() const;
-
-		void SetValidation(EFilePathValidation validation);
-
-		const String& ToString() const;
-		WString ToWString() const;
-
-		static bool Exists(const wchar* path);
-		static bool Exists(const String& path);
-		static bool Exists(const WString& path);
-
-		static bool IsDirectory(const wchar* path);
-		static bool IsDirectory(const String& path);
-		static bool IsDirectory(const WString& path);
-
-		static bool IsFile(const wchar* path);
-		static bool IsFile(const String& path);
-		static bool IsFile(const WString& path);
-
-		static bool IsDriveLetter(const String& drive);
-		static bool IsDriveLetter(const WString& drive);
-
-		static FileList ListFiles(const wchar* path);
-		static FileList ListFiles(const String& path);
-
-		FilePath& operator=(const FilePath&) = default;
-		FilePath& operator=(FilePath&&) = default;
-		FilePath& operator=(const String&);
-		FilePath& operator=(String&&);
-		FilePath& operator=(const WString&);
-		FilePath& operator=(WString&&);
-
-		FilePath& operator+=(const FilePath& path);
-		FilePath& operator+=(const String& directory);
-		FilePath& operator+=(const WString& directory);
-
-		FilePath operator+(const FilePath& path) const;
-		FilePath operator+(const String& directory) const;
-		FilePath operator+(const WString& directory) const;
-
-		bool operator==(const FilePath& path) const;
-		bool operator==(const String& path) const;
-		bool operator==(const WString& path) const;
-
-		bool operator!=(const FilePath& path) const;
-		bool operator!=(const String& path) const;
-		bool operator!=(const WString& path) const;
-
-		operator WString() const;
-		operator String() const;
-
-	private:
-		static TArray<String> SplitPathName(const String& path);
-		static StringView StripSlashes(const String& name);
-
-		TTreeNode<FileInfo>& Tree_Internal() const;
-
-		WString GetPathW() const;
-
-		// Platform specific
-
-		bool Make_Native(const wchar* name);
-		bool Delete_Native();
-		bool DeleteForce_Native();
-		TArray<FileInfo> ListFiles_Native() const;
-		static bool Exists_Native(const wchar* path);
-		static bool IsDirectory_Native(const wchar* path);
-		static bool IsDriveLetter_Native(const WString& drive);
-
-	private:
-		TArray<String> m_Path;
-		bool m_bChecked;
-		
-		mutable String m_PathName;
-		void UpdatePathName() const;
-
-		friend class File;
-	};
-
-	inline bool FilePath::Make(const String& name)
-	{
-		ionassert(File::IsFileNameLegal(name));
-
-		return Make(StringConverter::StringToWString(name));
-	}
-
-	inline bool FilePath::Make(const WString& name)
-	{
-		ionassert(File::IsFileNameLegal(name));
-
-		return Make_Native(name.c_str());
-	}
-
-	inline bool FilePath::Rename(const String& newName)
-	{
-		ionassert(File::IsFileNameLegal(newName));
-
-		// @TODO: Implement this
-		return true;
-	}
-
-	inline bool FilePath::Rename(const WString& newName)
-	{
-		return Rename(StringConverter::WStringToString(newName));
-	}
-
-	inline bool FilePath::Exists() const
-	{
-		return Exists(m_PathName.c_str());
-	}
-
-	inline bool FilePath::IsDirectory() const
-	{
-		return IsDirectory(m_PathName.c_str());
-	}
-
-	inline bool FilePath::IsFile() const
-	{
-		return Exists() && !IsDirectory();
-	}
-
-	inline bool FilePath::IsEmpty() const
-	{
-		return m_Path.empty();
-	}
-
-	inline String FilePath::LastElement() const
-	{
-		return !m_Path.empty() ?
-			m_Path.back() :
-			"";
-	}
-
-	inline WString FilePath::LastElementW() const
-	{
-		return !m_Path.empty() ?
-			StringConverter::StringToWString(m_Path.back()) :
-			L"";
-	}
-
-	inline void FilePath::SetValidation(EFilePathValidation validation)
-	{
-		m_bChecked = (bool)validation;
-	}
-
-	inline const String& FilePath::ToString() const
-	{
-		return m_PathName;
-	}
-
-	inline WString FilePath::ToWString() const
-	{
-		return StringConverter::StringToWString(m_PathName);
-	}
-
-	inline bool FilePath::Exists(const wchar* path)
-	{
-		return Exists_Native(path);
-	}
-
-	inline bool FilePath::Exists(const String& path)
-	{
-		return Exists(StringConverter::StringToWString(path));
-	}
-
-	inline bool FilePath::Exists(const WString& path)
-	{
-		return Exists(path.c_str());
-	}
-
-	inline bool FilePath::IsDirectory(const wchar* path)
-	{
-		return IsDirectory_Native(path);
-	}
-
-	inline bool FilePath::IsDirectory(const String& path)
-	{
-		return IsDirectory(StringConverter::StringToWString(path));
-	}
-
-	inline bool FilePath::IsDirectory(const WString& path)
-	{
-		return IsDirectory(path.c_str());
-	}
-
-	inline bool FilePath::IsFile(const wchar* path)
-	{
-		return Exists(path) && !IsDirectory(path);
-	}
-
-	inline bool FilePath::IsFile(const String& path)
-	{
-		return IsFile(StringConverter::StringToWString(path));
-	}
-
-	inline bool FilePath::IsFile(const WString& path)
-	{
-		return IsFile(path.c_str());
-	}
-
-	inline bool FilePath::IsDriveLetter(const String& drive)
-	{
-		return IsDriveLetter(StringConverter::StringToWString(drive));
-	}
-
-	inline bool FilePath::IsDriveLetter(const WString& drive)
-	{
-		return IsDriveLetter_Native(drive);
-	}
-	
-	inline FilePath& FilePath::operator=(const String& str)
-	{
-		Set(str);
-		return *this;
-	}
-
-	inline FilePath& FilePath::operator=(String&& str)
-	{
-		Set(Move(str));
-		return *this;
-	}
-
-	inline FilePath& FilePath::operator=(const WString& str)
-	{
-		Set(str);
-		return *this;
-	}
-
-	inline FilePath& FilePath::operator=(WString&& str)
-	{
-		Set(Move(str));
-		return *this;
-	}
-
-	inline FilePath::operator String() const
-	{
-		return ToString();
-	}
-
-	inline FilePath::operator WString() const
-	{
-		return ToWString();
+		return m_FilePath.ToString();
 	}
 
 #pragma endregion
