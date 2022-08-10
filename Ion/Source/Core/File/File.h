@@ -133,15 +133,15 @@ namespace Ion
 		FilePath(const FilePath&) = default;
 		FilePath(FilePath&&) noexcept = default;
 
-		void Set(const String& path);
-		void Set(const WString& path);
-		void Set(const FilePath& path);
+		FilePath& Set(const String& path);
+		FilePath& Set(const WString& path);
+		FilePath& Set(const FilePath& path);
 
-		bool ChangeDirectory(const String& directory);
-		bool ChangeDirectory(const WString& directory);
-		bool ChangePath(const FilePath& path);
+		FilePath& ChangeDirectory(const String& directory);
+		FilePath& ChangeDirectory(const WString& directory);
+		FilePath& ChangePath(const FilePath& path);
 
-		void Back();
+		FilePath& Back();
 
 		/**
 		 * @brief Creates a directory on disk with a given name.
@@ -181,6 +181,7 @@ namespace Ion
 		 * @return FilePath Fixed file path
 		 */
 		FilePath Fix() const;
+		FilePath& Fix();
 
 		/**
 		 * @brief Checks if the file / directory exists on disk
@@ -272,8 +273,6 @@ namespace Ion
 		static StringView StripSlashes(const String& name);
 
 		TTreeNode<FileInfo>& Tree_Internal() const;
-
-		WString GetPathW() const;
 
 		// Platform specific
 

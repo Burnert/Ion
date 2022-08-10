@@ -86,7 +86,7 @@ namespace Ion
 			}
 		}
 
-		Handle = CreateFile(m_FilePath.GetPathW().c_str(), dwDesiredAccess, 0, NULL, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, NULL);
+		Handle = CreateFile(m_FilePath.ToWString().c_str(), dwDesiredAccess, 0, NULL, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, NULL);
 
 		if (Handle == INVALID_HANDLE_VALUE)
 		{

@@ -158,70 +158,67 @@ namespace Ion
 		Set(path);
 	}
 
-	void FilePath::Set(const String& path)
+	FilePath& FilePath::Set(const String& path)
 	{
 		m_Path = SplitPathName(path);
-		UpdatePathName();
+		return Fix();
 	}
 
-	void FilePath::Set(const WString& path)
+	FilePath& FilePath::Set(const WString& path)
 	{
-		//ionassert(path.size() < MaxPathLength);
-
-		Set(StringConverter::WStringToString(path));
+		return Set(StringConverter::WStringToString(path));
 	}
 
-	void FilePath::Set(const FilePath& path)
+	FilePath& FilePath::Set(const FilePath& path)
 	{
 		m_Path = path.m_Path;
 		m_PathName = path.m_PathName;
+		return Fix();
 	}
 
-	bool FilePath::ChangeDirectory(const String& directory)
+	FilePath& FilePath::ChangeDirectory(const String& directory)
 	{
 		String strippedName(StripSlashes(directory));
 		ionassert(File::IsFileNameLegal(strippedName) || (m_Path.empty() && IsDriveLetter(strippedName)));
 
 		if (strippedName == ".")
 		{
-			return true;
+			return *this;
 		}
 
 		if (strippedName == "..")
 		{
 			Back();
-			return true;
+			return *this;
 		}
 
 		// Add the directory to the end instead of calling UpdatePathName
 		m_PathName = m_PathName.empty() ? strippedName : m_PathName + "/" + strippedName;
 		m_Path.emplace_back(Move(strippedName));
 
-		return true;
+		return *this;
 	}
 
-	bool FilePath::ChangeDirectory(const WString& directory)
+	FilePath& FilePath::ChangeDirectory(const WString& directory)
 	{
 		return ChangeDirectory(StringConverter::WStringToString(directory));
 	}
 
-	bool FilePath::ChangePath(const FilePath& path)
+	FilePath& FilePath::ChangePath(const FilePath& path)
 	{
 		String newPath;
-		bool bChanged = false;
 		for (const String& dir : path.m_Path)
 		{
 			newPath = m_PathName.empty() ? dir : m_PathName + "/" + dir;
 			
 			m_Path.push_back(dir);
 			m_PathName = newPath;
-			bChanged = true;
 		}
 
-		return bChanged;
+		return *this;
 	}
 
-	void FilePath::Back()
+	FilePath& FilePath::Back()
 	{
 		while (!m_Path.empty() && m_Path.back() == ".")
 			m_Path.pop_back();
@@ -238,6 +235,8 @@ namespace Ion
 			m_Path.pop_back();
 		}
 		UpdatePathName();
+
+		return *this;
 	}
 
 	bool FilePath::Delete(bool bForce)
@@ -300,6 +299,21 @@ namespace Ion
 			fixed.ChangeDirectory(dir);
 		}
 		return fixed;
+	}
+
+	FilePath& FilePath::Fix()
+	{
+		if (IsEmpty())
+			return *this;
+
+		TArray<String> path;
+		path.swap(m_Path);
+		m_PathName.clear();
+		for (const String& dir : path)
+		{
+			ChangeDirectory(dir);
+		}
+		return *this;
 	}
 
 	FileList FilePath::ListFiles() const
@@ -373,41 +387,32 @@ namespace Ion
 
 	FilePath& FilePath::operator/=(const FilePath& path)
 	{
-		ChangePath(path);
-		return *this;
+		return ChangePath(path);
 	}
 
 	FilePath& FilePath::operator/=(const String& directory)
 	{
-		ChangePath(directory);
-		return *this;
+		return ChangePath(directory);
 	}
 
 	FilePath& FilePath::operator/=(const WString& directory)
 	{
-		ChangePath(directory);
-		return *this;
+		return ChangePath(directory);
 	}
 
 	FilePath FilePath::operator/(const FilePath& path) const
 	{
-		FilePath newPath = *this;
-		newPath.ChangePath(path);
-		return newPath;
+		return FilePath(*this).ChangePath(path);
 	}
 
 	FilePath FilePath::operator/(const String& directory) const
 	{
-		FilePath newPath = *this;
-		newPath.ChangePath(directory);
-		return newPath;
+		return FilePath(*this).ChangePath(directory);
 	}
 
 	FilePath FilePath::operator/(const WString& directory) const
 	{
-		FilePath newPath = *this;
-		newPath.ChangePath(directory);
-		return newPath;
+		return FilePath(*this).ChangePath(directory);
 	}
 
 	bool FilePath::operator==(const FilePath& path) const
@@ -516,11 +521,6 @@ namespace Ion
 		}
 
 		return thisDirNode;
-	}
-
-	WString FilePath::GetPathW() const
-	{
-		return StringConverter::StringToWString(m_PathName);
 	}
 
 	void FilePath::UpdatePathName() const
