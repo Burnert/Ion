@@ -55,7 +55,7 @@ namespace Ion
 		m_Fonts()
 	{
 		ionassert(clientApp);
-		Logger::Init();
+		LoggerOld::Init();
 	}
 
 	Application::~Application()

@@ -26,6 +26,8 @@
 
 namespace Ion
 {
+	REGISTER_LOGGER(AssetLogger, "Asset");
+
 	// Fwd
 
 	// Asset.h
@@ -81,7 +83,7 @@ namespace Ion
 		long value = strtol(str, &pEnd, 10);
 		if (pEnd == str || errno == ERANGE)
 		{
-			LOG_ERROR("Invalid value.");
+			AssetLogger.Error("Invalid value.");
 			return NullOpt;
 		}
 		return value;
@@ -93,7 +95,7 @@ namespace Ion
 		float value = strtof(str, &pEnd);
 		if (pEnd == str || errno == ERANGE)
 		{
-			LOG_ERROR("Invalid value.");
+			AssetLogger.Error("Invalid value.");
 			return NullOpt;
 		}
 		return value;
@@ -110,7 +112,7 @@ namespace Ion
 			*currentValue++ = strtof(str, &pEnd);
 			if (pEnd == str || errno == ERANGE)
 			{
-				LOG_ERROR("Invalid value.");
+				AssetLogger.Error("Invalid value.");
 				return NullOpt;
 			}
 			// Omit the space between components;
@@ -126,7 +128,7 @@ namespace Ion
 			mcaseok return R.Unwrap();
 			melse
 			{
-				LOG_ERROR("Cannot parse a GUID value. -> {0}", str);
+				AssetLogger.Error("Cannot parse a GUID value. -> {0}", str);
 				return NullOpt;
 			}
 		);

@@ -4,6 +4,8 @@
 
 namespace Ion
 {
+	REGISTER_LOGGER(XMLParserLogger, "Core::File::XMLParser");
+
 #define _PARSER_NODE_ERROR_MSG_PATTERN \
 "<{}> node has not been found.\nIn file: \"{}\"\n"
 
@@ -24,7 +26,7 @@ if (!(node)) \
 { \
 	String sPath = path.ToString(); \
 	String sMsg = fmt::format(_PARSER_NODE_ERROR_MSG_PATTERN, nodeName, sPath); \
-	LOG_ERROR("XMLParser error:\n{0}", sMsg); \
+	XMLParserLogger.Error("XMLParser error:\n{0}", sMsg); \
 	Fail(sMsg); \
 	return ret; \
 }
@@ -37,7 +39,7 @@ if (!(attr)) \
 { \
 	String sPath = path.ToString(); \
 	String sMsg = fmt::format(_PARSER_ATTR_ERROR_MSG_PATTERN, attrName, nodeName, sPath); \
-	LOG_ERROR("XMLParser error:\n{0}", sMsg); \
+	XMLParserLogger.Error("XMLParser error:\n{0}", sMsg); \
 	Fail(sMsg); \
 	return ret; \
 }

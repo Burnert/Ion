@@ -8,7 +8,7 @@
 #include "Core/Event/WindowEvent.h"
 #include "Core/Event/InputEvent.h"
 #include "Core/Input/Input.h"
-#include "Core/Logging/Logger.h"
+#include "Core/Logging/LoggerOld.h"
 
 #include "RHI/RHI.h"
 #include "RHI/OpenGL/Windows/OpenGLWindows.h"

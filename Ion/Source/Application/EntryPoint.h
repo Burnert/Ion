@@ -17,6 +17,8 @@ static int32 MainShared()
 
 	Platform::_Detail::SetMainThreadId();
 
+	Platform::SetConsoleOutputUTF8();
+
 	Application* application = InstantiateApplication();
 	application->Start();
 

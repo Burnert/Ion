@@ -32,6 +32,7 @@
 #include "Core/GUID.h"
 #include "Core/Input/Input.h"
 #include "Core/Layer/Layer.h"
+#include "Core/Logging/LoggerOld.h"
 #include "Core/Logging/Logger.h"
 #include "Core/Memory/MemoryCore.h"
 #include "Core/Memory/PoolAllocator.h"

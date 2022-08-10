@@ -21,14 +21,14 @@ namespace Ion
 		auto it = instance.m_Assets.find(initializer.VirtualPath);
 		if (it != instance.m_Assets.end())
 		{
-			LOG_ERROR("Cannot register the asset. An asset with the same virtual path \"{0}\" already exists.", initializer.VirtualPath);
+			AssetLogger.Error("Cannot register the asset. An asset with the same virtual path \"{0}\" already exists.", initializer.VirtualPath);
 			return it->second;
 		}
 
 		auto& [vp, assetDef] = *instance.m_Assets.emplace(initializer.VirtualPath, AssetDefinition(initializer)).first;
 		instance.m_AssetPtrs.emplace(&assetDef);
 
-		LOG_TRACE("Registered asset \"{0}\".", assetDef.GetVirtualPath());
+		AssetLogger.Trace("Registered asset \"{0}\".", assetDef.GetVirtualPath());
 
 		return assetDef;
 	}
@@ -45,7 +45,7 @@ namespace Ion
 		instance.m_AssetPtrs.erase(&instance.m_Assets.at(virtualPath));
 		instance.m_Assets.erase(virtualPath);
 
-		LOG_TRACE("Unregistered asset \"{0}\".", virtualPath);
+		AssetLogger.Trace("Unregistered asset \"{0}\".", virtualPath);
 	}
 
 	AssetDefinition* AssetRegistry::Find(const String& virtualPath)
@@ -92,7 +92,7 @@ namespace Ion
 
 		instance.RegisterAssetsInVirtualRoot(Asset::VirtualRoot::Engine);
 
-		LOG_INFO("Registered Engine Assets.");
+		AssetLogger.Info("Registered Engine Assets.");
 	}
 
 	void AssetRegistry::RegisterEngineVirtualRoots()
@@ -113,7 +113,7 @@ namespace Ion
 
 		instance.m_VirtualRoots.emplace(root, fixedPath);
 
-		LOG_INFO("Registered asset virtual root: \"{}\" -> \"{}\"", root, fixedPath.ToString());
+		AssetLogger.Info("Registered asset virtual root: \"{}\" -> \"{}\"", root, fixedPath.ToString());
 	}
 
 	void AssetRegistry::RegisterAssetsInVirtualRoot(const String& virtualRoot)

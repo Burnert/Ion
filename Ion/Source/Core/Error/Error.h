@@ -4,10 +4,13 @@
 #include "Core/CoreMacros.h"
 #include "Core/CoreTypes.h"
 #include "Core/Platform/Platform.h"
+#include "Core/Logging/LoggerOld.h"
 #include "Core/Logging/Logger.h"
 
 namespace Ion
 {
+	REGISTER_LOGGER(ErrorLogger, "Core::Error");
+
 // Error handler ------------------------------------------------------------------------------------------
 
 #pragma region Error Handler
@@ -54,10 +57,10 @@ namespace Ion
 	template<typename... Args>
 	inline void ErrorHandler::AssertAbort(_ASSERT_ARGS, const char* format, Args&&... args)
 	{
-		LOG_CRITICAL("Critical error has occured!");
-		LOG_CRITICAL("Assertion failed:\n\n" _ABORT_LOG_PATTERN, _FWD_ASSERT_ARGS);
+		ErrorLogger.Critical("Critical error has occured!");
+		ErrorLogger.Critical("Assertion failed:\n\n" _ABORT_LOG_PATTERN, _FWD_ASSERT_ARGS);
 		if (format)
-			LOG_CRITICAL(format, Forward<Args>(args)...);
+			ErrorLogger.Critical(format, Forward<Args>(args)...);
 
 #if _SHOW_ABORT_MESSAGE_BOX
 		String message = format ? fmt::format(format, Forward<Args>(args)...) : EmptyString;
@@ -68,11 +71,11 @@ namespace Ion
 	template<typename TResult>
 	inline void ErrorHandler::UnwrapAbort(_ASSERT_ARGS, const TResult& result)
 	{
-		LOG_CRITICAL("Critical error has occured!");
-		LOG_CRITICAL("Unwrap failed: => Result<{4}>\n\n" _ABORT_LOG_PATTERN_NOEXPR, _FWD_ASSERT_ARGS, result.GetErrorClassName());
+		ErrorLogger.Critical("Critical error has occured!");
+		ErrorLogger.Critical("Unwrap failed: => Result<{4}>\n\n" _ABORT_LOG_PATTERN_NOEXPR, _FWD_ASSERT_ARGS, result.GetErrorClassName());
 		String message = result.GetErrorMessage();
 		if (!message.empty())
-			LOG_CRITICAL(message);
+			ErrorLogger.Critical(message);
 
 #if _SHOW_ABORT_MESSAGE_BOX
 		String reason = fmt::format("Unwrap failed: => Result<{}>", result.GetErrorClassName());
@@ -83,10 +86,10 @@ namespace Ion
 	template<typename TError>
 	inline void ErrorHandler::ErrorAbort(_ASSERT_ARGS, const TError& error)
 	{
-		LOG_CRITICAL("Critical error has occured!");
-		LOG_CRITICAL("Error: => {4}\n\n" _ABORT_LOG_PATTERN_NOEXPR, _FWD_ASSERT_ARGS, TError::ClassName);
+		ErrorLogger.Critical("Critical error has occured!");
+		ErrorLogger.Critical("Error: => {4}\n\n" _ABORT_LOG_PATTERN_NOEXPR, _FWD_ASSERT_ARGS, TError::ClassName);
 		if (!error.Message.empty())
-			LOG_CRITICAL(error.Message);
+			ErrorLogger.Critical(error.Message);
 
 #if _SHOW_ABORT_MESSAGE_BOX
 		String reason = fmt::format("Error: => {}", TError::ClassName);
@@ -97,18 +100,18 @@ namespace Ion
 	template<typename TError>
 	inline void ErrorHandler::PrintErrorThrow(_ASSERT_ARGS, const TError& error)
 	{
-		LOG_ERROR("An error has been thrown.");
-		LOG_ERROR("Error: => Result<{4}>\n\n" _ABORT_LOG_PATTERN_NOEXPR, _FWD_ASSERT_ARGS, TError::ClassName);
+		ErrorLogger.Error("An error has been thrown.");
+		ErrorLogger.Error("Error: => Result<{4}>\n\n" _ABORT_LOG_PATTERN_NOEXPR, _FWD_ASSERT_ARGS, TError::ClassName);
 		if (!error.Message.empty())
-			LOG_ERROR(error.Message);
+			ErrorLogger.Error(error.Message);
 	}
 
 	template<typename... Args>
 	inline void ErrorHandler::Break(const char* format, Args&&... args)
 	{
-		LOG_ERROR("A debugger break has been called.");
+		ErrorLogger.Error("A debugger break has been called.");
 		if (format)
-			LOG_ERROR(format, Forward<Args>(args)...);
+			ErrorLogger.Error(format, Forward<Args>(args)...);
 	}
 
 	template<bool bExpr>

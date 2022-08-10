@@ -1,98 +1,148 @@
 #pragma once
 
-#include "Core/CoreApi.h"
-#include "Core/CoreMacros.h"
-#include "Core/CoreTypes.h"
-
-#define SPDLOG_WCHAR_TO_UTF8_SUPPORT
-#define SPDLOG_COMPILED_LIB
-#include "spdlog/spdlog.h"
-
 namespace Ion
-{ 
+{
+#pragma region Logger
+
+	enum class ELogLevel : uint8
+	{
+		Trace,
+		Debug,
+		Info,
+		Warn,
+		Error,
+		Critical,
+	};
+
 	class ION_API Logger
 	{
 	public:
-		static void Init();
+		template<typename TStr, typename... Args>
+		void Trace(const TStr& str, Args&&... args) const;
+		template<typename TStr, typename... Args>
+		void Debug(const TStr& str, Args&&... args) const;
+		template<typename TStr, typename... Args>
+		void Info(const TStr& str, Args&&... args) const;
+		template<typename TStr, typename... Args>
+		void Warn(const TStr& str, Args&&... args) const;
+		template<typename TStr, typename... Args>
+		void Error(const TStr& str, Args&&... args) const;
+		template<typename TStr, typename... Args>
+		void Critical(const TStr& str, Args&&... args) const;
 
-		// Client Logger
+		template<typename TStr, typename... Args>
+		void Log(ELogLevel logLevel, const TStr& str, Args&&... args) const;
 
-		FORCEINLINE static TShared<spdlog::logger>& GetClientLogger() { return s_ClientLogger; }
+		void SetLevel(ELogLevel logLevel);
+		ELogLevel GetLevel() const;
+
+		void SetState(bool bEnabled);
+		bool GetState() const;
 
 	private:
-		static TShared<spdlog::logger> s_ClientLogger;
-
-#ifdef ION_ENGINE
-		// Engine Logger
-
-	public:
-		FORCEINLINE static TShared<spdlog::logger>& GetEngineLogger() { return s_EngineLogger; }
+		Logger(const String& name);
 
 	private:
-		static TShared<spdlog::logger> s_EngineLogger;
-#endif
+		String m_Name;
+		TShared<spdlog::logger> m_Logger;
+		ELogLevel m_LogLevel;
+		bool m_bEnabled;
+
+		friend class LogManager;
 	};
-}
 
-#ifdef ION_LOG_ENABLED
-	#ifdef ION_ENGINE
-		#define ION_LOG_ENGINE_TRACE(...)      Ion::Logger::GetEngineLogger()->trace(__VA_ARGS__)
-		#define ION_LOG_ENGINE_DEBUG(...)      Ion::Logger::GetEngineLogger()->debug(__VA_ARGS__)
-		#define ION_LOG_ENGINE_INFO(...)       Ion::Logger::GetEngineLogger()->info(__VA_ARGS__)
-		#define ION_LOG_ENGINE_WARN(...)       Ion::Logger::GetEngineLogger()->warn(__VA_ARGS__)
-		#define ION_LOG_ENGINE_ERROR(...)      Ion::Logger::GetEngineLogger()->error(__VA_ARGS__)
-		#define ION_LOG_ENGINE_CRITICAL(...)   Ion::Logger::GetEngineLogger()->critical(__VA_ARGS__)
+	template<typename TStr, typename... Args>
+	inline void Logger::Trace(const TStr& str, Args&&... args) const
+	{
+		Log(ELogLevel::Trace, str, Forward<Args>(args)...);
+	}
 
-		#define ION_LOG_ENGINE_BADPLATFORMFUNCTIONCALL() ION_LOG_ENGINE_CRITICAL("{0} is not supposed to be called on this platform!", __FUNCTION__)
-	#endif
+	template<typename TStr, typename... Args>
+	inline void Logger::Debug(const TStr& str, Args&&... args) const
+	{
+		Log(ELogLevel::Debug, str, Forward<Args>(args)...);
+	}
 
-	#define ION_LOG_TRACE(...)                 Ion::Logger::GetClientLogger()->trace(__VA_ARGS__)
-	#define ION_LOG_DEBUG(...)                 Ion::Logger::GetClientLogger()->debug(__VA_ARGS__)
-	#define ION_LOG_INFO(...)                  Ion::Logger::GetClientLogger()->info(__VA_ARGS__)
-	#define ION_LOG_WARN(...)                  Ion::Logger::GetClientLogger()->warn(__VA_ARGS__)
-	#define ION_LOG_ERROR(...)                 Ion::Logger::GetClientLogger()->error(__VA_ARGS__)
-	#define ION_LOG_CRITICAL(...)              Ion::Logger::GetClientLogger()->critical(__VA_ARGS__)
+	template<typename TStr, typename... Args>
+	inline void Logger::Info(const TStr& str, Args&&... args) const
+	{
+		Log(ELogLevel::Info, str, Forward<Args>(args)...);
+	}
 
-	// Side independent
+	template<typename TStr, typename... Args>
+	inline void Logger::Warn(const TStr& str, Args&&... args) const
+	{
+		Log(ELogLevel::Warn, str, Forward<Args>(args)...);
+	}
 
-	#ifdef ION_ENGINE
-		#define LOG_TRACE(...)                 ION_LOG_ENGINE_TRACE(__VA_ARGS__)
-		#define LOG_DEBUG(...)                 ION_LOG_ENGINE_DEBUG(__VA_ARGS__)
-		#define LOG_INFO(...)                  ION_LOG_ENGINE_INFO(__VA_ARGS__)
-		#define LOG_WARN(...)                  ION_LOG_ENGINE_WARN(__VA_ARGS__)
-		#define LOG_ERROR(...)                 ION_LOG_ENGINE_ERROR(__VA_ARGS__)
-		#define LOG_CRITICAL(...)              ION_LOG_ENGINE_CRITICAL(__VA_ARGS__)
-	#else
-		#define LOG_TRACE(...)                 ION_LOG_TRACE(__VA_ARGS__)
-		#define LOG_DEBUG(...)                 ION_LOG_DEBUG(__VA_ARGS__)
-		#define LOG_INFO(...)                  ION_LOG_INFO(__VA_ARGS__)
-		#define LOG_WARN(...)                  ION_LOG_WARN(__VA_ARGS__)
-		#define LOG_ERROR(...)                 ION_LOG_ERROR(__VA_ARGS__)
-		#define LOG_CRITICAL(...)              ION_LOG_CRITICAL(__VA_ARGS__)
-	#endif
-#else
-	#ifdef ION_ENGINE
-		#define ION_LOG_ENGINE_TRACE(...)
-		#define ION_LOG_ENGINE_DEBUG(...)
-		#define ION_LOG_ENGINE_INFO(...)
-		#define ION_LOG_ENGINE_WARN(...)
-		#define ION_LOG_ENGINE_ERROR(...)
-		#define ION_LOG_ENGINE_CRITICAL(...)
+	template<typename TStr, typename... Args>
+	inline void Logger::Error(const TStr& str, Args&&... args) const
+	{
+		Log(ELogLevel::Error, str, Forward<Args>(args)...);
+	}
 
-		#define ION_LOG_ENGINE_BADPLATFORMFUNCTIONCALL()
-	#endif
+	template<typename TStr, typename... Args>
+	inline void Logger::Critical(const TStr& str, Args&&... args) const
+	{
+		Log(ELogLevel::Critical, str, Forward<Args>(args)...);
+	}
 
-	#define ION_LOG_TRACE(...)
-	#define ION_LOG_DEBUG(...)
-	#define ION_LOG_INFO(...)
-	#define ION_LOG_WARN(...)
-	#define ION_LOG_ERROR(...)
-	#define ION_LOG_CRITICAL(...)
-
-	#define LOG_TRACE(...)    ((void)0)
-	#define LOG_DEBUG(...)    ((void)0)
-	#define LOG_INFO(...)     ((void)0)
-	#define LOG_WARN(...)     ((void)0)
-	#define LOG_ERROR(...)    ((void)0)
-	#define LOG_CRITICAL(...) ((void)0)
+	template<typename TStr, typename... Args>
+	inline void Logger::Log(ELogLevel logLevel, const TStr& str, Args&&... args) const
+	{
+#if !ION_DIST
+		if (m_bEnabled)
+		{
+			m_Logger->log((spdlog::level::level_enum)logLevel, str, Forward<Args>(args)...);
+		}
 #endif
+	}
+
+	inline void Logger::SetState(bool bEnabled)
+	{
+		m_bEnabled = true;
+	}
+
+	inline bool Logger::GetState() const
+	{
+		return m_bEnabled;
+	}
+
+#pragma endregion
+
+#pragma region LogManager
+
+#define REGISTER_LOGGER(varName, fullname) inline Logger& varName = LogManager::RegisterLogger(fullname)
+
+	class ION_API LogManager
+	{
+	public:
+		static Logger& RegisterLogger(const String& name);
+
+		static Logger& GetLogger(const String& name);
+
+		static void SetGlobalLogLevel(ELogLevel logLevel);
+		static ELogLevel GetGlobalLogLevel();
+
+	private:
+		static bool IsLoggerNameValid(const String& name);
+
+	private:
+		THashMap<String, Logger> m_Loggers;
+
+		static LogManager* s_Instance;
+		static LogManager& Get();
+	};
+
+	inline LogManager& LogManager::Get()
+	{
+		if (!s_Instance)
+			s_Instance = new LogManager;
+		return *s_Instance;
+	}
+
+#pragma endregion
+
+	// Global / Generic Engine Logger
+	REGISTER_LOGGER(GEngineLogger, "Engine");
+}

@@ -2,7 +2,7 @@
 
 #include "Core/CoreApi.h"
 #include "Core/CoreTypes.h"
-#include "Core/Logging/Logger.h"
+#include "Core/Logging/LoggerOld.h"
 #include "Core/Templates/Templates.h"
 
 namespace Ion

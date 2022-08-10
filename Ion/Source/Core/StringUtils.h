@@ -101,7 +101,50 @@ inline static TArray<std::basic_string<T>> SplitString(const std::basic_string<T
 }
 
 template<typename T>
+inline static TArray<std::basic_string<T>> SplitString(const std::basic_string<T>& str, const std::basic_string<T>& longDelimiter)
+{
+	TArray<std::basic_string<T>> split;
+	if (str.empty() || longDelimiter.empty())
+		return split;
+
+	split.reserve(_MINIMUM_SPLIT_ARRAY_N);
+
+	auto begin = str.begin();
+	while (begin < str.end())
+	{
+		// Keep finding the delimeter and push the substring before it into the array.
+		size_t offset = begin - str.begin();
+		size_t found = str.find(longDelimiter, offset);
+		auto end = found != std::basic_string<T>::npos ? str.begin() + found : str.end();
+		size_t count = end - begin;
+		split.emplace_back(str.substr(offset, count));
+		begin = end == str.end() ? str.end() : end + longDelimiter.size();
+		// Add an empty string if there was a delimiter at the end
+		if (found != std::basic_string<T>::npos && begin == str.end())
+			split.emplace_back();
+	}
+
+	return split;
+}
+
+template<typename T>
 inline static String JoinString(const TArray<std::basic_string<T>>& strArray, T delimiter)
+{
+	String joined;
+	joined.reserve(_MINIMUM_SPLIT_ARRAY_N * _MINIMUM_SPLIT_STRING_SIZE);
+
+	for (auto it = strArray.cbegin(); it != strArray.cend(); ++it)
+	{
+		joined += *it;
+		if (it < strArray.cend() - 1)
+			joined += delimiter;
+	}
+
+	return joined;
+}
+
+template<typename T>
+inline static String JoinString(const TArray<std::basic_string<T>>& strArray, const std::basic_string<T>& delimiter)
 {
 	String joined;
 	joined.reserve(_MINIMUM_SPLIT_ARRAY_N * _MINIMUM_SPLIT_STRING_SIZE);
