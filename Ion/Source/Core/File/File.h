@@ -42,12 +42,6 @@ namespace Ion
 		CRLF = 3,
 	};
 
-	enum class EFilePathValidation : uint8
-	{
-		Unchecked = 0,
-		Checked   = 1,
-	};
-
 #pragma endregion
 
 #pragma region FileList
@@ -133,9 +127,8 @@ namespace Ion
 	{
 	public:
 		FilePath();
-		FilePath(const String& path, EFilePathValidation validation = EFilePathValidation::Unchecked);
-		FilePath(const WString& path, EFilePathValidation validation = EFilePathValidation::Unchecked);
-		FilePath(const FilePath& path, EFilePathValidation validation);
+		FilePath(const String& path);
+		FilePath(const WString& path);
 
 		FilePath(const FilePath&) = default;
 		FilePath(FilePath&&) noexcept = default;
@@ -219,8 +212,6 @@ namespace Ion
 		StringView GetExtension() const;
 		static StringView GetExtension(const StringView& name);
 
-		void SetValidation(EFilePathValidation validation);
-
 		const String& ToString() const;
 		WString ToWString() const;
 
@@ -257,6 +248,14 @@ namespace Ion
 		FilePath operator+(const String& directory) const;
 		FilePath operator+(const WString& directory) const;
 
+		FilePath& operator/=(const FilePath& path);
+		FilePath& operator/=(const String& directory);
+		FilePath& operator/=(const WString& directory);
+
+		FilePath operator/(const FilePath& path) const;
+		FilePath operator/(const String& directory) const;
+		FilePath operator/(const WString& directory) const;
+
 		bool operator==(const FilePath& path) const;
 		bool operator==(const String& path) const;
 		bool operator==(const WString& path) const;
@@ -288,7 +287,6 @@ namespace Ion
 
 	private:
 		TArray<String> m_Path;
-		bool m_bChecked;
 		
 		mutable String m_PathName;
 		void UpdatePathName() const;
@@ -369,7 +367,7 @@ namespace Ion
 
 		bool IsDirectory() const;
 
-		const FilePath& GetFilePath(EFilePathValidation validation = EFilePathValidation::Unchecked) const;
+		const FilePath& GetFilePath() const;
 
 		const String& GetFullPath() const;
 
@@ -428,8 +426,8 @@ namespace Ion
 		static constexpr wchar s_IllegalCharactersW[] = L"/\\*<>|?:\"";
 		static constexpr char  s_IllegalCharacters[]  =  "/\\*<>|?:\"";
 #else
-		static constexpr wchar s_IllegalCharacters[] = L"";
-		static constexpr char  s_IllegalCharacters[] =  "";
+		static constexpr wchar s_IllegalCharactersW[] = L"";
+		static constexpr char  s_IllegalCharacters[]  =  "";
 #endif
 		friend void*& GetNative(File* file);
 		friend void* const& GetNative(const File* file);
@@ -532,11 +530,6 @@ namespace Ion
 			return "";
 		
 		return name.substr(dotIndex);
-	}
-
-	inline void FilePath::SetValidation(EFilePathValidation validation)
-	{
-		m_bChecked = (bool)validation;
 	}
 
 	inline const String& FilePath::ToString() const
@@ -773,7 +766,7 @@ namespace Ion
 		return FilePath::IsDirectory(StringConverter::StringToWString(m_FilePath));
 	}
 
-	inline const FilePath& File::GetFilePath(EFilePathValidation validation) const
+	inline const FilePath& File::GetFilePath() const
 	{
 		return m_FilePath;
 	}

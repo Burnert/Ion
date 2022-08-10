@@ -103,7 +103,7 @@ namespace Ion::Editor
 		String vertexSrc;
 		String pixelSrc;
 
-		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
+		FilePath shadersPath = EnginePath::GetShadersPath();
 
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() == ERHI::DX11)

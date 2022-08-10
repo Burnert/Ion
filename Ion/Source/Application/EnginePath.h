@@ -12,50 +12,24 @@ namespace Ion
 			return s_EnginePath;
 		}
 
-		/* Gets the engine path with path validation */
-		static inline FilePath GetCheckedEnginePath()
-		{
-			return FilePath(s_EnginePath, EFilePathValidation::Checked);
-		}
-
 		static inline FilePath GetShadersPath()
 		{
-			return s_EnginePath + "Shaders";
-		}
-
-		static inline FilePath GetCheckedShadersPath()
-		{
-			return GetCheckedEnginePath() + "Shaders";
+			return s_EnginePath / "Shaders";
 		}
 
 		static inline FilePath GetEngineContentPath()
 		{
-			return s_EnginePath + "Content";
-		}
-
-		static inline FilePath GetCheckedContentPath()
-		{
-			return GetCheckedEnginePath() + "Content";
+			return s_EnginePath / "Content";
 		}
 
 		static inline FilePath GetFontsPath()
 		{
-			return GetEngineContentPath() + "Fonts";
-		}
-
-		static inline FilePath GetCheckedFontsPath()
-		{
-			return GetCheckedContentPath() + "Fonts";
+			return GetEngineContentPath() / "Fonts";
 		}
 
 		static inline FilePath GetEditorContentPath()
 		{
-			return GetEngineContentPath() + "Editor";
-		}
-
-		static inline FilePath GetCheckedEditorContentPath()
-		{
-			return GetCheckedContentPath() + "Editor";
+			return GetEngineContentPath() / "Editor";
 		}
 
 	protected:

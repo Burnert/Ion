@@ -225,13 +225,13 @@ namespace Ion
 		String pixelSrc;
 		if (RHI::GetCurrent() == ERHI::DX11)
 		{
-			vertexSrc = File::ReadToString(EnginePath::GetCheckedShadersPath() + "TextureRenderVS.hlsl").Unwrap();
-			pixelSrc  = File::ReadToString(EnginePath::GetCheckedShadersPath() + "TextureRenderPS.hlsl").Unwrap();
+			vertexSrc = File::ReadToString(EnginePath::GetShadersPath() + "TextureRenderVS.hlsl").Unwrap();
+			pixelSrc  = File::ReadToString(EnginePath::GetShadersPath() + "TextureRenderPS.hlsl").Unwrap();
 		}
 		else
 		{
-			vertexSrc = File::ReadToString(EnginePath::GetCheckedShadersPath() + "TextureRender.vert").Unwrap();
-			pixelSrc  = File::ReadToString(EnginePath::GetCheckedShadersPath() + "TextureRender.frag").Unwrap();
+			vertexSrc = File::ReadToString(EnginePath::GetShadersPath() + "TextureRender.vert").Unwrap();
+			pixelSrc  = File::ReadToString(EnginePath::GetShadersPath() + "TextureRender.frag").Unwrap();
 		}
 
 		m_ScreenTextureRenderData.Shader = RHIShader::Create();
@@ -351,7 +351,7 @@ namespace Ion
 		String vertexSrc;
 		String pixelSrc;
 
-		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
+		FilePath shadersPath = EnginePath::GetShadersPath();
 
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() == ERHI::DX11)
@@ -379,7 +379,7 @@ namespace Ion
 		String vertexSrc;
 		String pixelSrc;
 
-		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
+		FilePath shadersPath = EnginePath::GetShadersPath();
 
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() == ERHI::DX11)
@@ -407,7 +407,7 @@ namespace Ion
 		String vertexSrc;
 		String pixelSrc;
 
-		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
+		FilePath shadersPath = EnginePath::GetShadersPath();
 
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() == ERHI::DX11)
@@ -435,7 +435,7 @@ namespace Ion
 		String vertexSrc;
 		String pixelSrc;
 
-		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
+		FilePath shadersPath = EnginePath::GetShadersPath();
 
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() == ERHI::DX11)
@@ -463,7 +463,7 @@ namespace Ion
 		String vertexSrc;
 		String pixelSrc;
 
-		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
+		FilePath shadersPath = EnginePath::GetShadersPath();
 
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() == ERHI::DX11)
@@ -490,7 +490,7 @@ namespace Ion
 		String vertexSrc;
 		String pixelSrc;
 
-		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
+		FilePath shadersPath = EnginePath::GetShadersPath();
 
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() == ERHI::DX11)
@@ -518,7 +518,7 @@ namespace Ion
 		String vertexSrc;
 		String pixelSrc;
 
-		FilePath shadersPath = EnginePath::GetCheckedShadersPath();
+		FilePath shadersPath = EnginePath::GetShadersPath();
 
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() == ERHI::DX11)

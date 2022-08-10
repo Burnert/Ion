@@ -144,25 +144,16 @@ namespace Ion
 	// FilePath: -------------------------------------------
 	// -----------------------------------------------------
 
-	FilePath::FilePath() :
-		m_bChecked(false)
+	FilePath::FilePath()
 	{
 	}
 
-	FilePath::FilePath(const String& path, EFilePathValidation validation) :
-		m_bChecked((bool)validation)
+	FilePath::FilePath(const String& path)
 	{
 		Set(path);
 	}
 
-	FilePath::FilePath(const WString& path, EFilePathValidation validation) :
-		m_bChecked((bool)validation)
-	{
-		Set(path);
-	}
-
-	FilePath::FilePath(const FilePath& path, EFilePathValidation validation) :
-		m_bChecked((bool)validation)
+	FilePath::FilePath(const WString& path)
 	{
 		Set(path);
 	}
@@ -202,15 +193,8 @@ namespace Ion
 			return true;
 		}
 
-		String newPath = m_PathName.empty() ? strippedName : m_PathName + "/" + strippedName;
-		if (m_bChecked && !Exists(newPath.c_str()))
-		{
-			LOG_ERROR("Path \"{0}\" does not exist!", newPath);
-			ionbreak("This should not happen when using validated path operations.");
-			return false;
-		}
 		// Add the directory to the end instead of calling UpdatePathName
-		m_PathName = newPath;
+		m_PathName = m_PathName.empty() ? strippedName : m_PathName + "/" + strippedName;
 		m_Path.emplace_back(Move(strippedName));
 
 		return true;
@@ -228,12 +212,6 @@ namespace Ion
 		for (const String& dir : path.m_Path)
 		{
 			newPath = m_PathName.empty() ? dir : m_PathName + "/" + dir;
-			if (m_bChecked && !Exists(newPath.c_str()))
-			{
-				LOG_ERROR("Path \"{0}\" does not exist!", newPath);
-				ionbreak("This should not happen when using validated path operations.");
-				break;
-			}
 			
 			m_Path.push_back(dir);
 			m_PathName = newPath;
@@ -365,37 +343,67 @@ namespace Ion
 
 	FilePath& FilePath::operator+=(const FilePath& path)
 	{
-		ChangePath(path);
-		return *this;
+		return operator/=(path);
 	}
 
 	FilePath& FilePath::operator+=(const String& directory)
 	{
-		ChangePath(directory);
-		return *this;
+		return operator/=(directory);
 	}
 
 	FilePath& FilePath::operator+=(const WString& directory)
+	{
+		return operator/=(directory);
+	}
+
+	FilePath FilePath::operator+(const FilePath& path) const
+	{
+		return operator/(path);
+	}
+
+	FilePath FilePath::operator+(const String& directory) const
+	{
+		return operator/(directory);
+	}
+
+	FilePath FilePath::operator+(const WString& directory) const
+	{
+		return operator/(directory);
+	}
+
+	FilePath& FilePath::operator/=(const FilePath& path)
+	{
+		ChangePath(path);
+		return *this;
+	}
+
+	FilePath& FilePath::operator/=(const String& directory)
 	{
 		ChangePath(directory);
 		return *this;
 	}
 
-	FilePath FilePath::operator+(const FilePath& path) const
+	FilePath& FilePath::operator/=(const WString& directory)
+	{
+		ChangePath(directory);
+		return *this;
+	}
+
+	FilePath FilePath::operator/(const FilePath& path) const
 	{
 		FilePath newPath = *this;
 		newPath.ChangePath(path);
 		return newPath;
 	}
 
-	FilePath FilePath::operator+(const String& directory) const
+	FilePath FilePath::operator/(const String& directory) const
 	{
 		FilePath newPath = *this;
 		newPath.ChangePath(directory);
 		return newPath;
 	}
 
-	FilePath FilePath::operator+(const WString& directory) const
+	FilePath FilePath::operator/(const WString& directory) const
 	{
 		FilePath newPath = *this;
 		newPath.ChangePath(directory);
