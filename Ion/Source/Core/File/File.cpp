@@ -105,7 +105,7 @@ namespace Ion
 		return outStr;
 	}
 
-	bool File::EndOfFile() const
+	bool File::Eof() const
 	{
 		return m_Offset >= GetSize();
 	}
@@ -239,7 +239,7 @@ namespace Ion
 		return *this;
 	}
 
-	bool FilePath::Delete(bool bForce)
+	bool FilePath::Delete(bool bForce) const
 	{
 		if (bForce)
 		{

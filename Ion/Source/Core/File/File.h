@@ -149,8 +149,8 @@ namespace Ion
 		 * @param name Name of the directory
 		 * @return true if the directory has been made successfully.
 		 */
-		bool Make(const String& name);
-		bool Make(const WString& name);
+		bool MkDir(const String& name);
+		bool MkDir(const WString& name);
 
 		bool Rename(const String& newName);
 		bool Rename(const WString& newName);
@@ -162,7 +162,7 @@ namespace Ion
 		 * @param bForce Whether to force delete the whole directory
 		 * @return true if the file has been deleted
 		 */
-		bool Delete(bool bForce = false);
+		bool Delete(bool bForce = false) const;
 
 		/**
 		 * @brief Get this FilePath as a relative path to a specified base directory.
@@ -276,9 +276,9 @@ namespace Ion
 
 		// Platform specific
 
-		bool Make_Native(const wchar* name);
-		bool Delete_Native();
-		bool DeleteForce_Native();
+		bool MkDir_Native(const wchar* name);
+		bool Delete_Native() const;
+		bool DeleteForce_Native() const;
 		TArray<FileInfo> ListFiles_Native() const;
 		static bool Exists_Native(const wchar* path);
 		static bool IsDirectory_Native(const wchar* path);
@@ -362,7 +362,7 @@ namespace Ion
 
 		bool Exists() const;
 
-		bool EndOfFile() const;
+		bool Eof() const;
 
 		bool IsDirectory() const;
 
@@ -453,18 +453,18 @@ namespace Ion
 
 #pragma region FilePath_Impl
 
-	inline bool FilePath::Make(const String& name)
+	inline bool FilePath::MkDir(const String& name)
 	{
 		ionassert(File::IsFileNameLegal(name));
 
-		return Make(StringConverter::StringToWString(name));
+		return MkDir(StringConverter::StringToWString(name));
 	}
 
-	inline bool FilePath::Make(const WString& name)
+	inline bool FilePath::MkDir(const WString& name)
 	{
 		ionassert(File::IsFileNameLegal(name));
 
-		return Make_Native(name.c_str());
+		return MkDir_Native(name.c_str());
 	}
 
 	inline bool FilePath::Rename(const String& newName)

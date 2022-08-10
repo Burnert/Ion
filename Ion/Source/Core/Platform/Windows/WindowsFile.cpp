@@ -448,7 +448,7 @@ namespace Ion
 	// FilePath: -------------------------------------------
 	// -----------------------------------------------------
 
-	bool FilePath::Make_Native(const wchar* name)
+	bool FilePath::MkDir_Native(const wchar* name)
 	{
 		WString path = StringConverter::StringToWString(m_PathName) + L"/" + name;
 
@@ -471,12 +471,12 @@ namespace Ion
 		return true;
 	}
 
-	bool FilePath::Delete_Native()
+	bool FilePath::Delete_Native() const
 	{
 		return RemoveDirectory(StringConverter::StringToWString(m_PathName).c_str());
 	}
 
-	bool FilePath::DeleteForce_Native()
+	bool FilePath::DeleteForce_Native() const
 	{
 		// @TODO: Remove all the files from the directory first
 
