@@ -215,6 +215,17 @@ NODISCARD inline constexpr bool IsAnyOf(T&& item, const U(&elements)[Size])
 	return false;
 }
 
+template<typename T, typename U>
+NODISCARD inline constexpr bool IsAnyOf(T&& item, std::initializer_list<U> elements)
+{
+	for (auto it = elements.begin(); it != elements.end(); ++it)
+	{
+		if (*it == item)
+			return true;
+	}
+	return false;
+}
+
 template<typename T, typename... Elements>
 NODISCARD inline constexpr bool IsAnyOf(T&& item, Elements&&... elements)
 {
@@ -227,10 +238,16 @@ NODISCARD inline constexpr bool IsNoneOf(T&& item, const U(&elements)[Size])
 	return !IsAnyOf(item, elements);
 }
 
+template<typename T, typename U>
+NODISCARD inline constexpr bool IsNoneOf(T&& item, std::initializer_list<U> elements)
+{
+	return !IsAnyOf(item, elements);
+}
+
 template<typename T, typename... Elements>
 NODISCARD inline constexpr bool IsNoneOf(T&& item, Elements&&... elements)
 {
-	return !IsAnyOf(item, elements...);
+	return !IsAnyOf(item, Forward<Elements>(elements)...);
 }
 
 // Empty constant references

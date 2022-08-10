@@ -2,6 +2,10 @@
 
 #include "File.h"
 
+#pragma warning(disable:6255)
+#pragma warning(disable:6386)
+#pragma warning(disable:26451)
+
 namespace Ion
 {
 	File::File(const FilePath& path)
@@ -430,59 +434,30 @@ namespace Ion
 
 	TArray<String> FilePath::SplitPathName(const String& path)
 	{
-#pragma warning(disable:6255)
-#pragma warning(disable:6386)
-		// @TODO: Make a string split thingy instead of this nonsense
+		TArray<String> splitPath1 = SplitString(path, { '/', '\\' });
+		// Remove empty segments
+		TArray<String> splitPath;
+		splitPath.reserve(splitPath1.size());
+		std::copy_if(splitPath1.begin(), splitPath1.end(), std::back_inserter(splitPath), [](const String& str) { return !str.empty(); });
 
-		TArray<String> pathArray;
+		ionassert(
+			splitPath.empty() ||
+			std::all_of(splitPath.begin(), splitPath.end(), [](const String& str) { return File::IsFileNameLegal(str); }) ||
+			(IsDriveLetter(splitPath[0]) && (splitPath.size() == 1 || std::all_of(splitPath.begin() + 1, splitPath.end(), [](const String& str) { return File::IsFileNameLegal(str); })))
+		);
 
-		String segment;
-		segment.reserve(path.size());
-
-		// This flag prevents adding empty directories (multiple slashes next to each other) to the list.
-		bool bEmptySegment = true;
-		//int32 segmentIt = 0;
-		for (int32 i = 0; i < path.size(); ++i)
-		{
-			char current = path[i];
-			if (IsAnyOf(current, L'/', L'\\'))
-			{
-				if (!bEmptySegment)
-				{
-					ionassert(File::IsFileNameLegal(segment) || (pathArray.empty() && IsDriveLetter(segment)));
-					pathArray.emplace_back(segment);
-					segment.clear();
-				}
-
-				//segmentIt = 0;
-				bEmptySegment = true;
-			}
-			else
-			{
-				bEmptySegment = false;
-				segment += current;
-			}
-		}
-		// Add the last element if there wasn't a slash at the end
-		if (!bEmptySegment)
-		{
-			ionassert(File::IsFileNameLegal(segment) || (pathArray.empty() && IsDriveLetter(segment)));
-			pathArray.emplace_back(segment);
-		}
-
-		return pathArray;
+		return splitPath;
 	}
 
 	StringView FilePath::StripSlashes(const String& name)
 	{
-#pragma warning(disable:26451)
 		uint64 size = name.size();
 		int32 start = 0;
 		int32 end = 0;
 		bool bName = false;
 		for (int32 i = 0; i < size; ++i)
 		{
-			if (IsAnyOf(name[i], L'/', L'\\'))
+			if (IsAnyOf(name[i], '/', '\\'))
 			{
 				if (bName)
 					break;
@@ -542,12 +517,6 @@ namespace Ion
 
 	void FilePath::UpdatePathName() const
 	{
-		m_PathName.clear();
-		for (auto it = m_Path.begin(); it != m_Path.end(); ++it)
-		{
-			m_PathName += *it;
-			if (it != m_Path.end() - 1)
-				m_PathName += "/";
-		}
+		m_PathName = JoinString(m_Path, '/');
 	}
 }

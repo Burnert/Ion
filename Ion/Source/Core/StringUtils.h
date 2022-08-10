@@ -47,6 +47,75 @@ static bool EqualsCI(const T1& lhs, const T2& rhs)
 		});
 }
 
+// Typical string operations ---------------------------------------------------------------
+
+#define _MINIMUM_SPLIT_ARRAY_N     5
+#define _MINIMUM_SPLIT_STRING_SIZE 8
+
+template<typename T>
+inline static TArray<std::basic_string<T>> SplitString(const std::basic_string<T>& str, T delimiter)
+{
+	TArray<std::basic_string<T>> split;
+	if (str.empty())
+		return split;
+
+	split.reserve(_MINIMUM_SPLIT_ARRAY_N);
+
+	split.emplace_back().reserve(_MINIMUM_SPLIT_STRING_SIZE);
+	for (auto& c : str)
+	{
+		if (c == delimiter)
+		{
+			split.emplace_back().reserve(_MINIMUM_SPLIT_STRING_SIZE);
+			continue;
+		}
+
+		split.back() += c;
+	}
+
+	return split;
+}
+
+template<typename T>
+inline static TArray<std::basic_string<T>> SplitString(const std::basic_string<T>& str, std::initializer_list<T> delimiters)
+{
+	TArray<std::basic_string<T>> split;
+	if (str.empty())
+		return split;
+
+	split.reserve(_MINIMUM_SPLIT_ARRAY_N);
+
+	split.emplace_back().reserve(_MINIMUM_SPLIT_STRING_SIZE);
+	for (auto& c : str)
+	{
+		if (IsAnyOf(c, delimiters))
+		{
+			split.emplace_back().reserve(_MINIMUM_SPLIT_STRING_SIZE);
+			continue;
+		}
+
+		split.back() += c;
+	}
+
+	return split;
+}
+
+template<typename T>
+inline static String JoinString(const TArray<std::basic_string<T>>& strArray, T delimiter)
+{
+	String joined;
+	joined.reserve(_MINIMUM_SPLIT_ARRAY_N * _MINIMUM_SPLIT_STRING_SIZE);
+
+	for (auto it = strArray.cbegin(); it != strArray.cend(); ++it)
+	{
+		joined += *it;
+		if (it < strArray.cend() - 1)
+			joined += delimiter;
+	}
+
+	return joined;
+}
+
 // Type definition to String converter functions
 
 template<typename Type>
