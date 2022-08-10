@@ -34,7 +34,7 @@ namespace Ion
 #if ION_DEBUG
 		else
 		{
-			LOG_WARN("[UniformBufferFactory]: Uniform {0} does not exist.", name);
+			RHILogger.Warn("[UniformBufferFactory]: Uniform {0} does not exist.", name);
 		}
 #endif
 	}

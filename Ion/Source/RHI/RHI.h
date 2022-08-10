@@ -6,6 +6,8 @@ struct ImDrawData;
 
 namespace Ion
 {
+	REGISTER_LOGGER(RHILogger, "RHI");
+
 	// @TODO: Implement other Render APIs in the future
 	enum class ERHI
 	{

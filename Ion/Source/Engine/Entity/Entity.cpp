@@ -143,7 +143,7 @@ namespace Ion
 
 		if (m_Parent == parent)
 		{
-			LOG_WARN("The entity is already attached to {0} {{{1}}}.",
+			EntityLogger.Warn("The entity is already attached to {0} {{{1}}}.",
 				m_Parent->GetName(),
 				m_Parent->GetGuid().ToString());
 			return;

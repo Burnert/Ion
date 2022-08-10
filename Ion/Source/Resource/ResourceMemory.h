@@ -7,7 +7,7 @@
 #define ENABLE_LOG_RESOURCE_MEMORY 0
 
 #if ENABLE_LOG_RESOURCE_MEMORY
-#define _DEBUG_LOG(...) LOG_DEBUG(__VA_ARGS__);
+#define _DEBUG_LOG(...) ResourceLogger.Debug(__VA_ARGS__);
 #else
 #define _DEBUG_LOG(...)
 #endif

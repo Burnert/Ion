@@ -1,5 +1,6 @@
 #pragma once
 
+#include "EngineCore.h"
 #include "World.h"
 #include "Entity/Entity.h"
 

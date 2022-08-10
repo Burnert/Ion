@@ -23,7 +23,7 @@ namespace ComponentSerialCall::Private \
 	inline void func##_AddFunctionForType(ComponentTypeID id, const String& typeClassName, func##FPtr fn) \
 	{ \
 		g_##func##Functions[id] = fn; \
-		LOG_DEBUG(#func"_AddFunctionForType called for {0} ({1:x})", typeClassName, id); \
+		ComponentLogger.Debug(#func"_AddFunctionForType called for {0} ({1:x})", typeClassName, id); \
 	} \
 } \
 namespace ComponentSerialCall \
@@ -309,6 +309,8 @@ CALL_OUTSIDE({ \
 
 namespace Ion
 {
+	REGISTER_LOGGER(ComponentLogger, "Engine::ECS::Component");
+
 	DECLARE_THASFUNCTION(GetTypeID);
 
 	// The hash of the Component class name
@@ -500,7 +502,7 @@ namespace Ion
 	protected:
 		virtual void OnRegister() override
 		{
-			LOG_DEBUG("TNCProperty::OnRegister [{0}::{1}]", CompT::ClassName, MemberName);
+			ComponentLogger.Debug("TNCProperty::OnRegister [{0}::{1}]", CompT::ClassName, MemberName);
 		}
 
 	private:
@@ -912,7 +914,7 @@ namespace Ion
 	{
 		static_assert(TIsBaseOfV<Component, CompT> && TIsComponentTypeFinal<CompT>);
 
-		LOG_DEBUG("ComponentRegistry::RegisterComponentClass<{0}>", CompT::ClassName);
+		ComponentLogger.Debug("ComponentRegistry::RegisterComponentClass<{0}>", CompT::ClassName);
 
 		ComponentDatabase* typeDB = GetComponentTypeDatabase_Internal();
 		auto it = typeDB->RegisteredTypes.find(CompT::GetTypeID());
@@ -1036,7 +1038,7 @@ namespace Ion
 			auto it = container.find(guid);
 			if (it == container.end())
 			{
-				LOG_ERROR("Component does not exist in the registry.\nGUID = {0}", component->GetGUID());
+				ComponentLogger.Error("Component does not exist in the registry.\nGUID = {0}", component->GetGUID());
 				return;
 			}
 			CompT* componentPtr = &it->second;
@@ -1071,7 +1073,7 @@ namespace Ion
 			}
 			else
 			{
-				LOG_ERROR("Component does not exist in the registry.\nGUID = {0}", component->GetGUID());
+				ComponentLogger.Error("Component does not exist in the registry.\nGUID = {0}", component->GetGUID());
 			}
 		}
 	}
@@ -1135,7 +1137,7 @@ namespace Ion
 		static_assert(TIsBaseOfV<Component, CompT>);
 		using CompContainer = CompT::ComponentContainerImpl;
 
-		LOG_DEBUG("ComponentRegistry::InitializeComponentContainter<{0}>", CompT::ClassName);
+		ComponentLogger.Debug("ComponentRegistry::InitializeComponentContainter<{0}>", CompT::ClassName);
 
 		ionassert(!IsContainerInitialized<CompT>());
 
@@ -1151,7 +1153,7 @@ namespace Ion
 		ComponentDatabase* database = GetComponentTypeDatabase_Internal();
 		ionassert(database);
 
-		LOG_DEBUG("ComponentRegistry::InitializeComponentContainter({0}) <- Runtime", database->GetTypeInfo(id).ClassName);
+		ComponentLogger.Debug("ComponentRegistry::InitializeComponentContainter({0}) <- Runtime", database->GetTypeInfo(id).ClassName);
 
 		InstantiateComponentContainerFPtr instantiateContianerFPtr = database->GetTypeInfo(id).m_InstantiateContainer;
 		ionverify(instantiateContianerFPtr);

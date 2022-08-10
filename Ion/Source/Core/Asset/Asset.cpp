@@ -118,7 +118,7 @@ namespace Ion
 	{
 		if (!path.Exists())
 		{
-			LOG_ERROR("The file \"{0}\" does not exist.", path.ToString());
+			AssetLogger.Error("The file \"{0}\" does not exist.", path.ToString());
 			ionthrow(FileNotFoundError, "The file \"{0}\" does not exist.", path.ToString());
 		}
 
@@ -135,7 +135,7 @@ namespace Ion
 
 		if (!Parse(/*in out*/ initializer))
 		{
-			LOG_ERROR("The file \"{0}\" could not be parsed.", path.ToString());
+			AssetLogger.Error("The file \"{0}\" could not be parsed.", path.ToString());
 			ionthrow(IOError, "The file \"{0}\" could not be parsed.", path.ToString());
 		}
 

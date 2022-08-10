@@ -26,7 +26,7 @@ namespace Ion
 
 		if (!image->IsLoaded())
 		{
-			LOG_ERROR("Cannot Update Subresource of Texture. Image has not been loaded.");
+			DX11Logger.Error("Cannot Update Subresource of Texture. Image has not been loaded.");
 			return;
 		}
 
@@ -36,7 +36,7 @@ namespace Ion
 		if (image->GetWidth() != m_Description.Dimensions.Width ||
 			image->GetHeight() != m_Description.Dimensions.Height)
 		{
-			LOG_WARN("Image dimensions do not match texture dimensions.");
+			DX11Logger.Warn("Image dimensions do not match texture dimensions.");
 			return;
 		}
 

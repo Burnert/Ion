@@ -14,3 +14,9 @@
 
 // MeshResource ----------------------------------------------------
 
+// Resource Logger ---------------------------------------------------
+
+namespace Ion
+{
+	REGISTER_LOGGER(ResourceLogger, "Resource");
+}

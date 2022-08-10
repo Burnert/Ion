@@ -59,7 +59,7 @@ namespace Ion
 				{
 					if (bReparent && !comp->GetParent())
 					{
-						LOG_ERROR("Cannot reparent component's children if it has no parent.");
+						ComponentLogger.Error("Cannot reparent component's children if it has no parent.");
 						bReparent = false; // Force no reparent
 					}
 
@@ -125,7 +125,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		LOG_DEBUG("ComponentRegistry::RegisterComponents");
+		ComponentLogger.Debug("ComponentRegistry::RegisterComponents");
 
 		RegisterComponentClass<BehaviorComponent>();
 		RegisterComponentClass<EmptySceneComponent>();

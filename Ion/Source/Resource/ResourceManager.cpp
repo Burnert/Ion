@@ -23,14 +23,14 @@ namespace Ion
 
 		if (Find(guid))
 		{
-			LOG_ERROR("Cannot register a resource.\n\nA resource with guid {{{0}}} already exists.", guid.ToString());
+			ResourceLogger.Error("Cannot register a resource.\n\nA resource with guid {{{0}}} already exists.", guid.ToString());
 			return;
 		}
 		instance.m_Resources.emplace(guid, resource);
 		// Associate the resource with the asset
 		instance.m_AssetToResources[asset].push_back(guid);
 
-		LOG_TRACE("Registered resource \"{}\".", asset->GetVirtualPath());
+		ResourceLogger.Trace("Registered resource \"{}\".", asset->GetVirtualPath());
 	}
 
 	void ResourceManager::Unregister(Resource* resource)
@@ -58,7 +58,7 @@ namespace Ion
 
 		instance.m_Resources.erase(resourceGuid);
 
-		LOG_TRACE("Unregistered resource \"{}\".", assetHandle->GetVirtualPath());
+		ResourceLogger.Trace("Unregistered resource \"{}\".", assetHandle->GetVirtualPath());
 	}
 
 	TArray<ResourcePtr> ResourceManager::FindAssociatedResources(const Asset& asset)

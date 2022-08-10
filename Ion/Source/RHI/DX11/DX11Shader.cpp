@@ -82,8 +82,8 @@ namespace Ion
 			{
 				const char* errorMessage = (char*)errorMessagesBlob->GetBufferPointer();
 
-				LOG_ERROR("{0} compilation failed!", ShaderTypeToString(shader.Type));
-				LOG_ERROR(errorMessage);
+				DX11Logger.Error("{0} compilation failed!", ShaderTypeToString(shader.Type));
+				DX11Logger.Error(errorMessage);
 
 				ionthrow(ShaderCompilationError, "{0} compilation failed!\n{1}", ShaderTypeToString(shader.Type), errorMessage);
 			}

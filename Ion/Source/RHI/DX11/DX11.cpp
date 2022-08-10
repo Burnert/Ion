@@ -43,8 +43,8 @@ namespace Ion
 		InitWindow(*window);
 
 		SetDisplayVersion(D3DFeatureLevelToString(s_FeatureLevel));
-		LOG_INFO("Renderer: DirectX {0}", GetFeatureLevelString());
-		LOG_INFO("Shader Model {0}", GetShaderModelString());
+		DX11Logger.Info("Renderer: DirectX {0}", GetFeatureLevelString());
+		DX11Logger.Info("Shader Model {0}", GetShaderModelString());
 
 		return true;
 	}
@@ -332,27 +332,27 @@ namespace Ion
 			{
 			case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_CORRUPTION:
 			{
-				LOG_CRITICAL(message.Message);
+				DX11Logger.Critical(message.Message);
 				break;
 			}
 			case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_ERROR:
 			{
-				LOG_ERROR(message.Message);
+				DX11Logger.Error(message.Message);
 				break;
 			}
 			case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_WARNING:
 			{
-				LOG_WARN(message.Message);
+				DX11Logger.Warn(message.Message);
 				break;
 			}
 			case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_INFO:
 			{
-				LOG_INFO(message.Message);
+				DX11Logger.Info(message.Message);
 				break;
 			}
 			case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_MESSAGE:
 			{
-				LOG_TRACE(message.Message);
+				DX11Logger.Trace(message.Message);
 				break;
 			}
 			default:

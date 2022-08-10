@@ -47,7 +47,7 @@ namespace Ion
 		if (!world)
 		{
 			// This won't ever be reached...
-			LOG_ERROR("Could not create the world.");
+			GEngineLogger.Error("Could not create the world.");
 			return nullptr;
 		}
 

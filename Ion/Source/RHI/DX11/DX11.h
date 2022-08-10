@@ -53,6 +53,8 @@ struct ImGuiViewport;
 
 namespace Ion
 {
+	REGISTER_LOGGER(DX11Logger, "RHI::DX11");
+
 	struct DXGIDebugMessage
 	{
 		DXGI_INFO_QUEUE_MESSAGE_SEVERITY Severity;

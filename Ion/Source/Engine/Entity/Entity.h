@@ -1,10 +1,13 @@
 #pragma once
 
+#include "Engine/EngineCore.h"
 #include "Engine/SceneObjectData.h"
 #include "Engine/Components/SceneComponent.h"
 
 namespace Ion
 {
+	REGISTER_LOGGER(EntityLogger, "Engine::ECS::Entity");
+
 	class ION_API Entity
 	{
 	public:
