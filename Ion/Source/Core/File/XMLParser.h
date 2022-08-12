@@ -58,6 +58,24 @@ if (!(attr)) \
 		Fail
 	};
 
+	template<>
+	struct TEnumParser<EXMLParserResultType>
+	{
+		ENUM_PARSER_TO_STRING_BEGIN(EXMLParserResultType)
+		ENUM_PARSER_TO_STRING_HELPER(Success)
+		ENUM_PARSER_TO_STRING_HELPER(Warning)
+		ENUM_PARSER_TO_STRING_HELPER(Error)
+		ENUM_PARSER_TO_STRING_HELPER(Fail)
+		ENUM_PARSER_TO_STRING_END()
+
+		ENUM_PARSER_FROM_STRING_BEGIN(EXMLParserResultType)
+		ENUM_PARSER_FROM_STRING_HELPER(Success)
+		ENUM_PARSER_FROM_STRING_HELPER(Warning)
+		ENUM_PARSER_FROM_STRING_HELPER(Error)
+		ENUM_PARSER_FROM_STRING_HELPER(Fail)
+		ENUM_PARSER_FROM_STRING_END()
+	};
+
 	struct XMLParserMessage
 	{
 		EXMLParserResultType Type = EXMLParserResultType::Success;
@@ -71,6 +89,29 @@ if (!(attr)) \
 
 		inline bool OK() const
 		{
+#if ION_DEBUG // Always print XMLParser errors on Debug configuration
+			if (OverallResult == EXMLParserResultType::Fail)
+			{
+				XMLParserLogger.Error("XMLParser failed messages:");
+
+				for (const XMLParserMessage& message : Messages)
+				{
+					ELogLevel level = [&]
+					{
+						switch (message.Type)
+						{
+						case EXMLParserResultType::Success: return ELogLevel::Info;
+						case EXMLParserResultType::Warning: return ELogLevel::Warn;
+						case EXMLParserResultType::Error:   return ELogLevel::Error;
+						case EXMLParserResultType::Fail:    return ELogLevel::Critical;
+						default:                            return ELogLevel::Trace;
+						}
+					}();
+					
+					XMLParserLogger.Log(level, "{}: {}", TEnumParser<EXMLParserResultType>::ToString(message.Type), message.Text);
+				}
+			}
+#endif
 			return OverallResult != EXMLParserResultType::Fail;
 		}
 	};
@@ -763,6 +804,8 @@ if (!(attr)) \
 		m_ParseResult.OverallResult = EXMLParserResultType::Fail;
 		//AddMessage(EXMLParserResultType::Fail, message);
 		m_ParseResult.Messages.emplace_back(XMLParserMessage { EXMLParserResultType::Fail, message });
+
+		XMLParserLogger.Error("XMLParser could not parse file \"{}\". Check the messages for more info.", m_Path.ToString());
 	}
 
 	template<typename T>

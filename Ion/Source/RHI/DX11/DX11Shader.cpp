@@ -11,7 +11,9 @@ namespace Ion
 {
 	DX11Shader::DX11Shader() :
 		m_bCompiled(false)
-	{ }
+	{
+		DX11Logger.Trace("Created DX11Shader object.");
+	}
 
 	DX11Shader::~DX11Shader()
 	{

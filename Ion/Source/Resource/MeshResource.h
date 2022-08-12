@@ -125,6 +125,7 @@ namespace Ion
 			return true;
 		}
 
+		ResourceLogger.Trace("Importing Mesh Resource from Asset \"{}\".", m_Asset->GetVirtualPath());
 		TShared<MeshAssetData> meshData = MakeShared<MeshAssetData>();
 		m_Asset->Import(
 			[meshData](TShared<AssetFileMemoryBlock> block)
@@ -164,6 +165,8 @@ namespace Ion
 				onTake(sharedRenderData);
 
 				m_RenderData = sharedRenderData;
+
+				ResourceLogger.Trace("Imported Mesh Resource from Asset \"{}\" successfully.", m_Asset->GetVirtualPath());
 			}
 		);
 		return (bool)meshData;

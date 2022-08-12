@@ -28,7 +28,7 @@ namespace Ion
 		auto& [vp, assetDef] = *instance.m_Assets.emplace(initializer.VirtualPath, AssetDefinition(initializer)).first;
 		instance.m_AssetPtrs.emplace(&assetDef);
 
-		AssetLogger.Trace("Registered asset \"{0}\".", assetDef.GetVirtualPath());
+		AssetLogger.Info("Registered asset \"{0}\".", assetDef.GetVirtualPath());
 
 		return assetDef;
 	}
@@ -45,7 +45,7 @@ namespace Ion
 		instance.m_AssetPtrs.erase(&instance.m_Assets.at(virtualPath));
 		instance.m_Assets.erase(virtualPath);
 
-		AssetLogger.Trace("Unregistered asset \"{0}\".", virtualPath);
+		AssetLogger.Info("Unregistered asset \"{0}\".", virtualPath);
 	}
 
 	AssetDefinition* AssetRegistry::Find(const String& virtualPath)
@@ -90,6 +90,8 @@ namespace Ion
 	{
 		AssetRegistry& instance = Get();
 
+		AssetLogger.Info("Registering Engine Assets...");
+
 		instance.RegisterAssetsInVirtualRoot(Asset::VirtualRoot::Engine);
 
 		AssetLogger.Info("Registered Engine Assets.");
@@ -97,9 +99,13 @@ namespace Ion
 
 	void AssetRegistry::RegisterEngineVirtualRoots()
 	{
+		AssetLogger.Info("Registering Engine Virtual Roots...");
+
 		AssetRegistry::RegisterVirtualRoot(Asset::VirtualRoot::Engine, EnginePath::GetEngineContentPath());
 		AssetRegistry::RegisterVirtualRoot(Asset::VirtualRoot::Shaders, EnginePath::GetShadersPath());
 		// @TODO: AssetRegistry::RegisterVirtualRoot(Asset::VirtualRoot::Game, X);
+
+		AssetLogger.Info("Registered Engine Virtual Roots.");
 	}
 
 	void AssetRegistry::RegisterVirtualRoot(const String& root, const FilePath& physicalPath)
@@ -124,6 +130,8 @@ namespace Ion
 		AssetRegistry& instance = Get();
 
 		FilePath rootDir = instance.ResolveVirtualRoot(virtualRoot);
+
+		AssetLogger.Info("Registering Assets in Virtual Root \"{}\" -> \"{}\"...", virtualRoot, rootDir.ToString());
 
 		TShared<TTreeNode<FileInfo>> content = rootDir.Tree();
 

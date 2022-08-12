@@ -1,11 +1,7 @@
-	enum class EAssetType : uint8
+enum class EXMLParserResultType
 	{
-		None = 0,
-		Generic,
-		Image,
-		Mesh,
-		Data,
-		Material,
-		MaterialInstance,
-		Invalid = 0xFF,
+		Success = 0,
+		Warning,
+		Error,
+		Fail
 	};

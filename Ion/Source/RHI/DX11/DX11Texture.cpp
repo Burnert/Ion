@@ -115,6 +115,8 @@ namespace Ion
 			CreateViews(desc);
 			CreateSampler(desc);
 		}
+
+		DX11Logger.Trace("Created DX11Texture object \"{}\".", desc.DebugName);
 	}
 
 	DX11Texture::DX11Texture(const TextureDescription& desc, ID3D11Texture2D* existingResource) :
@@ -131,6 +133,8 @@ namespace Ion
 			CreateViews(desc);
 			CreateSampler(desc);
 		}
+
+		DX11Logger.Trace("Created DX11Texture object \"{}\".", desc.DebugName);
 	}
 
 	static bool IsMultiSampled(const TextureDescription& desc)

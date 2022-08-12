@@ -26,6 +26,7 @@ namespace Ion
 		if (strcmp(csFilter, "Nearest") == 0)
 			return ETextureFilteringMethod::Nearest;
 
+		ionbreak("Unknown filter type.");
 		return (ETextureFilteringMethod)0xFF;
 	}
 

@@ -39,6 +39,9 @@ namespace Ion
 
 		dxcall(device->CreateBuffer(&bd, &sd, &m_Buffer),
 			"Could not create Vertex Buffer.");
+
+		// @TODO: SetDebugName on buffers
+		DX11Logger.Trace("Created DX11VertexBuffer object.");
 		
 		//if (m_Buffer)
 		//{
@@ -105,6 +108,8 @@ namespace Ion
 
 		dxcall(device->CreateInputLayout(m_IEDArray.data(), (uint32)m_IEDArray.size(), blob->GetBufferPointer(), blob->GetBufferSize(), &m_InputLayout),
 			"Could not create Input Layout.");
+
+		DX11Logger.Trace("Created DX11VertexBuffer Input Layout object.");
 	}
 
 	uint32 DX11VertexBuffer::GetVertexCount() const
@@ -163,6 +168,8 @@ namespace Ion
 
 		dxcall(device->CreateBuffer(&bd, &sd, &m_Buffer),
 			"Could not create Index Buffer.");
+
+		DX11Logger.Trace("Created DX11IndexBuffer object.");
 	}
 
 	DX11IndexBuffer::~DX11IndexBuffer()
@@ -271,6 +278,7 @@ namespace Ion
 	DX11UniformBuffer::DX11UniformBuffer(void* initialData, size_t size) :
 		m_Common(initialData, size)
 	{
+		DX11Logger.Trace("Created DX11UniformBuffer object.");
 	}
 
 	void DX11UniformBuffer::Bind(uint32 slot) const
@@ -292,6 +300,7 @@ namespace Ion
 		RHIUniformBufferDynamic(uniforms),
 		m_Common(initialData, size)
 	{
+		DX11Logger.Trace("Created DX11UniformBufferDynamic object.");
 	}
 
 	void DX11UniformBufferDynamic::Bind(uint32 slot) const

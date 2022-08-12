@@ -88,6 +88,7 @@ namespace Ion
 
 		if (resource)
 		{
+			ResourceLogger.Trace("Found Resource for asset \"{}\".", asset->GetVirtualPath());
 			return TStaticResourcePtrCast<T>(resource);
 		}
 		else

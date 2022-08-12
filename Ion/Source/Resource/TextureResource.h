@@ -129,6 +129,7 @@ namespace Ion
 			return true;
 		}
 
+		ResourceLogger.Trace("Importing Texture Resource from Asset \"{}\".", m_Asset->GetVirtualPath());
 		TShared<Image> image = MakeShared<Image>();
 		m_Asset->Import(
 			[image](TShared<AssetFileMemoryBlock> block)
@@ -149,7 +150,7 @@ namespace Ion
 				desc.bGenerateMips = true;
 				desc.bCreateSampler = true;
 				desc.bUseAsRenderTarget = true;
-				desc.DebugName = m_Asset->GetDefinitionPath().ToString();
+				desc.DebugName = m_Asset->GetVirtualPath();
 
 				desc.SetFilterAll(m_Description.Properties.Filter);
 
@@ -165,10 +166,12 @@ namespace Ion
 				});
 
 				sharedRenderData.Texture->UpdateSubresource(image.get());
-				;
+
 				onTake(sharedRenderData);
 
 				m_RenderData = sharedRenderData;
+
+				ResourceLogger.Trace("Imported Texture Resource from Asset \"{}\" successfully.", m_Asset->GetVirtualPath());
 			}
 		);
 		return (bool)image;
