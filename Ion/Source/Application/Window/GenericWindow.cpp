@@ -3,7 +3,6 @@
 #include "GenericWindow.h"
 #include "Application/Application.h"
 #include "Core/CoreTypes.h"
-#include "Core/Logging/LoggerOld.h"
 
 namespace Ion
 {

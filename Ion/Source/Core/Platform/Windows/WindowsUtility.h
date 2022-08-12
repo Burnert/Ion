@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Core/Platform/Windows/WindowsHeaders.h"
-#include "Core/Logging/LoggerOld.h"
 
 #include <comdef.h>
 

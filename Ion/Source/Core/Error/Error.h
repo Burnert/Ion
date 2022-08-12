@@ -4,7 +4,6 @@
 #include "Core/CoreMacros.h"
 #include "Core/CoreTypes.h"
 #include "Core/Platform/Platform.h"
-#include "Core/Logging/LoggerOld.h"
 #include "Core/Logging/Logger.h"
 
 namespace Ion

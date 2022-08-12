@@ -4,7 +4,6 @@
 #include "Core/CoreTypes.h"
 #include "Core/CoreApi.h"
 #include "Core/CoreUtility.h"
-#include "Core/Logging/LoggerOld.h"
 
 namespace Ion
 {

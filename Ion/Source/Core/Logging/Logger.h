@@ -1,5 +1,9 @@
 #pragma once
 
+#define SPDLOG_WCHAR_TO_UTF8_SUPPORT
+#define SPDLOG_COMPILED_LIB
+#include "spdlog/spdlog.h"
+
 namespace Ion
 {
 #pragma region Logger
