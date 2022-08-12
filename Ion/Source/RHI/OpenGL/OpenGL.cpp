@@ -17,7 +17,7 @@ namespace Ion
 #ifdef ION_PLATFORM_WINDOWS
 		OpenGLWindows::Init(window);
 #else
-		LOG_CRITICAL("OpenGL implementation is not defined on this platform!");
+		OpenGLLogger.Critical("OpenGL implementation is not defined on this platform!");
 #endif
 		return true;
 	}

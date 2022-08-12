@@ -24,7 +24,7 @@ namespace Ion
 {
 	void Application::SetCursor(ECursorType cursor)
 	{
-		LOG_WARN("Changing the cursor is not supported on this platform.");
+		ApplicationLogger.Warn("Changing the cursor is not supported on this platform.");
 	}
 
 	ECursorType Application::GetCurrentCursor() const
@@ -138,7 +138,7 @@ namespace Ion
 	void Application::Exit()
 	{
 		// @TODO: Exit
-		LOG_CRITICAL("TODO: Implement Exit!");
+		ApplicationLogger.Critical("TODO: Implement Exit!");
 	}
 
 	void Application::PollEvents()
@@ -315,7 +315,7 @@ namespace Ion
 		{
 			if (GetInputManager()->IsKeyPressed(Key::LAlt))
 			{
-				LOG_DEBUG("Fullscreen Toggle");
+				ApplicationLogger.Debug("Fullscreen Toggle");
 
 				bool bFullScreen = GetWindow()->IsFullScreenEnabled();
 				GetWindow()->EnableFullScreen(!bFullScreen);

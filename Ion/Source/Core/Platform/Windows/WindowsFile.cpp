@@ -13,11 +13,11 @@
 #ifdef ION_LOG_ENABLED
 
 #define _PRINT_HANDLE_ERROR() \
-LOG_ERROR("File \"{}\" cannot be accessed before it is physically opened!", m_FilePath);
+FileLogger.Error("File \"{}\" cannot be accessed before it is physically opened!", m_FilePath);
 #define _PRINT_READ_ERROR() \
-LOG_ERROR("File \"{}\" cannot be read because the Read access mode was not specified when opening the file!", m_FilePath);
+FileLogger.Error("File \"{}\" cannot be read because the Read access mode was not specified when opening the file!", m_FilePath);
 #define _PRINT_WRITE_ERROR() \
-LOG_ERROR("File \"{}\" cannot be written because the Write access mode was not specified when opening the file!", m_FilePath);
+FileLogger.Error("File \"{}\" cannot be written because the Write access mode was not specified when opening the file!", m_FilePath);
 
 #else
 
@@ -43,6 +43,8 @@ if (Handle == INVALID_HANDLE_VALUE) \
 
 namespace Ion
 {
+	//REGISTER_LOGGER(WindowsFileLogger, "Platform::Windows::File");
+
 	static HANDLE& GetNative(File* file)
 	{
 		return file->m_NativePointer;
@@ -97,7 +99,7 @@ namespace Ion
 				ionthrow(IOError, "File \"{}\" cannot be opened.", m_FilePath.ToString());
 			}
 
-			_DEBUG_LOG(LOG_WARN("File \"{}\" not found.", m_FilePath.ToString()));
+			_DEBUG_LOG(FileLogger.Warn("File \"{}\" not found.", m_FilePath.ToString()));
 			ionthrow(FileNotFoundError, "File \"{}\" not found.", m_FilePath.ToString());
 		}
 
@@ -111,7 +113,7 @@ namespace Ion
 			SetOffset(m_FileSize);
 		}
 
-		_DEBUG_LOG(LOG_TRACE("File \"{}\" opened.", m_FilePath.ToString()));
+		_DEBUG_LOG(FileLogger.Trace("File \"{}\" opened.", m_FilePath.ToString()));
 		return Void();
 	}
 
@@ -126,14 +128,14 @@ namespace Ion
 			ionthrow(IOError, L"Cannot delete file \"{}\"!", filename);
 		}
 
-		_DEBUG_STATIC_LOG(LOG_DEBUG(L"File \"{}\" has been deleted.", filename));
+		_DEBUG_STATIC_LOG(FileLogger.Debug(L"File \"{}\" has been deleted.", filename));
 		return Void();
 	}
 
 	void File::Close_Native()
 	{
 		CloseHandle(Handle);
-		_DEBUG_LOG(LOG_TRACE("File \"{}\" was closed.", m_FilePath.ToString()));
+		_DEBUG_LOG(FileLogger.Trace("File \"{}\" was closed.", m_FilePath.ToString()));
 
 		//*(size_t*)&m_NativeFile.m_FileHandle = (size_t)INVALID_HANDLE_VALUE;
 		Handle = INVALID_HANDLE_VALUE;
@@ -156,7 +158,7 @@ namespace Ion
 		}
 		m_Offset += bytesRead;
 
-		_DEBUG_LOG(LOG_TRACE("\"{}\": Read {} bytes.", m_FilePath.ToString(), bytesRead));
+		_DEBUG_LOG(FileLogger.Trace("\"{}\": Read {} bytes.", m_FilePath.ToString(), bytesRead));
 		return Void();
 	}
 
@@ -212,7 +214,7 @@ namespace Ion
 				}
 				else
 				{
-					_DEBUG_LOG(LOG_WARN("\"{}\": CR was found but the next byte could not be checked! {1} byte buffer was to small.", m_FilePath.ToString(), count));
+					_DEBUG_LOG(FileLogger.Warn("\"{}\": CR was found but the next byte could not be checked! {1} byte buffer was to small.", m_FilePath.ToString(), count));
 					// Set the offset back to the CR character
 					// so it can be interpreted later and then exit.
 					SetOffset(initialOffset + i);
@@ -264,7 +266,7 @@ namespace Ion
 			if (bOutOverflow != nullptr)
 				*bOutOverflow = true;
 
-			_DEBUG_LOG(LOG_WARN("\"{}\": File read output buffer overflow! {} byte buffer was to small.", m_FilePath.ToString(), count));
+			_DEBUG_LOG(FileLogger.Warn("\"{}\": File read output buffer overflow! {} byte buffer was to small.", m_FilePath.ToString(), count));
 		}
 
 		return Void();
@@ -282,7 +284,7 @@ namespace Ion
 		uint64 readCount = 0;
 		fwdthrowall(ReadLine_Internal(outBuffer, count, &readCount, nullptr));
 
-		_DEBUG_LOG(LOG_TRACE("\"{}\": Read {} bytes.", m_FilePath.ToString(), readCount));
+		_DEBUG_LOG(FileLogger.Trace("\"{}\": Read {} bytes.", m_FilePath.ToString(), readCount));
 		return Void();
 	}
 
@@ -310,7 +312,7 @@ namespace Ion
 		}
 		while (bOverflow);
 
-		_DEBUG_LOG(LOG_TRACE("\"{}\": Read {} bytes.", m_FilePath.ToString(), readCount));
+		_DEBUG_LOG(FileLogger.Trace("\"{}\": Read {} bytes.", m_FilePath.ToString(), readCount));
 		return line;
 	}
 
@@ -337,7 +339,7 @@ namespace Ion
 		int64 sizeDifference = std::max((int64)0, m_Offset - m_FileSize);
 		UpdateFileSizeCache(m_FileSize + sizeDifference);
 
-		_DEBUG_LOG(LOG_TRACE("\"{}\": Written {} bytes.", m_FilePath.ToString(), bytesWritten));
+		_DEBUG_LOG(FileLogger.Trace("\"{}\": Written {} bytes.", m_FilePath.ToString(), bytesWritten));
 		return Void();
 	}
 
@@ -386,7 +388,7 @@ namespace Ion
 		int64 sizeDifference = std::max((int64)0, m_Offset - m_FileSize);
 		UpdateFileSizeCache(m_FileSize + sizeDifference);
 
-		_DEBUG_LOG(LOG_TRACE("\"{}\": Written {} bytes.", m_FilePath.ToString(), bytesWritten));
+		_DEBUG_LOG(FileLogger.Trace("\"{}\": Written {} bytes.", m_FilePath.ToString(), bytesWritten));
 		return Void();
 	}
 
@@ -436,7 +438,7 @@ namespace Ion
 		{
 			GetFileSizeEx(Handle, (LARGE_INTEGER*)&m_FileSize);
 
-			_DEBUG_LOG(LOG_TRACE("\"{}\": New file size cache = {} bytes.", m_FilePath.ToString(), m_FileSize));
+			_DEBUG_LOG(FileLogger.Trace("\"{}\": New file size cache = {} bytes.", m_FilePath.ToString(), m_FileSize));
 		}
 		
 		return m_FileSize;
@@ -457,12 +459,12 @@ namespace Ion
 			DWORD dwError = GetLastError();
 			if (dwError == ERROR_ALREADY_EXISTS)
 			{
-				LOG_WARN(L"The path \"{}\" already exists!", path);
+				FileLogger.Warn(L"The path \"{}\" already exists!", path);
 				return false;
 			}
 			if (dwError == ERROR_PATH_NOT_FOUND)
 			{
-				LOG_ERROR(L"Cannot make path \"{}\"!", path);
+				FileLogger.Error(L"Cannot make path \"{}\"!", path);
 				// @TODO: Make this recursive?
 				return false;
 			}

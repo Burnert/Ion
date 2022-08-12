@@ -199,7 +199,7 @@ namespace Ion
 				handle = LoadCursorFromFile(StringConverter::StringToWString(cursorPath).c_str());
 				if (!handle)
 				{
-					LOG_WARN("Could not load cursor {0}. The default one will be used.", cursorPath);
+					WindowsApplicationLogger.Warn("Could not load cursor {0}. The default one will be used.", cursorPath);
 					handle = LoadCursor(NULL, IDC_ARROW);
 				}
 				break;
@@ -208,7 +208,7 @@ namespace Ion
 				handle = LoadCursorFromFile(StringConverter::StringToWString(cursorPath).c_str());
 				if (!handle)
 				{
-					LOG_WARN("Could not load cursor {0}. The default one will be used.", cursorPath);
+					WindowsApplicationLogger.Warn("Could not load cursor {0}. The default one will be used.", cursorPath);
 					handle = LoadCursor(NULL, IDC_ARROW);
 				}
 				break;

@@ -370,7 +370,7 @@ namespace Ion
 		m_BasicShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
 		m_BasicShader->Compile()
-			.Err<ShaderCompilationError>([](auto& err) { LOG_ERROR("Could not compile the Basic Shader."); })
+			.Err<ShaderCompilationError>([](auto& err) { RendererLogger.Error("Could not compile the Basic Shader."); })
 			.Unwrap();
 	}
 
@@ -398,7 +398,7 @@ namespace Ion
 		m_BasicUnlitMaskedShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
 		m_BasicUnlitMaskedShader->Compile()
-			.Err<ShaderCompilationError>([](auto& err) { LOG_ERROR("Could not compile the Basic Unlit Masked Shader."); })
+			.Err<ShaderCompilationError>([](auto& err) { RendererLogger.Error("Could not compile the Basic Unlit Masked Shader."); })
 			.Unwrap();
 	}
 
@@ -426,7 +426,7 @@ namespace Ion
 		m_PPFXAAShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
 		m_PPFXAAShader->Compile()
-			.Err<ShaderCompilationError>([](auto& err) { LOG_ERROR("Could not compile the PostProcess FXAA Shader."); })
+			.Err<ShaderCompilationError>([](auto& err) { RendererLogger.Error("Could not compile the PostProcess FXAA Shader."); })
 			.Unwrap();
 	}
 
@@ -454,7 +454,7 @@ namespace Ion
 		m_EditorObjectIDShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
 		m_EditorObjectIDShader->Compile()
-			.Err<ShaderCompilationError>([](auto& err) { LOG_ERROR("Could not compile the EditorObjectID Shader."); })
+			.Err<ShaderCompilationError>([](auto& err) { RendererLogger.Error("Could not compile the EditorObjectID Shader."); })
 			.Unwrap();
 	}
 
@@ -481,7 +481,7 @@ namespace Ion
 		m_EditorSelectedShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
 		m_EditorSelectedShader->Compile()
-			.Err<ShaderCompilationError>([](auto& err) { LOG_ERROR("Could not compile the EditorSelected Shader."); })
+			.Err<ShaderCompilationError>([](auto& err) { RendererLogger.Error("Could not compile the EditorSelected Shader."); })
 			.Unwrap();
 	}
 
@@ -509,7 +509,7 @@ namespace Ion
 		m_EditorViewportShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
 		m_EditorViewportShader->Compile()
-			.Err<ShaderCompilationError>([](auto& err) { LOG_ERROR("Could not compile the EditorViewport Shader."); })
+			.Err<ShaderCompilationError>([](auto& err) { RendererLogger.Error("Could not compile the EditorViewport Shader."); })
 			.Unwrap();
 	}
 
@@ -537,7 +537,7 @@ namespace Ion
 		m_EditorViewportMSShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
 
 		m_EditorViewportMSShader->Compile()
-			.Err<ShaderCompilationError>([](auto& err) { LOG_ERROR("Could not compile the EditorViewportMS Shader."); })
+			.Err<ShaderCompilationError>([](auto& err) { RendererLogger.Error("Could not compile the EditorViewportMS Shader."); })
 			.Unwrap();
 	}
 

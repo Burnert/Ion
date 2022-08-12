@@ -15,6 +15,8 @@ struct ImFont;
 
 namespace Ion
 {
+	REGISTER_LOGGER(ApplicationLogger, "Application");
+
 	class App;
 
 	template<void(const Event&)>

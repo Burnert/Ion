@@ -62,11 +62,11 @@ namespace Ion
 		
 		if (status == RPC_S_UUID_LOCAL_ONLY)
 		{
-			LOG_WARN("The UUID is guaranteed to be unique to this computer only.");
+			WindowsLogger.Warn("The UUID is guaranteed to be unique to this computer only.");
 		}
 		if (status == RPC_S_UUID_NO_ADDRESS)
 		{
-			LOG_WARN("Cannot get Ethernet or token - ring hardware address for this computer.");
+			WindowsLogger.Warn("Cannot get Ethernet or token - ring hardware address for this computer.");
 		}
 
 		GUIDBytesArray bytes;
@@ -99,7 +99,7 @@ namespace Ion
 
 		if (status != RPC_S_OK)
 		{
-			LOG_WARN("Could not convert UUID to String.");
+			WindowsLogger.Warn("Could not convert UUID to String.");
 			return "00000000-0000-0000-0000-000000000000";
 		}
 

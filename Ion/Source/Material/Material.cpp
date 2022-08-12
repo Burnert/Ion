@@ -56,7 +56,7 @@ namespace Ion
 				MaterialParameterTexture2D* param = (MaterialParameterTexture2D*)this;
 				String sValue = std::get<String>(def);
 				Asset asset = Asset::Resolve(sValue)
-					.Err([&](auto& err) { LOG_ERROR("Could not set Material Parameter default value to \"{}\".", sValue); })
+					.Err([&](auto& err) { MaterialLogger.Error("Could not set Material Parameter default value to \"{}\".", sValue); })
 					.UnwrapOr(Asset::None);
 				param->SetDefaultValue(asset);
 				break;
@@ -149,7 +149,7 @@ namespace Ion
 				MaterialParameterInstanceTexture2D* param = (MaterialParameterInstanceTexture2D*)this;
 				const String& sValue = std::get<String>(value);
 				Asset asset = Asset::Resolve(sValue)
-					.Err([&](auto& err) { LOG_ERROR("Could not set Material Parameter Instance value to \"{}\".", sValue); })
+					.Err([&](auto& err) { MaterialLogger.Error("Could not set Material Parameter Instance value to \"{}\".", sValue); })
 					.UnwrapOr(Asset::None);
 				param->SetValue(asset);
 				break;
@@ -322,7 +322,7 @@ namespace Ion
 					.Err<ShaderCompilationError>([&](auto& err)
 					{
 						// @TODO: More info
-						LOG_ERROR("Could not compile shader.");
+						MaterialLogger.Error("Could not compile shader.");
 					});
 			});
 			compileTask.Schedule();
@@ -366,7 +366,7 @@ namespace Ion
 					.Err<ShaderCompilationError>([&](auto& err)
 					{
 						// @TODO: More info
-						LOG_ERROR("Could not compile shader.");
+						MaterialLogger.Error("Could not compile shader.");
 					});
 			});
 			compileTask.Schedule();
@@ -437,7 +437,7 @@ namespace Ion
 	{
 		if (m_MaterialCode.empty())
 		{
-			LOG_ERROR("Cannot compile blank material code.");
+			MaterialLogger.Error("Cannot compile blank material code.");
 			return false;
 		}
 
@@ -454,13 +454,13 @@ namespace Ion
 	{
 		if (m_MaterialCode.empty())
 		{
-			LOG_ERROR("Cannot compile blank material code.");
+			MaterialLogger.Error("Cannot compile blank material code.");
 			return false;
 		}
 
 		if (m_Shaders.find(usage) == m_Shaders.end())
 		{
-			LOG_ERROR("Material cannot be compiled for the specified usage ({0}).", ToString(usage));
+			MaterialLogger.Error("Material cannot be compiled for the specified usage ({0}).", ToString(usage));
 			return false;
 		}
 
@@ -613,7 +613,7 @@ namespace Ion
 
 		if (code.empty())
 		{
-			LOG_ERROR("Material Code is empty!");
+			MaterialLogger.Error("Material Code is empty!");
 			return false;
 		}
 
@@ -706,7 +706,7 @@ namespace Ion
 		auto it = m_Parameters.find(name);
 		if (it != m_Parameters.end())
 		{
-			LOG_ERROR("Cannot add a material parameter, because a parameter with name \"{0}\" already exists.", name);
+			MaterialLogger.Error("Cannot add a material parameter, because a parameter with name \"{0}\" already exists.", name);
 			return nullptr;
 		}
 
@@ -723,7 +723,7 @@ namespace Ion
 		case EMaterialParameterType::Texture2D:
 			if (GetTextureParameterCount() == 16)
 			{
-				LOG_ERROR("A Material cannot have more than 16 Texture Parameters.");
+				MaterialLogger.Error("A Material cannot have more than 16 Texture Parameters.");
 				return nullptr;
 			}
 			uint32 freeSlot = GetFirstFreeTextureSlot();
@@ -744,7 +744,7 @@ namespace Ion
 		auto it = m_Parameters.find(name);
 		if (it == m_Parameters.end())
 		{
-			LOG_ERROR("Cannot find a parameter with name \"{0}\".", name);
+			MaterialLogger.Error("Cannot find a parameter with name \"{0}\".", name);
 			return false;
 		}
 
@@ -1004,7 +1004,7 @@ namespace Ion
 				IASSET_ATTR_parent, [this](String parent)
 				{
 					Asset asset = Asset::Resolve(parent)
-						.Err([&](auto& err) { LOG_ERROR("Could not set parent material to \"{}\"", parent); })
+						.Err([&](auto& err) { MaterialLogger.Error("Could not set parent material to \"{}\"", parent); })
 						.UnwrapOr(Asset::None);
 					SetParentMaterial(MaterialRegistry::QueryMaterial(asset));
 				}

@@ -22,8 +22,8 @@ namespace Windows
 		WINDOWS_FORMAT_ERROR_MESSAGE(errorMsg, error);
 #ifdef ION_LOG_ENABLED
 		if constexpr (sizeof...(args) > 0)
-			LOG_ERROR(args...);
-		LOG_ERROR(WString(errorMsg));
+			WindowsLogger.Error(args...);
+		WindowsLogger.Error(WString(errorMsg));
 #else
 		// @TODO: Make this show up only on critical errors
 		MessageBox(NULL, errorMsg.c_str(), TEXT("Win32 Critical Error"), MB_ICONERROR | MB_OK);
@@ -43,10 +43,10 @@ namespace Windows
 		const TCHAR* message = error.ErrorMessage();
 
 #ifdef ION_LOG_ENABLED
-		LOG_ERROR("Windows HRESULT Error:");
+		WindowsLogger.Error("Windows HRESULT Error:");
 		if constexpr (sizeof...(args) > 0)
-			LOG_ERROR(args...);
-		LOG_ERROR(TString(message));
+			WindowsLogger.Error(args...);
+		WindowsLogger.Error(TString(message));
 #else
 		MessageBox(NULL, message, TEXT("Windows HRESULT Error"), MB_ICONERROR | MB_OK);
 #endif

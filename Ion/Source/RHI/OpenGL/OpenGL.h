@@ -9,6 +9,8 @@ struct ImGuiViewport;
 
 namespace Ion
 {
+	REGISTER_LOGGER(OpenGLLogger, "RHI::OpenGL");
+
 	class GenericWindow;
 
 	class ION_API OpenGL : public RHI

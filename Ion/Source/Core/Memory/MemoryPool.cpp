@@ -58,7 +58,7 @@ namespace Ion
 		{
 			m_LastErrorType = EMemoryPoolError::AllocError;
 
-			LOG_WARN("Tried to allocate a block larger than the entire memory pool.\n"
+			MemoryLogger.Warn("Tried to allocate a block larger than the entire memory pool.\n"
 				"Pool Size = {0} B | Block Size (after alignment) = {1} B\n"
 				"If there is a need for large blocks, try allocating a bigger pool beforehand.", m_Size, size);
 
@@ -196,11 +196,11 @@ namespace Ion
 
 		TShared<MemoryPoolDebugInfo> info = GetDebugInfo();
 
-		LOG_DEBUG("Used: {0} B ({1:.2f} MB) | Free: {2} B ({3:.2f} MB) | Alloc count: {4}",
+		MemoryLogger.Debug("Used: {0} B ({1:.2f} MB) | Free: {2} B ({3:.2f} MB) | Alloc count: {4}",
 			info->BytesUsed, info->BytesUsed / (float)(1 << 20),
 			info->BytesFree, info->BytesFree / (float)(1 << 20),
 			info->AllocCount);
-		LOG_DEBUG("----------------------------------------------------------------------------------");
+		MemoryLogger.Debug("----------------------------------------------------------------------------------");
 
 		void* expectedPtr = info->PoolPtr;
 
@@ -208,15 +208,15 @@ namespace Ion
 		{
 			if (allocData.Ptr != expectedPtr)
 			{
-				LOG_ERROR("Noncontiguous memory from [{0}] to [{1}]", expectedPtr, allocData.Ptr);
+				MemoryLogger.Error("Noncontiguous memory from [{0}] to [{1}]", expectedPtr, allocData.Ptr);
 				size_t size = (uint8*)allocData.Ptr - (uint8*)expectedPtr;
-				LOG_ERROR("Size: {0} B ({1:.2f} MB)", size, size / (float)(1 << 20));
+				MemoryLogger.Error("Size: {0} B ({1:.2f} MB)", size, size / (float)(1 << 20));
 			}
 			expectedPtr = (uint8*)allocData.Ptr + allocData.Size;
 
-			LOG_DEBUG("{0:<8d} | Ptr: [{1}] | Size: {2:20d} B ({3:.2f} MB)",
+			MemoryLogger.Debug("{0:<8d} | Ptr: [{1}] | Size: {2:20d} B ({3:.2f} MB)",
 				allocData.SequentialIndex, allocData.Ptr, allocData.Size, allocData.Size / (float)(1 << 20));
 		}
-		LOG_DEBUG("----------------------------------------------------------------------------------");
+		MemoryLogger.Debug("----------------------------------------------------------------------------------");
 	}
 }

@@ -81,7 +81,7 @@ namespace Ion
 	{
 		if (!(FilePath::Exists(filePath) && FilePath::IsFile(filePath)))
 		{
-			LOG_ERROR(L"The file \"{}\" does not exist or is a directory.", filePath);
+			FileLogger.Error(L"The file \"{}\" does not exist or is a directory.", filePath);
 			ionthrow(FileNotFoundError, L"The file \"{}\" does not exist or is a directory.", filePath);
 		}
 
@@ -275,7 +275,7 @@ namespace Ion
 
 		if (itBaseDir != baseDir.m_Path.end())
 		{
-			LOG_ERROR("Cannot find base directory \"{0}\" in path \"{1}\".", baseDir.ToString(), m_PathName);
+			FileLogger.Error("Cannot find base directory \"{0}\" in path \"{1}\".", baseDir.ToString(), m_PathName);
 			return relative;
 		}
 

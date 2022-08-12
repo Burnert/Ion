@@ -1,5 +1,7 @@
 #pragma once
 
+#include "RendererCore.h"
+
 namespace Ion
 {
 	enum class EMaterialParameterTypeOld : uint8
@@ -184,7 +186,7 @@ namespace Ion
 			TMaterialParameter<T>* param = FindParameter<T>(name);
 			if (!param)
 			{
-				LOG_WARN("Cannot set parameter '{0}<{1}>' because it does not exist!", name, TypeToString<T>());
+				RendererLogger.Warn("Cannot set parameter '{0}<{1}>' because it does not exist!", name, TypeToString<T>());
 				return;
 			}
 			param->SetValue(value);
@@ -196,7 +198,7 @@ namespace Ion
 			TMaterialParameter<T>* param = FindParameter<T>(name);
 			if (!param)
 			{
-				LOG_WARN("Parameter '{0}<{1}>' does not exist!", name, TypeToString<T>());
+				RendererLogger.Warn("Parameter '{0}<{1}>' does not exist!", name, TypeToString<T>());
 			}
 			return param;
 		}
@@ -246,7 +248,7 @@ namespace Ion
 			EMaterialParameterTypeOld type = ExtractParameterType(it->second);
 			if (!IsStaticTypeSame<T>(type))
 			{
-				LOG_ERROR("Tried to cast the parameter '{0}' to incorrect value type! ({1} instead of {2})",
+				RendererLogger.Error("Tried to cast the parameter '{0}' to incorrect value type! ({1} instead of {2})",
 					name, TypeToString<T>(), MaterialParameterTypeToString(type));
 				return nullptr;
 			}

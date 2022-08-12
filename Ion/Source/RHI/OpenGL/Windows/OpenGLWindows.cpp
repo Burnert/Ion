@@ -45,11 +45,11 @@ namespace Ion
 
 		glDebugMessageCallback(OpenGLWindows::DebugCallback, nullptr);
 
-		LOG_INFO("  OpenGL Info:");
-		LOG_INFO("Vendor:            {0}", GetVendor());
-		LOG_INFO("Renderer:          {0}", GetRendererName());
-		LOG_INFO("OpenGL Version:    {0}", GetVersion());
-		LOG_INFO("Language version:  {0}", GetLanguageVersion());
+		OpenGLLogger.Info("  OpenGL Info:");
+		OpenGLLogger.Info("Vendor:            {0}", GetVendor());
+		OpenGLLogger.Info("Renderer:          {0}", GetRendererName());
+		OpenGLLogger.Info("OpenGL Version:    {0}", GetVersion());
+		OpenGLLogger.Info("Language version:  {0}", GetLanguageVersion());
 
 		glGetIntegerv(GL_MAJOR_VERSION, &s_MajorVersion);
 		glGetIntegerv(GL_MINOR_VERSION, &s_MinorVersion);
@@ -184,16 +184,16 @@ namespace Ion
 		switch (severity)
 		{
 		case GL_DEBUG_SEVERITY_HIGH:
-			LOG_CRITICAL("OpenGL Warning (High Severity): \n{0}", message);
+			OpenGLLogger.Critical("OpenGL Warning (High Severity): \n{0}", message);
 			break;
 		case GL_DEBUG_SEVERITY_MEDIUM:
-			LOG_ERROR("OpenGL Warning (Medium Severity): \n{0}", message);
+			OpenGLLogger.Error("OpenGL Warning (Medium Severity): \n{0}", message);
 			break;
 		case GL_DEBUG_SEVERITY_LOW:
-			LOG_WARN("OpenGL Warning (Low Severity): \n{0}", message);
+			OpenGLLogger.Warn("OpenGL Warning (Low Severity): \n{0}", message);
 			break;
 		case GL_DEBUG_SEVERITY_NOTIFICATION:
-			LOG_TRACE("OpenGL Notification: \n{0}", message);
+			OpenGLLogger.Trace("OpenGL Notification: \n{0}", message);
 			break;
 		}
 	}

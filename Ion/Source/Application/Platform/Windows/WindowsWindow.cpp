@@ -53,7 +53,7 @@ namespace Ion
 
 	TShared<WindowsWindow> WindowsWindow::Create()
 	{
-		ION_LOG_ENGINE_TRACE("Creating Windows window.");
+		WindowsApplicationLogger.Trace("Creating Windows window.");
 		return TShared<WindowsWindow>(new WindowsWindow);
 	}
 
@@ -467,7 +467,7 @@ namespace Ion
 
 				if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, buffer, &size, sizeof(RAWINPUTHEADER)) != size)
 				{
-					LOG_WARN("GetRawInputData does not return correct size!");
+					WindowsApplicationLogger.Warn("GetRawInputData does not return correct size!");
 					return 0;
 				}
 
@@ -694,7 +694,7 @@ namespace Ion
 
 		if (!RegisterRawInputDevices(&mouseRid, 1, sizeof(mouseRid)))
 		{
-			LOG_WARN("Cannot register Raw Input devices!");
+			WindowsApplicationLogger.Warn("Cannot register Raw Input devices!");
 		}
 
 		return true;
@@ -706,7 +706,7 @@ namespace Ion
 
 		if (m_WindowHandle == NULL)
 		{
-			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "show the window");
+			WindowsApplicationLogger.Critical(_windowNoInitMessage, "show the window");
 			return;
 		}
 
@@ -725,7 +725,7 @@ namespace Ion
 
 		if (m_WindowHandle == NULL)
 		{
-			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "hide the window");
+			WindowsApplicationLogger.Critical(_windowNoInitMessage, "hide the window");
 			return;
 		}
 
@@ -743,7 +743,7 @@ namespace Ion
 
 		if (m_WindowHandle == NULL)
 		{
-			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "maximize the window");
+			WindowsApplicationLogger.Critical(_windowNoInitMessage, "maximize the window");
 			return;
 		}
 
@@ -760,7 +760,7 @@ namespace Ion
 
 		if (m_WindowHandle == NULL)
 		{
-			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "set the title");
+			WindowsApplicationLogger.Critical(_windowNoInitMessage, "set the title");
 			return;
 		}
 
@@ -775,7 +775,7 @@ namespace Ion
 
 		if (m_WindowHandle == NULL)
 		{
-			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "enable the window");
+			WindowsApplicationLogger.Critical(_windowNoInitMessage, "enable the window");
 			return;
 		}
 
@@ -791,7 +791,7 @@ namespace Ion
 	{
 		if (m_WindowHandle == NULL)
 		{
-			ION_LOG_ENGINE_ERROR(_windowNoInitMessage, "get window dimensions");
+			WindowsApplicationLogger.Error(_windowNoInitMessage, "get window dimensions");
 			return { 0, 0 };
 		}
 		
@@ -959,7 +959,7 @@ namespace Ion
 
 		if (m_WindowHandle == NULL)
 		{
-			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "create OpenGL rendering context");
+			WindowsApplicationLogger.Critical(_windowNoInitMessage, "create OpenGL rendering context");
 			return NULL;
 		}
 
@@ -1002,7 +1002,7 @@ namespace Ion
 	{
 		if (m_WindowHandle == NULL)
 		{
-			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "get the Device Context");
+			WindowsApplicationLogger.Critical(_windowNoInitMessage, "get the Device Context");
 			return NULL;
 		}
 
@@ -1013,7 +1013,7 @@ namespace Ion
 	{
 		if (m_WindowHandle == NULL)
 		{
-			ION_LOG_ENGINE_CRITICAL(_windowNoInitMessage, "get the Rendering Context");
+			WindowsApplicationLogger.Critical(_windowNoInitMessage, "get the Rendering Context");
 			return NULL;
 		}
 

@@ -9,7 +9,7 @@
 // Return false on fail macros
 
 #define _FAIL(expr) if (!(expr)) { return 0; }
-#define _FAIL_M(expr, ...) if (!(expr)) { LOG_ERROR(__VA_ARGS__); return 0; }
+#define _FAIL_M(expr, ...) if (!(expr)) { FileLogger.Error(__VA_ARGS__); return 0; }
 
 namespace Ion
 {
@@ -89,7 +89,7 @@ namespace Ion
 
 		if (m_PixelData)
 		{
-			LOG_ERROR("Image has already been loaded.");
+			FileLogger.Error("Image has already been loaded.");
 			return nullptr;
 		}
 

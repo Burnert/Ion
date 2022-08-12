@@ -13,6 +13,8 @@
 
 namespace Ion
 {
+	REGISTER_LOGGER(RendererLogger, "Renderer");
+
 	struct EditorViewportTextures
 	{
 		TShared<RHITexture> SceneFinalColor;

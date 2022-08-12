@@ -61,7 +61,7 @@ namespace Ion
 
 			if (!bCompiled)
 			{
-				LOG_ERROR("Could not compile shader! ({0})", ShaderTypeToString(shader.Type));
+				OpenGLLogger.Error("Could not compile shader! ({0})", ShaderTypeToString(shader.Type));
 
 				int32 logLength = 0;
 				glGetShaderiv(shader.ID, GL_INFO_LOG_LENGTH, &logLength);
@@ -69,7 +69,7 @@ namespace Ion
 				char* message = (char*)_malloca(logLength);
 				glGetShaderInfoLog(shader.ID, logLength, &logLength, message);
 
-				LOG_TRACE("Shader compilation log: \n{0}", message);
+				OpenGLLogger.Trace("Shader compilation log: \n{0}", message);
 
 				CleanupDeleteShaders();
 				
@@ -98,7 +98,7 @@ namespace Ion
 
 		if (!bLinked)
 		{
-			LOG_ERROR("Could not link shader program!");
+			OpenGLLogger.Error("Could not link shader program!");
 			glDeleteProgram(m_ProgramID);
 			m_ProgramID = 0;
 
@@ -338,7 +338,7 @@ namespace Ion
 			}
 			else
 			{
-				LOG_WARN("Cannot find uniform named '{0}'!", name.c_str());
+				OpenGLLogger.Warn("Cannot find uniform named '{0}'!", name.c_str());
 				m_UniformCache[name] = -1;
 			}
 			TRACE_END(0);

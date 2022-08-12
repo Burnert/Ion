@@ -36,7 +36,7 @@ namespace Ion
 					parser.ParseCurrentAttributes(IASSET_ATTR_asset, [&](String sAsset)
 					{
 						asset = Asset::Resolve(sAsset)
-							.Err([&](auto& err) { LOG_ERROR("Could not set Mesh material to \"{}\".", sAsset); })
+							.Err([&](auto& err) { ResourceLogger.Error("Could not set Mesh material to \"{}\".", sAsset); })
 							.UnwrapOr(Asset::None);
 					});
 

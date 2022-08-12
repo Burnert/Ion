@@ -73,11 +73,11 @@ namespace Ion::Editor
 		Asset::Resolve("[Engine]/Lol/Something")
 			.Ok([](const Asset& asset)
 			{
-				LOG_INFO(asset->GetDefinitionPath().ToString());
+				EditorLogger.Info(asset->GetDefinitionPath().ToString());
 			})
 			.Err<FileNotFoundError>([](auto& error)
 			{
-				LOG_ERROR("Cannot find asset file.");
+				EditorLogger.Error("Cannot find asset file.");
 			});
 
 		Renderer::Get()->SetVSyncEnabled(true);
@@ -88,7 +88,7 @@ namespace Ion::Editor
 		AssetRegistry::RegisterVirtualRoot("[Example]", EnginePath::GetEnginePath() + "../IonExample/Assets");
 		AssetRegistry::RegisterAssetsInVirtualRoot("[Example]");
 
-		LOG_INFO("UTF8: {}", u8"żółw");
+		EditorLogger.Info("UTF8: {}", u8"żółw");
 
 		//InitExample(nullptr);
 

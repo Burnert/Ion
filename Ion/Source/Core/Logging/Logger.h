@@ -145,4 +145,6 @@ namespace Ion
 
 	// Global / Generic Engine Logger
 	REGISTER_LOGGER(GEngineLogger, "Engine");
+	// Core Logger
+	REGISTER_LOGGER(CoreLogger, "Core");
 }

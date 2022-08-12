@@ -63,7 +63,7 @@ namespace Ion
 
 	void DebugTimer::PrintTimer(const String& name, EDebugTimerTimeUnit unit)
 	{
-		LOG_INFO(unit == EDebugTimerTimeUnit::Nanosecond ? "[Timer] {0} = {1:.0f}{2}" : "[Timer] {0} = {1:.3f}{2}",
+		CoreLogger.Info(unit == EDebugTimerTimeUnit::Nanosecond ? "[Timer] {0} = {1:.0f}{2}" : "[Timer] {0} = {1:.3f}{2}",
 			name, GetTime(unit), DebugTimerTimeUnitToStringShort(unit));
 	}
 }

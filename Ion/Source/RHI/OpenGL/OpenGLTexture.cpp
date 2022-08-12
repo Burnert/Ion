@@ -28,7 +28,7 @@ namespace Ion
 
 		if (!image->IsLoaded())
 		{
-			LOG_ERROR("Cannot Update Subresource of Texture. Image has not been loaded.");
+			OpenGLLogger.Error("Cannot Update Subresource of Texture. Image has not been loaded.");
 			return;
 		}
 
@@ -36,7 +36,7 @@ namespace Ion
 		if (image->GetWidth() != m_Description.Dimensions.Width ||
 			image->GetHeight() != m_Description.Dimensions.Height)
 		{
-			LOG_WARN("Image dimensions do not match texture dimensions.");
+			OpenGLLogger.Warn("Image dimensions do not match texture dimensions.");
 			//ReleaseTexture();
 			//CreateTexture(image->GetPixelData(), image->GetWidth(), image->GetHeight());
 			return;
@@ -129,7 +129,7 @@ namespace Ion
 
 			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 			{
-				LOG_ERROR("Framebuffer is not complete.");
+				OpenGLLogger.Error("Framebuffer is not complete.");
 				debugbreak();
 			}
 

@@ -10,6 +10,8 @@ struct ImGuiViewport;
 
 namespace Ion
 {
+	REGISTER_LOGGER(WindowsApplicationLogger, "Platform::Windows::Application");
+
 	class ION_API WindowsApplication : public Application
 	{
 		friend class Application;

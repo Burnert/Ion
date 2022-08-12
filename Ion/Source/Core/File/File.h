@@ -13,6 +13,8 @@
 
 namespace Ion
 {
+	REGISTER_LOGGER(FileLogger, "Core::File");
+
 #pragma region Enums
 
 	namespace EFileMode

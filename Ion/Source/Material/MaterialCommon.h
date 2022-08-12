@@ -14,6 +14,8 @@
 
 namespace Ion
 {
+	REGISTER_LOGGER(MaterialLogger, "Material");
+
 	enum class EMaterialParameterType
 	{
 		Null = 0,

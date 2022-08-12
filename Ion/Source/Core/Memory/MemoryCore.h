@@ -4,6 +4,8 @@
 
 namespace Ion
 {
+	REGISTER_LOGGER(MemoryLogger, "Core::Memory");
+
 	template<typename T>
 	struct TMemoryBlock
 	{

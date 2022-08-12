@@ -171,7 +171,7 @@ namespace Ion
 				}
 				if (m_State != EState::FINALISED)
 				{
-					LOG_WARN("Serialiser was destroyed before Finalise() was called! This might be a bug.");
+					CoreLogger.Warn("Serialiser was destroyed before Finalise() was called! This might be a bug.");
 				}
 			}
 
@@ -179,7 +179,7 @@ namespace Ion
 			{
 				if (!(m_State == EState::NULLSTATE || m_State == EState::FINALISED))
 				{
-					LOG_CRITICAL("Cannot initialise serialiser in this state! {0}", m_State);
+					CoreLogger.Critical("Cannot initialise serialiser in this state! {0}", m_State);
 					ionassert(false);
 					return;
 				}
@@ -216,7 +216,7 @@ namespace Ion
 
 				if (m_State != EState::SERIALISING)
 				{
-					LOG_CRITICAL("Cannot write to serial in this state! {0}", m_State);
+					CoreLogger.Critical("Cannot write to serial in this state! {0}", m_State);
 					ionassert(false);
 					return;
 				}
@@ -236,7 +236,7 @@ namespace Ion
 
 				if (!(m_State == EState::INIT))
 				{
-					LOG_CRITICAL("Cannot read from serial in this state! {0}", m_State);
+					CoreLogger.Critical("Cannot read from serial in this state! {0}", m_State);
 					ionassert(false);
 					return;
 				}
@@ -253,7 +253,7 @@ namespace Ion
 			{
 				if (!(m_State == EState::WRITING || m_State == EState::DESERIALISING))
 				{
-					LOG_CRITICAL("Cannot finalise serialisation in this state! {0}", m_State);
+					CoreLogger.Critical("Cannot finalise serialisation in this state! {0}", m_State);
 					ionassert(false);
 					return;
 				}
@@ -340,7 +340,7 @@ namespace Ion
 
 				if (!(m_State == EState::INIT || m_State == EState::SERIALISING))
 				{
-					LOG_CRITICAL("Cannot serialise field in this state! {0}", m_State);
+					CoreLogger.Critical("Cannot serialise field in this state! {0}", m_State);
 					ionassert(false);
 					return false;
 				}
@@ -355,7 +355,7 @@ namespace Ion
 
 				if (!(m_State == EState::READING || m_State == EState::DESERIALISING))
 				{
-					LOG_CRITICAL("Cannot deserialise field in this state! {0}", m_State);
+					CoreLogger.Critical("Cannot deserialise field in this state! {0}", m_State);
 					ionassert(false);
 					return false;
 				}

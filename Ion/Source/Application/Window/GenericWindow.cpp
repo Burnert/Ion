@@ -1,6 +1,7 @@
 #include "IonPCH.h"
 
 #include "GenericWindow.h"
+#include "Application/Application.h"
 #include "Core/CoreTypes.h"
 #include "Core/Logging/LoggerOld.h"
 
@@ -13,13 +14,13 @@ namespace Ion
 
 	bool GenericWindow::Initialize()
 	{
-		ION_LOG_ENGINE_CRITICAL("{0} is not implemented!", __FUNCTION__);
+		ApplicationLogger.Critical("{0} is not implemented!", __FUNCTION__);
 		return false;
 	}
 
 	bool GenericWindow::Initialize(const TShared<GenericWindow>& parentWindow)
 	{
-		ION_LOG_ENGINE_CRITICAL("{0} is not implemented!", __FUNCTION__);
+		ApplicationLogger.Critical("{0} is not implemented!", __FUNCTION__);
 		return false;
 	}
 

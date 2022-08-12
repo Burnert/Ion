@@ -6,11 +6,11 @@ namespace Ion
 
 #define ENUM_PARSER_TO_STRING_BEGIN(type) inline static String ToString(type value) { switch (value) {
 #define ENUM_PARSER_TO_STRING_HELPER(val) case decltype(value)::val: return #val;
-#define ENUM_PARSER_TO_STRING_END() } LOG_ERROR("Invalid enum value."); return ""; }
+#define ENUM_PARSER_TO_STRING_END() } CoreLogger.Error("Invalid enum value."); return ""; }
 
 #define ENUM_PARSER_FROM_STRING_BEGIN(type) inline static TOptional<type> FromString(const String& str) { ionassert(!str.empty(), "The enum string is empty.");
 #define ENUM_PARSER_FROM_STRING_HELPER(val) if (str == #val) return decltype(FromString(""))::value_type::val;
-#define ENUM_PARSER_FROM_STRING_END() LOG_ERROR("Invalid enum string."); return NullOpt; }
+#define ENUM_PARSER_FROM_STRING_END() CoreLogger.Error("Invalid enum string."); return NullOpt; }
 
 	template<typename TEnum>
 	struct TEnumParser
@@ -38,7 +38,7 @@ namespace Ion
 				T val = TEnumParser<T>::FromString(str);
 				if (!val)
 				{
-					LOG_ERROR("Cannot parse an enum value.");
+					CoreLogger.Error("Cannot parse an enum value.");
 					return NullOpt;
 				}
 				return val;
@@ -49,7 +49,7 @@ namespace Ion
 				T val = tstrtoi<T>(str.c_str(), &end, 10);
 				if (end == str.c_str() || errno == ERANGE)
 				{
-					LOG_ERROR("Cannot parse an integral value. -> {0}", str);
+					CoreLogger.Error("Cannot parse an integral value. -> {0}", str);
 					return NullOpt;
 				}
 				return val;
@@ -60,7 +60,7 @@ namespace Ion
 				T val = tstrtof<T>(str.c_str(), &end);
 				if (end == str.c_str() || errno == ERANGE)
 				{
-					LOG_ERROR("Cannot parse a floating-point value. -> {0}", str);
+					CoreLogger.Error("Cannot parse a floating-point value. -> {0}", str);
 					return NullOpt;
 				}
 				return val;
@@ -71,7 +71,7 @@ namespace Ion
 					mcaseok return R.Unwrap();
 					melse
 					{
-						LOG_ERROR("Cannot parse a GUID value. -> {0}", str);
+						CoreLogger.Error("Cannot parse a GUID value. -> {0}", str);
 						return NullOpt;
 					}
 				);

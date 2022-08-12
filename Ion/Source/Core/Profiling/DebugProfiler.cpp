@@ -16,7 +16,7 @@ namespace Performance
 	void DebugCounter::Start()
 	{
 		if (m_Log)
-			LOG_TRACE("Started Counter [{0}]", m_CounterData.Name);
+			CoreLogger.Trace("Started Counter [{0}]", m_CounterData.Name);
 
 		m_StartTime = std::chrono::steady_clock::now();
 	}
@@ -24,7 +24,7 @@ namespace Performance
 	void DebugCounter::Stop()
 	{
 		if (m_Log)
-			LOG_TRACE("Stopped Counter [{0}]", m_CounterData.Name);
+			CoreLogger.Trace("Stopped Counter [{0}]", m_CounterData.Name);
 
 		m_EndTime = std::chrono::steady_clock::now();
 		m_CounterData.m_Time = (m_EndTime - m_StartTime).count();

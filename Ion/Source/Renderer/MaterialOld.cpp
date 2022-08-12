@@ -69,7 +69,7 @@ namespace Ion
 			}
 			break;
 		default:
-			LOG_WARN("Unknown parameter type for parameter named '{0}'!", name);
+			RendererLogger.Warn("Unknown parameter type for parameter named '{0}'!", name);
 			break;
 		}
 	}
@@ -101,7 +101,7 @@ namespace Ion
 		}
 		else
 		{
-			LOG_WARN("Parameter '{0}' does not exist!", name);
+			RendererLogger.Warn("Parameter '{0}' does not exist!", name);
 		}
 	}
 
@@ -110,14 +110,14 @@ namespace Ion
 		if (!HasParameter(name))
 		{
 			// This is probably due to a user error
-			LOG_WARN("Parameter '{0}' does not exist!", name);
+			RendererLogger.Warn("Parameter '{0}' does not exist!", name);
 			debugbreakd(); 
 			return;
 		}
 
 		if (!m_Shader->HasUniform(uniformName))
 		{
-			LOG_WARN("The shader used in the material does not have a uniform named '{0}'!", uniformName);
+			RendererLogger.Warn("The shader used in the material does not have a uniform named '{0}'!", uniformName);
 			return;
 		}
 
@@ -188,7 +188,7 @@ namespace Ion
 			}
 			else
 			{
-				LOG_WARN("Texture in slot {0} is no longer valid!", param->m_ReservedSlot);
+				RendererLogger.Warn("Texture in slot {0} is no longer valid!", param->m_ReservedSlot);
 			}
 		}
 	}
