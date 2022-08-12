@@ -284,20 +284,15 @@ namespace Ion
 			template<typename E>
 			E&& ForwardThrow();
 
-			ResultBase(const ResultBase&) = delete;
-			ResultBase(ResultBase&&) = delete;
-			ResultBase& operator=(const ResultBase&) = delete;
-			ResultBase& operator=(ResultBase&&) = delete;
-
 			/**
 			 * @see ResultBase::IsOk
 			 */
 			operator bool() const;
 
-		private:
 			String GetErrorClassName() const;
 			String GetErrorMessage() const;
 
+		private:
 			template<typename TCheck, typename T, typename... E>
 			bool FoldForwardThrow(Result<T, E...>& fwdThrow);
 

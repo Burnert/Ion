@@ -126,14 +126,13 @@ namespace Ion
 		}
 
 		ResourceLogger.Trace("Importing Mesh Resource from Asset \"{}\".", m_Asset->GetVirtualPath());
-		TShared<MeshAssetData> meshData = MakeShared<MeshAssetData>();
 		m_Asset->Import(
-			[meshData](TShared<AssetFileMemoryBlock> block)
+			[](TShared<AssetFileMemoryBlock> block)
 			{
-				AssetImporter::ImportColladaMeshAsset(block, *meshData);
+				return AssetImporter::ImportColladaMeshAsset(block);
 			},
 			// Store the pointer (self) so the resource doesn't get deleted before it's loaded
-			[this, self = GetPointer(), meshData, onTake]
+			[this, self = GetPointer(), onTake](TShared<MeshAssetData> meshData)
 			{
 				ionassert(m_Asset);
 				ionassert(m_Asset->GetType() == EAssetType::Mesh);
@@ -167,9 +166,10 @@ namespace Ion
 				m_RenderData = sharedRenderData;
 
 				ResourceLogger.Trace("Imported Mesh Resource from Asset \"{}\" successfully.", m_Asset->GetVirtualPath());
-			}
+			},
+			[&](auto& result) { ResourceLogger.Error("Failed to import Mesh Resource from Asset \"{}\". {}", m_Asset->GetVirtualPath(), result.GetErrorMessage()); }
 		);
-		return (bool)meshData;
+		return false;
 	}
 
 	inline const MeshResourceDefaults& MeshResource::GetDefaults() const

@@ -206,28 +206,35 @@ namespace Ion
 		return TEnumParser<EAssetType>::FromString(sType.substr(4)).value_or(EAssetType::Invalid);
 	}
 
-	void AssetImporter::ImportColladaMeshAsset(const TShared<AssetFileMemoryBlock>& block, MeshAssetData& outData)
+	TShared<MeshAssetData> AssetImporter::ImportColladaMeshAsset(const TShared<AssetFileMemoryBlock>& block)
 	{
+		TShared<MeshAssetData> meshData = MakeShared<MeshAssetData>();
+
 		String collada((const char*)block->Ptr, block->Count);
 
 		// @TODO: Refactor the ColladaDocument class a bit
 		TUnique<ColladaDocument> colladaDoc = MakeUnique<ColladaDocument>(collada);
+		// @TODO: Handle errors
 		ColladaData colladaData = colladaDoc->Parse().Unwrap();
 
-		outData.Layout = colladaData.Layout;
+		meshData->Layout = colladaData.Layout;
 
-		outData.Vertices.Ptr = new float[colladaData.VertexAttributeCount];
-		outData.Vertices.Count = colladaData.VertexAttributeCount;
+		meshData->Vertices.Ptr = new float[colladaData.VertexAttributeCount];
+		meshData->Vertices.Count = colladaData.VertexAttributeCount;
 
-		outData.Indices.Ptr = new uint32[colladaData.IndexCount];
-		outData.Indices.Count = colladaData.IndexCount;
+		meshData->Indices.Ptr = new uint32[colladaData.IndexCount];
+		meshData->Indices.Count = colladaData.IndexCount;
 
-		memcpy(outData.Vertices.Ptr, colladaData.VertexAttributes, colladaData.VertexAttributeCount * sizeof(float));
-		memcpy(outData.Indices.Ptr, colladaData.Indices, colladaData.IndexCount * sizeof(uint32));
+		memcpy(meshData->Vertices.Ptr, colladaData.VertexAttributes, colladaData.VertexAttributeCount * sizeof(float));
+		memcpy(meshData->Indices.Ptr, colladaData.Indices, colladaData.IndexCount * sizeof(uint32));
+
+		return meshData;
 	}
 
-	void AssetImporter::ImportImageAsset(const TShared<AssetFileMemoryBlock>& block, Image& outImage)
+	TShared<Image> AssetImporter::ImportImageAsset(const TShared<AssetFileMemoryBlock>& block)
 	{
-		outImage.Load(block->Ptr, block->Count);
+		TShared<Image> image = MakeShared<Image>();
+		image->Load(block->Ptr, block->Count);
+		return image;
 	}
 }

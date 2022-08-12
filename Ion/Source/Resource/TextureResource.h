@@ -130,14 +130,13 @@ namespace Ion
 		}
 
 		ResourceLogger.Trace("Importing Texture Resource from Asset \"{}\".", m_Asset->GetVirtualPath());
-		TShared<Image> image = MakeShared<Image>();
 		m_Asset->Import(
-			[image](TShared<AssetFileMemoryBlock> block)
+			[](TShared<AssetFileMemoryBlock> block)
 			{
-				AssetImporter::ImportImageAsset(block, *image);
+				return AssetImporter::ImportImageAsset(block);
 			},
 			// Store the pointer (self) so the resource doesn't get deleted before it's loaded
-			[this, self = GetPointer(), image, onTake]
+			[this, self = GetPointer(), onTake](TShared<Image> image)
 			{
 				ionassert(m_Asset);
 				ionassert(m_Asset->GetType() == EAssetType::Image);
@@ -172,9 +171,10 @@ namespace Ion
 				m_RenderData = sharedRenderData;
 
 				ResourceLogger.Trace("Imported Texture Resource from Asset \"{}\" successfully.", m_Asset->GetVirtualPath());
-			}
+			},
+			[&](auto& result) { ResourceLogger.Error("Failed to import Texture Resource from Asset \"{}\". {}", m_Asset->GetVirtualPath(), result.GetErrorMessage()); }
 		);
-		return (bool)image;
+		return false;
 	}
 
 }

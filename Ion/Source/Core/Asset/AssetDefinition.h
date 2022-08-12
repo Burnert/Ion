@@ -30,17 +30,21 @@ namespace Ion
 		/**
 		 * @brief Loads the file specified in the <ImportExternal> node in the asset file.
 		 * 
-		 * @tparam FImport lambda void(TShared<AssetFileMemoryBlock>)
-		 * @tparam FReady  lambda void()
+		 * @tparam FImport lambda TShared<TData>(TShared<AssetFileMemoryBlock>)
+		 * @tparam FReady  lambda void(TShared<TData>)
+		 * @tparam FError  lambda void(auto& result)
 		 * 
 		 * @param onImport Function called on a worker thread after the file has been loaded.
 		 * Used to reinterpret the file from a raw imported format to data that can be used to initialize some resource.
 		 * 
 		 * @param onReady Function called on the main thread, always after onImport.
 		 * Used to initialize some resource using the imported data.
+		 * 
+		 * @param onError If specified, function called on the main thread if an error occured during importing.
+		 * The result argument is always an Error variant.
 		 */
-		template<typename FImport, typename FReady>
-		void Import(FImport onImport, FReady onReady);
+		template<typename FImport, typename FReady, typename FError>
+		void Import(FImport onImport, FReady onReady, FError onError = nullptr);
 
 		EAssetType GetType() const;
 
@@ -111,18 +115,23 @@ namespace Ion
 		return Asset(const_cast<AssetDefinition*>(this));
 	}
 
-	template<typename FImport, typename FReady>
-	inline void AssetDefinition::Import(FImport onImport, FReady onReady)
+	template<typename FImport, typename FReady, typename FError>
+	inline void AssetDefinition::Import(FImport onImport, FReady onReady, FError onError)
 	{
-		static_assert(TIsConvertibleV<FImport, TFunction<void(TShared<AssetFileMemoryBlock>)>>);
-		static_assert(TIsConvertibleV<FReady, TFunction<void()>>);
+		using TImportRet = decltype(onImport(nullptr));
+		static constexpr bool bReportError = TIsDifferentV<FError, nullptr_t>;
 
-		ionassert(Platform::IsMainThread());
+		static_assert(TIsSharedV<TImportRet>, "The type returned from onImport must be a shared pointer.");
+		static_assert(TIsConvertibleV<FImport, TFunction<TImportRet(TShared<AssetFileMemoryBlock>)>>);
+		static_assert(TIsConvertibleV<FReady, TFunction<void(TImportRet)>>,
+			"onReady argument type and onImport return type must be the same.");
+
+		ionassert(Platform::IsMainThread(), "Asset import function can be called only on the main thread.");
 		ionassert(m_AssetReferencePath.IsFile());
 
 		AssetImportData importData { m_AssetReferencePath };
 
-		AsyncTask([onImport, onReady, importData](IMessageQueueProvider& q)
+		AsyncTask([onImport, onReady, onError, importData](IMessageQueueProvider& q)
 		{
 			// Worker thread:
 			TShared<AssetFileMemoryBlock> data(new AssetFileMemoryBlock, [](AssetFileMemoryBlock* ptr)
@@ -132,19 +141,41 @@ namespace Ion
 			});
 
 			File assetFile(importData.Path);
-			assetFile.Open();
+			auto openResult = assetFile.Open();
+			if (!openResult)
+			{
+				if constexpr (bReportError)
+				{
+					q.PushMessage(FTaskMessage([onError, openResult = Move(openResult)]
+					{
+						onError(openResult);
+					}));
+				}
+				return;
+			}
 			data->Count = assetFile.GetSize();
 			data->Ptr = new uint8[data->Count];
-			if (!assetFile.Read(data->Ptr, data->Count))
-				return;
-
-			onImport(data);
-
-			q.PushMessage(FTaskMessage([onReady]
+			auto readResult = assetFile.Read(data->Ptr, data->Count);
+			if (!readResult)
 			{
-				// Main thread:
+				if constexpr (bReportError)
+				{
+					q.PushMessage(FTaskMessage([onError, readResult = Move(readResult)]
+					{
+						onError(readResult);
+					}));
+				}
+				return;
+			}
 
-				onReady();
+			// onImport function should return a value that will be used in the
+			// onReady function on the main thread to initialize some object.
+			auto imported = onImport(data);
+
+			// Execute onReady on the main thread.
+			q.PushMessage(FTaskMessage([onReady, imported]
+			{
+				onReady(imported);
 			}));
 		}).Schedule();
 	}
