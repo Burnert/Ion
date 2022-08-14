@@ -1,7 +1,7 @@
 #include "IonPCH.h"
 
 #include "DX11Shader.h"
-#include "DX11Include.h"
+#include "RHI/DirectX/DXInclude.h"
 #include "Renderer/RendererCore.h"
 #include <d3dcompiler.h>
 
@@ -46,7 +46,7 @@ namespace Ion
 
 		ionassert(!m_bCompiled, "Shader has already been compiled.");
 
-		DX11Include includeHandler;
+		DXInclude includeHandler;
 
 		for (auto& entry : m_Shaders)
 		{

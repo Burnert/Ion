@@ -1,13 +1,13 @@
 #pragma once
 
-#include "DX11.h"
+#include "DXCommon.h"
 
 namespace Ion
 {
-	class ION_API DX11Include : public ID3DInclude
+	class ION_API DXInclude : public ID3DInclude
 	{
 	public:
-		DX11Include();
+		DXInclude();
 
 		virtual HRESULT WINAPI Open(
 			D3D_INCLUDE_TYPE IncludeType,

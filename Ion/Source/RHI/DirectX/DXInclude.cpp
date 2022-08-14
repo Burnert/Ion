@@ -1,13 +1,13 @@
 #include "IonPCH.h"
 
-#include "DX11Include.h"
+#include "DXInclude.h"
 #include "Application/EnginePath.h"
 
 namespace Ion
 {
-	DX11Include::DX11Include() { }
+	DXInclude::DXInclude() { }
 
-	HRESULT DX11Include::Open(D3D_INCLUDE_TYPE IncludeType, LPCSTR pFileName, LPCVOID pParentData, LPCVOID* ppData, UINT* pBytes)
+	HRESULT DXInclude::Open(D3D_INCLUDE_TYPE IncludeType, LPCSTR pFileName, LPCVOID pParentData, LPCVOID* ppData, UINT* pBytes)
 	{
 		FilePath includePath("");
 
@@ -40,7 +40,7 @@ namespace Ion
 		return S_OK;
 	}
 
-	HRESULT DX11Include::Close(LPCVOID pData)
+	HRESULT DXInclude::Close(LPCVOID pData)
 	{
 		if (pData)
 		{

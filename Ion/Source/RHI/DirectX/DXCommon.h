@@ -4,6 +4,8 @@
 #include "RHI/VertexAttribute.h"
 #include "RHI/Shader.h"
 
+#include "Core/Platform/Windows/WindowsCore.h"
+
 #include <d3dcommon.h>
 #include <dxgiformat.h>
 
