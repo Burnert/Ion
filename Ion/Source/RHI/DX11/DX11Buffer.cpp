@@ -76,7 +76,7 @@ namespace Ion
 			D3D11_INPUT_ELEMENT_DESC ied { };
 			ied.SemanticName = GetSemanticName(attribute.Semantic);
 			ied.SemanticIndex = 0;
-			ied.Format = VertexAttributeToDXGIFormat({ attribute.Type, attribute.ElementCount });
+			ied.Format = DXCommon::VertexAttributeToDXGIFormat({ attribute.Type, attribute.ElementCount });
 			ied.InputSlot = 0;
 			ied.AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
 			ied.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;

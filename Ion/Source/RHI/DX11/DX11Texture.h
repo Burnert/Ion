@@ -56,33 +56,6 @@ namespace Ion
 			return D3D11_TEXTURE_ADDRESS_WRAP;
 		}
 
-		inline static constexpr DXGI_FORMAT FormatToDX11Format(ETextureFormat format, EDX11FormatUsage usage)
-		{
-			switch (format)
-			{
-				case ETextureFormat::RGBA8:       return DXGI_FORMAT_R8G8B8A8_UNORM;
-				case ETextureFormat::RGBA10:      return DXGI_FORMAT_R10G10B10A2_UNORM;
-				case ETextureFormat::RGBAFloat32: return DXGI_FORMAT_R32G32B32A32_FLOAT;
-				case ETextureFormat::Float32:     return DXGI_FORMAT_R32_FLOAT;
-				case ETextureFormat::UInt32:      return DXGI_FORMAT_R32_UINT;
-				case ETextureFormat::D24S8:
-				{
-					switch (usage)
-					{
-					case EDX11FormatUsage::Resource: return DXGI_FORMAT_R24G8_TYPELESS;
-					case EDX11FormatUsage::RTV:      return DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
-					case EDX11FormatUsage::DSV:      return DXGI_FORMAT_D24_UNORM_S8_UINT;
-					case EDX11FormatUsage::SRV:      return DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
-					case EDX11FormatUsage::AuxSRV:   return DXGI_FORMAT_X24_TYPELESS_G8_UINT;
-					}
-					break;
-				}
-				case ETextureFormat::UInt128GUID: return DXGI_FORMAT_R32G32B32A32_UINT;
-			}
-			ionassert(false, "Invalid format.");
-			return DXGI_FORMAT_UNKNOWN;
-		}
-
 		/* Returns bytes per pixel for a format. */
 		inline static constexpr int32 GetFormatPixelSize(ETextureFormat format)
 		{

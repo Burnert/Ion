@@ -55,9 +55,9 @@ namespace Ion
 #endif
 		InitWindow(*window);
 
-		SetDisplayVersion(D3DFeatureLevelToString(s_FeatureLevel));
+		SetDisplayVersion(DXCommon::D3DFeatureLevelToString(s_FeatureLevel));
 		DX11Logger.Info("Renderer: DirectX {0}", GetFeatureLevelString());
-		DX11Logger.Info("Shader Model {0}", GetShaderModelString());
+		DX11Logger.Info("Shader Model {0}", DXCommon::GetShaderModelString(s_FeatureLevel));
 
 		return true;
 	}

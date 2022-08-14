@@ -49,7 +49,7 @@ namespace Ion
 
 		static FORCEINLINE const char* GetFeatureLevelString()
 		{
-			return D3DFeatureLevelToString(s_FeatureLevel);
+			return DXCommon::D3DFeatureLevelToString(s_FeatureLevel);
 		}
 
 		static FORCEINLINE D3D_FEATURE_LEVEL GetFeatureLevel()
@@ -98,42 +98,6 @@ namespace Ion
 		static void PrepareDebugMessageQueue();
 
 		static void SetDebugName(ID3D11DeviceChild* object, const String& name, const String& prefix);
-
-		static constexpr const char* D3DFeatureLevelToString(D3D_FEATURE_LEVEL level)
-		{
-			switch (level)
-			{
-			case D3D_FEATURE_LEVEL_1_0_CORE: return "1.0 Core";
-			case D3D_FEATURE_LEVEL_9_1:      return "9.1";
-			case D3D_FEATURE_LEVEL_9_2:      return "9.2";
-			case D3D_FEATURE_LEVEL_9_3:      return "9.3";
-			case D3D_FEATURE_LEVEL_10_0:     return "10.0";
-			case D3D_FEATURE_LEVEL_10_1:     return "10.1";
-			case D3D_FEATURE_LEVEL_11_0:     return "11.0";
-			case D3D_FEATURE_LEVEL_11_1:     return "11.1";
-			case D3D_FEATURE_LEVEL_12_0:     return "12.0";
-			case D3D_FEATURE_LEVEL_12_1:     return "12.1";
-			default:                         return "UNKNOWNVERSION";
-			}
-		}
-
-		static constexpr const char* GetShaderModelString()
-		{
-			switch (s_FeatureLevel)
-			{
-			case D3D_FEATURE_LEVEL_1_0_CORE: return "";
-			case D3D_FEATURE_LEVEL_9_1:      return "3.0";
-			case D3D_FEATURE_LEVEL_9_2:      return "3.0";
-			case D3D_FEATURE_LEVEL_9_3:      return "3.0";
-			case D3D_FEATURE_LEVEL_10_0:     return "4.0";
-			case D3D_FEATURE_LEVEL_10_1:     return "4.1";
-			case D3D_FEATURE_LEVEL_11_0:     return "5.0";
-			case D3D_FEATURE_LEVEL_11_1:     return "5.0";
-			case D3D_FEATURE_LEVEL_12_0:     return "5.1";
-			case D3D_FEATURE_LEVEL_12_1:     return "5.1";
-			default:                         return "UNKNOWNVERSION";
-			}
-		}
 
 	protected:
 		static void SetDisplayVersion(const char* version);
