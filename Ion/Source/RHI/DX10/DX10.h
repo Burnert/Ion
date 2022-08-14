@@ -7,56 +7,16 @@
 #include "RHI/DirectX/DXCommon.h"
 #include <d3d10_1.h>
 
-#undef dxcall_r
-#undef dxcall_t
-#undef dxcall_v
-#undef dxcall
-#undef dxcall_f
-
-#if ION_LOG_ENABLED
-/// Requires
-/// HRESULT hResult;
-/// in function scope.
-/// Returns a custom value on error.
-#define dxcall_r(call, ret, ...) \
-{ \
-	Ion::DX10::PrepareDebugMessageQueue(); \
-	hResult = call; \
-	win_check_hresult_c(hResult, { Ion::DX10::PrintDebugMessages(); debugbreak(); return ret; }, __VA_ARGS__) \
-	Ion::DX10::PrintDebugMessages(); \
-}
-#define dxcall_t(call, err, ...) \
-{ \
-	Ion::DX10::PrepareDebugMessageQueue(); \
-	hResult = call; \
-	win_check_hresult_c(hResult, { Ion::DX10::PrintDebugMessages(); debugbreak(); err; }, __VA_ARGS__) \
-	Ion::DX10::PrintDebugMessages(); \
-}
-#define dxcall_v(call, ...) \
-{ \
-	Ion::DX10::PrepareDebugMessageQueue(); \
-	call; \
-	Ion::DX10::PrintDebugMessages(); \
-}
-#else
-#define dxcall_r(call, ret, ...) hResult = call
-#define dxcall_t(call, err, ...) hResult = call
-#define dxcall_v(call, ...) call
-#endif
-
-/// Requires
-/// HRESULT hResult;
-/// in function scope.
-#define dxcall(call, ...) dxcall_r(call, , __VA_ARGS__)
-/// Requires
-/// HRESULT hResult;
-/// in function scope.
-/// Returns false on error.
-#define dxcall_f(call, ...) dxcall_r(call, false, __VA_ARGS__)
-
 namespace Ion
 {
 	REGISTER_LOGGER(DX10Logger, "RHI::DX10");
+
+	class DX10DebugMessageQueue : public IDXDebugMessageQueue
+	{
+	public:
+		virtual void PrepareQueue() override;
+		virtual void PrintMessages() override;
+	};
 
 	struct DX10DebugMessage
 	{

@@ -7,6 +7,8 @@
 #include <d3dcommon.h>
 #include <dxgiformat.h>
 
+#include "DXDebug.h"
+
 namespace Ion
 {
 	struct DXShader

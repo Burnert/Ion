@@ -15,6 +15,16 @@
 
 namespace Ion
 {
+	void DX11DebugMessageQueue::PrepareQueue()
+	{
+		DX11::PrepareDebugMessageQueue();
+	}
+
+	void DX11DebugMessageQueue::PrintMessages()
+	{
+		DX11::PrintDebugMessages();
+	}
+
 	bool DX11::Init(GenericWindow* window)
 	{
 #pragma warning(disable:6001)
@@ -25,6 +35,9 @@ namespace Ion
 		ionassert(window);
 
 		HRESULT hResult = S_OK;
+
+		// No delete, persistent object
+		g_DXDebugMessageQueue = new DX11DebugMessageQueue;
 
 #if ION_DEBUG
 		// Init Debug Layer
@@ -37,7 +50,7 @@ namespace Ion
 			DXGIGetDebugInterface = (DXGIGetDebugInterfaceProc)GetProcAddress(s_hDxgiDebugModule, "DXGIGetDebugInterface");
 			win_check_r(DXGIGetDebugInterface, false, "Cannot load DXGIGetDebugInterface from Dxgidebug.dll.");
 
-			dxcall_f(DXGIGetDebugInterface(IID_PPV_ARGS(&s_DebugInfoQueue)), "Cannot get the Debug Interface.");
+			win_check_hresult_r(DXGIGetDebugInterface(IID_PPV_ARGS(&s_DebugInfoQueue)), "Cannot get the Debug Interface.");
 		}
 #endif
 		InitWindow(*window);

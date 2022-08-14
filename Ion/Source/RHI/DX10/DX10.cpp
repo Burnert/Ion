@@ -18,6 +18,16 @@
 
 namespace Ion
 {
+	void DX10DebugMessageQueue::PrepareQueue()
+	{
+		DX10::PrepareDebugMessageQueue();
+	}
+
+	void DX10DebugMessageQueue::PrintMessages()
+	{
+		DX10::PrintDebugMessages();
+	}
+
 	bool DX10::Init(GenericWindow* window)
 	{
 		TRACE_FUNCTION();
@@ -25,6 +35,9 @@ namespace Ion
 		ionassert(window);
 
 		HRESULT hResult = S_OK;
+
+		// No delete, persistent object
+		g_DXDebugMessageQueue = new DX10DebugMessageQueue;
 
 		InitWindow(*window);
 

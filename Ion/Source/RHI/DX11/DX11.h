@@ -8,59 +8,19 @@
 #include <d3d11_1.h>
 #include <dxgidebug.h>
 
-#undef dxcall_r
-#undef dxcall_t
-#undef dxcall_v
-#undef dxcall
-#undef dxcall_f
-
-#if ION_LOG_ENABLED
-/// Requires
-/// HRESULT hResult;
-/// in function scope.
-/// Returns a custom value on error.
-#define dxcall_r(call, ret, ...) \
-{ \
-	Ion::DX11::PrepareDebugMessageQueue(); \
-	hResult = call; \
-	win_check_hresult_c(hResult, { Ion::DX11::PrintDebugMessages(); debugbreak(); return ret; }, __VA_ARGS__) \
-	Ion::DX11::PrintDebugMessages(); \
-}
-#define dxcall_t(call, err, ...) \
-{ \
-	Ion::DX11::PrepareDebugMessageQueue(); \
-	hResult = call; \
-	win_check_hresult_c(hResult, { Ion::DX11::PrintDebugMessages(); debugbreak(); err; }, __VA_ARGS__) \
-	Ion::DX11::PrintDebugMessages(); \
-}
-#define dxcall_v(call, ...) \
-{ \
-	Ion::DX11::PrepareDebugMessageQueue(); \
-	call; \
-	Ion::DX11::PrintDebugMessages(); \
-}
-#else
-#define dxcall_r(call, ret, ...) hResult = call
-#define dxcall_t(call, err, ...) hResult = call
-#define dxcall_v(call, ...) call
-#endif
-
-/// Requires
-/// HRESULT hResult;
-/// in function scope.
-#define dxcall(call, ...) dxcall_r(call, , __VA_ARGS__)
-/// Requires
-/// HRESULT hResult;
-/// in function scope.
-/// Returns false on error.
-#define dxcall_f(call, ...) dxcall_r(call, false, __VA_ARGS__)
-
 struct ImDrawData;
 struct ImGuiViewport;
 
 namespace Ion
 {
 	REGISTER_LOGGER(DX11Logger, "RHI::DX11");
+
+	class DX11DebugMessageQueue : public IDXDebugMessageQueue
+	{
+	public:
+		virtual void PrepareQueue() override;
+		virtual void PrintMessages() override;
+	};
 
 	struct DXGIDebugMessage
 	{
