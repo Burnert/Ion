@@ -81,18 +81,21 @@ namespace Ion
 
 		Transform worldTransform = GetWorldTransform();
 
-		MaterialOld* material = m_Mesh->GetMaterial().get();
+		RHIShader* shader = Renderer::Get()->GetBasicShader().get();
 
-		const MaterialInstance* materialInstance = m_Mesh->GetMaterialInSlot(0).get();
-
-		RHIShader* shader = material ?
-			material->GetShader().get() :
-			Renderer::Get()->GetBasicShader().get();
+		TShared<MaterialInstance> materialInstance = m_Mesh->GetMaterialInSlot(0);
+		if (materialInstance)
+		{
+			const TShared<Material>& material = materialInstance->GetBaseMaterial();
+			if (material)
+			{
+				shader = material->GetShader(EShaderUsage::StaticMesh).get();
+			}
+		}
 
 		RPrimitiveRenderProxy mesh { };
 		mesh.Transform        = worldTransform.GetMatrix();
-		mesh.MaterialOld      = material;
-		mesh.MaterialInstance = materialInstance;
+		mesh.MaterialInstance = materialInstance.get();
 		mesh.Shader           = shader;
 		mesh.VertexBuffer     = m_Mesh->GetVertexBufferRaw();
 		mesh.IndexBuffer      = m_Mesh->GetIndexBufferRaw();

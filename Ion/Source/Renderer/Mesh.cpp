@@ -77,10 +77,6 @@ namespace Ion
 		m_VertexCount = vertexBuffer->GetVertexCount();
 
 		// Set the layout if the material has been set before the VB.
-		if (m_Material)
-		{
-			m_VertexBuffer->SetLayoutShader(m_Material->GetShader());
-		}
 
 		// @TODO: Handle each material slot in the future
 		TShared<MaterialInstance> instance = m_MaterialSlots.at(0).MaterialInstance;
@@ -97,17 +93,6 @@ namespace Ion
 		m_TriangleCount = indexBuffer->GetTriangleCount();
 	}
 
-	void Mesh::SetMaterial(const TShared<MaterialOld>& material)
-	{
-		m_Material = material;
-
-		// Vertex Buffer might not have been set yet.
-		if (m_VertexBuffer)
-		{
-			m_VertexBuffer->SetLayoutShader(material->GetShader());
-		}
-	}
-
 	const TShared<RHIVertexBuffer>& Mesh::GetVertexBuffer() const
 	{
 		return m_VertexBuffer;
@@ -116,11 +101,6 @@ namespace Ion
 	const TShared<RHIIndexBuffer>& Mesh::GetIndexBuffer() const
 	{
 		return m_IndexBuffer;
-	}
-
-	const TShared<MaterialOld>& Mesh::GetMaterial() const
-	{
-		return m_Material;
 	}
 
 	void Mesh::AssignMaterialToSlot(uint16 index, const TShared<MaterialInstance>& material)
@@ -186,10 +166,5 @@ namespace Ion
 	const RHIUniformBuffer* Mesh::GetUniformBufferRaw() const
 	{
 		return m_UniformBuffer.get();
-	}
-
-	const MaterialOld* Mesh::GetMaterialRaw() const
-	{
-		return m_Material.get();
 	}
 }

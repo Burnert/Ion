@@ -6,7 +6,6 @@
 #include "Resource/TextureResource.h"
 
 #include "RendererCore.h"
-#include "MaterialOld.h"
 
 #include "RHI/VertexBuffer.h"
 #include "RHI/IndexBuffer.h"
@@ -50,11 +49,9 @@ namespace Ion
 
 		void SetVertexBuffer(const TShared<RHIVertexBuffer>& vertexBuffer);
 		void SetIndexBuffer(const TShared<RHIIndexBuffer>& indexBuffer);
-		void SetMaterial(const TShared<MaterialOld>& material);
 
 		const TShared<RHIVertexBuffer>& GetVertexBuffer() const;
 		const TShared<RHIIndexBuffer>& GetIndexBuffer() const;
-		const TShared<MaterialOld>& GetMaterial() const;
 
 		void AssignMaterialToSlot(uint16 index, const TShared<MaterialInstance>& material);
 		TShared<MaterialInstance> GetMaterialInSlot(uint16 slot) const;
@@ -66,7 +63,6 @@ namespace Ion
 		const RHIVertexBuffer* GetVertexBufferRaw() const;
 		const RHIIndexBuffer* GetIndexBufferRaw() const;
 		const RHIUniformBuffer* GetUniformBufferRaw() const;
-		const MaterialOld* GetMaterialRaw() const;
 
 		const TResourcePtr<MeshResource>& GetMeshResource() const;
 
@@ -79,7 +75,6 @@ namespace Ion
 		TShared<RHIVertexBuffer> m_VertexBuffer;
 		TShared<RHIIndexBuffer> m_IndexBuffer;
 		TShared<RHIUniformBuffer> m_UniformBuffer;
-		TShared<MaterialOld> m_Material;
 
 		// @TODO: Is this fine?
 		TResourcePtr<MeshResource> m_MeshResource;
