@@ -3,7 +3,6 @@
 namespace Ion
 {
 	// Shader.h
-	struct ShaderInfo;
 	class RHIShader;
 	// Texture.h
 	struct TextureDimensions;

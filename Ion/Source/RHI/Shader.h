@@ -9,13 +9,6 @@ namespace Ion
 		Pixel,
 	};
 
-	struct ShaderInfo
-	{
-		uint32 ID;
-		String Source;
-		EShaderType Type;
-	};
-
 	DEFINE_ERROR_TYPE(ShaderCompilationError);
 
 	class ION_API RHIShader

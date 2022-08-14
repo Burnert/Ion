@@ -5,6 +5,13 @@
 
 namespace Ion
 {
+	struct OpenGLShaderInfo
+	{
+		uint32 ID;
+		String Source;
+		EShaderType Type;
+	};
+
 	class ION_API OpenGLShader : public RHIShader
 	{
 		friend class OpenGLRenderer;
@@ -40,7 +47,7 @@ namespace Ion
 	private:
 		uint32 m_ProgramID;
 		bool m_bCompiled;
-		THashMap<EShaderType, ShaderInfo> m_Shaders;
+		THashMap<EShaderType, OpenGLShaderInfo> m_Shaders;
 
 		mutable THashMap<String, int32> m_UniformCache;
 	};

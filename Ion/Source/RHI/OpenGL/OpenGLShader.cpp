@@ -52,7 +52,7 @@ namespace Ion
 		TRACE_BEGIN(0, "OpenGLShader - Shader Compilation");
 		for (auto& entry : m_Shaders)
 		{
-			const ShaderInfo& shader = entry.second;
+			const OpenGLShaderInfo& shader = entry.second;
 
 			glCompileShader(shader.ID);
 
@@ -83,7 +83,7 @@ namespace Ion
 		TRACE_BEGIN(1, "OpenGLShader - Shader Attachment");
 		for (auto& entry : m_Shaders)
 		{
-			const ShaderInfo& shader = entry.second;
+			const OpenGLShaderInfo& shader = entry.second;
 
 			glAttachShader(m_ProgramID, shader.ID);
 		}
@@ -109,7 +109,7 @@ namespace Ion
 		// Shaders need to be detached after a successful link
 		for (auto& entry : m_Shaders)
 		{
-			const ShaderInfo& shader = entry.second;
+			const OpenGLShaderInfo& shader = entry.second;
 
 			glDetachShader(m_ProgramID, shader.ID);
 		}
@@ -172,7 +172,7 @@ namespace Ion
 
 		for (auto& entry : m_Shaders)
 		{
-			const ShaderInfo& shader = entry.second;
+			const OpenGLShaderInfo& shader = entry.second;
 
 			glDeleteShader(shader.ID);
 		}
