@@ -1,0 +1,217 @@
+#include "IonPCH.h"
+
+#include "DX10.h"
+#include "DX10Renderer.h"
+#include "DX10Buffer.h"
+#include "DX10Shader.h"
+#include "DX10Texture.h"
+
+#include "Renderer/Scene.h"
+
+#include "Core/Platform/Windows/WindowsMacros.h"
+#include "Core/Platform/Windows/WindowsUtility.h"
+
+#include "Application/EnginePath.h"
+
+#include "Engine/Entity/Entity.h"
+#include "Engine/Components/MeshComponent.h"
+
+namespace Ion
+{
+	DX10Renderer::DX10Renderer() :
+		m_CurrentRTV(nullptr),
+		m_CurrentDSV(nullptr)
+	{
+	}
+
+	DX10Renderer::~DX10Renderer()
+	{
+	}
+
+	void DX10Renderer::Init()
+	{
+		TRACE_FUNCTION();
+
+		Renderer::Init();
+	}
+
+	void DX10Renderer::Clear(const RendererClearOptions& options) const
+	{
+		TRACE_FUNCTION();
+
+		ID3D10Device* device = DX10::GetDevice();
+
+		if (m_CurrentRTV)
+		{
+			if (options.bClearColor)
+			{
+				dxcall_v(device->ClearRenderTargetView(m_CurrentRTV, (float*)&options.ClearColorValue));
+			}
+		}
+		if (m_CurrentDSV)
+		{
+			if (options.bClearDepth || options.bClearStencil)
+			{
+				dxcall_v(device->ClearDepthStencilView(m_CurrentDSV,
+					FlagsIf(options.bClearDepth, D3D10_CLEAR_DEPTH) |
+					FlagsIf(options.bClearStencil, D3D10_CLEAR_STENCIL),
+					options.ClearDepthValue, options.ClearStencilValue));
+			}
+		}
+	}
+
+	void DX10Renderer::DrawIndexed(uint32 indexCount) const
+	{
+		ID3D10Device* device = DX10::GetDevice();
+
+		dxcall_v(device->DrawIndexed(indexCount, 0, 0));
+	}
+
+	void DX10Renderer::UnbindResources() const
+	{
+		ID3D10Device* device = DX10::GetDevice();
+
+		static ID3D10ShaderResourceView* const c_nullViews[D3D10_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT] = { };
+		
+		dxcall_v(device->PSSetShaderResources(0, D3D10_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, c_nullViews));
+	}
+
+	void DX10Renderer::SetBlendingEnabled(bool bEnable) const
+	{
+		ID3D10Device* device = DX10::GetDevice();
+
+		ID3D10BlendState* blendState = bEnable ?
+			DX10::s_BlendStateTransparent :
+			DX10::s_BlendState;
+
+		dxcall_v(device->OMSetBlendState(blendState, nullptr, 0xFFFFFFFF));
+	}
+
+	void DX10Renderer::SetVSyncEnabled(bool bEnabled) const
+	{
+		dxcall_v(DX10::SetSwapInterval((uint32)bEnabled));
+	}
+
+	bool DX10Renderer::IsVSyncEnabled() const
+	{
+		return DX10::GetSwapInterval();
+	}
+
+	void DX10Renderer::SetViewport(const ViewportDescription& viewport)
+	{
+		TRACE_FUNCTION();
+
+		HRESULT hResult = S_OK;
+
+		ID3D10Device* device = DX10::GetDevice();
+
+		D3D10_VIEWPORT dxViewport { };
+		dxViewport.TopLeftX = viewport.X;
+		dxViewport.TopLeftY = viewport.Y;
+		dxViewport.Width = viewport.Width;
+		dxViewport.Height = viewport.Height;
+		dxViewport.MinDepth = viewport.MinDepth;
+		dxViewport.MaxDepth = viewport.MaxDepth;
+
+		dxcall_v(device->RSSetViewports(1, &dxViewport));
+
+		m_CurrentViewport = viewport;
+	}
+
+	ViewportDescription DX10Renderer::GetViewport() const
+	{
+		TRACE_FUNCTION();
+
+		ID3D10Device* device = DX10::GetDevice();
+
+		D3D10_VIEWPORT dxViewport { };
+		uint32 nViewports = 0;
+
+		dxcall_v(device->RSGetViewports(&nViewports, &dxViewport));
+
+		ViewportDescription viewport { };
+		viewport.X = (int32)dxViewport.TopLeftX;
+		viewport.Y = (int32)dxViewport.TopLeftY;
+		viewport.Width = (uint32)dxViewport.Width;
+		viewport.Height = (uint32)dxViewport.Height;
+		viewport.MinDepth = dxViewport.MinDepth;
+		viewport.MaxDepth = dxViewport.MaxDepth;
+
+		return viewport;
+	}
+
+	void DX10Renderer::SetPolygonDrawMode(EPolygonDrawMode drawMode) const
+	{
+		HRESULT hResult;
+
+		ID3D10Device* device = DX10::GetDevice();
+		ID3D10RasterizerState* rasterizerState = DX10::GetRasterizerState();
+
+		D3D10_RASTERIZER_DESC rd{ };
+		dxcall_v(rasterizerState->GetDesc(&rd));
+
+		rd.FillMode = drawMode == EPolygonDrawMode::Lines ? D3D10_FILL_WIREFRAME : D3D10_FILL_SOLID;
+
+		COMReset(DX10::s_RasterizerState);
+
+		dxcall(device->CreateRasterizerState(&rd, &DX10::s_RasterizerState));
+		dxcall_v(device->RSSetState(DX10::s_RasterizerState));
+	}
+
+	EPolygonDrawMode DX10Renderer::GetPolygonDrawMode() const
+	{
+		ID3D10RasterizerState* rasterizerState = DX10::GetRasterizerState();
+
+		D3D10_RASTERIZER_DESC rd { };
+		dxcall_v(rasterizerState->GetDesc(&rd));
+
+		return rd.FillMode == D3D10_FILL_WIREFRAME ? EPolygonDrawMode::Lines : EPolygonDrawMode::Fill;
+	}
+
+	void DX10Renderer::SetRenderTarget(const TShared<RHITexture>& targetTexture)
+	{
+		ionassert(!targetTexture || targetTexture->GetDescription().bUseAsRenderTarget);
+		ionassert(!targetTexture || UVector2(targetTexture->GetDimensions()) == m_CurrentViewport.GetSize());
+
+		ID3D10Device* device = DX10::GetDevice();
+
+		if (targetTexture)
+		{
+			DX10Texture* dx11Texture = (DX10Texture*)targetTexture.get();
+			m_CurrentRTV = dx11Texture->m_RTV;
+		}
+		else
+		{
+			m_CurrentRTV = nullptr;
+		}
+		// Override the depth stencil too
+		// The DSV has to be the same format as the RTV
+		// so it has to be cleared here to make it possible
+		// to set the RTV
+		// @TODO: This shouldn't work like this,
+		// it should be the user's responsibility to unset the DSV.
+		m_CurrentDSV = nullptr;
+
+		dxcall_v(device->OMSetRenderTargets(1, &m_CurrentRTV, m_CurrentDSV));
+	}
+
+	void DX10Renderer::SetDepthStencil(const TShared<RHITexture>& targetTexture)
+	{
+		ionassert(!targetTexture || targetTexture->GetDescription().bUseAsDepthStencil);
+		ionassert(!targetTexture || UVector2(targetTexture->GetDimensions()) == m_CurrentViewport.GetSize());
+
+		ID3D10Device* device = DX10::GetDevice();
+
+		if (targetTexture)
+		{
+			DX10Texture* dx11Texture = (DX10Texture*)targetTexture.get();
+			m_CurrentDSV = dx11Texture->m_DSV;
+		}
+		else
+		{
+			m_CurrentDSV = nullptr;
+		}
+
+		dxcall_v(device->OMSetRenderTargets(1, &m_CurrentRTV, m_CurrentDSV));
+	}
+}

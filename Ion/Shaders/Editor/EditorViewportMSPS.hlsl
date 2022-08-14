@@ -44,7 +44,7 @@ float4 PSMain(BasicPixel pixel) : SV_TARGET
 	uint nSamples;
 	g_SceneTexture.GetDimensions(dimensions.x, dimensions.y, nSamples);
 
-	uint2 location = (uint2)((double2)dimensions * (double2)pixel.TexCoord.xy);
+	uint2 location = (uint2)((float2)dimensions * (float2)pixel.TexCoord.xy);
 	
 	float4 scene = float4(SampleFloat4MS(g_SceneTexture, location, nSamples).rgb, 1.0f);
 	float sceneDepth = SampleFloatMS(g_SceneDepthTexture, location, nSamples);

@@ -4,6 +4,7 @@
 
 #include "RHI/RHI.h"
 #include "RHI/OpenGL/OpenGLRenderer.h"
+#include "RHI/DX10/DX10Renderer.h"
 #include "RHI/DX11/DX11Renderer.h"
 
 #include "Application/EnginePath.h"
@@ -21,6 +22,11 @@ namespace Ion
 			case ERHI::OpenGL:
 			{
 				s_Instance = new OpenGLRenderer;
+				break;
+			}
+			case ERHI::DX10:
+			{
+				s_Instance = new DX10Renderer;
 				break;
 			}
 			case ERHI::DX11:
@@ -223,7 +229,7 @@ namespace Ion
 
 		String vertexSrc;
 		String pixelSrc;
-		if (RHI::GetCurrent() == ERHI::DX11)
+		if (RHI::GetCurrent() != ERHI::OpenGL)
 		{
 			vertexSrc = File::ReadToString(EnginePath::GetShadersPath() + "TextureRenderVS.hlsl").Unwrap();
 			pixelSrc  = File::ReadToString(EnginePath::GetShadersPath() + "TextureRenderPS.hlsl").Unwrap();
@@ -354,7 +360,7 @@ namespace Ion
 		FilePath shadersPath = EnginePath::GetShadersPath();
 
 		// @TODO: This needs a refactor
-		if (RHI::GetCurrent() == ERHI::DX11)
+		if (RHI::GetCurrent() != ERHI::OpenGL)
 		{
 			vertexSrc = File::ReadToString(shadersPath + "BasicVS.hlsl").Unwrap();
 			pixelSrc  = File::ReadToString(shadersPath + "BasicPS.hlsl").Unwrap();
@@ -382,7 +388,7 @@ namespace Ion
 		FilePath shadersPath = EnginePath::GetShadersPath();
 
 		// @TODO: This needs a refactor
-		if (RHI::GetCurrent() == ERHI::DX11)
+		if (RHI::GetCurrent() != ERHI::OpenGL)
 		{
 			vertexSrc = File::ReadToString(shadersPath + "BasicVS.hlsl").Unwrap();
 			pixelSrc  = File::ReadToString(shadersPath + "BasicUnlitMaskedPS.hlsl").Unwrap();
@@ -410,7 +416,7 @@ namespace Ion
 		FilePath shadersPath = EnginePath::GetShadersPath();
 
 		// @TODO: This needs a refactor
-		if (RHI::GetCurrent() == ERHI::DX11)
+		if (RHI::GetCurrent() != ERHI::OpenGL)
 		{
 			vertexSrc = File::ReadToString(shadersPath + "TextureRenderVS.hlsl").Unwrap();
 			pixelSrc  = File::ReadToString(shadersPath + "PP_FXAAPS.hlsl").Unwrap();
@@ -438,7 +444,7 @@ namespace Ion
 		FilePath shadersPath = EnginePath::GetShadersPath();
 
 		// @TODO: This needs a refactor
-		if (RHI::GetCurrent() == ERHI::DX11)
+		if (RHI::GetCurrent() != ERHI::OpenGL)
 		{
 			vertexSrc = File::ReadToString(shadersPath + "Editor/EditorObjectIDVS.hlsl").Unwrap();
 			pixelSrc  = File::ReadToString(shadersPath + "Editor/EditorObjectIDPS.hlsl").Unwrap();
@@ -466,7 +472,7 @@ namespace Ion
 		FilePath shadersPath = EnginePath::GetShadersPath();
 
 		// @TODO: This needs a refactor
-		if (RHI::GetCurrent() == ERHI::DX11)
+		if (RHI::GetCurrent() != ERHI::OpenGL)
 		{
 			vertexSrc = File::ReadToString(shadersPath + "Editor/EditorSelectedVS.hlsl").Unwrap();
 			pixelSrc  = File::ReadToString(shadersPath + "BasicUnlitMaskedPS.hlsl").Unwrap();
@@ -493,7 +499,7 @@ namespace Ion
 		FilePath shadersPath = EnginePath::GetShadersPath();
 
 		// @TODO: This needs a refactor
-		if (RHI::GetCurrent() == ERHI::DX11)
+		if (RHI::GetCurrent() != ERHI::OpenGL)
 		{
 			vertexSrc = File::ReadToString(shadersPath + "Editor/EditorViewportVS.hlsl").Unwrap();
 			pixelSrc  = File::ReadToString(shadersPath + "Editor/EditorViewportPS.hlsl").Unwrap();
@@ -521,7 +527,7 @@ namespace Ion
 		FilePath shadersPath = EnginePath::GetShadersPath();
 
 		// @TODO: This needs a refactor
-		if (RHI::GetCurrent() == ERHI::DX11)
+		if (RHI::GetCurrent() != ERHI::OpenGL)
 		{
 			vertexSrc = File::ReadToString(shadersPath + "Editor/EditorViewportVS.hlsl").Unwrap();
 			pixelSrc  = File::ReadToString(shadersPath + "Editor/EditorViewportMSPS.hlsl").Unwrap();

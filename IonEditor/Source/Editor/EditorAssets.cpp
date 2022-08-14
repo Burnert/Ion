@@ -106,7 +106,7 @@ namespace Ion::Editor
 		FilePath shadersPath = EnginePath::GetShadersPath();
 
 		// @TODO: This needs a refactor
-		if (RHI::GetCurrent() == ERHI::DX11)
+		if (RHI::GetCurrent() != ERHI::OpenGL)
 		{
 			vertexSrc = File::ReadToString(shadersPath + "Editor/EditorGridVS.hlsl").Unwrap();
 			pixelSrc  = File::ReadToString(shadersPath + "Editor/EditorGridPS.hlsl").Unwrap();

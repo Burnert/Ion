@@ -1,12 +1,22 @@
 #pragma once
 
 #include "RHI/Texture.h"
+#include "RHI/VertexAttribute.h"
+#include "RHI/Shader.h"
 
 #include <d3dcommon.h>
 #include <dxgiformat.h>
 
 namespace Ion
 {
+	struct DXShader
+	{
+		void* ShaderPtr;
+		ID3DBlob* ShaderBlob;
+		String Source;
+		EShaderType Type;
+	};
+
 	class DXCommon
 	{
 	public:
@@ -72,6 +82,95 @@ namespace Ion
 			}
 			ionbreak("Invalid format.");
 			return DXGI_FORMAT_UNKNOWN;
+		}
+
+		static constexpr const char* GetSemanticName(const EVertexAttributeSemantic semantic)
+		{
+			switch (semantic)
+			{
+			case EVertexAttributeSemantic::Position:  return "POSITION";
+			case EVertexAttributeSemantic::Normal:    return "NORMAL";
+			case EVertexAttributeSemantic::TexCoord:  return "TEXCOORD";
+			default:                                  return "";
+			}
+		}
+
+		struct VertexAttributeFormat
+		{
+			EVertexAttributeType Type;
+			uint8 ElementCount;
+		};
+
+		static constexpr DXGI_FORMAT VertexAttributeToDXGIFormat(const VertexAttributeFormat attribute)
+		{
+			switch (attribute.ElementCount)
+			{
+			case 1:
+			{
+				switch (attribute.Type)
+				{
+				case EVertexAttributeType::Null:           return DXGI_FORMAT_UNKNOWN;
+				case EVertexAttributeType::Byte:           return DXGI_FORMAT_R8_SINT;
+				case EVertexAttributeType::UnsignedByte:   return DXGI_FORMAT_R8_UINT;
+				case EVertexAttributeType::Short:          return DXGI_FORMAT_R16_SINT;
+				case EVertexAttributeType::UnsignedShort:  return DXGI_FORMAT_R16_UINT;
+				case EVertexAttributeType::Int:            return DXGI_FORMAT_R32_SINT;
+				case EVertexAttributeType::UnsignedInt:    return DXGI_FORMAT_R32_UINT;
+				case EVertexAttributeType::Float16:        return DXGI_FORMAT_R16_FLOAT;
+				case EVertexAttributeType::Float: 		   return DXGI_FORMAT_R32_FLOAT;
+				case EVertexAttributeType::Double:         return DXGI_FORMAT_UNKNOWN;
+				}
+			}
+			case 2:
+			{
+				switch (attribute.Type)
+				{
+				case EVertexAttributeType::Null:           return DXGI_FORMAT_UNKNOWN;
+				case EVertexAttributeType::Byte:           return DXGI_FORMAT_R8G8_SINT;
+				case EVertexAttributeType::UnsignedByte:   return DXGI_FORMAT_R8G8_UINT;
+				case EVertexAttributeType::Short:          return DXGI_FORMAT_R16G16_SINT;
+				case EVertexAttributeType::UnsignedShort:  return DXGI_FORMAT_R16G16_UINT;
+				case EVertexAttributeType::Int:            return DXGI_FORMAT_R32G32_SINT;
+				case EVertexAttributeType::UnsignedInt:    return DXGI_FORMAT_R32G32_UINT;
+				case EVertexAttributeType::Float16:        return DXGI_FORMAT_R16G16_FLOAT;
+				case EVertexAttributeType::Float:          return DXGI_FORMAT_R32G32_FLOAT;
+				case EVertexAttributeType::Double:         return DXGI_FORMAT_UNKNOWN;
+				}
+			}
+			case 3:
+			{
+				switch (attribute.Type)
+				{
+				case EVertexAttributeType::Null:           return DXGI_FORMAT_UNKNOWN;
+				case EVertexAttributeType::Byte:           return DXGI_FORMAT_UNKNOWN;
+				case EVertexAttributeType::UnsignedByte:   return DXGI_FORMAT_UNKNOWN;
+				case EVertexAttributeType::Short:          return DXGI_FORMAT_UNKNOWN;
+				case EVertexAttributeType::UnsignedShort:  return DXGI_FORMAT_UNKNOWN;
+				case EVertexAttributeType::Int:            return DXGI_FORMAT_R32G32B32_SINT;
+				case EVertexAttributeType::UnsignedInt:    return DXGI_FORMAT_R32G32B32_UINT;
+				case EVertexAttributeType::Float16:        return DXGI_FORMAT_UNKNOWN;
+				case EVertexAttributeType::Float:          return DXGI_FORMAT_R32G32B32_FLOAT;
+				case EVertexAttributeType::Double:         return DXGI_FORMAT_UNKNOWN;
+				}
+			}
+			case 4:
+			{
+				switch (attribute.Type)
+				{
+				case EVertexAttributeType::Null:           return DXGI_FORMAT_UNKNOWN;
+				case EVertexAttributeType::Byte:           return DXGI_FORMAT_R8G8B8A8_SINT;
+				case EVertexAttributeType::UnsignedByte:   return DXGI_FORMAT_R8G8B8A8_UINT;
+				case EVertexAttributeType::Short:          return DXGI_FORMAT_R16G16B16A16_SINT;
+				case EVertexAttributeType::UnsignedShort:  return DXGI_FORMAT_R16G16B16A16_UINT;
+				case EVertexAttributeType::Int:            return DXGI_FORMAT_R32G32B32A32_SINT;
+				case EVertexAttributeType::UnsignedInt:	   return DXGI_FORMAT_R32G32B32A32_UINT;
+				case EVertexAttributeType::Float16:        return DXGI_FORMAT_R16G16B16A16_FLOAT;
+				case EVertexAttributeType::Float:          return DXGI_FORMAT_R32G32B32A32_FLOAT;
+				case EVertexAttributeType::Double:         return DXGI_FORMAT_UNKNOWN;
+				}
+			}
+			default: return DXGI_FORMAT_UNKNOWN;
+			}
 		}
 	};
 }

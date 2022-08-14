@@ -69,9 +69,7 @@ namespace Ion
 			D3D10_FEATURE_LEVEL1 targetFeatureLevel = D3D10_FEATURE_LEVEL_10_1;
 
 			uint32 flags = 0;
-#if ION_DEBUG
 			flags |= D3D10_CREATE_DEVICE_DEBUG /*| D3D10_CREATE_DEVICE_DEBUGGABLE*/;
-#endif
 
 			IDXGIFactory* dxgiFactory = nullptr;
 			win_check_hresult_r(CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory)),

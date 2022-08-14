@@ -1,17 +1,15 @@
 #pragma once
 
 #include "RHI/Shader.h"
-#include "DX11.h"
-
-class IonExample;
+#include "DX10.h"
 
 namespace Ion
 {
-	class ION_API DX11Shader : public RHIShader
+	class ION_API DX10Shader : public RHIShader
 	{
 	public:
-		DX11Shader();
-		virtual ~DX11Shader() override;
+		DX10Shader();
+		virtual ~DX10Shader() override;
 
 		virtual void AddShaderSource(EShaderType type, const String& source) override;
 
@@ -63,10 +61,8 @@ namespace Ion
 			int32 modelMajor = 0;
 			int32 modelMinor = 0;
 
-			switch (DX11::GetFeatureLevel())
+			switch (DX10::GetFeatureLevel())
 			{
-			case D3D_FEATURE_LEVEL_11_1: modelMajor = 5; modelMinor = 0; break;
-			case D3D_FEATURE_LEVEL_11_0: modelMajor = 5; modelMinor = 0; break;
 			case D3D_FEATURE_LEVEL_10_1: modelMajor = 4; modelMinor = 1; break;
 			case D3D_FEATURE_LEVEL_10_0: modelMajor = 4; modelMinor = 0; break;
 			}
@@ -120,8 +116,7 @@ namespace Ion
 		THashMap<EShaderType, DXShader> m_Shaders;
 		bool m_bCompiled;
 
-		friend class DX11Renderer;
-		friend class DX11VertexBuffer;
-		friend class ::IonExample;
+		friend class DX10Renderer;
+		friend class DX10VertexBuffer;
 	};
 }

@@ -80,6 +80,9 @@ namespace Ion
 
 		virtual String GetCurrentDisplayName() override;
 
+		static FORCEINLINE const char* GetFeatureLevelString();
+		static FORCEINLINE D3D10_FEATURE_LEVEL1 GetFeatureLevel();
+
 		static ID3D10Device* GetDevice();
 		static IDXGISwapChain* GetSwapChain();
 		static ID3D10RasterizerState* GetRasterizerState();
@@ -125,9 +128,19 @@ namespace Ion
 		static D3D10_FEATURE_LEVEL1 s_FeatureLevel;
 		static bool s_Initialized;
 
-		friend class DX11Renderer;
+		friend class DX10Renderer;
 		friend class RHI;
 	};
+
+	inline const char* DX10::GetFeatureLevelString()
+	{
+		return DXCommon::D3DFeatureLevelToString((D3D_FEATURE_LEVEL)s_FeatureLevel);
+	}
+
+	inline D3D10_FEATURE_LEVEL1 DX10::GetFeatureLevel()
+	{
+		return s_FeatureLevel;
+	}
 
 	inline ID3D10Device* DX10::GetDevice()
 	{

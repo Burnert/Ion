@@ -4,6 +4,7 @@
 
 #include "Core/Platform/Windows/WindowsCore.h"
 
+#include "RHI/DirectX/DXCommon.h"
 #include <d3d11_1.h>
 #include <dxgidebug.h>
 
