@@ -21,6 +21,8 @@
 
 #include "ExampleModels.h"
 
+#include "Core/Logging/LogManager.h"
+
 namespace Ion::Editor
 {
 	// Constructed at the entry point
@@ -91,6 +93,8 @@ namespace Ion::Editor
 		EditorLogger.Info("UTF8: {}", u8"żółw");
 
 		//InitExample(nullptr);
+
+		auto& hierarchy = LogManager::GetLoggerHierarchy();
 
 		ComponentRegistry& registry = m_EditorMainWorld->GetComponentRegistry();
 

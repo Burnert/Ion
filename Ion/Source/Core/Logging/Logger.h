@@ -6,7 +6,7 @@
 
 namespace Ion
 {
-#pragma region Logger
+#define REGISTER_LOGGER(varName, fullname) inline Logger& varName = Logger::Register(fullname)
 
 	enum class ELogLevel : uint8
 	{
@@ -21,6 +21,8 @@ namespace Ion
 	class ION_API Logger
 	{
 	public:
+		static Logger& Register(const String& name);
+
 		template<typename TStr, typename... Args>
 		void Trace(const TStr& str, Args&&... args) const;
 		template<typename TStr, typename... Args>
@@ -42,6 +44,8 @@ namespace Ion
 
 		void SetState(bool bEnabled);
 		bool GetState() const;
+
+		const String& GetName() const;
 
 	private:
 		Logger(const String& name);
@@ -112,40 +116,10 @@ namespace Ion
 		return m_bEnabled;
 	}
 
-#pragma endregion
-
-#pragma region LogManager
-
-#define REGISTER_LOGGER(varName, fullname) inline Logger& varName = LogManager::RegisterLogger(fullname)
-
-	class ION_API LogManager
+	inline const String& Logger::GetName() const
 	{
-	public:
-		static Logger& RegisterLogger(const String& name);
-
-		static Logger& GetLogger(const String& name);
-
-		static void SetGlobalLogLevel(ELogLevel logLevel);
-		static ELogLevel GetGlobalLogLevel();
-
-	private:
-		static bool IsLoggerNameValid(const String& name);
-
-	private:
-		THashMap<String, Logger> m_Loggers;
-
-		static LogManager* s_Instance;
-		static LogManager& Get();
-	};
-
-	inline LogManager& LogManager::Get()
-	{
-		if (!s_Instance)
-			s_Instance = new LogManager;
-		return *s_Instance;
+		return m_Name;
 	}
-
-#pragma endregion
 
 	// Global / Generic Engine Logger
 	REGISTER_LOGGER(GEngineLogger, "Engine");
