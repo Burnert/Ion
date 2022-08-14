@@ -7,6 +7,12 @@
 #include <d3d11_1.h>
 #include <dxgidebug.h>
 
+#undef dxcall_r
+#undef dxcall_t
+#undef dxcall_v
+#undef dxcall
+#undef dxcall_f
+
 #if ION_LOG_ENABLED
 /// Requires
 /// HRESULT hResult;

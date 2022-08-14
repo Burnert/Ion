@@ -13,6 +13,7 @@ namespace Ion
 	{
 		None = 0,
 		OpenGL,
+		DX10,
 		DX11,
 		DX12,
 		Vulkan,
@@ -24,6 +25,7 @@ namespace Ion
 		{
 		case ERHI::None:   return "None";
 		case ERHI::OpenGL: return "OpenGL";
+		case ERHI::DX10:   return "DX10";
 		case ERHI::DX11:   return "DX11";
 		case ERHI::DX12:   return "DX12";
 		case ERHI::Vulkan: return "Vulkan";

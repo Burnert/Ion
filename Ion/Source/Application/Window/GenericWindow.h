@@ -97,6 +97,7 @@ namespace Ion
 		bool m_bCursorShown;
 
 		friend class DX11;
+		friend class DX10;
 	};
 
 	inline const TShared<RHITexture>& GenericWindow::GetWindowColorTexture() const

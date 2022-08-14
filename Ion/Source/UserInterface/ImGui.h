@@ -19,6 +19,7 @@
 
 #if ION_PLATFORM_WINDOWS
 #include "imgui/backends/imgui_impl_win32.h"
+#include "imgui/backends/imgui_impl_dx10.h"
 #include "imgui/backends/imgui_impl_dx11.h"
 #endif // ION_PLATFORM_WINDOWS
 #if PLATFORM_SUPPORTS_OPENGL

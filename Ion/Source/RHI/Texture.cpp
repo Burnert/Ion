@@ -4,6 +4,7 @@
 #include "Texture.h"
 
 #include "RHI/RHI.h"
+#include "RHI/DX10/DX10Texture.h"
 #include "RHI/DX11/DX11Texture.h"
 #include "RHI/OpenGL/OpenGLTexture.h"
 
@@ -15,6 +16,8 @@ namespace Ion
 		{
 			case ERHI::OpenGL:
 				return new OpenGLTexture(desc);
+			case ERHI::DX10:
+				return new DX10Texture(desc);
 			case ERHI::DX11:
 				return new DX11Texture(desc);
 			default:

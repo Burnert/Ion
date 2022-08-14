@@ -5,6 +5,9 @@
 #if PLATFORM_SUPPORTS_OPENGL
 #include "OpenGL/OpenGL.h"
 #endif
+#if PLATFORM_SUPPORTS_DX10
+#include "DX10/DX10.h"
+#endif
 #if PLATFORM_SUPPORTS_DX11
 #include "DX11/DX11.h"
 #endif
@@ -23,6 +26,9 @@ namespace Ion
 		{
 #if PLATFORM_SUPPORTS_OPENGL
 			case ERHI::OpenGL: return s_RHI = new OpenGL;
+#endif
+#if PLATFORM_SUPPORTS_DX10
+			case ERHI::DX10:   return s_RHI = new DX10;
 #endif
 #if PLATFORM_SUPPORTS_DX11
 			case ERHI::DX11:   return s_RHI = new DX11;

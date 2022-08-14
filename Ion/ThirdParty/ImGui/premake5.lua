@@ -12,6 +12,8 @@ project "ImGui"
         "imgui/backends/imgui_impl_opengl3.h",
         "imgui/backends/imgui_impl_dx11.cpp",
         "imgui/backends/imgui_impl_dx11.h",
+        "imgui/backends/imgui_impl_dx10.cpp",
+        "imgui/backends/imgui_impl_dx10.h",
         "imgui/backends/imgui_impl_win32.cpp",
         "imgui/backends/imgui_impl_win32.h",
         "imgui/misc/freetype/imgui_freetype.h",
