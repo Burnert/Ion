@@ -115,11 +115,11 @@ namespace Ion
 			return;
 		}
 
-		if (!m_Shader->HasUniform(uniformName))
-		{
-			RendererLogger.Warn("The shader used in the material does not have a uniform named '{0}'!", uniformName);
-			return;
-		}
+		//if (!m_Shader->HasUniform(uniformName))
+		//{
+		//	RendererLogger.Warn("The shader used in the material does not have a uniform named '{0}'!", uniformName);
+		//	return;
+		//}
 
 		m_UniformLinks[name] = uniformName;
 	}
@@ -141,37 +141,37 @@ namespace Ion
 				case EMaterialParameterTypeOld::Float:
 				{
 					TMaterialParameter<float>* parameter = reinterpret_cast<TMaterialParameter<float>*>(paramPtr);
-					m_Shader->SetUniform1f(uniformName, parameter->GetValue());
+					//m_Shader->SetUniform1f(uniformName, parameter->GetValue());
 				}
 				break;
 				case EMaterialParameterTypeOld::Float2:
 				{
 					TMaterialParameter<Vector2>* parameter = reinterpret_cast<TMaterialParameter<Vector2>*>(paramPtr);
-					m_Shader->SetUniform2f(uniformName, parameter->GetValue());
+					//m_Shader->SetUniform2f(uniformName, parameter->GetValue());
 				}
 				break;
 				case EMaterialParameterTypeOld::Float3:
 				{
 					TMaterialParameter<Vector3>* parameter = reinterpret_cast<TMaterialParameter<Vector3>*>(paramPtr);
-					m_Shader->SetUniform3f(uniformName, parameter->GetValue());
+					//m_Shader->SetUniform3f(uniformName, parameter->GetValue());
 				}
 				break;
 				case EMaterialParameterTypeOld::Float4:
 				{
 					TMaterialParameter<Vector4>* parameter = reinterpret_cast<TMaterialParameter<Vector4>*>(paramPtr);
-					m_Shader->SetUniform4f(uniformName, parameter->GetValue());
+					//m_Shader->SetUniform4f(uniformName, parameter->GetValue());
 				}
 				break;
 				case EMaterialParameterTypeOld::Bool:
 				{
 					TMaterialParameter<bool>* parameter = reinterpret_cast<TMaterialParameter<bool>*>(paramPtr);
-					m_Shader->SetUniform1ui(uniformName, parameter->GetValue());
+					//m_Shader->SetUniform1ui(uniformName, parameter->GetValue());
 				}
 				break;
 				case EMaterialParameterTypeOld::Texture2D:
 				{
 					TMaterialParameter<TShared<RHITexture>>* parameter = reinterpret_cast<TMaterialParameter<TShared<RHITexture>>*>(paramPtr);
-					m_Shader->SetUniform1i(uniformName, parameter->m_ReservedSlot);
+					//m_Shader->SetUniform1i(uniformName, parameter->m_ReservedSlot);
 				}
 			}
 		}
