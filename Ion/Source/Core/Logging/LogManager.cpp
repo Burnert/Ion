@@ -4,14 +4,14 @@
 
 namespace Ion
 {
-	Logger& LogManager::RegisterLogger(const String& name, bool bAlwaysActive)
+	Logger& LogManager::RegisterLogger(const String& name, uint8 loggerFlags)
 	{
 		LogManager& instance = Get();
 
 		ionassert(IsLoggerNameValid(name), "Logger name \"{}\" is invalid.", name);
 		ionassert(instance.m_Loggers.find(name) == instance.m_Loggers.end(), "A logger with name \"{}\" already exists.", name);
 
-		LoggerMapEntry& entry = instance.m_Loggers.emplace(name, LoggerMapEntry { Logger(name, bAlwaysActive), nullptr }).first->second;
+		LoggerMapEntry& entry = instance.m_Loggers.emplace(name, LoggerMapEntry { Logger(name, loggerFlags), nullptr }).first->second;
 
 		entry.HierarchyNode = &AddHierarchyNode(entry.Logger);
 

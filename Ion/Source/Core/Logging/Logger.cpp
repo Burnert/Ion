@@ -6,16 +6,16 @@
 
 namespace Ion
 {
-	Logger& Logger::Register(const String& name, bool bAlwaysActive)
+	Logger& Logger::Register(const String& name, uint8 loggerFlags)
 	{
-		return LogManager::RegisterLogger(name, bAlwaysActive);
+		return LogManager::RegisterLogger(name, loggerFlags);
 	}
 
-	Logger::Logger(const String& name, bool bAlwaysActive) :
+	Logger::Logger(const String& name, uint8 loggerFlags) :
 		m_Name(name),
 		m_LogLevel(ELogLevel::Trace),
-		m_bEnabled(true),
-		m_bAlwaysActive(bAlwaysActive),
+		m_bEnabled(!(loggerFlags & ELoggerFlags::DisabledByDefault)),
+		m_bAlwaysActive(loggerFlags & ELoggerFlags::AlwaysActive),
 		m_Logger(spdlog::stdout_color_mt(name))
 	{
 		if (m_bAlwaysActive)

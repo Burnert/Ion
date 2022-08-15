@@ -6,12 +6,17 @@
 
 namespace Ion
 {
-#define REGISTER_LOGGER(varName, fullname) inline Logger& varName = Logger::Register(fullname)
+#define REGISTER_LOGGER(varName, fullname, ...) inline Logger& varName = Logger::Register(fullname, __VA_ARGS__)
 
-/**
- * Create a logger that is active even if logger solo mode is enabled.
- */
-#define REGISTER_LOGGER_ALWAYS_ACTIVE(varName, fullname) inline Logger& varName = Logger::Register(fullname, true)
+	namespace ELoggerFlags
+	{
+		enum Type : uint8
+		{
+			None = 0,
+			AlwaysActive = 1 << 0,      // A logger that is active even if logger solo mode is enabled.
+			DisabledByDefault = 1 << 1, // The logger is insignificant and will be disabled by default.
+		};
+	}
 
 	enum class ELogLevel : uint8
 	{
@@ -26,7 +31,7 @@ namespace Ion
 	class ION_API Logger
 	{
 	public:
-		static Logger& Register(const String& name, bool bAlwaysActive = false);
+		static Logger& Register(const String& name, uint8 loggerFlags = ELoggerFlags::None);
 
 		template<typename TStr, typename... Args>
 		void Trace(const TStr& str, Args&&... args) const;
@@ -61,7 +66,7 @@ namespace Ion
 		static void UnsoloAll();
 
 	private:
-		Logger(const String& name, bool bAlwaysActive);
+		Logger(const String& name, uint8 loggerFlags);
 
 		bool ShouldLog() const;
 
@@ -145,5 +150,5 @@ namespace Ion
 	// Global / Generic Engine Logger
 	REGISTER_LOGGER(GEngineLogger, "Engine");
 	// Core Logger
-	REGISTER_LOGGER_ALWAYS_ACTIVE(CoreLogger, "Core");
+	REGISTER_LOGGER(CoreLogger, "Core", ELoggerFlags::AlwaysActive);
 }

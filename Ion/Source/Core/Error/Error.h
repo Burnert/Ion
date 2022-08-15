@@ -8,7 +8,7 @@
 
 namespace Ion
 {
-	REGISTER_LOGGER_ALWAYS_ACTIVE(ErrorLogger, "Core::Error");
+	REGISTER_LOGGER(ErrorLogger, "Core::Error", ELoggerFlags::AlwaysActive);
 
 // Error handler ------------------------------------------------------------------------------------------
 
