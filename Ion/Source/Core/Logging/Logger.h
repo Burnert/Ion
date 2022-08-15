@@ -54,6 +54,8 @@ namespace Ion
 		void Unsolo();
 		bool IsSoloed() const;
 
+		bool IsAlwaysActive() const;
+
 		const String& GetName() const;
 
 		static void UnsoloAll();
@@ -128,6 +130,11 @@ namespace Ion
 	inline bool Logger::GetState() const
 	{
 		return m_bEnabled;
+	}
+
+	inline bool Logger::IsAlwaysActive() const
+	{
+		return m_bAlwaysActive;
 	}
 
 	inline const String& Logger::GetName() const

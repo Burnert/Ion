@@ -1113,20 +1113,32 @@ namespace Ion::Editor
 	void EditorLayer::DrawLoggerRow(const LogManager::HierarchyNode& node)
 	{
 		const LoggerHierarchyEntry& entry = node.Get();
-		const char* name = entry.Name.c_str();
+		bool bAlwaysActive = entry.Logger && entry.Logger->IsAlwaysActive();
+		String nodeName = 
+			bAlwaysActive ?
+			entry.Name + "!" :
+			entry.Name;
 		bool bNodeOpen = false;
 
 		ImGui::TableNextRow();
 
 		// Logger
 		ImGui::TableNextColumn();
+
+		// Change the color for always active loggers
+		if (bAlwaysActive)
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.8f, 0.3f, 1.0f));
+
 		if (node.HasChildren())
-			bNodeOpen = ImGui::TreeNodeEx(name, ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+			bNodeOpen = ImGui::TreeNodeEx(nodeName.c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_NoTreePushOnOpen);
 		else
-			ImGui::TreeNodeEx(name, ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth);
+			ImGui::TreeNodeEx(nodeName.c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth);
+		
+		if (bAlwaysActive)
+			ImGui::PopStyleColor();
 
 		// Push ID for the controls
-		ImGui::PushID(name);
+		ImGui::PushID(nodeName.c_str());
 		{
 			// Make the checkboxes smaller
 			ImGuiStyle& style = ImGui::GetStyle();
@@ -1169,7 +1181,7 @@ namespace Ion::Editor
 
 		if (bNodeOpen)
 		{
-			ImGui::TreePush(name);
+			ImGui::TreePush(nodeName.c_str());
 			auto& children = node.GetChildren();
 			for (const LogManager::HierarchyNode* child : children)
 			{
