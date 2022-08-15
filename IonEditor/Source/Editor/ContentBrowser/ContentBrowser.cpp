@@ -31,45 +31,48 @@ namespace Ion::Editor
 
 	void UIContentBrowser::Draw()
 	{
-		if (m_bWindowOpen && ImGui::Begin("Content Browser", &m_bWindowOpen))
+		if (m_bWindowOpen)
 		{
-			ImGui::PushID("ContentBrowser");
-
-			// @TODO: Make some kind of a directory tree here.
-
-			ImGui::BeginChild("AssetTree", ImVec2(160, 0));
+			if (ImGui::Begin("Content Browser", &m_bWindowOpen))
 			{
-				if (ImGui::Button("Refresh"))
+				ImGui::PushID("ContentBrowser");
+
+				// @TODO: Make some kind of a directory tree here.
+
+				ImGui::BeginChild("AssetTree", ImVec2(160, 0));
 				{
-					m_Owner->UpdateRegisteredAssetsCache();
+					if (ImGui::Button("Refresh"))
+					{
+						m_Owner->UpdateRegisteredAssetsCache();
+					}
+
+					ImGui::Text("Asset Tree Lol");
+				}
+				ImGui::EndChild();
+
+				ImGui::SameLine();
+
+				ImGui::BeginChild("Assets");
+				{
+					const TArray<Asset>& registeredAssetCache = m_Owner->GetRegisteredAssetsCache();
+					m_AssetAnimData.resize(registeredAssetCache.size());
+
+					size_t assetIndex = 0;
+					for (const Asset& asset : registeredAssetCache)
+					{
+						DrawAsset(asset, m_AssetAnimData[assetIndex++]);
+					}
+				}
+				ImGui::EndChild();
+				// Deselect the asset on empty space click
+				if (ImGui::IsItemClicked())
+				{
+					m_Owner->SetSelectedAsset(Asset());
 				}
 
-				ImGui::Text("Asset Tree Lol");
+				ImGui::PopID();
+
 			}
-			ImGui::EndChild();
-
-			ImGui::SameLine();
-
-			ImGui::BeginChild("Assets");
-			{
-				const TArray<Asset>& registeredAssetCache = m_Owner->GetRegisteredAssetsCache();
-				m_AssetAnimData.resize(registeredAssetCache.size());
-
-				size_t assetIndex = 0;
-				for (const Asset& asset : registeredAssetCache)
-				{
-					DrawAsset(asset, m_AssetAnimData[assetIndex++]);
-				}
-			}
-			ImGui::EndChild();
-			// Deselect the asset on empty space click
-			if (ImGui::IsItemClicked())
-			{
-				m_Owner->SetSelectedAsset(Asset());
-			}
-
-			ImGui::PopID();
-
 			ImGui::End();
 		}
 	}
