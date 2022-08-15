@@ -3,6 +3,7 @@
 #include "Editor/EditorCommon.h"
 #include "Engine/Components/Component.h"
 #include "Core/Asset/Asset.h"
+#include "Core/Logging/LogManager.h"
 
 namespace Ion::Editor
 {
@@ -75,6 +76,9 @@ namespace Ion::Editor
 		/* Returns true if the settings have changed */
 		bool DrawMeshSection(MeshComponent& meshComponent);
 
+		void DrawLoggingPanel();
+		void DrawLoggerRow(const LogManager::HierarchyNode& node);
+
 		void DrawDiagnosticsPanel();
 
 		void DrawComponentTreeContent(Entity& entity);
@@ -125,6 +129,7 @@ namespace Ion::Editor
 		bool m_bResourcesPanelOpen;
 		bool m_bWorldTreePanelOpen;
 		bool m_bDetailsPanelOpen;
+		bool m_bLoggingPanelOpen;
 
 		bool m_bDiagnosticsPanelOpen;
 

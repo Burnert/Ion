@@ -72,4 +72,17 @@ namespace ImGui
 
 		return is_open;
 	}
+
+	IMGUI_API void PushDisabledStyle()
+	{
+		ImGui::PushStyleColor(ImGuiCol_FrameBg,        ImVec4(0.25f, 0.25f, 0.28f, 0.25f));
+		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.25f, 0.25f, 0.28f, 0.25f));
+		ImGui::PushStyleColor(ImGuiCol_FrameBgActive,  ImVec4(0.25f, 0.25f, 0.28f, 0.25f));
+		ImGui::PushStyleColor(ImGuiCol_CheckMark,      ImVec4(0.25f, 0.25f, 0.28f, 0.5f));
+	}
+
+	IMGUI_API void PopDisabledStyle()
+	{
+		ImGui::PopStyleColor(4);
+	}
 }

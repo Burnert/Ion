@@ -64,4 +64,9 @@ namespace ImGui
 
 	IMGUI_API bool CollapsingHeaderUnframed(const char* label, ImGuiTreeNodeFlags flags = 0);
 	IMGUI_API bool CollapsingHeaderUnframed(const char* label, bool* p_visible, ImGuiTreeNodeFlags flags = 0);
+
+	// Style
+
+	IMGUI_API void PushDisabledStyle();
+	IMGUI_API void PopDisabledStyle();
 }

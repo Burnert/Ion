@@ -29,6 +29,7 @@ namespace Ion::Editor
 		m_bResourcesPanelOpen(false),
 		m_bWorldTreePanelOpen(true),
 		m_bDetailsPanelOpen(true),
+		m_bLoggingPanelOpen(true),
 		m_bDiagnosticsPanelOpen(false),
 		m_bImGuiMetricsOpen(false),
 		m_bImGuiDemoOpen(false),
@@ -124,6 +125,7 @@ namespace Ion::Editor
 		DrawResourcesPanel();
 		DrawWorldTreePanel();
 		DrawDetailsPanel();
+		DrawLoggingPanel();
 		DrawDiagnosticsPanel();
 
 		if (m_bImGuiMetricsOpen)
@@ -182,6 +184,7 @@ namespace Ion::Editor
 				ImGui::MenuItem("Resources", nullptr, &m_bResourcesPanelOpen);
 				ImGui::MenuItem("World Tree", nullptr, &m_bWorldTreePanelOpen);
 				ImGui::MenuItem("Details", nullptr, &m_bDetailsPanelOpen);
+				ImGui::MenuItem("Logging", nullptr, &m_bLoggingPanelOpen);
 
 				ImGui::EndMenu();
 			}
@@ -1071,6 +1074,110 @@ namespace Ion::Editor
 			ImGui::PopID();
 		}
 		return bChanged;
+	}
+
+	void EditorLayer::DrawLoggingPanel()
+	{
+		if (m_bLoggingPanelOpen)
+		{
+			if (ImGui::Begin("Logging Settings", &m_bLoggingPanelOpen))
+			{
+				const LogManager::HierarchyNode& loggerHierarchyRoot = LogManager::GetLoggerHierarchy();
+
+				static ImGuiTableFlags flags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersH | ImGuiTableFlags_Resizable | ImGuiTableFlags_NoBordersInBody;
+				if (ImGui::BeginTable("ion_loggers", 3, flags))
+				{
+					ImGui::TableSetupColumn("Logger",  ImGuiTableColumnFlags_NoHide);
+					ImGui::TableSetupColumn("Enable",  ImGuiTableColumnFlags_WidthFixed, ImGui::CalcTextSize("Enable").x);
+					ImGui::TableSetupColumn("Solo",    ImGuiTableColumnFlags_WidthFixed, ImGui::CalcTextSize("Solo").x);
+					ImGui::TableHeadersRow();
+
+					ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, ImGui::GetFontSize());
+
+					auto& children = loggerHierarchyRoot.GetChildren();
+					for (const LogManager::HierarchyNode* child : children)
+					{
+						ionassert(child);
+						DrawLoggerRow(*child);
+					}
+
+					ImGui::PopStyleVar();
+
+					ImGui::EndTable();
+				}
+			}
+			ImGui::End();
+		}
+	}
+
+	void EditorLayer::DrawLoggerRow(const LogManager::HierarchyNode& node)
+	{
+		const LoggerHierarchyEntry& entry = node.Get();
+		const char* name = entry.Name.c_str();
+		bool bNodeOpen = false;
+
+		ImGui::TableNextRow();
+
+		// Logger
+		ImGui::TableNextColumn();
+		if (node.HasChildren())
+			bNodeOpen = ImGui::TreeNodeEx(name, ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+		else
+			ImGui::TreeNodeEx(name, ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth);
+
+		// Push ID for the controls
+		ImGui::PushID(name);
+		{
+			// Make the checkboxes smaller
+			ImGuiStyle& style = ImGui::GetStyle();
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(style.FramePadding.x, (float)(int)(style.FramePadding.y * 0.60f)));
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, (float)(int)(style.ItemSpacing.y * 0.60f)));
+
+			// Don't show controls if a logger does not exist in this node.
+			if (entry.Logger)
+			{
+				bool bSoloMode = LogManager::IsSoloModeEnabled();
+
+				// Enable
+				ImGui::TableNextColumn();
+				// Render the checkbox as disabled if solo mode is enabled.
+				if (bSoloMode)
+					ImGui::PushDisabledStyle();
+				bool bEnabled = entry.Logger->GetState();
+				if (ImGui::Checkbox("##enabled", &bEnabled) && !bSoloMode)
+				{
+					entry.Logger->SetState(bEnabled);
+				}
+				if (bSoloMode)
+					ImGui::PopDisabledStyle();
+
+				// Solo
+				ImGui::TableNextColumn();
+				bool bSolo = entry.Logger->IsSoloed();
+				if (ImGui::Checkbox("##solo", &bSolo))
+				{
+					if (bSolo)
+						entry.Logger->Solo();
+					else
+						entry.Logger->Unsolo();
+				}
+			}
+
+			ImGui::PopStyleVar(2);
+		}
+		ImGui::PopID();
+
+		if (bNodeOpen)
+		{
+			ImGui::TreePush(name);
+			auto& children = node.GetChildren();
+			for (const LogManager::HierarchyNode* child : children)
+			{
+				ionassert(child);
+				DrawLoggerRow(*child);
+			}
+			ImGui::TreePop();
+		}
 	}
 
 	void EditorLayer::DrawDiagnosticsPanel()
