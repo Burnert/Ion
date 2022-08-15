@@ -4,14 +4,14 @@
 
 namespace Ion
 {
-	Logger& LogManager::RegisterLogger(const String& name)
+	Logger& LogManager::RegisterLogger(const String& name, bool bAlwaysActive)
 	{
 		LogManager& instance = Get();
 
 		ionassert(IsLoggerNameValid(name), "Logger name \"{}\" is invalid.", name);
 		ionassert(instance.m_Loggers.find(name) == instance.m_Loggers.end(), "A logger with name \"{}\" already exists.", name);
 
-		LoggerMapEntry& entry = instance.m_Loggers.emplace(name, LoggerMapEntry { Logger(name), nullptr }).first->second;
+		LoggerMapEntry& entry = instance.m_Loggers.emplace(name, LoggerMapEntry { Logger(name, bAlwaysActive), nullptr }).first->second;
 
 		entry.HierarchyNode = &AddHierarchyNode(entry.Logger);
 
@@ -39,6 +39,41 @@ namespace Ion
 	const LogManager::HierarchyNode& LogManager::GetLoggerHierarchy()
 	{
 		return *Get().m_LoggerHierarchy;
+	}
+
+	void LogManager::EnableSolo(const Logger& logger)
+	{
+		LogManager& instance = Get();
+
+		instance.m_SoloedLoggers.insert(logger.m_Name);
+	}
+
+	void LogManager::DisableSolo(const Logger& logger)
+	{
+		LogManager& instance = Get();
+
+		instance.m_SoloedLoggers.erase(logger.m_Name);
+	}
+
+	bool LogManager::IsSoloed(const Logger& logger)
+	{
+		LogManager& instance = Get();
+
+		return instance.m_SoloedLoggers.find(logger.m_Name) != instance.m_SoloedLoggers.end();
+	}
+
+	void LogManager::UnsoloAll()
+	{
+		LogManager& instance = Get();
+
+		instance.m_SoloedLoggers.clear();
+	}
+
+	bool LogManager::IsSoloModeEnabled()
+	{
+		LogManager& instance = Get();
+
+		return !instance.m_SoloedLoggers.empty();
 	}
 
 	bool LogManager::IsLoggerNameValid(const String& name)

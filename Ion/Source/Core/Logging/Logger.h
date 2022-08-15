@@ -8,6 +8,11 @@ namespace Ion
 {
 #define REGISTER_LOGGER(varName, fullname) inline Logger& varName = Logger::Register(fullname)
 
+/**
+ * Create a logger that is active even if logger solo mode is enabled.
+ */
+#define REGISTER_LOGGER_ALWAYS_ACTIVE(varName, fullname) inline Logger& varName = Logger::Register(fullname, true)
+
 	enum class ELogLevel : uint8
 	{
 		Trace,
@@ -21,7 +26,7 @@ namespace Ion
 	class ION_API Logger
 	{
 	public:
-		static Logger& Register(const String& name);
+		static Logger& Register(const String& name, bool bAlwaysActive = false);
 
 		template<typename TStr, typename... Args>
 		void Trace(const TStr& str, Args&&... args) const;
@@ -45,16 +50,25 @@ namespace Ion
 		void SetState(bool bEnabled);
 		bool GetState() const;
 
+		void Solo();
+		void Unsolo();
+		bool IsSoloed() const;
+
 		const String& GetName() const;
 
+		static void UnsoloAll();
+
 	private:
-		Logger(const String& name);
+		Logger(const String& name, bool bAlwaysActive);
+
+		bool ShouldLog() const;
 
 	private:
 		String m_Name;
 		TShared<spdlog::logger> m_Logger;
 		ELogLevel m_LogLevel;
 		bool m_bEnabled;
+		bool m_bAlwaysActive;
 
 		friend class LogManager;
 	};
@@ -99,7 +113,7 @@ namespace Ion
 	inline void Logger::Log(ELogLevel logLevel, const TStr& str, Args&&... args) const
 	{
 #if !ION_DIST
-		if (m_bEnabled)
+		if (ShouldLog())
 		{
 			m_Logger->log((spdlog::level::level_enum)logLevel, str, Forward<Args>(args)...);
 		}
@@ -124,5 +138,5 @@ namespace Ion
 	// Global / Generic Engine Logger
 	REGISTER_LOGGER(GEngineLogger, "Engine");
 	// Core Logger
-	REGISTER_LOGGER(CoreLogger, "Core");
+	REGISTER_LOGGER_ALWAYS_ACTIVE(CoreLogger, "Core");
 }

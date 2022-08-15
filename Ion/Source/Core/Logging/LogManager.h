@@ -26,7 +26,7 @@ namespace Ion
 	public:
 		using HierarchyNode = TTreeNode<LoggerHierarchyEntry>;
 
-		static Logger& RegisterLogger(const String& name);
+		static Logger& RegisterLogger(const String& name, bool bAlwaysActive);
 
 		static Logger& GetLogger(const String& name);
 
@@ -34,6 +34,13 @@ namespace Ion
 		static ELogLevel GetGlobalLogLevel();
 
 		static const HierarchyNode& GetLoggerHierarchy();
+
+		static void EnableSolo(const Logger& logger);
+		static void DisableSolo(const Logger& logger);
+		static bool IsSoloed(const Logger& logger);
+
+		static void UnsoloAll();
+		static bool IsSoloModeEnabled();
 
 	private:
 		static bool IsLoggerNameValid(const String& name);
@@ -45,6 +52,7 @@ namespace Ion
 	private:
 		THashMap<String, LoggerMapEntry> m_Loggers;
 		TUnique<HierarchyNode> m_LoggerHierarchy;
+		THashSet<String> m_SoloedLoggers;
 
 		static LogManager* s_Instance;
 		static LogManager& Get();
