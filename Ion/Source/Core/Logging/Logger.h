@@ -122,7 +122,7 @@ namespace Ion
 
 	inline void Logger::SetState(bool bEnabled)
 	{
-		m_bEnabled = true;
+		m_bEnabled = bEnabled;
 	}
 
 	inline bool Logger::GetState() const
