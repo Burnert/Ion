@@ -5,6 +5,8 @@
 #include "Core/Asset/Asset.h"
 #include "Core/Logging/LogManager.h"
 
+struct ImGuiTableSortSpecs;
+
 namespace Ion::Editor
 {
 	class EditorApplication;
@@ -77,7 +79,8 @@ namespace Ion::Editor
 		bool DrawMeshSection(MeshComponent& meshComponent);
 
 		void DrawLoggingPanel();
-		void DrawLoggerRow(const LogManager::HierarchyNode& node);
+		void DrawLoggerNodeChildren(const LogManager::HierarchyNode& node, ImGuiTableSortSpecs* sortSpecs);
+		void DrawLoggerRow(const LogManager::HierarchyNode& node, ImGuiTableSortSpecs* sortSpecs);
 
 		void DrawDiagnosticsPanel();
 

@@ -11,6 +11,8 @@
 #include "Engine/Components/MeshComponent.h"
 #include "Engine/Entity/MeshEntity.h"
 
+#include "Core/Logging/LoggerUtils.h"
+
 #include "Renderer/Renderer.h"
 
 #include "UserInterface/ImGui.h"
@@ -1084,22 +1086,25 @@ namespace Ion::Editor
 			{
 				const LogManager::HierarchyNode& loggerHierarchyRoot = LogManager::GetLoggerHierarchy();
 
-				static ImGuiTableFlags flags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersH | ImGuiTableFlags_Resizable | ImGuiTableFlags_NoBordersInBody;
-				if (ImGui::BeginTable("ion_loggers", 3, flags))
+				static ImGuiTableFlags flags =
+					ImGuiTableFlags_BordersV  |
+					ImGuiTableFlags_BordersH  |
+					ImGuiTableFlags_Resizable |
+					ImGuiTableFlags_ScrollY   |
+					ImGuiTableFlags_Sortable  |
+					ImGuiTableFlags_NoBordersInBody;
+				if (ImGui::BeginTable("table_ion_loggers", 4, flags))
 				{
-					ImGui::TableSetupColumn("Logger",  ImGuiTableColumnFlags_NoHide);
-					ImGui::TableSetupColumn("Enable",  ImGuiTableColumnFlags_WidthFixed, ImGui::CalcTextSize("Enable").x);
-					ImGui::TableSetupColumn("Solo",    ImGuiTableColumnFlags_WidthFixed, ImGui::CalcTextSize("Solo").x);
+					ImGui::TableSetupScrollFreeze(0, 1);
+					ImGui::TableSetupColumn("Logger",    ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_DefaultSort);
+					ImGui::TableSetupColumn("Log Level", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoSort, 100.0f);
+					ImGui::TableSetupColumn("Enable",    ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoSort, ImGui::CalcTextSize("Enable").x);
+					ImGui::TableSetupColumn("Solo",      ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoSort, ImGui::CalcTextSize("Solo").x);
 					ImGui::TableHeadersRow();
 
 					ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, ImGui::GetFontSize());
 
-					auto& children = loggerHierarchyRoot.GetChildren();
-					for (const LogManager::HierarchyNode* child : children)
-					{
-						ionassert(child);
-						DrawLoggerRow(*child);
-					}
+					DrawLoggerNodeChildren(loggerHierarchyRoot, ImGui::TableGetSortSpecs());
 
 					ImGui::PopStyleVar();
 
@@ -1110,7 +1115,35 @@ namespace Ion::Editor
 		}
 	}
 
-	void EditorLayer::DrawLoggerRow(const LogManager::HierarchyNode& node)
+	void EditorLayer::DrawLoggerNodeChildren(const LogManager::HierarchyNode& node, ImGuiTableSortSpecs* sortSpecs)
+	{
+		if (!node.HasChildren())
+			return;
+
+		// @TODO: Sorting should preferably not happen every frame.
+
+		TArray<LogManager::HierarchyNode*> children = node.GetChildren();
+		if (sortSpecs && sortSpecs->SpecsCount > 0)
+		{
+			std::sort(children.begin(), children.end(), [sortSpecs](LogManager::HierarchyNode* lhs, LogManager::HierarchyNode* rhs) -> bool
+			{
+				const ImGuiTableColumnSortSpecs* spec = &sortSpecs->Specs[0];
+				int32 delta = lhs->Get().Name.compare(rhs->Get().Name);
+				if (delta < 0)
+					return (spec->SortDirection == ImGuiSortDirection_Ascending) ? 1 : 0;
+				else
+					return (spec->SortDirection == ImGuiSortDirection_Ascending) ? 0 : 1;
+			});
+		}
+
+		for (const LogManager::HierarchyNode* child : children)
+		{
+			ionassert(child);
+			DrawLoggerRow(*child, sortSpecs);
+		}
+	}
+
+	void EditorLayer::DrawLoggerRow(const LogManager::HierarchyNode& node, ImGuiTableSortSpecs* sortSpecs)
 	{
 		const LoggerHierarchyEntry& entry = node.Get();
 		bool bAlwaysActive = entry.Logger && entry.Logger->IsAlwaysActive();
@@ -1148,6 +1181,24 @@ namespace Ion::Editor
 			// Don't show controls if a logger does not exist in this node.
 			if (entry.Logger)
 			{
+				// Log level
+				ImGui::TableNextColumn();
+				ELogLevel logLevel = entry.Logger->GetLevel();
+				String sLogLevel = TEnumParser<ELogLevel>::ToString(logLevel);
+				ImGui::SetNextItemWidth(-FLT_MIN);
+				if (ImGui::BeginCombo("##log_level", sLogLevel.c_str(), ImGuiComboFlags_None))
+				{
+					for (int32 i = 0; i < 6; ++i)
+					{
+						if (ImGui::Selectable(TEnumParser<ELogLevel>::ToString((ELogLevel)i).c_str(), logLevel == (ELogLevel)i))
+						{
+							entry.Logger->SetLevel((ELogLevel)i);
+						}
+					}
+
+					ImGui::EndCombo();
+				}
+
 				bool bSoloMode = LogManager::IsSoloModeEnabled();
 
 				// Enable
@@ -1182,12 +1233,7 @@ namespace Ion::Editor
 		if (bNodeOpen)
 		{
 			ImGui::TreePush(nodeName.c_str());
-			auto& children = node.GetChildren();
-			for (const LogManager::HierarchyNode* child : children)
-			{
-				ionassert(child);
-				DrawLoggerRow(*child);
-			}
+			DrawLoggerNodeChildren(node, sortSpecs);
 			ImGui::TreePop();
 		}
 	}

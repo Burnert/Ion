@@ -1,7 +1,9 @@
-enum class EXMLParserResultType
+	enum class ELogLevel : uint8
 	{
-		Success = 0,
-		Warning,
+		Trace,
+		Debug,
+		Info,
+		Warn,
 		Error,
-		Fail
+		Critical,
 	};
