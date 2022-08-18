@@ -7,8 +7,7 @@ namespace ImGui
 {
 	bool IsTreeNodeToggled()
 	{
-		ImGuiWindow* window = GetCurrentWindow();
-		return window->DC.LastItemStatusFlags & ImGuiItemStatusFlags_ToggledOpen;
+		return ImGui::GetItemStatusFlags() & ImGuiItemStatusFlags_ToggledOpen;
 	}
 
 	Ion::Vector4 GetWindowWorkRect()
@@ -60,14 +59,14 @@ namespace ImGui
 		{
 			// Create a small overlapping close button
 			ImGuiContext& g = *GImGui;
-			ImGuiLastItemDataBackup last_item_backup;
+			ImGuiLastItemData last_item_backup;
 			float button_size = g.FontSize;
-			float button_x = ImMax(window->DC.LastItemRect.Min.x, window->DC.LastItemRect.Max.x - g.Style.FramePadding.x * 2.0f - button_size);
-			float button_y = window->DC.LastItemRect.Min.y;
+			float button_x = ImMax(g.LastItemData.Rect.Min.x, g.LastItemData.Rect.Max.x - g.Style.FramePadding.x * 2.0f - button_size);
+			float button_y = g.LastItemData.Rect.Min.y;
 			ImGuiID close_button_id = GetIDWithSeed("#CLOSE", NULL, id);
 			if (CloseButton(close_button_id, ImVec2(button_x, button_y)))
 				*p_visible = false;
-			last_item_backup.Restore();
+			g.LastItemData = last_item_backup;
 		}
 
 		return is_open;
