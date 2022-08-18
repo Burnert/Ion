@@ -95,11 +95,12 @@ namespace Ion
 			DWORD lastError = GetLastError();
 			if (lastError != ERROR_FILE_NOT_FOUND)
 			{
-				Windows::PrintLastError("File \"{}\" cannot be opened.", m_FilePath.ToString());
+				// @TODO: Refactor Windows error reporting
+				//Windows::PrintLastError("File \"{}\" cannot be opened.", m_FilePath.ToString());
 				ionthrow(IOError, "File \"{}\" cannot be opened.", m_FilePath.ToString());
 			}
 
-			_DEBUG_LOG(FileLogger.Warn("File \"{}\" not found.", m_FilePath.ToString()));
+			//_DEBUG_LOG(FileLogger.Warn("File \"{}\" not found.", m_FilePath.ToString()));
 			ionthrow(FileNotFoundError, "File \"{}\" not found.", m_FilePath.ToString());
 		}
 
@@ -113,7 +114,7 @@ namespace Ion
 			SetOffset(m_FileSize);
 		}
 
-		_DEBUG_LOG(FileLogger.Trace("File \"{}\" opened.", m_FilePath.ToString()));
+		//_DEBUG_LOG(FileLogger.Trace("File \"{}\" opened.", m_FilePath.ToString()));
 		return Void();
 	}
 
@@ -124,18 +125,18 @@ namespace Ion
 
 		if (!DeleteFile(filename))
 		{
-			Windows::PrintLastError(L"Cannot delete file \"{}\"!", filename);
+			//Windows::PrintLastError(L"Cannot delete file \"{}\"!", filename);
 			ionthrow(IOError, L"Cannot delete file \"{}\"!", filename);
 		}
 
-		_DEBUG_STATIC_LOG(FileLogger.Debug(L"File \"{}\" has been deleted.", filename));
+		//_DEBUG_STATIC_LOG(FileLogger.Debug(L"File \"{}\" has been deleted.", filename));
 		return Void();
 	}
 
 	void File::Close_Native()
 	{
 		CloseHandle(Handle);
-		_DEBUG_LOG(FileLogger.Trace("File \"{}\" was closed.", m_FilePath.ToString()));
+		//_DEBUG_LOG(FileLogger.Trace("File \"{}\" was closed.", m_FilePath.ToString()));
 
 		//*(size_t*)&m_NativeFile.m_FileHandle = (size_t)INVALID_HANDLE_VALUE;
 		Handle = INVALID_HANDLE_VALUE;
@@ -153,12 +154,12 @@ namespace Ion
 		DWORD bytesRead;
 		if (!ReadFile(Handle, outBuffer, (DWORD)count, &bytesRead, NULL))
 		{
-			Windows::PrintLastError("Cannot read file \"{}\"!", m_FilePath.ToString());
+			//Windows::PrintLastError("Cannot read file \"{}\"!", m_FilePath.ToString());
 			ionthrow(IOError, "Cannot read file \"{}\"!", m_FilePath.ToString());
 		}
 		m_Offset += bytesRead;
 
-		_DEBUG_LOG(FileLogger.Trace("\"{}\": Read {} bytes.", m_FilePath.ToString(), bytesRead));
+		//_DEBUG_LOG(FileLogger.Trace("\"{}\": Read {} bytes.", m_FilePath.ToString(), bytesRead));
 		return Void();
 	}
 
@@ -179,7 +180,7 @@ namespace Ion
 		DWORD bytesRead;
 		if (!ReadFile(Handle, outBuffer, (DWORD)count, &bytesRead, NULL))
 		{
-			Windows::PrintLastError("Cannot read file \"{}\"!", m_FilePath.ToString());
+			//Windows::PrintLastError("Cannot read file \"{}\"!", m_FilePath.ToString());
 			ionthrow(IOError, "Cannot read file \"{}\"!", m_FilePath.ToString());
 		}
 
@@ -214,7 +215,7 @@ namespace Ion
 				}
 				else
 				{
-					_DEBUG_LOG(FileLogger.Warn("\"{}\": CR was found but the next byte could not be checked! {1} byte buffer was to small.", m_FilePath.ToString(), count));
+					//_DEBUG_LOG(FileLogger.Warn("\"{}\": CR was found but the next byte could not be checked! {1} byte buffer was to small.", m_FilePath.ToString(), count));
 					// Set the offset back to the CR character
 					// so it can be interpreted later and then exit.
 					SetOffset(initialOffset + i);
@@ -266,7 +267,7 @@ namespace Ion
 			if (bOutOverflow != nullptr)
 				*bOutOverflow = true;
 
-			_DEBUG_LOG(FileLogger.Warn("\"{}\": File read output buffer overflow! {} byte buffer was to small.", m_FilePath.ToString(), count));
+			//_DEBUG_LOG(FileLogger.Warn("\"{}\": File read output buffer overflow! {} byte buffer was to small.", m_FilePath.ToString(), count));
 		}
 
 		return Void();
@@ -284,7 +285,7 @@ namespace Ion
 		uint64 readCount = 0;
 		fwdthrowall(ReadLine_Internal(outBuffer, count, &readCount, nullptr));
 
-		_DEBUG_LOG(FileLogger.Trace("\"{}\": Read {} bytes.", m_FilePath.ToString(), readCount));
+		//_DEBUG_LOG(FileLogger.Trace("\"{}\": Read {} bytes.", m_FilePath.ToString(), readCount));
 		return Void();
 	}
 
@@ -312,7 +313,7 @@ namespace Ion
 		}
 		while (bOverflow);
 
-		_DEBUG_LOG(FileLogger.Trace("\"{}\": Read {} bytes.", m_FilePath.ToString(), readCount));
+		//_DEBUG_LOG(FileLogger.Trace("\"{}\": Read {} bytes.", m_FilePath.ToString(), readCount));
 		return line;
 	}
 
@@ -328,7 +329,7 @@ namespace Ion
 		DWORD bytesWritten;
 		if (!WriteFile(Handle, inBuffer, (DWORD)count, &bytesWritten, NULL))
 		{
-			Windows::PrintLastError("Cannot write file \"{}\"!", m_FilePath.ToString());
+			//Windows::PrintLastError("Cannot write file \"{}\"!", m_FilePath.ToString());
 			ionthrow(IOError, "Cannot write file \"{}\"!", m_FilePath.ToString());
 		}
 		// Retrieves the file pointer
@@ -339,7 +340,7 @@ namespace Ion
 		int64 sizeDifference = std::max((int64)0, m_Offset - m_FileSize);
 		UpdateFileSizeCache(m_FileSize + sizeDifference);
 
-		_DEBUG_LOG(FileLogger.Trace("\"{}\": Written {} bytes.", m_FilePath.ToString(), bytesWritten));
+		//_DEBUG_LOG(FileLogger.Trace("\"{}\": Written {} bytes.", m_FilePath.ToString(), bytesWritten));
 		return Void();
 	}
 
@@ -372,7 +373,7 @@ namespace Ion
 		ulong bytesWritten;
 		if (!WriteFile(Handle, tempBuffer, (DWORD)count + bCRLF, &bytesWritten, NULL))
 		{
-			Windows::PrintLastError("Cannot write file \"{}\"!", m_FilePath.ToString());
+			//Windows::PrintLastError("Cannot write file \"{}\"!", m_FilePath.ToString());
 			ionthrow(IOError, "Cannot write file \"{}\"!", m_FilePath.ToString());
 		}
 
@@ -388,7 +389,7 @@ namespace Ion
 		int64 sizeDifference = std::max((int64)0, m_Offset - m_FileSize);
 		UpdateFileSizeCache(m_FileSize + sizeDifference);
 
-		_DEBUG_LOG(FileLogger.Trace("\"{}\": Written {} bytes.", m_FilePath.ToString(), bytesWritten));
+		//_DEBUG_LOG(FileLogger.Trace("\"{}\": Written {} bytes.", m_FilePath.ToString(), bytesWritten));
 		return Void();
 	}
 
@@ -401,7 +402,7 @@ namespace Ion
 
 		if (!SetFilePointerEx(Handle, *(LARGE_INTEGER*)&count, (LARGE_INTEGER*)&m_Offset, FILE_CURRENT))
 		{
-			Windows::PrintLastError("\"{}\": Cannot add file offset!", m_FilePath.ToString());
+			//Windows::PrintLastError("\"{}\": Cannot add file offset!", m_FilePath.ToString());
 			ionthrow(IOError, "\"{}\": Cannot add file offset!", m_FilePath.ToString());
 		}
 		return Void();
@@ -416,7 +417,7 @@ namespace Ion
 
 		if (!SetFilePointerEx(Handle, *(LARGE_INTEGER*)&m_Offset, (LARGE_INTEGER*)&m_Offset, FILE_BEGIN))
 		{
-			Windows::PrintLastError("\"{}\": Cannot set file offset!", m_FilePath.ToString());
+			//Windows::PrintLastError("\"{}\": Cannot set file offset!", m_FilePath.ToString());
 			ionthrow(IOError, "\"{}\": Cannot set file offset!", m_FilePath.ToString());
 		}
 		return Void();
@@ -438,7 +439,7 @@ namespace Ion
 		{
 			GetFileSizeEx(Handle, (LARGE_INTEGER*)&m_FileSize);
 
-			_DEBUG_LOG(FileLogger.Trace("\"{}\": New file size cache = {} bytes.", m_FilePath.ToString(), m_FileSize));
+			//_DEBUG_LOG(FileLogger.Trace("\"{}\": New file size cache = {} bytes.", m_FilePath.ToString(), m_FileSize));
 		}
 		
 		return m_FileSize;

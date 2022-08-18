@@ -13,7 +13,7 @@
 
 namespace Ion
 {
-	REGISTER_LOGGER(FileLogger, "Core::File", ELoggerFlags::None, ELogLevel::Warn);
+	REGISTER_LOGGER(FileLogger, "Core::File", ELoggerFlags::None, ELogLevel::Trace);
 
 #pragma region Enums
 
@@ -300,8 +300,6 @@ namespace Ion
 // File class -------------------------------------------------------------------------------
 
 #pragma region File
-
-	class FilePath;
 
 	class ION_API File
 	{
@@ -653,7 +651,9 @@ namespace Ion
 		ionassert(m_bOpen);
 		ionassert(m_Mode & EFileMode::Read, "Read access mode was not specified when opening the file.");
 
-		return Read_Native(outBuffer, count);
+		return Read_Native(outBuffer, count)
+			.Err([](Error& err) { FileLogger.Error(err.Message); })
+			.Ok([&] { FileLogger.Debug("Read [@TODO] bytes from file \"{}\".", m_FilePath.ToString()); });
 	}
 
 	inline Result<void, IOError> File::Read(char* outBuffer, uint64 count)
@@ -666,17 +666,18 @@ namespace Ion
 		ionassert(m_bOpen);
 		ionassert(m_Mode & EFileMode::Read, "Read access mode was not specified when opening the file.");
 
-		return ReadLine_Native(outBuffer, count);
+		return ReadLine_Native(outBuffer, count)
+			.Err([](Error& err) { FileLogger.Error(err.Message); })
+			.Ok([&] { FileLogger.Debug("Read [@TODO] bytes from file \"{}\".", m_FilePath.ToString()); });
 	}
 
 	inline Result<String, IOError> File::ReadLine()
 	{
 		ionassert(m_Mode & EFileMode::Read, "Read access mode was not specified when opening the file.");
 
-		ionmatchresult(ReadLine_Native(),
-			mfwdthrowall
-			melse return R.Unwrap();
-		);
+		return ReadLine_Native()
+			.Err([](Error& err) { FileLogger.Error(err.Message); })
+			.Ok([&](const String& value) { FileLogger.Debug("Read [@TODO] bytes from file \"{}\".", m_FilePath.ToString()); });
 	}
 
 	template<uint64 Size>
@@ -695,7 +696,9 @@ namespace Ion
 	{
 		ionassert(m_Mode & EFileMode::Write, "Write access mode was not specified when opening the file.");
 
-		return Write_Native(inBuffer, count);
+		return Write_Native(inBuffer, count)
+			.Err([](Error& err) { FileLogger.Error(err.Message); })
+			.Ok([&] { FileLogger.Debug("Written [@TODO] bytes to file \"{}\".", m_FilePath.ToString()); });
 	}
 
 	inline Result<void, IOError> File::Write(const char* inBuffer, uint64 count)
@@ -712,7 +715,9 @@ namespace Ion
 	{
 		ionassert(m_Mode & EFileMode::Write, "Write access mode was not specified when opening the file.");
 
-		return WriteLine_Native(inBuffer, count, newLineType);
+		return WriteLine_Native(inBuffer, count, newLineType)
+			.Err([](Error& err) { FileLogger.Error(err.Message); })
+			.Ok([&] { FileLogger.Debug("Written [@TODO] bytes to file \"{}\".", m_FilePath.ToString()); });
 	}
 
 	inline Result<void, IOError> File::WriteLine(const String& inStr, ENewLineType newLineType)
@@ -734,12 +739,16 @@ namespace Ion
 
 	inline Result<void, IOError> File::AddOffset(int64 count)
 	{
-		return AddOffset_Native(count);
+		return AddOffset_Native(count)
+			.Err([](Error& err) { FileLogger.Error(err.Message); })
+			.Ok([&] { FileLogger.Debug("Moved pointer by {} bytes in file \"{}\".", count, m_FilePath.ToString()); });
 	}
 
 	inline Result<void, IOError> File::SetOffset(int64 count)
 	{
-		return SetOffset_Native(count);
+		return SetOffset_Native(count)
+			.Err([](Error& err) { FileLogger.Error(err.Message); })
+			.Ok([&] { FileLogger.Debug("Pointer has been set to {} bytes in file \"{}\".", count, m_FilePath.ToString()); });;
 	}
 
 	inline int64 File::GetOffset() const

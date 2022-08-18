@@ -47,12 +47,20 @@ namespace Ion
 
 		m_Mode = mode;
 
-		return Open_Native();
+		FileLogger.Trace("Opening file \"{}\"...", m_FilePath.ToString());
+
+		return Open_Native()
+			.Err([](Error& err) { FileLogger.Error(err.Message); })
+			.Ok([&] { FileLogger.Debug("File \"{}\" has been opened.", m_FilePath.ToString()); });
 	}
 
 	bool File::Delete(const FilePath& path)
 	{
-		return Delete_Native(path.ToWString().c_str());
+		FileLogger.Trace("Deleting file \"{}\"...", path.ToString());
+
+		return Delete_Native(path.ToWString().c_str())
+			.Err([](Error& err) { FileLogger.Error(err.Message); })
+			.Ok([&] { FileLogger.Debug("File \"{}\" has been deleted.", path.ToString()); });
 	}
 
 	void File::Close()
@@ -65,6 +73,8 @@ namespace Ion
 		m_bOpen = false;
 
 		Close_Native();
+
+		FileLogger.Debug("File \"{}\" has been closed.", m_FilePath.ToString());
 	}
 
 	Result<String, IOError, FileNotFoundError> File::ReadToString(const FilePath& filePath)
