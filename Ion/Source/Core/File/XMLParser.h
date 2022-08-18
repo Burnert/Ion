@@ -4,7 +4,7 @@
 
 namespace Ion
 {
-	REGISTER_LOGGER(XMLParserLogger, "Core::File::XMLParser");
+	REGISTER_LOGGER(XMLParserLogger, "Core::File::XMLParser", ELoggerFlags::None, ELogLevel::Warn);
 
 #define _PARSER_NODE_ERROR_MSG_PATTERN \
 "<{}> node has not been found.\nIn file: \"{}\"\n"

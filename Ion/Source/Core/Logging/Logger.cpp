@@ -6,9 +6,9 @@
 
 namespace Ion
 {
-	Logger& Logger::Register(const String& name, uint8 loggerFlags)
+	Logger& Logger::Register(const String& name, uint8 loggerFlags, ELogLevel defaultLogLevel)
 	{
-		return LogManager::RegisterLogger(name, loggerFlags);
+		return LogManager::RegisterLogger(name, loggerFlags, defaultLogLevel);
 	}
 
 	Logger::Logger(const String& name, uint8 loggerFlags) :

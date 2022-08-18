@@ -4,7 +4,7 @@
 
 namespace Ion
 {
-	Logger& LogManager::RegisterLogger(const String& name, uint8 loggerFlags)
+	Logger& LogManager::RegisterLogger(const String& name, uint8 loggerFlags, ELogLevel defaultLogLevel)
 	{
 		LogManager& instance = Get();
 
@@ -12,6 +12,7 @@ namespace Ion
 		ionassert(instance.m_Loggers.find(name) == instance.m_Loggers.end(), "A logger with name \"{}\" already exists.", name);
 
 		LoggerMapEntry& entry = instance.m_Loggers.emplace(name, LoggerMapEntry { Logger(name, loggerFlags), nullptr }).first->second;
+		entry.Logger.SetLevel(defaultLogLevel);
 
 		entry.HierarchyNode = &AddHierarchyNode(entry.Logger);
 

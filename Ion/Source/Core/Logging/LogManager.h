@@ -27,7 +27,7 @@ namespace Ion
 	public:
 		using HierarchyNode = TTreeNode<LoggerHierarchyEntry>;
 
-		static Logger& RegisterLogger(const String& name, uint8 loggerFlags);
+		static Logger& RegisterLogger(const String& name, uint8 loggerFlags, ELogLevel defaultLogLevel);
 
 		static Logger& GetLogger(const String& name);
 

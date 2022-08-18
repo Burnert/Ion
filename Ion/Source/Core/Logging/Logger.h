@@ -6,6 +6,14 @@
 
 namespace Ion
 {
+/**
+ * @brief Create a static logger.
+ * 
+ * @param varName Logger reference variable name
+ * @param fullname Full name of a logger (e.g. Core::File::XMLParser)
+ * @param va_0 *optional: ELoggerFlags logger flags
+ * @param va_1 *optional: ELogLevel default log level
+ */
 #define REGISTER_LOGGER(varName, fullname, ...) inline Logger& varName = Logger::Register(fullname, __VA_ARGS__)
 
 	namespace ELoggerFlags
@@ -31,7 +39,7 @@ namespace Ion
 	class ION_API Logger
 	{
 	public:
-		static Logger& Register(const String& name, uint8 loggerFlags = ELoggerFlags::None);
+		static Logger& Register(const String& name, uint8 loggerFlags = ELoggerFlags::None, ELogLevel defaultLogLevel = ELogLevel::Trace);
 
 		template<typename TStr, typename... Args>
 		void Trace(const TStr& str, Args&&... args) const;
