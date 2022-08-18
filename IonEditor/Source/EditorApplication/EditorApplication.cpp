@@ -5,6 +5,7 @@
 
 #include "Editor/Viewport/EditorViewport.h"
 #include "Editor/ContentBrowser/ContentBrowser.h"
+#include "Editor/LogSettings.h"
 
 #include "Editor/EditorAssets.h"
 
@@ -69,6 +70,8 @@ namespace Ion::Editor
 
 		m_ContentBrowser = MakeShared<ContentBrowser>();
 		m_ContentBrowser->AddUI();
+
+		m_LogSettings = MakeShared<LogSettings>();
 
 		Asset::Resolve("[Engine]/Materials/DefaultMaterial").Unwrap();
 		Asset::Resolve("[Engine]/Textures/White").UnwrapOr(Asset::None);

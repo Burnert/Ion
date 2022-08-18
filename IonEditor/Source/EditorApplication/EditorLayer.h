@@ -78,10 +78,6 @@ namespace Ion::Editor
 		/* Returns true if the settings have changed */
 		bool DrawMeshSection(MeshComponent& meshComponent);
 
-		void DrawLoggingPanel();
-		void DrawLoggerNodeChildren(const LogManager::HierarchyNode& node, ImGuiTableSortSpecs* sortSpecs);
-		void DrawLoggerRow(const LogManager::HierarchyNode& node, ImGuiTableSortSpecs* sortSpecs);
-
 		void DrawDiagnosticsPanel();
 
 		void DrawComponentTreeContent(Entity& entity);

@@ -13,6 +13,7 @@ namespace Ion::Editor
 	class EditorLayer;
 	class EditorViewport;
 	class ContentBrowser;
+	class LogSettings;
 
 	struct ViewportObject
 	{
@@ -112,6 +113,8 @@ namespace Ion::Editor
 		TShared<EditorViewport> m_CapturedViewport;
 
 		TShared<ContentBrowser> m_ContentBrowser;
+
+		TShared<LogSettings> m_LogSettings;
 
 		friend class EditorLayer;
 	};
