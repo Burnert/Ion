@@ -12,6 +12,7 @@ namespace Ion
 	struct LoggerHierarchyEntry
 	{
 		String Name;
+		String GroupName;
 		Logger* Logger;
 	};
 
@@ -42,10 +43,19 @@ namespace Ion
 		static void UnsoloAll();
 		static bool IsSoloModeEnabled();
 
+		// Group functions
+
+		static void SetGroupLogLevel(const String& groupName, ELogLevel logLevel);
+		static void EnableGroup(const String& groupName);
+		static void DisableGroup(const String& groupName);
+		static void EnableGroupSolo(const String& groupName);
+
 	private:
 		static bool IsLoggerNameValid(const String& name);
 
 		static HierarchyNode& AddHierarchyNode(Logger& logger);
+
+		static HierarchyNode* FindGroupNode(const String& groupName);
 
 		LogManager();
 

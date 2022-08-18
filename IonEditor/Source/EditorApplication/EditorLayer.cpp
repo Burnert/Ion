@@ -1151,7 +1151,6 @@ namespace Ion::Editor
 			bAlwaysActive ?
 			entry.Name + "!" :
 			entry.Name;
-		bool bNodeOpen = false;
 
 		ImGui::TableNextRow();
 
@@ -1162,10 +1161,12 @@ namespace Ion::Editor
 		if (bAlwaysActive)
 			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.8f, 0.3f, 1.0f));
 
-		if (node.HasChildren())
-			bNodeOpen = ImGui::TreeNodeEx(nodeName.c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_NoTreePushOnOpen);
-		else
-			ImGui::TreeNodeEx(nodeName.c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth);
+		ImGuiTreeNodeFlags nodeFlags =
+			ImGuiTreeNodeFlags_NoTreePushOnOpen |
+			ImGuiTreeNodeFlags_SpanFullWidth    |
+			FlagsIf(!node.HasChildren(), ImGuiTreeNodeFlags_Leaf);
+
+		bool bNodeOpen = ImGui::TreeNodeEx(nodeName.c_str(), nodeFlags) && node.HasChildren();
 		
 		if (bAlwaysActive)
 			ImGui::PopStyleColor();
@@ -1173,6 +1174,49 @@ namespace Ion::Editor
 		// Push ID for the controls
 		ImGui::PushID(nodeName.c_str());
 		{
+			if (ImGui::BeginPopupContextItem("logger_context"))
+			{
+				if (node.HasChildren())
+				{
+					ImGui::Text("Group Settings");
+
+					ImGui::SetNextItemWidth(-FLT_MIN);
+					if (ImGui::BeginCombo("Set Log Level", nullptr, ImGuiComboFlags_NoPreview))
+					{
+						for (int32 i = 0; i < 6; ++i)
+						{
+							if (ImGui::Selectable(TEnumParser<ELogLevel>::ToString((ELogLevel)i).c_str()))
+							{
+								LogManager::SetGroupLogLevel(entry.GroupName, (ELogLevel)i);
+							}
+						}
+
+						ImGui::EndCombo();
+					}
+
+					if (ImGui::Button("Enable"))
+					{
+						LogManager::EnableGroup(entry.GroupName);
+					}
+					ImGui::SameLine();
+					if (ImGui::Button("Disable"))
+					{
+						LogManager::DisableGroup(entry.GroupName);
+					}
+
+					if (ImGui::Button("Solo"))
+					{
+						LogManager::EnableGroupSolo(entry.GroupName);
+					}
+				}
+				else
+				{
+					ImGui::TextDisabled("No group settings.");
+				}
+
+				ImGui::EndPopup();
+			}
+
 			// Make the checkboxes smaller
 			ImGuiStyle& style = ImGui::GetStyle();
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(style.FramePadding.x, (float)(int)(style.FramePadding.y * 0.60f)));
