@@ -12,8 +12,6 @@
 #include "Engine/Components/MeshComponent.h"
 #include "Engine/Entity/MeshEntity.h"
 
-#include "Core/Logging/LoggerUtils.h"
-
 #include "Renderer/Renderer.h"
 
 #include "UserInterface/ImGui.h"

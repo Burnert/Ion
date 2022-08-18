@@ -4,11 +4,19 @@
 #include "Core/CoreMacros.h"
 #include "Core/CoreTypes.h"
 #include "Core/Platform/Platform.h"
-#include "Core/Logging/Logger.h"
 
 namespace Ion
 {
-	REGISTER_LOGGER(ErrorLogger, "Core::Error", ELoggerFlags::AlwaysActive);
+	/**
+	 * @brief This class is here, so Logger.h doesn't have to be included in this file
+	 */
+	class ION_API ErrorLoggerInterface
+	{
+		static void Error(const String& message);
+		static void Critical(const String& message);
+
+		friend struct ErrorHandler;
+	};
 
 // Error handler ------------------------------------------------------------------------------------------
 
@@ -56,10 +64,10 @@ namespace Ion
 	template<typename... Args>
 	inline void ErrorHandler::AssertAbort(_ASSERT_ARGS, const char* format, Args&&... args)
 	{
-		ErrorLogger.Critical("Critical error has occured!");
-		ErrorLogger.Critical("Assertion failed:\n\n" _ABORT_LOG_PATTERN, _FWD_ASSERT_ARGS);
+		ErrorLoggerInterface::Critical("Critical error has occured!");
+		ErrorLoggerInterface::Critical(fmt::format("Assertion failed:\n\n" _ABORT_LOG_PATTERN, _FWD_ASSERT_ARGS));
 		if (format)
-			ErrorLogger.Critical(format, Forward<Args>(args)...);
+			ErrorLoggerInterface::Critical(fmt::format(format, Forward<Args>(args)...));
 
 #if _SHOW_ABORT_MESSAGE_BOX
 		String message = format ? fmt::format(format, Forward<Args>(args)...) : EmptyString;
@@ -70,11 +78,11 @@ namespace Ion
 	template<typename TResult>
 	inline void ErrorHandler::UnwrapAbort(_ASSERT_ARGS, const TResult& result)
 	{
-		ErrorLogger.Critical("Critical error has occured!");
-		ErrorLogger.Critical("Unwrap failed: => Result<{4}>\n\n" _ABORT_LOG_PATTERN_NOEXPR, _FWD_ASSERT_ARGS, result.GetErrorClassName());
+		ErrorLoggerInterface::Critical("Critical error has occured!");
+		ErrorLoggerInterface::Critical(fmt::format("Unwrap failed: => Result<{4}>\n\n" _ABORT_LOG_PATTERN_NOEXPR, _FWD_ASSERT_ARGS, result.GetErrorClassName()));
 		String message = result.GetErrorMessage();
 		if (!message.empty())
-			ErrorLogger.Critical(message);
+			ErrorLoggerInterface::Critical(message);
 
 #if _SHOW_ABORT_MESSAGE_BOX
 		String reason = fmt::format("Unwrap failed: => Result<{}>", result.GetErrorClassName());
@@ -85,10 +93,10 @@ namespace Ion
 	template<typename TError>
 	inline void ErrorHandler::ErrorAbort(_ASSERT_ARGS, const TError& error)
 	{
-		ErrorLogger.Critical("Critical error has occured!");
-		ErrorLogger.Critical("Error: => {4}\n\n" _ABORT_LOG_PATTERN_NOEXPR, _FWD_ASSERT_ARGS, TError::ClassName);
+		ErrorLoggerInterface::Critical("Critical error has occured!");
+		ErrorLoggerInterface::Critical(fmt::format("Error: => {4}\n\n" _ABORT_LOG_PATTERN_NOEXPR, _FWD_ASSERT_ARGS, TError::ClassName));
 		if (!error.Message.empty())
-			ErrorLogger.Critical(error.Message);
+			ErrorLoggerInterface::Critical(error.Message);
 
 #if _SHOW_ABORT_MESSAGE_BOX
 		String reason = fmt::format("Error: => {}", TError::ClassName);
@@ -99,18 +107,18 @@ namespace Ion
 	template<typename TError>
 	inline void ErrorHandler::PrintErrorThrow(_ASSERT_ARGS, const TError& error)
 	{
-		ErrorLogger.Error("An error has been thrown.");
-		ErrorLogger.Error("Error: => Result<{4}>\n\n" _ABORT_LOG_PATTERN_NOEXPR, _FWD_ASSERT_ARGS, TError::ClassName);
+		ErrorLoggerInterface::Error("An error has been thrown.");
+		ErrorLoggerInterface::Error(fmt::format("Error: => Result<{4}>\n\n" _ABORT_LOG_PATTERN_NOEXPR, _FWD_ASSERT_ARGS, TError::ClassName));
 		if (!error.Message.empty())
-			ErrorLogger.Error(error.Message);
+			ErrorLoggerInterface::Error(error.Message);
 	}
 
 	template<typename... Args>
 	inline void ErrorHandler::Break(const char* format, Args&&... args)
 	{
-		ErrorLogger.Error("A debugger break has been called.");
+		ErrorLoggerInterface::Error("A debugger break has been called.");
 		if (format)
-			ErrorLogger.Error(format, Forward<Args>(args)...);
+			ErrorLoggerInterface::Error(fmt::format(format, Forward<Args>(args)...));
 	}
 
 	template<bool bExpr>

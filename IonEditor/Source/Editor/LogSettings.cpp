@@ -2,8 +2,6 @@
 
 #include "LogSettings.h"
 
-#include "Core/Logging/LoggerUtils.h"
-
 #include "UserInterface/ImGui.h"
 
 namespace Ion::Editor
