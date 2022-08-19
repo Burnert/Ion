@@ -93,7 +93,51 @@ namespace Ion::Editor
 		AssetRegistry::RegisterVirtualRoot("[Example]", EnginePath::GetEnginePath() + "../IonExample/Assets");
 		AssetRegistry::RegisterAssetsInVirtualRoot("[Example]");
 
-		EditorLogger.Info("UTF8: {}", u8"żółw");
+		// Unicode test
+		{
+			EditorLogger.Info("UTF8: {}", u8"żółw");
+
+			const char mbTestU1[] = u8"öÄÖÅäåèé";
+			const wchar wcTestU1[] = L"öÄÖÅäåèé";
+			const char mbTestU2[] = u8"żęąłóćź";
+			const wchar wcTestU2[] = L"żęąłóćź";
+			const char mbTestU3[] = u8"中文";
+			const wchar wcTestU3[] = L"中文";
+
+			EditorLogger.Trace("mbTestU1 = {}", mbTestU1);
+			EditorLogger.Trace(L"wcTestU1 = {}", wcTestU1);
+			EditorLogger.Trace("mbTestU2 = {}", mbTestU2);
+			EditorLogger.Trace(L"wcTestU2 = {}", wcTestU2);
+			EditorLogger.Trace("mbTestU3 = {}", mbTestU3);
+			EditorLogger.Trace(L"wcTestU3 = {}", wcTestU3);
+
+			char mbTestU1Out[50] = { };
+			StringConverter::W2MB(wcTestU1, mbTestU1Out);
+			wchar wcTestU1Out[50] = { };
+			StringConverter::MB2W(mbTestU1, wcTestU1Out);
+
+			String mbTest1 = StringConverter::WStringToString(wcTestU1);
+			ionassert(mbTest1 == mbTestU1);
+			WString wcTest1 = StringConverter::StringToWString(mbTestU1);
+			ionassert(wcTest1 == wcTestU1);
+
+			String mbTest2 = StringConverter::WStringToString(wcTestU2);
+			ionassert(mbTest2 == mbTestU2);
+			WString wcTest2 = StringConverter::StringToWString(mbTestU2);
+			ionassert(wcTest2 == wcTestU2);
+
+			String mbTest3 = StringConverter::WStringToString(wcTestU3);
+			ionassert(mbTest3 == mbTestU3);
+			WString wcTest3 = StringConverter::StringToWString(mbTestU3);
+			ionassert(wcTest3 == wcTestU3);
+
+			EditorLogger.Trace("mbTest1 = {}", mbTest1);
+			EditorLogger.Trace(L"wcTest1 = {}", wcTest1);
+			EditorLogger.Trace("mbTest2 = {}", mbTest2);
+			EditorLogger.Trace(L"wcTest2 = {}", wcTest2);
+			EditorLogger.Trace("mbTest3 = {}", mbTest3);
+			EditorLogger.Trace(L"wcTest3 = {}", wcTest3);
+		}
 
 		//InitExample(nullptr);
 

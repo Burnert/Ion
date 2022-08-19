@@ -1,6 +1,6 @@
 #include "IonPCH.h"
 
-#include "Core/Platform/Windows/WindowsHeaders.h"
+#include "Core/Platform/Windows/WindowsCore.h"
 #include "Core/StringConverter.h"
 #include "Core/Error/Error.h"
 
@@ -8,19 +8,47 @@
 
 namespace Ion
 {
-	int32 StringConverter::WCharToChar(const wchar* wcstr, char* outCstr, int32 cstrLength)
+	int32 StringConverter::W2MB(const wchar* wcStr, int32 wcStrLen, char* outBuffer, int32 bufferCount)
 	{
-		uint64 length = wcslen(wcstr);
-		ionassert(length <= cstrLength, "Output buffer is too small to fit the converted string!");
-		uint64 strSize = (length + 1) * sizeof(char);
-		return WideCharToMultiByte(CP_UTF8, 0, wcstr, -1, outCstr, (int32)strSize, nullptr, nullptr);
+		ionassert(wcStr);
+
+		// Don't convert an empty string.
+		if (wcStrLen == 0 || wcStrLen == -1 && wcslen(wcStr) == 0)
+			return 0;
+
+		ionassert((wcStrLen == -1) || wcStrLen == wcslen(wcStr));
+
+		int32 minLength = WideCharToMultiByte(CP_UTF8, 0, wcStr, wcStrLen, nullptr, 0, nullptr, nullptr);
+
+		if (!outBuffer)
+			return minLength;
+
+		ionverify(bufferCount >= minLength, "Output buffer is too small to fit the converted string.");
+
+		int32 bytesWritten = WideCharToMultiByte(CP_UTF8, 0, wcStr, wcStrLen, outBuffer, bufferCount, nullptr, nullptr);
+		ionverify(bytesWritten, "WideCharToMultiByte could not convert the string.\n{}", Windows::GetLastErrorMessage());
+		return bytesWritten;
 	}
 
-	int32 StringConverter::CharToWChar(const char* cstr, wchar* outWcstr, int32 wcstrLength)
+	int32 StringConverter::MB2W(const char* mbStr, int32 mbStrLen, wchar* outBuffer, int32 bufferCount)
 	{
-		uint64 length = strlen(cstr);
-		ionassert(length <= wcstrLength, "Output buffer is too small to fit the converted string!");
-		uint64 wcsSize = (length + 1) * sizeof(wchar);
-		return MultiByteToWideChar(CP_UTF8, 0, cstr, -1, outWcstr, (int32)wcsSize);
+		ionassert(mbStr);
+
+		// Don't convert an empty string.
+		if (mbStrLen == 0 || mbStrLen == -1 && strlen(mbStr) == 0)
+			return 0;
+
+		ionassert((mbStrLen == -1) || mbStrLen == strlen(mbStr));
+
+		int32 minLength = MultiByteToWideChar(CP_UTF8, 0, mbStr, mbStrLen, nullptr, 0);
+
+		if (!outBuffer)
+			return minLength;
+
+		ionverify(bufferCount >= minLength, "Output buffer is too small to fit the converted string.");
+
+		int32 charsWritten = MultiByteToWideChar(CP_UTF8, 0, mbStr, mbStrLen, outBuffer, bufferCount);
+		ionverify(charsWritten, "MultiByteToWideChar could not convert the string.\n{}", Windows::GetLastErrorMessage());
+		return charsWritten;
 	}
 }

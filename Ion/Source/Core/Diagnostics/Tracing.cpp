@@ -23,7 +23,7 @@ namespace Ion
 			s_CurrentSessionName = name;
 		}
 		wchar* nameW = (wchar*)_alloca((nameLength + 1) * sizeof(wchar));
-		StringConverter::CharToWChar(name, nameW, nameLength);
+		StringConverter::MB2W(name, -1, nameW, nameLength + 1);
 
 		std::filesystem::create_directory("Debug");
 
