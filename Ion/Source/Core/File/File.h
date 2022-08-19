@@ -310,9 +310,7 @@ namespace Ion
 
 		Result<void, IOError, FileNotFoundError> Open(uint8 mode = EFileMode::Read);
 
-		static bool Delete(const FilePath& path);
-		static bool Delete(const String& filename);
-		static bool Delete(const WString& filename);
+		Result<void, IOError, FileNotFoundError> Delete();
 
 		void Close();
 
@@ -402,7 +400,7 @@ namespace Ion
 
 	private:
 		Result<void, IOError, FileNotFoundError> Open_Native();
-		static Result<void, IOError> Delete_Native(const wchar* filename);
+		Result<void, IOError, FileNotFoundError> Delete_Native();
 		void Close_Native();
 
 		Result<void, IOError> Read_Native(uint8* outBuffer, uint64 count);
@@ -635,16 +633,6 @@ namespace Ion
 // File implementation ----------------------------------------------------------------------
 
 #pragma region File_Impl
-
-	inline bool File::Delete(const String& filename)
-	{
-		return Delete(StringConverter::StringToWString(filename));
-	}
-
-	inline bool File::Delete(const WString& filename)
-	{
-		return Delete_Native(filename.c_str());
-	}
 
 	inline Result<void, IOError> File::Read(uint8* outBuffer, uint64 count)
 	{

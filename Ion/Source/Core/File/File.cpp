@@ -54,13 +54,13 @@ namespace Ion
 			.Ok([&] { FileLogger.Debug("File \"{}\" has been opened.", m_FilePath.ToString()); });
 	}
 
-	bool File::Delete(const FilePath& path)
+	Result<void, IOError, FileNotFoundError> File::Delete()
 	{
-		FileLogger.Trace("Deleting file \"{}\"...", path.ToString());
+		FileLogger.Trace("Deleting file \"{}\"...", m_FilePath.ToString());
 
-		return Delete_Native(path.ToWString().c_str())
+		return Delete_Native()
 			.Err([](Error& err) { FileLogger.Error(err.Message); })
-			.Ok([&] { FileLogger.Debug("File \"{}\" has been deleted.", path.ToString()); });
+			.Ok([&] { FileLogger.Debug("File \"{}\" has been deleted.", m_FilePath.ToString()); });
 	}
 
 	void File::Close()

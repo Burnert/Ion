@@ -63,10 +63,10 @@ namespace Ion
 
 		if (Handle == INVALID_HANDLE_VALUE)
 		{
-			DWORD lastError = GetLastError();
-			if (lastError != ERROR_FILE_NOT_FOUND)
+			DWORD error = GetLastError();
+			if (error != ERROR_FILE_NOT_FOUND)
 			{
-				ionthrow(IOError, "File \"{}\" cannot be opened.\n{}", m_FilePath.ToString(), Windows::GetLastErrorMessage());
+				ionthrow(IOError, "File \"{}\" cannot be opened.\n{}", m_FilePath.ToString(), Windows::FormatErrorMessage(error));
 			}
 
 			ionthrow(FileNotFoundError, "File \"{}\" not found.", m_FilePath.ToString());
@@ -85,14 +85,20 @@ namespace Ion
 		return Void();
 	}
 
-	Result<void, IOError> File::Delete_Native(const wchar* filename) // static
+	Result<void, IOError, FileNotFoundError> File::Delete_Native() // static
 	{
-		ionassert(filename);
-		ionassert(wcslen(filename) > 0);
+		ionassert(!m_bOpen, "The file needs to be closed before being deleted.");
+		ionassert(!m_FilePath.IsEmpty());
 
-		if (!DeleteFile(filename))
+		if (!DeleteFile(m_FilePath.ToWString().c_str()))
 		{
-			ionthrow(IOError, "Cannot delete file \"{}\".\n{}", StringConverter::WStringToString(filename), Windows::GetLastErrorMessage());
+			DWORD error = ::GetLastError();
+			if (error != ERROR_FILE_NOT_FOUND)
+			{
+				ionthrow(IOError, "Cannot delete file \"{}\".\n{}", m_FilePath.ToString(), Windows::FormatErrorMessage(error));
+			}
+
+			ionthrow(FileNotFoundError, "File \"{}\" not found.", m_FilePath.ToString());
 		}
 
 		return Void();
