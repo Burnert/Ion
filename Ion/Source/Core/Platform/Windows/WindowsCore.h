@@ -4,6 +4,7 @@
 #include "WindowsMacros.h"
 #include "WindowsUtility.h"
 #include "WindowsInput.h"
+#include "WindowsError.h"
 
 namespace Ion
 {
