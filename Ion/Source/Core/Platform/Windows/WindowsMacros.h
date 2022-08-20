@@ -40,6 +40,3 @@ if (FAILED((hr))) \
 	Ion::Windows::PrintHResultError(hr, __VA_ARGS__); \
 	{ onfailed } \
 }
-
-#define COMRelease(ptr) if (ptr)   ((IUnknown*)ptr)->Release()
-#define COMReset(ptr)   if (ptr) { ((IUnknown*)ptr)->Release(); ptr = nullptr; }

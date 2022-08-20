@@ -111,6 +111,8 @@ namespace Ion
 		virtual void ImGuiRender(ImDrawData* drawData) override;
 		virtual void ImGuiShutdown() override;
 
+		static Result<void, DXError, PlatformError> InitDebugLayer();
+
 	protected:
 		static bool s_Initialized;
 		static D3D_FEATURE_LEVEL s_FeatureLevel;
@@ -129,15 +131,13 @@ namespace Ion
 
 		static uint32 s_SwapInterval;
 
-		// Debug
-#if ION_DEBUG
 		static HMODULE s_hDxgiDebugModule;
 
 		using DXGIGetDebugInterfaceProc = HRESULT(*)(REFIID, void**);
 		static DXGIGetDebugInterfaceProc DXGIGetDebugInterface;
 
 		static IDXGIInfoQueue* s_DebugInfoQueue;
-#endif
+
 		friend class DX11Renderer;
 		friend class RHI;
 	};

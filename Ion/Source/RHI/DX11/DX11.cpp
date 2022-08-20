@@ -13,6 +13,9 @@
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxguid.lib")
 
+#pragma warning(disable:6001)
+#pragma warning(disable:6387)
+
 namespace Ion
 {
 	void DX11DebugMessageQueue::PrepareQueue()
@@ -27,9 +30,6 @@ namespace Ion
 
 	bool DX11::Init(GenericWindow* window)
 	{
-#pragma warning(disable:6001)
-#pragma warning(disable:6387)
-
 		TRACE_FUNCTION();
 
 		ionassert(window);
@@ -39,25 +39,15 @@ namespace Ion
 		// No delete, persistent object
 		g_DXDebugMessageQueue = new DX11DebugMessageQueue;
 
-#if ION_DEBUG
 		// Init Debug Layer
-		{
-			TRACE_SCOPE("DX11::Init - Init Debug Layer");
+		InitDebugLayer()
+			.Err([](Error& error) { DX11Logger.Error(error.Message); });
 
-			s_hDxgiDebugModule = LoadLibrary(L"Dxgidebug.dll");
-			win_check_r(s_hDxgiDebugModule, false, "Could not load module Dxgidebug.dll.");
-
-			DXGIGetDebugInterface = (DXGIGetDebugInterfaceProc)GetProcAddress(s_hDxgiDebugModule, "DXGIGetDebugInterface");
-			win_check_r(DXGIGetDebugInterface, false, "Cannot load DXGIGetDebugInterface from Dxgidebug.dll.");
-
-			win_check_hresult_r(DXGIGetDebugInterface(IID_PPV_ARGS(&s_DebugInfoQueue)), "Cannot get the Debug Interface.");
-		}
-#endif
 		InitWindow(*window);
 
 		SetDisplayVersion(DXCommon::D3DFeatureLevelToString(s_FeatureLevel));
-		DX11Logger.Info("Renderer: DirectX {0}", GetFeatureLevelString());
-		DX11Logger.Info("Shader Model {0}", DXCommon::GetShaderModelString(s_FeatureLevel));
+		DX11Logger.Info("Renderer: DirectX {}", GetFeatureLevelString());
+		DX11Logger.Info("Shader Model {}", DXCommon::GetShaderModelString(s_FeatureLevel));
 
 		return true;
 	}
@@ -233,9 +223,7 @@ namespace Ion
 		COMRelease(s_SwapChain);
 		COMRelease(s_DepthStencilState);
 		COMRelease(s_RasterizerState);
-#if ION_DEBUG
 		COMRelease(s_DebugInfoQueue);
-#endif
 	}
 
 	void DX11::ShutdownWindow(GenericWindow& window)
@@ -292,7 +280,6 @@ namespace Ion
 
 	DX11::MessageArray DX11::GetDebugMessages()
 	{
-#if ION_DEBUG
 		TRACE_FUNCTION();
 
 		if (!s_DebugInfoQueue)
@@ -328,14 +315,10 @@ namespace Ion
 		s_DebugInfoQueue->ClearStoredMessages(DXGI_DEBUG_ALL);
 
 		return messageArray;
-#else
-		return MessageArray();
-#endif
 	}
 
 	void DX11::PrintDebugMessages()
 	{
-#if ION_DEBUG
 		if (!s_DebugInfoQueue || !s_DebugInfoQueue->GetNumStoredMessages(DXGI_DEBUG_ALL))
 			return;
 
@@ -372,17 +355,14 @@ namespace Ion
 				break;
 			}
 		}
-#endif
 	}
 
 	void DX11::PrepareDebugMessageQueue()
 	{
-#if ION_DEBUG
 		if (!s_DebugInfoQueue)
 			return;
 
 		s_DebugInfoQueue->ClearStoredMessages(DXGI_DEBUG_ALL);
-#endif
 	}
 
 	void DX11::SetDebugName(ID3D11DeviceChild* object, const String& name, const String& prefix)
@@ -471,6 +451,30 @@ namespace Ion
 		ImGui_ImplDX11_Shutdown();
 	}
 
+	Result<void, DXError, PlatformError> DX11::InitDebugLayer()
+	{
+		TRACE_FUNCTION();
+
+		s_hDxgiDebugModule = LoadLibrary(L"Dxgidebug.dll");
+		if (!s_hDxgiDebugModule)
+		{
+			ionthrow(PlatformError, "Could not load module Dxgidebug.dll.\n{}", Windows::GetLastErrorMessage());
+		}
+
+		DXGIGetDebugInterface = (DXGIGetDebugInterfaceProc)GetProcAddress(s_hDxgiDebugModule, "DXGIGetDebugInterface");
+		if (!DXGIGetDebugInterface)
+		{
+			ionthrow(PlatformError, "Cannot load DXGIGetDebugInterface from Dxgidebug.dll.");
+		}
+
+		if (FAILED(DXGIGetDebugInterface(IID_PPV_ARGS(&s_DebugInfoQueue))))
+		{
+			ionthrow(DXError, "Cannot load DXGIGetDebugInterface from Dxgidebug.dll.");
+		}
+
+		return Void();
+	}
+
 	bool DX11::s_Initialized = false;
 	D3D_FEATURE_LEVEL DX11::s_FeatureLevel = D3D_FEATURE_LEVEL_1_0_CORE;
 
@@ -486,9 +490,7 @@ namespace Ion
 
 	uint32 DX11::s_SwapInterval = 0;
 
-#if ION_DEBUG
 	HMODULE DX11::s_hDxgiDebugModule = NULL;
 	DX11::DXGIGetDebugInterfaceProc DX11::DXGIGetDebugInterface = nullptr;
 	IDXGIInfoQueue* DX11::s_DebugInfoQueue = nullptr;
-#endif
 }
