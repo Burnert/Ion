@@ -13,8 +13,6 @@
 
 namespace Ion
 {
-	DEFINE_ERROR_TYPE(DXError);
-
 	struct DXShader
 	{
 		void* ShaderPtr;

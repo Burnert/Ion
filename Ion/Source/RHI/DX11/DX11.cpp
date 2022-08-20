@@ -28,13 +28,11 @@ namespace Ion
 		DX11::PrintDebugMessages();
 	}
 
-	bool DX11::Init(GenericWindow* window)
+	Result<void, RHIError> DX11::Init(GenericWindow* window)
 	{
 		TRACE_FUNCTION();
 
 		ionassert(window);
-
-		HRESULT hResult = S_OK;
 
 		// No delete, persistent object
 		g_DXDebugMessageQueue = new DX11DebugMessageQueue;
@@ -43,20 +41,18 @@ namespace Ion
 		InitDebugLayer()
 			.Err([](Error& error) { DX11Logger.Error(error.Message); });
 
-		InitWindow(*window);
+		fwdthrowall(InitWindow(*window));
 
 		SetDisplayVersion(DXCommon::D3DFeatureLevelToString(s_FeatureLevel));
 		DX11Logger.Info("Renderer: DirectX {}", GetFeatureLevelString());
 		DX11Logger.Info("Shader Model {}", DXCommon::GetShaderModelString(s_FeatureLevel));
 
-		return true;
+		return Void();
 	}
 
-	bool DX11::InitWindow(GenericWindow& window)
+	Result<void, RHIError> DX11::InitWindow(GenericWindow& window)
 	{
 		TRACE_FUNCTION();
-
-		HRESULT hResult = S_OK;
 
 		WindowsWindow& windowsWindow = (WindowsWindow&)window;
 		HWND hwnd = (HWND)window.GetNativeHandle();
@@ -96,8 +92,9 @@ namespace Ion
 
 			ID3D11Device* device;
 			ID3D11DeviceContext* context;
-			dxcall_f(
-				D3D11CreateDeviceAndSwapChain(nullptr,
+			dxcall_throw(
+				D3D11CreateDeviceAndSwapChain(
+					nullptr,
 					D3D_DRIVER_TYPE_HARDWARE,
 					NULL,
 					flags,
@@ -109,10 +106,10 @@ namespace Ion
 					&device,
 					&s_FeatureLevel,
 					&context),
-				"Cannot create D3D Device and Swap Chain.");
+				"Cannot create D3D11 Device and Swap Chain.");
 
-			dxcall_f(device->QueryInterface(IID_PPV_ARGS(&s_Device)));
-			dxcall_f(context->QueryInterface(IID_PPV_ARGS(&s_Context)));
+			dxcall_throw(device->QueryInterface(IID_PPV_ARGS(&s_Device)));
+			dxcall_throw(context->QueryInterface(IID_PPV_ARGS(&s_Context)));
 		}
 		// Create Render Target
 
@@ -129,8 +126,8 @@ namespace Ion
 			rd.DepthClipEnable = true;
 			rd.MultisampleEnable = true;
 
-			dxcall_f(s_Device->CreateRasterizerState(&rd, &s_RasterizerState));
-			dxcall_v(s_Context->RSSetState(s_RasterizerState));
+			dxcall_throw(s_Device->CreateRasterizerState(&rd, &s_RasterizerState));
+			dxcall_throw(s_Context->RSSetState(s_RasterizerState));
 		}
 		// Create Blend State
 		{
@@ -148,9 +145,8 @@ namespace Ion
 			blendDesc.RenderTarget[0].LogicOp = D3D11_LOGIC_OP_NOOP;
 			blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
-			dxcall_f(s_Device->CreateBlendState1(&blendDesc, &s_BlendStateTransparent));
-
-			s_Context->OMSetBlendState(s_BlendState, nullptr, 0xFFFFFFFF);
+			dxcall_throw(s_Device->CreateBlendState1(&blendDesc, &s_BlendStateTransparent));
+			dxcall_throw(s_Context->OMSetBlendState(s_BlendState, nullptr, 0xFFFFFFFF));
 		}
 		// Create Depth / Stencil Buffer
 		{
@@ -172,10 +168,10 @@ namespace Ion
 			dsd.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 			dsd.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
 
-			dxcall_f(s_Device->CreateDepthStencilState(&dsd, &s_DepthStencilState));
-			dxcall_v(s_Context->OMSetDepthStencilState(s_DepthStencilState, 1));
+			dxcall_throw(s_Device->CreateDepthStencilState(&dsd, &s_DepthStencilState));
+			dxcall_throw(s_Context->OMSetDepthStencilState(s_DepthStencilState, 1));
 
-			s_SwapChain->GetDesc(&scd);
+			dxcall_throw(s_SwapChain->GetDesc(&scd));
 			CreateDepthStencil(window.m_WindowDepthStencilTexture, scd.BufferDesc.Width, scd.BufferDesc.Height);
 		}
 		// Set Viewports
@@ -191,22 +187,22 @@ namespace Ion
 			viewport.Height = (float)dimensions.Height;
 			viewport.MinDepth = 0.0f;
 			viewport.MaxDepth = 1.0f;
-			dxcall_v(s_Context->RSSetViewports(1, &viewport));
+			dxcall_throw(s_Context->RSSetViewports(1, &viewport));
 		}
 		// Disable Alt+Enter Fullscreen
 
 		IDXGIFactory1* factory = nullptr;
 
-		dxcall_f(s_SwapChain->GetParent(IID_PPV_ARGS(&factory)), "Cannot get the Swap Chain factory.");
-		dxcall_f(factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
+		dxcall_throw(s_SwapChain->GetParent(IID_PPV_ARGS(&factory)), "Cannot get the Swap Chain factory.");
+		dxcall_throw(factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
 
 		factory->Release();
 
 		// -------------------------------------------------------
 
-		dxcall_v(s_Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
+		dxcall_throw(s_Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
 
-		return true;
+		return Void();
 	}
 
 	void DX11::Shutdown()
@@ -451,7 +447,7 @@ namespace Ion
 		ImGui_ImplDX11_Shutdown();
 	}
 
-	Result<void, DXError, PlatformError> DX11::InitDebugLayer()
+	Result<void, RHIError, PlatformError> DX11::InitDebugLayer()
 	{
 		TRACE_FUNCTION();
 
@@ -467,9 +463,10 @@ namespace Ion
 			ionthrow(PlatformError, "Cannot load DXGIGetDebugInterface from Dxgidebug.dll.");
 		}
 
-		if (FAILED(DXGIGetDebugInterface(IID_PPV_ARGS(&s_DebugInfoQueue))))
+		HRESULT hResult = DXGIGetDebugInterface(IID_PPV_ARGS(&s_DebugInfoQueue));
+		if (FAILED(hResult))
 		{
-			ionthrow(DXError, "Cannot load DXGIGetDebugInterface from Dxgidebug.dll.");
+			ionthrow(RHIError, "Cannot load DXGIGetDebugInterface from Dxgidebug.dll.\n{}", Windows::FormatHResultMessage(hResult));
 		}
 
 		return Void();

@@ -17,8 +17,8 @@ namespace Ion
 	{
 	public:
 		/* Called by the Application class */
-		virtual bool Init(GenericWindow* window) override;
-		virtual bool InitWindow(GenericWindow& window) override;
+		virtual Result<void, RHIError> Init(GenericWindow* window) override;
+		virtual Result<void, RHIError> InitWindow(GenericWindow& window) override;
 		virtual void Shutdown() override;
 		virtual void ShutdownWindow(GenericWindow& window) override;
 

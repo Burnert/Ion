@@ -34,8 +34,8 @@ namespace Ion
 	{
 	public:
 		/* Called by the Application class */
-		virtual bool Init(GenericWindow* window) override;
-		virtual bool InitWindow(GenericWindow& window) override;
+		virtual Result<void, RHIError> Init(GenericWindow* window) override;
+		virtual Result<void, RHIError> InitWindow(GenericWindow& window) override;
 		virtual void Shutdown() override;
 		virtual void ShutdownWindow(GenericWindow& window) override;
 
@@ -111,7 +111,7 @@ namespace Ion
 		virtual void ImGuiRender(ImDrawData* drawData) override;
 		virtual void ImGuiShutdown() override;
 
-		static Result<void, DXError, PlatformError> InitDebugLayer();
+		static Result<void, RHIError, PlatformError> InitDebugLayer();
 
 	protected:
 		static bool s_Initialized;

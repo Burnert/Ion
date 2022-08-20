@@ -8,6 +8,8 @@ namespace Ion
 {
 	REGISTER_LOGGER(RHILogger, "RHI");
 
+	DEFINE_ERROR_TYPE(RHIError);
+
 	// @TODO: Implement other Render APIs in the future
 	enum class ERHI
 	{
@@ -41,8 +43,8 @@ namespace Ion
 		static RHI* Create(ERHI rhi);
 		static RHI* Get();
 
-		virtual bool Init(GenericWindow* window) = 0;
-		virtual bool InitWindow(GenericWindow& window) = 0;
+		virtual Result<void, RHIError> Init(GenericWindow* window) = 0;
+		virtual Result<void, RHIError> InitWindow(GenericWindow& window) = 0;
 		virtual void Shutdown() = 0;
 		virtual void ShutdownWindow(GenericWindow& window) = 0;
 

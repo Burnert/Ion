@@ -28,32 +28,28 @@ namespace Ion
 		DX10::PrintDebugMessages();
 	}
 
-	bool DX10::Init(GenericWindow* window)
+	Result<void, RHIError> DX10::Init(GenericWindow* window)
 	{
 		TRACE_FUNCTION();
 
 		ionassert(window);
 
-		HRESULT hResult = S_OK;
-
 		// No delete, persistent object
 		g_DXDebugMessageQueue = new DX10DebugMessageQueue;
 
-		InitWindow(*window);
+		fwdthrowall(InitWindow(*window));
 
 		const char* version = DXCommon::D3DFeatureLevelToString((D3D_FEATURE_LEVEL)s_FeatureLevel);
 		SetDisplayVersion(version);
 		DX10Logger.Info("Renderer: DirectX {}", version);
 		DX10Logger.Info("Shader Model {}", GetShaderModel());
 
-		return true;
+		return Void();
 	}
 
-	bool DX10::InitWindow(GenericWindow& window)
+	Result<void, RHIError> DX10::InitWindow(GenericWindow& window)
 	{
 		TRACE_FUNCTION();
-
-		HRESULT hResult = S_OK;
 
 		WindowsWindow& windowsWindow = (WindowsWindow&)window;
 		HWND hwnd = (HWND)window.GetNativeHandle();
@@ -85,8 +81,8 @@ namespace Ion
 			flags |= D3D10_CREATE_DEVICE_DEBUG /*| D3D10_CREATE_DEVICE_DEBUGGABLE*/;
 
 			IDXGIFactory* dxgiFactory = nullptr;
-			win_check_hresult_r(CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory)),
-				false, "Cannot create a DXGI Factory object.");
+			dxcall_throw(CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory)),
+				"Cannot create a DXGI Factory object.");
 
 			UINT i = 0;
 			IDXGIAdapter* adapter;
@@ -100,7 +96,7 @@ namespace Ion
 
 			ionassert(!adapters.empty(), "Could not find any video adapters.");
 
-			win_check_hresult_r(
+			dxcall_throw(
 				D3D10CreateDeviceAndSwapChain1(
 					adapters[0],
 					D3D10_DRIVER_TYPE_HARDWARE,
@@ -111,14 +107,14 @@ namespace Ion
 					&scd,
 					&s_SwapChain,
 					&s_Device),
-				false, "Cannot create D3D Device and Swap Chain.");
+				"Cannot create D3D Device and Swap Chain.");
 
 			s_FeatureLevel = s_Device->GetFeatureLevel();
 		}
 
 		// Create Debug Info Queue
 		{
-			win_check_hresult_r(s_Device->QueryInterface(IID_PPV_ARGS(&s_DebugInfoQueue)), false);
+			dxcall_throw(s_Device->QueryInterface(IID_PPV_ARGS(&s_DebugInfoQueue)));
 			ionassert(s_DebugInfoQueue);
 		}
 
@@ -137,8 +133,8 @@ namespace Ion
 			rd.DepthClipEnable = true;
 			rd.MultisampleEnable = true;
 
-			dxcall_f(s_Device->CreateRasterizerState(&rd, &s_RasterizerState));
-			dxcall_v(s_Device->RSSetState(s_RasterizerState));
+			dxcall_throw(s_Device->CreateRasterizerState(&rd, &s_RasterizerState));
+			dxcall_throw(s_Device->RSSetState(s_RasterizerState));
 		}
 		// Create Blend State
 		{
@@ -155,9 +151,8 @@ namespace Ion
 			blendDesc.RenderTarget[0].BlendOpAlpha = D3D10_BLEND_OP_ADD;
 			blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D10_COLOR_WRITE_ENABLE_ALL;
 
-			dxcall_f(s_Device->CreateBlendState1(&blendDesc, &s_BlendStateTransparent));
-
-			s_Device->OMSetBlendState(s_BlendState, nullptr, 0xFFFFFFFF);
+			dxcall_throw(s_Device->CreateBlendState1(&blendDesc, &s_BlendStateTransparent));
+			dxcall_throw(s_Device->OMSetBlendState(s_BlendState, nullptr, 0xFFFFFFFF));
 		}
 		// Create Depth / Stencil Buffer
 		{
@@ -179,10 +174,10 @@ namespace Ion
 			dsd.BackFace.StencilPassOp = D3D10_STENCIL_OP_KEEP;
 			dsd.BackFace.StencilDepthFailOp = D3D10_STENCIL_OP_KEEP;
 
-			dxcall_f(s_Device->CreateDepthStencilState(&dsd, &s_DepthStencilState));
-			dxcall_v(s_Device->OMSetDepthStencilState(s_DepthStencilState, 1));
+			dxcall_throw(s_Device->CreateDepthStencilState(&dsd, &s_DepthStencilState));
+			dxcall_throw(s_Device->OMSetDepthStencilState(s_DepthStencilState, 1));
 
-			s_SwapChain->GetDesc(&scd);
+			dxcall_throw(s_SwapChain->GetDesc(&scd));
 			window.m_WindowDepthStencilTexture = CreateDepthStencil(scd.BufferDesc.Width, scd.BufferDesc.Height);
 		}
 		// Set Viewports
@@ -198,22 +193,22 @@ namespace Ion
 			viewport.Height = (UINT)dimensions.Height;
 			viewport.MinDepth = 0.0f;
 			viewport.MaxDepth = 1.0f;
-			dxcall_v(s_Device->RSSetViewports(1, &viewport));
+			dxcall_throw(s_Device->RSSetViewports(1, &viewport));
 		}
 		// Disable Alt+Enter Fullscreen
 
 		IDXGIFactory* factory = nullptr;
 
-		dxcall_f(s_SwapChain->GetParent(IID_PPV_ARGS(&factory)), "Cannot get the Swap Chain factory.");
-		dxcall_f(factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
+		dxcall_throw(s_SwapChain->GetParent(IID_PPV_ARGS(&factory)), "Cannot get the Swap Chain factory.");
+		dxcall_throw(factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
 
 		factory->Release();
 
 		// -------------------------------------------------------
 
-		dxcall_v(s_Device->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
+		dxcall_throw(s_Device->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
 
-		return true;
+		return Void();
 	}
 
 	void DX10::Shutdown()

@@ -12,19 +12,19 @@
 
 namespace Ion
 {
-	bool OpenGL::Init(GenericWindow* window)
+	Result<void, RHIError> OpenGL::Init(GenericWindow* window)
 	{
 #ifdef ION_PLATFORM_WINDOWS
 		OpenGLWindows::Init(window);
 #else
 		OpenGLLogger.Critical("OpenGL implementation is not defined on this platform!");
 #endif
-		return true;
+		return Void();
 	}
 
-	bool OpenGL::InitWindow(GenericWindow& window)
+	Result<void, RHIError> OpenGL::InitWindow(GenericWindow& window)
 	{
-		return false;
+		ionthrow(RHIError);
 	}
 
 	void OpenGL::Shutdown()

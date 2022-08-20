@@ -83,7 +83,7 @@ namespace Ion
 
 		// Current thread will render graphics in this window.
 		RHI::Create(ERHI::DX11);
-		RHI::Get()->Init(m_Window.get());
+		RHI::Get()->Init(m_Window.get()).Unwrap();
 
 		Renderer* renderer = Renderer::Create();
 		renderer->Init();
