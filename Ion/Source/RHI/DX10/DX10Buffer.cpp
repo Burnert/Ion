@@ -17,7 +17,9 @@ namespace Ion
 		m_Buffer(nullptr),
 		m_InputLayout(nullptr)
 	{
-		CreateBuffer(vertexAttributes, count).Unwrap();
+		CreateBuffer(vertexAttributes, count)
+			.Err([](Error& error) { DX10Logger.Critical("Cannot create a Vertex Buffer.\n{}", error.Message); })
+			.Unwrap();
 	}
 
 	DX10VertexBuffer::~DX10VertexBuffer()
@@ -55,9 +57,7 @@ namespace Ion
 
 	Result<void, RHIError> DX10VertexBuffer::SetLayoutShader(const TShared<RHIShader>& shader)
 	{
-		CreateDX10Layout(TStaticCast<DX10Shader>(shader));
-
-		return Void();
+		return CreateDX10Layout(TStaticCast<DX10Shader>(shader));
 	}
 
 	Result<void, RHIError> DX10VertexBuffer::CreateDX10Layout(const TShared<DX10Shader>& shader)
@@ -157,7 +157,9 @@ namespace Ion
 		m_TriangleCount(count / 3),
 		m_ID(0)
 	{
-		CreateBuffer(indices, count).Unwrap();
+		CreateBuffer(indices, count)
+			.Err([](Error& error) { DX10Logger.Critical("Cannot create an Index Buffer.\n{}", error.Message); })
+			.Unwrap();
 	}
 
 	DX10IndexBuffer::~DX10IndexBuffer()
@@ -232,7 +234,9 @@ namespace Ion
 		DataSize(size),
 		Buffer(nullptr)
 	{
-		CreateBuffer(initialData, size).Unwrap();
+		CreateBuffer(initialData, size)
+			.Err([](Error& error) { DX10Logger.Critical("Cannot create a Uniform Buffer.\n{}", error.Message); })
+			.Unwrap();
 	}
 
 	_DX10UniformBufferCommon::~_DX10UniformBufferCommon()

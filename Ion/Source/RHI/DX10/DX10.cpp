@@ -94,7 +94,7 @@ namespace Ion
 				adapters.push_back(adapter);
 			}
 
-			ionassert(!adapters.empty(), "Could not find any video adapters.");
+			ionverify(!adapters.empty(), "Could not find any video adapters.");
 
 			dxcall(
 				D3D10CreateDeviceAndSwapChain1(
@@ -107,7 +107,7 @@ namespace Ion
 					&scd,
 					&s_SwapChain,
 					&s_Device),
-				"Cannot create D3D Device and Swap Chain.");
+				"Cannot create D3D10 Device and Swap Chain.");
 
 			s_FeatureLevel = s_Device->GetFeatureLevel();
 		}
@@ -120,8 +120,7 @@ namespace Ion
 
 		// Create Render Target
 
-		// @TODO: Definitely handle the error
-		window.m_WindowColorTexture = CreateRenderTarget().UnwrapOr(nullptr);
+		safe_unwrap(window.m_WindowColorTexture, CreateRenderTarget());
 
 		// Create Rasterizer State
 		{
@@ -179,8 +178,7 @@ namespace Ion
 			dxcall(s_Device->OMSetDepthStencilState(s_DepthStencilState, 1));
 
 			dxcall(s_SwapChain->GetDesc(&scd));
-			// @TODO: Definitely handle the error
-			window.m_WindowDepthStencilTexture = CreateDepthStencil(scd.BufferDesc.Width, scd.BufferDesc.Height).UnwrapOr(nullptr);
+			safe_unwrap(window.m_WindowDepthStencilTexture, CreateDepthStencil(scd.BufferDesc.Width, scd.BufferDesc.Height));
 		}
 		// Set Viewports
 		{
@@ -218,7 +216,7 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		if (s_SwapChain)
-			s_SwapChain->SetFullscreenState(false, nullptr);
+			dxcall_nocheck(s_SwapChain->SetFullscreenState(false, nullptr));
 
 		// Free the D3D objects
 
@@ -253,9 +251,7 @@ namespace Ion
 
 		dxcall(s_SwapChain->SetFullscreenState(mode == EDisplayMode::FullScreen, nullptr));
 
-		ResizeBuffers(window, { width, height });
-
-		return Void();
+		return ResizeBuffers(window, { width, height });
 	}
 
 	Result<void, RHIError> DX10::ResizeBuffers(GenericWindow& window, const TextureDimensions& size)
@@ -268,10 +264,8 @@ namespace Ion
 		dxcall(s_SwapChain->ResizeBuffers(2, size.Width, size.Height, DXGI_FORMAT_UNKNOWN, 0),
 			"Cannot resize buffers.");
 
-		// @TODO: Definitely handle the error
-
-		window.m_WindowColorTexture = CreateRenderTarget().UnwrapOr(nullptr);
-		window.m_WindowDepthStencilTexture = CreateDepthStencil(size.Width, size.Height).UnwrapOr(nullptr);
+		safe_unwrap(window.m_WindowColorTexture, CreateRenderTarget());
+		safe_unwrap(window.m_WindowDepthStencilTexture, CreateDepthStencil(size.Width, size.Height));
 
 		return Void();
 	}

@@ -648,6 +648,16 @@ namespace Ion
  */
 #define fwdthrowall(result) { auto& R = result; _fwdthrowall(R); }
 
+// Safe unwrap --------------------------------------------------------------------------------------------------
+
+/**
+ * @brief If the result is Ok, unwrap it, else forward throw.
+ * 
+ * @param var Variable to store the Ok variant in
+ * @param result Result to unwrap
+ */
+#define safe_unwrap(var, result) { auto R = result; if (R) var = R.Unwrap(); else return Move(R); }
+
 // Result match -------------------------------------------------------------------------------------------------
 
 /**

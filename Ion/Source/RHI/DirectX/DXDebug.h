@@ -65,6 +65,16 @@ namespace Ion::_DXDebug_Detail
  */
 #define dxcall(call, ...) dxcall_throw(call, Ion::RHIError, __VA_ARGS__)
 
+/**
+ * Executes the call and prints messages stored by the DirectX Debug Layer.
+ */
+#define dxcall_nocheck(call) \
+{ \
+	Ion::g_DXDebugMessageQueue->PrepareQueue(); \
+	call; \
+	Ion::g_DXDebugMessageQueue->PrintMessages(); \
+}
+
 namespace Ion
 {
 	class IDXDebugMessageQueue

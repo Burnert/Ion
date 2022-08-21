@@ -113,7 +113,7 @@ namespace Ion
 		}
 		// Create Render Target
 
-		CreateRenderTarget(window.m_WindowColorTexture);
+		safe_unwrap(window.m_WindowColorTexture, CreateRenderTarget());
 
 		// Create Rasterizer State
 		{
@@ -172,7 +172,7 @@ namespace Ion
 			dxcall(s_Context->OMSetDepthStencilState(s_DepthStencilState, 1));
 
 			dxcall(s_SwapChain->GetDesc(&scd));
-			CreateDepthStencil(window.m_WindowDepthStencilTexture, scd.BufferDesc.Width, scd.BufferDesc.Height);
+			safe_unwrap(window.m_WindowDepthStencilTexture, CreateDepthStencil(scd.BufferDesc.Width, scd.BufferDesc.Height));
 		}
 		// Set Viewports
 		{
@@ -210,7 +210,7 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		if (s_SwapChain)
-			s_SwapChain->SetFullscreenState(false, nullptr);
+			dxcall_nocheck(s_SwapChain->SetFullscreenState(false, nullptr));
 
 		// Free the D3D objects
 
@@ -251,16 +251,12 @@ namespace Ion
 
 		dxcall(s_SwapChain->SetFullscreenState(mode == EDisplayMode::FullScreen, nullptr));
 
-		ResizeBuffers(window, { width, height });
-
-		return Void();
+		return ResizeBuffers(window, { width, height });
 	}
 
 	Result<void, RHIError> DX11::ResizeBuffers(GenericWindow& window, const TextureDimensions& size)
 	{
 		TRACE_FUNCTION();
-
-		HRESULT hResult = S_OK;
 
 		window.m_WindowColorTexture = nullptr;
 		window.m_WindowDepthStencilTexture = nullptr;
@@ -268,8 +264,8 @@ namespace Ion
 		dxcall(s_SwapChain->ResizeBuffers(2, size.Width, size.Height, DXGI_FORMAT_UNKNOWN, 0),
 			"Cannot resize buffers.");
 
-		CreateRenderTarget(window.m_WindowColorTexture);
-		CreateDepthStencil(window.m_WindowDepthStencilTexture, size.Width, size.Height);
+		safe_unwrap(window.m_WindowColorTexture, CreateRenderTarget());
+		safe_unwrap(window.m_WindowDepthStencilTexture, CreateDepthStencil(size.Width, size.Height));
 
 		return Void();
 	}
@@ -393,7 +389,7 @@ namespace Ion
 		strcpy_s((s_DisplayName + length), 120 - length, version);
 	}
 
-	Result<void, RHIError> DX11::CreateRenderTarget(TShared<RHITexture>& texture)
+	Result<TShared<RHITexture>, RHIError> DX11::CreateRenderTarget()
 	{
 		TRACE_FUNCTION();
 
@@ -410,12 +406,10 @@ namespace Ion
 		desc.bUseAsRenderTarget = true;
 		desc.Dimensions = { t2dDesc.Width, t2dDesc.Height };
 
-		texture = MakeShareable(new DX11Texture(desc, backBuffer));
-
-		return Void();
+		return std::static_pointer_cast<RHITexture>(MakeShareable(new DX11Texture(desc, backBuffer)));
 	}
 
-	Result<void, RHIError> DX11::CreateDepthStencil(TShared<RHITexture>& texture, uint32 width, uint32 height)
+	Result<TShared<RHITexture>, RHIError> DX11::CreateDepthStencil(uint32 width, uint32 height)
 	{
 		TRACE_FUNCTION();
 
@@ -424,9 +418,7 @@ namespace Ion
 		desc.bUseAsDepthStencil = true;
 		desc.Dimensions = { width, height };
 
-		texture = RHITexture::CreateShared(desc);
-
-		return Void();
+		return RHITexture::CreateShared(desc);
 	}
 
 	void DX11::InitImGuiBackend()
