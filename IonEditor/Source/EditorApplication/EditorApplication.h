@@ -17,7 +17,7 @@ namespace Ion::Editor
 
 	struct ViewportObject
 	{
-		TShared<EditorViewport> Viewport;
+		std::shared_ptr<EditorViewport> Viewport;
 	};
 
 	class EDITOR_API EditorApplication : public App
@@ -57,7 +57,7 @@ namespace Ion::Editor
 		static void ExitEditor();
 
 		/* Valid for the frame after PostUpdate */
-		const TShared<EditorPassData>& GetEditorPassData() const;
+		const std::shared_ptr<EditorPassData>& GetEditorPassData() const;
 
 	protected:
 		void OnWindowResizeEvent(const WindowResizeEvent& event);
@@ -67,9 +67,9 @@ namespace Ion::Editor
 		void OnKeyPressedEvent(const KeyPressedEvent& event);
 
 	private:
-		TShared<EditorViewport>& AddViewport();
+		std::shared_ptr<EditorViewport>& AddViewport();
 		void RemoveViewport(const GUID& viewportID);
-		TShared<EditorViewport> GetViewport(const GUID& viewportID);
+		std::shared_ptr<EditorViewport> GetViewport(const GUID& viewportID);
 		void UpdateViewports(float deltaTime);
 		void RenderViewports();
 		void DrawViewports();
@@ -100,21 +100,21 @@ namespace Ion::Editor
 		>;
 		EventDispatcher<EventFunctions, EditorApplication> m_EventDispatcher;
 
-		TShared<EditorLayer> m_EditorLayer;
+		std::shared_ptr<EditorLayer> m_EditorLayer;
 
-		TShared<EditorPassData> m_EditorPassData;
+		std::shared_ptr<EditorPassData> m_EditorPassData;
 
 		World* m_EditorMainWorld;
 		Entity* m_SelectedEntity;
 		Component* m_SelectedComponent;
 
-		THashMap<GUID, TShared<EditorViewport>> m_Viewports;
-		TWeak<EditorViewport> m_MainViewport;
-		TShared<EditorViewport> m_CapturedViewport;
+		THashMap<GUID, std::shared_ptr<EditorViewport>> m_Viewports;
+		std::weak_ptr<EditorViewport> m_MainViewport;
+		std::shared_ptr<EditorViewport> m_CapturedViewport;
 
-		TShared<ContentBrowser> m_ContentBrowser;
+		std::shared_ptr<ContentBrowser> m_ContentBrowser;
 
-		TShared<LogSettings> m_LogSettings;
+		std::shared_ptr<LogSettings> m_LogSettings;
 
 		friend class EditorLayer;
 	};
@@ -139,7 +139,7 @@ namespace Ion::Editor
 		return m_EditorMainWorld;
 	}
 
-	inline const TShared<EditorPassData>& EditorApplication::GetEditorPassData() const
+	inline const std::shared_ptr<EditorPassData>& EditorApplication::GetEditorPassData() const
 	{
 		return m_EditorPassData;
 	}

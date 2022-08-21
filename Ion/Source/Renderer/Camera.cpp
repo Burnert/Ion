@@ -6,7 +6,7 @@
 
 namespace Ion
 {
-	TShared<Camera> Camera::Create()
+	std::shared_ptr<Camera> Camera::Create()
 	{
 		return MakeShareable(new Camera);
 	}

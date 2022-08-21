@@ -7,7 +7,7 @@ namespace Ion
 	class ION_API Layer
 	{
 	public:
-		using LayerPtr = TShared<Layer>;
+		using LayerPtr = std::shared_ptr<Layer>;
 
 		Layer(const char* name);
 		virtual ~Layer();

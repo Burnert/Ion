@@ -26,15 +26,15 @@ namespace Ion
 		void SetMeshResource(const TResourcePtr<MeshResource>& resource);
 		Asset GetMeshResource() const;
 
-		void SetMesh(const TShared<Mesh>& mesh);
-		TShared<Mesh> GetMesh() const;
+		void SetMesh(const std::shared_ptr<Mesh>& mesh);
+		std::shared_ptr<Mesh> GetMesh() const;
 
 		RPrimitiveRenderProxy AsRenderProxy() const;
 
 	private:
 		Asset m_MeshAsset;
 		TResourcePtr<MeshResource> m_MeshResource;
-		TShared<Mesh> m_Mesh;
+		std::shared_ptr<Mesh> m_Mesh;
 	};
 
 	inline Asset MeshComponent::GetMeshAsset() const

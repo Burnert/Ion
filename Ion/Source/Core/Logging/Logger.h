@@ -82,7 +82,7 @@ namespace Ion
 
 	private:
 		String m_Name;
-		TShared<spdlog::logger> m_Logger;
+		std::shared_ptr<spdlog::logger> m_Logger;
 		ELogLevel m_LogLevel;
 		bool m_bEnabled;
 		bool m_bAlwaysActive;

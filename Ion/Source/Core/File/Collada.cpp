@@ -65,7 +65,7 @@ namespace Ion
 		XMLNode* trianglesNode = meshNode->first_node("triangles");
 		ionthrowif(!trianglesNode, IOError, "The <mesh> node does not have a <triangles> node.");
 
-		TShared<TrianglesNodeData> trianglesData = ExtractTriangleInputs(trianglesNode);
+		std::shared_ptr<TrianglesNodeData> trianglesData = ExtractTriangleInputs(trianglesNode);
 
 		fwdthrowall(ParseTriangleInputs(trianglesData, 0.01f));
 
@@ -149,11 +149,11 @@ namespace Ion
 		return indices;
 	}
 
-	TShared<ColladaDocument::TrianglesNodeData> ColladaDocument::ExtractTriangleInputs(XMLNode* trianglesNode)
+	std::shared_ptr<ColladaDocument::TrianglesNodeData> ColladaDocument::ExtractTriangleInputs(XMLNode* trianglesNode)
 	{
 		TRACE_FUNCTION();
 
-		TShared<TrianglesNodeData> layout = MakeShared<TrianglesNodeData>();
+		std::shared_ptr<TrianglesNodeData> layout = std::make_shared<TrianglesNodeData>();
 		layout->m_TriangleInputs.reserve(8);
 		layout->m_AttributeCount = 0;
 		XMLNode* inputNode = trianglesNode->first_node("input");
@@ -220,7 +220,7 @@ namespace Ion
 		return version;
 	}
 
-	Result<void, IOError> ColladaDocument::ParseTriangleInputs(const TShared<TrianglesNodeData>& layout, float scale)
+	Result<void, IOError> ColladaDocument::ParseTriangleInputs(const std::shared_ptr<TrianglesNodeData>& layout, float scale)
 	{
 		TRACE_FUNCTION();
 
@@ -270,7 +270,7 @@ namespace Ion
 		return Ok();
 	}
 
-	void ColladaDocument::ParseTriangles(uint32* indices, uint64 indexCount, const TShared<TrianglesNodeData>& data, ColladaData& outMeshData)
+	void ColladaDocument::ParseTriangles(uint32* indices, uint64 indexCount, const std::shared_ptr<TrianglesNodeData>& data, ColladaData& outMeshData)
 	{
 		TRACE_FUNCTION();
 
@@ -475,11 +475,11 @@ namespace Ion
 		return stride;
 	}
 
-	TShared<RHIVertexLayout> ColladaDocument::TrianglesNodeData::CreateLayout() const
+	std::shared_ptr<RHIVertexLayout> ColladaDocument::TrianglesNodeData::CreateLayout() const
 	{
 		TRACE_FUNCTION();
 
-		TShared<RHIVertexLayout> layout = MakeShareable(new RHIVertexLayout((uint32)m_TriangleInputs.size()));
+		std::shared_ptr<RHIVertexLayout> layout = MakeShareable(new RHIVertexLayout((uint32)m_TriangleInputs.size()));
 		for (const TriangleInput& input : m_TriangleInputs)
 		{
 			EVertexAttributeSemantic semantic = EVertexAttributeSemantic::Null;

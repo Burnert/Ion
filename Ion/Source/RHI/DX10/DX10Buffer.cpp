@@ -30,7 +30,7 @@ namespace Ion
 		COMRelease(m_InputLayout);
 	}
 
-	void DX10VertexBuffer::SetLayout(const TShared<RHIVertexLayout>& layout)
+	void DX10VertexBuffer::SetLayout(const std::shared_ptr<RHIVertexLayout>& layout)
 	{
 		TRACE_FUNCTION();
 
@@ -55,12 +55,12 @@ namespace Ion
 		}
 	}
 
-	Result<void, RHIError> DX10VertexBuffer::SetLayoutShader(const TShared<RHIShader>& shader)
+	Result<void, RHIError> DX10VertexBuffer::SetLayoutShader(const std::shared_ptr<RHIShader>& shader)
 	{
-		return CreateDX10Layout(TStaticCast<DX10Shader>(shader));
+		return CreateDX10Layout(std::static_pointer_cast<DX10Shader>(shader));
 	}
 
-	Result<void, RHIError> DX10VertexBuffer::CreateDX10Layout(const TShared<DX10Shader>& shader)
+	Result<void, RHIError> DX10VertexBuffer::CreateDX10Layout(const std::shared_ptr<DX10Shader>& shader)
 	{
 		TRACE_FUNCTION();
 

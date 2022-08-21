@@ -114,7 +114,7 @@ namespace Ion
 
 	private:
 		Thread m_Thread;
-		TShared<FTaskWork> m_CurrentWork;
+		std::shared_ptr<FTaskWork> m_CurrentWork;
 		TaskQueue* m_Owner;
 
 		bool m_bExit;
@@ -163,7 +163,7 @@ namespace Ion
 		 * 
 		 * @see Schedule(FTaskWork& work)
 		 */
-		void Schedule(const TShared<FTaskWork>& work);
+		void Schedule(const std::shared_ptr<FTaskWork>& work);
 
 		/**
 		 * @brief Dispach all the messages, which are currently in
@@ -202,7 +202,7 @@ namespace Ion
 	private:
 		TArray<TaskWorker> m_Workers;
 
-		TQueue<TShared<FTaskWork>> m_WorkQueue;
+		TQueue<std::shared_ptr<FTaskWork>> m_WorkQueue;
 		Mutex m_WorkQueueMutex;
 		ConditionVariable m_WorkQueueWorkersCV;
 
@@ -218,7 +218,7 @@ namespace Ion
 	{
 		static_assert(TIsBaseOfV<FTaskWork, T>);
 
-		TShared<T> workPtr = MakeShared<T>(Move(work));
+		std::shared_ptr<T> workPtr = std::make_shared<T>(Move(work));
 		Schedule(workPtr);
 	}
 }

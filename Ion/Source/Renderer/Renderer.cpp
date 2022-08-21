@@ -162,7 +162,7 @@ namespace Ion
 
 		ionassert(targetScene);
 
-		TShared<Mesh> billboardMesh = GetBillboardMesh();
+		std::shared_ptr<Mesh> billboardMesh = GetBillboardMesh();
 		ionassert(billboardMesh);
 
 		const RHIVertexBuffer* vb = billboardMesh->GetVertexBufferRaw();
@@ -193,7 +193,7 @@ namespace Ion
 		DrawIndexed(ib->GetIndexCount());
 	}
 
-	void Renderer::DrawScreenTexture(const TShared<RHITexture>& texture) const
+	void Renderer::DrawScreenTexture(const std::shared_ptr<RHITexture>& texture) const
 	{
 		TRACE_FUNCTION();
 
@@ -204,7 +204,7 @@ namespace Ion
 		DrawIndexed(6);
 	}
 
-	void Renderer::DrawScreenTexture(const TShared<RHITexture>& texture, const RHIShader* shader) const
+	void Renderer::DrawScreenTexture(const std::shared_ptr<RHITexture>& texture, const RHIShader* shader) const
 	{
 		TRACE_FUNCTION();
 
@@ -254,7 +254,7 @@ namespace Ion
 			2, 0, 3,
 		};
 
-		TShared<RHIVertexLayout> quadLayout = MakeShared<RHIVertexLayout>(2);
+		std::shared_ptr<RHIVertexLayout> quadLayout = std::make_shared<RHIVertexLayout>(2);
 		quadLayout->AddAttribute(EVertexAttributeSemantic::Position, EVertexAttributeType::Float, 3, false);
 		quadLayout->AddAttribute(EVertexAttributeSemantic::TexCoord, EVertexAttributeType::Float, 2, false);
 
@@ -282,16 +282,16 @@ namespace Ion
 			2, 0, 3,
 		};
 
-		TShared<RHIVertexLayout> quadLayout = MakeShared<RHIVertexLayout>(2);
+		std::shared_ptr<RHIVertexLayout> quadLayout = std::make_shared<RHIVertexLayout>(2);
 		quadLayout->AddAttribute(EVertexAttributeSemantic::Position, EVertexAttributeType::Float, 3, false);
 		quadLayout->AddAttribute(EVertexAttributeSemantic::TexCoord, EVertexAttributeType::Float, 2, false);
 		quadLayout->AddAttribute(EVertexAttributeSemantic::Normal,   EVertexAttributeType::Float, 3, true);
 
-		TShared<RHIVertexBuffer> vb = RHIVertexBuffer::CreateShared(quadVertices, sizeof(quadVertices) / sizeof(float));
+		std::shared_ptr<RHIVertexBuffer> vb = RHIVertexBuffer::CreateShared(quadVertices, sizeof(quadVertices) / sizeof(float));
 		vb->SetLayout(quadLayout);
 		vb->SetLayoutShader(m_BasicUnlitMaskedShader);
 
-		TShared<RHIIndexBuffer> ib = RHIIndexBuffer::CreateShared(quadIndices, sizeof(quadIndices) / sizeof(uint32));
+		std::shared_ptr<RHIIndexBuffer> ib = RHIIndexBuffer::CreateShared(quadIndices, sizeof(quadIndices) / sizeof(uint32));
 
 		m_BillboardMesh = Mesh::Create();
 		m_BillboardMesh->SetVertexBuffer(vb);
@@ -589,7 +589,7 @@ namespace Ion
 
 		for (const REditorPassBillboardPrimitive& billboardPrim : data.Billboards)
 		{
-			TShared<Mesh> billboardMesh = GetBillboardMesh();
+			std::shared_ptr<Mesh> billboardMesh = GetBillboardMesh();
 
 			// Load the GUID
 			MeshUniforms& meshUniforms = billboardMesh->GetUniformsDataRef();

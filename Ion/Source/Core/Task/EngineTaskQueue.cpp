@@ -4,11 +4,11 @@
 
 namespace Ion
 {
-	TUnique<TaskQueue> g_EngineTaskQueue;
+	std::unique_ptr<TaskQueue> g_EngineTaskQueue;
 
 	namespace EngineTaskQueue
 	{
-		void Schedule(const TShared<FTaskWork>& work)
+		void Schedule(const std::shared_ptr<FTaskWork>& work)
 		{
 			ionassert(g_EngineTaskQueue, "The Engine Task Queue has not been initialized yet.");
 			g_EngineTaskQueue->Schedule(work);
@@ -17,7 +17,7 @@ namespace Ion
 		void Init()
 		{
 			ionassert(!g_EngineTaskQueue, "The Engine Task Queue has already been initialized.");
-			g_EngineTaskQueue = MakeUnique<TaskQueue>();
+			g_EngineTaskQueue = std::make_unique<TaskQueue>();
 		}
 
 		void Shutdown()

@@ -26,14 +26,14 @@ namespace Ion
 
 	struct MeshResourceRenderDataShared
 	{
-		TShared<RHIVertexBuffer> VertexBuffer;
-		TShared<RHIIndexBuffer> IndexBuffer;
+		std::shared_ptr<RHIVertexBuffer> VertexBuffer;
+		std::shared_ptr<RHIIndexBuffer> IndexBuffer;
 	};
 
 	struct MeshResourceRenderData
 	{
-		TWeak<RHIVertexBuffer> VertexBuffer;
-		TWeak<RHIIndexBuffer> IndexBuffer;
+		std::weak_ptr<RHIVertexBuffer> VertexBuffer;
+		std::weak_ptr<RHIIndexBuffer> IndexBuffer;
 
 		bool IsAvailable() const
 		{
@@ -127,12 +127,12 @@ namespace Ion
 
 		ResourceLogger.Trace("Importing Mesh Resource from Asset \"{}\".", m_Asset->GetVirtualPath());
 		m_Asset->Import(
-			[](TShared<AssetFileMemoryBlock> block)
+			[](std::shared_ptr<AssetFileMemoryBlock> block)
 			{
 				return AssetImporter::ImportColladaMeshAsset(block);
 			},
 			// Store the pointer (self) so the resource doesn't get deleted before it's loaded
-			[this, self = GetPointer(), onTake](TShared<MeshAssetData> meshData)
+			[this, self = GetPointer(), onTake](std::shared_ptr<MeshAssetData> meshData)
 			{
 				ionassert(m_Asset);
 				ionassert(m_Asset->GetType() == EAssetType::Mesh);
@@ -144,7 +144,7 @@ namespace Ion
 				// RHIVertexBuffer:
 				ResourceMemory::IncRef(*this);
 				RHIVertexBuffer* vb = RHIVertexBuffer::Create(meshData->Vertices.Ptr, meshData->Vertices.Count);
-				sharedRenderData.VertexBuffer = TShared<RHIVertexBuffer>(vb, [this](RHIVertexBuffer* ptr)
+				sharedRenderData.VertexBuffer = std::shared_ptr<RHIVertexBuffer>(vb, [this](RHIVertexBuffer* ptr)
 				{
 					ResourceMemory::DecRef(*this);
 					delete ptr;
@@ -153,7 +153,7 @@ namespace Ion
 				// RHIIndexBuffer:
 				ResourceMemory::IncRef(*this);
 				RHIIndexBuffer* ib = RHIIndexBuffer::Create(meshData->Indices.Ptr, (uint32)meshData->Indices.Count);
-				sharedRenderData.IndexBuffer = TShared<RHIIndexBuffer>(ib, [this](RHIIndexBuffer* ptr)
+				sharedRenderData.IndexBuffer = std::shared_ptr<RHIIndexBuffer>(ib, [this](RHIIndexBuffer* ptr)
 				{
 					ResourceMemory::DecRef(*this);
 					delete ptr;

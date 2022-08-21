@@ -12,7 +12,7 @@ namespace Ion::Editor
 	{
 		FilePath Path;
 		TResourcePtr<TextureResource> Resource;
-		TShared<RHITexture> Texture;
+		std::shared_ptr<RHITexture> Texture;
 		String VirtualPath;
 
 		EditorIcon(const FilePath& path) :
@@ -55,22 +55,22 @@ namespace Ion::Editor
 		static inline TResourcePtr<TextureResource> ResourceBillboardSun;
 		static inline TResourcePtr<TextureResource> ResourceBillboardNoMesh;
 
-		static inline TShared<RHITexture> BillboardCircle;
-		static inline TShared<RHITexture> BillboardLightbulb;
-		static inline TShared<RHITexture> BillboardSun;
-		static inline TShared<RHITexture> BillboardNoMesh;
+		static inline std::shared_ptr<RHITexture> BillboardCircle;
+		static inline std::shared_ptr<RHITexture> BillboardLightbulb;
+		static inline std::shared_ptr<RHITexture> BillboardSun;
+		static inline std::shared_ptr<RHITexture> BillboardNoMesh;
 
 		static void LoadTextures();
 
-		static const TShared<RHITexture>& GetComponentBillboardTexture(ComponentTypeID id);
+		static const std::shared_ptr<RHITexture>& GetComponentBillboardTexture(ComponentTypeID id);
 	};
 
 	class EDITOR_API EditorMeshes
 	{
 	public:
-		static inline TShared<Mesh> MeshGrid;
+		static inline std::shared_ptr<Mesh> MeshGrid;
 
-		static inline TShared<RHIShader> ShaderGrid;
+		static inline std::shared_ptr<RHIShader> ShaderGrid;
 
 		static void Init();
 	};

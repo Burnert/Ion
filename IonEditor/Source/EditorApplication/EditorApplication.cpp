@@ -59,19 +59,19 @@ namespace Ion::Editor
 
 		m_MainViewport = AddViewport();
 		
-		TShared<EditorViewport> additionalViewport = AddViewport();
+		std::shared_ptr<EditorViewport> additionalViewport = AddViewport();
 		additionalViewport->GetUI()->SetOpen(true);
 		additionalViewport->GetUI()->SetWindowName("Viewport 2");
 
-		TShared<EditorViewport> mainViewport = m_MainViewport.lock();
+		std::shared_ptr<EditorViewport> mainViewport = m_MainViewport.lock();
 		m_EditorLayer->SetMainViewportOpenFlagPtr(&mainViewport->GetUI()->GetWindowOpenFlagRef());
 		mainViewport->GetUI()->SetOpen(true);
 		mainViewport->GetUI()->SetWindowName("Main Viewport");
 
-		m_ContentBrowser = MakeShared<ContentBrowser>();
+		m_ContentBrowser = std::make_shared<ContentBrowser>();
 		m_ContentBrowser->AddUI();
 
-		m_LogSettings = MakeShared<LogSettings>();
+		m_LogSettings = std::make_shared<LogSettings>();
 
 		Asset::Resolve("[Engine]/Materials/DefaultMaterial").Unwrap();
 		Asset::Resolve("[Engine]/Textures/White").UnwrapOr(Asset::None);
@@ -147,7 +147,7 @@ namespace Ion::Editor
 
 		//Asset materialAsset = AssetFinder(EnginePath::GetEngineContentPath() + L"Materials/DefaultMaterial.iasset").Resolve();
 
-		//TShared<Material> material = MaterialRegistry::QueryMaterial(materialAsset);
+		//std::shared_ptr<Material> material = MaterialRegistry::QueryMaterial(materialAsset);
 		//material->AddUsage(EShaderUsage::StaticMesh);
 		//material->CompileShaders();
 
@@ -155,7 +155,7 @@ namespace Ion::Editor
 
 		//Asset materialInstanceAsset = AssetFinder(FilePath(L"../IonExample/Assets/Materials/ciupaga.iasset")).Resolve();
 
-		//TShared<MaterialInstance> materialInstance = MaterialRegistry::QueryMaterialInstance(materialInstanceAsset);
+		//std::shared_ptr<MaterialInstance> materialInstance = MaterialRegistry::QueryMaterialInstance(materialInstanceAsset);
 		//MaterialParameterInstanceScalar* paramBrightness = materialInstance->GetMaterialParameterInstanceTyped<MaterialParameterInstanceScalar>("Brightness");
 		//MaterialParameterInstanceVector* paramColor = materialInstance->GetMaterialParameterInstanceTyped<MaterialParameterInstanceVector>("Color");
 
@@ -165,7 +165,7 @@ namespace Ion::Editor
 		MeshEntity* meshEntity = m_EditorMainWorld->SpawnEntityOfClass<MeshEntity>();
 
 		TResourcePtr<MeshResource> meshResource = MeshResource::Query(Asset::Resolve("[Example]/models/4pak").UnwrapOr(Asset::None));
-		TShared<Mesh> mesh = Mesh::CreateFromResource(meshResource);
+		std::shared_ptr<Mesh> mesh = Mesh::CreateFromResource(meshResource);
 		meshEntity->SetMesh(mesh);
 		meshEntity->SetName("MaterialExampleMesh");
 
@@ -257,10 +257,10 @@ namespace Ion::Editor
 		m_EventDispatcher.Dispatch(event);
 	}
 
-	TShared<EditorViewport>& EditorApplication::AddViewport()
+	std::shared_ptr<EditorViewport>& EditorApplication::AddViewport()
 	{
 		UVector2 initialSize = { 1, 1 };
-		TShared<EditorViewport> viewport = MakeShared<EditorViewport>(initialSize, (int32)m_Viewports.size());
+		std::shared_ptr<EditorViewport> viewport = std::make_shared<EditorViewport>(initialSize, (int32)m_Viewports.size());
 
 		viewport->SetOnClicked([this](const GUID& clickedGuid)
 		{
@@ -297,7 +297,7 @@ namespace Ion::Editor
 		}
 	}
 
-	TShared<EditorViewport> EditorApplication::GetViewport(const GUID& viewportID)
+	std::shared_ptr<EditorViewport> EditorApplication::GetViewport(const GUID& viewportID)
 	{
 		auto it = m_Viewports.find(viewportID);
 		if (it != m_Viewports.end())
@@ -563,7 +563,7 @@ namespace Ion::Editor
 	{
 		if (!m_EditorPassData)
 		{
-			m_EditorPassData = MakeShared<EditorPassData>();
+			m_EditorPassData = std::make_shared<EditorPassData>();
 		}
 
 		// Prepare the Editor Render Pass

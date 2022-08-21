@@ -13,7 +13,7 @@ namespace Ion
 		uint32* Indices;
 		uint64 VertexAttributeCount;
 		uint64 IndexCount;
-		TShared<RHIVertexLayout> Layout;
+		std::shared_ptr<RHIVertexLayout> Layout;
 	};
 
 	class ION_API ColladaDocument : public XMLDocument
@@ -37,7 +37,7 @@ namespace Ion
 
 			Result<TriangleInput*, IOError> AddTriangleInput(XMLNode* meshNode, XMLNode* inputNode);
 			uint32 GetFullStride() const;
-			TShared<RHIVertexLayout> CreateLayout() const;
+			std::shared_ptr<RHIVertexLayout> CreateLayout() const;
 
 			TArray<TriangleInput> m_TriangleInputs;
 			uint32 m_AttributeCount = 0;
@@ -129,14 +129,14 @@ namespace Ion
 	protected:
 		static Result<uint32*, IOError> ExtractTriangles(XMLNode* trianglesNode, uint64& outIndexCount);
 
-		static TShared<TrianglesNodeData> ExtractTriangleInputs(XMLNode* trianglesNode);
+		static std::shared_ptr<TrianglesNodeData> ExtractTriangleInputs(XMLNode* trianglesNode);
 
 		static Result<XMLNode*, IOError> ExtractSourceNode(XMLNode* meshNode, XMLNode* inputNode);
 		static Result<XMLNode*, IOError> ExtractVerticesSourceNode(XMLNode* verticesNode);
 		//static bool ExtractParams(const XMLNode* accessorNode);
 
-		static Result<void, IOError> ParseTriangleInputs(const TShared<TrianglesNodeData>& layout, float scale = 1.0f);
-		static void ParseTriangles(uint32* indices, uint64 indexCount, const TShared<TrianglesNodeData>& data, ColladaData& outMeshData);
+		static Result<void, IOError> ParseTriangleInputs(const std::shared_ptr<TrianglesNodeData>& layout, float scale = 1.0f);
+		static void ParseTriangles(uint32* indices, uint64 indexCount, const std::shared_ptr<TrianglesNodeData>& data, ColladaData& outMeshData);
 
 		static Result<float*, IOError> ExtractFloatArray(XMLNode* sourceNode, uint64& outSize, TransformFn transformFunction = nullptr);
 

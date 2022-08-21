@@ -9,8 +9,8 @@ namespace Ion::Editor
 {
 	struct ExampleModelData
 	{
-		TShared<Mesh> Mesh;
-		TShared<RHITexture> Texture;
+		std::shared_ptr<Mesh> Mesh;
+		std::shared_ptr<RHITexture> Texture;
 
 		Asset MeshAsset;
 		Asset TextureAsset;

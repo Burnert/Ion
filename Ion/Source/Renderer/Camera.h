@@ -15,7 +15,7 @@ namespace Ion
 	class ION_API Camera
 	{
 	public:
-		static TShared<Camera> Create();
+		static std::shared_ptr<Camera> Create();
 
 		~Camera() { };
 

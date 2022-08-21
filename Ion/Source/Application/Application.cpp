@@ -47,8 +47,8 @@ namespace Ion
 
 	Application::Application(App* clientApp) :
 		m_EventDispatcher(this),
-		m_EventQueue(MakeUnique<EventQueue<EventHandler>>()),
-		m_LayerStack(MakeUnique<LayerStack>()),
+		m_EventQueue(std::make_unique<EventQueue<EventHandler>>()),
+		m_LayerStack(std::make_unique<LayerStack>()),
 		m_MainThreadId(std::this_thread::get_id()),
 		m_bRunning(true),
 		m_ClientApp(clientApp),

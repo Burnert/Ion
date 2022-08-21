@@ -72,11 +72,11 @@ namespace Ion
 		return Ok();
 	}
 
-	Result<void, RHIError> DX10Texture::CopyTo(const TShared<RHITexture>& destination) const
+	Result<void, RHIError> DX10Texture::CopyTo(const std::shared_ptr<RHITexture>& destination) const
 	{
 		ID3D10Device* device = DX10::GetDevice();
 
-		TShared<DX10Texture> destTexture = TStaticCast<DX10Texture>(destination);
+		std::shared_ptr<DX10Texture> destTexture = std::static_pointer_cast<DX10Texture>(destination);
 		dxcall(device->CopyResource(destTexture->m_Texture, m_Texture));
 
 		return Ok();

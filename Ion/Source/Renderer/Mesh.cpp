@@ -7,14 +7,14 @@
 
 namespace Ion
 {
-	TShared<Mesh> Mesh::Create()
+	std::shared_ptr<Mesh> Mesh::Create()
 	{
 		return MakeShareable(new Mesh);
 	}
 
-	TShared<Mesh> Mesh::CreateFromResource(const TResourcePtr<MeshResource>& resource)
+	std::shared_ptr<Mesh> Mesh::CreateFromResource(const TResourcePtr<MeshResource>& resource)
 	{
-		TShared<Mesh> mesh = Mesh::Create();
+		std::shared_ptr<Mesh> mesh = Mesh::Create();
 
 		resource->Take([mesh](const MeshResourceRenderDataShared& renderData)
 		{
@@ -32,7 +32,7 @@ namespace Ion
 			if (!asset)
 				continue;
 
-			TShared<MaterialInstance> material = MaterialRegistry::QueryMaterialInstance(asset);
+			std::shared_ptr<MaterialInstance> material = MaterialRegistry::QueryMaterialInstance(asset);
 
 			mesh->AssignMaterialToSlot(i, material);
 		}
@@ -61,8 +61,8 @@ namespace Ion
 		//float* vertexAttributesPtr = (float*)((uint8*)asset->Data() + meshDesc->VerticesOffset);
 		//uint32* indicesPtr = (uint32*)((uint8*)asset->Data() + meshDesc->IndicesOffset);
 
-		//TShared<VertexBuffer> vb = VertexBuffer::Create(vertexAttributesPtr, meshDesc->VertexCount);
-		//TShared<IndexBuffer> ib = IndexBuffer::Create(indicesPtr, (uint32)meshDesc->IndexCount);
+		//std::shared_ptr<VertexBuffer> vb = VertexBuffer::Create(vertexAttributesPtr, meshDesc->VertexCount);
+		//std::shared_ptr<IndexBuffer> ib = IndexBuffer::Create(indicesPtr, (uint32)meshDesc->IndexCount);
 		//vb->SetLayout(meshDesc->VertexLayout);
 
 		//SetVertexBuffer(vb);
@@ -71,7 +71,7 @@ namespace Ion
 		return true;
 	}
 
-	void Mesh::SetVertexBuffer(const TShared<RHIVertexBuffer>& vertexBuffer)
+	void Mesh::SetVertexBuffer(const std::shared_ptr<RHIVertexBuffer>& vertexBuffer)
 	{
 		m_VertexBuffer = vertexBuffer;
 		m_VertexCount = vertexBuffer->GetVertexCount();
@@ -79,7 +79,7 @@ namespace Ion
 		// Set the layout if the material has been set before the VB.
 
 		// @TODO: Handle each material slot in the future
-		TShared<MaterialInstance> instance = m_MaterialSlots.at(0).MaterialInstance;
+		std::shared_ptr<MaterialInstance> instance = m_MaterialSlots.at(0).MaterialInstance;
 		// @TODO: This checking for compiled shit is really wrong, there should be a system that does this automatically
 		if (instance && instance->GetBaseMaterial()->IsCompiled(EShaderUsage::StaticMesh))
 		{
@@ -87,29 +87,29 @@ namespace Ion
 		}
 	}
 
-	void Mesh::SetIndexBuffer(const TShared<RHIIndexBuffer>& indexBuffer)
+	void Mesh::SetIndexBuffer(const std::shared_ptr<RHIIndexBuffer>& indexBuffer)
 	{
 		m_IndexBuffer = indexBuffer;
 		m_TriangleCount = indexBuffer->GetTriangleCount();
 	}
 
-	const TShared<RHIVertexBuffer>& Mesh::GetVertexBuffer() const
+	const std::shared_ptr<RHIVertexBuffer>& Mesh::GetVertexBuffer() const
 	{
 		return m_VertexBuffer;
 	}
 
-	const TShared<RHIIndexBuffer>& Mesh::GetIndexBuffer() const
+	const std::shared_ptr<RHIIndexBuffer>& Mesh::GetIndexBuffer() const
 	{
 		return m_IndexBuffer;
 	}
 
-	void Mesh::AssignMaterialToSlot(uint16 index, const TShared<MaterialInstance>& material)
+	void Mesh::AssignMaterialToSlot(uint16 index, const std::shared_ptr<MaterialInstance>& material)
 	{
 		ionassert(index < m_MaterialSlots.size(), "Slot {0} does not exist.", index);
 
 		if (material)
 		{
-			TShared<Material> baseMaterial = material->GetBaseMaterial();
+			std::shared_ptr<Material> baseMaterial = material->GetBaseMaterial();
 
 			// @TODO: I don't think there should even be an option to assign not compiled materials to meshes.
 
@@ -140,7 +140,7 @@ namespace Ion
 		slot.MaterialInstance = material;
 	}
 
-	TShared<MaterialInstance> Mesh::GetMaterialInSlot(uint16 index) const
+	std::shared_ptr<MaterialInstance> Mesh::GetMaterialInSlot(uint16 index) const
 	{
 		ionassert(index < m_MaterialSlots.size(), "Slot {0} does not exist.", index);
 

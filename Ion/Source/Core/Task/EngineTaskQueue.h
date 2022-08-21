@@ -9,7 +9,7 @@ namespace Ion
 	 * 
 	 * @details Use the members of the EngineTaskQueue namespace to access it.
 	 */
-	extern TUnique<TaskQueue> g_EngineTaskQueue;
+	extern std::unique_ptr<TaskQueue> g_EngineTaskQueue;
 
 	/**
 	 * @brief Engine Task Queue object wrapper functions
@@ -39,12 +39,12 @@ namespace Ion
 		 * @brief Same as Schedule(FTaskWork& work), but uses
 		 * an existing shader pointer.
 		 * 
-		 * @see TaskQueue::Schedule(const TShared<FTaskWork>& work)
+		 * @see TaskQueue::Schedule(const std::shared_ptr<FTaskWork>& work)
 		 * @see Schedule(FTaskWork& work)
 		 *
 		 * @param work Work pointer
 		 */
-		void Schedule(const TShared<FTaskWork>& work);
+		void Schedule(const std::shared_ptr<FTaskWork>& work);
 
 		/**
 		 * @brief Creates the Engine Task Queue object, which will then be

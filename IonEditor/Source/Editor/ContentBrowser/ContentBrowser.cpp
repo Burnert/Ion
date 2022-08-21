@@ -167,7 +167,7 @@ namespace Ion::Editor
 
 			for (const String& resource : asset->GetInfo().ResourceUsage)
 			{
-				TShared<RHITexture> resourceIconTexture;
+				std::shared_ptr<RHITexture> resourceIconTexture;
 
 				if (resource == "Mesh")
 				{

@@ -336,7 +336,7 @@ namespace Ion
 		return list;
 	}
 
-	TShared<TTreeNode<FileInfo>> FilePath::Tree() const
+	std::shared_ptr<TTreeNode<FileInfo>> FilePath::Tree() const
 	{
 		return MakeShareable(&Tree_Internal());
 	}

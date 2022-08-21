@@ -30,6 +30,6 @@ namespace Ion
 		void Schedule();
 
 	private:
-		TShared<FTaskWork> m_Work;
+		std::shared_ptr<FTaskWork> m_Work;
 	};
 }

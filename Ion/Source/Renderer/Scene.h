@@ -29,8 +29,8 @@ namespace Ion
 	public:
 		const static uint32 MaxLights = 100;
 
-		void SetActiveCamera(const TShared<Camera>& camera);
-		FORCEINLINE const TShared<Camera>& GetActiveCamera() const { return m_ActiveCamera; }
+		void SetActiveCamera(const std::shared_ptr<Camera>& camera);
+		FORCEINLINE const std::shared_ptr<Camera>& GetActiveCamera() const { return m_ActiveCamera; }
 
 		void SetAmbientLightColor(const Vector4& color);
 		inline const Vector4& GetAmbientLightColor() const { return m_AmbientLightColor; }
@@ -47,7 +47,7 @@ namespace Ion
 		~Scene() { }
 
 		void LoadSceneData(const RRendererData& data);
-		void LoadCamera(const TShared<Camera>& camera);
+		void LoadCamera(const std::shared_ptr<Camera>& camera);
 
 		// Render Thread: --------------------------------------------------------------------------
 
@@ -61,13 +61,13 @@ namespace Ion
 	private:
 		World* m_OwningWorld;
 
-		TShared<Camera> m_ActiveCamera;
+		std::shared_ptr<Camera> m_ActiveCamera;
 
 		Vector4 m_AmbientLightColor;
 		DirectionalLight* m_ActiveDirectionalLight;
 		THashSet<Light*> m_Lights;
 
-		TShared<RHIUniformBuffer> m_SceneUniformBuffer;
+		std::shared_ptr<RHIUniformBuffer> m_SceneUniformBuffer;
 
 		// Render Thread: -------------------------------------
 

@@ -34,7 +34,7 @@ namespace Ion
 
 		Platform::SetCurrentThreadDescription(L"AssetWorker");
 
-		TQueue<TShared<FTaskWork>>& queue = m_Owner->m_WorkQueue;
+		TQueue<std::shared_ptr<FTaskWork>>& queue = m_Owner->m_WorkQueue;
 
 		while (!m_bExit)
 		{
@@ -77,7 +77,7 @@ namespace Ion
 		}
 	}
 
-	void TaskQueue::Schedule(const TShared<FTaskWork>& work)
+	void TaskQueue::Schedule(const std::shared_ptr<FTaskWork>& work)
 	{
 		// Lock the queue, notify a free worker
 		{

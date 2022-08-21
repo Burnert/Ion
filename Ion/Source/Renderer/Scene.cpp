@@ -16,7 +16,7 @@ namespace Ion
 		m_SceneUniformBuffer = MakeShareable(RHIUniformBuffer::Create(SceneUniforms()));
 	}
 
-	void Scene::SetActiveCamera(const TShared<Camera>& camera)
+	void Scene::SetActiveCamera(const std::shared_ptr<Camera>& camera)
 	{
 		m_ActiveCamera = camera;
 	}
@@ -61,7 +61,7 @@ namespace Ion
 			m_RenderLights.shrink_to_fit();
 	}
 
-	void Scene::LoadCamera(const TShared<Camera>& camera)
+	void Scene::LoadCamera(const std::shared_ptr<Camera>& camera)
 	{
 		camera->CopyRenderData(m_RenderCamera);
 	}

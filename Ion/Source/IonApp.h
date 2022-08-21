@@ -27,8 +27,8 @@ namespace Ion
 
 		Application* GetEngineApplication() const;
 
-		const TShared<GenericWindow>& GetWindow() const;
-		const TShared<InputManager>& GetInputManager() const;
+		const std::shared_ptr<GenericWindow>& GetWindow() const;
+		const std::shared_ptr<InputManager>& GetInputManager() const;
 		LayerStack* GetLayerStack() const;
 
 		float GetGlobalDeltaTime() const;
@@ -64,12 +64,12 @@ namespace Ion
 		return GetEngineApplication()->GetGlobalDeltaTime();
 	}
 
-	inline const TShared<GenericWindow>& App::GetWindow() const
+	inline const std::shared_ptr<GenericWindow>& App::GetWindow() const
 	{
 		return GetEngineApplication()->GetWindow();
 	}
 
-	inline const TShared<InputManager>& App::GetInputManager() const
+	inline const std::shared_ptr<InputManager>& App::GetInputManager() const
 	{
 		return GetEngineApplication()->GetInputManager();
 	}

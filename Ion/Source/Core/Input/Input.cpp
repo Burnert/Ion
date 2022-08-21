@@ -129,5 +129,5 @@ namespace Ion
 		UnsetBitflags(*statePtr, InputPressedFlag);
 	}
 
-	TShared<InputManager> InputManager::s_Instance = nullptr;
+	std::shared_ptr<InputManager> InputManager::s_Instance = nullptr;
 }

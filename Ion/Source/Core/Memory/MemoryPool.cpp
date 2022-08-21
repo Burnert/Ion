@@ -173,11 +173,11 @@ namespace Ion
 		return AlignAs(size, m_Alignment) <= GetFreeBytes();
 	}
 
-	TShared<MemoryPoolDebugInfo> MemoryPool::GetDebugInfo() const
+	std::shared_ptr<MemoryPoolDebugInfo> MemoryPool::GetDebugInfo() const
 	{
 		TRACE_FUNCTION();
 
-		TShared<MemoryPoolDebugInfo> info = MakeShared<MemoryPoolDebugInfo>();
+		std::shared_ptr<MemoryPoolDebugInfo> info = std::make_shared<MemoryPoolDebugInfo>();
 
 		UniqueLock lock(m_PoolMutex);
 
@@ -194,7 +194,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		TShared<MemoryPoolDebugInfo> info = GetDebugInfo();
+		std::shared_ptr<MemoryPoolDebugInfo> info = GetDebugInfo();
 
 		MemoryLogger.Debug("Used: {0} B ({1:.2f} MB) | Free: {2} B ({3:.2f} MB) | Alloc count: {4}",
 			info->BytesUsed, info->BytesUsed / (float)(1 << 20),

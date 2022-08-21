@@ -9,7 +9,7 @@ namespace Ion
 	class ION_API LayerStack
 	{
 	public:
-		using LayerPtr = TShared<Layer>;
+		using LayerPtr = std::shared_ptr<Layer>;
 		using LayerVec = TArray<LayerPtr>;
 
 		using LayerIterator             = LayerVec::iterator;
@@ -22,25 +22,25 @@ namespace Ion
 
 		/* Creates and pushes a layer object with specified name and parameters into the layer stack */
 		template<typename LayerT, typename... Types>
-		TShared<LayerT> PushLayer(const char* name, Types&&... args)
+		std::shared_ptr<LayerT> PushLayer(const char* name, Types&&... args)
 		{
-			LayerPtr layer = MakeShared<LayerT>(name, args...);
+			LayerPtr layer = std::make_shared<LayerT>(name, args...);
 			layer->OnAttach();
 			LayerIterator layerIt = m_Layers.emplace(begin() + m_LayerInsertIndex, Move(layer));
 			m_LayerInsertIndex++;
 
-			return TStaticCast<LayerT>(*layerIt);
+			return std::static_pointer_cast<LayerT>(*layerIt);
 		}
 
 		/* Creates and pushes a layer object (overlay) with specified name and parameters on top of other layers */
 		template<typename LayerT, typename... Types>
-		TShared<LayerT> PushOverlayLayer(const char* name, Types&&... args)
+		std::shared_ptr<LayerT> PushOverlayLayer(const char* name, Types&&... args)
 		{
-			LayerPtr overlay = MakeShared<LayerT>(name, args...);
+			LayerPtr overlay = std::make_shared<LayerT>(name, args...);
 			overlay->OnAttach();
 			LayerPtr& layerPtr = m_Layers.emplace_back(Move(overlay));
 
-			return TStaticCast<LayerT>(layerPtr);
+			return std::static_pointer_cast<LayerT>(layerPtr);
 		}
 
 		/* Removes a layer based on its name */

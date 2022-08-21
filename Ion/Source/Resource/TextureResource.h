@@ -27,12 +27,12 @@ namespace Ion
 
 	struct TextureResourceRenderDataShared
 	{
-		TShared<RHITexture> Texture;
+		std::shared_ptr<RHITexture> Texture;
 	};
 
 	struct TextureResourceRenderData
 	{
-		TWeak<RHITexture> Texture;
+		std::weak_ptr<RHITexture> Texture;
 
 		bool IsAvailable() const
 		{
@@ -131,12 +131,12 @@ namespace Ion
 
 		ResourceLogger.Trace("Importing Texture Resource from Asset \"{}\".", m_Asset->GetVirtualPath());
 		m_Asset->Import(
-			[](TShared<AssetFileMemoryBlock> block)
+			[](std::shared_ptr<AssetFileMemoryBlock> block)
 			{
 				return AssetImporter::ImportImageAsset(block);
 			},
 			// Store the pointer (self) so the resource doesn't get deleted before it's loaded
-			[this, self = GetPointer(), onTake](TShared<Image> image)
+			[this, self = GetPointer(), onTake](std::shared_ptr<Image> image)
 			{
 				ionassert(m_Asset);
 				ionassert(m_Asset->GetType() == EAssetType::Image);
@@ -157,7 +157,7 @@ namespace Ion
 				// This is to make sure the resource won't be deleted before the object is destroyed.
 				ResourceMemory::IncRef(*this);
 
-				sharedRenderData.Texture = TShared<RHITexture>(RHITexture::Create(desc), [this](RHITexture* ptr)
+				sharedRenderData.Texture = std::shared_ptr<RHITexture>(RHITexture::Create(desc), [this](RHITexture* ptr)
 				{
 					// Decrement the ref count when the actual RHITexture object gets destroyed.
 					ResourceMemory::DecRef(*this);

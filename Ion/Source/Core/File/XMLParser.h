@@ -260,7 +260,7 @@ if (!(attr)) \
 	private:
 		FilePath m_Path;
 
-		TShared<XMLDocument> m_XML;
+		std::shared_ptr<XMLDocument> m_XML;
 		XMLNode* m_CurrentNode;
 
 		XMLParserResult m_ParseResult;
@@ -332,7 +332,7 @@ if (!(attr)) \
 			return *this;
 		}
 
-		m_XML = MakeShared<XMLDocument>(xml);
+		m_XML = std::make_shared<XMLDocument>(xml);
 		m_CurrentNode = &m_XML->XML();
 
 		return *this;

@@ -62,8 +62,8 @@ namespace Ion
 		static void SetDisplayVersion(const char* version);
 		static const char* GetShaderModel();
 
-		static Result<TShared<RHITexture>, RHIError> CreateRenderTarget();
-		static Result<TShared<RHITexture>, RHIError> CreateDepthStencil(uint32 width, uint32 height);
+		static Result<std::shared_ptr<RHITexture>, RHIError> CreateRenderTarget();
+		static Result<std::shared_ptr<RHITexture>, RHIError> CreateDepthStencil(uint32 width, uint32 height);
 
 		virtual void InitImGuiBackend() override;
 		virtual void ImGuiNewFrame() override;

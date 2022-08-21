@@ -70,7 +70,7 @@ namespace Ion
 		return Ok();
 	}
 
-	Result<void, RHIError> OpenGLTexture::CopyTo(const TShared<RHITexture>& destination) const
+	Result<void, RHIError> OpenGLTexture::CopyTo(const std::shared_ptr<RHITexture>& destination) const
 	{
 		return Ok();
 	}

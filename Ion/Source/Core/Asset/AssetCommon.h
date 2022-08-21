@@ -110,7 +110,7 @@ namespace Ion
 	{
 		TMemoryBlock<float> Vertices;
 		TMemoryBlock<uint32> Indices;
-		TShared<RHIVertexLayout> Layout;
+		std::shared_ptr<RHIVertexLayout> Layout;
 
 		MeshAssetData() :
 			Vertices({ }),
@@ -135,7 +135,7 @@ namespace Ion
 	 */
 	struct AssetInitializer
 	{
-		TShared<XMLDocument> IAssetXML;
+		std::shared_ptr<XMLDocument> IAssetXML;
 
 		String VirtualPath;
 		GUID Guid;

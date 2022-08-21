@@ -27,12 +27,12 @@ namespace Ion
 		glDeleteBuffers(1, &m_ID);
 	}
 
-	void OpenGLVertexBuffer::SetLayout(const TShared<RHIVertexLayout>& layout)
+	void OpenGLVertexBuffer::SetLayout(const std::shared_ptr<RHIVertexLayout>& layout)
 	{
 		m_VertexLayout = layout;
 	}
 
-	Result<void, RHIError> OpenGLVertexBuffer::SetLayoutShader(const TShared<RHIShader>& shader)
+	Result<void, RHIError> OpenGLVertexBuffer::SetLayoutShader(const std::shared_ptr<RHIShader>& shader)
 	{
 		return Ok();
 	}

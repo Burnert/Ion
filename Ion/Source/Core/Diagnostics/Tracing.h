@@ -88,7 +88,7 @@ namespace Ion
 		static TraceStartMap s_TraceStarts;
 		static NamedTraceResultsMap s_NamedTraceResults;
 		static ThreadNameCache s_ThreadNameCache;
-		static TUnique<File> s_SessionDumpFile;
+		static std::unique_ptr<File> s_SessionDumpFile;
 		static Mutex s_ResultsMutex;
 		static Mutex s_SessionMutex;
 		static const char* s_CurrentSessionName;

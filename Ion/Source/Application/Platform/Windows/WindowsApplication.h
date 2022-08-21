@@ -47,7 +47,7 @@ namespace Ion
 		void LoadCursors();
 		bool UpdateMouseCursor();
 
-		virtual void InitImGuiBackend(const TShared<GenericWindow>& window) const override;
+		virtual void InitImGuiBackend(const std::shared_ptr<GenericWindow>& window) const override;
 		virtual void ImGuiNewFramePlatform() const override;
 		virtual void ImGuiRenderPlatform(ImDrawData* drawData) const override;
 		virtual void ImGuiShutdownPlatform() const override;

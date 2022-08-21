@@ -61,7 +61,7 @@ namespace Ion
 
 	private:
 		THashMap<String, LoggerMapEntry> m_Loggers;
-		TUnique<HierarchyNode> m_LoggerHierarchy;
+		std::unique_ptr<HierarchyNode> m_LoggerHierarchy;
 		THashSet<String> m_SoloedLoggers;
 
 		static LogManager* s_Instance;

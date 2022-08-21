@@ -25,7 +25,7 @@ namespace Ion
 		}
 	}
 
-	TShared<RHITexture> RHITexture::CreateShared(const TextureDescription& desc)
+	std::shared_ptr<RHITexture> RHITexture::CreateShared(const TextureDescription& desc)
 	{
 		return MakeShareable(Create(desc));
 	}

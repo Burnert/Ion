@@ -241,11 +241,11 @@ namespace Ion
 
 	MaterialRegistry* MaterialRegistry::s_Instance = nullptr;
 
-	TShared<Material> MaterialRegistry::QueryMaterial(Asset materialAsset)
+	std::shared_ptr<Material> MaterialRegistry::QueryMaterial(Asset materialAsset)
 	{
 		MaterialRegistry& instance = Get();
 
-		TShared<Material> material;
+		std::shared_ptr<Material> material;
 
 		auto it = instance.m_Materials.find(materialAsset);
 		if (it == instance.m_Materials.end() || it->second.expired())
@@ -261,11 +261,11 @@ namespace Ion
 		return material;
 	}
 
-	TShared<MaterialInstance> MaterialRegistry::QueryMaterialInstance(Asset materialInstanceAsset)
+	std::shared_ptr<MaterialInstance> MaterialRegistry::QueryMaterialInstance(Asset materialInstanceAsset)
 	{
 		MaterialRegistry& instance = Get();
 
-		TShared<MaterialInstance> materialInstance;
+		std::shared_ptr<MaterialInstance> materialInstance;
 
 		auto it = instance.m_MaterialInstances.find(materialInstanceAsset);
 		if (it == instance.m_MaterialInstances.end() || it->second.expired())
@@ -283,12 +283,12 @@ namespace Ion
 
 	// Material --------------------------------------------------------------------------------------
 
-	TShared<Material> Material::Create()
+	std::shared_ptr<Material> Material::Create()
 	{
 		return MakeShareable(new Material);
 	}
 
-	TShared<Material> Material::CreateFromAsset(Asset materialAsset)
+	std::shared_ptr<Material> Material::CreateFromAsset(Asset materialAsset)
 	{
 		return MakeShareable(new Material(materialAsset));
 	}
@@ -331,7 +331,7 @@ namespace Ion
 
 	void Material::CompileShaders(const FOnShadersCompiled& onCompiled)
 	{
-		TShared<ShadersCompiledCounter> counter = MakeShared<ShadersCompiledCounter>((uint32)m_Shaders.size());
+		std::shared_ptr<ShadersCompiledCounter> counter = std::make_shared<ShadersCompiledCounter>((uint32)m_Shaders.size());
 
 		for (auto& [usage, shader] : m_Shaders)
 		{
@@ -393,7 +393,7 @@ namespace Ion
 		return true;
 	}
 
-	const TShared<RHIShader>& Material::GetShader(EShaderUsage usage) const
+	const std::shared_ptr<RHIShader>& Material::GetShader(EShaderUsage usage) const
 	{
 		ionassert(m_Shaders.find(usage) != m_Shaders.end());
 
@@ -851,12 +851,12 @@ namespace Ion
 
 	// Material Instance ------------------------------------------------------------------------------
 
-	TShared<MaterialInstance> MaterialInstance::Create(const TShared<Material>& parentMaterial)
+	std::shared_ptr<MaterialInstance> MaterialInstance::Create(const std::shared_ptr<Material>& parentMaterial)
 	{
 		return MakeShareable(new MaterialInstance(parentMaterial));
 	}
 
-	TShared<MaterialInstance> MaterialInstance::CreateFromAsset(Asset materialInstanceAsset)
+	std::shared_ptr<MaterialInstance> MaterialInstance::CreateFromAsset(Asset materialInstanceAsset)
 	{
 		return MakeShareable(new MaterialInstance(materialInstanceAsset));
 	}
@@ -887,7 +887,7 @@ namespace Ion
 		// Update the constant buffer fields from parameters
 		// Textures need to be loaded and bound normally
 
-		TShared<RHIUniformBufferDynamic> constants = m_ParentMaterial->m_MaterialConstants;
+		std::shared_ptr<RHIUniformBufferDynamic> constants = m_ParentMaterial->m_MaterialConstants;
 		constants->Bind(2);
 
 		for (auto& [name, parameter] : m_ParameterInstances)
@@ -915,7 +915,7 @@ namespace Ion
 		DestroyParameterInstances();
 	}
 
-	MaterialInstance::MaterialInstance(const TShared<Material>& parentMaterial) :
+	MaterialInstance::MaterialInstance(const std::shared_ptr<Material>& parentMaterial) :
 		m_ParentMaterial(parentMaterial)
 	{
 		ionassert(parentMaterial);
@@ -935,7 +935,7 @@ namespace Ion
 		}
 	}
 
-	void MaterialInstance::SetParentMaterial(const TShared<Material>& material)
+	void MaterialInstance::SetParentMaterial(const std::shared_ptr<Material>& material)
 	{
 		DestroyParameterInstances();
 		m_ParentMaterial = material;

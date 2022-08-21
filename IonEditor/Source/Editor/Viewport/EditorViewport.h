@@ -99,11 +99,11 @@ namespace Ion::Editor
 		void SetMSAAEnabled(bool bEnabled);
 		void SetFXAAEnabled(bool bEnabled);
 
-		const TShared<RHITexture>& GetViewportFramebuffer() const;
-		const TShared<Camera>& GetCamera() const;
+		const std::shared_ptr<RHITexture>& GetViewportFramebuffer() const;
+		const std::shared_ptr<Camera>& GetCamera() const;
 		const Transform& GetCameraTransform() const;
 
-		const TShared<EditorUIViewport>& GetUI() const;
+		const std::shared_ptr<EditorUIViewport>& GetUI() const;
 
 		UVector2 GetSize() const;
 
@@ -139,17 +139,17 @@ namespace Ion::Editor
 		TFunction<void(EditorViewport&)> m_OnCaptured;
 		TFunction<void(EditorViewport&)> m_OnReleased;
 
-		TShared<EditorUIViewport> m_UI;
+		std::shared_ptr<EditorUIViewport> m_UI;
 
-		TShared<RHITexture> m_ViewportFinalColor;
-		TShared<RHITexture> m_ViewportPreFX;
-		TShared<RHITexture> m_ObjectIDColor;
-		TShared<RHITexture> m_ObjectIDDepthStencil;
-		TShared<RHITexture> m_ObjectIDStaging;
+		std::shared_ptr<RHITexture> m_ViewportFinalColor;
+		std::shared_ptr<RHITexture> m_ViewportPreFX;
+		std::shared_ptr<RHITexture> m_ObjectIDColor;
+		std::shared_ptr<RHITexture> m_ObjectIDDepthStencil;
+		std::shared_ptr<RHITexture> m_ObjectIDStaging;
 		EditorViewportTextures m_ViewportTextures;
 		UVector2 m_ViewportSize;
 
-		TShared<Camera> m_Camera;
+		std::shared_ptr<Camera> m_Camera;
 		Transform m_CameraTransform;
 		float m_CameraMoveSpeed;
 
@@ -162,7 +162,7 @@ namespace Ion::Editor
 		friend class EditorUIViewport;
 	};
 
-	inline const TShared<Camera>& EditorViewport::GetCamera() const
+	inline const std::shared_ptr<Camera>& EditorViewport::GetCamera() const
 	{
 		return m_Camera;
 	}
@@ -172,7 +172,7 @@ namespace Ion::Editor
 		return m_CameraTransform;
 	}
 
-	inline const TShared<EditorUIViewport>& EditorViewport::GetUI() const
+	inline const std::shared_ptr<EditorUIViewport>& EditorViewport::GetUI() const
 	{
 		return m_UI;
 	}
@@ -182,7 +182,7 @@ namespace Ion::Editor
 		return m_ViewportGuid;
 	}
 
-	inline const TShared<RHITexture>& EditorViewport::GetViewportFramebuffer() const
+	inline const std::shared_ptr<RHITexture>& EditorViewport::GetViewportFramebuffer() const
 	{
 		return m_ViewportFinalColor;
 	}

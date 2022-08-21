@@ -84,7 +84,7 @@ namespace Ion
 	//	{
 	//		material->BindTextures();
 	//		//material->UpdateShaderUniforms();
-	//		material->ForEachTexture([shader](const TShared<Texture> texture, uint32 slot)
+	//		material->ForEachTexture([shader](const std::shared_ptr<Texture> texture, uint32 slot)
 	//		{
 	//			char uniformName[20];
 	//			sprintf_s(uniformName, "g_Samplers[%u]", slot);
@@ -183,7 +183,7 @@ namespace Ion
 		return GLPolygonModeToPolygonDrawMode(polygonMode);
 	}
 
-	Result<void, RHIError> OpenGLRenderer::SetRenderTarget(const TShared<RHITexture>& targetTexture)
+	Result<void, RHIError> OpenGLRenderer::SetRenderTarget(const std::shared_ptr<RHITexture>& targetTexture)
 	{
 		ionassert(!targetTexture || targetTexture->GetDescription().bUseAsRenderTarget);
 
@@ -193,7 +193,7 @@ namespace Ion
 		return Ok();
 	}
 
-	Result<void, RHIError> OpenGLRenderer::SetDepthStencil(const TShared<RHITexture>& targetTexture)
+	Result<void, RHIError> OpenGLRenderer::SetDepthStencil(const std::shared_ptr<RHITexture>& targetTexture)
 	{
 		return Ok();
 	}

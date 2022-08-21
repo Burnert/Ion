@@ -19,7 +19,7 @@ namespace Ion
 
 	struct ShaderPermutation
 	{
-		TShared<RHIShader> Shader;
+		std::shared_ptr<RHIShader> Shader;
 		EShaderUsage Usage;
 		bool bCompiled;
 
@@ -324,7 +324,7 @@ namespace Ion
 		Asset m_Value;
 
 		TResourcePtr<TextureResource> m_TextureResource;
-		TShared<RHITexture> m_Texture;
+		std::shared_ptr<RHITexture> m_Texture;
 	};
 
 	inline void MaterialParameterInstanceTexture2D::SetValue(Asset value)
@@ -341,15 +341,15 @@ namespace Ion
 	class ION_API MaterialRegistry
 	{
 	public:
-		static TShared<Material> QueryMaterial(Asset materialAsset);
-		static TShared<MaterialInstance> QueryMaterialInstance(Asset materialInstanceAsset);
+		static std::shared_ptr<Material> QueryMaterial(Asset materialAsset);
+		static std::shared_ptr<MaterialInstance> QueryMaterialInstance(Asset materialInstanceAsset);
 
 	private:
 		static MaterialRegistry& Get();
 
 	private:
-		THashMap<Asset, TWeak<Material>> m_Materials;
-		THashMap<Asset, TWeak<MaterialInstance>> m_MaterialInstances;
+		THashMap<Asset, std::weak_ptr<Material>> m_Materials;
+		THashMap<Asset, std::weak_ptr<MaterialInstance>> m_MaterialInstances;
 
 		static MaterialRegistry* s_Instance;
 	};
@@ -398,8 +398,8 @@ namespace Ion
 	class ION_API Material : public std::enable_shared_from_this<Material>
 	{
 	public:
-		static TShared<Material> Create();
-		static TShared<Material> CreateFromAsset(Asset materialAsset);
+		static std::shared_ptr<Material> Create();
+		static std::shared_ptr<Material> CreateFromAsset(Asset materialAsset);
 
 		/**
 		 * @brief Compile the shaders for this material.
@@ -411,7 +411,7 @@ namespace Ion
 		bool IsCompiled(EShaderUsage usage) const;
 
 		bool BindShader(EShaderUsage usage) const;
-		const TShared<RHIShader>& GetShader(EShaderUsage usage) const;
+		const std::shared_ptr<RHIShader>& GetShader(EShaderUsage usage) const;
 
 		void UpdateConstantBuffer() const;
 
@@ -453,8 +453,8 @@ namespace Ion
 	private:
 		THashMap<EShaderUsage, ShaderPermutation> m_Shaders;
 		THashMap<String, IMaterialParameter*> m_Parameters;
-		THashMap<MaterialInstance*, TWeak<MaterialInstance>> m_MaterialInstances;
-		TShared<RHIUniformBufferDynamic> m_MaterialConstants;
+		THashMap<MaterialInstance*, std::weak_ptr<MaterialInstance>> m_MaterialInstances;
+		std::shared_ptr<RHIUniformBufferDynamic> m_MaterialConstants;
 		uint64 m_Usage;
 		String m_MaterialCode;
 
@@ -484,8 +484,8 @@ namespace Ion
 	class ION_API MaterialInstance
 	{
 	public:
-		static TShared<MaterialInstance> Create(const TShared<Material>& parentMaterial);
-		static TShared<MaterialInstance> CreateFromAsset(Asset materialInstanceAsset);
+		static std::shared_ptr<MaterialInstance> Create(const std::shared_ptr<Material>& parentMaterial);
+		static std::shared_ptr<MaterialInstance> CreateFromAsset(Asset materialInstanceAsset);
 
 		void BindTextures() const;
 
@@ -494,7 +494,7 @@ namespace Ion
 		template<typename T>
 		T* GetMaterialParameterInstanceTyped(const String& name) const;
 
-		const TShared<Material>& GetBaseMaterial() const;
+		const std::shared_ptr<Material>& GetBaseMaterial() const;
 
 		/**
 		 * @brief Set the values in the associated material uniform buffer
@@ -507,10 +507,10 @@ namespace Ion
 		~MaterialInstance();
 
 	private:
-		MaterialInstance(const TShared<Material>& parentMaterial);
+		MaterialInstance(const std::shared_ptr<Material>& parentMaterial);
 		MaterialInstance(Asset materialInstanceAsset);
 
-		void SetParentMaterial(const TShared<Material>& material);
+		void SetParentMaterial(const std::shared_ptr<Material>& material);
 
 		void CreateParameterInstances();
 		void DestroyParameterInstances();
@@ -518,7 +518,7 @@ namespace Ion
 		bool ParseAsset(Asset materialInstanceAsset);
 
 	private:
-		TShared<Material> m_ParentMaterial;
+		std::shared_ptr<Material> m_ParentMaterial;
 
 		THashMap<String, IMaterialParameterInstance*> m_ParameterInstances;
 		THashSet<MaterialParameterInstanceTexture2D*> m_TextureParameterInstances;
@@ -533,7 +533,7 @@ namespace Ion
 		return (T*)GetMaterialParameterInstance(name);
 	}
 
-	inline const TShared<Material>& MaterialInstance::GetBaseMaterial() const
+	inline const std::shared_ptr<Material>& MaterialInstance::GetBaseMaterial() const
 	{
 		return m_ParentMaterial;
 	}

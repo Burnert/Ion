@@ -63,7 +63,7 @@ namespace Ion
 	{
 		friend GenericWindow;
 	public:
-		using EventPtr = TShared<Event>;
+		using EventPtr = std::shared_ptr<Event>;
 
 		virtual ~Application();
 
@@ -86,12 +86,12 @@ namespace Ion
 
 		static Renderer* GetRenderer();
 
-		FORCEINLINE static const TShared<GenericWindow>& GetWindow()
+		FORCEINLINE static const std::shared_ptr<GenericWindow>& GetWindow()
 		{
 			return Get()->m_Window;
 		}
 
-		FORCEINLINE static const TShared<InputManager>& GetInputManager()
+		FORCEINLINE static const std::shared_ptr<InputManager>& GetInputManager()
 		{
 			return Get()->m_InputManager;
 		}
@@ -207,7 +207,7 @@ namespace Ion
 
 		// End of overridables
 
-		FORCEINLINE TShared<GenericWindow> GetApplicationWindow() const { return m_Window; }
+		FORCEINLINE std::shared_ptr<GenericWindow> GetApplicationWindow() const { return m_Window; }
 
 		static Application* s_Instance;
 
@@ -230,7 +230,7 @@ namespace Ion
 		void LoadFonts();
 
 	protected:
-		virtual void InitImGuiBackend(const TShared<GenericWindow>& window) const { }
+		virtual void InitImGuiBackend(const std::shared_ptr<GenericWindow>& window) const { }
 		virtual void ImGuiNewFramePlatform() const { }
 		virtual void ImGuiRenderPlatform(ImDrawData* drawData) const { }
 		virtual void ImGuiShutdownPlatform() const { }
@@ -238,12 +238,12 @@ namespace Ion
 	private:
 		App* m_ClientApp;
 
-		TShared<GenericWindow> m_Window;
-		TShared<InputManager> m_InputManager;
+		std::shared_ptr<GenericWindow> m_Window;
+		std::shared_ptr<InputManager> m_InputManager;
 
 		EventDispatcher<ApplicationEventFunctions, Application> m_EventDispatcher;
-		TUnique<EventQueue<EventHandler>> m_EventQueue;
-		TUnique<LayerStack> m_LayerStack;
+		std::unique_ptr<EventQueue<EventHandler>> m_EventQueue;
+		std::unique_ptr<LayerStack> m_LayerStack;
 
 		std::thread::id m_MainThreadId;
 

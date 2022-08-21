@@ -30,8 +30,8 @@ namespace Ion
 		/**
 		 * @brief Loads the file specified in the <ImportExternal> node in the asset file.
 		 * 
-		 * @tparam FImport lambda TShared<TData>(TShared<AssetFileMemoryBlock>)
-		 * @tparam FReady  lambda void(TShared<TData>)
+		 * @tparam FImport lambda std::shared_ptr<TData>(std::shared_ptr<AssetFileMemoryBlock>)
+		 * @tparam FReady  lambda void(std::shared_ptr<TData>)
 		 * @tparam FError  lambda void(auto& result)
 		 * 
 		 * @param onImport Function called on a worker thread after the file has been loaded.
@@ -122,7 +122,7 @@ namespace Ion
 		static constexpr bool bReportError = TIsDifferentV<FError, nullptr_t>;
 
 		static_assert(TIsSharedV<TImportRet>, "The type returned from onImport must be a shared pointer.");
-		static_assert(TIsConvertibleV<FImport, TFunction<TImportRet(TShared<AssetFileMemoryBlock>)>>);
+		static_assert(TIsConvertibleV<FImport, TFunction<TImportRet(std::shared_ptr<AssetFileMemoryBlock>)>>);
 		static_assert(TIsConvertibleV<FReady, TFunction<void(TImportRet)>>,
 			"onReady argument type and onImport return type must be the same.");
 
@@ -134,7 +134,7 @@ namespace Ion
 		AsyncTask([onImport, onReady, onError, importData](IMessageQueueProvider& q)
 		{
 			// Worker thread:
-			TShared<AssetFileMemoryBlock> data(new AssetFileMemoryBlock, [](AssetFileMemoryBlock* ptr)
+			std::shared_ptr<AssetFileMemoryBlock> data(new AssetFileMemoryBlock, [](AssetFileMemoryBlock* ptr)
 			{
 				ptr->Free();
 				delete ptr;

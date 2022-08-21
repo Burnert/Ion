@@ -36,7 +36,7 @@ namespace Ion
 		virtual ~GenericWindow() { }
 
 		virtual bool Initialize();
-		virtual bool Initialize(const TShared<GenericWindow>& parentWindow);
+		virtual bool Initialize(const std::shared_ptr<GenericWindow>& parentWindow);
 
 		virtual void Show() { }
 		virtual void Hide() { }
@@ -77,20 +77,20 @@ namespace Ion
 
 		Vector2 GetCenterPosition() const;
 
-		const TShared<RHITexture>& GetWindowColorTexture() const;
-		const TShared<RHITexture>& GetWindowDepthStencilTexture() const;
+		const std::shared_ptr<RHITexture>& GetWindowColorTexture() const;
+		const std::shared_ptr<RHITexture>& GetWindowDepthStencilTexture() const;
 
 	public:
 		// Implemented per platform.
-		static TShared<GenericWindow> Create();
+		static std::shared_ptr<GenericWindow> Create();
 
 	protected:
 		// Protected constructor: Only shared_ptrs of this class can be made.
 		GenericWindow();
 
 	private:
-		TShared<RHITexture> m_WindowColorTexture;
-		TShared<RHITexture> m_WindowDepthStencilTexture;
+		std::shared_ptr<RHITexture> m_WindowColorTexture;
+		std::shared_ptr<RHITexture> m_WindowDepthStencilTexture;
 
 	protected:
 		bool m_bCursorLocked;
@@ -100,12 +100,12 @@ namespace Ion
 		friend class DX10;
 	};
 
-	inline const TShared<RHITexture>& GenericWindow::GetWindowColorTexture() const
+	inline const std::shared_ptr<RHITexture>& GenericWindow::GetWindowColorTexture() const
 	{
 		return m_WindowColorTexture;
 	}
 
-	inline const TShared<RHITexture>& GenericWindow::GetWindowDepthStencilTexture() const
+	inline const std::shared_ptr<RHITexture>& GenericWindow::GetWindowDepthStencilTexture() const
 	{
 		return m_WindowDepthStencilTexture;
 	}

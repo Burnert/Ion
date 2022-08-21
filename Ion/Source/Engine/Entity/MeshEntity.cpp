@@ -29,12 +29,12 @@ namespace Ion
 		GetMeshComponent()->SetMeshFromAsset(asset);
 	}
 
-	void MeshEntity::SetMesh(const TShared<Mesh>& mesh)
+	void MeshEntity::SetMesh(const std::shared_ptr<Mesh>& mesh)
 	{
 		GetMeshComponent()->SetMesh(mesh);
 	}
 
-	TShared<Mesh> MeshEntity::GetMesh() const
+	std::shared_ptr<Mesh> MeshEntity::GetMesh() const
 	{
 		return GetMeshComponent()->GetMesh();
 	}

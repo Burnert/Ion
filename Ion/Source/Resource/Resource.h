@@ -98,7 +98,7 @@ namespace Ion
 			if (T::ParseAssetFile(asset, guid, desc))
 			{
 				// Register the new resource, if it doesn't exist.
-				//TShared<T> newResource = MakeShareable(new T(guid, asset, desc));
+				//std::shared_ptr<T> newResource = MakeShareable(new T(guid, asset, desc));
 				TResourcePtr<T> newResource(new T(guid, asset, desc));
 
 				// Register the resource using the asset's Guid.

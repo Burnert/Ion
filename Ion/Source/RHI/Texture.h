@@ -131,7 +131,7 @@ namespace Ion
 	{
 	public:
 		static RHITexture* Create(const TextureDescription& desc);
-		static TShared<RHITexture> CreateShared(const TextureDescription& desc);
+		static std::shared_ptr<RHITexture> CreateShared(const TextureDescription& desc);
 
 		virtual ~RHITexture();
 
@@ -141,7 +141,7 @@ namespace Ion
 		virtual Result<void, RHIError> Bind(uint32 slot = 0) const = 0;
 		virtual Result<void, RHIError> Unbind() const = 0;
 
-		virtual Result<void, RHIError> CopyTo(const TShared<RHITexture>& destination) const = 0;
+		virtual Result<void, RHIError> CopyTo(const std::shared_ptr<RHITexture>& destination) const = 0;
 		virtual Result<void, RHIError> Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType) = 0;
 		virtual Result<void, RHIError> Unmap() = 0;
 

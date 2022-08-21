@@ -146,8 +146,8 @@ namespace Ion
 	class ION_API AssetImporter
 	{
 	public:
-		static TShared<MeshAssetData> ImportColladaMeshAsset(const TShared<AssetFileMemoryBlock>& block);
-		static TShared<Image> ImportImageAsset(const TShared<AssetFileMemoryBlock>& block);
+		static std::shared_ptr<MeshAssetData> ImportColladaMeshAsset(const std::shared_ptr<AssetFileMemoryBlock>& block);
+		static std::shared_ptr<Image> ImportImageAsset(const std::shared_ptr<AssetFileMemoryBlock>& block);
 	};
 }
 

@@ -65,12 +65,12 @@ namespace Ion
 		m_MeshResource = resource;
 	}
 
-	void MeshComponent::SetMesh(const TShared<Mesh>& mesh)
+	void MeshComponent::SetMesh(const std::shared_ptr<Mesh>& mesh)
 	{
 		m_Mesh = mesh;
 	}
 
-	TShared<Mesh> MeshComponent::GetMesh() const
+	std::shared_ptr<Mesh> MeshComponent::GetMesh() const
 	{
 		return m_Mesh;
 	}
@@ -83,10 +83,10 @@ namespace Ion
 
 		RHIShader* shader = Renderer::Get()->GetBasicShader().get();
 
-		TShared<MaterialInstance> materialInstance = m_Mesh->GetMaterialInSlot(0);
+		std::shared_ptr<MaterialInstance> materialInstance = m_Mesh->GetMaterialInSlot(0);
 		if (materialInstance)
 		{
-			const TShared<Material>& material = materialInstance->GetBaseMaterial();
+			const std::shared_ptr<Material>& material = materialInstance->GetBaseMaterial();
 			if (material)
 			{
 				shader = material->GetShader(EShaderUsage::StaticMesh).get();

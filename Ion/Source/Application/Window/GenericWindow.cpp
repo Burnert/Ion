@@ -17,7 +17,7 @@ namespace Ion
 		return false;
 	}
 
-	bool GenericWindow::Initialize(const TShared<GenericWindow>& parentWindow)
+	bool GenericWindow::Initialize(const std::shared_ptr<GenericWindow>& parentWindow)
 	{
 		ApplicationLogger.Critical("{0} is not implemented!", __FUNCTION__);
 		return false;

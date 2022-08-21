@@ -252,7 +252,7 @@ template<typename T>
 inline constexpr bool TIsSharedV = false;
 
 template<typename T>
-inline constexpr bool TIsSharedV<TShared<T>> = true;
+inline constexpr bool TIsSharedV<std::shared_ptr<T>> = true;
 
 // TIsUnique -------------------------------------------------------------------------
 
@@ -260,7 +260,7 @@ template<typename T>
 inline constexpr bool TIsUniqueV = false;
 
 template<typename T>
-inline constexpr bool TIsUniqueV<TUnique<T>> = true;
+inline constexpr bool TIsUniqueV<std::unique_ptr<T>> = true;
 
 // -------------------------------------------------------------------------------------
 // - Has Function Test

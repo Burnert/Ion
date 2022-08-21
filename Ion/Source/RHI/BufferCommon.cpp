@@ -27,7 +27,7 @@ namespace Ion
 		}
 	}
 
-	TShared<RHIVertexBuffer> RHIVertexBuffer::CreateShared(float* vertexAttributes, uint64 count)
+	std::shared_ptr<RHIVertexBuffer> RHIVertexBuffer::CreateShared(float* vertexAttributes, uint64 count)
 	{
 		return MakeShareable(Create(vertexAttributes, count));
 	}
@@ -48,7 +48,7 @@ namespace Ion
 		}
 	}
 
-	TShared<RHIIndexBuffer> RHIIndexBuffer::CreateShared(uint32* indices, uint32 count)
+	std::shared_ptr<RHIIndexBuffer> RHIIndexBuffer::CreateShared(uint32* indices, uint32 count)
 	{
 		return MakeShareable(Create(indices, count));
 	}

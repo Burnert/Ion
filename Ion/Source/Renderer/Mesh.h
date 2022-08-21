@@ -27,7 +27,7 @@ namespace Ion
 
 	struct MaterialSlot
 	{
-		TShared<MaterialInstance> MaterialInstance;
+		std::shared_ptr<MaterialInstance> MaterialInstance;
 		uint16 Index;
 		union
 		{
@@ -42,19 +42,19 @@ namespace Ion
 	class ION_API Mesh
 	{
 	public:
-		static TShared<Mesh> Create();
-		static TShared<Mesh> CreateFromResource(const TResourcePtr<MeshResource>& resource);
+		static std::shared_ptr<Mesh> Create();
+		static std::shared_ptr<Mesh> CreateFromResource(const TResourcePtr<MeshResource>& resource);
 
 		virtual ~Mesh() { }
 
-		void SetVertexBuffer(const TShared<RHIVertexBuffer>& vertexBuffer);
-		void SetIndexBuffer(const TShared<RHIIndexBuffer>& indexBuffer);
+		void SetVertexBuffer(const std::shared_ptr<RHIVertexBuffer>& vertexBuffer);
+		void SetIndexBuffer(const std::shared_ptr<RHIIndexBuffer>& indexBuffer);
 
-		const TShared<RHIVertexBuffer>& GetVertexBuffer() const;
-		const TShared<RHIIndexBuffer>& GetIndexBuffer() const;
+		const std::shared_ptr<RHIVertexBuffer>& GetVertexBuffer() const;
+		const std::shared_ptr<RHIIndexBuffer>& GetIndexBuffer() const;
 
-		void AssignMaterialToSlot(uint16 index, const TShared<MaterialInstance>& material);
-		TShared<MaterialInstance> GetMaterialInSlot(uint16 slot) const;
+		void AssignMaterialToSlot(uint16 index, const std::shared_ptr<MaterialInstance>& material);
+		std::shared_ptr<MaterialInstance> GetMaterialInSlot(uint16 slot) const;
 
 		MeshUniforms& GetUniformsDataRef();
 
@@ -72,9 +72,9 @@ namespace Ion
 	private:
 		TArray<MaterialSlot> m_MaterialSlots;
 
-		TShared<RHIVertexBuffer> m_VertexBuffer;
-		TShared<RHIIndexBuffer> m_IndexBuffer;
-		TShared<RHIUniformBuffer> m_UniformBuffer;
+		std::shared_ptr<RHIVertexBuffer> m_VertexBuffer;
+		std::shared_ptr<RHIIndexBuffer> m_IndexBuffer;
+		std::shared_ptr<RHIUniformBuffer> m_UniformBuffer;
 
 		// @TODO: Is this fine?
 		TResourcePtr<MeshResource> m_MeshResource;

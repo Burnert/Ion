@@ -232,11 +232,11 @@ namespace Ion
 		return true;
 	}
 
-	void WindowsApplication::InitImGuiBackend(const TShared<GenericWindow>& window) const
+	void WindowsApplication::InitImGuiBackend(const std::shared_ptr<GenericWindow>& window) const
 	{
 		TRACE_FUNCTION();
 
-		TShared<WindowsWindow> windowsWindow = std::static_pointer_cast<WindowsWindow>(window);
+		std::shared_ptr<WindowsWindow> windowsWindow = std::static_pointer_cast<WindowsWindow>(window);
 		ImGui_ImplWin32_Init((HWND)windowsWindow->GetNativeHandle());
 		RHI::Get()->InitImGuiBackend();
 	}
@@ -253,7 +253,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		TShared<WindowsWindow> window = std::static_pointer_cast<WindowsWindow>(GetWindow());
+		std::shared_ptr<WindowsWindow> window = std::static_pointer_cast<WindowsWindow>(GetWindow());
 
 		RHI::Get()->ImGuiRender(drawData);
 

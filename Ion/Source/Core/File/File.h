@@ -204,7 +204,7 @@ namespace Ion
 
 		FileList ListFiles() const;
 
-		TShared<TTreeNode<FileInfo>> Tree() const;
+		std::shared_ptr<TTreeNode<FileInfo>> Tree() const;
 
 		bool IsRelative() const;
 		bool IsAbsolute() const;

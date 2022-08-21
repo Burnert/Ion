@@ -388,7 +388,7 @@ namespace Ion
 		return DXCommon::GetShaderModelString((D3D_FEATURE_LEVEL)s_FeatureLevel);
 	}
 
-	Result<TShared<RHITexture>, RHIError> DX10::CreateRenderTarget()
+	Result<std::shared_ptr<RHITexture>, RHIError> DX10::CreateRenderTarget()
 	{
 		TRACE_FUNCTION();
 
@@ -410,7 +410,7 @@ namespace Ion
 		return MakeShareable(new DX10Texture(desc, backBuffer));
 	}
 
-	Result<TShared<RHITexture>, RHIError> DX10::CreateDepthStencil(uint32 width, uint32 height)
+	Result<std::shared_ptr<RHITexture>, RHIError> DX10::CreateDepthStencil(uint32 width, uint32 height)
 	{
 		TRACE_FUNCTION();
 

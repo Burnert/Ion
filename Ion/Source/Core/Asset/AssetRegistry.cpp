@@ -133,7 +133,7 @@ namespace Ion
 
 		AssetLogger.Info("Registering Assets in Virtual Root \"{}\" -> \"{}\"...", virtualRoot, rootDir.ToString());
 
-		TShared<TTreeNode<FileInfo>> content = rootDir.Tree();
+		std::shared_ptr<TTreeNode<FileInfo>> content = rootDir.Tree();
 
 		TArray<TTreeNode<FileInfo>*> assets = content->FindAllNodesRecursiveDF([](FileInfo& fileInfo)
 		{

@@ -43,17 +43,17 @@ namespace Ion
 
 	// Generic Window
 
-	TShared<GenericWindow> GenericWindow::Create()
+	std::shared_ptr<GenericWindow> GenericWindow::Create()
 	{
 		return WindowsWindow::Create();
 	}
 
 	// Windows Window
 
-	TShared<WindowsWindow> WindowsWindow::Create()
+	std::shared_ptr<WindowsWindow> WindowsWindow::Create()
 	{
 		WindowsApplicationLogger.Trace("Creating Windows window.");
-		return TShared<WindowsWindow>(new WindowsWindow);
+		return std::shared_ptr<WindowsWindow>(new WindowsWindow);
 	}
 
 	WindowsWindow::WindowsWindow() :
@@ -609,10 +609,10 @@ namespace Ion
 
 	bool WindowsWindow::Initialize()
 	{
-		return Initialize(TShared<GenericWindow>(nullptr));
+		return Initialize(std::shared_ptr<GenericWindow>(nullptr));
 	}
 
-	bool WindowsWindow::Initialize(const TShared<GenericWindow>& parentWindow)
+	bool WindowsWindow::Initialize(const std::shared_ptr<GenericWindow>& parentWindow)
 	{
 		TRACE_FUNCTION();
 

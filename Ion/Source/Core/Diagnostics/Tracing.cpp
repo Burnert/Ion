@@ -33,7 +33,7 @@ namespace Ion
 		swprintf_s(filename, L"Debug/Trace_XX-XX-XX_XX-XX-XXXX_%s.json", nameW);
 
 		UniqueLock lockResults(s_ResultsMutex);
-		s_SessionDumpFile = MakeUnique<File>(filename);
+		s_SessionDumpFile = std::make_unique<File>(filename);
 		s_SessionDumpFile->Open(EFileMode::Write | EFileMode::Reset | EFileMode::CreateNew);
 
 		//bResult = s_SessionDumpFile->Open(IO::FM_Write | IO::FM_Reset);
@@ -226,7 +226,7 @@ namespace Ion
 	DebugTracing::TraceStartMap DebugTracing::s_TraceStarts;
 	DebugTracing::NamedTraceResultsMap DebugTracing::s_NamedTraceResults;
 	DebugTracing::ThreadNameCache DebugTracing::s_ThreadNameCache;
-	TUnique<File> DebugTracing::s_SessionDumpFile = nullptr;
+	std::unique_ptr<File> DebugTracing::s_SessionDumpFile = nullptr;
 	Mutex DebugTracing::s_ResultsMutex;
 	Mutex DebugTracing::s_SessionMutex;
 	const char* DebugTracing::s_CurrentSessionName = nullptr;

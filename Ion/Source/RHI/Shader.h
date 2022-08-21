@@ -16,7 +16,7 @@ namespace Ion
 	class ION_API RHIShader
 	{
 	public:
-		static TShared<RHIShader> Create();
+		static std::shared_ptr<RHIShader> Create();
 
 		virtual ~RHIShader() { }
 

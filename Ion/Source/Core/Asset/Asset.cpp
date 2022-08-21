@@ -129,7 +129,7 @@ namespace Ion
 		);
 
 		AssetInitializer initializer;
-		initializer.IAssetXML = MakeShared<XMLDocument>(assetDefinition);
+		initializer.IAssetXML = std::make_shared<XMLDocument>(assetDefinition);
 		initializer.AssetDefinitionPath = path;
 		initializer.VirtualPath = virtualPath;
 
@@ -206,14 +206,14 @@ namespace Ion
 		return TEnumParser<EAssetType>::FromString(sType.substr(4)).value_or(EAssetType::Invalid);
 	}
 
-	TShared<MeshAssetData> AssetImporter::ImportColladaMeshAsset(const TShared<AssetFileMemoryBlock>& block)
+	std::shared_ptr<MeshAssetData> AssetImporter::ImportColladaMeshAsset(const std::shared_ptr<AssetFileMemoryBlock>& block)
 	{
-		TShared<MeshAssetData> meshData = MakeShared<MeshAssetData>();
+		std::shared_ptr<MeshAssetData> meshData = std::make_shared<MeshAssetData>();
 
 		String collada((const char*)block->Ptr, block->Count);
 
 		// @TODO: Refactor the ColladaDocument class a bit
-		TUnique<ColladaDocument> colladaDoc = MakeUnique<ColladaDocument>(collada);
+		std::unique_ptr<ColladaDocument> colladaDoc = std::make_unique<ColladaDocument>(collada);
 		// @TODO: Handle errors
 		ColladaData colladaData = colladaDoc->Parse().Unwrap();
 
@@ -231,9 +231,9 @@ namespace Ion
 		return meshData;
 	}
 
-	TShared<Image> AssetImporter::ImportImageAsset(const TShared<AssetFileMemoryBlock>& block)
+	std::shared_ptr<Image> AssetImporter::ImportImageAsset(const std::shared_ptr<AssetFileMemoryBlock>& block)
 	{
-		TShared<Image> image = MakeShared<Image>();
+		std::shared_ptr<Image> image = std::make_shared<Image>();
 		image->Load(block->Ptr, block->Count);
 		return image;
 	}

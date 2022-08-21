@@ -13,10 +13,10 @@ namespace Ion
 		DX10VertexBuffer(float* vertexAttributes, uint64 count);
 		virtual ~DX10VertexBuffer() override;
 
-		virtual void SetLayout(const TShared<RHIVertexLayout>& layout) override;
-		virtual Result<void, RHIError> SetLayoutShader(const TShared<RHIShader>& shader) override;
+		virtual void SetLayout(const std::shared_ptr<RHIVertexLayout>& layout) override;
+		virtual Result<void, RHIError> SetLayoutShader(const std::shared_ptr<RHIShader>& shader) override;
 
-		Result<void, RHIError> CreateDX10Layout(const TShared<class DX10Shader>& shader);
+		Result<void, RHIError> CreateDX10Layout(const std::shared_ptr<class DX10Shader>& shader);
 
 		virtual uint32 GetVertexCount() const override;
 
@@ -31,7 +31,7 @@ namespace Ion
 	private:
 		uint32 m_ID;
 		uint32 m_VertexCount;
-		TShared<RHIVertexLayout> m_VertexLayout;
+		std::shared_ptr<RHIVertexLayout> m_VertexLayout;
 		TArray<D3D10_INPUT_ELEMENT_DESC> m_IEDArray;
 
 		ID3D10Buffer* m_Buffer;

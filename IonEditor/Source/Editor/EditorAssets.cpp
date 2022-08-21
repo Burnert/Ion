@@ -17,7 +17,7 @@
 
 namespace Ion::Editor
 {
-	static void LoadTexture(TResourcePtr<TextureResource>& outResource, TShared<RHITexture>& texture, const String& vp)
+	static void LoadTexture(TResourcePtr<TextureResource>& outResource, std::shared_ptr<RHITexture>& texture, const String& vp)
 	{
 		Asset asset = Asset::Resolve(vp).UnwrapOr(Asset::None);
 		
@@ -53,7 +53,7 @@ namespace Ion::Editor
 		LoadTexture(ResourceBillboardNoMesh,    BillboardNoMesh,    VPNoMesh);
 	}
 
-	const TShared<RHITexture>& EditorBillboards::GetComponentBillboardTexture(ComponentTypeID id)
+	const std::shared_ptr<RHITexture>& EditorBillboards::GetComponentBillboardTexture(ComponentTypeID id)
 	{
 		if (id == LightComponent::GetTypeID())
 			return BillboardLightbulb;
@@ -82,16 +82,16 @@ namespace Ion::Editor
 			2, 3, 0,
 		};
 
-		TShared<RHIVertexLayout> gridLayout = MakeShared<RHIVertexLayout>(2);
+		std::shared_ptr<RHIVertexLayout> gridLayout = std::make_shared<RHIVertexLayout>(2);
 		gridLayout->AddAttribute(EVertexAttributeSemantic::Position, EVertexAttributeType::Float, 3, false);
 		gridLayout->AddAttribute(EVertexAttributeSemantic::TexCoord, EVertexAttributeType::Float, 2, false);
 		gridLayout->AddAttribute(EVertexAttributeSemantic::Normal, EVertexAttributeType::Float, 3, true);
 
-		TShared<RHIVertexBuffer> gridVB = RHIVertexBuffer::CreateShared(gridVertices, sizeof(gridVertices) / sizeof(float));
+		std::shared_ptr<RHIVertexBuffer> gridVB = RHIVertexBuffer::CreateShared(gridVertices, sizeof(gridVertices) / sizeof(float));
 		gridVB->SetLayout(gridLayout);
 		gridVB->SetLayoutShader(EditorMeshes::ShaderGrid);
 
-		TShared<RHIIndexBuffer> gridIB = RHIIndexBuffer::CreateShared(gridIndices, sizeof(gridIndices) / sizeof(uint32));
+		std::shared_ptr<RHIIndexBuffer> gridIB = RHIIndexBuffer::CreateShared(gridIndices, sizeof(gridIndices) / sizeof(uint32));
 
 		EditorMeshes::MeshGrid = Mesh::Create();
 		EditorMeshes::MeshGrid->SetVertexBuffer(gridVB);

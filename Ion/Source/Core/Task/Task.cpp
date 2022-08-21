@@ -6,7 +6,7 @@ namespace Ion
 {
 	AsyncTask::AsyncTask(const TFuncAsyncTaskOnExecute& onExecute)
 	{
-		m_Work = MakeShared<FTaskWork>(onExecute);
+		m_Work = std::make_shared<FTaskWork>(onExecute);
 	}
 
 	void AsyncTask::Schedule(TaskQueue& taskQueue)

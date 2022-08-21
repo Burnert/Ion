@@ -138,7 +138,7 @@ template<> constexpr EUniformType TTypeToUniformTypeV<type> = EUniformType::name
 		void Add(const String& name, EUniformType type);
 		void Remove(const String& name);
 
-		TShared<RHIUniformBufferDynamic> Construct();
+		std::shared_ptr<RHIUniformBufferDynamic> Construct();
 
 	private:
 		UniformDataMap m_Uniforms;

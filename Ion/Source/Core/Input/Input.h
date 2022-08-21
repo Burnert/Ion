@@ -183,7 +183,7 @@ namespace Ion
 
 		static IVector2 GetCursorPosition() { return s_Instance->GetCursorPosition_Internal(); }
 
-		static TShared<InputManager> Create();
+		static std::shared_ptr<InputManager> Create();
 
 		/* Transforms ActualKeyCode to normal KeyCode
 		   for LShift returns Shift, etc. */
@@ -228,7 +228,7 @@ namespace Ion
 		>;
 		EventDispatcher<InputEventFunctions, InputManager> m_EventDispatcher;
 
-		static TShared<InputManager> s_Instance;
+		static std::shared_ptr<InputManager> s_Instance;
 		uint8 m_InputStates[256];
 
 		MouseInputType m_MouseInputType;

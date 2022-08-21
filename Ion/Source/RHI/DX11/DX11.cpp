@@ -389,7 +389,7 @@ namespace Ion
 		strcpy_s((s_DisplayName + length), 120 - length, version);
 	}
 
-	Result<TShared<RHITexture>, RHIError> DX11::CreateRenderTarget()
+	Result<std::shared_ptr<RHITexture>, RHIError> DX11::CreateRenderTarget()
 	{
 		TRACE_FUNCTION();
 
@@ -410,7 +410,7 @@ namespace Ion
 		return MakeShareable(new DX11Texture(desc, backBuffer));
 	}
 
-	Result<TShared<RHITexture>, RHIError> DX11::CreateDepthStencil(uint32 width, uint32 height)
+	Result<std::shared_ptr<RHITexture>, RHIError> DX11::CreateDepthStencil(uint32 width, uint32 height)
 	{
 		TRACE_FUNCTION();
 

@@ -17,14 +17,14 @@ namespace Ion
 	{
 		friend class WindowsApplication;
 	public:
-		static TShared<WindowsWindow> Create();
+		static std::shared_ptr<WindowsWindow> Create();
 
 		// GenericWindow:
 
 		virtual ~WindowsWindow();
 
 		virtual bool Initialize() override;
-		virtual bool Initialize(const TShared<GenericWindow>& parentWindow) override;
+		virtual bool Initialize(const std::shared_ptr<GenericWindow>& parentWindow) override;
 
 		virtual void Show() override;
 		virtual void Hide() override;

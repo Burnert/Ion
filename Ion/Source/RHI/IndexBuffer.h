@@ -8,7 +8,7 @@ namespace Ion
 	{
 	public:
 		static RHIIndexBuffer* Create(uint32* indices, uint32 count);
-		static TShared<RHIIndexBuffer> CreateShared(uint32* indices, uint32 count);
+		static std::shared_ptr<RHIIndexBuffer> CreateShared(uint32* indices, uint32 count);
 
 		virtual ~RHIIndexBuffer() { }
 

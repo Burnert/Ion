@@ -967,7 +967,7 @@ namespace Ion::Editor
 		{
 			ImGui::PushID("MeshSettings");
 
-			TShared<Mesh> mesh = meshComponent.GetMesh();
+			std::shared_ptr<Mesh> mesh = meshComponent.GetMesh();
 
 			Asset currentMeshAsset = mesh && mesh->GetMeshResource() ?
 				mesh->GetMeshResource()->GetAssetHandle() :
@@ -990,7 +990,7 @@ namespace Ion::Editor
 
 					TResourcePtr<MeshResource> meshResource = MeshResource::Query(data.AssetHandle);
 
-					TShared<Mesh> mesh = Mesh::CreateFromResource(meshResource);
+					std::shared_ptr<Mesh> mesh = Mesh::CreateFromResource(meshResource);
 
 					// @TODO: Yeah well this is a bit too much
 					meshComponent.SetMeshAsset(data.AssetHandle);
@@ -1021,7 +1021,7 @@ namespace Ion::Editor
 					{
 						TResourcePtr<MeshResource> meshResource = MeshResource::Query(meshAsset);
 
-						TShared<Mesh> mesh = Mesh::CreateFromResource(meshResource);
+						std::shared_ptr<Mesh> mesh = Mesh::CreateFromResource(meshResource);
 
 						// @TODO: Yeah well this is a bit too much
 						meshComponent.SetMeshAsset(meshAsset);
@@ -1062,7 +1062,7 @@ namespace Ion::Editor
 						bool bSelected = materialAsset == currentMaterialAsset;
 						if (ImGui::Selectable(materialAsset->GetInfo().Name.c_str(), bSelected))
 						{
-							TShared<MaterialInstance> materialInstance = MaterialRegistry::QueryMaterialInstance(materialAsset);
+							std::shared_ptr<MaterialInstance> materialInstance = MaterialRegistry::QueryMaterialInstance(materialAsset);
 							meshComponent.GetMesh()->AssignMaterialToSlot(0, materialInstance);
 
 							bChanged = true;

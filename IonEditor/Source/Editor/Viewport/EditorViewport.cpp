@@ -66,7 +66,7 @@ namespace Ion::Editor
 					DispatchOnResize(m_Size);
 				}
 
-				TShared<RHITexture> viewportFramebuffer = m_Owner->GetViewportFramebuffer();
+				std::shared_ptr<RHITexture> viewportFramebuffer = m_Owner->GetViewportFramebuffer();
 				if (viewportFramebuffer)
 				{
 					ImVec2 startCursor = ImGui::GetCursorPos();
@@ -94,7 +94,7 @@ namespace Ion::Editor
 							DNDAssetData& data = *(DNDAssetData*)payload->Data;
 
 							TResourcePtr<MeshResource> meshResource = MeshResource::Query(data.AssetHandle);
-							TShared<Mesh> mesh = Mesh::CreateFromResource(meshResource);
+							std::shared_ptr<Mesh> mesh = Mesh::CreateFromResource(meshResource);
 
 							World* world = EditorApplication::Get()->GetEditorWorld();
 							MeshEntity* meshEntity = world->SpawnEntityOfClass<MeshEntity>();
@@ -193,7 +193,7 @@ namespace Ion::Editor
 	// EditorViewport -------------------------------------------------------------------
 
 	EditorViewport::EditorViewport(const UVector2& initialSize, int32 index) :
-		m_UI(MakeShared<EditorUIViewport>(this, index)),
+		m_UI(std::make_shared<EditorUIViewport>(this, index)),
 		m_Camera(Camera::Create()),
 		m_CameraMoveSpeed(5.0f),
 		m_ClickedPoint({ -1, -1 }),
@@ -252,7 +252,7 @@ namespace Ion::Editor
 			m_Camera->SetTransform(m_CameraTransform.GetMatrix());
 			editorScene->LoadCamera(m_Camera);
 
-			TShared<EditorPassData> editorPassData = EditorApplication::Get()->GetEditorPassData();
+			std::shared_ptr<EditorPassData> editorPassData = EditorApplication::Get()->GetEditorPassData();
 			editorPassData->RTObjectID = m_ObjectIDColor;
 			editorPassData->RTObjectIDDepth = m_ObjectIDDepthStencil;
 			editorPassData->RTSelectionDepth = m_ViewportTextures.SelectedDepth;
@@ -284,7 +284,7 @@ namespace Ion::Editor
 			Renderer::Get()->Clear();
 			m_ViewportTextures.SceneFinalDepth->Bind(1);
 			m_ViewportTextures.SelectedDepth->Bind(2);
-			TShared<RHIShader> viewportShader =
+			std::shared_ptr<RHIShader> viewportShader =
 				// Select the proper shader
 				m_ViewportTextures.SceneFinalColor->GetDescription().IsMultiSampled() ?
 				Renderer::Get()->GetEditorViewportMSShader() :

@@ -72,7 +72,7 @@ namespace Ion
 		template<typename T>
 		T GetErrorDetails() const;
 
-		TShared<MemoryPoolDebugInfo> GetDebugInfo() const;
+		std::shared_ptr<MemoryPoolDebugInfo> GetDebugInfo() const;
 		void PrintDebugInfo() const;
 
 		MemoryPool(const MemoryPool&) = delete;

@@ -16,8 +16,8 @@ namespace Ion
 
 		void SetMeshFromAsset(const Asset& asset);
 
-		void SetMesh(const TShared<Mesh>& mesh);
-		TShared<Mesh> GetMesh() const;
+		void SetMesh(const std::shared_ptr<Mesh>& mesh);
+		std::shared_ptr<Mesh> GetMesh() const;
 
 		// Entity overrides
 
