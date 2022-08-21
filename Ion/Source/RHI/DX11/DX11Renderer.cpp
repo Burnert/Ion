@@ -153,6 +153,8 @@ namespace Ion
 
 	Result<void, RHIError> DX11Renderer::SetPolygonDrawMode(EPolygonDrawMode drawMode) const
 	{
+		ID3D11Device* device = DX11::GetDevice();
+		ID3D11DeviceContext* context = DX11::GetContext();
 		ID3D11RasterizerState* rasterizerState = DX11::GetRasterizerState();
 
 		D3D11_RASTERIZER_DESC rd{ };
@@ -162,8 +164,8 @@ namespace Ion
 
 		COMReset(DX11::s_RasterizerState);
 
-		dxcall(DX11::GetDevice()->CreateRasterizerState(&rd, &DX11::s_RasterizerState));
-		dxcall(DX11::GetContext()->RSSetState(DX11::s_RasterizerState));
+		dxcall(device->CreateRasterizerState(&rd, &DX11::s_RasterizerState));
+		dxcall(context->RSSetState(DX11::s_RasterizerState));
 
 		return Ok();
 	}
@@ -182,6 +184,8 @@ namespace Ion
 	{
 		ionassert(!targetTexture || targetTexture->GetDescription().bUseAsRenderTarget);
 		ionassert(!targetTexture || UVector2(targetTexture->GetDimensions()) == m_CurrentViewport.GetSize());
+
+		ID3D11DeviceContext* context = DX11::GetContext();
 
 		// ahhhhhhhh idk
 		//if (targetTexture && UVector2(targetTexture->GetDimensions()) != m_CurrentViewport.GetSize())
@@ -210,7 +214,7 @@ namespace Ion
 		// to set the RTV
 		m_CurrentDSV = nullptr;
 
-		dxcall(DX11::GetContext()->OMSetRenderTargets(1, &m_CurrentRTV, m_CurrentDSV));
+		dxcall(context->OMSetRenderTargets(1, &m_CurrentRTV, m_CurrentDSV));
 
 		return Ok();
 	}
@@ -219,6 +223,8 @@ namespace Ion
 	{
 		ionassert(!targetTexture || targetTexture->GetDescription().bUseAsDepthStencil);
 		ionassert(!targetTexture || UVector2(targetTexture->GetDimensions()) == m_CurrentViewport.GetSize());
+
+		ID3D11DeviceContext* context = DX11::GetContext();
 
 		if (targetTexture)
 		{
@@ -230,7 +236,7 @@ namespace Ion
 			m_CurrentDSV = nullptr;
 		}
 
-		dxcall(DX11::GetContext()->OMSetRenderTargets(1, &m_CurrentRTV, m_CurrentDSV));
+		dxcall(context->OMSetRenderTargets(1, &m_CurrentRTV, m_CurrentDSV));
 
 		return Ok();
 	}

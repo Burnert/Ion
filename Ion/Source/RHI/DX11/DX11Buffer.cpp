@@ -109,14 +109,18 @@ namespace Ion
 
 	Result<void, RHIError> DX11VertexBuffer::Unbind() const
 	{
-		dxcall(DX11::GetContext()->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr));
+		ID3D11DeviceContext* context = DX11::GetContext();
+
+		dxcall(context->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr));
 
 		return Ok();
 	}
 
 	Result<void, RHIError> DX11VertexBuffer::BindLayout() const
 	{
-		dxcall(DX11::GetContext()->IASetInputLayout(m_InputLayout));
+		ID3D11DeviceContext* context = DX11::GetContext();
+
+		dxcall(context->IASetInputLayout(m_InputLayout));
 
 		return Ok();
 	}
@@ -185,14 +189,18 @@ namespace Ion
 
 	Result<void, RHIError> DX11IndexBuffer::Bind() const
 	{
-		dxcall(DX11::GetContext()->IASetIndexBuffer(m_Buffer, DXGI_FORMAT_R32_UINT, 0));
+		ID3D11DeviceContext* context = DX11::GetContext();
+
+		dxcall(context->IASetIndexBuffer(m_Buffer, DXGI_FORMAT_R32_UINT, 0));
 
 		return Ok();
 	}
 
 	Result<void, RHIError> DX11IndexBuffer::Unbind() const
 	{
-		dxcall(DX11::GetContext()->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0));
+		ID3D11DeviceContext* context = DX11::GetContext();
+
+		dxcall(context->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0));
 
 		return Ok();
 	}

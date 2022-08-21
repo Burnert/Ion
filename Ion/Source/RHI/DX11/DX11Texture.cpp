@@ -54,16 +54,20 @@ namespace Ion
 		ionassert(m_SRV);
 		ionassert(m_SamplerState);
 
-		dxcall(DX11::GetContext()->PSSetShaderResources(slot, 1, &m_SRV));
-		dxcall(DX11::GetContext()->PSSetSamplers(slot, 1, &m_SamplerState));
+		ID3D11DeviceContext* context = DX11::GetContext();
+
+		dxcall(context->PSSetShaderResources(slot, 1, &m_SRV));
+		dxcall(context->PSSetSamplers(slot, 1, &m_SamplerState));
 
 		return Ok();
 	}
 
 	Result<void, RHIError> DX11Texture::Unbind() const
 	{
-		dxcall(DX11::GetContext()->PSSetShaderResources(0, 0, nullptr));
-		dxcall(DX11::GetContext()->PSSetSamplers(0, 0, nullptr));
+		ID3D11DeviceContext* context = DX11::GetContext();
+
+		dxcall(context->PSSetShaderResources(0, 0, nullptr));
+		dxcall(context->PSSetSamplers(0, 0, nullptr));
 
 		return Ok();
 	}
