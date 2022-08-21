@@ -16,7 +16,7 @@ namespace Ion
 		//ionassert(dimensions.Width <= 16384 && dimensions.Height <= 16384, "Textures larger than 16K are unsupported.");
 		// @TODO: This probably should not be here (recreate the texture instead)
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX10Texture::UpdateSubresource(Image* image)
@@ -46,7 +46,7 @@ namespace Ion
 			dxcall(device->GenerateMips(m_SRV));
 		}
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX10Texture::Bind(uint32 slot) const
@@ -59,7 +59,7 @@ namespace Ion
 		dxcall(device->PSSetShaderResources(slot, 1, &m_SRV));
 		dxcall(device->PSSetSamplers(slot, 1, &m_SamplerState));
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX10Texture::Unbind() const
@@ -69,7 +69,7 @@ namespace Ion
 		dxcall(device->PSSetShaderResources(0, 0, nullptr));
 		dxcall(device->PSSetSamplers(0, 0, nullptr));
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX10Texture::CopyTo(const TShared<RHITexture>& destination) const
@@ -79,7 +79,7 @@ namespace Ion
 		TShared<DX10Texture> destTexture = TStaticCast<DX10Texture>(destination);
 		dxcall(device->CopyResource(destTexture->m_Texture, m_Texture));
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX10Texture::Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType)
@@ -91,14 +91,14 @@ namespace Ion
 		outBuffer = mt2d.pData;
 		outLineSize = mt2d.RowPitch;
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX10Texture::Unmap()
 	{
 		dxcall(m_Texture->Unmap(0));
 
-		return Void();
+		return Ok();
 	}
 
 	void* DX10Texture::GetNativeID() const
@@ -203,7 +203,7 @@ namespace Ion
 		dxcall(device->CreateTexture2D(&tex2DDesc, desc.InitialData ? &sd : nullptr, &m_Texture));
 		DX10::SetDebugName(m_Texture, "Texture2D_" + desc.DebugName);
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX10Texture::CreateViews(const TextureDescription& desc)
@@ -250,7 +250,7 @@ namespace Ion
 			DX10::SetDebugName(m_DSV, "DSV_" + desc.DebugName);
 		}
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX10Texture::CreateSampler(const TextureDescription& desc)
@@ -295,7 +295,7 @@ namespace Ion
 			DX10::SetDebugName(m_SamplerState, "SamplerState_" + desc.DebugName);
 		}
 
-		return Void();
+		return Ok();
 	}
 
 	void DX10Texture::ReleaseResources()

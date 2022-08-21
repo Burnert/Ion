@@ -183,6 +183,12 @@ namespace Ion
 	template<typename TRet, typename... TErr>
 	struct Result;
 
+	/**
+	 * @brief Use this to return the successful Result of void type at the end of the function
+	 * return Ok();
+	 */
+	struct Ok { };
+
 	namespace _Detail
 	{
 		template<typename T>
@@ -214,6 +220,15 @@ namespace Ion
 			 */
 			template<typename T, TEnableIfT<!TIsResult<T>::Value>* = 0>
 			ResultBase(const T& value);
+
+			/**
+			 * @brief Construct a new Result Base object that holds std::monostate
+			 *
+			 * @tparam T Value type, it must be the Ok struct
+			 * @param value The value
+			 */
+			template<typename T, TEnableIfT<TIsSameV<TRet, std::monostate> && TIsSameV<T, Ok>>* = 0>
+			ResultBase(T&& value);
 
 			/**
 			 * @brief Forward throw constructor
@@ -322,6 +337,13 @@ namespace Ion
 		{
 			static_assert(TIsSameV<T, TRet> || (TIsSameV<T, TErr> || ...),
 				"Returned type has not been specified in the Result.");
+		}
+
+		template<typename TRet, typename... TErr>
+		template<typename T, TEnableIfT<TIsSameV<TRet, std::monostate> && TIsSameV<T, Ok>>*>
+		ResultBase<TRet, TErr...>::ResultBase(T&& value) :
+			m_Value(std::monostate())
+		{
 		}
 
 		template<typename TRet, typename... TErr>
@@ -564,12 +586,6 @@ namespace Ion
 		{
 		}
 	};
-
-	/**
-	 * @brief Use this to return the Result of void type at the end of the function
-	 * return Void();
-	 */
-	using Void = std::monostate;
 
 #pragma endregion
 

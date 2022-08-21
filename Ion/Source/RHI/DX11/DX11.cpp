@@ -47,7 +47,7 @@ namespace Ion
 		DX11Logger.Info("Renderer: DirectX {}", GetFeatureLevelString());
 		DX11Logger.Info("Shader Model {}", DXCommon::GetShaderModelString(s_FeatureLevel));
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX11::InitWindow(GenericWindow& window)
@@ -202,7 +202,7 @@ namespace Ion
 
 		dxcall(s_Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
 
-		return Void();
+		return Ok();
 	}
 
 	void DX11::Shutdown()
@@ -233,7 +233,7 @@ namespace Ion
 
 		//dxcall(s_Context->OMSetRenderTargets(1, &s_RTV, s_DSV), "Cannot set render target.");
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX11::EndFrame(GenericWindow& window)
@@ -242,7 +242,7 @@ namespace Ion
 
 		dxcall(s_SwapChain->Present(s_SwapInterval, 0), "Cannot present frame.");
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX11::ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height)
@@ -267,7 +267,7 @@ namespace Ion
 		safe_unwrap(window.m_WindowColorTexture, CreateRenderTarget());
 		safe_unwrap(window.m_WindowDepthStencilTexture, CreateDepthStencil(size.Width, size.Height));
 
-		return Void();
+		return Ok();
 	}
 
 	String DX11::GetCurrentDisplayName()
@@ -372,12 +372,12 @@ namespace Ion
 		ionassert(object);
 
 		if (name.empty())
-			return Void();
+			return Ok();
 
 		String fullName = prefix + name;
 		dxcall(object->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)fullName.size(), fullName.c_str()));
 #endif
-		return Void();
+		return Ok();
 	}
 
 	void DX11::SetDisplayVersion(const char* version)
@@ -471,7 +471,7 @@ namespace Ion
 			ionthrow(RHIError, "Cannot load DXGIGetDebugInterface from Dxgidebug.dll.\n{}", Windows::FormatHResultMessage(hResult));
 		}
 
-		return Void();
+		return Ok();
 	}
 
 	bool DX11::s_Initialized = false;

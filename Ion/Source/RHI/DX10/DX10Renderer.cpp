@@ -58,7 +58,7 @@ namespace Ion
 			}
 		}
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX10Renderer::DrawIndexed(uint32 indexCount) const
@@ -67,7 +67,7 @@ namespace Ion
 
 		dxcall(device->DrawIndexed(indexCount, 0, 0));
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX10Renderer::UnbindResources() const
@@ -78,7 +78,7 @@ namespace Ion
 		
 		dxcall(device->PSSetShaderResources(0, D3D10_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, c_nullViews));
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX10Renderer::SetBlendingEnabled(bool bEnable) const
@@ -91,14 +91,14 @@ namespace Ion
 
 		dxcall(device->OMSetBlendState(blendState, nullptr, 0xFFFFFFFF));
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX10Renderer::SetVSyncEnabled(bool bEnabled) const
 	{
 		dxcall(DX10::SetSwapInterval((uint32)bEnabled));
 
-		return Void();
+		return Ok();
 	}
 
 	bool DX10Renderer::IsVSyncEnabled() const
@@ -126,7 +126,7 @@ namespace Ion
 
 		m_CurrentViewport = viewport;
 
-		return Void();
+		return Ok();
 	}
 
 	Result<ViewportDescription, RHIError> DX10Renderer::GetViewport() const
@@ -166,7 +166,7 @@ namespace Ion
 		dxcall(device->CreateRasterizerState(&rd, &DX10::s_RasterizerState));
 		dxcall(device->RSSetState(DX10::s_RasterizerState));
 
-		return Void();
+		return Ok();
 	}
 
 	Result<EPolygonDrawMode, RHIError> DX10Renderer::GetPolygonDrawMode() const
@@ -205,7 +205,7 @@ namespace Ion
 
 		dxcall(device->OMSetRenderTargets(1, &m_CurrentRTV, m_CurrentDSV));
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX10Renderer::SetDepthStencil(const TShared<RHITexture>& targetTexture)
@@ -227,6 +227,6 @@ namespace Ion
 
 		dxcall(device->OMSetRenderTargets(1, &m_CurrentRTV, m_CurrentDSV));
 
-		return Void();
+		return Ok();
 	}
 }

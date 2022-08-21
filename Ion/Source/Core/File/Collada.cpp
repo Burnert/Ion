@@ -267,7 +267,7 @@ namespace Ion
 			input.DataSize = dataSize;
 			input.Stride = stride;
 		}
-		return Void();
+		return Ok();
 	}
 
 	void ColladaDocument::ParseTriangles(uint32* indices, uint64 indexCount, const TShared<TrianglesNodeData>& data, ColladaData& outMeshData)

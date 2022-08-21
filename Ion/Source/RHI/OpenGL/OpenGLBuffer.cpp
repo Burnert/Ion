@@ -34,7 +34,7 @@ namespace Ion
 
 	Result<void, RHIError> OpenGLVertexBuffer::SetLayoutShader(const TShared<RHIShader>& shader)
 	{
-		return Void();
+		return Ok();
 	}
 
 	uint32 OpenGLVertexBuffer::GetVertexCount() const
@@ -48,7 +48,7 @@ namespace Ion
 
 		glBindBuffer(GL_ARRAY_BUFFER, m_ID);
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> OpenGLVertexBuffer::Unbind() const
@@ -57,7 +57,7 @@ namespace Ion
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> OpenGLVertexBuffer::BindLayout() const
@@ -77,7 +77,7 @@ namespace Ion
 			attributeIndex++;
 		}
 
-		return Void();
+		return Ok();
 	}
 
 	// -------------------------------------------------------------------
@@ -118,7 +118,7 @@ namespace Ion
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ID);
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> OpenGLIndexBuffer::Unbind() const
@@ -127,7 +127,7 @@ namespace Ion
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-		return Void();
+		return Ok();
 	}
 
 	// -------------------------------------------------------------------
@@ -164,7 +164,7 @@ namespace Ion
 		glBindBuffer(GL_UNIFORM_BUFFER, m_ID);
 		glBufferSubData(GL_UNIFORM_BUFFER, 0, m_DataSize, m_Data);
 
-		return Void();
+		return Ok();
 	}
 
 	OpenGLUniformBuffer::~OpenGLUniformBuffer()
@@ -183,6 +183,6 @@ namespace Ion
 		glBindBuffer(GL_UNIFORM_BUFFER, m_ID);
 		glBindBufferBase(GL_UNIFORM_BUFFER, slot, m_ID);
 
-		return Void();
+		return Ok();
 	}
 }

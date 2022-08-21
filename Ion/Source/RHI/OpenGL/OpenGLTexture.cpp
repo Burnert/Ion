@@ -19,7 +19,7 @@ namespace Ion
 
 	Result<void, RHIError> OpenGLTexture::SetDimensions(TextureDimensions dimensions)
 	{
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> OpenGLTexture::UpdateSubresource(Image* image)
@@ -49,7 +49,7 @@ namespace Ion
 			glGenerateMipmap(GL_TEXTURE_2D);
 		}
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> OpenGLTexture::Bind(uint32 slot) const
@@ -59,7 +59,7 @@ namespace Ion
 		glBindTextureUnit(slot, m_ID);
 		m_BoundSlot = slot;
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> OpenGLTexture::Unbind() const
@@ -67,22 +67,22 @@ namespace Ion
 		// This is useless for the time being
 		// @TODO: Implement a texture manager with some indication which slots are bound by which textures
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> OpenGLTexture::CopyTo(const TShared<RHITexture>& destination) const
 	{
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> OpenGLTexture::Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType)
 	{
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> OpenGLTexture::Unmap()
 	{
-		return Void();
+		return Ok();
 	}
 
 	void* OpenGLTexture::GetNativeID() const

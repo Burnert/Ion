@@ -82,7 +82,7 @@ namespace Ion
 			SetOffset(m_FileSize);
 		}
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, IOError, FileNotFoundError> File::Delete_Native() // static
@@ -101,7 +101,7 @@ namespace Ion
 			ionthrow(FileNotFoundError, "File \"{}\" not found.", m_FilePath.ToString());
 		}
 
-		return Void();
+		return Ok();
 	}
 
 	void File::Close_Native()
@@ -124,7 +124,7 @@ namespace Ion
 		}
 		m_Offset += bytesRead;
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, IOError> File::ReadLine_Internal(char* outBuffer, uint64 count, uint64* outReadCount, bool* bOutOverflow)
@@ -233,7 +233,7 @@ namespace Ion
 			WindowsFileLogger.Debug("(\"{}\" -> ReadLine_Internal) File read output buffer overflow. {} byte buffer was to small.", m_FilePath.ToString(), count);
 		}
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, IOError> File::ReadLine_Native(char* outBuffer, uint64 count)
@@ -292,7 +292,7 @@ namespace Ion
 		int64 sizeDifference = std::max((int64)0, m_Offset - m_FileSize);
 		UpdateFileSizeCache(m_FileSize + sizeDifference);
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, IOError> File::WriteLine_Native(const char* inBuffer, uint64 count, ENewLineType newLineType)
@@ -337,7 +337,7 @@ namespace Ion
 		int64 sizeDifference = std::max((int64)0, m_Offset - m_FileSize);
 		UpdateFileSizeCache(m_FileSize + sizeDifference);
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, IOError> File::AddOffset_Native(int64 count)
@@ -349,7 +349,7 @@ namespace Ion
 		{
 			ionthrow(IOError, "Cannot add file offset in file \"{}\".\n{}", m_FilePath.ToString(), Windows::GetLastErrorMessage());
 		}
-		return Void();
+		return Ok();
 	}
 
 	Result<void, IOError> File::SetOffset_Native(int64 count)
@@ -361,7 +361,7 @@ namespace Ion
 		{
 			ionthrow(IOError, "Cannot set file offset in file \"{}\".\n{}", m_FilePath.ToString(), Windows::GetLastErrorMessage());
 		}
-		return Void();
+		return Ok();
 	}
 
 	void File::SetNativePointer_Native()

@@ -115,7 +115,7 @@ namespace Ion
 		}
 		TRACE_END(3);
 
-		return Void();
+		return Ok();
 	}
 
 	bool OpenGLShader::IsCompiled()

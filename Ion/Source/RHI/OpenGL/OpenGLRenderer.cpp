@@ -60,7 +60,7 @@ namespace Ion
 			FlagsIf(options.bClearDepth,   GL_DEPTH_BUFFER_BIT) |
 			FlagsIf(options.bClearStencil, GL_STENCIL_BUFFER_BIT)
 		);
-		return Void();
+		return Ok();
 	}
 
 	//void OpenGLRenderer::Draw(const RPrimitiveRenderProxy& primitive, const Scene* targetScene) const
@@ -112,23 +112,23 @@ namespace Ion
 	Result<void, RHIError> OpenGLRenderer::DrawIndexed(uint32 indexCount) const
 	{
 		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> OpenGLRenderer::UnbindResources() const
 	{
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> OpenGLRenderer::SetBlendingEnabled(bool bEnable) const
 	{
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> OpenGLRenderer::SetVSyncEnabled(bool bEnabled) const
 	{
 		OpenGL::SetSwapInterval((int32)bEnabled);
-		return Void();
+		return Ok();
 	}
 
 	bool OpenGLRenderer::IsVSyncEnabled() const
@@ -142,7 +142,7 @@ namespace Ion
 
 		glViewport(viewport.X, viewport.Y, viewport.Width, viewport.Height);
 		glDepthRange(viewport.MinDepth, viewport.MaxDepth);
-		return Void();
+		return Ok();
 	}
 
 	Result<ViewportDescription, RHIError> OpenGLRenderer::GetViewport() const
@@ -171,7 +171,7 @@ namespace Ion
 			glDisable(GL_CULL_FACE);
 			break;
 		}
-		return Void();
+		return Ok();
 	}
 
 	Result<EPolygonDrawMode, RHIError> OpenGLRenderer::GetPolygonDrawMode() const
@@ -190,11 +190,11 @@ namespace Ion
 		m_CurrentRenderTarget = targetTexture ?
 			((OpenGLTexture*)targetTexture.get())->m_FramebufferID : 0;
 		glBindFramebuffer(GL_FRAMEBUFFER, m_CurrentRenderTarget);
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> OpenGLRenderer::SetDepthStencil(const TShared<RHITexture>& targetTexture)
 	{
-		return Void();
+		return Ok();
 	}
 }

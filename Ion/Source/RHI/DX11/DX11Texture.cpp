@@ -16,7 +16,7 @@ namespace Ion
 		//ionassert(dimensions.Width <= 16384 && dimensions.Height <= 16384, "Textures larger than 16K are unsupported.");
 		// @TODO: This probably should not be here (recreate the texture instead)
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX11Texture::UpdateSubresource(Image* image)
@@ -46,7 +46,7 @@ namespace Ion
 			dxcall(context->GenerateMips(m_SRV));
 		}
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX11Texture::Bind(uint32 slot) const
@@ -57,7 +57,7 @@ namespace Ion
 		dxcall(DX11::GetContext()->PSSetShaderResources(slot, 1, &m_SRV));
 		dxcall(DX11::GetContext()->PSSetSamplers(slot, 1, &m_SamplerState));
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX11Texture::Unbind() const
@@ -65,7 +65,7 @@ namespace Ion
 		dxcall(DX11::GetContext()->PSSetShaderResources(0, 0, nullptr));
 		dxcall(DX11::GetContext()->PSSetSamplers(0, 0, nullptr));
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX11Texture::CopyTo(const TShared<RHITexture>& destination) const
@@ -75,7 +75,7 @@ namespace Ion
 		TShared<DX11Texture> destTexture = TStaticCast<DX11Texture>(destination);
 		dxcall(context->CopyResource(destTexture->m_Texture, m_Texture));
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX11Texture::Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType)
@@ -89,7 +89,7 @@ namespace Ion
 		outBuffer = msr.pData;
 		outLineSize = msr.RowPitch;
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX11Texture::Unmap()
@@ -98,7 +98,7 @@ namespace Ion
 
 		dxcall(context->Unmap(m_Texture, 0));
 
-		return Void();
+		return Ok();
 	}
 
 	void* DX11Texture::GetNativeID() const
@@ -204,7 +204,7 @@ namespace Ion
 		dxcall(device->CreateTexture2D(&tex2DDesc, desc.InitialData ? &sd : nullptr, &m_Texture));
 		DX11::SetDebugName(m_Texture, desc.DebugName, "Texture2D_");
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX11Texture::CreateViews(const TextureDescription& desc)
@@ -251,7 +251,7 @@ namespace Ion
 			DX11::SetDebugName(m_DSV, desc.DebugName, "DSV_");
 		}
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX11Texture::CreateSampler(const TextureDescription& desc)
@@ -296,7 +296,7 @@ namespace Ion
 			DX11::SetDebugName(m_SamplerState, desc.DebugName, "SamplerState_");
 		}
 
-		return Void();
+		return Ok();
 	}
 
 	void DX11Texture::ReleaseResources()

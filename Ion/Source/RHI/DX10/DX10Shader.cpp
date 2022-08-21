@@ -118,7 +118,7 @@ namespace Ion
 
 		m_bCompiled = true;
 
-		return Void();
+		return Ok();
 	}
 
 	bool DX10Shader::IsCompiled()

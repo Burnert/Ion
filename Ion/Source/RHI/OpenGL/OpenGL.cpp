@@ -19,7 +19,7 @@ namespace Ion
 #else
 		OpenGLLogger.Critical("OpenGL implementation is not defined on this platform!");
 #endif
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> OpenGL::InitWindow(GenericWindow& window)
@@ -37,23 +37,23 @@ namespace Ion
 
 	Result<void, RHIError> OpenGL::BeginFrame()
 	{
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> OpenGL::EndFrame(GenericWindow& window)
 	{
 		window.SwapBuffers();
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> OpenGL::ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height)
 	{
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> OpenGL::ResizeBuffers(GenericWindow& window, const TextureDimensions& size)
 	{
-		return Void();
+		return Ok();
 	}
 
 	String OpenGL::GetCurrentDisplayName()

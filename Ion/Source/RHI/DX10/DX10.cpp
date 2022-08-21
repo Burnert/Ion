@@ -44,7 +44,7 @@ namespace Ion
 		DX10Logger.Info("Renderer: DirectX {}", version);
 		DX10Logger.Info("Shader Model {}", GetShaderModel());
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX10::InitWindow(GenericWindow& window)
@@ -208,7 +208,7 @@ namespace Ion
 
 		dxcall(s_Device->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
 
-		return Void();
+		return Ok();
 	}
 
 	void DX10::Shutdown()
@@ -233,7 +233,7 @@ namespace Ion
 
 	Result<void, RHIError> DX10::BeginFrame()
 	{
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX10::EndFrame(GenericWindow& window)
@@ -242,7 +242,7 @@ namespace Ion
 
 		dxcall(s_SwapChain->Present(s_SwapInterval, 0), "Cannot present frame.");
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX10::ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height)
@@ -267,7 +267,7 @@ namespace Ion
 		safe_unwrap(window.m_WindowColorTexture, CreateRenderTarget());
 		safe_unwrap(window.m_WindowDepthStencilTexture, CreateDepthStencil(size.Width, size.Height));
 
-		return Void();
+		return Ok();
 	}
 
 	String DX10::GetCurrentDisplayName()
@@ -371,11 +371,11 @@ namespace Ion
 		ionassert(object);
 
 		if (name.empty())
-			return Void();
+			return Ok();
 
 		dxcall(object->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)name.size(), name.c_str()));
 
-		return Void();
+		return Ok();
 	}
 
 	void DX10::SetDisplayVersion(const char* version)

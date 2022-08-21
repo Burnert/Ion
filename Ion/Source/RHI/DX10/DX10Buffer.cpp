@@ -78,7 +78,7 @@ namespace Ion
 
 		DX10Logger.Trace("Created DX10VertexBuffer Input Layout object.");
 
-		return Void();
+		return Ok();
 	}
 
 	uint32 DX10VertexBuffer::GetVertexCount() const
@@ -97,7 +97,7 @@ namespace Ion
 		uint32 offset = 0;
 		dxcall(device->IASetVertexBuffers(0, 1, &m_Buffer, &stride, &offset));
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX10VertexBuffer::Unbind() const
@@ -106,7 +106,7 @@ namespace Ion
 
 		dxcall(device->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr));
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX10VertexBuffer::BindLayout() const
@@ -115,7 +115,7 @@ namespace Ion
 
 		dxcall(device->IASetInputLayout(m_InputLayout));
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX10VertexBuffer::CreateBuffer(float* vertexAttributes, uint64 count)
@@ -145,7 +145,7 @@ namespace Ion
 		// @TODO: SetDebugName on buffers
 		DX10Logger.Trace("Created DX10VertexBuffer object.");
 
-		return Void();
+		return Ok();
 	}
 
 	// -------------------------------------------------------------------
@@ -185,7 +185,7 @@ namespace Ion
 
 		dxcall(device->IASetIndexBuffer(m_Buffer, DXGI_FORMAT_R32_UINT, 0));
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX10IndexBuffer::Unbind() const
@@ -194,7 +194,7 @@ namespace Ion
 
 		dxcall(device->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0));
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> DX10IndexBuffer::CreateBuffer(uint32* indices, uint64 count)
@@ -221,7 +221,7 @@ namespace Ion
 
 		DX10Logger.Trace("Created DX10IndexBuffer object.");
 
-		return Void();
+		return Ok();
 	}
 
 	// -------------------------------------------------------------------
@@ -257,7 +257,7 @@ namespace Ion
 		dxcall(device->VSSetConstantBuffers(slot, 1, &Buffer));
 		dxcall(device->PSSetConstantBuffers(slot, 1, &Buffer));
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> _DX10UniformBufferCommon::UpdateData() const
@@ -272,7 +272,7 @@ namespace Ion
 		memcpy(pData, Data, DataSize);
 		dxcall(Buffer->Unmap());
 
-		return Void();
+		return Ok();
 	}
 
 	Result<void, RHIError> _DX10UniformBufferCommon::CreateBuffer(void* initialData, size_t size)
@@ -300,7 +300,7 @@ namespace Ion
 		dxcall(device->CreateBuffer(&bd, &sd, &Buffer),
 			"Could not create Constant Buffer.");
 
-		return Void();
+		return Ok();
 	}
 
 	// Specific Uniform Buffer -------------------------------------------------------
