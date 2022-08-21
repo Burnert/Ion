@@ -114,12 +114,18 @@ namespace Ion
 		m_SRV(nullptr),
 		m_SamplerState(nullptr)
 	{
-		CreateTexture(desc);
+		CreateTexture(desc)
+			.Err([&](Error& error) { DX10Logger.Critical("{}: Cannot create a Texture.\n{}", desc.DebugName, error.Message); })
+			.Unwrap();
 		// Can't do any of this if this is a staging texture
 		if (desc.Usage != ETextureUsage::Staging)
 		{
-			CreateViews(desc);
-			CreateSampler(desc);
+			CreateViews(desc)
+				.Err([&](Error& error) { DX10Logger.Critical("{}: Cannot create Views.\n{}", desc.DebugName, error.Message); })
+				.Unwrap();
+			CreateSampler(desc)
+				.Err([&](Error& error) { DX10Logger.Critical("{}: Cannot create a Sampler.\n{}", desc.DebugName, error.Message); })
+				.Unwrap();
 		}
 
 		DX10Logger.Trace("Created DX10Texture object \"{}\".", desc.DebugName);
@@ -136,8 +142,12 @@ namespace Ion
 		// Can't do any of this if this is a staging texture
 		if (desc.Usage != ETextureUsage::Staging)
 		{
-			CreateViews(desc);
-			CreateSampler(desc);
+			CreateViews(desc)
+				.Err([&](Error& error) { DX10Logger.Critical("{}: Cannot create Views.\n{}", desc.DebugName, error.Message); })
+				.Unwrap();
+			CreateSampler(desc)
+				.Err([&](Error& error) { DX10Logger.Critical("{}: Cannot create a Sampler.\n{}", desc.DebugName, error.Message); })
+				.Unwrap();
 		}
 
 		DX10Logger.Trace("Created DX10Texture object \"{}\".", desc.DebugName);

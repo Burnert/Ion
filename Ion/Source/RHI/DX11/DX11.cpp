@@ -405,6 +405,7 @@ namespace Ion
 		desc.Format = ETextureFormat::RGBA8;
 		desc.bUseAsRenderTarget = true;
 		desc.Dimensions = { t2dDesc.Width, t2dDesc.Height };
+		desc.DebugName = "Window_BackBuffer_RT";
 
 		return MakeShareable(new DX11Texture(desc, backBuffer));
 	}
@@ -417,6 +418,7 @@ namespace Ion
 		desc.Format = ETextureFormat::D24S8;
 		desc.bUseAsDepthStencil = true;
 		desc.Dimensions = { width, height };
+		desc.DebugName = "Window_BackBuffer_DS";
 
 		return RHITexture::CreateShared(desc);
 	}

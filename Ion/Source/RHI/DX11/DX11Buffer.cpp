@@ -256,8 +256,8 @@ namespace Ion
 
 		ID3D11DeviceContext* context = DX11::GetContext();
 
-		context->VSSetConstantBuffers(slot, 1, &Buffer);
-		context->PSSetConstantBuffers(slot, 1, &Buffer);
+		dxcall(context->VSSetConstantBuffers(slot, 1, &Buffer));
+		dxcall(context->PSSetConstantBuffers(slot, 1, &Buffer));
 
 		return Ok();
 	}

@@ -33,6 +33,7 @@ namespace Ion
 	RHITexture::RHITexture(const TextureDescription& desc)
 		: m_Description(desc)
 	{
+		ionassert(!desc.DebugName.empty(), "Specify a debug name to avoid future problems.");
 	}
 
 	RHITexture::~RHITexture()

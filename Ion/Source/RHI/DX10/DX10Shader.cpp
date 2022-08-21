@@ -136,12 +136,12 @@ namespace Ion
 			{
 				case EShaderType::Vertex:
 				{
-					device->VSSetShader((ID3D10VertexShader*)shader.ShaderPtr);
+					dxcall_nocheck(device->VSSetShader((ID3D10VertexShader*)shader.ShaderPtr));
 					break;
 				}
 				case EShaderType::Pixel:
 				{
-					device->PSSetShader((ID3D10PixelShader*)shader.ShaderPtr);
+					dxcall_nocheck(device->PSSetShader((ID3D10PixelShader*)shader.ShaderPtr));
 					break;
 				}
 			}
@@ -152,7 +152,7 @@ namespace Ion
 	{
 		ID3D10Device* device = DX10::GetDevice();
 
-		device->VSSetShader(nullptr);
-		device->PSSetShader(nullptr);
+		dxcall_nocheck(device->VSSetShader(nullptr));
+		dxcall_nocheck(device->PSSetShader(nullptr));
 	}
 }
