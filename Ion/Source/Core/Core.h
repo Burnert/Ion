@@ -34,6 +34,7 @@
 #include "Core/Layer/Layer.h"
 #include "Core/Logging/Logger.h"
 #include "Core/Memory/MemoryCore.h"
+#include "Core/Memory/RefCount.h"
 #include "Core/Memory/PoolAllocator.h"
 #include "Core/Profiling/DebugProfiler.h"
 #include "Core/Serialisation/Serialisation.h"

@@ -139,6 +139,19 @@ namespace Ion::Editor
 			EditorLogger.Trace(L"wcTest3 = {}", wcTest3);
 		}
 
+		{
+			TSharedPtr<String> pStr = TSharedPtr<String>(new String(10000000, 0));
+			TSharedPtr<String> pStr2 = pStr;
+			{
+				TWeakPtr<String> wpStr = pStr;
+				{
+					TSharedPtr<String> pStr3 = wpStr.Lock();
+				}
+			}
+
+			EditorLogger.Info(*pStr);
+		}
+
 		//InitExample(nullptr);
 
 		auto& hierarchy = LogManager::GetLoggerHierarchy();
