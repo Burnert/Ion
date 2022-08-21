@@ -11,73 +11,75 @@ namespace Ion
 		ReleaseResources();
 	}
 
-	void DX11Texture::SetDimensions(TextureDimensions dimensions)
+	Result<void, RHIError> DX11Texture::SetDimensions(TextureDimensions dimensions)
 	{
 		//ionassert(dimensions.Width <= 16384 && dimensions.Height <= 16384, "Textures larger than 16K are unsupported.");
 		// @TODO: This probably should not be here (recreate the texture instead)
+
+		return Void();
 	}
 
-	void DX11Texture::UpdateSubresource(Image* image)
+	Result<void, RHIError> DX11Texture::UpdateSubresource(Image* image)
 	{
 		TRACE_FUNCTION();
 
 		ionassert(m_Description.bUseAsRenderTarget,
 			"Cannot update subresource if the texture has not been created as a render target.");
 
-		if (!image->IsLoaded())
-		{
-			DX11Logger.Error("Cannot Update Subresource of Texture. Image has not been loaded.");
-			return;
-		}
+		ionassert(image->IsLoaded(), "Cannot Update Subresource of Texture. Image has not been loaded.");
+
+		ionassert(
+			image->GetWidth() == m_Description.Dimensions.Width &&
+			image->GetHeight() == m_Description.Dimensions.Height,
+			"Image dimensions do not match texture dimensions.");
 
 		ID3D11DeviceContext* context = DX11::GetContext();
-
-		// Dimensions are different
-		if (image->GetWidth() != m_Description.Dimensions.Width ||
-			image->GetHeight() != m_Description.Dimensions.Height)
-		{
-			DX11Logger.Warn("Image dimensions do not match texture dimensions.");
-			return;
-		}
 
 		uint32 lineSize = image->GetWidth() * 4;
 
 		// Update Subresource
-		dxcall_v(context->UpdateSubresource(m_Texture, 0, nullptr, image->GetPixelData(), lineSize, 0));
+		dxcall(context->UpdateSubresource(m_Texture, 0, nullptr, image->GetPixelData(), lineSize, 0));
 
 		if (m_Description.bGenerateMips)
 		{
 			// Generate mipmaps
-			dxcall_v(context->GenerateMips(m_SRV));
+			dxcall(context->GenerateMips(m_SRV));
 		}
+
+		return Void();
 	}
 
-	void DX11Texture::Bind(uint32 slot) const
+	Result<void, RHIError> DX11Texture::Bind(uint32 slot) const
 	{
 		ionassert(m_SRV);
 		ionassert(m_SamplerState);
-		dxcall_v(DX11::GetContext()->PSSetShaderResources(slot, 1, &m_SRV));
-		dxcall_v(DX11::GetContext()->PSSetSamplers(slot, 1, &m_SamplerState));
+
+		dxcall(DX11::GetContext()->PSSetShaderResources(slot, 1, &m_SRV));
+		dxcall(DX11::GetContext()->PSSetSamplers(slot, 1, &m_SamplerState));
+
+		return Void();
 	}
 
-	void DX11Texture::Unbind() const
+	Result<void, RHIError> DX11Texture::Unbind() const
 	{
-		dxcall_v(DX11::GetContext()->PSSetShaderResources(0, 0, nullptr));
-		dxcall_v(DX11::GetContext()->PSSetSamplers(0, 0, nullptr));
+		dxcall(DX11::GetContext()->PSSetShaderResources(0, 0, nullptr));
+		dxcall(DX11::GetContext()->PSSetSamplers(0, 0, nullptr));
+
+		return Void();
 	}
 
-	void DX11Texture::CopyTo(const TShared<RHITexture>& destination) const
+	Result<void, RHIError> DX11Texture::CopyTo(const TShared<RHITexture>& destination) const
 	{
 		ID3D11DeviceContext* context = DX11::GetContext();
 
 		TShared<DX11Texture> destTexture = TStaticCast<DX11Texture>(destination);
-		dxcall_v(context->CopyResource(destTexture->m_Texture, m_Texture));
+		dxcall(context->CopyResource(destTexture->m_Texture, m_Texture));
+
+		return Void();
 	}
 
-	void DX11Texture::Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType)
+	Result<void, RHIError> DX11Texture::Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType)
 	{
-		HRESULT hResult;
-
 		ID3D11DeviceContext* context = DX11::GetContext();
 
 		D3D11_MAPPED_SUBRESOURCE msr { };
@@ -86,13 +88,17 @@ namespace Ion
 
 		outBuffer = msr.pData;
 		outLineSize = msr.RowPitch;
+
+		return Void();
 	}
 
-	void DX11Texture::Unmap()
+	Result<void, RHIError> DX11Texture::Unmap()
 	{
 		ID3D11DeviceContext* context = DX11::GetContext();
 
-		dxcall_v(context->Unmap(m_Texture, 0));
+		dxcall(context->Unmap(m_Texture, 0));
+
+		return Void();
 	}
 
 	void* DX11Texture::GetNativeID() const
@@ -142,14 +148,12 @@ namespace Ion
 		return desc.MultiSampling != ETextureMSMode::Default && desc.MultiSampling != ETextureMSMode::X1;
 	}
 
-	void DX11Texture::CreateTexture(const TextureDescription& desc)
+	Result<void, RHIError> DX11Texture::CreateTexture(const TextureDescription& desc)
 	{
 		TRACE_FUNCTION();
 
 		ionassert(!IsMultiSampled(desc) || !desc.InitialData,
 			"Multisampled textures have to be initialized using UpdateSubresource function");
-
-		HRESULT hResult;
 
 		ID3D11Device* device = DX11::GetDevice();
 		ID3D11DeviceContext* context = DX11::GetContext();
@@ -199,15 +203,15 @@ namespace Ion
 
 		dxcall(device->CreateTexture2D(&tex2DDesc, desc.InitialData ? &sd : nullptr, &m_Texture));
 		DX11::SetDebugName(m_Texture, desc.DebugName, "Texture2D_");
+
+		return Void();
 	}
 
-	void DX11Texture::CreateViews(const TextureDescription& desc)
+	Result<void, RHIError> DX11Texture::CreateViews(const TextureDescription& desc)
 	{
 		TRACE_FUNCTION();
 
 		ionassert(m_Texture);
-
-		HRESULT hResult;
 
 		ID3D11Device* device = DX11::GetDevice();
 
@@ -246,15 +250,15 @@ namespace Ion
 			dxcall(device->CreateDepthStencilView(m_Texture, &dsvDesc, &m_DSV));
 			DX11::SetDebugName(m_DSV, desc.DebugName, "DSV_");
 		}
+
+		return Void();
 	}
 
-	void DX11Texture::CreateSampler(const TextureDescription& desc)
+	Result<void, RHIError> DX11Texture::CreateSampler(const TextureDescription& desc)
 	{
 		TRACE_FUNCTION();
 
 		ionassert(m_Texture);
-
-		HRESULT hResult;
 
 		ID3D11Device* device = DX11::GetDevice();
 
@@ -291,6 +295,8 @@ namespace Ion
 			dxcall(device->CreateSamplerState(&samplerDesc, &m_SamplerState));
 			DX11::SetDebugName(m_SamplerState, desc.DebugName, "SamplerState_");
 		}
+
+		return Void();
 	}
 
 	void DX11Texture::ReleaseResources()

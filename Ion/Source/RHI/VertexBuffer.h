@@ -1,5 +1,6 @@
 #pragma once
 
+#include "RHICore.h"
 #include "VertexAttribute.h"
 #include "VertexLayout.h"
 
@@ -16,16 +17,16 @@ namespace Ion
 		virtual ~RHIVertexBuffer() { }
 
 		virtual void SetLayout(const TShared<RHIVertexLayout>& layout) = 0;
-		virtual void SetLayoutShader(const TShared<RHIShader>& shader) = 0;
+		virtual Result<void, RHIError> SetLayoutShader(const TShared<RHIShader>& shader) = 0;
 
 		virtual uint32 GetVertexCount() const = 0;
 
 	protected:
 		RHIVertexBuffer() { }
 
-		virtual void Bind() const = 0;
-		virtual void BindLayout() const = 0;
-		virtual void Unbind() const = 0;
+		virtual Result<void, RHIError> Bind() const = 0;
+		virtual Result<void, RHIError> BindLayout() const = 0;
+		virtual Result<void, RHIError> Unbind() const = 0;
 
 		friend class Renderer;
 	};

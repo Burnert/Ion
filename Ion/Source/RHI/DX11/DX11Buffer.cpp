@@ -15,33 +15,7 @@ namespace Ion
 		m_Buffer(nullptr),
 		m_InputLayout(nullptr)
 	{
-		TRACE_FUNCTION();
-
-		ionverify(vertexAttributes);
-		ionassert(count <= std::numeric_limits<uint64>::max() / 4);
-		ionassert(count * sizeof(float) <= std::numeric_limits<UINT>::max());
-
-		HRESULT hResult = S_OK;
-
-		ID3D11Device* device = DX11::GetDevice();
-		ID3D11DeviceContext* context = DX11::GetContext();
-
-		uint32 size = (uint32)(count * sizeof(float));
-
-		D3D11_BUFFER_DESC bd { };
-		bd.ByteWidth = size;
-		bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		bd.Usage = D3D11_USAGE_DEFAULT;
-		bd.CPUAccessFlags = 0;
-
-		D3D11_SUBRESOURCE_DATA sd { };
-		sd.pSysMem = vertexAttributes;
-
-		dxcall(device->CreateBuffer(&bd, &sd, &m_Buffer),
-			"Could not create Vertex Buffer.");
-
-		// @TODO: SetDebugName on buffers
-		DX11Logger.Trace("Created DX11VertexBuffer object.");
+		CreateBuffer(vertexAttributes, count).Unwrap();
 		
 		//if (m_Buffer)
 		//{
@@ -49,7 +23,7 @@ namespace Ion
 		//	dxcall(context->Map(m_Buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms),
 		//		"Cannot map the Vertex Buffer.");
 		//	memcpy(ms.pData, vertexAttributes, size);
-		//	dxcall_v(context->Unmap(m_Buffer, 0));
+		//	dxcall(context->Unmap(m_Buffer, 0));
 		//}
 	}
 
@@ -86,12 +60,12 @@ namespace Ion
 		}
 	}
 
-	void DX11VertexBuffer::SetLayoutShader(const TShared<RHIShader>& shader)
+	Result<void, RHIError> DX11VertexBuffer::SetLayoutShader(const TShared<RHIShader>& shader)
 	{
-		CreateDX11Layout(TStaticCast<DX11Shader>(shader));
+		return CreateDX11Layout(TStaticCast<DX11Shader>(shader));
 	}
 
-	void DX11VertexBuffer::CreateDX11Layout(const TShared<DX11Shader>& shader)
+	Result<void, RHIError> DX11VertexBuffer::CreateDX11Layout(const TShared<DX11Shader>& shader)
 	{
 		TRACE_FUNCTION();
 
@@ -99,8 +73,6 @@ namespace Ion
 		ionassert(shader->IsCompiled());
 		ionassert(m_VertexLayout);
 		ionassert(!m_IEDArray.empty());
-
-		HRESULT hResult;
 
 		ID3D11Device* device = DX11::GetDevice();
 
@@ -110,14 +82,17 @@ namespace Ion
 			"Could not create Input Layout.");
 
 		DX11Logger.Trace("Created DX11VertexBuffer Input Layout object.");
+
+		return Void();
 	}
 
 	uint32 DX11VertexBuffer::GetVertexCount() const
 	{
+		// @TODO: 0...
 		return 0;
 	}
 
-	void DX11VertexBuffer::Bind() const
+	Result<void, RHIError> DX11VertexBuffer::Bind() const
 	{
 		ionassert(m_VertexLayout, "Vertex Layout has not been set.");
 
@@ -125,17 +100,54 @@ namespace Ion
 
 		uint32 stride = m_VertexLayout->GetStride();
 		uint32 offset = 0;
-		dxcall_v(context->IASetVertexBuffers(0, 1, &m_Buffer, &stride, &offset));
+		dxcall(context->IASetVertexBuffers(0, 1, &m_Buffer, &stride, &offset));
+
+		return Void();
 	}
 
-	void DX11VertexBuffer::Unbind() const
+	Result<void, RHIError> DX11VertexBuffer::Unbind() const
 	{
-		dxcall_v(DX11::GetContext()->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr));
+		dxcall(DX11::GetContext()->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr));
+
+		return Void();
 	}
 
-	void DX11VertexBuffer::BindLayout() const
+	Result<void, RHIError> DX11VertexBuffer::BindLayout() const
 	{
-		dxcall_v(DX11::GetContext()->IASetInputLayout(m_InputLayout));
+		dxcall(DX11::GetContext()->IASetInputLayout(m_InputLayout));
+
+		return Void();
+	}
+
+	Result<void, RHIError> DX11VertexBuffer::CreateBuffer(float* vertexAttributes, uint64 count)
+	{
+		TRACE_FUNCTION();
+
+		ionverify(vertexAttributes);
+		ionassert(count <= std::numeric_limits<uint64>::max() / 4);
+		ionassert(count * sizeof(float) <= std::numeric_limits<UINT>::max());
+
+		ID3D11Device* device = DX11::GetDevice();
+		ID3D11DeviceContext* context = DX11::GetContext();
+
+		uint32 size = (uint32)(count * sizeof(float));
+
+		D3D11_BUFFER_DESC bd { };
+		bd.ByteWidth = size;
+		bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		bd.Usage = D3D11_USAGE_DEFAULT;
+		bd.CPUAccessFlags = 0;
+
+		D3D11_SUBRESOURCE_DATA sd { };
+		sd.pSysMem = vertexAttributes;
+
+		dxcall(device->CreateBuffer(&bd, &sd, &m_Buffer),
+			"Could not create Vertex Buffer.");
+
+		// @TODO: SetDebugName on buffers
+		DX11Logger.Trace("Created DX11VertexBuffer object.");
+
+		return Void();
 	}
 
 	// -------------------------------------------------------------------
@@ -147,29 +159,7 @@ namespace Ion
 		m_TriangleCount(count / 3),
 		m_ID(0)
 	{
-		TRACE_FUNCTION();
-
-		ionverify(indices);
-
-		HRESULT hResult = S_OK;
-
-		ID3D11Device* device = DX11::GetDevice();
-
-		uint32 size = (uint32)(count * sizeof(float));
-
-		D3D11_BUFFER_DESC bd { };
-		bd.ByteWidth = size;
-		bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-		bd.Usage = D3D11_USAGE_DEFAULT;
-		bd.CPUAccessFlags = 0;
-
-		D3D11_SUBRESOURCE_DATA sd { };
-		sd.pSysMem = indices;
-
-		dxcall(device->CreateBuffer(&bd, &sd, &m_Buffer),
-			"Could not create Index Buffer.");
-
-		DX11Logger.Trace("Created DX11IndexBuffer object.");
+		CreateBuffer(indices, count).Unwrap();
 	}
 
 	DX11IndexBuffer::~DX11IndexBuffer()
@@ -189,14 +179,45 @@ namespace Ion
 		return m_TriangleCount;
 	}
 
-	void DX11IndexBuffer::Bind() const
+	Result<void, RHIError> DX11IndexBuffer::Bind() const
 	{
-		dxcall_v(DX11::GetContext()->IASetIndexBuffer(m_Buffer, DXGI_FORMAT_R32_UINT, 0));
+		dxcall(DX11::GetContext()->IASetIndexBuffer(m_Buffer, DXGI_FORMAT_R32_UINT, 0));
+
+		return Void();
 	}
 
-	void DX11IndexBuffer::Unbind() const
+	Result<void, RHIError> DX11IndexBuffer::Unbind() const
 	{
-		dxcall_v(DX11::GetContext()->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0));
+		dxcall(DX11::GetContext()->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0));
+
+		return Void();
+	}
+
+	Result<void, RHIError> DX11IndexBuffer::CreateBuffer(uint32* indices, uint64 count)
+	{
+		TRACE_FUNCTION();
+
+		ionverify(indices);
+
+		ID3D11Device* device = DX11::GetDevice();
+
+		uint32 size = (uint32)(count * sizeof(float));
+
+		D3D11_BUFFER_DESC bd { };
+		bd.ByteWidth = size;
+		bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+		bd.Usage = D3D11_USAGE_DEFAULT;
+		bd.CPUAccessFlags = 0;
+
+		D3D11_SUBRESOURCE_DATA sd { };
+		sd.pSysMem = indices;
+
+		dxcall(device->CreateBuffer(&bd, &sd, &m_Buffer),
+			"Could not create Index Buffer.");
+
+		DX11Logger.Trace("Created DX11IndexBuffer object.");
+		
+		return Void();
 	}
 
 	// -------------------------------------------------------------------
@@ -211,12 +232,53 @@ namespace Ion
 		DataSize(size),
 		Buffer(nullptr)
 	{
+		CreateBuffer(initialData, size).Unwrap();
+	}
+
+	_DX11UniformBufferCommon::~_DX11UniformBufferCommon()
+	{
+		TRACE_FUNCTION();
+
+		COMRelease(Buffer);
+
+		_aligned_free(Data);
+	}
+
+	Result<void, RHIError> _DX11UniformBufferCommon::Bind(uint32 slot) const
+	{
+		ionassert(Buffer);
+
+		ID3D11DeviceContext* context = DX11::GetContext();
+
+		context->VSSetConstantBuffers(slot, 1, &Buffer);
+		context->PSSetConstantBuffers(slot, 1, &Buffer);
+
+		return Void();
+	}
+
+	Result<void, RHIError> _DX11UniformBufferCommon::UpdateData() const
+	{
+		// Might become useful
+		//TRACE_FUNCTION();
+
+		ionassert(Buffer);
+
+		ID3D11DeviceContext* context = DX11::GetContext();
+
+		D3D11_MAPPED_SUBRESOURCE msd { };
+		dxcall(context->Map(Buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &msd));
+		memcpy(msd.pData, Data, DataSize);
+		dxcall(context->Unmap(Buffer, 0));
+
+		return Void();
+	}
+
+	Result<void, RHIError> _DX11UniformBufferCommon::CreateBuffer(void* initialData, size_t size)
+	{
 		TRACE_FUNCTION();
 
 		ionverify(initialData);
 		ionassert(size <= std::numeric_limits<UINT>::max());
-
-		HRESULT hResult;
 
 		ID3D11Device* device = DX11::GetDevice();
 
@@ -235,43 +297,10 @@ namespace Ion
 
 		dxcall(device->CreateBuffer(&bd, &sd, &Buffer),
 			"Could not create Constant Buffer.");
+
+		return Void();
 	}
 
-	_DX11UniformBufferCommon::~_DX11UniformBufferCommon()
-	{
-		TRACE_FUNCTION();
-
-		COMRelease(Buffer);
-
-		_aligned_free(Data);
-	}
-
-	void _DX11UniformBufferCommon::Bind(uint32 slot) const
-	{
-		ionassert(Buffer);
-
-		ID3D11DeviceContext* context = DX11::GetContext();
-
-		context->VSSetConstantBuffers(slot, 1, &Buffer);
-		context->PSSetConstantBuffers(slot, 1, &Buffer);
-	}
-
-	void _DX11UniformBufferCommon::UpdateData() const
-	{
-		// Might become useful
-		//TRACE_FUNCTION();
-
-		ionassert(Buffer);
-
-		HRESULT hResult;
-
-		ID3D11DeviceContext* context = DX11::GetContext();
-
-		D3D11_MAPPED_SUBRESOURCE msd { };
-		dxcall(context->Map(Buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &msd));
-		memcpy(msd.pData, Data, DataSize);
-		dxcall_v(context->Unmap(Buffer, 0));
-	}
 
 	// Specific Uniform Buffer -------------------------------------------------------
 
@@ -281,9 +310,9 @@ namespace Ion
 		DX11Logger.Trace("Created DX11UniformBuffer object.");
 	}
 
-	void DX11UniformBuffer::Bind(uint32 slot) const
+	Result<void, RHIError> DX11UniformBuffer::Bind(uint32 slot) const
 	{
-		m_Common.Bind(slot);
+		return m_Common.Bind(slot);
 	}
 
 	void* DX11UniformBuffer::GetDataPtr() const
@@ -291,9 +320,9 @@ namespace Ion
 		return m_Common.Data;
 	}
 
-	void DX11UniformBuffer::UpdateData() const
+	Result<void, RHIError> DX11UniformBuffer::UpdateData() const
 	{
-		m_Common.UpdateData();
+		return m_Common.UpdateData();
 	}
 
 	DX11UniformBufferDynamic::DX11UniformBufferDynamic(void* initialData, size_t size, const UniformDataMap& uniforms) :
@@ -303,9 +332,9 @@ namespace Ion
 		DX11Logger.Trace("Created DX11UniformBufferDynamic object.");
 	}
 
-	void DX11UniformBufferDynamic::Bind(uint32 slot) const
+	Result<void, RHIError> DX11UniformBufferDynamic::Bind(uint32 slot) const
 	{
-		m_Common.Bind(slot);
+		return m_Common.Bind(slot);
 	}
 
 	const UniformData* DX11UniformBufferDynamic::GetUniformData(const String& name) const
@@ -316,9 +345,9 @@ namespace Ion
 		return &it->second;
 	}
 
-	void DX11UniformBufferDynamic::UpdateData() const
+	Result<void, RHIError> DX11UniformBufferDynamic::UpdateData() const
 	{
-		m_Common.UpdateData();
+		return m_Common.UpdateData();
 	}
 
 	bool DX11UniformBufferDynamic::SetUniformValue_Internal(const String& name, const void* value)

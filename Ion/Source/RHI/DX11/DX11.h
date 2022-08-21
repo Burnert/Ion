@@ -39,11 +39,11 @@ namespace Ion
 		virtual void Shutdown() override;
 		virtual void ShutdownWindow(GenericWindow& window) override;
 
-		virtual void BeginFrame() override;
-		virtual void EndFrame(GenericWindow& window) override;
+		virtual Result<void, RHIError> BeginFrame() override;
+		virtual Result<void, RHIError> EndFrame(GenericWindow& window) override;
 
-		virtual void ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height);
-		virtual void ResizeBuffers(GenericWindow& window, const TextureDimensions& size);
+		virtual Result<void, RHIError> ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height);
+		virtual Result<void, RHIError> ResizeBuffers(GenericWindow& window, const TextureDimensions& size);
 
 		virtual String GetCurrentDisplayName() override;
 
@@ -97,13 +97,13 @@ namespace Ion
 		static void PrintDebugMessages();
 		static void PrepareDebugMessageQueue();
 
-		static void SetDebugName(ID3D11DeviceChild* object, const String& name, const String& prefix);
+		static Result<void, RHIError> SetDebugName(ID3D11DeviceChild* object, const String& name, const String& prefix);
 
 	protected:
 		static void SetDisplayVersion(const char* version);
 
-		static void CreateRenderTarget(TShared<RHITexture>& texture);
-		static void CreateDepthStencil(TShared<RHITexture>& texture, uint32 width, uint32 height);
+		static Result<void, RHIError> CreateRenderTarget(TShared<RHITexture>& texture);
+		static Result<void, RHIError> CreateDepthStencil(TShared<RHITexture>& texture, uint32 width, uint32 height);
 
 	private:
 		virtual void InitImGuiBackend() override;

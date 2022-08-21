@@ -13,25 +13,25 @@ namespace Ion
 
 		virtual void Init() override;
 
-		virtual void Clear(const RendererClearOptions& options) const override;
+		virtual Result<void, RHIError> Clear(const RendererClearOptions& options) const override;
 
-		virtual void DrawIndexed(uint32 indexCount) const override;
+		virtual Result<void, RHIError> DrawIndexed(uint32 indexCount) const override;
 
-		virtual void UnbindResources() const override;
+		virtual Result<void, RHIError> UnbindResources() const override;
 
-		virtual void SetBlendingEnabled(bool bEnable) const override;
+		virtual Result<void, RHIError> SetBlendingEnabled(bool bEnable) const override;
 
-		virtual void SetVSyncEnabled(bool bEnabled) const override;
+		virtual Result<void, RHIError> SetVSyncEnabled(bool bEnabled) const override;
 		virtual bool IsVSyncEnabled() const override;
 
-		virtual void SetViewport(const ViewportDescription& viewport) override;
-		virtual ViewportDescription GetViewport() const override;
+		virtual Result<void, RHIError> SetViewport(const ViewportDescription& viewport) override;
+		virtual Result<ViewportDescription, RHIError> GetViewport() const override;
 
-		virtual void SetPolygonDrawMode(EPolygonDrawMode drawMode) const override;
-		virtual EPolygonDrawMode GetPolygonDrawMode() const override;
+		virtual Result<void, RHIError> SetPolygonDrawMode(EPolygonDrawMode drawMode) const override;
+		virtual Result<EPolygonDrawMode, RHIError> GetPolygonDrawMode() const override;
 
-		virtual void SetRenderTarget(const TShared<RHITexture>& targetTexture) override;
-		virtual void SetDepthStencil(const TShared<RHITexture>& targetTexture) override;
+		virtual Result<void, RHIError> SetRenderTarget(const TShared<RHITexture>& targetTexture) override;
+		virtual Result<void, RHIError> SetDepthStencil(const TShared<RHITexture>& targetTexture) override;
 
 		FORCEINLINE static uint32 PolygonDrawModeToGLPolygonMode(EPolygonDrawMode drawMode)
 		{

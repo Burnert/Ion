@@ -1,5 +1,7 @@
 #pragma once
 
+#include "RHICore.h"
+
 namespace Ion
 {
 	enum class EShaderType : uint8
@@ -20,7 +22,7 @@ namespace Ion
 
 		virtual void AddShaderSource(EShaderType type, const String& source) = 0;
 
-		virtual Result<void, ShaderCompilationError> Compile() = 0;
+		virtual Result<void, RHIError, ShaderCompilationError> Compile() = 0;
 		virtual bool IsCompiled() = 0;
 
 		virtual void Bind() const = 0;

@@ -40,7 +40,7 @@ namespace Ion
 		}
 	}
 
-	Result<void, ShaderCompilationError> DX10Shader::Compile()
+	Result<void, RHIError, ShaderCompilationError> DX10Shader::Compile()
 	{
 		TRACE_FUNCTION();
 
@@ -58,7 +58,6 @@ namespace Ion
 				continue;
 			}
 
-			HRESULT hResult;
 			ID3D10Device* device = DX10::GetDevice();
 
 			uint32 compileFlags =
@@ -70,24 +69,30 @@ namespace Ion
 #endif
 			ID3DBlob* errorMessagesBlob = nullptr;
 
-			hResult = D3DCompile(
-				shader.Source.c_str(),
-				shader.Source.length(),
-				nullptr, nullptr,
-				&includeHandler,
-				ShaderTypeToEntryPoint(shader.Type),
-				FormatShaderTarget(shader.Type),
-				compileFlags, 0,
-				&shader.ShaderBlob,
-				&errorMessagesBlob);
-			if (FAILED(hResult) || errorMessagesBlob)
+			dxcall_throw(
+				D3DCompile(
+					shader.Source.c_str(),
+					shader.Source.length(),
+					nullptr, nullptr,
+					&includeHandler,
+					ShaderTypeToEntryPoint(shader.Type),
+					FormatShaderTarget(shader.Type),
+					compileFlags, 0,
+					&shader.ShaderBlob,
+					&errorMessagesBlob
+				),
+				ShaderCompilationError,
+				"{} compilation failed.\n{}", ShaderTypeToString(shader.Type),
+				[&] {
+					String errorMessage = (char*)errorMessagesBlob->GetBufferPointer();
+					errorMessagesBlob->Release();
+					return errorMessage;
+				}());
+
+			if (errorMessagesBlob)
 			{
-				const char* errorMessage = (char*)errorMessagesBlob->GetBufferPointer();
-
-				DX10Logger.Error("{0} compilation failed!", ShaderTypeToString(shader.Type));
-				DX10Logger.Error(errorMessage);
-
-				ionthrow(ShaderCompilationError, "{0} compilation failed!\n{1}", ShaderTypeToString(shader.Type), errorMessage);
+				DX10Logger.Warn("{} compilation generated some warnings.\n{}", ShaderTypeToString(shader.Type), (char*)errorMessagesBlob->GetBufferPointer());
+				errorMessagesBlob->Release();
 			}
 
 			void* blobPtr = shader.ShaderBlob->GetBufferPointer();
@@ -95,24 +100,19 @@ namespace Ion
 
 			if (shader.Type == EShaderType::Vertex)
 			{
-				dxcall_t(device->CreateVertexShader(blobPtr, blobSize, (ID3D10VertexShader**)&shader.ShaderPtr),
-					ionthrow(ShaderCompilationError, "Could not create Vertex Shader"),
+				dxcall(device->CreateVertexShader(blobPtr, blobSize, (ID3D10VertexShader**)&shader.ShaderPtr),
 					"Could not create Vertex Shader");
 			}
 			else if (shader.Type == EShaderType::Pixel)
 			{
-				dxcall_t(device->CreatePixelShader(blobPtr, blobSize, (ID3D10PixelShader**)&shader.ShaderPtr),
-					ionthrow(ShaderCompilationError, "Could not create Pixel Shader"),
+				dxcall(device->CreatePixelShader(blobPtr, blobSize, (ID3D10PixelShader**)&shader.ShaderPtr),
 					"Could not create Pixel Shader");
 			}
 			else
 			{
-				// Unknown shader type
-				debugbreak();
+				ionbreak("Unknown shader type.");
 				shader.ShaderBlob->Release();
 				shader.ShaderBlob = nullptr;
-				
-				ionthrow(ShaderCompilationError, "{0} compilation failed!\nUnknown shader type.", ShaderTypeToString(shader.Type));
 			}
 		}
 

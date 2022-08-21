@@ -19,15 +19,15 @@ namespace Ion
 	public:
 		virtual ~DX10Texture() override;
 
-		virtual void SetDimensions(TextureDimensions dimensions) override;
-		virtual void UpdateSubresource(Image* image) override;
+		virtual Result<void, RHIError> SetDimensions(TextureDimensions dimensions) override;
+		virtual Result<void, RHIError> UpdateSubresource(Image* image) override;
 
-		virtual void Bind(uint32 slot = 0) const override;
-		virtual void Unbind() const override;
+		virtual Result<void, RHIError> Bind(uint32 slot = 0) const override;
+		virtual Result<void, RHIError> Unbind() const override;
 
-		virtual void CopyTo(const TShared<RHITexture>& destination) const override;
-		virtual void Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType) override;
-		virtual void Unmap() override;
+		virtual Result<void, RHIError> CopyTo(const TShared<RHITexture>& destination) const override;
+		virtual Result<void, RHIError> Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType) override;
+		virtual Result<void, RHIError> Unmap() override;
 
 		virtual void* GetNativeID() const override;
 
@@ -173,9 +173,9 @@ namespace Ion
 		DX10Texture(const TextureDescription& desc, ID3D10Texture2D* existingResource);
 
 	private:
-		void CreateTexture(const TextureDescription& desc);
-		void CreateViews(const TextureDescription& desc);
-		void CreateSampler(const TextureDescription& desc);
+		Result<void, RHIError> CreateTexture(const TextureDescription& desc);
+		Result<void, RHIError> CreateViews(const TextureDescription& desc);
+		Result<void, RHIError> CreateSampler(const TextureDescription& desc);
 		void ReleaseResources();
 
 	private:

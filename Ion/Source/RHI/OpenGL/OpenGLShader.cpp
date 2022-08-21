@@ -43,7 +43,7 @@ namespace Ion
 		}
 	}
 
-	Result<void, ShaderCompilationError> OpenGLShader::Compile()
+	Result<void, RHIError, ShaderCompilationError> OpenGLShader::Compile()
 	{
 		TRACE_FUNCTION();
 
@@ -102,7 +102,7 @@ namespace Ion
 			glDeleteProgram(m_ProgramID);
 			m_ProgramID = 0;
 
-			ionthrow(ShaderCompilationError, "Could not link shader program!");
+			ionthrow(RHIError, "Could not link shader program!");
 		}
 
 		TRACE_BEGIN(3, "OpenGLShader - Shader Detachment");

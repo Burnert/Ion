@@ -17,19 +17,19 @@ namespace Ion
 		}
 	}
 
-	void OpenGLTexture::SetDimensions(TextureDimensions dimensions)
+	Result<void, RHIError> OpenGLTexture::SetDimensions(TextureDimensions dimensions)
 	{
-
+		return Void();
 	}
 
-	void OpenGLTexture::UpdateSubresource(Image* image)
+	Result<void, RHIError> OpenGLTexture::UpdateSubresource(Image* image)
 	{
 		TRACE_FUNCTION();
 
 		if (!image->IsLoaded())
 		{
 			OpenGLLogger.Error("Cannot Update Subresource of Texture. Image has not been loaded.");
-			return;
+			ionthrow(RHIError);
 		}
 
 		// Dimensions are different
@@ -39,7 +39,7 @@ namespace Ion
 			OpenGLLogger.Warn("Image dimensions do not match texture dimensions.");
 			//ReleaseTexture();
 			//CreateTexture(image->GetPixelData(), image->GetWidth(), image->GetHeight());
-			return;
+			ionthrow(RHIError);
 		}
 
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->GetWidth(), image->GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, image->GetPixelData());
@@ -48,32 +48,41 @@ namespace Ion
 		{
 			glGenerateMipmap(GL_TEXTURE_2D);
 		}
+
+		return Void();
 	}
 
-	void OpenGLTexture::Bind(uint32 slot) const
+	Result<void, RHIError> OpenGLTexture::Bind(uint32 slot) const
 	{
 		TRACE_FUNCTION();
 
 		glBindTextureUnit(slot, m_ID);
 		m_BoundSlot = slot;
+
+		return Void();
 	}
 
-	void OpenGLTexture::Unbind() const
+	Result<void, RHIError> OpenGLTexture::Unbind() const
 	{
 		// This is useless for the time being
 		// @TODO: Implement a texture manager with some indication which slots are bound by which textures
+
+		return Void();
 	}
 
-	void OpenGLTexture::CopyTo(const TShared<RHITexture>& destination) const
+	Result<void, RHIError> OpenGLTexture::CopyTo(const TShared<RHITexture>& destination) const
 	{
+		return Void();
 	}
 
-	void OpenGLTexture::Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType)
+	Result<void, RHIError> OpenGLTexture::Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType)
 	{
+		return Void();
 	}
 
-	void OpenGLTexture::Unmap()
+	Result<void, RHIError> OpenGLTexture::Unmap()
 	{
+		return Void();
 	}
 
 	void* OpenGLTexture::GetNativeID() const

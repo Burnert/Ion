@@ -22,11 +22,11 @@ namespace Ion
 		virtual void Shutdown() override;
 		virtual void ShutdownWindow(GenericWindow& window) override;
 
-		virtual void BeginFrame() override;
-		virtual void EndFrame(GenericWindow& window) override;
+		virtual Result<void, RHIError> BeginFrame() override;
+		virtual Result<void, RHIError> EndFrame(GenericWindow& window) override;
 
-		virtual void ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height) override;
-		virtual void ResizeBuffers(GenericWindow& window, const TextureDimensions& size) override;
+		virtual Result<void, RHIError> ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height) override;
+		virtual Result<void, RHIError> ResizeBuffers(GenericWindow& window, const TextureDimensions& size) override;
 
 		virtual String GetCurrentDisplayName() override;
 

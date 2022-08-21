@@ -3,6 +3,8 @@
 #include "DX10Buffer.h"
 #include "DX10Shader.h"
 
+#pragma warning(disable:6387)
+
 namespace Ion
 {
 	// -------------------------------------------------------------------
@@ -15,32 +17,7 @@ namespace Ion
 		m_Buffer(nullptr),
 		m_InputLayout(nullptr)
 	{
-		TRACE_FUNCTION();
-
-		ionverify(vertexAttributes);
-		ionassert(count <= std::numeric_limits<uint64>::max() / 4);
-		ionassert(count * sizeof(float) <= std::numeric_limits<UINT>::max());
-
-		HRESULT hResult = S_OK;
-
-		ID3D10Device* device = DX10::GetDevice();
-
-		uint32 size = (uint32)(count * sizeof(float));
-
-		D3D10_BUFFER_DESC bd { };
-		bd.ByteWidth = size;
-		bd.BindFlags = D3D10_BIND_VERTEX_BUFFER;
-		bd.Usage = D3D10_USAGE_DEFAULT;
-		bd.CPUAccessFlags = 0;
-
-		D3D10_SUBRESOURCE_DATA sd { };
-		sd.pSysMem = vertexAttributes;
-
-		dxcall(device->CreateBuffer(&bd, &sd, &m_Buffer),
-			"Could not create Vertex Buffer.");
-
-		// @TODO: SetDebugName on buffers
-		DX10Logger.Trace("Created DX10VertexBuffer object.");
+		CreateBuffer(vertexAttributes, count).Unwrap();
 	}
 
 	DX10VertexBuffer::~DX10VertexBuffer()
@@ -76,12 +53,14 @@ namespace Ion
 		}
 	}
 
-	void DX10VertexBuffer::SetLayoutShader(const TShared<RHIShader>& shader)
+	Result<void, RHIError> DX10VertexBuffer::SetLayoutShader(const TShared<RHIShader>& shader)
 	{
 		CreateDX10Layout(TStaticCast<DX10Shader>(shader));
+
+		return Void();
 	}
 
-	void DX10VertexBuffer::CreateDX10Layout(const TShared<DX10Shader>& shader)
+	Result<void, RHIError> DX10VertexBuffer::CreateDX10Layout(const TShared<DX10Shader>& shader)
 	{
 		TRACE_FUNCTION();
 
@@ -89,8 +68,6 @@ namespace Ion
 		ionassert(shader->IsCompiled());
 		ionassert(m_VertexLayout);
 		ionassert(!m_IEDArray.empty());
-
-		HRESULT hResult;
 
 		ID3D10Device* device = DX10::GetDevice();
 
@@ -100,14 +77,17 @@ namespace Ion
 			"Could not create Input Layout.");
 
 		DX10Logger.Trace("Created DX10VertexBuffer Input Layout object.");
+
+		return Void();
 	}
 
 	uint32 DX10VertexBuffer::GetVertexCount() const
 	{
+		// @TODO: 0...
 		return 0;
 	}
 
-	void DX10VertexBuffer::Bind() const
+	Result<void, RHIError> DX10VertexBuffer::Bind() const
 	{
 		ionassert(m_VertexLayout, "Vertex Layout has not been set.");
 
@@ -115,21 +95,57 @@ namespace Ion
 
 		uint32 stride = m_VertexLayout->GetStride();
 		uint32 offset = 0;
-		dxcall_v(device->IASetVertexBuffers(0, 1, &m_Buffer, &stride, &offset));
+		dxcall(device->IASetVertexBuffers(0, 1, &m_Buffer, &stride, &offset));
+
+		return Void();
 	}
 
-	void DX10VertexBuffer::Unbind() const
+	Result<void, RHIError> DX10VertexBuffer::Unbind() const
 	{
 		ID3D10Device* device = DX10::GetDevice();
 
-		dxcall_v(device->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr));
+		dxcall(device->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr));
+
+		return Void();
 	}
 
-	void DX10VertexBuffer::BindLayout() const
+	Result<void, RHIError> DX10VertexBuffer::BindLayout() const
 	{
 		ID3D10Device* device = DX10::GetDevice();
 
-		dxcall_v(device->IASetInputLayout(m_InputLayout));
+		dxcall(device->IASetInputLayout(m_InputLayout));
+
+		return Void();
+	}
+
+	Result<void, RHIError> DX10VertexBuffer::CreateBuffer(float* vertexAttributes, uint64 count)
+	{
+		TRACE_FUNCTION();
+
+		ionverify(vertexAttributes);
+		ionassert(count <= std::numeric_limits<uint64>::max() / 4);
+		ionassert(count * sizeof(float) <= std::numeric_limits<UINT>::max());
+
+		ID3D10Device* device = DX10::GetDevice();
+
+		uint32 size = (uint32)(count * sizeof(float));
+
+		D3D10_BUFFER_DESC bd { };
+		bd.ByteWidth = size;
+		bd.BindFlags = D3D10_BIND_VERTEX_BUFFER;
+		bd.Usage = D3D10_USAGE_DEFAULT;
+		bd.CPUAccessFlags = 0;
+
+		D3D10_SUBRESOURCE_DATA sd { };
+		sd.pSysMem = vertexAttributes;
+
+		dxcall(device->CreateBuffer(&bd, &sd, &m_Buffer),
+			"Could not create Vertex Buffer.");
+
+		// @TODO: SetDebugName on buffers
+		DX10Logger.Trace("Created DX10VertexBuffer object.");
+
+		return Void();
 	}
 
 	// -------------------------------------------------------------------
@@ -141,29 +157,7 @@ namespace Ion
 		m_TriangleCount(count / 3),
 		m_ID(0)
 	{
-		TRACE_FUNCTION();
-
-		ionverify(indices);
-
-		HRESULT hResult = S_OK;
-
-		ID3D10Device* device = DX10::GetDevice();
-
-		uint32 size = (uint32)(count * sizeof(float));
-
-		D3D10_BUFFER_DESC bd { };
-		bd.ByteWidth = size;
-		bd.BindFlags = D3D10_BIND_INDEX_BUFFER;
-		bd.Usage = D3D10_USAGE_DEFAULT;
-		bd.CPUAccessFlags = 0;
-
-		D3D10_SUBRESOURCE_DATA sd { };
-		sd.pSysMem = indices;
-
-		dxcall(device->CreateBuffer(&bd, &sd, &m_Buffer),
-			"Could not create Index Buffer.");
-
-		DX10Logger.Trace("Created DX10IndexBuffer object.");
+		CreateBuffer(indices, count).Unwrap();
 	}
 
 	DX10IndexBuffer::~DX10IndexBuffer()
@@ -183,25 +177,54 @@ namespace Ion
 		return m_TriangleCount;
 	}
 
-	void DX10IndexBuffer::Bind() const
+	Result<void, RHIError> DX10IndexBuffer::Bind() const
 	{
 		ID3D10Device* device = DX10::GetDevice();
 
-		dxcall_v(device->IASetIndexBuffer(m_Buffer, DXGI_FORMAT_R32_UINT, 0));
+		dxcall(device->IASetIndexBuffer(m_Buffer, DXGI_FORMAT_R32_UINT, 0));
+
+		return Void();
 	}
 
-	void DX10IndexBuffer::Unbind() const
+	Result<void, RHIError> DX10IndexBuffer::Unbind() const
 	{
 		ID3D10Device* device = DX10::GetDevice();
 
-		dxcall_v(device->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0));
+		dxcall(device->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0));
+
+		return Void();
+	}
+
+	Result<void, RHIError> DX10IndexBuffer::CreateBuffer(uint32* indices, uint64 count)
+	{
+		TRACE_FUNCTION();
+
+		ionverify(indices);
+
+		ID3D10Device* device = DX10::GetDevice();
+
+		uint32 size = (uint32)(count * sizeof(float));
+
+		D3D10_BUFFER_DESC bd { };
+		bd.ByteWidth = size;
+		bd.BindFlags = D3D10_BIND_INDEX_BUFFER;
+		bd.Usage = D3D10_USAGE_DEFAULT;
+		bd.CPUAccessFlags = 0;
+
+		D3D10_SUBRESOURCE_DATA sd { };
+		sd.pSysMem = indices;
+
+		dxcall(device->CreateBuffer(&bd, &sd, &m_Buffer),
+			"Could not create Index Buffer.");
+
+		DX10Logger.Trace("Created DX10IndexBuffer object.");
+
+		return Void();
 	}
 
 	// -------------------------------------------------------------------
 	// DX10UniformBuffer -------------------------------------------------
 	// -------------------------------------------------------------------
-
-#pragma warning(disable:6387)
 
 	// Common Uniform Buffer -------------------------------------------------------
 
@@ -209,12 +232,51 @@ namespace Ion
 		DataSize(size),
 		Buffer(nullptr)
 	{
+		CreateBuffer(initialData, size).Unwrap();
+	}
+
+	_DX10UniformBufferCommon::~_DX10UniformBufferCommon()
+	{
+		TRACE_FUNCTION();
+
+		COMRelease(Buffer);
+
+		_aligned_free(Data);
+	}
+
+	Result<void, RHIError> _DX10UniformBufferCommon::Bind(uint32 slot) const
+	{
+		ionassert(Buffer);
+
+		ID3D10Device* device = DX10::GetDevice();
+
+		dxcall(device->VSSetConstantBuffers(slot, 1, &Buffer));
+		dxcall(device->PSSetConstantBuffers(slot, 1, &Buffer));
+
+		return Void();
+	}
+
+	Result<void, RHIError> _DX10UniformBufferCommon::UpdateData() const
+	{
+		// Might become useful
+		//TRACE_FUNCTION();
+
+		ionassert(Buffer);
+
+		void* pData = nullptr;
+		dxcall(Buffer->Map(D3D10_MAP_WRITE_DISCARD, 0, &pData));
+		memcpy(pData, Data, DataSize);
+		dxcall(Buffer->Unmap());
+
+		return Void();
+	}
+
+	Result<void, RHIError> _DX10UniformBufferCommon::CreateBuffer(void* initialData, size_t size)
+	{
 		TRACE_FUNCTION();
 
 		ionverify(initialData);
 		ionassert(size <= std::numeric_limits<UINT>::max());
-
-		HRESULT hResult;
 
 		ID3D10Device* device = DX10::GetDevice();
 
@@ -233,40 +295,8 @@ namespace Ion
 
 		dxcall(device->CreateBuffer(&bd, &sd, &Buffer),
 			"Could not create Constant Buffer.");
-	}
 
-	_DX10UniformBufferCommon::~_DX10UniformBufferCommon()
-	{
-		TRACE_FUNCTION();
-
-		COMRelease(Buffer);
-
-		_aligned_free(Data);
-	}
-
-	void _DX10UniformBufferCommon::Bind(uint32 slot) const
-	{
-		ionassert(Buffer);
-
-		ID3D10Device* device = DX10::GetDevice();
-
-		dxcall_v(device->VSSetConstantBuffers(slot, 1, &Buffer));
-		dxcall_v(device->PSSetConstantBuffers(slot, 1, &Buffer));
-	}
-
-	void _DX10UniformBufferCommon::UpdateData() const
-	{
-		// Might become useful
-		//TRACE_FUNCTION();
-
-		ionassert(Buffer);
-
-		HRESULT hResult;
-
-		void* pData = nullptr;
-		dxcall(Buffer->Map(D3D10_MAP_WRITE_DISCARD, 0, &pData));
-		memcpy(pData, Data, DataSize);
-		dxcall_v(Buffer->Unmap());
+		return Void();
 	}
 
 	// Specific Uniform Buffer -------------------------------------------------------
@@ -277,9 +307,9 @@ namespace Ion
 		DX10Logger.Trace("Created DX10UniformBuffer object.");
 	}
 
-	void DX10UniformBuffer::Bind(uint32 slot) const
+	Result<void, RHIError> DX10UniformBuffer::Bind(uint32 slot) const
 	{
-		m_Common.Bind(slot);
+		return m_Common.Bind(slot);
 	}
 
 	void* DX10UniformBuffer::GetDataPtr() const
@@ -287,9 +317,9 @@ namespace Ion
 		return m_Common.Data;
 	}
 
-	void DX10UniformBuffer::UpdateData() const
+	Result<void, RHIError> DX10UniformBuffer::UpdateData() const
 	{
-		m_Common.UpdateData();
+		return m_Common.UpdateData();
 	}
 
 	DX10UniformBufferDynamic::DX10UniformBufferDynamic(void* initialData, size_t size, const UniformDataMap& uniforms) :
@@ -299,9 +329,9 @@ namespace Ion
 		DX10Logger.Trace("Created DX10UniformBufferDynamic object.");
 	}
 
-	void DX10UniformBufferDynamic::Bind(uint32 slot) const
+	Result<void, RHIError> DX10UniformBufferDynamic::Bind(uint32 slot) const
 	{
-		m_Common.Bind(slot);
+		return m_Common.Bind(slot);
 	}
 
 	const UniformData* DX10UniformBufferDynamic::GetUniformData(const String& name) const
@@ -312,9 +342,9 @@ namespace Ion
 		return &it->second;
 	}
 
-	void DX10UniformBufferDynamic::UpdateData() const
+	Result<void, RHIError> DX10UniformBufferDynamic::UpdateData() const
 	{
-		m_Common.UpdateData();
+		return m_Common.UpdateData();
 	}
 
 	bool DX10UniformBufferDynamic::SetUniformValue_Internal(const String& name, const void* value)

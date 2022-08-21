@@ -35,21 +35,25 @@ namespace Ion
 	{
 	}
 
-	void OpenGL::BeginFrame()
+	Result<void, RHIError> OpenGL::BeginFrame()
 	{
+		return Void();
 	}
 
-	void OpenGL::EndFrame(GenericWindow& window)
+	Result<void, RHIError> OpenGL::EndFrame(GenericWindow& window)
 	{
 		window.SwapBuffers();
+		return Void();
 	}
 
-	void OpenGL::ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height)
+	Result<void, RHIError> OpenGL::ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height)
 	{
+		return Void();
 	}
 
-	void OpenGL::ResizeBuffers(GenericWindow& window, const TextureDimensions& size)
+	Result<void, RHIError> OpenGL::ResizeBuffers(GenericWindow& window, const TextureDimensions& size)
 	{
+		return Void();
 	}
 
 	String OpenGL::GetCurrentDisplayName()

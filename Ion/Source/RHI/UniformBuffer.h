@@ -1,5 +1,6 @@
 #pragma once
 
+#include "RHICore.h"
 #include "VertexAttribute.h"
 
 namespace Ion
@@ -147,14 +148,14 @@ template<> constexpr EUniformType TTypeToUniformTypeV<type> = EUniformType::name
 	class IRHIUniformBuffer
 	{
 	public:
-		virtual void Bind(uint32 slot = 0) const = 0;
+		virtual Result<void, RHIError> Bind(uint32 slot = 0) const = 0;
 
 	protected:
 		/**
 		 * Copy the constants data from the CPU to the GPU.
 		 * Accessible in Material
 		 */
-		virtual void UpdateData() const = 0;
+		virtual Result<void, RHIError> UpdateData() const = 0;
 
 		friend class Material;
 	};

@@ -92,7 +92,7 @@ namespace Ion
 
 			ID3D11Device* device;
 			ID3D11DeviceContext* context;
-			dxcall_throw(
+			dxcall(
 				D3D11CreateDeviceAndSwapChain(
 					nullptr,
 					D3D_DRIVER_TYPE_HARDWARE,
@@ -108,8 +108,8 @@ namespace Ion
 					&context),
 				"Cannot create D3D11 Device and Swap Chain.");
 
-			dxcall_throw(device->QueryInterface(IID_PPV_ARGS(&s_Device)));
-			dxcall_throw(context->QueryInterface(IID_PPV_ARGS(&s_Context)));
+			dxcall(device->QueryInterface(IID_PPV_ARGS(&s_Device)));
+			dxcall(context->QueryInterface(IID_PPV_ARGS(&s_Context)));
 		}
 		// Create Render Target
 
@@ -126,8 +126,8 @@ namespace Ion
 			rd.DepthClipEnable = true;
 			rd.MultisampleEnable = true;
 
-			dxcall_throw(s_Device->CreateRasterizerState(&rd, &s_RasterizerState));
-			dxcall_throw(s_Context->RSSetState(s_RasterizerState));
+			dxcall(s_Device->CreateRasterizerState(&rd, &s_RasterizerState));
+			dxcall(s_Context->RSSetState(s_RasterizerState));
 		}
 		// Create Blend State
 		{
@@ -145,8 +145,8 @@ namespace Ion
 			blendDesc.RenderTarget[0].LogicOp = D3D11_LOGIC_OP_NOOP;
 			blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
-			dxcall_throw(s_Device->CreateBlendState1(&blendDesc, &s_BlendStateTransparent));
-			dxcall_throw(s_Context->OMSetBlendState(s_BlendState, nullptr, 0xFFFFFFFF));
+			dxcall(s_Device->CreateBlendState1(&blendDesc, &s_BlendStateTransparent));
+			dxcall(s_Context->OMSetBlendState(s_BlendState, nullptr, 0xFFFFFFFF));
 		}
 		// Create Depth / Stencil Buffer
 		{
@@ -168,10 +168,10 @@ namespace Ion
 			dsd.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 			dsd.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
 
-			dxcall_throw(s_Device->CreateDepthStencilState(&dsd, &s_DepthStencilState));
-			dxcall_throw(s_Context->OMSetDepthStencilState(s_DepthStencilState, 1));
+			dxcall(s_Device->CreateDepthStencilState(&dsd, &s_DepthStencilState));
+			dxcall(s_Context->OMSetDepthStencilState(s_DepthStencilState, 1));
 
-			dxcall_throw(s_SwapChain->GetDesc(&scd));
+			dxcall(s_SwapChain->GetDesc(&scd));
 			CreateDepthStencil(window.m_WindowDepthStencilTexture, scd.BufferDesc.Width, scd.BufferDesc.Height);
 		}
 		// Set Viewports
@@ -187,20 +187,20 @@ namespace Ion
 			viewport.Height = (float)dimensions.Height;
 			viewport.MinDepth = 0.0f;
 			viewport.MaxDepth = 1.0f;
-			dxcall_throw(s_Context->RSSetViewports(1, &viewport));
+			dxcall(s_Context->RSSetViewports(1, &viewport));
 		}
 		// Disable Alt+Enter Fullscreen
 
 		IDXGIFactory1* factory = nullptr;
 
-		dxcall_throw(s_SwapChain->GetParent(IID_PPV_ARGS(&factory)), "Cannot get the Swap Chain factory.");
-		dxcall_throw(factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
+		dxcall(s_SwapChain->GetParent(IID_PPV_ARGS(&factory)), "Cannot get the Swap Chain factory.");
+		dxcall(factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
 
 		factory->Release();
 
 		// -------------------------------------------------------
 
-		dxcall_throw(s_Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
+		dxcall(s_Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
 
 		return Void();
 	}
@@ -227,33 +227,36 @@ namespace Ion
 
 	}
 
-	void DX11::BeginFrame()
+	Result<void, RHIError> DX11::BeginFrame()
 	{
 		TRACE_FUNCTION();
 
-		//dxcall_v(s_Context->OMSetRenderTargets(1, &s_RTV, s_DSV), "Cannot set render target.");
+		//dxcall(s_Context->OMSetRenderTargets(1, &s_RTV, s_DSV), "Cannot set render target.");
+
+		return Void();
 	}
 
-	void DX11::EndFrame(GenericWindow& window)
+	Result<void, RHIError> DX11::EndFrame(GenericWindow& window)
 	{
 		TRACE_FUNCTION();
 
-		HRESULT hResult;
 		dxcall(s_SwapChain->Present(s_SwapInterval, 0), "Cannot present frame.");
+
+		return Void();
 	}
 
-	void DX11::ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height)
+	Result<void, RHIError> DX11::ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height)
 	{
 		TRACE_FUNCTION();
-
-		HRESULT hResult;
 
 		dxcall(s_SwapChain->SetFullscreenState(mode == EDisplayMode::FullScreen, nullptr));
 
 		ResizeBuffers(window, { width, height });
+
+		return Void();
 	}
 
-	void DX11::ResizeBuffers(GenericWindow& window, const TextureDimensions& size)
+	Result<void, RHIError> DX11::ResizeBuffers(GenericWindow& window, const TextureDimensions& size)
 	{
 		TRACE_FUNCTION();
 
@@ -267,6 +270,8 @@ namespace Ion
 
 		CreateRenderTarget(window.m_WindowColorTexture);
 		CreateDepthStencil(window.m_WindowDepthStencilTexture, size.Width, size.Height);
+
+		return Void();
 	}
 
 	String DX11::GetCurrentDisplayName()
@@ -291,21 +296,25 @@ namespace Ion
 		{
 			uint64 messageLength = 0;
 			hResult = s_DebugInfoQueue->GetMessage(DXGI_DEBUG_ALL, i, nullptr, &messageLength);
-			win_check_hresult_c(hResult, { break; }, "Could not get message length.");
-
-			DXGI_INFO_QUEUE_MESSAGE* message = (DXGI_INFO_QUEUE_MESSAGE*)malloc(messageLength);
-
-			hResult = s_DebugInfoQueue->GetMessage(DXGI_DEBUG_ALL, i, message, &messageLength);
-			if (message)
+			if (FAILED(hResult))
 			{
-				if (hResult == S_OK)
-				{
-					messageArray.emplace_back(DXGIDebugMessage { message->Severity, message->pDescription });
-				}
-				free(message);
+				DX11Logger.Error("Could not get the message length.\n{}", Windows::FormatHResultMessage(hResult));
+				continue;
 			}
 
-			win_check_hresult_c(hResult, { break; }, "Could not retrieve message.");
+			DXGI_INFO_QUEUE_MESSAGE* message = (DXGI_INFO_QUEUE_MESSAGE*)malloc(messageLength);
+			ionverify(message);
+
+			hResult = s_DebugInfoQueue->GetMessage(DXGI_DEBUG_ALL, i, message, &messageLength);
+			if (FAILED(hResult))
+			{
+				DX11Logger.Error("Could not retrieve the message.\n{}", Windows::FormatHResultMessage(hResult));
+				free(message);
+				continue;
+			}
+
+			messageArray.emplace_back(DXGIDebugMessage { message->Severity, message->pDescription });
+			free(message);
 		}
 
 		s_DebugInfoQueue->ClearStoredMessages(DXGI_DEBUG_ALL);
@@ -361,19 +370,18 @@ namespace Ion
 		s_DebugInfoQueue->ClearStoredMessages(DXGI_DEBUG_ALL);
 	}
 
-	void DX11::SetDebugName(ID3D11DeviceChild* object, const String& name, const String& prefix)
+	Result<void, RHIError> DX11::SetDebugName(ID3D11DeviceChild* object, const String& name, const String& prefix)
 	{
 #if ION_DEBUG
 		ionassert(object);
 
 		if (name.empty())
-			return;
+			return Void();
 
-		HRESULT hResult;
-		
 		String fullName = prefix + name;
 		dxcall(object->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)fullName.size(), fullName.c_str()));
 #endif
+		return Void();
 	}
 
 	void DX11::SetDisplayVersion(const char* version)
@@ -385,11 +393,9 @@ namespace Ion
 		strcpy_s((s_DisplayName + length), 120 - length, version);
 	}
 
-	void DX11::CreateRenderTarget(TShared<RHITexture>& texture)
+	Result<void, RHIError> DX11::CreateRenderTarget(TShared<RHITexture>& texture)
 	{
 		TRACE_FUNCTION();
-
-		HRESULT hResult;
 
 		ID3D11Texture2D* backBuffer;
 
@@ -405,9 +411,11 @@ namespace Ion
 		desc.Dimensions = { t2dDesc.Width, t2dDesc.Height };
 
 		texture = MakeShareable(new DX11Texture(desc, backBuffer));
+
+		return Void();
 	}
 
-	void DX11::CreateDepthStencil(TShared<RHITexture>& texture, uint32 width, uint32 height)
+	Result<void, RHIError> DX11::CreateDepthStencil(TShared<RHITexture>& texture, uint32 width, uint32 height)
 	{
 		TRACE_FUNCTION();
 
@@ -417,6 +425,8 @@ namespace Ion
 		desc.Dimensions = { width, height };
 
 		texture = RHITexture::CreateShared(desc);
+
+		return Void();
 	}
 
 	void DX11::InitImGuiBackend()

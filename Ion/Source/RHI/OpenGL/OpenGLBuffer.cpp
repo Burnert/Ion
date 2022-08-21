@@ -32,9 +32,9 @@ namespace Ion
 		m_VertexLayout = layout;
 	}
 
-	void OpenGLVertexBuffer::SetLayoutShader(const TShared<RHIShader>& shader)
+	Result<void, RHIError> OpenGLVertexBuffer::SetLayoutShader(const TShared<RHIShader>& shader)
 	{
-
+		return Void();
 	}
 
 	uint32 OpenGLVertexBuffer::GetVertexCount() const
@@ -42,21 +42,25 @@ namespace Ion
 		return m_VertexCount;
 	}
 
-	void OpenGLVertexBuffer::Bind() const
+	Result<void, RHIError> OpenGLVertexBuffer::Bind() const
 	{
 		TRACE_FUNCTION();
 
 		glBindBuffer(GL_ARRAY_BUFFER, m_ID);
+
+		return Void();
 	}
 
-	void OpenGLVertexBuffer::Unbind() const
+	Result<void, RHIError> OpenGLVertexBuffer::Unbind() const
 	{
 		TRACE_FUNCTION();
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		return Void();
 	}
 
-	void OpenGLVertexBuffer::BindLayout() const
+	Result<void, RHIError> OpenGLVertexBuffer::BindLayout() const
 	{
 		TRACE_FUNCTION();
 
@@ -72,6 +76,8 @@ namespace Ion
 			glEnableVertexAttribArray(attributeIndex);
 			attributeIndex++;
 		}
+
+		return Void();
 	}
 
 	// -------------------------------------------------------------------
@@ -106,18 +112,22 @@ namespace Ion
 		return m_TriangleCount;
 	}
 
-	void OpenGLIndexBuffer::Bind() const
+	Result<void, RHIError> OpenGLIndexBuffer::Bind() const
 	{
 		TRACE_FUNCTION();
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ID);
+
+		return Void();
 	}
 
-	void OpenGLIndexBuffer::Unbind() const
+	Result<void, RHIError> OpenGLIndexBuffer::Unbind() const
 	{
 		TRACE_FUNCTION();
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+		return Void();
 	}
 
 	// -------------------------------------------------------------------
@@ -147,12 +157,14 @@ namespace Ion
 		return m_Data;
 	}
 
-	void OpenGLUniformBuffer::UpdateData() const
+	Result<void, RHIError> OpenGLUniformBuffer::UpdateData() const
 	{
 		TRACE_FUNCTION();
 
 		glBindBuffer(GL_UNIFORM_BUFFER, m_ID);
 		glBufferSubData(GL_UNIFORM_BUFFER, 0, m_DataSize, m_Data);
+
+		return Void();
 	}
 
 	OpenGLUniformBuffer::~OpenGLUniformBuffer()
@@ -164,11 +176,13 @@ namespace Ion
 		glDeleteBuffers(1, &m_ID);
 	}
 
-	void OpenGLUniformBuffer::Bind(uint32 slot) const
+	Result<void, RHIError> OpenGLUniformBuffer::Bind(uint32 slot) const
 	{
 		TRACE_FUNCTION();
 
 		glBindBuffer(GL_UNIFORM_BUFFER, m_ID);
 		glBindBufferBase(GL_UNIFORM_BUFFER, slot, m_ID);
+
+		return Void();
 	}
 }

@@ -102,27 +102,27 @@ namespace Ion
 		void DrawScreenTexture(const TShared<RHITexture>& texture) const;
 		void DrawScreenTexture(const TShared<RHITexture>& texture, const RHIShader* shader) const;
 
-		virtual void Clear(const RendererClearOptions& options) const = 0;
+		virtual Result<void, RHIError> Clear(const RendererClearOptions& options) const = 0;
 
-		virtual void DrawIndexed(uint32 indexCount) const = 0;
+		virtual Result<void, RHIError> DrawIndexed(uint32 indexCount) const = 0;
 
-		virtual void UnbindResources() const = 0;
+		virtual Result<void, RHIError> UnbindResources() const = 0;
 
-		virtual void SetBlendingEnabled(bool bEnable) const = 0;
+		virtual Result<void, RHIError> SetBlendingEnabled(bool bEnable) const = 0;
 
-		virtual void SetVSyncEnabled(bool bEnabled) const = 0;
+		virtual Result<void, RHIError> SetVSyncEnabled(bool bEnabled) const = 0;
 		virtual bool IsVSyncEnabled() const = 0;
 
-		virtual void SetViewport(const ViewportDescription& viewport) = 0;
-		virtual ViewportDescription GetViewport() const = 0;
+		virtual Result<void, RHIError> SetViewport(const ViewportDescription& viewport) = 0;
+		virtual Result<ViewportDescription, RHIError> GetViewport() const = 0;
 
-		virtual void SetPolygonDrawMode(EPolygonDrawMode drawMode) const = 0;
-		virtual EPolygonDrawMode GetPolygonDrawMode() const = 0;
+		virtual Result<void, RHIError> SetPolygonDrawMode(EPolygonDrawMode drawMode) const = 0;
+		virtual Result<EPolygonDrawMode, RHIError> GetPolygonDrawMode() const = 0;
 
 		/* Sets the render target (resets the depth stencil to null) */
-		virtual void SetRenderTarget(const TShared<RHITexture>& targetTexture) = 0;
+		virtual Result<void, RHIError> SetRenderTarget(const TShared<RHITexture>& targetTexture) = 0;
 		/* Sets the depth stencil target (call this only after SetRenderTarget) */
-		virtual void SetDepthStencil(const TShared<RHITexture>& targetTexture) = 0;
+		virtual Result<void, RHIError> SetDepthStencil(const TShared<RHITexture>& targetTexture) = 0;
 
 		void RenderEditorPass(const Scene* scene, const EditorPassData& data);
 

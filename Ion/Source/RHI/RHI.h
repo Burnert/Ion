@@ -1,15 +1,12 @@
 #pragma once
 
+#include "RHICore.h"
 #include "Renderer/RendererCore.h"
 
 struct ImDrawData;
 
 namespace Ion
 {
-	REGISTER_LOGGER(RHILogger, "RHI");
-
-	DEFINE_ERROR_TYPE(RHIError);
-
 	// @TODO: Implement other Render APIs in the future
 	enum class ERHI
 	{
@@ -48,11 +45,11 @@ namespace Ion
 		virtual void Shutdown() = 0;
 		virtual void ShutdownWindow(GenericWindow& window) = 0;
 
-		virtual void BeginFrame() = 0;
-		virtual void EndFrame(GenericWindow& window) = 0;
+		virtual Result<void, RHIError> BeginFrame() = 0;
+		virtual Result<void, RHIError> EndFrame(GenericWindow& window) = 0;
 
-		virtual void ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height) = 0;
-		virtual void ResizeBuffers(GenericWindow& window, const TextureDimensions& size) = 0;
+		virtual Result<void, RHIError> ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height) = 0;
+		virtual Result<void, RHIError> ResizeBuffers(GenericWindow& window, const TextureDimensions& size) = 0;
 
 		virtual String GetCurrentDisplayName() = 0;
 

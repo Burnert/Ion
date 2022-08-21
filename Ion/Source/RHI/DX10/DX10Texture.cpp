@@ -11,89 +11,94 @@ namespace Ion
 		ReleaseResources();
 	}
 
-	void DX10Texture::SetDimensions(TextureDimensions dimensions)
+	Result<void, RHIError> DX10Texture::SetDimensions(TextureDimensions dimensions)
 	{
 		//ionassert(dimensions.Width <= 16384 && dimensions.Height <= 16384, "Textures larger than 16K are unsupported.");
 		// @TODO: This probably should not be here (recreate the texture instead)
+
+		return Void();
 	}
 
-	void DX10Texture::UpdateSubresource(Image* image)
+	Result<void, RHIError> DX10Texture::UpdateSubresource(Image* image)
 	{
 		TRACE_FUNCTION();
 
 		ionassert(m_Description.bUseAsRenderTarget,
 			"Cannot update subresource if the texture has not been created as a render target.");
 
-		if (!image->IsLoaded())
-		{
-			DX10Logger.Error("Cannot Update Subresource of Texture. Image has not been loaded.");
-			return;
-		}
+		ionassert(image->IsLoaded(), "Cannot Update Subresource of Texture. Image has not been loaded.");
+
+		ionassert(
+			image->GetWidth() == m_Description.Dimensions.Width &&
+			image->GetHeight() == m_Description.Dimensions.Height,
+			"Image dimensions do not match texture dimensions.");
 
 		ID3D10Device* device = DX10::GetDevice();
-
-		// Dimensions are different
-		if (image->GetWidth() != m_Description.Dimensions.Width ||
-			image->GetHeight() != m_Description.Dimensions.Height)
-		{
-			DX10Logger.Warn("Image dimensions do not match texture dimensions.");
-			return;
-		}
 
 		uint32 lineSize = image->GetWidth() * 4;
 
 		// Update Subresource
-		dxcall_v(device->UpdateSubresource(m_Texture, 0, nullptr, image->GetPixelData(), lineSize, 0));
+		dxcall(device->UpdateSubresource(m_Texture, 0, nullptr, image->GetPixelData(), lineSize, 0));
 
 		if (m_Description.bGenerateMips)
 		{
 			// Generate mipmaps
-			dxcall_v(device->GenerateMips(m_SRV));
+			dxcall(device->GenerateMips(m_SRV));
 		}
+
+		return Void();
 	}
 
-	void DX10Texture::Bind(uint32 slot) const
+	Result<void, RHIError> DX10Texture::Bind(uint32 slot) const
 	{
 		ionassert(m_SRV);
 		ionassert(m_SamplerState);
 
 		ID3D10Device* device = DX10::GetDevice();
 
-		dxcall_v(device->PSSetShaderResources(slot, 1, &m_SRV));
-		dxcall_v(device->PSSetSamplers(slot, 1, &m_SamplerState));
+		dxcall(device->PSSetShaderResources(slot, 1, &m_SRV));
+		dxcall(device->PSSetSamplers(slot, 1, &m_SamplerState));
+
+		return Void();
 	}
 
-	void DX10Texture::Unbind() const
+	Result<void, RHIError> DX10Texture::Unbind() const
 	{
 		ID3D10Device* device = DX10::GetDevice();
 
-		dxcall_v(device->PSSetShaderResources(0, 0, nullptr));
-		dxcall_v(device->PSSetSamplers(0, 0, nullptr));
+		dxcall(device->PSSetShaderResources(0, 0, nullptr));
+		dxcall(device->PSSetSamplers(0, 0, nullptr));
+
+		return Void();
 	}
 
-	void DX10Texture::CopyTo(const TShared<RHITexture>& destination) const
+	Result<void, RHIError> DX10Texture::CopyTo(const TShared<RHITexture>& destination) const
 	{
 		ID3D10Device* device = DX10::GetDevice();
 
 		TShared<DX10Texture> destTexture = TStaticCast<DX10Texture>(destination);
-		dxcall_v(device->CopyResource(destTexture->m_Texture, m_Texture));
+		dxcall(device->CopyResource(destTexture->m_Texture, m_Texture));
+
+		return Void();
 	}
 
-	void DX10Texture::Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType)
+	Result<void, RHIError> DX10Texture::Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType)
 	{
-		HRESULT hResult;
-
 		D3D10_MAPPED_TEXTURE2D mt2d { };
 
 		dxcall(m_Texture->Map(0, MapTypeToDX10Map(mapType), 0, &mt2d));
 
 		outBuffer = mt2d.pData;
 		outLineSize = mt2d.RowPitch;
+
+		return Void();
 	}
 
-	void DX10Texture::Unmap()
+	Result<void, RHIError> DX10Texture::Unmap()
 	{
-		dxcall_v(m_Texture->Unmap(0));
+		dxcall(m_Texture->Unmap(0));
+
+		return Void();
 	}
 
 	void* DX10Texture::GetNativeID() const
@@ -143,14 +148,12 @@ namespace Ion
 		return desc.MultiSampling != ETextureMSMode::Default && desc.MultiSampling != ETextureMSMode::X1;
 	}
 
-	void DX10Texture::CreateTexture(const TextureDescription& desc)
+	Result<void, RHIError> DX10Texture::CreateTexture(const TextureDescription& desc)
 	{
 		TRACE_FUNCTION();
 
 		ionassert(!IsMultiSampled(desc) || !desc.InitialData,
 			"Multisampled textures have to be initialized using UpdateSubresource function");
-
-		HRESULT hResult;
 
 		ID3D10Device* device = DX10::GetDevice();
 
@@ -199,15 +202,15 @@ namespace Ion
 
 		dxcall(device->CreateTexture2D(&tex2DDesc, desc.InitialData ? &sd : nullptr, &m_Texture));
 		DX10::SetDebugName(m_Texture, "Texture2D_" + desc.DebugName);
+
+		return Void();
 	}
 
-	void DX10Texture::CreateViews(const TextureDescription& desc)
+	Result<void, RHIError> DX10Texture::CreateViews(const TextureDescription& desc)
 	{
 		TRACE_FUNCTION();
 
 		ionassert(m_Texture);
-
-		HRESULT hResult;
 
 		ID3D10Device* device = DX10::GetDevice();
 
@@ -246,15 +249,15 @@ namespace Ion
 			dxcall(device->CreateDepthStencilView(m_Texture, &dsvDesc, &m_DSV));
 			DX10::SetDebugName(m_DSV, "DSV_" + desc.DebugName);
 		}
+
+		return Void();
 	}
 
-	void DX10Texture::CreateSampler(const TextureDescription& desc)
+	Result<void, RHIError> DX10Texture::CreateSampler(const TextureDescription& desc)
 	{
 		TRACE_FUNCTION();
 
 		ionassert(m_Texture);
-
-		HRESULT hResult;
 
 		ID3D10Device* device = DX10::GetDevice();
 
@@ -291,6 +294,8 @@ namespace Ion
 			dxcall(device->CreateSamplerState(&samplerDesc, &m_SamplerState));
 			DX10::SetDebugName(m_SamplerState, "SamplerState_" + desc.DebugName);
 		}
+
+		return Void();
 	}
 
 	void DX10Texture::ReleaseResources()

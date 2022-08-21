@@ -8,7 +8,6 @@
 
 #include "Renderer/Scene.h"
 
-#include "Core/Platform/Windows/WindowsMacros.h"
 #include "Core/Platform/Windows/WindowsUtility.h"
 
 #include "Application/EnginePath.h"
@@ -35,7 +34,7 @@ namespace Ion
 		Renderer::Init();
 	}
 
-	void DX11Renderer::Clear(const RendererClearOptions& options) const
+	Result<void, RHIError> DX11Renderer::Clear(const RendererClearOptions& options) const
 	{
 		TRACE_FUNCTION();
 
@@ -45,38 +44,44 @@ namespace Ion
 		{
 			if (options.bClearColor)
 			{
-				dxcall_v(context->ClearRenderTargetView(m_CurrentRTV, (float*)&options.ClearColorValue));
+				dxcall(context->ClearRenderTargetView(m_CurrentRTV, (float*)&options.ClearColorValue));
 			}
 		}
 		if (m_CurrentDSV)
 		{
 			if (options.bClearDepth || options.bClearStencil)
 			{
-				dxcall_v(context->ClearDepthStencilView(m_CurrentDSV,
+				dxcall(context->ClearDepthStencilView(m_CurrentDSV,
 					FlagsIf(options.bClearDepth, D3D11_CLEAR_DEPTH) |
 					FlagsIf(options.bClearStencil, D3D11_CLEAR_STENCIL),
 					options.ClearDepthValue, options.ClearStencilValue));
 			}
 		}
+
+		return Void();
 	}
 
-	void DX11Renderer::DrawIndexed(uint32 indexCount) const
+	Result<void, RHIError> DX11Renderer::DrawIndexed(uint32 indexCount) const
 	{
 		ID3D11DeviceContext* context = DX11::GetContext();
 
-		dxcall_v(context->DrawIndexed(indexCount, 0, 0));
+		dxcall(context->DrawIndexed(indexCount, 0, 0));
+
+		return Void();
 	}
 
-	void DX11Renderer::UnbindResources() const
+	Result<void, RHIError> DX11Renderer::UnbindResources() const
 	{
 		ID3D11DeviceContext* context = DX11::GetContext();
 
 		static ID3D11ShaderResourceView* const c_nullViews[D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT] = { };
 		
-		dxcall_v(context->PSSetShaderResources(0, D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, c_nullViews));
+		dxcall(context->PSSetShaderResources(0, D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, c_nullViews));
+
+		return Void();
 	}
 
-	void DX11Renderer::SetBlendingEnabled(bool bEnable) const
+	Result<void, RHIError> DX11Renderer::SetBlendingEnabled(bool bEnable) const
 	{
 		ID3D11DeviceContext* context = DX11::GetContext();
 
@@ -84,12 +89,16 @@ namespace Ion
 			DX11::s_BlendStateTransparent :
 			DX11::s_BlendState;
 
-		dxcall_v(context->OMSetBlendState(blendState, nullptr, 0xFFFFFFFF));
+		dxcall(context->OMSetBlendState(blendState, nullptr, 0xFFFFFFFF));
+
+		return Void();
 	}
 
-	void DX11Renderer::SetVSyncEnabled(bool bEnabled) const
+	Result<void, RHIError> DX11Renderer::SetVSyncEnabled(bool bEnabled) const
 	{
-		dxcall_v(DX11::SetSwapInterval((uint32)bEnabled));
+		dxcall(DX11::SetSwapInterval((uint32)bEnabled));
+
+		return Void();
 	}
 
 	bool DX11Renderer::IsVSyncEnabled() const
@@ -97,7 +106,7 @@ namespace Ion
 		return DX11::GetSwapInterval();
 	}
 
-	void DX11Renderer::SetViewport(const ViewportDescription& viewport)
+	Result<void, RHIError> DX11Renderer::SetViewport(const ViewportDescription& viewport)
 	{
 		TRACE_FUNCTION();
 
@@ -113,12 +122,14 @@ namespace Ion
 		dxViewport.MinDepth = viewport.MinDepth;
 		dxViewport.MaxDepth = viewport.MaxDepth;
 
-		dxcall_v(context->RSSetViewports(1, &dxViewport));
+		dxcall(context->RSSetViewports(1, &dxViewport));
 
 		m_CurrentViewport = viewport;
+
+		return Void();
 	}
 
-	ViewportDescription DX11Renderer::GetViewport() const
+	Result<ViewportDescription, RHIError> DX11Renderer::GetViewport() const
 	{
 		TRACE_FUNCTION();
 
@@ -127,7 +138,7 @@ namespace Ion
 		D3D11_VIEWPORT dxViewport { };
 		uint32 nViewports = 0;
 
-		dxcall_v(context->RSGetViewports(&nViewports, &dxViewport));
+		dxcall(context->RSGetViewports(&nViewports, &dxViewport));
 
 		ViewportDescription viewport { };
 		viewport.X = (int32)dxViewport.TopLeftX;
@@ -140,34 +151,34 @@ namespace Ion
 		return viewport;
 	}
 
-	void DX11Renderer::SetPolygonDrawMode(EPolygonDrawMode drawMode) const
+	Result<void, RHIError> DX11Renderer::SetPolygonDrawMode(EPolygonDrawMode drawMode) const
 	{
-		HRESULT hResult;
-
 		ID3D11RasterizerState* rasterizerState = DX11::GetRasterizerState();
 
 		D3D11_RASTERIZER_DESC rd{ };
-		dxcall_v(rasterizerState->GetDesc(&rd));
+		dxcall(rasterizerState->GetDesc(&rd));
 
 		rd.FillMode = drawMode == EPolygonDrawMode::Lines ? D3D11_FILL_WIREFRAME : D3D11_FILL_SOLID;
 
 		COMReset(DX11::s_RasterizerState);
 
 		dxcall(DX11::GetDevice()->CreateRasterizerState(&rd, &DX11::s_RasterizerState));
-		dxcall_v(DX11::GetContext()->RSSetState(DX11::s_RasterizerState));
+		dxcall(DX11::GetContext()->RSSetState(DX11::s_RasterizerState));
+
+		return Void();
 	}
 
-	EPolygonDrawMode DX11Renderer::GetPolygonDrawMode() const
+	Result<EPolygonDrawMode, RHIError> DX11Renderer::GetPolygonDrawMode() const
 	{
 		ID3D11RasterizerState* rasterizerState = DX11::GetRasterizerState();
 
 		D3D11_RASTERIZER_DESC rd { };
-		dxcall_v(rasterizerState->GetDesc(&rd));
+		dxcall(rasterizerState->GetDesc(&rd));
 
 		return rd.FillMode == D3D11_FILL_WIREFRAME ? EPolygonDrawMode::Lines : EPolygonDrawMode::Fill;
 	}
 
-	void DX11Renderer::SetRenderTarget(const TShared<RHITexture>& targetTexture)
+	Result<void, RHIError> DX11Renderer::SetRenderTarget(const TShared<RHITexture>& targetTexture)
 	{
 		ionassert(!targetTexture || targetTexture->GetDescription().bUseAsRenderTarget);
 		ionassert(!targetTexture || UVector2(targetTexture->GetDimensions()) == m_CurrentViewport.GetSize());
@@ -199,10 +210,12 @@ namespace Ion
 		// to set the RTV
 		m_CurrentDSV = nullptr;
 
-		dxcall_v(DX11::GetContext()->OMSetRenderTargets(1, &m_CurrentRTV, m_CurrentDSV));
+		dxcall(DX11::GetContext()->OMSetRenderTargets(1, &m_CurrentRTV, m_CurrentDSV));
+
+		return Void();
 	}
 
-	void DX11Renderer::SetDepthStencil(const TShared<RHITexture>& targetTexture)
+	Result<void, RHIError> DX11Renderer::SetDepthStencil(const TShared<RHITexture>& targetTexture)
 	{
 		ionassert(!targetTexture || targetTexture->GetDescription().bUseAsDepthStencil);
 		ionassert(!targetTexture || UVector2(targetTexture->GetDimensions()) == m_CurrentViewport.GetSize());
@@ -217,6 +230,8 @@ namespace Ion
 			m_CurrentDSV = nullptr;
 		}
 
-		dxcall_v(DX11::GetContext()->OMSetRenderTargets(1, &m_CurrentRTV, m_CurrentDSV));
+		dxcall(DX11::GetContext()->OMSetRenderTargets(1, &m_CurrentRTV, m_CurrentDSV));
+
+		return Void();
 	}
 }

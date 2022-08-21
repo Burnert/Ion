@@ -1,5 +1,7 @@
 #pragma once
 
+#include "RHICore.h"
+
 namespace Ion
 {
 	enum class ETextureUsage : uint8
@@ -133,15 +135,15 @@ namespace Ion
 
 		virtual ~RHITexture();
 
-		virtual void SetDimensions(TextureDimensions dimensions) = 0;
-		virtual void UpdateSubresource(Image* image) = 0;
+		virtual Result<void, RHIError> SetDimensions(TextureDimensions dimensions) = 0;
+		virtual Result<void, RHIError> UpdateSubresource(Image* image) = 0;
 
-		virtual void Bind(uint32 slot = 0) const = 0;
-		virtual void Unbind() const = 0;
+		virtual Result<void, RHIError> Bind(uint32 slot = 0) const = 0;
+		virtual Result<void, RHIError> Unbind() const = 0;
 
-		virtual void CopyTo(const TShared<RHITexture>& destination) const = 0;
-		virtual void Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType) = 0;
-		virtual void Unmap() = 0;
+		virtual Result<void, RHIError> CopyTo(const TShared<RHITexture>& destination) const = 0;
+		virtual Result<void, RHIError> Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType) = 0;
+		virtual Result<void, RHIError> Unmap() = 0;
 
 		virtual void* GetNativeID() const = 0;
 

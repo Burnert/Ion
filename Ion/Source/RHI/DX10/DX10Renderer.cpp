@@ -8,7 +8,6 @@
 
 #include "Renderer/Scene.h"
 
-#include "Core/Platform/Windows/WindowsMacros.h"
 #include "Core/Platform/Windows/WindowsUtility.h"
 
 #include "Application/EnginePath.h"
@@ -35,7 +34,7 @@ namespace Ion
 		Renderer::Init();
 	}
 
-	void DX10Renderer::Clear(const RendererClearOptions& options) const
+	Result<void, RHIError> DX10Renderer::Clear(const RendererClearOptions& options) const
 	{
 		TRACE_FUNCTION();
 
@@ -45,38 +44,44 @@ namespace Ion
 		{
 			if (options.bClearColor)
 			{
-				dxcall_v(device->ClearRenderTargetView(m_CurrentRTV, (float*)&options.ClearColorValue));
+				dxcall(device->ClearRenderTargetView(m_CurrentRTV, (float*)&options.ClearColorValue));
 			}
 		}
 		if (m_CurrentDSV)
 		{
 			if (options.bClearDepth || options.bClearStencil)
 			{
-				dxcall_v(device->ClearDepthStencilView(m_CurrentDSV,
+				dxcall(device->ClearDepthStencilView(m_CurrentDSV,
 					FlagsIf(options.bClearDepth, D3D10_CLEAR_DEPTH) |
 					FlagsIf(options.bClearStencil, D3D10_CLEAR_STENCIL),
 					options.ClearDepthValue, options.ClearStencilValue));
 			}
 		}
+
+		return Void();
 	}
 
-	void DX10Renderer::DrawIndexed(uint32 indexCount) const
+	Result<void, RHIError> DX10Renderer::DrawIndexed(uint32 indexCount) const
 	{
 		ID3D10Device* device = DX10::GetDevice();
 
-		dxcall_v(device->DrawIndexed(indexCount, 0, 0));
+		dxcall(device->DrawIndexed(indexCount, 0, 0));
+
+		return Void();
 	}
 
-	void DX10Renderer::UnbindResources() const
+	Result<void, RHIError> DX10Renderer::UnbindResources() const
 	{
 		ID3D10Device* device = DX10::GetDevice();
 
 		static ID3D10ShaderResourceView* const c_nullViews[D3D10_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT] = { };
 		
-		dxcall_v(device->PSSetShaderResources(0, D3D10_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, c_nullViews));
+		dxcall(device->PSSetShaderResources(0, D3D10_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, c_nullViews));
+
+		return Void();
 	}
 
-	void DX10Renderer::SetBlendingEnabled(bool bEnable) const
+	Result<void, RHIError> DX10Renderer::SetBlendingEnabled(bool bEnable) const
 	{
 		ID3D10Device* device = DX10::GetDevice();
 
@@ -84,12 +89,16 @@ namespace Ion
 			DX10::s_BlendStateTransparent :
 			DX10::s_BlendState;
 
-		dxcall_v(device->OMSetBlendState(blendState, nullptr, 0xFFFFFFFF));
+		dxcall(device->OMSetBlendState(blendState, nullptr, 0xFFFFFFFF));
+
+		return Void();
 	}
 
-	void DX10Renderer::SetVSyncEnabled(bool bEnabled) const
+	Result<void, RHIError> DX10Renderer::SetVSyncEnabled(bool bEnabled) const
 	{
-		dxcall_v(DX10::SetSwapInterval((uint32)bEnabled));
+		dxcall(DX10::SetSwapInterval((uint32)bEnabled));
+
+		return Void();
 	}
 
 	bool DX10Renderer::IsVSyncEnabled() const
@@ -97,7 +106,7 @@ namespace Ion
 		return DX10::GetSwapInterval();
 	}
 
-	void DX10Renderer::SetViewport(const ViewportDescription& viewport)
+	Result<void, RHIError> DX10Renderer::SetViewport(const ViewportDescription& viewport)
 	{
 		TRACE_FUNCTION();
 
@@ -113,12 +122,14 @@ namespace Ion
 		dxViewport.MinDepth = viewport.MinDepth;
 		dxViewport.MaxDepth = viewport.MaxDepth;
 
-		dxcall_v(device->RSSetViewports(1, &dxViewport));
+		dxcall(device->RSSetViewports(1, &dxViewport));
 
 		m_CurrentViewport = viewport;
+
+		return Void();
 	}
 
-	ViewportDescription DX10Renderer::GetViewport() const
+	Result<ViewportDescription, RHIError> DX10Renderer::GetViewport() const
 	{
 		TRACE_FUNCTION();
 
@@ -127,7 +138,7 @@ namespace Ion
 		D3D10_VIEWPORT dxViewport { };
 		uint32 nViewports = 0;
 
-		dxcall_v(device->RSGetViewports(&nViewports, &dxViewport));
+		dxcall(device->RSGetViewports(&nViewports, &dxViewport));
 
 		ViewportDescription viewport { };
 		viewport.X = (int32)dxViewport.TopLeftX;
@@ -140,35 +151,35 @@ namespace Ion
 		return viewport;
 	}
 
-	void DX10Renderer::SetPolygonDrawMode(EPolygonDrawMode drawMode) const
+	Result<void, RHIError> DX10Renderer::SetPolygonDrawMode(EPolygonDrawMode drawMode) const
 	{
-		HRESULT hResult;
-
 		ID3D10Device* device = DX10::GetDevice();
 		ID3D10RasterizerState* rasterizerState = DX10::GetRasterizerState();
 
 		D3D10_RASTERIZER_DESC rd{ };
-		dxcall_v(rasterizerState->GetDesc(&rd));
+		dxcall(rasterizerState->GetDesc(&rd));
 
 		rd.FillMode = drawMode == EPolygonDrawMode::Lines ? D3D10_FILL_WIREFRAME : D3D10_FILL_SOLID;
 
 		COMReset(DX10::s_RasterizerState);
 
 		dxcall(device->CreateRasterizerState(&rd, &DX10::s_RasterizerState));
-		dxcall_v(device->RSSetState(DX10::s_RasterizerState));
+		dxcall(device->RSSetState(DX10::s_RasterizerState));
+
+		return Void();
 	}
 
-	EPolygonDrawMode DX10Renderer::GetPolygonDrawMode() const
+	Result<EPolygonDrawMode, RHIError> DX10Renderer::GetPolygonDrawMode() const
 	{
 		ID3D10RasterizerState* rasterizerState = DX10::GetRasterizerState();
 
 		D3D10_RASTERIZER_DESC rd { };
-		dxcall_v(rasterizerState->GetDesc(&rd));
+		dxcall(rasterizerState->GetDesc(&rd));
 
 		return rd.FillMode == D3D10_FILL_WIREFRAME ? EPolygonDrawMode::Lines : EPolygonDrawMode::Fill;
 	}
 
-	void DX10Renderer::SetRenderTarget(const TShared<RHITexture>& targetTexture)
+	Result<void, RHIError> DX10Renderer::SetRenderTarget(const TShared<RHITexture>& targetTexture)
 	{
 		ionassert(!targetTexture || targetTexture->GetDescription().bUseAsRenderTarget);
 		ionassert(!targetTexture || UVector2(targetTexture->GetDimensions()) == m_CurrentViewport.GetSize());
@@ -192,10 +203,12 @@ namespace Ion
 		// it should be the user's responsibility to unset the DSV.
 		m_CurrentDSV = nullptr;
 
-		dxcall_v(device->OMSetRenderTargets(1, &m_CurrentRTV, m_CurrentDSV));
+		dxcall(device->OMSetRenderTargets(1, &m_CurrentRTV, m_CurrentDSV));
+
+		return Void();
 	}
 
-	void DX10Renderer::SetDepthStencil(const TShared<RHITexture>& targetTexture)
+	Result<void, RHIError> DX10Renderer::SetDepthStencil(const TShared<RHITexture>& targetTexture)
 	{
 		ionassert(!targetTexture || targetTexture->GetDescription().bUseAsDepthStencil);
 		ionassert(!targetTexture || UVector2(targetTexture->GetDimensions()) == m_CurrentViewport.GetSize());
@@ -212,6 +225,8 @@ namespace Ion
 			m_CurrentDSV = nullptr;
 		}
 
-		dxcall_v(device->OMSetRenderTargets(1, &m_CurrentRTV, m_CurrentDSV));
+		dxcall(device->OMSetRenderTargets(1, &m_CurrentRTV, m_CurrentDSV));
+
+		return Void();
 	}
 }

@@ -15,7 +15,7 @@ namespace Ion
 		virtual ~OpenGLVertexBuffer() override;
 
 		virtual void SetLayout(const TShared<RHIVertexLayout>& layout) override;
-		virtual void SetLayoutShader(const TShared<RHIShader>& shader) override;
+		virtual Result<void, RHIError> SetLayoutShader(const TShared<RHIShader>& shader) override;
 
 		virtual uint32 GetVertexCount() const override;
 
@@ -37,9 +37,9 @@ namespace Ion
 		}
 
 	protected:
-		virtual void Bind() const override;
-		virtual void BindLayout() const override;
-		virtual void Unbind() const override;
+		virtual Result<void, RHIError> Bind() const override;
+		virtual Result<void, RHIError> BindLayout() const override;
+		virtual Result<void, RHIError> Unbind() const override;
 
 	private:
 		uint32 m_ID;
@@ -58,8 +58,8 @@ namespace Ion
 		virtual uint32 GetTriangleCount() const override;
 
 	protected:
-		virtual void Bind() const override;
-		virtual void Unbind() const override;
+		virtual Result<void, RHIError> Bind() const override;
+		virtual Result<void, RHIError> Unbind() const override;
 
 	private:
 		uint32 m_ID;
@@ -72,14 +72,14 @@ namespace Ion
 	public:
 		virtual ~OpenGLUniformBuffer() override;
 
-		virtual void Bind(uint32 slot = 0) const override;
+		virtual Result<void, RHIError> Bind(uint32 slot = 0) const override;
 
 	protected:
 		OpenGLUniformBuffer(void* initialData, size_t size);
 		//OpenGLUniformBuffer(void* data, size_t size, const UniformDataMap& uniforms);
 
 		virtual void* GetDataPtr() const override;
-		virtual void UpdateData() const override;
+		virtual Result<void, RHIError> UpdateData() const override;
 
 	private:
 		void* m_Data;

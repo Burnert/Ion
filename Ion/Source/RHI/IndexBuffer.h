@@ -1,5 +1,7 @@
 #pragma once
 
+#include "RHICore.h"
+
 namespace Ion
 {
 	class ION_API RHIIndexBuffer
@@ -16,8 +18,8 @@ namespace Ion
 	protected:
 		RHIIndexBuffer() { }
 
-		virtual void Bind() const = 0;
-		virtual void Unbind() const = 0;
+		virtual Result<void, RHIError> Bind() const = 0;
+		virtual Result<void, RHIError> Unbind() const = 0;
 
 		friend class Renderer;
 	};

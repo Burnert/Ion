@@ -14,9 +14,9 @@ namespace Ion
 		virtual ~DX11VertexBuffer() override;
 
 		virtual void SetLayout(const TShared<RHIVertexLayout>& layout) override;
-		virtual void SetLayoutShader(const TShared<RHIShader>& shader) override;
+		virtual Result<void, RHIError> SetLayoutShader(const TShared<RHIShader>& shader) override;
 
-		void CreateDX11Layout(const TShared<class DX11Shader>& shader);
+		Result<void, RHIError> CreateDX11Layout(const TShared<class DX11Shader>& shader);
 
 		virtual uint32 GetVertexCount() const override;
 
@@ -32,9 +32,12 @@ namespace Ion
 		}
 
 	protected:
-		virtual void Bind() const override;
-		virtual void BindLayout() const override;
-		virtual void Unbind() const override;
+		virtual Result<void, RHIError> Bind() const override;
+		virtual Result<void, RHIError> BindLayout() const override;
+		virtual Result<void, RHIError> Unbind() const override;
+
+	private:
+		Result<void, RHIError> CreateBuffer(float* vertexAttributes, uint64 count);
 
 	private:
 		uint32 m_ID;
@@ -58,8 +61,11 @@ namespace Ion
 		virtual uint32 GetTriangleCount() const override;
 
 	protected:
-		virtual void Bind() const override;
-		virtual void Unbind() const override;
+		virtual Result<void, RHIError> Bind() const override;
+		virtual Result<void, RHIError> Unbind() const override;
+
+	private:
+		Result<void, RHIError> CreateBuffer(uint32* indices, uint64 count);
 
 	private:
 		uint32 m_ID;
@@ -76,8 +82,10 @@ namespace Ion
 		_DX11UniformBufferCommon(void* initialData, size_t size);
 		~_DX11UniformBufferCommon();
 
-		void Bind(uint32 slot) const;
-		void UpdateData() const;
+		Result<void, RHIError> Bind(uint32 slot) const;
+		Result<void, RHIError> UpdateData() const;
+
+		Result<void, RHIError> CreateBuffer(void* initialData, size_t size);
 
 		void* Data;
 		size_t DataSize;
@@ -90,13 +98,13 @@ namespace Ion
 	class ION_API DX11UniformBuffer : public RHIUniformBuffer
 	{
 	public:
-		virtual void Bind(uint32 slot = 0) const override;
+		virtual Result<void, RHIError> Bind(uint32 slot = 0) const override;
 
 	protected:
 		DX11UniformBuffer(void* initialData, size_t size);
 
 		virtual void* GetDataPtr() const override;
-		virtual void UpdateData() const override;
+		virtual Result<void, RHIError> UpdateData() const override;
 
 	private:
 		_DX11UniformBufferCommon m_Common;
@@ -110,12 +118,12 @@ namespace Ion
 	protected:
 		DX11UniformBufferDynamic(void* initialData, size_t size, const UniformDataMap& uniforms);
 
-		virtual void Bind(uint32 slot = 0) const override;
+		virtual Result<void, RHIError> Bind(uint32 slot = 0) const override;
 
 		virtual const UniformData* GetUniformData(const String& name) const override;
 
 	protected:
-		virtual void UpdateData() const override;
+		virtual Result<void, RHIError> UpdateData() const override;
 
 		virtual bool SetUniformValue_Internal(const String& name, const void* value) override;
 		virtual void* GetUniformAddress(const String& name) const override;

@@ -81,7 +81,7 @@ namespace Ion
 			flags |= D3D10_CREATE_DEVICE_DEBUG /*| D3D10_CREATE_DEVICE_DEBUGGABLE*/;
 
 			IDXGIFactory* dxgiFactory = nullptr;
-			dxcall_throw(CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory)),
+			dxcall(CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory)),
 				"Cannot create a DXGI Factory object.");
 
 			UINT i = 0;
@@ -96,7 +96,7 @@ namespace Ion
 
 			ionassert(!adapters.empty(), "Could not find any video adapters.");
 
-			dxcall_throw(
+			dxcall(
 				D3D10CreateDeviceAndSwapChain1(
 					adapters[0],
 					D3D10_DRIVER_TYPE_HARDWARE,
@@ -114,13 +114,14 @@ namespace Ion
 
 		// Create Debug Info Queue
 		{
-			dxcall_throw(s_Device->QueryInterface(IID_PPV_ARGS(&s_DebugInfoQueue)));
+			dxcall(s_Device->QueryInterface(IID_PPV_ARGS(&s_DebugInfoQueue)));
 			ionassert(s_DebugInfoQueue);
 		}
 
 		// Create Render Target
 
-		window.m_WindowColorTexture = CreateRenderTarget();
+		// @TODO: Definitely handle the error
+		window.m_WindowColorTexture = CreateRenderTarget().UnwrapOr(nullptr);
 
 		// Create Rasterizer State
 		{
@@ -133,8 +134,8 @@ namespace Ion
 			rd.DepthClipEnable = true;
 			rd.MultisampleEnable = true;
 
-			dxcall_throw(s_Device->CreateRasterizerState(&rd, &s_RasterizerState));
-			dxcall_throw(s_Device->RSSetState(s_RasterizerState));
+			dxcall(s_Device->CreateRasterizerState(&rd, &s_RasterizerState));
+			dxcall(s_Device->RSSetState(s_RasterizerState));
 		}
 		// Create Blend State
 		{
@@ -151,8 +152,8 @@ namespace Ion
 			blendDesc.RenderTarget[0].BlendOpAlpha = D3D10_BLEND_OP_ADD;
 			blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D10_COLOR_WRITE_ENABLE_ALL;
 
-			dxcall_throw(s_Device->CreateBlendState1(&blendDesc, &s_BlendStateTransparent));
-			dxcall_throw(s_Device->OMSetBlendState(s_BlendState, nullptr, 0xFFFFFFFF));
+			dxcall(s_Device->CreateBlendState1(&blendDesc, &s_BlendStateTransparent));
+			dxcall(s_Device->OMSetBlendState(s_BlendState, nullptr, 0xFFFFFFFF));
 		}
 		// Create Depth / Stencil Buffer
 		{
@@ -174,11 +175,12 @@ namespace Ion
 			dsd.BackFace.StencilPassOp = D3D10_STENCIL_OP_KEEP;
 			dsd.BackFace.StencilDepthFailOp = D3D10_STENCIL_OP_KEEP;
 
-			dxcall_throw(s_Device->CreateDepthStencilState(&dsd, &s_DepthStencilState));
-			dxcall_throw(s_Device->OMSetDepthStencilState(s_DepthStencilState, 1));
+			dxcall(s_Device->CreateDepthStencilState(&dsd, &s_DepthStencilState));
+			dxcall(s_Device->OMSetDepthStencilState(s_DepthStencilState, 1));
 
-			dxcall_throw(s_SwapChain->GetDesc(&scd));
-			window.m_WindowDepthStencilTexture = CreateDepthStencil(scd.BufferDesc.Width, scd.BufferDesc.Height);
+			dxcall(s_SwapChain->GetDesc(&scd));
+			// @TODO: Definitely handle the error
+			window.m_WindowDepthStencilTexture = CreateDepthStencil(scd.BufferDesc.Width, scd.BufferDesc.Height).UnwrapOr(nullptr);
 		}
 		// Set Viewports
 		{
@@ -193,20 +195,20 @@ namespace Ion
 			viewport.Height = (UINT)dimensions.Height;
 			viewport.MinDepth = 0.0f;
 			viewport.MaxDepth = 1.0f;
-			dxcall_throw(s_Device->RSSetViewports(1, &viewport));
+			dxcall(s_Device->RSSetViewports(1, &viewport));
 		}
 		// Disable Alt+Enter Fullscreen
 
 		IDXGIFactory* factory = nullptr;
 
-		dxcall_throw(s_SwapChain->GetParent(IID_PPV_ARGS(&factory)), "Cannot get the Swap Chain factory.");
-		dxcall_throw(factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
+		dxcall(s_SwapChain->GetParent(IID_PPV_ARGS(&factory)), "Cannot get the Swap Chain factory.");
+		dxcall(factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
 
 		factory->Release();
 
 		// -------------------------------------------------------
 
-		dxcall_throw(s_Device->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
+		dxcall(s_Device->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
 
 		return Void();
 	}
@@ -231,34 +233,34 @@ namespace Ion
 	{
 	}
 
-	void DX10::BeginFrame()
+	Result<void, RHIError> DX10::BeginFrame()
 	{
+		return Void();
 	}
 
-	void DX10::EndFrame(GenericWindow& window)
+	Result<void, RHIError> DX10::EndFrame(GenericWindow& window)
 	{
 		TRACE_FUNCTION();
 
-		HRESULT hResult;
 		dxcall(s_SwapChain->Present(s_SwapInterval, 0), "Cannot present frame.");
+
+		return Void();
 	}
 
-	void DX10::ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height)
+	Result<void, RHIError> DX10::ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height)
 	{
 		TRACE_FUNCTION();
-
-		HRESULT hResult;
 
 		dxcall(s_SwapChain->SetFullscreenState(mode == EDisplayMode::FullScreen, nullptr));
 
 		ResizeBuffers(window, { width, height });
+
+		return Void();
 	}
 
-	void DX10::ResizeBuffers(GenericWindow& window, const TextureDimensions& size)
+	Result<void, RHIError> DX10::ResizeBuffers(GenericWindow& window, const TextureDimensions& size)
 	{
 		TRACE_FUNCTION();
-
-		HRESULT hResult = S_OK;
 
 		window.m_WindowColorTexture = nullptr;
 		window.m_WindowDepthStencilTexture = nullptr;
@@ -266,8 +268,12 @@ namespace Ion
 		dxcall(s_SwapChain->ResizeBuffers(2, size.Width, size.Height, DXGI_FORMAT_UNKNOWN, 0),
 			"Cannot resize buffers.");
 
-		window.m_WindowColorTexture = CreateRenderTarget();
-		window.m_WindowDepthStencilTexture = CreateDepthStencil(size.Width, size.Height);
+		// @TODO: Definitely handle the error
+
+		window.m_WindowColorTexture = CreateRenderTarget().UnwrapOr(nullptr);
+		window.m_WindowDepthStencilTexture = CreateDepthStencil(size.Width, size.Height).UnwrapOr(nullptr);
+
+		return Void();
 	}
 
 	String DX10::GetCurrentDisplayName()
@@ -292,17 +298,25 @@ namespace Ion
 		{
 			uint64 messageLength = 0;
 			hResult = s_DebugInfoQueue->GetMessage(i, nullptr, &messageLength);
-			win_check_hresult_c(hResult, { break; }, "Could not get the message length.");
+			if (FAILED(hResult))
+			{
+				DX10Logger.Error("Could not get the message length.\n{}", Windows::FormatHResultMessage(hResult));
+				continue;
+			}
 
 			D3D10_MESSAGE* message = (D3D10_MESSAGE*)malloc(messageLength);
-			hResult = s_DebugInfoQueue->GetMessage(i, message, &messageLength);
-			if (hResult == S_OK)
-			{
-				messageArray.emplace_back(DX10DebugMessage { message->Severity, message->pDescription });
-			}
-			free(message);
+			ionverify(message);
 
-			win_check_hresult_c(hResult, { break; }, "Could not retrieve message.");
+			hResult = s_DebugInfoQueue->GetMessage(i, message, &messageLength);
+			if (FAILED(hResult))
+			{
+				DX10Logger.Error("Could not retrieve the message.\n{}", Windows::FormatHResultMessage(hResult));
+				free(message);
+				continue;
+			}
+
+			messageArray.emplace_back(DX10DebugMessage { message->Severity, message->pDescription });
+			free(message);
 		}
 
 		s_DebugInfoQueue->ClearStoredMessages();
@@ -358,16 +372,16 @@ namespace Ion
 		s_DebugInfoQueue->ClearStoredMessages();
 	}
 
-	void DX10::SetDebugName(ID3D10DeviceChild* object, const String& name)
+	Result<void, RHIError> DX10::SetDebugName(ID3D10DeviceChild* object, const String& name)
 	{
 		ionassert(object);
 
 		if (name.empty())
-			return;
-
-		HRESULT hResult;
+			return Void();
 
 		dxcall(object->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)name.size(), name.c_str()));
+
+		return Void();
 	}
 
 	void DX10::SetDisplayVersion(const char* version)
@@ -380,16 +394,13 @@ namespace Ion
 		return DXCommon::GetShaderModelString((D3D_FEATURE_LEVEL)s_FeatureLevel);
 	}
 
-	TShared<RHITexture> DX10::CreateRenderTarget()
+	Result<TShared<RHITexture>, RHIError> DX10::CreateRenderTarget()
 	{
 		TRACE_FUNCTION();
 
-		HRESULT hResult;
-
 		ID3D10Texture2D* backBuffer;
 
-		dxcall_r(s_SwapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer)),
-			nullptr, "Cannot get buffer.");
+		dxcall(s_SwapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer)), "Cannot get buffer.");
 
 		D3D10_TEXTURE2D_DESC t2dDesc;
 		backBuffer->GetDesc(&t2dDesc);
@@ -400,10 +411,12 @@ namespace Ion
 		desc.Dimensions = { t2dDesc.Width, t2dDesc.Height };
 		desc.DebugName = "Window_BackBuffer_RT";
 
-		return MakeShareable(new DX10Texture(desc, backBuffer));
+		// @TODO: The Result should get constructed if the type can be implicitly converted to it's Ok variant.
+		// (no static_pointer_cast should be needed here)
+		return std::static_pointer_cast<RHITexture>(MakeShareable(new DX10Texture(desc, backBuffer)));
 	}
 
-	TShared<RHITexture> DX10::CreateDepthStencil(uint32 width, uint32 height)
+	Result<TShared<RHITexture>, RHIError> DX10::CreateDepthStencil(uint32 width, uint32 height)
 	{
 		TRACE_FUNCTION();
 

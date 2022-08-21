@@ -15,7 +15,7 @@ namespace Ion
 
 		virtual void AddShaderSource(EShaderType type, const String& source) override;
 
-		virtual Result<void, ShaderCompilationError> Compile() override;
+		virtual Result<void, RHIError, ShaderCompilationError> Compile() override;
 		virtual bool IsCompiled() override;
 
 		virtual void Bind() const override;
