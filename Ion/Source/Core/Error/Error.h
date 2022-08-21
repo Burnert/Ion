@@ -195,12 +195,14 @@ namespace Ion
 		struct TIsResult
 		{
 			static constexpr bool Value = false;
+			static constexpr bool value = false;
 		};
 
 		template<typename T, typename... E>
 		struct TIsResult<Result<T, E...>>
 		{
 			static constexpr bool Value = true;
+			static constexpr bool value = true;
 		};
 
 		template<typename TRet, typename... TErr>
@@ -212,14 +214,57 @@ namespace Ion
 			using TVoid = std::monostate;
 			static constexpr bool IsVoid = TIsSameV<TRet, TVoid>;
 
+			using TVariantValue = TVariant<TRet, TErr...>;
+
 			/**
 			 * @brief Construct a new Result Base object that holds the specified value
 			 * 
 			 * @tparam T Value type, it must be one of the Result template types
 			 * @param value The value
 			 */
-			template<typename T, TEnableIfT<!TIsResult<T>::Value>* = 0>
+			template<typename T, TEnableIfT<TAndV<
+				TNot<TIsResult<T>>,
+				TOr<TIsSame<T, TRet>, TIsSame<T, TErr>...>
+				>>* = 0>
 			ResultBase(const T& value);
+
+			/**
+			 * @brief Construct a new Result Base object that holds the specified value
+			 *
+			 * @tparam T Value type, must be convertible to TRet
+			 * @param value The value
+			 */
+			template<typename T, TEnableIfT<TAndV<
+				TNot<TIsResult<T>>,
+				TIsDifferent<T, TRet>,
+				TIsConvertible<T, TRet>
+				>>* = 0>
+			ResultBase(const T& value);
+
+			/**
+			 * @brief Construct a new Result Base object that holds the specified value
+			 *
+			 * @tparam T Value type, it must be one of the Result template types
+			 * @param value The value
+			 */
+			template<typename T, TEnableIfT<TAndV<
+				TNot<TIsResult<T>>,
+				TOr<TIsSame<T, TRet>, TIsSame<T, TErr>...>
+				>>* = 0>
+			ResultBase(T&& value);
+
+			/**
+			 * @brief Construct a new Result Base object that holds the specified value
+			 *
+			 * @tparam T Value type, must be convertible to TRet
+			 * @param value The value
+			 */
+			template<typename T, TEnableIfT<TAndV<
+				TNot<TIsResult<T>>,
+				TIsDifferent<T, TRet>,
+				TIsConvertible<T, TRet>
+				>>* = 0>
+			ResultBase(T&& value);
 
 			/**
 			 * @brief Construct a new Result Base object that holds std::monostate
@@ -227,7 +272,10 @@ namespace Ion
 			 * @tparam T Value type, it must be the Ok struct
 			 * @param value The value
 			 */
-			template<typename T, TEnableIfT<TIsSameV<TRet, std::monostate> && TIsSameV<T, Ok>>* = 0>
+			template<typename T, TEnableIfT<TAndV<
+				TIsSame<TRet, std::monostate>,
+				TIsSame<T, Ok>
+				>>* = 0>
 			ResultBase(T&& value);
 
 			/**
@@ -331,16 +379,52 @@ namespace Ion
 		};
 
 		template<typename TRet, typename... TErr>
-		template<typename T, TEnableIfT<!TIsResult<T>::Value>*>
+		template<typename T, TEnableIfT<TAndV<
+			TNot<TIsResult<T>>,
+			TOr<TIsSame<T, TRet>, TIsSame<T, TErr>...>
+			>>*>
 		ResultBase<TRet, TErr...>::ResultBase(const T& value) :
 			m_Value(value)
 		{
-			static_assert(TIsSameV<T, TRet> || (TIsSameV<T, TErr> || ...),
-				"Returned type has not been specified in the Result.");
 		}
 
 		template<typename TRet, typename... TErr>
-		template<typename T, TEnableIfT<TIsSameV<TRet, std::monostate> && TIsSameV<T, Ok>>*>
+		template<typename T, TEnableIfT<TAndV<
+			TNot<TIsResult<T>>,
+			TIsDifferent<T, TRet>,
+			TIsConvertible<T, TRet>
+			>>*>
+		ResultBase<TRet, TErr...>::ResultBase(const T& value) :
+			m_Value((TRet)value)
+		{
+		}
+
+		template<typename TRet, typename... TErr>
+		template<typename T, TEnableIfT<TAndV<
+			TNot<TIsResult<T>>,
+			TOr<TIsSame<T, TRet>, TIsSame<T, TErr>...>
+			>>*>
+		ResultBase<TRet, TErr...>::ResultBase(T&& value) :
+			m_Value(value)
+		{
+		}
+
+		template<typename TRet, typename... TErr>
+		template<typename T, TEnableIfT<TAndV<
+			TNot<TIsResult<T>>,
+			TIsDifferent<T, TRet>,
+			TIsConvertible<T, TRet>
+			>>*>
+		ResultBase<TRet, TErr...>::ResultBase(T&& value) :
+			m_Value((TRet)value)
+		{
+		}
+
+		template<typename TRet, typename... TErr>
+		template<typename T, TEnableIfT<TAndV<
+			TIsSame<TRet, std::monostate>,
+			TIsSame<T, Ok>
+			>>*>
 		ResultBase<TRet, TErr...>::ResultBase(T&& value) :
 			m_Value(std::monostate())
 		{
@@ -530,6 +614,7 @@ namespace Ion
 		 * @brief Construct a new Result object that holds the specified value
 		 *
 		 * @tparam T Value type, it must be one of the Result template types
+		 * or be convertible to TRet
 		 * @param value The value
 		 */
 		template<typename T>
@@ -539,14 +624,17 @@ namespace Ion
 		}
 
 		/**
-		 * @brief Forward throw constructor
-		 * Use fwdthrowall / mfwdthrowall macros for this.
+		 * @brief Construct a new Result object that holds the specified value
 		 * 
-		 * @param fwdThrow Result to copy the error from.
+		 * @details fwdthrowall / mfwdthrowall macros use this constructor.
+		 * 
+		 * @tparam T Value type, it must be one of the Result template types
+		 * or be convertible to TRet
+		 * @param value The value
 		 */
 		template<typename T>
-		Result(T&& fwdThrow) :
-			ResultBase(Move(fwdThrow))
+		Result(T&& value) :
+			ResultBase(Move(value))
 		{
 		}
 	};
@@ -566,6 +654,7 @@ namespace Ion
 		 * @brief Construct a new Result object that holds the specified value
 		 *
 		 * @tparam T Value type, it must be one of the Result template types
+		 * or be convertible to TRet
 		 * @param value The value
 		 */
 		template<typename T>
@@ -575,14 +664,17 @@ namespace Ion
 		}
 
 		/**
-		 * @brief Forward throw constructor
-		 * Use fwdthrowall / mfwdthrowall macros for this.
-		 * 
-		 * @param fwdThrow Result to copy the error from.
+		 * @brief Construct a new Result object that holds the specified value
+		 *
+		 * @details fwdthrowall / mfwdthrowall macros use this constructor.
+		 *
+		 * @tparam T Value type, it must be one of the Result template types
+		 * or be convertible to TRet
+		 * @param value The value
 		 */
 		template<typename T>
-		Result(T&& fwdThrow) :
-			ResultBase(Move(fwdThrow))
+		Result(T&& value) :
+			ResultBase(Move(value))
 		{
 		}
 	};

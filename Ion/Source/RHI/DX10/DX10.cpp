@@ -407,7 +407,7 @@ namespace Ion
 
 		// @TODO: The Result should get constructed if the type can be implicitly converted to it's Ok variant.
 		// (no static_pointer_cast should be needed here)
-		return std::static_pointer_cast<RHITexture>(MakeShareable(new DX10Texture(desc, backBuffer)));
+		return MakeShareable(new DX10Texture(desc, backBuffer));
 	}
 
 	Result<TShared<RHITexture>, RHIError> DX10::CreateDepthStencil(uint32 width, uint32 height)

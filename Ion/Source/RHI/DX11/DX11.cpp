@@ -406,7 +406,7 @@ namespace Ion
 		desc.bUseAsRenderTarget = true;
 		desc.Dimensions = { t2dDesc.Width, t2dDesc.Height };
 
-		return std::static_pointer_cast<RHITexture>(MakeShareable(new DX11Texture(desc, backBuffer)));
+		return MakeShareable(new DX11Texture(desc, backBuffer));
 	}
 
 	Result<TShared<RHITexture>, RHIError> DX11::CreateDepthStencil(uint32 width, uint32 height)
