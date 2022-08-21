@@ -77,30 +77,6 @@ namespace Ion
 
 	EAssetType ParseAssetTypeString(const String& sType);
 
-	inline static TOptional<int32> ParseInt32String(const char* str)
-	{
-		char* pEnd;
-		long value = strtol(str, &pEnd, 10);
-		if (pEnd == str || errno == ERANGE)
-		{
-			AssetLogger.Error("Invalid value.");
-			return NullOpt;
-		}
-		return value;
-	}
-
-	inline static TOptional<float> ParseFloatString(const char* str)
-	{
-		char* pEnd;
-		float value = strtof(str, &pEnd);
-		if (pEnd == str || errno == ERANGE)
-		{
-			AssetLogger.Error("Invalid value.");
-			return NullOpt;
-		}
-		return value;
-	}
-
 	inline static TOptional<Vector4> ParseVector4String(const char* str)
 	{
 		Vector4 value;
@@ -120,18 +96,6 @@ namespace Ion
 				str = pEnd + 1;
 		}
 		return value;
-	}
-
-	inline static TOptional<GUID> ParseGuidString(const char* str)
-	{
-		ionmatchresult(GUID::FromString(str),
-			mcaseok return R.Unwrap();
-			melse
-			{
-				AssetLogger.Error("Cannot parse a GUID value. -> {0}", str);
-				return NullOpt;
-			}
-		);
 	}
 
 	using AssetFileMemoryBlock = TMemoryBlock<uint8>;
