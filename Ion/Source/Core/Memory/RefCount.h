@@ -174,12 +174,6 @@ namespace Ion
 
 		template<typename T0, typename T1>
 		friend TRef<T0> RefCast(TRef<T1>&& other);
-
-		template<typename T0, typename T1>
-		friend TRef<T0> DynamicRefCast(const TRef<T1>& other);
-
-		template<typename T0, typename T1>
-		friend TRef<T0> DynamicRefCast(TRef<T1>&& other);
 	};
 
 	template<typename T>
@@ -422,9 +416,7 @@ namespace Ion
 		if (!dynamic_cast<T0*>(other.GetRaw()))
 			return TRef<T0>();
 
-		TRef<T0> ref;
-		ref.CastConstruct(other);
-		return ref;
+		return RefCast<T0>(other);
 	}
 
 	template<typename T0, typename T1>
@@ -433,9 +425,7 @@ namespace Ion
 		if (!dynamic_cast<T0*>(other.GetRaw()))
 			return TRef<T0>();
 
-		TRef<T0> ref;
-		ref.CastConstruct(Move(other));
-		return ref;
+		return RefCast<T0>(Move(other));
 	}
 
 #pragma endregion
