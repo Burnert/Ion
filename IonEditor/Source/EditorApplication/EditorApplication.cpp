@@ -153,6 +153,7 @@ namespace Ion::Editor
 		}
 
 		RefCountTest();
+		RefCountPtrTest();
 
 		//InitExample(nullptr);
 

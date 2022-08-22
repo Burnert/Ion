@@ -516,7 +516,7 @@ namespace Ion
 
 #pragma region Non-Intrusive
 
-#pragma region Templates / Fwd
+#pragma region Templates (type traits) / Fwd
 
 	template<typename T>
 	class TSharedPtrBase;
@@ -578,7 +578,7 @@ namespace Ion
 	 * @tparam T Type of the element that the ref counter owns.
 	 */
 	template<typename T>
-	class TRefCounter
+	class TRefCountBlock
 	{
 		static_assert(!TIsReferenceV<T>);
 
@@ -587,7 +587,7 @@ namespace Ion
 		 * 
 		 * @param ptr Pointer to take the ownership of.
 		 */
-		TRefCounter(T* ptr);
+		TRefCountBlock(T* ptr);
 
 		/**
 		 * @brief Increments the strong reference count
@@ -652,13 +652,13 @@ namespace Ion
 		uint32 m_WeakCount;
 
 		template<typename T0>
-		friend class TRefCountPtrBase;
+		friend class TPtrBase;
 	};
 
 	#pragma region TRefCounter Implementation
 
 	template<typename T>
-	inline TRefCounter<T>::TRefCounter(T* ptr) :
+	inline TRefCountBlock<T>::TRefCountBlock(T* ptr) :
 		m_Ptr(ptr),
 		m_RefCount(1),
 		m_WeakCount(1)
@@ -667,7 +667,7 @@ namespace Ion
 	}
 
 	template<typename T>
-	inline uint32 TRefCounter<T>::IncRef()
+	inline uint32 TRefCountBlock<T>::IncRef()
 	{
 		uint32 count = ++m_RefCount;
 		RefCountLogger.Debug("{{{}}} Incremented the ref count by 1. Current ref count: {}", (void*)m_Ptr, count);
@@ -675,7 +675,7 @@ namespace Ion
 	}
 
 	template<typename T>
-	inline uint32 TRefCounter<T>::DecRef()
+	inline uint32 TRefCountBlock<T>::DecRef()
 	{
 		uint32 count = --m_RefCount;
 		RefCountLogger.Debug("{{{}}} Decremented the ref count by 1. Current ref count: {}", (void*)m_Ptr, count);
@@ -689,7 +689,7 @@ namespace Ion
 	}
 
 	template<typename T>
-	inline uint32 TRefCounter<T>::IncWeak()
+	inline uint32 TRefCountBlock<T>::IncWeak()
 	{
 		uint32 count = ++m_WeakCount;
 		RefCountLogger.Debug("{{{}}} Incremented the weak ref count by 1. Current weak ref count: {}", (void*)m_Ptr, count);
@@ -697,7 +697,7 @@ namespace Ion
 	}
 
 	template<typename T>
-	inline uint32 TRefCounter<T>::DecWeak()
+	inline uint32 TRefCountBlock<T>::DecWeak()
 	{
 		uint32 count = --m_WeakCount;
 		RefCountLogger.Debug("{{{}}} Decremented the weak ref count by 1. Current weak ref count: {}", (void*)m_Ptr, count);
@@ -710,7 +710,7 @@ namespace Ion
 	}
 
 	template<typename T>
-	inline void TRefCounter<T>::Delete()
+	inline void TRefCountBlock<T>::Delete()
 	{
 		RefCountLogger.Trace("Deleting owned object...");
 		if (m_Ptr)
@@ -721,7 +721,7 @@ namespace Ion
 	}
 
 	template<typename T>
-	inline void TRefCounter<T>::DeleteRefCounter()
+	inline void TRefCountBlock<T>::DeleteRefCounter()
 	{
 		RefCountLogger.Trace("Deleting ref counting block...");
 		void* ptr = m_Ptr;
@@ -733,20 +733,18 @@ namespace Ion
 
 #pragma endregion
 
-#pragma region TRefCountPtrBase
+#pragma region TPtrBase
 
 	template<typename T>
-	class TRefCountPtrBase
+	class TPtrBase
 	{
 	public:
 		using TElement  = T;
-		using TThis     = TRefCountPtrBase<T>;
-		using TRep      = TRefCounter<T>;
+		using TThis     = TPtrBase<T>;
+		using TRep      = TRefCountBlock<T>;
 
-		/**
-		 * @brief Checks if the weak pointer no longer points to a valid object
-		 */
-		bool IsExpired() const;
+		uint32 RefCount() const;
+		uint32 WeakRefCount() const;
 
 		/**
 		 * @brief Checks if the pointer is not null
@@ -757,12 +755,12 @@ namespace Ion
 		/**
 		 * @brief Construct a null pointer base
 		 */
-		TRefCountPtrBase();
+		TPtrBase();
 
 		/**
 		 * @brief Construct a null pointer base
 		 */
-		TRefCountPtrBase(nullptr_t);
+		TPtrBase(nullptr_t);
 
 		/**
 		 * @brief Makes this pointer own the ptr and constructs a ref count control block.
@@ -831,7 +829,7 @@ namespace Ion
 		template<typename T0>
 		void AliasConstructShared(const TSharedPtr<T0>& other, TElement* ptr);
 
-		void Swap(TRefCountPtrBase& other);
+		void Swap(TPtrBase& other);
 
 		/**
 		 * @brief Delete the shared pointer
@@ -858,39 +856,44 @@ namespace Ion
 		friend class TWeakPtr;
 
 		template<typename T0>
-		friend class TRefCountPtrBase;
+		friend class TPtrBase;
 	};
 
 	#pragma region TRefCountPtrBase Implementation
 
 	template<typename T>
-	inline bool TRefCountPtrBase<T>::IsExpired() const
+	inline uint32 TPtrBase<T>::RefCount() const
 	{
-		ionassert(m_RefCount);
-		return m_RefCount->m_RefCount == 0;
+		return m_RefCount->m_RefCount;
 	}
 
 	template<typename T>
-	inline TRefCountPtrBase<T>::operator bool() const
+	inline uint32 TPtrBase<T>::WeakRefCount() const
+	{
+		return m_RefCount->m_WeakCount;
+	}
+
+	template<typename T>
+	inline TPtrBase<T>::operator bool() const
 	{
 		return m_Ptr && m_RefCount;
 	}
 
 	template<typename T>
-	inline TRefCountPtrBase<T>::TRefCountPtrBase() :
-		TRefCountPtrBase(nullptr)
+	inline TPtrBase<T>::TPtrBase() :
+		TPtrBase(nullptr)
 	{
 	}
 
 	template<typename T>
-	inline TRefCountPtrBase<T>::TRefCountPtrBase(nullptr_t) :
+	inline TPtrBase<T>::TPtrBase(nullptr_t) :
 		m_Ptr(nullptr),
 		m_RefCount(nullptr)
 	{
 	}
 
 	template<typename T>
-	inline void TRefCountPtrBase<T>::ConstructShared(T* ptr)
+	inline void TPtrBase<T>::ConstructShared(T* ptr)
 	{
 		ionassert(ptr);
 
@@ -900,7 +903,7 @@ namespace Ion
 
 	template<typename T>
 	template<typename T0>
-	inline void TRefCountPtrBase<T>::ConstructSharedFromWeak(const TWeakPtr<T0>& ptr)
+	inline void TPtrBase<T>::ConstructSharedFromWeak(const TWeakPtr<T0>& ptr)
 	{
 		static_assert(TIsBaseOfV<TElement, T0>);
 
@@ -917,7 +920,7 @@ namespace Ion
 
 	template<typename T>
 	template<typename T0>
-	inline void TRefCountPtrBase<T>::ConstructWeak(const TSharedPtr<T0>& ptr)
+	inline void TPtrBase<T>::ConstructWeak(const TSharedPtr<T0>& ptr)
 	{
 		static_assert(TIsBaseOfV<TElement, T0>);
 
@@ -934,7 +937,7 @@ namespace Ion
 
 	template<typename T>
 	template<typename T0>
-	inline void TRefCountPtrBase<T>::CopyConstructShared(const TSharedPtr<T0>& other)
+	inline void TPtrBase<T>::CopyConstructShared(const TSharedPtr<T0>& other)
 	{
 		static_assert(TIsBaseOfV<TElement, T0>);
 
@@ -951,7 +954,7 @@ namespace Ion
 
 	template<typename T>
 	template<typename T0>
-	inline void TRefCountPtrBase<T>::CopyConstructWeak(const TWeakPtr<T0>& other)
+	inline void TPtrBase<T>::CopyConstructWeak(const TWeakPtr<T0>& other)
 	{
 		static_assert(TIsBaseOfV<TElement, T0>);
 
@@ -968,7 +971,7 @@ namespace Ion
 
 	template<typename T>
 	template<typename TPtr>
-	inline void TRefCountPtrBase<T>::MoveConstruct(TPtr&& other)
+	inline void TPtrBase<T>::MoveConstruct(TPtr&& other)
 	{
 		static_assert(TIsRefCountPtrV<TPtr>);
 		static_assert(TIsBaseOfV<TElement, typename TPtr::TElement>);
@@ -982,7 +985,7 @@ namespace Ion
 
 	template<typename T>
 	template<typename T0>
-	inline void TRefCountPtrBase<T>::AliasConstructShared(const TSharedPtr<T0>& other, TElement* ptr)
+	inline void TPtrBase<T>::AliasConstructShared(const TSharedPtr<T0>& other, TElement* ptr)
 	{
 		static_assert(TOrV<TIsBaseOf<TElement, T0>, TIsBaseOf<T0, TElement>>);
 
@@ -998,14 +1001,14 @@ namespace Ion
 	}
 
 	template<typename T>
-	inline void TRefCountPtrBase<T>::Swap(TRefCountPtrBase<T>& other)
+	inline void TPtrBase<T>::Swap(TPtrBase<T>& other)
 	{
 		std::swap(m_Ptr, other.m_Ptr);
 		std::swap(m_RefCount, other.m_RefCount);
 	}
 
 	template<typename T>
-	inline void TRefCountPtrBase<T>::DeleteShared()
+	inline void TPtrBase<T>::DeleteShared()
 	{
 		if (m_RefCount)
 		{
@@ -1017,7 +1020,7 @@ namespace Ion
 	}
 
 	template<typename T>
-	inline void TRefCountPtrBase<T>::DeleteWeak()
+	inline void TPtrBase<T>::DeleteWeak()
 	{
 		if (m_RefCount)
 		{
@@ -1035,10 +1038,10 @@ namespace Ion
 #pragma region TSharedPtr
 
 	template<typename T>
-	class TSharedPtr : public TRefCountPtrBase<T>
+	class TSharedPtr : public TPtrBase<T>
 	{
 	public:
-		using TBase = TRefCountPtrBase<T>;
+		using TBase = TPtrBase<T>;
 		using TRep  = typename TBase::TRep;
 
 		/**
@@ -1277,10 +1280,10 @@ namespace Ion
 #pragma region TWeakPtr
 
 	template<typename T>
-	class TWeakPtr : public TRefCountPtrBase<T>
+	class TWeakPtr : public TPtrBase<T>
 	{
 	public:
-		using TBase = TRefCountPtrBase<T>;
+		using TBase = TPtrBase<T>;
 		using TRep  = typename TBase::TRep;
 
 		/**
@@ -1362,6 +1365,11 @@ namespace Ion
 		 * that points to the same object, else a null shared pointer.
 		 */
 		TSharedPtr<T> Lock() const;
+
+		/**
+		 * @brief Checks if the weak pointer no longer points to a valid object
+		 */
+		bool IsExpired() const;
 
 		~TWeakPtr();
 	};
@@ -1475,6 +1483,12 @@ namespace Ion
 	}
 
 	template<typename T>
+	inline bool TWeakPtr<T>::IsExpired() const
+	{
+		return RefCount() == 0;
+	}
+
+	template<typename T>
 	inline TWeakPtr<T>::~TWeakPtr()
 	{
 		DeleteWeak();
@@ -1521,6 +1535,8 @@ namespace Ion
 	}
 
 #pragma endregion
+
+	int RefCountPtrTest();
 
 #pragma endregion
 }

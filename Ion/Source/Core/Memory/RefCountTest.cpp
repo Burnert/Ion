@@ -6,6 +6,8 @@
 
 namespace Ion
 {
+#pragma region Intrusive
+
 	class RefTest : public RefCountable
 	{
 	public:
@@ -205,6 +207,59 @@ namespace Ion
 
 		return 0;
 	}
+
+#pragma endregion
+
+#pragma region Non-Intrusive
+
+	class PtrTest
+	{
+	public:
+		String Text;
+		PtrTest(const String& text) : Text(text) { }
+	};
+
+	class PtrTest2 : public PtrTest
+	{
+	public:
+		String Text2;
+		PtrTest2(const String& text, const String& text2) : PtrTest(text), Text2(text2) { }
+	};
+
+	int RefCountPtrTest()
+	{
+		TSharedPtr<PtrTest> ptr0;
+		ionassert(!ptr0);
+		ionassert(!ptr0.GetRaw());
+		//ionassert(ptr0 == nullptr);
+
+		TSharedPtr<PtrTest> ptr1 = nullptr;
+		ionassert(!ptr1);
+		ionassert(!ptr1.GetRaw());
+
+		TSharedPtr<PtrTest> ptr2 = TSharedPtr<PtrTest>(new PtrTest("Text1"));
+		ionassert(ptr2);
+		ionassert(ptr2->Text == "Text1");
+		ionassert((*ptr2).Text == "Text1");
+		ionassert(ptr2.GetRaw()->Text == ptr2->Text);
+
+		ptr2 = nullptr;
+		ionassert(!ptr2);
+
+		TSharedPtr<PtrTest> ptr3 = TSharedPtr<PtrTest>(new PtrTest("WeakTest"));
+
+		TWeakPtr<PtrTest> wptr0;
+		ionassert(!ptr0);
+
+		TWeakPtr<PtrTest> wptr1 = nullptr;
+
+		TWeakPtr<PtrTest> wptr3 = ptr3;
+		ionassert(wptr3);
+
+		return 0;
+	}
+
+#pragma endregion
 }
 
 //#endif
