@@ -31,24 +31,24 @@ namespace Ion
 		// Default constructor
 		TRef<RefTest> ref0;
 		ionassert(!ref0);
-		ionassert(ref0.GetRaw() == nullptr);
+		ionassert(ref0.Raw() == nullptr);
 
 		// Null constructor
 		TRef<RefTest> ref1 = nullptr;
 		ionassert(!ref1);
-		ionassert(ref1.GetRaw() == nullptr);
+		ionassert(ref1.Raw() == nullptr);
 
 		// Null assignment
 		ref0 = nullptr;
 		ionassert(!ref0);
-		ionassert(ref0.GetRaw() == nullptr);
+		ionassert(ref0.Raw() == nullptr);
 
 		// Pointer assignment
 		RefTest* pRefTest;
 		TRef<RefTest> ref2 = pRefTest = new RefTest("Text");
 		ionassert(ref2);
-		ionassert(ref2.GetRaw() != nullptr);
-		ionassert(ref2.GetRaw() == pRefTest);
+		ionassert(ref2.Raw() != nullptr);
+		ionassert(ref2.Raw() == pRefTest);
 		ionassert(ref2->Text == "Text");
 		ionassert(ref2->Text == pRefTest->Text);
 		ionassert((*ref2).Text == "Text");
@@ -57,38 +57,38 @@ namespace Ion
 		TRef<RefTest> ref3 = MakeRef<RefTest>("Text2");
 		ionassert(ref3);
 		ionassert(ref3->Text == "Text2");
-		ionassert(ref3.GetRefCount() == 1);
-		ionassert(ref3.GetRefCount() == ref3->GetRefCount());
+		ionassert(ref3.RefCount() == 1);
+		ionassert(ref3.RefCount() == ref3->RefCount());
 
 		// Copy constructor
 		TRef<RefTest> ref4 = ref3;
 		ionassert(ref4);
 		ionassert(ref4->Text == ref3->Text);
-		ionassert(ref4.GetRaw() == ref3.GetRaw());
+		ionassert(ref4.Raw() == ref3.Raw());
 		ionassert(ref4 == ref3);
-		ionassert(ref4.GetRefCount() == 2);
+		ionassert(ref4.RefCount() == 2);
 
 		// Move constructor
 		String text3 = ref3->Text;
-		RefTest* pRefTest3 = ref3.GetRaw();
+		RefTest* pRefTest3 = ref3.Raw();
 		TRef<RefTest> ref5 = Move(ref3);
 		ionassert(ref5);
 		ionassert(ref5->Text == text3);
-		ionassert(ref5.GetRaw() == pRefTest3);
+		ionassert(ref5.Raw() == pRefTest3);
 		ionassert(ref5 != ref3);
-		ionassert(ref5.GetRefCount() == 2);
+		ionassert(ref5.RefCount() == 2);
 
 		// Copy assignment
 		ref0 = ref4;
 		ionassert(ref0);
 		ionassert(ref4);
-		ionassert(ref0.GetRaw() == ref4.GetRaw());
+		ionassert(ref0.Raw() == ref4.Raw());
 		ionassert(ref0 == ref4);
-		ionassert(ref0.GetRefCount() == 3);
+		ionassert(ref0.RefCount() == 3);
 		ionassert(ref0->Text == ref4->Text);
 		ref0 = ref2;
-		ionassert(ref4.GetRefCount() == 2);
-		ionassert(ref2.GetRefCount() == 2);
+		ionassert(ref4.RefCount() == 2);
+		ionassert(ref2.RefCount() == 2);
 		ionassert(ref0 == ref2);
 		ionassert(ref0 != ref4);
 		ref0 = ref4;
@@ -97,28 +97,28 @@ namespace Ion
 		ref1 = Move(ref4);
 		ionassert(ref1);
 		ionassert(!ref4);
-		ionassert(ref1.GetRaw() == ref0.GetRaw());
-		ionassert(ref1.GetRaw() != ref4.GetRaw());
+		ionassert(ref1.Raw() == ref0.Raw());
+		ionassert(ref1.Raw() != ref4.Raw());
 		ionassert(ref1 == ref0);
 		ionassert(ref1 != ref4);
-		ionassert(ref1.GetRefCount() == 3);
-		ionassert(ref1.GetRefCount() == ref0.GetRefCount());
-		ionassert(ref1.GetRefCount() != ref4.GetRefCount());
+		ionassert(ref1.RefCount() == 3);
+		ionassert(ref1.RefCount() == ref0.RefCount());
+		ionassert(ref1.RefCount() != ref4.RefCount());
 		ionassert(ref1->Text == ref0->Text);
 		TRef<RefTest> ref2Backup = ref2;
 		ref1 = Move(ref2);
-		ionassert(ref0.GetRefCount() == 2);
-		ionassert(ref1.GetRefCount() == ref2Backup.GetRefCount());
+		ionassert(ref0.RefCount() == 2);
+		ionassert(ref1.RefCount() == ref2Backup.RefCount());
 		ref1 = ref0;
 		ref2 = Move(ref2Backup);
 
 		// Swap
 		TRef<RefTest> ref6 = MakeRef<RefTest>("TextSwap");
-		ionassert(ref6.GetRefCount() == 1);
-		ionassert(ref0.GetRefCount() == 3);
+		ionassert(ref6.RefCount() == 1);
+		ionassert(ref0.RefCount() == 3);
 		ref0.Swap(ref6);
-		ionassert(ref6.GetRefCount() == 3);
-		ionassert(ref0.GetRefCount() == 1);
+		ionassert(ref6.RefCount() == 3);
+		ionassert(ref0.RefCount() == 1);
 		ionassert(ref6->Text == "Text2");
 		ionassert(ref0->Text == "TextSwap");
 
@@ -128,41 +128,41 @@ namespace Ion
 		TRef<RefTest2> rt2_0 = MakeRef<RefTest2>("Text1", "Text2");
 		TRef<RefTest> rt1_0 = rt2_0;
 		ionassert(rt2_0 == rt1_0);
-		ionassert(rt2_0.GetRaw() == rt1_0.GetRaw());
-		ionassert(rt2_0.GetRefCount() == rt1_0.GetRefCount());
-		ionassert(rt2_0.GetRefCount() == 2);
+		ionassert(rt2_0.Raw() == rt1_0.Raw());
+		ionassert(rt2_0.RefCount() == rt1_0.RefCount());
+		ionassert(rt2_0.RefCount() == 2);
 		ionassert(rt1_0->Text == rt2_0->Text);
 		ionassert(rt1_0->Text == "Text1");
 
 		TRef<RefTest> rt1_1;
 		rt1_1 = rt2_0;
 		ionassert(rt1_1 == rt2_0);
-		ionassert(rt1_1.GetRaw() == rt2_0.GetRaw());
-		ionassert(rt1_1.GetRefCount() == rt2_0.GetRefCount());
-		ionassert(rt2_0.GetRefCount() == 3);
+		ionassert(rt1_1.Raw() == rt2_0.Raw());
+		ionassert(rt1_1.RefCount() == rt2_0.RefCount());
+		ionassert(rt2_0.RefCount() == 3);
 
 		// Move
 		TRef<RefTest2> rt2_1 = rt2_0;
-		ionassert(rt2_1.GetRefCount() == 4);
+		ionassert(rt2_1.RefCount() == 4);
 		TRef<RefTest> rt1_2 = Move(rt2_1);
 		ionassert(!rt2_1);
 		ionassert(rt1_2 == rt2_0);
 		ionassert(rt1_2 != rt2_1);
-		ionassert(rt1_2.GetRefCount() == 4);
-		ionassert(rt1_2.GetRefCount() != rt2_1.GetRefCount());
+		ionassert(rt1_2.RefCount() == 4);
+		ionassert(rt1_2.RefCount() != rt2_1.RefCount());
 
 		TRef<RefTest> rt1_3;
-		ionassert(rt2_0.GetRefCount() == 4);
+		ionassert(rt2_0.RefCount() == 4);
 		rt2_1 = rt2_0;
-		ionassert(rt2_0.GetRefCount() == 5);
+		ionassert(rt2_0.RefCount() == 5);
 		rt1_3 = Move(rt2_1);
-		ionassert(rt2_0.GetRefCount() == 5);
+		ionassert(rt2_0.RefCount() == 5);
 		ionassert(!rt2_1);
 		ionassert(rt1_3);
 		ionassert(rt1_3 == rt2_0);
 		ionassert(rt1_3 != rt2_1);
-		ionassert(rt1_3.GetRefCount() == 5);
-		ionassert(rt1_3.GetRefCount() != rt2_1.GetRefCount());
+		ionassert(rt1_3.RefCount() == 5);
+		ionassert(rt1_3.RefCount() != rt2_1.RefCount());
 
 		// RefCast
 		TRef<RefTest> poly0 = MakeRef<RefTest2>("Text1", "Text2");
@@ -189,7 +189,7 @@ namespace Ion
 		// Deletion
 
 		TRef<RefDelTest> del0 = MakeRef<RefDelTest>();
-		RefDelTest* refTestRef = del0.GetRaw();
+		RefDelTest* refTestRef = del0.Raw();
 		ionassert(refTestRef->Number == 0x1234567890);
 		// Get the offset of the field to the object start
 		ptrdiff_t fieldOffset = (uint64*)&refTestRef->Number - (uint64*)refTestRef;

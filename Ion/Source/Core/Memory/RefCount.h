@@ -28,7 +28,7 @@ namespace Ion
 	public:
 		virtual ~RefCountable();
 
-		size_t GetRefCount() const;
+		size_t RefCount() const;
 
 		RefCountable(const RefCountable&) = delete;
 		RefCountable(RefCountable&&) = delete;
@@ -58,7 +58,7 @@ namespace Ion
 	{
 	}
 
-	FORCEINLINE size_t RefCountable::GetRefCount() const
+	FORCEINLINE size_t RefCountable::RefCount() const
 	{
 		return m_Count;
 	}
@@ -210,9 +210,9 @@ namespace Ion
 
 		void Swap(TRef& other);
 
-		size_t GetRefCount() const;
+		size_t RefCount() const;
 
-		T* GetRaw() const;
+		T* Raw() const;
 		T& operator*() const;
 		T* operator->() const;
 
@@ -374,16 +374,16 @@ namespace Ion
 	}
 
 	template<typename T>
-	inline size_t TRef<T>::GetRefCount() const
+	inline size_t TRef<T>::RefCount() const
 	{
 		if (!m_Object)
 			return 0;
 
-		return m_Object->GetRefCount();
+		return m_Object->RefCount();
 	}
 
 	template<typename T>
-	inline typename T* TRef<T>::GetRaw() const
+	inline typename T* TRef<T>::Raw() const
 	{
 		return m_Object;
 	}
@@ -493,7 +493,7 @@ namespace Ion
 	template<typename T0, typename T1>
 	inline TRef<T0> DynamicRefCast(const TRef<T1>& other)
 	{
-		if (!dynamic_cast<T0*>(other.GetRaw()))
+		if (!dynamic_cast<T0*>(other.Raw()))
 			return TRef<T0>();
 
 		return RefCast<T0>(other);
@@ -502,7 +502,7 @@ namespace Ion
 	template<typename T0, typename T1>
 	inline TRef<T0> DynamicRefCast(TRef<T1>&& other)
 	{
-		if (!dynamic_cast<T0*>(other.GetRaw()))
+		if (!dynamic_cast<T0*>(other.Raw()))
 			return TRef<T0>();
 
 		return RefCast<T0>(Move(other));
