@@ -152,6 +152,8 @@ namespace Ion::Editor
 			EditorLogger.Info(*pStr);
 		}
 
+		RefCountTest();
+
 		//InitExample(nullptr);
 
 		auto& hierarchy = LogManager::GetLoggerHierarchy();

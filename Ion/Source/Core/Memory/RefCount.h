@@ -4,9 +4,443 @@
 
 namespace Ion
 {
-	REGISTER_LOGGER(RefCountLogger, "Core::Memory::RefCount");
+	REGISTER_LOGGER(RefCountLogger, "Core::Memory::RefCount", /*ELoggerFlags::DisabledByDefault*/);
 
 #pragma region Intrusive
+
+#pragma region Templates (type traits)
+
+	template<typename TFrom, typename TTo>
+	struct TIsRefCompatible : TIsConvertible<TFrom*, TTo*> { };
+
+	template<typename TFrom, typename TTo>
+	static constexpr bool TIsRefCompatibleV = TIsRefCompatible<TFrom, TTo>::value;
+
+#pragma endregion
+
+#pragma region RefCountable
+
+	class NOVTABLE RefCountable
+	{
+	protected:
+		RefCountable();
+
+	public:
+		virtual ~RefCountable();
+
+		size_t GetRefCount() const;
+
+		RefCountable(const RefCountable&) = delete;
+		RefCountable(RefCountable&&) = delete;
+		RefCountable& operator=(const RefCountable&) = delete;
+		RefCountable& operator=(RefCountable&&) = delete;
+
+	private:
+		size_t m_Count;
+
+		size_t IncRef();
+		size_t DecRef();
+
+		void DeleteThis();
+
+		template<typename T>
+		friend class TRef;
+	};
+
+	inline RefCountable::RefCountable() :
+		m_Count(0)
+	{
+	}
+
+	inline RefCountable::~RefCountable()
+	{
+	}
+
+	FORCEINLINE size_t RefCountable::GetRefCount() const
+	{
+		return m_Count;
+	}
+
+	inline size_t RefCountable::IncRef()
+	{
+		++m_Count;
+		RefCountLogger.Debug("RefCountable {{{}}} incremented the ref count by 1. Current ref count: {}", (void*)this, m_Count);
+		return m_Count;
+	}
+
+	inline size_t RefCountable::DecRef()
+	{
+		ionassert(m_Count > 0);
+
+		--m_Count;
+		RefCountLogger.Debug("RefCountable {{{}}} decremented the ref count by 1. Current ref count: {}", (void*)this, m_Count);
+		if (m_Count == 0)
+		{
+			RefCountLogger.Trace("RefCountable {{{}}} ref count reached 0.", (void*)this);
+
+			RefCountLogger.Trace("RefCountable {{{}}} deleting ref countable object...", (void*)this);
+			DeleteThis();
+
+			return 0;
+		}
+		return m_Count;
+	}
+
+	inline void RefCountable::DeleteThis()
+	{
+		delete this;
+		RefCountLogger.Debug("RefCountable {{{}}} deleted ref countable object.", (void*)this);
+	}
+
+#pragma endregion
+
+#pragma region TRef
+
+	template<typename T>
+	class TRef
+	{
+	public:
+		static_assert(TIsBaseOfV<RefCountable, T>, "Object cannot be used with TRef if it's not derived from RefCountable.");
+
+		using TElement = T;
+
+		TRef();
+		TRef(nullptr_t);
+
+		TRef(T* ptr);
+
+		TRef(const TRef& other);
+		template<typename T0, TEnableIfT<TIsRefCompatibleV<T0, T>>* = 0>
+		TRef(const TRef<T0>& other);
+
+		TRef(TRef&& other) noexcept;
+		template<typename T0, TEnableIfT<TIsRefCompatibleV<T0, T>>* = 0>
+		TRef(TRef<T0>&& other) noexcept;
+
+		~TRef();
+
+		TRef& operator=(const TRef& other);
+		template<typename T0, TEnableIfT<TIsRefCompatibleV<T0, T>>* = 0>
+		TRef& operator=(const TRef<T0>& other);
+
+		TRef& operator=(TRef&& other) noexcept;
+		template<typename T0, TEnableIfT<TIsRefCompatibleV<T0, T>>* = 0>
+		TRef& operator=(TRef<T0>&& other) noexcept;
+
+		TRef& operator=(nullptr_t);
+
+		template<typename T0>
+		bool operator==(const TRef<T0>& other);
+
+		template<typename T0>
+		bool operator!=(const TRef<T0>& other);
+
+		void Swap(TRef& other);
+
+		size_t GetRefCount() const;
+
+		T* GetRaw() const;
+		T& operator*() const;
+		T* operator->() const;
+
+		operator bool() const;
+
+	private:
+		template<typename T0>
+		void CopyConstruct(const TRef<T0>& other);
+
+		template<typename T0>
+		void MoveConstruct(TRef<T0>&& other) noexcept;
+
+		template<typename T0>
+		void CastConstruct(const TRef<T0>& other);
+
+		template<typename T0>
+		void CastConstruct(TRef<T0>&& other) noexcept;
+
+		void Delete();
+
+	private:
+		T* m_Object;
+
+		template<typename T0>
+		friend class TRef;
+
+		template<typename T0, typename... Args>
+		friend TRef<T0> MakeRef(Args&&... args);
+
+		template<typename T0, typename T1>
+		friend TRef<T0> RefCast(const TRef<T1>& other);
+
+		template<typename T0, typename T1>
+		friend TRef<T0> RefCast(TRef<T1>&& other);
+
+		template<typename T0, typename T1>
+		friend TRef<T0> DynamicRefCast(const TRef<T1>& other);
+
+		template<typename T0, typename T1>
+		friend TRef<T0> DynamicRefCast(TRef<T1>&& other);
+	};
+
+	template<typename T>
+	inline TRef<T>::TRef() :
+		TRef(nullptr)
+	{
+	}
+
+	template<typename T>
+	inline TRef<T>::TRef(nullptr_t) :
+		m_Object(nullptr)
+	{
+		RefCountLogger.Debug("TRef {{{}}} has been null constructed.", (void*)m_Object);
+	}
+
+	template<typename T>
+	inline TRef<T>::TRef(T* ptr) :
+		m_Object(ptr)
+	{
+		RefCountLogger.Debug("TRef {{{}}} has been constructed.", (void*)m_Object);
+		if (m_Object)
+		{
+			m_Object->IncRef();
+		}
+	}
+
+	template<typename T>
+	inline TRef<T>::TRef(const TRef& other)
+	{
+		CopyConstruct(other);
+	}
+
+	template<typename T>
+	template<typename T0, TEnableIfT<TIsRefCompatibleV<T0, T>>*>
+	inline TRef<T>::TRef(const TRef<T0>& other)
+	{
+		CopyConstruct(other);
+	}
+
+	template<typename T>
+	inline TRef<T>::TRef(TRef&& other) noexcept
+	{
+		MoveConstruct(Move(other));
+	}
+
+	template<typename T>
+	template<typename T0, TEnableIfT<TIsRefCompatibleV<T0, T>>*>
+	inline TRef<T>::TRef(TRef<T0>&& other) noexcept
+	{
+		MoveConstruct(Move(other));
+	}
+
+	template<typename T>
+	inline TRef<T>::~TRef()
+	{
+		RefCountLogger.Debug("TRef {{{}}} has been destroyed.", (void*)m_Object);
+		Delete();
+	}
+
+	template<typename T>
+	inline TRef<T>& TRef<T>::operator=(const TRef& other)
+	{
+		RefCountLogger.Debug("TRef {{{}}} has been copy assigned to TRef {{{}}}.", (void*)other.m_Object, (void*)m_Object);
+		TRef<T>(other).Swap(*this);
+		return *this;
+	}
+
+	template<typename T>
+	template<typename T0, TEnableIfT<TIsRefCompatibleV<T0, T>>*>
+	inline TRef<T>& TRef<T>::operator=(const TRef<T0>& other)
+	{
+		RefCountLogger.Debug("TRef {{{}}} has been copy assigned to TRef {{{}}}.", (void*)other.m_Object, (void*)m_Object);
+		TRef<T>(other).Swap(*this);
+		return *this;
+	}
+
+	template<typename T>
+	inline TRef<T>& TRef<T>::operator=(TRef&& other) noexcept
+	{
+		RefCountLogger.Debug("TRef {{{}}} has been move assigned to TRef {{{}}}.", (void*)other.m_Object, (void*)m_Object);
+		TRef<T>(Move(other)).Swap(*this);
+		return *this;
+	}
+
+	template<typename T>
+	template<typename T0, TEnableIfT<TIsRefCompatibleV<T0, T>>*>
+	inline TRef<T>& TRef<T>::operator=(TRef<T0>&& other) noexcept
+	{
+		RefCountLogger.Debug("TRef {{{}}} has been move assigned to TRef {{{}}}.", (void*)other.m_Object, (void*)m_Object);
+		TRef<T>(Move(other)).Swap(*this);
+		return *this;
+	}
+
+	template<typename T>
+	inline TRef<T>& TRef<T>::operator=(nullptr_t)
+	{
+		RefCountLogger.Debug("Null has been assigned to TRef {{{}}}.", (void*)m_Object);
+		Delete();
+		return *this;
+	}
+
+	template<typename T>
+	template<typename T0>
+	inline bool TRef<T>::operator==(const TRef<T0>& other)
+	{
+		return m_Object == other.m_Object;
+	}
+
+	template<typename T>
+	template<typename T0>
+	inline bool TRef<T>::operator!=(const TRef<T0>& other)
+	{
+		return m_Object != other.m_Object;
+	}
+
+	template<typename T>
+	inline void TRef<T>::Swap(TRef& other)
+	{
+		std::swap(m_Object, other.m_Object);
+	}
+
+	template<typename T>
+	inline size_t TRef<T>::GetRefCount() const
+	{
+		if (!m_Object)
+			return 0;
+
+		return m_Object->GetRefCount();
+	}
+
+	template<typename T>
+	inline typename T* TRef<T>::GetRaw() const
+	{
+		return m_Object;
+	}
+
+	template<typename T>
+	inline typename T& TRef<T>::operator*() const
+	{
+		ionassert(m_Object);
+		return *m_Object;
+	}
+
+	template<typename T>
+	inline typename T* TRef<T>::operator->() const
+	{
+		ionassert(m_Object);
+		return m_Object;
+	}
+
+	template<typename T>
+	inline TRef<T>::operator bool() const
+	{
+		return (bool)m_Object;
+	}
+
+	template<typename T>
+	inline void TRef<T>::Delete()
+	{
+		if (m_Object)
+		{
+			m_Object->DecRef();
+			m_Object = nullptr;
+		}
+	}
+
+	template<typename T>
+	template<typename T0>
+	inline void TRef<T>::CopyConstruct(const TRef<T0>& other)
+	{
+		m_Object = other.m_Object;
+		RefCountLogger.Debug("TRef {{{}}} has been copy constructed.", (void*)m_Object);
+		if (m_Object)
+		{
+			m_Object->IncRef();
+		}
+	}
+
+	template<typename T>
+	template<typename T0>
+	inline void TRef<T>::MoveConstruct(TRef<T0>&& other) noexcept
+	{
+		m_Object = other.m_Object;
+		RefCountLogger.Debug("TRef {{{}}} has been move constructed.", (void*)m_Object);
+
+		other.m_Object = nullptr;
+	}
+
+	template<typename T>
+	template<typename T0>
+	inline void TRef<T>::CastConstruct(const TRef<T0>& other)
+	{
+		m_Object = static_cast<T*>(other.m_Object);
+		RefCountLogger.Debug("TRef {{{}}} has been copy cast constructed.", (void*)m_Object);
+		if (m_Object)
+		{
+			m_Object->IncRef();
+		}
+	}
+
+	template<typename T>
+	template<typename T0>
+	inline void TRef<T>::CastConstruct(TRef<T0>&& other) noexcept
+	{
+		m_Object = static_cast<T*>(other.m_Object);
+		RefCountLogger.Debug("TRef {{{}}} has been move cast constructed.", (void*)m_Object);
+
+		other.m_Object = nullptr;
+	}
+
+#pragma endregion
+
+#pragma region MakeRef / RefCast / DynamicRefCast
+
+	template<typename T, typename... Args>
+	inline TRef<T> MakeRef(Args&&... args)
+	{
+		return TRef<T>(new T(Forward<Args>(args)...));
+	}
+
+	template<typename T0, typename T1>
+	inline TRef<T0> RefCast(const TRef<T1>& other)
+	{
+		TRef<T0> ref;
+		ref.CastConstruct(other);
+		return ref;
+	}
+
+	template<typename T0, typename T1>
+	inline TRef<T0> RefCast(TRef<T1>&& other)
+	{
+		TRef<T0> ref;
+		ref.CastConstruct(Move(other));
+		return ref;
+	}
+
+	template<typename T0, typename T1>
+	inline TRef<T0> DynamicRefCast(const TRef<T1>& other)
+	{
+		if (!dynamic_cast<T0*>(other.GetRaw()))
+			return TRef<T0>();
+
+		TRef<T0> ref;
+		ref.CastConstruct(other);
+		return ref;
+	}
+
+	template<typename T0, typename T1>
+	inline TRef<T0> DynamicRefCast(TRef<T1>&& other)
+	{
+		if (!dynamic_cast<T0*>(other.GetRaw()))
+			return TRef<T0>();
+
+		TRef<T0> ref;
+		ref.CastConstruct(Move(other));
+		return ref;
+	}
+
+#pragma endregion
+
+	int RefCountTest();
 
 #pragma endregion
 
