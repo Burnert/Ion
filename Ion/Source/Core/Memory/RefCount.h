@@ -47,6 +47,8 @@ namespace Ion
 		friend class TRef;
 	};
 
+	#pragma region RefCountable Implementation
+
 	inline RefCountable::RefCountable() :
 		m_Count(0)
 	{
@@ -92,6 +94,8 @@ namespace Ion
 		RefCountLogger.Debug("RefCountable {{{}}} deleted ref countable object.", (void*)this);
 	}
 
+	#pragma endregion
+
 #pragma endregion
 
 #pragma region TRef
@@ -104,34 +108,103 @@ namespace Ion
 
 		using TElement = T;
 
+		/**
+		 * @brief Construct a null ref
+		 */
 		TRef();
+
+		/**
+		 * @brief Construct a null ref
+		 */
 		TRef(nullptr_t);
 
+		/**
+		 * @brief Construct a ref that owns ptr
+		 * 
+		 * @param ptr Pointer to take the ownership of (must be derived from RefCountable)
+		 */
 		TRef(T* ptr);
 
+		/**
+		 * @brief Copy another ref
+		 * 
+		 * @param other Ref to make a copy of
+		 */
 		TRef(const TRef& other);
+
+		/**
+		 * @brief Copy a ref of another type
+		 * 
+		 * @param other Ref to make a copy of
+		 */
 		template<typename T0, TEnableIfT<TIsRefCompatibleV<T0, T>>* = 0>
 		TRef(const TRef<T0>& other);
 
+		/**
+		 * @brief Move another ref
+		 * 
+		 * @param other Ref to move
+		 */
 		TRef(TRef&& other) noexcept;
+
+		/**
+		 * @brief Move a ref of another type
+		 * 
+		 * @param other Ref to move
+		 */
 		template<typename T0, TEnableIfT<TIsRefCompatibleV<T0, T>>* = 0>
 		TRef(TRef<T0>&& other) noexcept;
 
 		~TRef();
 
+		/**
+		 * @brief Copy another ref
+		 * 
+		 * @param other Ref to make a copy of
+		 */
 		TRef& operator=(const TRef& other);
+
+		/**
+		 * @brief Copy a ref of another type
+		 * 
+		 * @param other Ref to make a copy of
+		 */
 		template<typename T0, TEnableIfT<TIsRefCompatibleV<T0, T>>* = 0>
 		TRef& operator=(const TRef<T0>& other);
 
+		/**
+		 * @brief Move another ref
+		 * 
+		 * @param other Ref to move
+		 */
 		TRef& operator=(TRef&& other) noexcept;
+
+		/**
+		 * @brief Move a ref of another type
+		 * 
+		 * @param other Ref to move
+		 */
 		template<typename T0, TEnableIfT<TIsRefCompatibleV<T0, T>>* = 0>
 		TRef& operator=(TRef<T0>&& other) noexcept;
 
+		/**
+		 * @brief Assign a null value
+		 */
 		TRef& operator=(nullptr_t);
 
+		/**
+		 * @brief Check if two refs point to the same object
+		 * 
+		 * @param other Other ref
+		 */
 		template<typename T0>
 		bool operator==(const TRef<T0>& other);
 
+		/**
+		 * @brief Check if two refs don't point to the same object
+		 * 
+		 * @param other Other ref
+		 */
 		template<typename T0>
 		bool operator!=(const TRef<T0>& other);
 
@@ -143,6 +216,9 @@ namespace Ion
 		T& operator*() const;
 		T* operator->() const;
 
+		/**
+		 * @return true if the ref is not null
+		 */
 		operator bool() const;
 
 	private:
@@ -175,6 +251,8 @@ namespace Ion
 		template<typename T0, typename T1>
 		friend TRef<T0> RefCast(TRef<T1>&& other);
 	};
+
+	#pragma region TRef Implementation
 
 	template<typename T>
 	inline TRef<T>::TRef() :
@@ -384,6 +462,8 @@ namespace Ion
 		other.m_Object = nullptr;
 	}
 
+	#pragma endregion
+
 #pragma endregion
 
 #pragma region MakeRef / RefCast / DynamicRefCast
@@ -575,7 +655,7 @@ namespace Ion
 		friend class TRefCountPtrBase;
 	};
 
-	// Implementation -----------------------------------------------------------------------------------
+	#pragma region TRefCounter Implementation
 
 	template<typename T>
 	inline TRefCounter<T>::TRefCounter(T* ptr) :
@@ -648,6 +728,8 @@ namespace Ion
 		delete this;
 		RefCountLogger.Debug("{{{}}} Deleted ref counting block.", ptr);
 	}
+
+	#pragma endregion
 
 #pragma endregion
 
@@ -779,7 +861,7 @@ namespace Ion
 		friend class TRefCountPtrBase;
 	};
 
-	// Implementation -----------------------------------------------------------------------------------
+	#pragma region TRefCountPtrBase Implementation
 
 	template<typename T>
 	inline bool TRefCountPtrBase<T>::IsExpired() const
@@ -946,6 +1028,8 @@ namespace Ion
 		m_RefCount = nullptr;
 	}
 
+	#pragma endregion
+
 #pragma endregion
 
 #pragma region TSharedPtr
@@ -1060,7 +1144,7 @@ namespace Ion
 		~TSharedPtr();
 	};
 
-	// Implementation -----------------------------------------------------------------------------------
+	#pragma region TSharedPtr Implementation
 
 	template<typename T>
 	inline TSharedPtr<T>::TSharedPtr() :
@@ -1186,6 +1270,8 @@ namespace Ion
 		DeleteShared();
 	}
 
+	#pragma endregion
+
 #pragma endregion
 
 #pragma region TWeakPtr
@@ -1280,7 +1366,7 @@ namespace Ion
 		~TWeakPtr();
 	};
 
-	// Implementation -----------------------------------------------------------------------------------
+	#pragma region TWeakPtr Implementation
 
 	template<typename T>
 	inline TWeakPtr<T>::TWeakPtr() :
@@ -1393,6 +1479,8 @@ namespace Ion
 	{
 		DeleteWeak();
 	}
+
+	#pragma endregion
 
 #pragma endregion
 
