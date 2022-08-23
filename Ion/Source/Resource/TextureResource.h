@@ -25,34 +25,13 @@ namespace Ion
 		TextureResourceProperties Properties;
 	};
 
-	struct TextureResourceRenderDataShared
-	{
-		std::shared_ptr<RHITexture> Texture;
-	};
-
 	struct TextureResourceRenderData
 	{
-		std::weak_ptr<RHITexture> Texture;
+		std::shared_ptr<RHITexture> Texture;
 
 		bool IsAvailable() const
 		{
-			return !Texture.expired();
-		}
-
-		TextureResourceRenderDataShared Lock() const
-		{
-			TextureResourceRenderDataShared data { };
-			if (IsAvailable())
-			{
-				data.Texture = Texture.lock();
-			}
-			return data;
-		}
-
-		TextureResourceRenderData& operator=(const TextureResourceRenderDataShared& shared)
-		{
-			Texture = shared.Texture;
-			return *this;
+			return (bool)Texture;
 		}
 	};
 
@@ -121,13 +100,13 @@ namespace Ion
 	template<typename Lambda>
 	inline bool TextureResource::Take(Lambda onTake)
 	{
-		static_assert(TIsConvertibleV<Lambda, TFuncResourceOnTake<TextureResourceRenderDataShared>>);
+		static_assert(TIsConvertibleV<Lambda, TFuncResourceOnTake<TextureResourceRenderData>>);
 
 		ionassert(m_Asset);
 
 		if (m_RenderData.IsAvailable())
 		{
-			onTake(m_RenderData.Lock());
+			onTake(m_RenderData);
 			return true;
 		}
 
@@ -143,8 +122,6 @@ namespace Ion
 				ionassert(m_Asset);
 				ionassert(m_Asset->GetType() == EAssetType::Image);
 
-				TextureResourceRenderDataShared sharedRenderData { };
-
 				TextureDescription desc { };
 				desc.Dimensions.Width = image->GetWidth();
 				desc.Dimensions.Height = image->GetHeight();
@@ -155,22 +132,11 @@ namespace Ion
 
 				desc.SetFilterAll(m_Description.Properties.Filter);
 
-				// The shared RHITexture has to reference the resource without actually using a ResourcePtr.
-				// This is to make sure the resource won't be deleted before the object is destroyed.
-				//ResourceMemory::IncRef(*this);
+				m_RenderData.Texture = RHITexture::CreateShared(desc);
 
-				sharedRenderData.Texture = std::shared_ptr<RHITexture>(RHITexture::Create(desc), [this](RHITexture* ptr)
-				{
-					// Decrement the ref count when the actual RHITexture object gets destroyed.
-					//ResourceMemory::DecRef(*this);
-					delete ptr;
-				});
+				m_RenderData.Texture->UpdateSubresource(image.get());
 
-				sharedRenderData.Texture->UpdateSubresource(image.get());
-
-				onTake(sharedRenderData);
-
-				m_RenderData = sharedRenderData;
+				onTake(m_RenderData);
 
 				ResourceLogger.Trace("Imported Texture Resource from Asset \"{}\" successfully.", m_Asset->GetVirtualPath());
 			},

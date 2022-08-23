@@ -230,7 +230,7 @@ namespace Ion
 			m_TextureResource = TextureResource::Query(m_Value);
 
 			// @TODO: Make sure the instance is not deleted before this gets done
-			m_TextureResource->Take([this](const TextureResourceRenderDataShared& data)
+			m_TextureResource->Take([this](const TextureResourceRenderData& data)
 			{
 				m_Texture = data.Texture;
 			});

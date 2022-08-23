@@ -23,7 +23,7 @@ namespace Ion::Editor
 		
 		outResource = TextureResource::Query(asset);
 
-		outResource->Take([&texture](const TextureResourceRenderDataShared& data)
+		outResource->Take([&texture](const TextureResourceRenderData& data)
 		{
 			texture = data.Texture;
 		});

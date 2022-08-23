@@ -16,7 +16,7 @@ namespace Ion
 	{
 		std::shared_ptr<Mesh> mesh = Mesh::Create();
 
-		resource->Take([mesh](const MeshResourceRenderDataShared& renderData)
+		resource->Take([mesh](const MeshResourceRenderData& renderData)
 		{
 			mesh->SetVertexBuffer(renderData.VertexBuffer);
 			mesh->SetIndexBuffer(renderData.IndexBuffer);

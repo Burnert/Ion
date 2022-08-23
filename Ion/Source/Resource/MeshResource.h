@@ -24,38 +24,14 @@ namespace Ion
 		MeshResourceDefaults Defaults;
 	};
 
-	struct MeshResourceRenderDataShared
+	struct MeshResourceRenderData
 	{
 		std::shared_ptr<RHIVertexBuffer> VertexBuffer;
 		std::shared_ptr<RHIIndexBuffer> IndexBuffer;
-	};
-
-	struct MeshResourceRenderData
-	{
-		std::weak_ptr<RHIVertexBuffer> VertexBuffer;
-		std::weak_ptr<RHIIndexBuffer> IndexBuffer;
 
 		bool IsAvailable() const
 		{
-			return !VertexBuffer.expired() && !IndexBuffer.expired();
-		}
-
-		MeshResourceRenderDataShared Lock() const
-		{
-			MeshResourceRenderDataShared data { };
-			if (IsAvailable())
-			{
-				data.VertexBuffer = VertexBuffer.lock();
-				data.IndexBuffer = IndexBuffer.lock();
-			}
-			return data;
-		}
-
-		MeshResourceRenderData& operator=(const MeshResourceRenderDataShared& shared)
-		{
-			VertexBuffer = shared.VertexBuffer;
-			IndexBuffer = shared.IndexBuffer;
-			return *this;
+			return VertexBuffer && IndexBuffer;
 		}
 	};
 
@@ -117,13 +93,13 @@ namespace Ion
 	template<typename Lambda>
 	inline bool MeshResource::Take(Lambda onTake)
 	{
-		static_assert(TIsConvertibleV<Lambda, TFuncResourceOnTake<MeshResourceRenderDataShared>>);
+		static_assert(TIsConvertibleV<Lambda, TFuncResourceOnTake<MeshResourceRenderData>>);
 
 		ionassert(m_Asset);
 
 		if (m_RenderData.IsAvailable())
 		{
-			onTake(m_RenderData.Lock());
+			onTake(m_RenderData);
 			return true;
 		}
 
@@ -139,33 +115,15 @@ namespace Ion
 				ionassert(m_Asset);
 				ionassert(m_Asset->GetType() == EAssetType::Mesh);
 
-				MeshResourceRenderDataShared sharedRenderData { };
-
-				// The same manual reference counting as in TextureResource.
-
 				// RHIVertexBuffer:
-				//ResourceMemory::IncRef(*this);
-				RHIVertexBuffer* vb = RHIVertexBuffer::Create(meshData->Vertices.Ptr, meshData->Vertices.Count);
-				sharedRenderData.VertexBuffer = std::shared_ptr<RHIVertexBuffer>(vb, [this](RHIVertexBuffer* ptr)
-				{
-					//ResourceMemory::DecRef(*this);
-					delete ptr;
-				});
+				m_RenderData.VertexBuffer = RHIVertexBuffer::CreateShared(meshData->Vertices.Ptr, meshData->Vertices.Count);
 
 				// RHIIndexBuffer:
-				//ResourceMemory::IncRef(*this);
-				RHIIndexBuffer* ib = RHIIndexBuffer::Create(meshData->Indices.Ptr, (uint32)meshData->Indices.Count);
-				sharedRenderData.IndexBuffer = std::shared_ptr<RHIIndexBuffer>(ib, [this](RHIIndexBuffer* ptr)
-				{
-					//ResourceMemory::DecRef(*this);
-					delete ptr;
-				});
+				m_RenderData.IndexBuffer = RHIIndexBuffer::CreateShared(meshData->Indices.Ptr, (uint32)meshData->Indices.Count);
 
-				sharedRenderData.VertexBuffer->SetLayout(meshData->Layout);
+				m_RenderData.VertexBuffer->SetLayout(meshData->Layout);
 
-				onTake(sharedRenderData);
-
-				m_RenderData = sharedRenderData;
+				onTake(m_RenderData);
 
 				ResourceLogger.Trace("Imported Mesh Resource from Asset \"{}\" successfully.", m_Asset->GetVirtualPath());
 			},
