@@ -45,7 +45,7 @@ namespace Ion
 		ionassert(!ref0);
 		ionassert(ref0.Raw() == nullptr);
 
-		// Pointer assignment
+		// Pointer construction
 		RefTest* pRefTest;
 		TRef<RefTest> ref2 = pRefTest = new RefTest("Text");
 		ionassert(ref2);
@@ -217,6 +217,8 @@ namespace Ion
 	public:
 		String Text;
 		PtrTest(const String& text) : Text(text) { }
+
+		virtual ~PtrTest() {}
 	};
 
 	class PtrTest2 : public PtrTest
@@ -228,33 +230,171 @@ namespace Ion
 
 	int RefCountPtrTest()
 	{
+		// Default constructor
 		TSharedPtr<PtrTest> ptr0;
 		ionassert(!ptr0);
-		ionassert(!ptr0.GetRaw());
+		ionassert(!ptr0.Raw());
 		//ionassert(ptr0 == nullptr);
 
+		// Null constructor
 		TSharedPtr<PtrTest> ptr1 = nullptr;
 		ionassert(!ptr1);
-		ionassert(!ptr1.GetRaw());
+		ionassert(!ptr1.Raw());
+		ionassert(ptr0 == ptr1);
 
-		TSharedPtr<PtrTest> ptr2 = TSharedPtr<PtrTest>(new PtrTest("Text1"));
+		// Null assignment
+		ptr0 = nullptr;
+		ionassert(!ptr0);
+		ionassert(ptr0.Raw() == nullptr);
+
+		// Pointer construction
+		PtrTest* pPtrTest = new PtrTest("Text1");
+		TSharedPtr<PtrTest> ptr2 = MakeSharedFrom(pPtrTest);
 		ionassert(ptr2);
 		ionassert(ptr2->Text == "Text1");
 		ionassert((*ptr2).Text == "Text1");
-		ionassert(ptr2.GetRaw()->Text == ptr2->Text);
+		ionassert(ptr2.Raw()->Text == ptr2->Text);
+		ionassert(ptr2.Raw() != nullptr);
+		ionassert(ptr2.Raw() == pPtrTest);
+		ionassert(ptr2->Text == "Text1");
+		ionassert(ptr2->Text == pPtrTest->Text);
+		ionassert((*ptr2).Text == "Text1");
 
-		ptr2 = nullptr;
-		ionassert(!ptr2);
+		// MakeShared
+		TSharedPtr<PtrTest> ptr3 = MakeSharedFrom(new PtrTest("Text2"));
+		ionassert(ptr3);
+		ionassert(ptr3->Text == "Text2");
+		ionassert(ptr3.RefCount() == 1);
 
-		TSharedPtr<PtrTest> ptr3 = TSharedPtr<PtrTest>(new PtrTest("WeakTest"));
+		// Copy constructor
+		TSharedPtr<PtrTest> ptr4 = ptr3;
+		ionassert(ptr4);
+		ionassert(ptr4->Text == ptr3->Text);
+		ionassert(ptr4.Raw() == ptr3.Raw());
+		ionassert(ptr4 == ptr3);
+		ionassert(ptr4.RefCount() == 2);
+
+		// Move constructor
+		String text3 = ptr3->Text;
+		PtrTest* pPtrTest3 = ptr3.Raw();
+		TSharedPtr<PtrTest> ptr5 = Move(ptr3);
+		ionassert(ptr5);
+		ionassert(ptr5->Text == text3);
+		ionassert(ptr5.Raw() == pPtrTest3);
+		ionassert(ptr5 != ptr3);
+		ionassert(ptr5.RefCount() == 2);
+
+		// Copy assignment
+		ptr0 = ptr4;
+		ionassert(ptr0);
+		ionassert(ptr4);
+		ionassert(ptr0.Raw() == ptr4.Raw());
+		ionassert(ptr0 == ptr4);
+		ionassert(ptr0.RefCount() == 3);
+		ionassert(ptr0->Text == ptr4->Text);
+		ptr0 = ptr2;
+		ionassert(ptr4.RefCount() == 2);
+		ionassert(ptr2.RefCount() == 2);
+		ionassert(ptr0 == ptr2);
+		ionassert(ptr0 != ptr4);
+		ptr0 = ptr4;
+
+		// Move assignment
+		ptr1 = Move(ptr4);
+		ionassert(ptr1);
+		ionassert(!ptr4);
+		ionassert(ptr1.Raw() == ptr0.Raw());
+		ionassert(ptr1.Raw() != ptr4.Raw());
+		ionassert(ptr1 == ptr0);
+		ionassert(ptr1 != ptr4);
+		ionassert(ptr1.RefCount() == 3);
+		ionassert(ptr1.RefCount() == ptr0.RefCount());
+		ionassert(ptr1.RefCount() != ptr4.RefCount());
+		ionassert(ptr1->Text == ptr0->Text);
+		TSharedPtr<PtrTest> ptr2Backup = ptr2;
+		ptr1 = Move(ptr2);
+		ionassert(ptr0.RefCount() == 2);
+		ionassert(ptr1.RefCount() == ptr2Backup.RefCount());
+		ptr1 = ptr0;
+		ptr2 = Move(ptr2Backup);
+
+		// Polymorphic
+
+		// Copy
+		TSharedPtr<PtrTest2> pt2_0 = MakeSharedFrom(new PtrTest2("Text1", "Text2"));
+		TSharedPtr<PtrTest> pt1_0 = pt2_0;
+		ionassert(pt2_0 == pt1_0);
+		ionassert(pt2_0.Raw() == pt1_0.Raw());
+		ionassert(pt2_0.RefCount() == pt1_0.RefCount());
+		ionassert(pt2_0.RefCount() == 2);
+		ionassert(pt1_0->Text == pt2_0->Text);
+		ionassert(pt1_0->Text == "Text1");
+
+		TSharedPtr<PtrTest> pt1_1;
+		pt1_1 = pt2_0;
+		ionassert(pt1_1 == pt2_0);
+		ionassert(pt1_1.Raw() == pt2_0.Raw());
+		ionassert(pt1_1.RefCount() == pt2_0.RefCount());
+		ionassert(pt2_0.RefCount() == 3);
+
+		// Move
+		TSharedPtr<PtrTest> pt2_1 = pt2_0;
+		ionassert(pt2_1.RefCount() == 4);
+		TSharedPtr<PtrTest> pt1_2 = Move(pt2_1);
+		ionassert(!pt2_1);
+		ionassert(pt1_2 == pt2_0);
+		ionassert(pt1_2 != pt2_1);
+		ionassert(pt1_2.RefCount() == 4);
+		ionassert(pt1_2.RefCount() != pt2_1.RefCount());
+
+		TSharedPtr<PtrTest> pt1_3;
+		ionassert(pt2_0.RefCount() == 4);
+		pt2_1 = pt2_0;
+		ionassert(pt2_0.RefCount() == 5);
+		pt1_3 = Move(pt2_1);
+		ionassert(pt2_0.RefCount() == 5);
+		ionassert(!pt2_1);
+		ionassert(pt1_3);
+		ionassert(pt1_3 == pt2_0);
+		ionassert(pt1_3 != pt2_1);
+		ionassert(pt1_3.RefCount() == 5);
+		ionassert(pt1_3.RefCount() != pt2_1.RefCount());
+
+		// PtrCast
+		TSharedPtr<PtrTest> poly0 = MakeSharedFrom(new PtrTest2("Text1", "Text2"));
+		TSharedPtr<PtrTest2> poly1 = PtrCast<PtrTest2>(poly0);
+		ionassert(poly0 == poly1);
+		poly1 = PtrCast<PtrTest2>(Move(poly0));
+		ionassert(poly0 != poly1);
+		ionassert(!poly0);
+
+		// DynamicPtrCast
+		TSharedPtr<PtrTest> poly2 = MakeSharedFrom(new PtrTest("Text2"));
+		poly0 = DynamicPtrCast<PtrTest>(poly2);
+		poly1 = DynamicPtrCast<PtrTest2>(poly2);
+		ionassert(poly0);
+		ionassert(!poly1);
+		poly0 = DynamicPtrCast<PtrTest>(Move(poly2));
+		ionassert(!poly2);
+		poly2 = poly0;
+		poly1 = DynamicPtrCast<PtrTest2>(Move(poly2));
+		ionassert(poly2);
+		ionassert(poly0);
+		ionassert(!poly1);
+
+		// TWeakPtr
+
+		TSharedPtr<PtrTest> sptr0 = MakeSharedFrom(new PtrTest("WeakTest"));
 
 		TWeakPtr<PtrTest> wptr0;
-		ionassert(!ptr0);
+		ionassert(!wptr0);
 
 		TWeakPtr<PtrTest> wptr1 = nullptr;
+		ionassert(!wptr1);
+		ionassert(wptr0 == wptr1);
 
-		TWeakPtr<PtrTest> wptr3 = ptr3;
-		ionassert(wptr3);
+		TWeakPtr<PtrTest> wptr2 = sptr0;
+		ionassert(wptr2);
 
 		return 0;
 	}

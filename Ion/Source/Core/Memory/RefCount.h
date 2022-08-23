@@ -516,10 +516,10 @@ namespace Ion
 
 #pragma region Non-Intrusive
 
-#pragma region Templates (type traits) / Fwd
+#pragma region Templates (type traits)
 
 	template<typename T>
-	class TSharedPtrBase;
+	class TPtrBase;
 
 	template<typename T>
 	class TSharedPtr;
@@ -540,7 +540,7 @@ namespace Ion
 	};
 
 	template<typename T>
-	struct TIsRefCountPtr<TSharedPtrBase<T>>
+	struct TIsRefCountPtr<TPtrBase<T>>
 	{
 		static constexpr inline bool Value = true;
 		static constexpr inline bool value = true;
@@ -568,84 +568,78 @@ namespace Ion
 	template<typename T>
 	static constexpr inline bool TIsRefCountPtrV = TIsRefCountPtr<T>::Value;
 
+	template<typename TFrom, typename TTo>
+	struct TIsPtrCompatible : TIsConvertible<TFrom*, TTo*> { };
+
+	template<typename TFrom, typename TTo>
+	static constexpr bool TIsPtrCompatibleV = TIsPtrCompatible<TFrom, TTo>::value;
+
 #pragma endregion
 
-#pragma region TRefCounter
+#pragma region RefCountBase
 
 	/**
-	 * @brief Ref counting control block for shared pointers
-	 * 
-	 * @tparam T Type of the element that the ref counter owns.
+	 * @brief Ref counting block base for shared pointers
 	 */
-	template<typename T>
-	class TRefCountBlock
+	class RefCountBase
 	{
-		static_assert(!TIsReferenceV<T>);
-
-		/**
-		 * @brief Construct a new RefCount object that owns the pointer
-		 * 
-		 * @param ptr Pointer to take the ownership of.
-		 */
-		TRefCountBlock(T* ptr);
+	public:
+		RefCountBase();
 
 		/**
 		 * @brief Increments the strong reference count
-		 * 
+		 *
 		 * @return uint32 Reference count after incrementing
 		 */
 		uint32 IncRef();
 
 		/**
 		 * @brief Decrements the strong reference count
-		 * 
+		 *
 		 * @details Deletes the owned pointer if the reference count is 0
 		 * and decrements the weak reference count.
-		 * 
+		 *
 		 * @return uint32 Reference count after decrementing
 		 */
 		uint32 DecRef();
 
 		/**
 		 * @brief Increments the weak reference count
-		 * 
+		 *
 		 * @return uint32 Weak reference count after incrementing
 		 */
 		uint32 IncWeak();
 
 		/**
 		 * @brief Decrements the weak reference count
-		 * 
+		 *
 		 * @details Destroys this control block if the reference count is 0.
-		 * 
+		 *
 		 * @return uint32 Weak reference count after decrementing
 		 */
 		uint32 DecWeak();
 
-	private:
+		uint32 RefCount() const;
+		uint32 WeakRefCount() const;
+
+	protected:
 		/**
 		 * @brief Deletes the owned object.
 		 */
-		void Delete();
-
+		virtual void Destroy() noexcept = 0;
 		/**
 		 * @brief Destroys this control block.
 		 */
-		void DeleteRefCounter();
+		virtual void DestroySelf() noexcept = 0;
 
 	private:
 		/**
-		 * @brief Owned pointer
-		 */
-		T* m_Ptr;
-
-		/**
 		 * @brief Current reference count
 		 */
-		uint32 m_RefCount;
+		uint32 m_Count;
 		/**
 		 * @brief Current weak reference count
-		 * 
+		 *
 		 * @details It is 1 if there are no weak pointers.
 		 * The ref counting block kind of is a weak reference.
 		 */
@@ -655,78 +649,120 @@ namespace Ion
 		friend class TPtrBase;
 	};
 
-	#pragma region TRefCounter Implementation
+	#pragma region RefCountBase Implementation
 
-	template<typename T>
-	inline TRefCountBlock<T>::TRefCountBlock(T* ptr) :
-		m_Ptr(ptr),
-		m_RefCount(1),
+	inline RefCountBase::RefCountBase() :
+		m_Count(1),
 		m_WeakCount(1)
 	{
-		RefCountLogger.Trace("{{{}}} Constructed a ref counting block.", (void*)m_Ptr);
 	}
 
-	template<typename T>
-	inline uint32 TRefCountBlock<T>::IncRef()
+	inline uint32 RefCountBase::IncRef()
 	{
-		uint32 count = ++m_RefCount;
-		RefCountLogger.Debug("{{{}}} Incremented the ref count by 1. Current ref count: {}", (void*)m_Ptr, count);
-		return count;
+		++m_Count;
+		RefCountLogger.Debug("RefCountBase {{{}}} Incremented the ref count by 1. Current ref count: {}", (void*)this, m_Count);
+		return m_Count;
 	}
 
-	template<typename T>
-	inline uint32 TRefCountBlock<T>::DecRef()
+	inline uint32 RefCountBase::DecRef()
 	{
-		uint32 count = --m_RefCount;
-		RefCountLogger.Debug("{{{}}} Decremented the ref count by 1. Current ref count: {}", (void*)m_Ptr, count);
-		if (count == 0)
+		--m_Count;
+		RefCountLogger.Debug("RefCountBase {{{}}} Decremented the ref count by 1. Current ref count: {}", (void*)this, m_Count);
+		if (m_Count == 0)
 		{
-			RefCountLogger.Trace("{{{}}} Strong ref count reached 0.", (void*)m_Ptr);
-			Delete();
+			RefCountLogger.Trace("RefCountBase {{{}}} Strong ref count reached 0.", (void*)this);
+			Destroy();
 			DecWeak();
 		}
-		return count;
+		return m_Count;
 	}
 
-	template<typename T>
-	inline uint32 TRefCountBlock<T>::IncWeak()
+	inline uint32 RefCountBase::IncWeak()
 	{
-		uint32 count = ++m_WeakCount;
-		RefCountLogger.Debug("{{{}}} Incremented the weak ref count by 1. Current weak ref count: {}", (void*)m_Ptr, count);
-		return count;
+		++m_WeakCount;
+		RefCountLogger.Debug("RefCountBase {{{}}} Incremented the weak ref count by 1. Current weak ref count: {}", (void*)this, m_WeakCount);
+		return m_WeakCount;
 	}
 
-	template<typename T>
-	inline uint32 TRefCountBlock<T>::DecWeak()
+	inline uint32 RefCountBase::DecWeak()
 	{
 		uint32 count = --m_WeakCount;
-		RefCountLogger.Debug("{{{}}} Decremented the weak ref count by 1. Current weak ref count: {}", (void*)m_Ptr, count);
-		if (count == 0)
+		RefCountLogger.Debug("RefCountBase {{{}}} Decremented the weak ref count by 1. Current weak ref count: {}", (void*)this, m_WeakCount);
+		if (m_WeakCount == 0)
 		{
-			RefCountLogger.Trace("{{{}}} Weak ref count reached 0.", (void*)m_Ptr);
-			DeleteRefCounter();
+			RefCountLogger.Trace("RefCountBase {{{}}} Weak ref count reached 0.", (void*)this);
+			DestroySelf();
 		}
 		return count;
 	}
 
-	template<typename T>
-	inline void TRefCountBlock<T>::Delete()
+	inline uint32 RefCountBase::RefCount() const
 	{
-		RefCountLogger.Trace("Deleting owned object...");
+		return m_Count;
+	}
+
+	inline uint32 RefCountBase::WeakRefCount() const
+	{
+		return m_WeakCount;
+	}
+
+	#pragma endregion
+
+#pragma endregion
+
+#pragma region TPtrRefCountBlock
+
+	template<typename T>
+	class TPtrRefCountBlock : public RefCountBase
+	{
+	public:
+		static_assert(!TIsReferenceV<T>);
+
+		/**
+		 * @brief Construct a new RefCount object that owns the pointer
+		 * 
+		 * @param ptr Pointer to take the ownership of.
+		 */
+		TPtrRefCountBlock(T* ptr);
+
+	private:
+		virtual void Destroy() noexcept override;
+		virtual void DestroySelf() noexcept override;
+
+	private:
+		/**
+		 * @brief Owned pointer
+		 */
+		T* m_Ptr;
+	};
+
+	#pragma region TPtrRefCountBlock Implementation
+
+	template<typename T>
+	inline TPtrRefCountBlock<T>::TPtrRefCountBlock(T* ptr) :
+		m_Ptr(ptr)
+	{
+		RefCountLogger.Trace("TPtrRefCountBlock {{{}}} has been constructed with a pointer to {} {{{}}}.", (void*)this, typeid(T).name(), (void*)ptr);
+	}
+
+	template<typename T>
+	inline void TPtrRefCountBlock<T>::Destroy() noexcept
+	{
 		if (m_Ptr)
 		{
+			RefCountLogger.Trace("TPtrRefCountBlock {{{}}} is deleting the owned object {} {{{}}}...", (void*)this, typeid(T).name(), (void*)m_Ptr);
 			delete m_Ptr;
-			RefCountLogger.Debug("{{{}}} Deleted owned object.", (void*)m_Ptr);
+			RefCountLogger.Debug("TPtrRefCountBlock {{{}}} has deleted the owned object {} {{{}}}.", (void*)this, typeid(T).name(), (void*)m_Ptr);
 		}
 	}
 
 	template<typename T>
-	inline void TRefCountBlock<T>::DeleteRefCounter()
+	inline void TPtrRefCountBlock<T>::DestroySelf() noexcept
 	{
-		RefCountLogger.Trace("Deleting ref counting block...");
-		void* ptr = m_Ptr;
+		void* ptr = this;
+		RefCountLogger.Trace("TPtrRefCountBlock {{{}}} is deleting itself...", ptr);
 		delete this;
-		RefCountLogger.Debug("{{{}}} Deleted ref counting block.", ptr);
+		RefCountLogger.Debug("TPtrRefCountBlock {{{}}} has deleted itself.", ptr);
 	}
 
 	#pragma endregion
@@ -741,15 +777,9 @@ namespace Ion
 	public:
 		using TElement  = T;
 		using TThis     = TPtrBase<T>;
-		using TRep      = TRefCountBlock<T>;
 
 		uint32 RefCount() const;
 		uint32 WeakRefCount() const;
-
-		/**
-		 * @brief Checks if the pointer is not null
-		 */
-		operator bool() const;
 
 	protected:
 		/**
@@ -763,11 +793,13 @@ namespace Ion
 		TPtrBase(nullptr_t);
 
 		/**
-		 * @brief Makes this pointer own the ptr and constructs a ref count control block.
+		 * @brief Constructs a ref count control block that owns the pointer.
 		 * 
+		 * @tparam T0 Element type
 		 * @param ptr Pointer to take the ownership of.
 		 */
-		void ConstructShared(T* ptr);
+		template<typename T0>
+		void ConstructShared(T0* ptr);
 
 		/**
 		 * @brief Makes this pointer a shared pointer that points
@@ -829,6 +861,19 @@ namespace Ion
 		template<typename T0>
 		void AliasConstructShared(const TSharedPtr<T0>& other, TElement* ptr);
 
+		/**
+		 * @brief Makes this pointer point to the specified raw pointer,
+		 * but use the control block of the other pointer
+		 *
+		 * @details This is mostly used for pointer type casting.
+		 *
+		 * @tparam T0 Other pointer element type
+		 * @param other Other pointer
+		 * @param ptr Raw pointer to point to.
+		 */
+		template<typename T0>
+		void AliasConstructShared(TSharedPtr<T0>&& other, TElement* ptr);
+
 		void Swap(TPtrBase& other);
 
 		/**
@@ -847,7 +892,7 @@ namespace Ion
 
 	private:
 		T* m_Ptr;
-		TRep* m_RefCount;
+		RefCountBase* m_Rep;
 
 		template<typename T0>
 		friend class TSharedPtr;
@@ -859,24 +904,24 @@ namespace Ion
 		friend class TPtrBase;
 	};
 
-	#pragma region TRefCountPtrBase Implementation
+	#pragma region TPtrBase Implementation
 
 	template<typename T>
 	inline uint32 TPtrBase<T>::RefCount() const
 	{
-		return m_RefCount->m_RefCount;
+		if (!m_Rep)
+			return 0;
+
+		return m_Rep->RefCount();
 	}
 
 	template<typename T>
 	inline uint32 TPtrBase<T>::WeakRefCount() const
 	{
-		return m_RefCount->m_WeakCount;
-	}
+		if (!m_Rep)
+			return 0;
 
-	template<typename T>
-	inline TPtrBase<T>::operator bool() const
-	{
-		return m_Ptr && m_RefCount;
+		return m_Rep->WeakRefCount();
 	}
 
 	template<typename T>
@@ -888,17 +933,18 @@ namespace Ion
 	template<typename T>
 	inline TPtrBase<T>::TPtrBase(nullptr_t) :
 		m_Ptr(nullptr),
-		m_RefCount(nullptr)
+		m_Rep(nullptr)
 	{
 	}
 
 	template<typename T>
-	inline void TPtrBase<T>::ConstructShared(T* ptr)
+	template<typename T0>
+	inline void TPtrBase<T>::ConstructShared(T0* ptr)
 	{
 		ionassert(ptr);
 
 		m_Ptr = ptr;
-		m_RefCount = new TRep(ptr);
+		m_Rep = new TPtrRefCountBlock(ptr);
 	}
 
 	template<typename T>
@@ -907,14 +953,12 @@ namespace Ion
 	{
 		static_assert(TIsBaseOfV<TElement, T0>);
 
-		if (ptr.m_RefCount)
+		if (ptr.IsValid())
 		{
-			ionassert(ptr.m_Ptr);
-
 			m_Ptr = ptr.m_Ptr;
-			m_RefCount = ptr.m_RefCount;
+			m_Rep = ptr.m_Rep;
 
-			m_RefCount->IncRef();
+			m_Rep->IncRef();
 		}
 	}
 
@@ -924,14 +968,14 @@ namespace Ion
 	{
 		static_assert(TIsBaseOfV<TElement, T0>);
 
-		if (ptr.m_RefCount)
+		if (ptr.m_Rep)
 		{
 			ionassert(ptr.m_Ptr);
 
 			m_Ptr = ptr.m_Ptr;
-			m_RefCount = ptr.m_RefCount;
+			m_Rep = ptr.m_Rep;
 
-			m_RefCount->IncWeak();
+			m_Rep->IncWeak();
 		}
 	}
 
@@ -941,14 +985,14 @@ namespace Ion
 	{
 		static_assert(TIsBaseOfV<TElement, T0>);
 
-		m_Ptr = (TElement*)other.m_Ptr;
-		m_RefCount = (TRep*)other.m_RefCount;
+		m_Ptr = other.m_Ptr;
+		m_Rep = other.m_Rep;
 
-		if (other.m_RefCount)
+		if (m_Rep)
 		{
-			ionassert(other.m_Ptr);
+			ionassert(m_Ptr);
 
-			m_RefCount->IncRef();
+			m_Rep->IncRef();
 		}
 	}
 
@@ -958,14 +1002,14 @@ namespace Ion
 	{
 		static_assert(TIsBaseOfV<TElement, T0>);
 
-		m_Ptr = (TElement*)other.m_Ptr;
-		m_RefCount = (TRep*)other.m_RefCount;
+		m_Ptr = other.m_Ptr;
+		m_Rep = other.m_Rep;
 
-		if (other.m_RefCount)
+		if (m_Rep)
 		{
-			ionassert(other.m_Ptr);
+			ionassert(m_Ptr);
 
-			m_RefCount->IncWeak();
+			m_Rep->IncWeak();
 		}
 	}
 
@@ -976,59 +1020,68 @@ namespace Ion
 		static_assert(TIsRefCountPtrV<TPtr>);
 		static_assert(TIsBaseOfV<TElement, typename TPtr::TElement>);
 
-		m_Ptr = (TElement*)other.m_Ptr;
-		m_RefCount = (TRep*)other.m_RefCount;
+		m_Ptr = other.m_Ptr;
+		m_Rep = other.m_Rep;
 
 		other.m_Ptr = nullptr;
-		other.m_RefCount = nullptr;
+		other.m_Rep = nullptr;
 	}
 
 	template<typename T>
 	template<typename T0>
 	inline void TPtrBase<T>::AliasConstructShared(const TSharedPtr<T0>& other, TElement* ptr)
 	{
-		static_assert(TOrV<TIsBaseOf<TElement, T0>, TIsBaseOf<T0, TElement>>);
-
 		m_Ptr = ptr;
-		m_RefCount = (TRep*)other.m_RefCount;
+		m_Rep = other.m_Rep;
 
-		if (other.m_RefCount)
+		if (m_Rep)
 		{
-			ionassert(other.m_Ptr);
+			ionassert(m_Ptr);
 
-			m_RefCount->IncRef();
+			m_Rep->IncRef();
 		}
+	}
+
+	template<typename T>
+	template<typename T0>
+	inline void TPtrBase<T>::AliasConstructShared(TSharedPtr<T0>&& other, TElement* ptr)
+	{
+		m_Ptr = ptr;
+		m_Rep = other.m_Rep;
+
+		other.m_Ptr = nullptr;
+		other.m_Rep = nullptr;
 	}
 
 	template<typename T>
 	inline void TPtrBase<T>::Swap(TPtrBase<T>& other)
 	{
 		std::swap(m_Ptr, other.m_Ptr);
-		std::swap(m_RefCount, other.m_RefCount);
+		std::swap(m_Rep, other.m_Rep);
 	}
 
 	template<typename T>
 	inline void TPtrBase<T>::DeleteShared()
 	{
-		if (m_RefCount)
+		if (m_Rep)
 		{
-			m_RefCount->DecRef();
+			m_Rep->DecRef();
 		}
 
 		m_Ptr = nullptr;
-		m_RefCount = nullptr;
+		m_Rep = nullptr;
 	}
 
 	template<typename T>
 	inline void TPtrBase<T>::DeleteWeak()
 	{
-		if (m_RefCount)
+		if (m_Rep)
 		{
-			m_RefCount->DecWeak();
+			m_Rep->DecWeak();
 		}
 
 		m_Ptr = nullptr;
-		m_RefCount = nullptr;
+		m_Rep = nullptr;
 	}
 
 	#pragma endregion
@@ -1042,7 +1095,6 @@ namespace Ion
 	{
 	public:
 		using TBase = TPtrBase<T>;
-		using TRep  = typename TBase::TRep;
 
 		/**
 		 * @brief Construct a null shared pointer
@@ -1059,8 +1111,14 @@ namespace Ion
 		 * 
 		 * @param ptr Pointer to take the ownership of.
 		 */
-		explicit TSharedPtr(T* ptr);
+		template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0>
+		explicit TSharedPtr(T0* ptr);
 
+		/**
+		 * @brief Make a copy of another shared pointer.
+		 * 
+		 * @param other Other shared pointer
+		 */
 		TSharedPtr(const TSharedPtr& other);
 
 		/**
@@ -1069,9 +1127,14 @@ namespace Ion
 		 * @tparam T0 Other pointer element type
 		 * @param other Other shared pointer
 		 */
-		template<typename T0>
+		template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0>
 		TSharedPtr(const TSharedPtr<T0>& other);
 
+		/**
+		 * @brief Move another shared pointer.
+		 * 
+		 * @param other Other shared pointer
+		 */
 		TSharedPtr(TSharedPtr&& other) noexcept;
 
 		/**
@@ -1080,7 +1143,7 @@ namespace Ion
 		 * @tparam T0 Other pointer element type
 		 * @param other Other shared pointer
 		 */
-		template<typename T0>
+		template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0>
 		TSharedPtr(TSharedPtr<T0>&& other) noexcept;
 
 		/**
@@ -1096,6 +1159,26 @@ namespace Ion
 		template<typename T0>
 		TSharedPtr(const TSharedPtr<T0>& other, TElement* ptr);
 
+		/**
+		 * @brief Create an alias pointer of another shared pointer.
+		 *
+		 * @details Points to the ptr, while using the same control block
+		 * as the other shared pointer. Mainly used for pointer type casting.
+		 *
+		 * @tparam T0 Other pointer element type
+		 * @param other Other shared pointer
+		 * @param ptr Raw pointer to point to
+		 */
+		template<typename T0>
+		TSharedPtr(TSharedPtr<T0>&& other, TElement* ptr);
+
+		~TSharedPtr();
+
+		/**
+		 * @brief Copy assign other shared pointer to this pointer
+		 * 
+		 * @param other Other shared pointer
+		 */
 		TSharedPtr& operator=(const TSharedPtr& other);
 
 		/**
@@ -1103,11 +1186,15 @@ namespace Ion
 		 * 
 		 * @tparam T0 Other pointer element type
 		 * @param other Other shared pointer
-		 * @return This pointer
 		 */
-		template<typename T0>
+		template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0>
 		TSharedPtr& operator=(const TSharedPtr<T0>& other);
 
+		/**
+		 * @brief Move assign other shared pointer to this pointer
+		 * 
+		 * @param other Other shared pointer
+		 */
 		TSharedPtr& operator=(TSharedPtr&& other);
 
 		/**
@@ -1115,24 +1202,37 @@ namespace Ion
 		 * 
 		 * @tparam T0 Other pointer element type
 		 * @param other Other shared pointer
-		 * @return This pointer
 		 */
-		template<typename T0>
+		template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0>
 		TSharedPtr& operator=(TSharedPtr<T0>&& other);
 
 		/**
 		 * @brief Make this a null pointer
-		 * 
-		 * @return This pointer
 		 */
 		TSharedPtr& operator=(nullptr_t);
 
 		/**
+		 * @brief Check if two pointers point to the same object
+		 *
+		 * @param other Other shared pointer
+		 */
+		template<typename T0>
+		bool operator==(const TSharedPtr<T0>& other);
+
+		/**
+		 * @brief Check if two pointers don't point to the same object
+		 *
+		 * @param other Other shared pointer
+		 */
+		template<typename T0>
+		bool operator!=(const TSharedPtr<T0>& other);
+
+		/**
 		 * @brief Get the Raw pointer
 		 * 
-		 * @return Raw pointer
+		 * @return T* Raw pointer
 		 */
-		T* GetRaw() const;
+		T* Raw() const;
 
 		/**
 		 * @brief Access the pointer
@@ -1144,7 +1244,15 @@ namespace Ion
 		 */
 		T& operator*() const;
 
-		~TSharedPtr();
+		/**
+		 * @brief Check if this pointer is not null.
+		 */
+		bool IsValid() const;
+
+		/**
+		 * @see IsValid()
+		 */
+		operator bool() const;
 	};
 
 	#pragma region TSharedPtr Implementation
@@ -1159,97 +1267,127 @@ namespace Ion
 	inline TSharedPtr<T>::TSharedPtr(nullptr_t) :
 		TBase(nullptr)
 	{
+		RefCountLogger.Debug("TSharedPtr {{{}}} has been null constructed.", (void*)m_Rep);
 	}
 
 	template<typename T>
-	inline TSharedPtr<T>::TSharedPtr(T* ptr)
+	template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>*>
+	inline TSharedPtr<T>::TSharedPtr(T0* ptr)
 	{
 		ConstructShared(ptr);
-		RefCountLogger.Debug("{{{}}} TSharedPtr has been constructed.", (void*)ptr);
+		RefCountLogger.Debug("TSharedPtr {{{}}} has been constructed with a pointer to {} {{{}}}.", (void*)m_Rep, typeid(T0).name(), (void*)ptr);
 	}
 
 	template<typename T>
 	inline TSharedPtr<T>::TSharedPtr(const TSharedPtr& other)
 	{
+		RefCountLogger.Debug("TSharedPtr {{{}}} has been copy constructed.", (void*)other.m_Rep);
 		CopyConstructShared(other);
-		RefCountLogger.Debug("{{{}}} TSharedPtr has been copy constructed.", (void*)m_Ptr);
 	}
 
 	template<typename T>
-	template<typename T0>
+	template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>*>
 	inline TSharedPtr<T>::TSharedPtr(const TSharedPtr<T0>& other)
 	{
+		RefCountLogger.Debug("TSharedPtr {{{}}} has been copy constructed.", (void*)other.m_Rep);
 		CopyConstructShared(other);
-		RefCountLogger.Debug("{{{}}} TSharedPtr has been copy constructed.", (void*)m_Ptr);
 	}
 
 	template<typename T>
 	inline TSharedPtr<T>::TSharedPtr(TSharedPtr&& other) noexcept
 	{
+		RefCountLogger.Debug("TSharedPtr {{{}}} has been move constructed.", (void*)other.m_Rep);
 		MoveConstruct(Move(other));
-		RefCountLogger.Debug("{{{}}} TSharedPtr has been move constructed.", (void*)m_Ptr);
 	}
 
 	template<typename T>
-	template<typename T0>
+	template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>*>
 	inline TSharedPtr<T>::TSharedPtr(TSharedPtr<T0>&& other) noexcept
 	{
+		RefCountLogger.Debug("TSharedPtr {{{}}} has been move constructed.", (void*)other.m_Rep);
 		MoveConstruct(Move(other));
-		RefCountLogger.Debug("{{{}}} TSharedPtr has been move constructed.", (void*)m_Ptr);
 	}
 
 	template<typename T>
 	template<typename T0>
 	inline TSharedPtr<T>::TSharedPtr(const TSharedPtr<T0>& other, TElement* ptr)
 	{
+		RefCountLogger.Debug("TSharedPtr {{{}}} has been alias constructed with a pointer to {} {{{}}}.", (void*)other.m_Rep, typeid(TElement).name(), (void*)ptr);
 		AliasConstructShared(other, ptr);
-		RefCountLogger.Debug("{{{}}} TSharedPtr has been alias constructed.", (void*)m_Ptr);
+	}
+
+	template<typename T>
+	template<typename T0>
+	inline TSharedPtr<T>::TSharedPtr(TSharedPtr<T0>&& other, TElement* ptr)
+	{
+		RefCountLogger.Debug("TSharedPtr {{{}}} has been alias move constructed with a pointer to {} {{{}}}.", (void*)other.m_Rep, typeid(TElement).name(), (void*)ptr);
+		AliasConstructShared(Move(other), ptr);
+	}
+
+	template<typename T>
+	inline TSharedPtr<T>::~TSharedPtr()
+	{
+		DeleteShared();
 	}
 
 	template<typename T>
 	inline TSharedPtr<T>& TSharedPtr<T>::operator=(const TSharedPtr& other)
 	{
+		RefCountLogger.Debug("TSharedPtr {{{}}} has been copy assigned to TSharedPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
 		TSharedPtr(other).Swap(*this);
-		RefCountLogger.Debug("{{{}}} TSharedPtr has been copy assigned.", (void*)m_Ptr);
 		return *this;
 	}
 
 	template<typename T>
-	template<typename T0>
+	template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>*>
 	inline TSharedPtr<T>& TSharedPtr<T>::operator=(const TSharedPtr<T0>& other)
 	{
+		RefCountLogger.Debug("TSharedPtr {{{}}} has been copy assigned to TSharedPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
 		TSharedPtr(other).Swap(*this);
-		RefCountLogger.Debug("{{{}}} TSharedPtr has been copy assigned.", (void*)m_Ptr);
 		return *this;
 	}
 
 	template<typename T>
 	inline TSharedPtr<T>& TSharedPtr<T>::operator=(TSharedPtr&& other)
 	{
+		RefCountLogger.Debug("TSharedPtr {{{}}} has been move assigned to TSharedPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
 		TSharedPtr(Move(other)).Swap(*this);
-		RefCountLogger.Debug("{{{}}} TSharedPtr has been move assigned.", (void*)m_Ptr);
 		return *this;
 	}
 
 	template<typename T>
-	template<typename T0>
+	template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>*>
 	inline TSharedPtr<T>& TSharedPtr<T>::operator=(TSharedPtr<T0>&& other)
 	{
+		RefCountLogger.Debug("TSharedPtr {{{}}} has been move assigned to TSharedPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
 		TSharedPtr(Move(other)).Swap(*this);
-		RefCountLogger.Debug("{{{}}} TSharedPtr has been move assigned.", (void*)m_Ptr);
 		return *this;
 	}
 
 	template<typename T>
 	inline TSharedPtr<T>& TSharedPtr<T>::operator=(nullptr_t)
 	{
+		RefCountLogger.Debug("Null has been assigned to TSharedPtr {{{}}}.", (void*)m_Rep);
 		DeleteShared();
-		RefCountLogger.Debug("{{{}}} TSharedPtr has been null assigned.", (void*)m_Ptr);
 		return *this;
 	}
 
 	template<typename T>
-	inline T* TSharedPtr<T>::GetRaw() const
+	template<typename T0>
+	inline bool TSharedPtr<T>::operator==(const TSharedPtr<T0>& other)
+	{
+		return m_Ptr == other.m_Ptr;
+	}
+
+	template<typename T>
+	template<typename T0>
+	inline bool TSharedPtr<T>::operator!=(const TSharedPtr<T0>& other)
+	{
+		return m_Ptr != other.m_Ptr;
+	}
+
+	template<typename T>
+	inline T* TSharedPtr<T>::Raw() const
 	{
 		return m_Ptr;
 	}
@@ -1257,20 +1395,27 @@ namespace Ion
 	template<typename T>
 	inline T* TSharedPtr<T>::operator->() const
 	{
-		return GetRaw();
+		ionassert(m_Ptr);
+		return m_Ptr;
 	}
 
 	template<typename T>
 	inline T& TSharedPtr<T>::operator*() const
 	{
 		ionassert(m_Ptr);
-		return *GetRaw();
+		return *m_Ptr;
 	}
 
 	template<typename T>
-	inline TSharedPtr<T>::~TSharedPtr()
+	inline bool TSharedPtr<T>::IsValid() const
 	{
-		DeleteShared();
+		return m_Rep && m_Ptr;
+	}
+
+	template<typename T>
+	inline TSharedPtr<T>::operator bool() const
+	{
+		return IsValid();
 	}
 
 	#pragma endregion
@@ -1284,7 +1429,6 @@ namespace Ion
 	{
 	public:
 		using TBase = TPtrBase<T>;
-		using TRep  = typename TBase::TRep;
 
 		/**
 		 * @brief Construct a null weak pointer
@@ -1305,6 +1449,11 @@ namespace Ion
 		template<typename T0>
 		TWeakPtr(const TSharedPtr<T0>& ptr);
 
+		/**
+		 * @brief Make a copy of another weak pointer.
+		 * 
+		 * @param other Other weak pointer
+		 */
 		TWeakPtr(const TWeakPtr& other);
 
 		/**
@@ -1316,6 +1465,11 @@ namespace Ion
 		template<typename T0>
 		TWeakPtr(const TWeakPtr<T0>& other);
 
+		/**
+		 * @brief Move another weak pointer.
+		 * 
+		 * @param other Other weak pointer
+		 */
 		TWeakPtr(TWeakPtr&& other);
 
 		/**
@@ -1327,6 +1481,13 @@ namespace Ion
 		template<typename T0>
 		TWeakPtr(TWeakPtr<T0>&& other);
 
+		~TWeakPtr();
+
+		/**
+		 * @brief Copy assign other weak pointer to this pointer
+		 * 
+		 * @param other Other weak pointer
+		 */
 		TWeakPtr& operator=(const TWeakPtr& other);
 
 		/**
@@ -1334,11 +1495,15 @@ namespace Ion
 		 * 
 		 * @tparam T0 Other pointer element type
 		 * @param other Other weak pointer
-		 * @return This pointer
 		 */
 		template<typename T0>
 		TWeakPtr& operator=(const TWeakPtr<T0>& other);
 
+		/**
+		 * @brief Move assign other weak pointer to this pointer
+		 * 
+		 * @param other Other weak pointer
+		 */
 		TWeakPtr& operator=(TWeakPtr&& other);
 
 		/**
@@ -1346,7 +1511,6 @@ namespace Ion
 		 * 
 		 * @tparam T0 Other pointer element type
 		 * @param other Other weak pointer
-		 * @return This pointer
 		 */
 		template<typename T0>
 		TWeakPtr& operator=(TWeakPtr<T0>&& other);
@@ -1371,7 +1535,15 @@ namespace Ion
 		 */
 		bool IsExpired() const;
 
-		~TWeakPtr();
+		/**
+		 * @brief Check if this pointer is not null and not expired.
+		 */
+		bool IsValid() const;
+
+		/**
+		 * @see IsValid()
+		 */
+		operator bool() const;
 	};
 
 	#pragma region TWeakPtr Implementation
@@ -1386,6 +1558,7 @@ namespace Ion
 	inline TWeakPtr<T>::TWeakPtr(nullptr_t) :
 		TBase(nullptr)
 	{
+		RefCountLogger.Debug("TWeakPtr {{{}}} has been null constructed.", (void*)m_Ptr);
 	}
 
 	template<typename T>
@@ -1393,44 +1566,50 @@ namespace Ion
 	inline TWeakPtr<T>::TWeakPtr(const TSharedPtr<T0>& ptr)
 	{
 		ConstructWeak(ptr);
-		RefCountLogger.Debug("{{{}}} TWeakPtr has been constructed from a TSharedPtr.", (void*)m_Ptr);
+		RefCountLogger.Debug("TWeakPtr {{{}}} has been constructed from TSharedPtr {{{}}}.", (void*)m_Rep, (void*)ptr.m_Rep);
 	}
 
 	template<typename T>
 	inline TWeakPtr<T>::TWeakPtr(const TWeakPtr& other)
 	{
+		RefCountLogger.Debug("TWeakPtr {{{}}} has been copy constructed.", (void*)other.m_Rep);
 		CopyConstructWeak(other);
-		RefCountLogger.Debug("{{{}}} TWeakPtr has been copy constructed.", (void*)m_Ptr);
 	}
 
 	template<typename T>
 	template<typename T0>
 	inline TWeakPtr<T>::TWeakPtr(const TWeakPtr<T0>& other)
 	{
+		RefCountLogger.Debug("TWeakPtr {{{}}} has been copy constructed.", (void*)other.m_Rep);
 		CopyConstructWeak(other);
-		RefCountLogger.Debug("{{{}}} TWeakPtr has been copy constructed.", (void*)m_Ptr);
 	}
 
 	template<typename T>
 	inline TWeakPtr<T>::TWeakPtr(TWeakPtr&& other)
 	{
+		RefCountLogger.Debug("TWeakPtr {{{}}} has been move constructed.", (void*)other.m_Rep);
 		MoveConstruct(Move(other));
-		RefCountLogger.Debug("{{{}}} TWeakPtr has been move constructed.", (void*)m_Ptr);
 	}
 
 	template<typename T>
 	template<typename T0>
 	inline TWeakPtr<T>::TWeakPtr(TWeakPtr<T0>&& other)
 	{
+		RefCountLogger.Debug("TWeakPtr {{{}}} has been move constructed.", (void*)other.m_Rep);
 		MoveConstruct(Move(other));
-		RefCountLogger.Debug("{{{}}} TWeakPtr has been move constructed.", (void*)m_Ptr);
+	}
+
+	template<typename T>
+	inline TWeakPtr<T>::~TWeakPtr()
+	{
+		DeleteWeak();
 	}
 
 	template<typename T>
 	inline TWeakPtr<T>& TWeakPtr<T>::operator=(const TWeakPtr& other)
 	{
+		RefCountLogger.Debug("TWeakPtr {{{}}} has been copy assigned to TWeakPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
 		TWeakPtr(other).Swap(*this);
-		RefCountLogger.Debug("{{{}}} TWeakPtr has been copy assigned.", (void*)m_Ptr);
 		return *this;
 	}
 
@@ -1438,16 +1617,16 @@ namespace Ion
 	template<typename T0>
 	inline TWeakPtr<T>& TWeakPtr<T>::operator=(const TWeakPtr<T0>& other)
 	{
+		RefCountLogger.Debug("TWeakPtr {{{}}} has been copy assigned to TWeakPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
 		TWeakPtr(other).Swap(*this);
-		RefCountLogger.Debug("{{{}}} TWeakPtr has been copy assigned.", (void*)m_Ptr);
 		return *this;
 	}
 
 	template<typename T>
 	inline TWeakPtr<T>& TWeakPtr<T>::operator=(TWeakPtr&& other)
 	{
+		RefCountLogger.Debug("TWeakPtr {{{}}} has been move assigned to TWeakPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
 		TWeakPtr(Move(other)).Swap(*this);
-		RefCountLogger.Debug("{{{}}} TWeakPtr has been move assigned.", (void*)m_Ptr);
 		return *this;
 	}
 
@@ -1455,16 +1634,16 @@ namespace Ion
 	template<typename T0>
 	inline TWeakPtr<T>& TWeakPtr<T>::operator=(TWeakPtr<T0>&& other)
 	{
+		RefCountLogger.Debug("TWeakPtr {{{}}} has been move assigned to TWeakPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
 		TWeakPtr(Move(other)).Swap(*this);
-		RefCountLogger.Debug("{{{}}} TWeakPtr has been move assigned.", (void*)m_Ptr);
 		return *this;
 	}
 
 	template<typename T>
 	inline TWeakPtr<T>& TWeakPtr<T>::operator=(nullptr_t)
 	{
+		RefCountLogger.Debug("Null has been assigned to TWeakPtr {{{}}}.", (void*)m_Rep);
 		DeleteWeak();
-		RefCountLogger.Debug("{{{}}} TWeakPtr has been null assigned.", (void*)m_Ptr);
 		return *this;
 	}
 
@@ -1476,9 +1655,10 @@ namespace Ion
 			return TSharedPtr<T>();
 		}
 
+		RefCountLogger.Debug("TWeakPtr {{{}}} has been locked.", (void*)m_Rep);
 		TSharedPtr<T> shared;
 		shared.ConstructSharedFromWeak(*this);
-		RefCountLogger.Debug("{{{}}} TWeakPtr has been locked.", (void*)m_Ptr);
+		RefCountLogger.Debug("TSharedPtr {{{}}} has been constructed from TWeakPtr {{{}}}.", (void*)shared.m_Rep, (void*)m_Rep);
 		return shared;
 	}
 
@@ -1489,16 +1669,22 @@ namespace Ion
 	}
 
 	template<typename T>
-	inline TWeakPtr<T>::~TWeakPtr()
+	inline bool TWeakPtr<T>::IsValid() const
 	{
-		DeleteWeak();
+		return m_Rep && m_Ptr && !IsExpired();
+	}
+
+	template<typename T>
+	inline TWeakPtr<T>::operator bool() const
+	{
+		return IsValid();
 	}
 
 	#pragma endregion
 
 #pragma endregion
 
-#pragma region TStaticPtrCast
+#pragma region PtrCast / DynamicPtrCast
 
 	/**
 	 * @brief Cast a shared pointer to another type.
@@ -1509,12 +1695,11 @@ namespace Ion
 	 * @return A new, statically cast shared pointer
 	 */
 	template<typename T1, typename T2>
-	inline TSharedPtr<T1> TStaticPtrCast(const TSharedPtr<T2>& other)
+	inline TSharedPtr<T1> PtrCast(const TSharedPtr<T2>& other)
 	{
-		T2* rawPtr = other.GetRaw();
-		TSharedPtr<T1> castPointer(other, static_cast<T1*>(rawPtr));
-		RefCountLogger.Debug("{{{}}} TSharedPtr has been copy cast to another type.", (void*)rawPtr);
-		return castPointer;
+		T2* rawPtr = other.Raw();
+		RefCountLogger.Debug("TSharedPtr {{{}}} has been copy cast to {}.", (void*)rawPtr, typeid(T1).name());
+		return TSharedPtr<T1>(other, static_cast<T1*>(rawPtr));
 	}
 
 	/**
@@ -1526,12 +1711,61 @@ namespace Ion
 	 * @return A new, statically cast shared pointer
 	 */
 	template<typename T1, typename T2>
-	inline TSharedPtr<T1> TStaticPtrCast(TSharedPtr<T2>&& other)
+	inline TSharedPtr<T1> PtrCast(TSharedPtr<T2>&& other)
 	{
-		T2* rawPtr = other.GetRaw();
-		TSharedPtr<T1> castPointer(Move(other), static_cast<T1*>(rawPtr));
-		RefCountLogger.Debug("{{{}}} TSharedPtr has been move cast to another type.", (void*)rawPtr);
-		return castPointer;
+		T2* rawPtr = other.Raw();
+		RefCountLogger.Debug("TSharedPtr {{{}}} has been move cast to {}.", (void*)rawPtr, typeid(T1).name());
+		return TSharedPtr<T1>(Move(other), static_cast<T1*>(rawPtr));
+	}
+
+	/**
+	 * @brief Dynamically cast a shared pointer to another type.
+	 *
+	 * @tparam T1 Type to cast to
+	 * @tparam T2 Type to cast from
+	 * @param other Other shared pointer
+	 * @return On a succeeded cast, a statically cast shared pointer; null shared pointer otherwise
+	 */
+	template<typename T1, typename T2>
+	inline TSharedPtr<T1> DynamicPtrCast(const TSharedPtr<T2>& other)
+	{
+		if (!dynamic_cast<T1*>(other.Raw()))
+			return TSharedPtr<T1>();
+
+		return PtrCast<T1>(other);
+	}
+
+	/**
+	 * @brief Dynamically cast a shared pointer to another type.
+	 *
+	 * @tparam T1 Type to cast to
+	 * @tparam T2 Type to cast from
+	 * @param other Other shared pointer
+	 * @return On a succeeded cast, a statically cast shared pointer; null shared pointer otherwise
+	 */
+	template<typename T1, typename T2>
+	inline TSharedPtr<T1> DynamicPtrCast(TSharedPtr<T2>&& other)
+	{
+		if (!dynamic_cast<T1*>(other.Raw()))
+			return TSharedPtr<T1>();
+
+		return PtrCast<T1>(Move(other));
+	}
+
+#pragma endregion
+
+#pragma region MakeSharedFrom
+
+	/**
+	 * @brief Make a shared pointer from a raw pointer and take the ownership of it.
+	 * 
+	 * @tparam T Pointer type
+	 * @param ptr Raw pointer
+	 */
+	template<typename T>
+	inline TSharedPtr<T> MakeSharedFrom(T* ptr)
+	{
+		return TSharedPtr<T>(ptr);
 	}
 
 #pragma endregion
