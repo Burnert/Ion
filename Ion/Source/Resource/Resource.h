@@ -2,10 +2,9 @@
 
 #include "ResourceFwd.h"
 #include "ResourceCommon.h"
-//#include "ResourceMemory.h"
-#include "Core/Asset/Asset.h"
-#include "Core/Asset/AssetRegistry.h"
-#include "Core/Asset/AssetDefinition.h"
+#include "Asset/Asset.h"
+#include "Asset/AssetRegistry.h"
+#include "Asset/AssetDefinition.h"
 
 namespace Ion
 {

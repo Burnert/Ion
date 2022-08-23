@@ -4,8 +4,8 @@
 #include "RHI/Shader.h"
 #include "RHI/UniformBuffer.h"
 
-#include "Core/Asset/AssetRegistry.h"
-#include "Core/Asset/AssetParser.h"
+#include "Asset/AssetRegistry.h"
+#include "Asset/AssetParser.h"
 
 #include "Application/EnginePath.h"
 

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "MaterialCommon.h"
+#include "Asset/Asset.h"
 #include "Core/Core.h"
-#include "Core/Asset/Asset.h"
 #include "Core/File/XML.h"
 
 #include "Resource/TextureResource.h"

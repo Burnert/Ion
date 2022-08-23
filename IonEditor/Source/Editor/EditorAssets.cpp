@@ -11,7 +11,7 @@
 #include "RHI/RHI.h"
 #include "Renderer/Mesh.h"
 
-#include "Core/Asset/AssetRegistry.h"
+#include "Asset/AssetRegistry.h"
 
 #include "Resource/TextureResource.h"
 

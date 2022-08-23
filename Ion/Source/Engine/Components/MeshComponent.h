@@ -2,7 +2,7 @@
 
 #include "SceneComponent.h"
 
-#include "Core/Asset/Asset.h"
+#include "Asset/Asset.h"
 
 #include "Resource/MeshResource.h"
 

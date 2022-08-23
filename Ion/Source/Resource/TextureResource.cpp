@@ -3,9 +3,9 @@
 #include "TextureResource.h"
 #include "ResourceManager.h"
 
-#include "Core/Asset/AssetRegistry.h"
-#include "Core/Asset/AssetParser.h"
 #include "Core/File/XML.h"
+#include "Asset/AssetRegistry.h"
+#include "Asset/AssetParser.h"
 
 namespace Ion
 {

@@ -2,7 +2,7 @@
 
 #include "Resource.h"
 #include "ResourceManager.h"
-#include "Core/Asset/AssetRegistry.h"
+#include "Asset/AssetRegistry.h"
 
 namespace Ion
 {

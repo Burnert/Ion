@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Core/Asset/AssetRegistry.h"
+#include "Asset/AssetRegistry.h"
 
 #include "Resource/MeshResource.h"
 #include "Resource/TextureResource.h"

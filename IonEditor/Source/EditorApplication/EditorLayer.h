@@ -2,7 +2,7 @@
 
 #include "Editor/EditorCommon.h"
 #include "Engine/Components/Component.h"
-#include "Core/Asset/Asset.h"
+#include "Asset/Asset.h"
 #include "Core/Logging/LogManager.h"
 
 struct ImGuiTableSortSpecs;
