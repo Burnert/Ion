@@ -64,7 +64,7 @@ namespace Ion
 	public:
 		using TResourceDescription = MeshResourceDescription;
 
-		static TResourcePtr<MeshResource> Query(const Asset& asset);
+		static TResourceRef<MeshResource> Query(const Asset& asset);
 
 		/**
 		 * @brief Used to access the mesh render data owned by the Resource.
@@ -97,9 +97,11 @@ namespace Ion
 		 */
 		static bool ParseAssetFile(const Asset& asset, GUID& outGuid, MeshResourceDescription& outDescription);
 
+		DEFINE_RESOURCE_AS_REF(MeshResource)
+
 	protected:
-		MeshResource(const GUID& guid, const Asset& asset, const MeshResourceDescription& desc) :
-			Resource(guid, asset),
+		MeshResource(const Asset& asset, const MeshResourceDescription& desc) :
+			Resource(asset),
 			m_RenderData({ }),
 			m_Description(desc)
 		{
@@ -131,8 +133,8 @@ namespace Ion
 			{
 				return AssetImporter::ImportColladaMeshAsset(block);
 			},
-			// Store the pointer (self) so the resource doesn't get deleted before it's loaded
-			[this, self = GetPointer(), onTake](std::shared_ptr<MeshAssetData> meshData)
+			// Store the ref (self) so the resource doesn't get deleted before it's loaded
+			[this, self = AsRef(), onTake](std::shared_ptr<MeshAssetData> meshData)
 			{
 				ionassert(m_Asset);
 				ionassert(m_Asset->GetType() == EAssetType::Mesh);
@@ -142,20 +144,20 @@ namespace Ion
 				// The same manual reference counting as in TextureResource.
 
 				// RHIVertexBuffer:
-				ResourceMemory::IncRef(*this);
+				//ResourceMemory::IncRef(*this);
 				RHIVertexBuffer* vb = RHIVertexBuffer::Create(meshData->Vertices.Ptr, meshData->Vertices.Count);
 				sharedRenderData.VertexBuffer = std::shared_ptr<RHIVertexBuffer>(vb, [this](RHIVertexBuffer* ptr)
 				{
-					ResourceMemory::DecRef(*this);
+					//ResourceMemory::DecRef(*this);
 					delete ptr;
 				});
 
 				// RHIIndexBuffer:
-				ResourceMemory::IncRef(*this);
+				//ResourceMemory::IncRef(*this);
 				RHIIndexBuffer* ib = RHIIndexBuffer::Create(meshData->Indices.Ptr, (uint32)meshData->Indices.Count);
 				sharedRenderData.IndexBuffer = std::shared_ptr<RHIIndexBuffer>(ib, [this](RHIIndexBuffer* ptr)
 				{
-					ResourceMemory::DecRef(*this);
+					//ResourceMemory::DecRef(*this);
 					delete ptr;
 				});
 

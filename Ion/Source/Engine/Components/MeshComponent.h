@@ -23,7 +23,7 @@ namespace Ion
 		void SetMeshAsset(const Asset& asset);
 		Asset GetMeshAsset() const;
 
-		void SetMeshResource(const TResourcePtr<MeshResource>& resource);
+		void SetMeshResource(const TResourceRef<MeshResource>& resource);
 		Asset GetMeshResource() const;
 
 		void SetMesh(const std::shared_ptr<Mesh>& mesh);
@@ -33,7 +33,7 @@ namespace Ion
 
 	private:
 		Asset m_MeshAsset;
-		TResourcePtr<MeshResource> m_MeshResource;
+		TResourceRef<MeshResource> m_MeshResource;
 		std::shared_ptr<Mesh> m_Mesh;
 	};
 

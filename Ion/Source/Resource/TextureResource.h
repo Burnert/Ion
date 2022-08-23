@@ -70,7 +70,7 @@ namespace Ion
 		 * @param asset Asset associated with the Resource
 		 * @return Shared pointer to the Resource
 		 */
-		static TResourcePtr<TextureResource> Query(const Asset& asset);
+		static TResourceRef<TextureResource> Query(const Asset& asset);
 
 		/**
 		 * @brief Used to access the Texture owned by the Resource.
@@ -101,9 +101,11 @@ namespace Ion
 		 */
 		static bool ParseAssetFile(const Asset& asset, GUID& outGuid, TextureResourceDescription& outDescription);
 
+		DEFINE_RESOURCE_AS_REF(TextureResource)
+
 	protected:
-		TextureResource(const GUID& guid, const Asset& asset, const TextureResourceDescription& desc) :
-			Resource(guid, asset),
+		TextureResource(const Asset& asset, const TextureResourceDescription& desc) :
+			Resource(asset),
 			m_RenderData({ }),
 			m_Description(desc)
 		{
@@ -135,8 +137,8 @@ namespace Ion
 			{
 				return AssetImporter::ImportImageAsset(block);
 			},
-			// Store the pointer (self) so the resource doesn't get deleted before it's loaded
-			[this, self = GetPointer(), onTake](std::shared_ptr<Image> image)
+			// Store the ref (self) so the resource doesn't get deleted before it's loaded
+			[this, self = AsRef(), onTake](std::shared_ptr<Image> image)
 			{
 				ionassert(m_Asset);
 				ionassert(m_Asset->GetType() == EAssetType::Image);
@@ -155,12 +157,12 @@ namespace Ion
 
 				// The shared RHITexture has to reference the resource without actually using a ResourcePtr.
 				// This is to make sure the resource won't be deleted before the object is destroyed.
-				ResourceMemory::IncRef(*this);
+				//ResourceMemory::IncRef(*this);
 
 				sharedRenderData.Texture = std::shared_ptr<RHITexture>(RHITexture::Create(desc), [this](RHITexture* ptr)
 				{
 					// Decrement the ref count when the actual RHITexture object gets destroyed.
-					ResourceMemory::DecRef(*this);
+					//ResourceMemory::DecRef(*this);
 					delete ptr;
 				});
 

@@ -6,20 +6,28 @@
 
 namespace Ion
 {
-	Resource::~Resource()
+	namespace _Detail
 	{
-		ResourceManager::Unregister(this);
-	}
+		bool ResourceRefHelper::IsRegistered(Resource* resource) noexcept
+		{
+			return ResourceManager::IsRegistered(resource);
+		}
 
+		size_t ResourceRefHelper::IncRef(Resource* resource) noexcept
+		{
+			ResourceControlBlock* block = ResourceManager::GetControlBlock(resource);
+			return ++block->RefCount;
+		}
 
-	ResourcePtr Resource::GetPointer() const
-	{
-		return ResourceManager::Find(m_Guid);
-	}
-
-	Resource::Resource(const GUID& guid, const Asset& asset) :
-		m_Guid(guid),
-		m_Asset(asset)
-	{
+		size_t ResourceRefHelper::DecRef(Resource* resource) noexcept
+		{
+			ResourceControlBlock* block = ResourceManager::GetControlBlock(resource);
+			size_t count = --block->RefCount;
+			if (count == 0)
+			{
+				ResourceManager::Unregister(resource);
+			}
+			return count;
+		}
 	}
 }

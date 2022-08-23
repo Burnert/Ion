@@ -11,7 +11,7 @@ namespace Ion::Editor
 	struct EDITOR_API EditorIcon
 	{
 		FilePath Path;
-		TResourcePtr<TextureResource> Resource;
+		TResourceRef<TextureResource> Resource;
 		std::shared_ptr<RHITexture> Texture;
 		String VirtualPath;
 
@@ -50,10 +50,10 @@ namespace Ion::Editor
 		static const inline String VPSun       = "[Engine]/Editor/Icons/Sun";
 		static const inline String VPNoMesh    = "[Engine]/Editor/Icons/NoMesh";
 
-		static inline TResourcePtr<TextureResource> ResourceBillboardCircle;
-		static inline TResourcePtr<TextureResource> ResourceBillboardLightbulb;
-		static inline TResourcePtr<TextureResource> ResourceBillboardSun;
-		static inline TResourcePtr<TextureResource> ResourceBillboardNoMesh;
+		static inline TResourceRef<TextureResource> ResourceBillboardCircle;
+		static inline TResourceRef<TextureResource> ResourceBillboardLightbulb;
+		static inline TResourceRef<TextureResource> ResourceBillboardSun;
+		static inline TResourceRef<TextureResource> ResourceBillboardNoMesh;
 
 		static inline std::shared_ptr<RHITexture> BillboardCircle;
 		static inline std::shared_ptr<RHITexture> BillboardLightbulb;

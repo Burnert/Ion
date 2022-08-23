@@ -294,8 +294,8 @@ namespace Ion::Editor
 			ImGui::Text("Mesh Resources");
 			ImGui::Indent();
 			{
-				TArray<TResourcePtr<MeshResource>> meshes = ResourceManager::GetResourcesOfType<MeshResource>();
-				for (TResourcePtr<MeshResource>& mesh : meshes)
+				TArray<TResourceRef<MeshResource>> meshes = ResourceManager::GetResourcesOfType<MeshResource>();
+				for (TResourceRef<MeshResource>& mesh : meshes)
 				{
 					String assetPath = mesh->GetAssetHandle()->GetImportPath().ToString();
 					ImGui::Selectable(assetPath.c_str());
@@ -306,8 +306,8 @@ namespace Ion::Editor
 			ImGui::Text("Texture Resources");
 			ImGui::Indent();
 			{
-				TArray<TResourcePtr<TextureResource>> textures = ResourceManager::GetResourcesOfType<TextureResource>();
-				for (TResourcePtr<TextureResource>& texture : textures)
+				TArray<TResourceRef<TextureResource>> textures = ResourceManager::GetResourcesOfType<TextureResource>();
+				for (TResourceRef<TextureResource>& texture : textures)
 				{
 					String assetPath = texture->GetAssetHandle()->GetImportPath().ToString();
 					ImGui::Selectable(assetPath.c_str());
@@ -988,7 +988,7 @@ namespace Ion::Editor
 
 					DNDAssetData& data = *(DNDAssetData*)payload->Data;
 
-					TResourcePtr<MeshResource> meshResource = MeshResource::Query(data.AssetHandle);
+					TResourceRef<MeshResource> meshResource = MeshResource::Query(data.AssetHandle);
 
 					std::shared_ptr<Mesh> mesh = Mesh::CreateFromResource(meshResource);
 
@@ -1019,7 +1019,7 @@ namespace Ion::Editor
 					bool bSelected = meshAsset == currentMeshAsset;
 					if (ImGui::Selectable(meshAsset->GetInfo().Name.c_str(), bSelected))
 					{
-						TResourcePtr<MeshResource> meshResource = MeshResource::Query(meshAsset);
+						TResourceRef<MeshResource> meshResource = MeshResource::Query(meshAsset);
 
 						std::shared_ptr<Mesh> mesh = Mesh::CreateFromResource(meshResource);
 

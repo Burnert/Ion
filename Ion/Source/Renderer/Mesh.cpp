@@ -12,7 +12,7 @@ namespace Ion
 		return MakeShareable(new Mesh);
 	}
 
-	std::shared_ptr<Mesh> Mesh::CreateFromResource(const TResourcePtr<MeshResource>& resource)
+	std::shared_ptr<Mesh> Mesh::CreateFromResource(const TResourceRef<MeshResource>& resource)
 	{
 		std::shared_ptr<Mesh> mesh = Mesh::Create();
 
@@ -21,7 +21,7 @@ namespace Ion
 			mesh->SetVertexBuffer(renderData.VertexBuffer);
 			mesh->SetIndexBuffer(renderData.IndexBuffer);
 		});
-		// @TODO: Is this fine?
+		// Reference the resource, so it doesn't get deleted until the mesh is alive.
 		mesh->m_MeshResource = resource;
 
 		const MeshResourceDefaults& defaults = resource->GetDefaults();

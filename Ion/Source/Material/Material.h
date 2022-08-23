@@ -323,7 +323,7 @@ namespace Ion
 		MaterialParameterTexture2D* m_Parameter;
 		Asset m_Value;
 
-		TResourcePtr<TextureResource> m_TextureResource;
+		TResourceRef<TextureResource> m_TextureResource;
 		std::shared_ptr<RHITexture> m_Texture;
 	};
 

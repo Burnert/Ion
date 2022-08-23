@@ -9,7 +9,7 @@
 
 namespace Ion
 {
-	TResourcePtr<TextureResource> TextureResource::Query(const Asset& asset)
+	TResourceRef<TextureResource> TextureResource::Query(const Asset& asset)
 	{
 		return Resource::Query<TextureResource>(asset);
 	}

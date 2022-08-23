@@ -9,7 +9,7 @@
 
 namespace Ion
 {
-	TResourcePtr<MeshResource> MeshResource::Query(const Asset& asset)
+	TResourceRef<MeshResource> MeshResource::Query(const Asset& asset)
 	{
 		return Resource::Query<MeshResource>(asset);
 	}

@@ -17,7 +17,7 @@
 
 namespace Ion::Editor
 {
-	static void LoadTexture(TResourcePtr<TextureResource>& outResource, std::shared_ptr<RHITexture>& texture, const String& vp)
+	static void LoadTexture(TResourceRef<TextureResource>& outResource, std::shared_ptr<RHITexture>& texture, const String& vp)
 	{
 		Asset asset = Asset::Resolve(vp).UnwrapOr(Asset::None);
 		
