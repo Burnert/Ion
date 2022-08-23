@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Core/Layer/Layer.h"
+#include "Application/Layer/Layer.h"
+#include "Application/Event/EventDispatcher.h"
 
 namespace Ion
 {

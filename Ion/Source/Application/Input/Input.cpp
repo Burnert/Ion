@@ -2,6 +2,7 @@
 
 #include "Input.h"
 #include "Core/CoreUtility.h"
+#include "Application/Event/InputEvent.h"
 
 namespace Ion
 {

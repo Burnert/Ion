@@ -2,7 +2,7 @@
 
 #include "Core/Platform/Windows/WindowsHeaders.h"
 #include "Core/CoreApi.h"
-#include "Core/Input/Input.h"
+#include "Application/Input/Input.h"
 
 namespace Ion
 {

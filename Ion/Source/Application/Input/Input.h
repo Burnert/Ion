@@ -2,7 +2,7 @@
 
 #include "Core/CoreTypes.h"
 #include "Core/CoreApi.h"
-#include "Core/Event/EventDispatcher.h"
+#include "Application/Event/EventDispatcher.h"
 
 namespace Ion
 {

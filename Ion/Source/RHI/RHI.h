@@ -33,6 +33,7 @@ namespace Ion
 	}
 
 	class GenericWindow;
+	enum class EDisplayMode : uint8;
 
 	class ION_API RHI
 	{

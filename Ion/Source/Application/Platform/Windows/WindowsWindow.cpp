@@ -4,10 +4,10 @@
 #include "WindowsWindow.h"
 #include "WindowsApplication.h"
 
-#include "Core/Event/Event.h"
-#include "Core/Event/WindowEvent.h"
-#include "Core/Event/InputEvent.h"
-#include "Core/Input/Input.h"
+#include "Application/Event/Event.h"
+#include "Application/Event/WindowEvent.h"
+#include "Application/Event/InputEvent.h"
+#include "Application/Input/Input.h"
 
 #include "RHI/RHI.h"
 #include "RHI/OpenGL/Windows/OpenGLWindows.h"

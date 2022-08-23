@@ -4,12 +4,14 @@
 #include "GameLayer.h"
 #include "ImGuiLayer.h"
 
-#include "Core/Event/InputEvent.h"
-#include "Core/Event/EventQueue.h"
-#include "Core/Event/EventDispatcher.h"
-#include "Core/Input/Input.h"
-#include "Core/Asset/AssetRegistry.h"
 #include "Core/Task/EngineTaskQueue.h"
+
+#include "Asset/AssetRegistry.h"
+
+#include "Application/Event/InputEvent.h"
+#include "Application/Event/EventQueue.h"
+#include "Application/Event/EventDispatcher.h"
+#include "Application/Input/Input.h"
 
 #include "Engine/Engine.h"
 
