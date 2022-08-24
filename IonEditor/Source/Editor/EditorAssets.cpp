@@ -87,7 +87,7 @@ namespace Ion::Editor
 		gridLayout->AddAttribute(EVertexAttributeSemantic::TexCoord, EVertexAttributeType::Float, 2, false);
 		gridLayout->AddAttribute(EVertexAttributeSemantic::Normal, EVertexAttributeType::Float, 3, true);
 
-		std::shared_ptr<RHIVertexBuffer> gridVB = RHIVertexBuffer::CreateShared(gridVertices, sizeof(gridVertices) / sizeof(float));
+		TRef<RHIVertexBuffer> gridVB = RHIVertexBuffer::Create(gridVertices, sizeof(gridVertices) / sizeof(float));
 		gridVB->SetLayout(gridLayout);
 		gridVB->SetLayoutShader(EditorMeshes::ShaderGrid);
 

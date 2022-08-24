@@ -33,7 +33,7 @@ namespace Ion
 	struct ScreenTextureRenderData
 	{
 		std::shared_ptr<RHIShader> Shader;
-		std::shared_ptr<RHIVertexBuffer> VertexBuffer;
+		TRef<RHIVertexBuffer> VertexBuffer;
 		std::shared_ptr<RHIIndexBuffer> IndexBuffer;
 	};
 

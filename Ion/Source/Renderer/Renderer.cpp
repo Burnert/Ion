@@ -258,7 +258,7 @@ namespace Ion
 		quadLayout->AddAttribute(EVertexAttributeSemantic::Position, EVertexAttributeType::Float, 3, false);
 		quadLayout->AddAttribute(EVertexAttributeSemantic::TexCoord, EVertexAttributeType::Float, 2, false);
 
-		m_ScreenTextureRenderData.VertexBuffer = RHIVertexBuffer::CreateShared(quadVertices, sizeof(quadVertices) / sizeof(float));
+		m_ScreenTextureRenderData.VertexBuffer = RHIVertexBuffer::Create(quadVertices, sizeof(quadVertices) / sizeof(float));
 		m_ScreenTextureRenderData.VertexBuffer->SetLayout(quadLayout);
 		m_ScreenTextureRenderData.VertexBuffer->SetLayoutShader(m_ScreenTextureRenderData.Shader);
 
@@ -287,7 +287,7 @@ namespace Ion
 		quadLayout->AddAttribute(EVertexAttributeSemantic::TexCoord, EVertexAttributeType::Float, 2, false);
 		quadLayout->AddAttribute(EVertexAttributeSemantic::Normal,   EVertexAttributeType::Float, 3, true);
 
-		std::shared_ptr<RHIVertexBuffer> vb = RHIVertexBuffer::CreateShared(quadVertices, sizeof(quadVertices) / sizeof(float));
+		TRef<RHIVertexBuffer> vb = RHIVertexBuffer::Create(quadVertices, sizeof(quadVertices) / sizeof(float));
 		vb->SetLayout(quadLayout);
 		vb->SetLayoutShader(m_BasicUnlitMaskedShader);
 

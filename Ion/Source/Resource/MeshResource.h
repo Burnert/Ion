@@ -26,7 +26,7 @@ namespace Ion
 
 	struct MeshResourceRenderData
 	{
-		std::shared_ptr<RHIVertexBuffer> VertexBuffer;
+		TRef<RHIVertexBuffer> VertexBuffer;
 		std::shared_ptr<RHIIndexBuffer> IndexBuffer;
 
 		bool IsAvailable() const
@@ -127,7 +127,7 @@ namespace Ion
 				ionassert(m_Asset->GetType() == EAssetType::Mesh);
 
 				// RHIVertexBuffer:
-				m_RenderData.VertexBuffer = RHIVertexBuffer::CreateShared(meshData->Vertices.Ptr, meshData->Vertices.Count);
+				m_RenderData.VertexBuffer = RHIVertexBuffer::Create(meshData->Vertices.Ptr, meshData->Vertices.Count);
 
 				// RHIIndexBuffer:
 				m_RenderData.IndexBuffer = RHIIndexBuffer::CreateShared(meshData->Indices.Ptr, (uint32)meshData->Indices.Count);

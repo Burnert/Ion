@@ -47,10 +47,10 @@ namespace Ion
 
 		virtual ~Mesh() { }
 
-		void SetVertexBuffer(const std::shared_ptr<RHIVertexBuffer>& vertexBuffer);
+		void SetVertexBuffer(const TRef<RHIVertexBuffer>& vertexBuffer);
 		void SetIndexBuffer(const std::shared_ptr<RHIIndexBuffer>& indexBuffer);
 
-		const std::shared_ptr<RHIVertexBuffer>& GetVertexBuffer() const;
+		const TRef<RHIVertexBuffer>& GetVertexBuffer() const;
 		const std::shared_ptr<RHIIndexBuffer>& GetIndexBuffer() const;
 
 		void AssignMaterialToSlot(uint16 index, const std::shared_ptr<MaterialInstance>& material);
@@ -72,7 +72,7 @@ namespace Ion
 	private:
 		TArray<MaterialSlot> m_MaterialSlots;
 
-		std::shared_ptr<RHIVertexBuffer> m_VertexBuffer;
+		TRef<RHIVertexBuffer> m_VertexBuffer;
 		std::shared_ptr<RHIIndexBuffer> m_IndexBuffer;
 		std::shared_ptr<RHIUniformBuffer> m_UniformBuffer;
 

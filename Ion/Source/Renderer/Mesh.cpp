@@ -76,7 +76,7 @@ namespace Ion
 		return true;
 	}
 
-	void Mesh::SetVertexBuffer(const std::shared_ptr<RHIVertexBuffer>& vertexBuffer)
+	void Mesh::SetVertexBuffer(const TRef<RHIVertexBuffer>& vertexBuffer)
 	{
 		m_VertexBuffer = vertexBuffer;
 		m_VertexCount = vertexBuffer->GetVertexCount();
@@ -98,7 +98,7 @@ namespace Ion
 		m_TriangleCount = indexBuffer->GetTriangleCount();
 	}
 
-	const std::shared_ptr<RHIVertexBuffer>& Mesh::GetVertexBuffer() const
+	const TRef<RHIVertexBuffer>& Mesh::GetVertexBuffer() const
 	{
 		return m_VertexBuffer;
 	}
@@ -160,7 +160,7 @@ namespace Ion
 
 	const RHIVertexBuffer* Mesh::GetVertexBufferRaw() const
 	{
-		return m_VertexBuffer.get();
+		return m_VertexBuffer.Raw();
 	}
 
 	const RHIIndexBuffer* Mesh::GetIndexBufferRaw() const

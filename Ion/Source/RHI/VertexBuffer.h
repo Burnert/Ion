@@ -8,11 +8,10 @@ namespace Ion
 {
 	class RHIShader;
 
-	class ION_API RHIVertexBuffer
+	class ION_API RHIVertexBuffer : public RefCountable
 	{
 	public:
-		static RHIVertexBuffer* Create(float* vertexAttributes, uint64 count);
-		static std::shared_ptr<RHIVertexBuffer> CreateShared(float* vertexAttributes, uint64 count);
+		static TRef<RHIVertexBuffer> Create(float* vertexAttributes, uint64 count);
 
 		virtual ~RHIVertexBuffer() { }
 

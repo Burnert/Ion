@@ -12,24 +12,19 @@
 namespace Ion
 {
 	// Vertex Buffer
-	RHIVertexBuffer* RHIVertexBuffer::Create(float* vertexAttributes, uint64 count)
+	TRef<RHIVertexBuffer> RHIVertexBuffer::Create(float* vertexAttributes, uint64 count)
 	{
 		switch (RHI::GetCurrent())
 		{
 		case ERHI::OpenGL:
-			return new OpenGLVertexBuffer(vertexAttributes, count);
+			return MakeRef<OpenGLVertexBuffer>(vertexAttributes, count);
 		case ERHI::DX10:
-			return new DX10VertexBuffer(vertexAttributes, count);
+			return MakeRef<DX10VertexBuffer>(vertexAttributes, count);
 		case ERHI::DX11:
-			return new DX11VertexBuffer(vertexAttributes, count);
+			return MakeRef<DX11VertexBuffer>(vertexAttributes, count);
 		default:
 			return nullptr;
 		}
-	}
-
-	std::shared_ptr<RHIVertexBuffer> RHIVertexBuffer::CreateShared(float* vertexAttributes, uint64 count)
-	{
-		return std::shared_ptr<RHIVertexBuffer>(Create(vertexAttributes, count));
 	}
 
 	// Index Buffer
