@@ -1,6 +1,5 @@
 #include "IonPCH.h"
 
-#include "Core/File/Image.h"
 #include "Texture.h"
 
 #include "RHI/RHI.h"
@@ -27,7 +26,7 @@ namespace Ion
 
 	std::shared_ptr<RHITexture> RHITexture::CreateShared(const TextureDescription& desc)
 	{
-		return MakeShareable(Create(desc));
+		return std::shared_ptr<RHITexture>(Create(desc));
 	}
 
 	RHITexture::RHITexture(const TextureDescription& desc)

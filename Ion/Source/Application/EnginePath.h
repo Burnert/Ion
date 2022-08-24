@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Core/File/File.h"
-
 namespace Ion
 {
 	class ION_API EnginePath

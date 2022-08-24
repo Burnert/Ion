@@ -4,8 +4,7 @@
 #include "AssetRegistry.h"
 #include "AssetParser.h"
 #include "AssetDefinition.h"
-#include "Core/File/XML.h"
-#include "Core/File/Collada.h"
+#include "Collada.h"
 #include "Application/EnginePath.h"
 
 namespace Ion

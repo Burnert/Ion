@@ -1,6 +1,8 @@
 #pragma once
 
-#include "Core/Platform/Windows/WindowsCore.h"
+#include "Core/Platform/Windows.h"
+
+#include "Application/Input/Input.h"
 #include "Application/Window/GenericWindow.h"
 
 namespace Ion

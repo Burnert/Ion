@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Core/Core.h"
-
 namespace Ion
 {
 	struct SceneObjectData

@@ -2,7 +2,6 @@
 
 #include "GenericWindow.h"
 #include "Application/Application.h"
-#include "Core/CoreTypes.h"
 
 namespace Ion
 {

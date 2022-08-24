@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Core/Core.h"
-#include "Core/Task/TaskFwd.h"
+#include "Core.h"
 #include "Application/Input/Input.h"
 #include "Application/Event/InputEvent.h"
 #include "Application/Event/WindowEvent.h"

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Core/Core.h"
 #include "RendererCore.h"
 #include "Camera.h"
 #include "Light.h"

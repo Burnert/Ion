@@ -8,7 +8,7 @@ namespace Ion
 {
 	std::shared_ptr<Camera> Camera::Create()
 	{
-		return MakeShareable(new Camera);
+		return std::shared_ptr<Camera>(new Camera);
 	}
 
 	void Camera::SetTransform(const Matrix4& transformMatrix)

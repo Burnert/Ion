@@ -4,8 +4,6 @@
 #include "GameLayer.h"
 #include "ImGuiLayer.h"
 
-#include "Core/Task/EngineTaskQueue.h"
-
 #include "Asset/AssetRegistry.h"
 
 #include "Application/Event/InputEvent.h"

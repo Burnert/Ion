@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Event.h"
-#include "Core/Diagnostics/Tracing.h"
 
 namespace Ion
 {

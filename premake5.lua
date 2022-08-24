@@ -11,15 +11,74 @@ workspace "Ion"
 outputdir = "%{cfg.system}-%{cfg.architecture}-%{cfg.buildcfg}"
 
 ThirdParty = {
+	SpdLog   = "IonCore/ThirdParty/SpdLog",
 	FreeType = "Ion/ThirdParty/FreeType",
 	Glad     = "Ion/ThirdParty/Glad",
 	ImGui    = "Ion/ThirdParty/ImGui",
-	SpdLog   = "Ion/ThirdParty/SpdLog"
 }
 
 for name, dir in pairs(ThirdParty) do
 	include(dir)
 end
+
+-- IonCore -----------------------------------------------------------
+
+project "IonCore"
+	location "IonCore"
+	kind "StaticLib"
+	language "C++"
+	cppdialect "C++17"
+	characterset "Unicode"
+
+	pchheader "Core/CorePCH.h"
+	pchsource "IonCore/Source/Core/CorePCH.cpp"
+
+	targetdir ("Build/" .. outputdir .. "/%{prj.name}")
+	objdir ("Intermediate/" .. outputdir .. "/%{prj.name}")
+
+	files {
+		"%{prj.name}/Source/**.h",
+		"%{prj.name}/Source/**.cpp",
+		"%{prj.name}/Source/**.inl",
+	}
+
+	includedirs {
+		"%{prj.name}/Source",
+		"%{prj.name}/ThirdParty/glm",
+		"%{prj.name}/ThirdParty/SpdLog/SpdLog/include",
+		"%{prj.name}/ThirdParty/stb",
+		"%{prj.name}/ThirdParty/rapidxml",
+	}
+
+	links {
+		"SpdLog"
+	}
+	
+	flags {
+		"MultiProcessorCompile"
+	}
+
+	filter "system:windows"
+		staticruntime "On"
+		systemversion "latest"
+
+		defines {
+			"ION_STATIC_LIB",
+			"ION_PLATFORM_WINDOWS",
+			"ION_CORE",
+		}
+
+	filter "configurations:Debug"
+		defines "ION_DEBUG"
+		symbols "On"
+
+	filter "configurations:Release"
+		defines "ION_RELEASE"
+		optimize "On"
+
+	filter "configurations:Distribution"
+		defines "ION_DIST"
+		optimize "On"
 
 -- Ion -----------------------------------------------------------
 
@@ -43,21 +102,22 @@ project "Ion"
 	}
 
 	includedirs {
-        "%{prj.name}/ThirdParty/FreeType/freetype/include",
+		"IonCore/Source",
+		"IonCore/ThirdParty/glm",
+		"IonCore/ThirdParty/SpdLog/SpdLog/include",
+		"IonCore/ThirdParty/stb",
+		"IonCore/ThirdParty/rapidxml",
+		"%{prj.name}/Source",
+		"%{prj.name}/ThirdParty/FreeType/freetype/include",
 		"%{prj.name}/ThirdParty/Glad/include",
 		"%{prj.name}/ThirdParty/ImGui",
-		"%{prj.name}/ThirdParty/glm",
-		"%{prj.name}/ThirdParty/SpdLog/SpdLog/include",
-		"%{prj.name}/ThirdParty/stb",
-		"%{prj.name}/ThirdParty/rapidxml",
-		"%{prj.name}/Source"
 	}
 
 	links {
+		"IonCore",
 		"FreeType",
 		"Glad",
 		"ImGui",
-		"SpdLog",
 		"opengl32.lib"
 	}
 	
@@ -109,14 +169,15 @@ project "IonEditor"
 	}
 
 	includedirs {
+		"IonCore/Source",
+		"IonCore/ThirdParty/glm",
+		"IonCore/ThirdParty/SpdLog/SpdLog/include",
+		"IonCore/ThirdParty/stb",
+		"IonCore/ThirdParty/rapidxml",
 		"Ion/Source",
 		"Ion/ThirdParty/Glad/include",
 		"Ion/ThirdParty/ImGui",
-		"Ion/ThirdParty/glm",
-		"Ion/ThirdParty/SpdLog/SpdLog/include",
-		"Ion/ThirdParty/stb",
-		"Ion/ThirdParty/rapidxml",
-		"%{prj.name}/Source"
+		"%{prj.name}/Source",
 	}
 
 	links {

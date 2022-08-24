@@ -8,8 +8,6 @@
 
 #include "Renderer/Scene.h"
 
-#include "Core/Platform/Windows/WindowsUtility.h"
-
 #include "Application/EnginePath.h"
 
 #include "Engine/Entity/Entity.h"

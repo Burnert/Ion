@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Core/Core.h"
-#include "CoreApi.h"
+#include "Core.h"
+#include "EditorApi.h"
 #include "Editor/EditorFwd.h"
 
 namespace Ion::Editor

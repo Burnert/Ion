@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Core/Core.h"
-
 #define IMGUI_API ION_API
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 #define IMGUI_ENABLE_FREETYPE

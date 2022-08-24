@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Core/CoreTypes.h"
 #include "RendererFwd.h"
 
 #define UNIFORMBUFFER alignas(16)

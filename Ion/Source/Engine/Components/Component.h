@@ -320,7 +320,9 @@ namespace Ion
 	template<typename T>
 	static constexpr bool TIsComponentTypeFinal = THasGetTypeID<T>;
 
+	class Component;
 	class ComponentRegistry;
+	class IComponentContainer;
 
 	// @TODO: Change this to something more efficient
 	/* Container for Components of type T */

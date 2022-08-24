@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Asset.h"
-#include "Core/File/XMLParser.h"
 
 // @TODO: Out of module include
 #include "Material/MaterialCommon.h"

@@ -1,10 +1,5 @@
 #pragma once
 
-#include "Core/CoreMacros.h"
-#include "Core/CoreTypes.h"
-#include "Core/CoreApi.h"
-#include "Core/CoreUtility.h"
-
 namespace Ion
 {
 	enum class EEventType

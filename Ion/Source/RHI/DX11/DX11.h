@@ -1,8 +1,8 @@
 #pragma once
 
-#include "RHI/RHI.h"
+#include "Core/Platform/Windows.h"
 
-#include "Core/Platform/Windows/WindowsCore.h"
+#include "RHI/RHI.h"
 
 #include "RHI/DirectX/DXCommon.h"
 #include <d3d11_1.h>

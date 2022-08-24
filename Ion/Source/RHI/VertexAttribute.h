@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Core/CoreTypes.h"
-
 namespace Ion
 {
 	enum class EVertexAttributeType : uint8

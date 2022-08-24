@@ -1,10 +1,11 @@
 #include "IonPCH.h"
 
+#include "Core/Platform/Windows.h"
+
 #include "DX10.h"
 #include "RHI/DX10/DX10Texture.h"
 
 #include "Application/Platform/Windows/WindowsWindow.h"
-#include "Core/Platform/Windows/WindowsUtility.h"
 
 #include "Renderer/Renderer.h"
 
@@ -407,7 +408,7 @@ namespace Ion
 
 		// @TODO: The Result should get constructed if the type can be implicitly converted to it's Ok variant.
 		// (no static_pointer_cast should be needed here)
-		return MakeShareable(new DX10Texture(desc, backBuffer));
+		return std::shared_ptr<RHITexture>(new DX10Texture(desc, backBuffer));
 	}
 
 	Result<std::shared_ptr<RHITexture>, RHIError> DX10::CreateDepthStencil(uint32 width, uint32 height)

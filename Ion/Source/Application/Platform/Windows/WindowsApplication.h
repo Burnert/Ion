@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Core/CoreApi.h"
-#include "Core/Platform/Windows/WindowsCore.h"
+#include "Core/Platform/Windows.h"
+
 #include "Application/Application.h"
 #include "Application/Input/Input.h"
 

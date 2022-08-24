@@ -9,7 +9,7 @@ namespace Ion
 {
 	std::shared_ptr<Mesh> Mesh::Create()
 	{
-		return MakeShareable(new Mesh);
+		return std::shared_ptr<Mesh>(new Mesh);
 	}
 
 	std::shared_ptr<Mesh> Mesh::CreateFromResource(const TResourceRef<MeshResource>& resource)
@@ -45,7 +45,7 @@ namespace Ion
 		m_IndexBuffer(nullptr),
 		m_VertexCount(0),
 		m_TriangleCount(0),
-		m_UniformBuffer(MakeShareable(RHIUniformBuffer::Create<MeshUniforms>())),
+		m_UniformBuffer(std::shared_ptr<RHIUniformBuffer>(RHIUniformBuffer::Create<MeshUniforms>())),
 		m_MaterialSlots(1, MaterialSlot())
 	{
 	}

@@ -1,8 +1,5 @@
 #pragma once
 
-#include "Core/CoreTypes.h"
-#include "Core/CoreApi.h"
-
 #include "Application/Event/Event.h"
 
 namespace Ion

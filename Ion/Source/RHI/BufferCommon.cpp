@@ -29,7 +29,7 @@ namespace Ion
 
 	std::shared_ptr<RHIVertexBuffer> RHIVertexBuffer::CreateShared(float* vertexAttributes, uint64 count)
 	{
-		return MakeShareable(Create(vertexAttributes, count));
+		return std::shared_ptr<RHIVertexBuffer>(Create(vertexAttributes, count));
 	}
 
 	// Index Buffer
@@ -50,7 +50,7 @@ namespace Ion
 
 	std::shared_ptr<RHIIndexBuffer> RHIIndexBuffer::CreateShared(uint32* indices, uint32 count)
 	{
-		return MakeShareable(Create(indices, count));
+		return std::shared_ptr<RHIIndexBuffer>(Create(indices, count));
 	}
 
 	// Uniform Buffer

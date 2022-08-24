@@ -285,12 +285,12 @@ namespace Ion
 
 	std::shared_ptr<Material> Material::Create()
 	{
-		return MakeShareable(new Material);
+		return std::shared_ptr<Material>(new Material);
 	}
 
 	std::shared_ptr<Material> Material::CreateFromAsset(Asset materialAsset)
 	{
-		return MakeShareable(new Material(materialAsset));
+		return std::shared_ptr<Material>(new Material(materialAsset));
 	}
 
 	void Material::CompileShaders()
@@ -853,12 +853,12 @@ namespace Ion
 
 	std::shared_ptr<MaterialInstance> MaterialInstance::Create(const std::shared_ptr<Material>& parentMaterial)
 	{
-		return MakeShareable(new MaterialInstance(parentMaterial));
+		return std::shared_ptr<MaterialInstance>(new MaterialInstance(parentMaterial));
 	}
 
 	std::shared_ptr<MaterialInstance> MaterialInstance::CreateFromAsset(Asset materialInstanceAsset)
 	{
-		return MakeShareable(new MaterialInstance(materialInstanceAsset));
+		return std::shared_ptr<MaterialInstance>(new MaterialInstance(materialInstanceAsset));
 	}
 
 	void MaterialInstance::BindTextures() const

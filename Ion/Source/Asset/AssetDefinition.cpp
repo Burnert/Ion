@@ -5,9 +5,6 @@
 #include "AssetParser.h"
 #include "Asset.h"
 
-#include "Core/Task/EngineTaskQueue.h"
-#include "Core/File/Collada.h"
-
 #include "Application/EnginePath.h"
 
 namespace Ion

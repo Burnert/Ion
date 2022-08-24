@@ -13,7 +13,7 @@ namespace Ion
 		m_RenderCamera({ }),
 		m_RenderDirLight({ })
 	{
-		m_SceneUniformBuffer = MakeShareable(RHIUniformBuffer::Create(SceneUniforms()));
+		m_SceneUniformBuffer = std::shared_ptr<RHIUniformBuffer>(RHIUniformBuffer::Create(SceneUniforms()));
 	}
 
 	void Scene::SetActiveCamera(const std::shared_ptr<Camera>& camera)

@@ -3,7 +3,6 @@
 #include "TextureResource.h"
 #include "ResourceManager.h"
 
-#include "Core/File/XML.h"
 #include "Asset/AssetRegistry.h"
 #include "Asset/AssetParser.h"
 

@@ -1,10 +1,11 @@
 #include "IonPCH.h"
 
+#include "Core/Platform/Windows.h"
+
 #include "DX11.h"
 #include "RHI/DX11/DX11Texture.h"
 
 #include "Application/Platform/Windows/WindowsWindow.h"
-#include "Core/Platform/Windows/WindowsUtility.h"
 
 #include "Renderer/Renderer.h"
 
@@ -407,7 +408,7 @@ namespace Ion
 		desc.Dimensions = { t2dDesc.Width, t2dDesc.Height };
 		desc.DebugName = "Window_BackBuffer_RT";
 
-		return MakeShareable(new DX11Texture(desc, backBuffer));
+		return std::shared_ptr<RHITexture>(new DX11Texture(desc, backBuffer));
 	}
 
 	Result<std::shared_ptr<RHITexture>, RHIError> DX11::CreateDepthStencil(uint32 width, uint32 height)

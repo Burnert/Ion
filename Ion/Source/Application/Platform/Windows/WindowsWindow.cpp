@@ -1,6 +1,7 @@
 #include "IonPCH.h"
 
-#include "Core/Platform/Windows/WindowsCore.h"
+#include "Core/Platform/Windows.h"
+
 #include "WindowsWindow.h"
 #include "WindowsApplication.h"
 
@@ -8,6 +9,7 @@
 #include "Application/Event/WindowEvent.h"
 #include "Application/Event/InputEvent.h"
 #include "Application/Input/Input.h"
+#include "Application/Platform/Windows/WindowsInput.h"
 
 #include "RHI/RHI.h"
 #include "RHI/OpenGL/Windows/OpenGLWindows.h"

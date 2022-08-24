@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Core/StringUtils.h"
-
 #define IASSET_NODE_Material                           "Material"
 #define IASSET_NODE_Material_Code                      "Code"
 #define IASSET_NODE_Material_Parameter                 "Parameter"

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Core/CoreTypes.h"
-
 #include "Layer.h"
 
 namespace Ion
