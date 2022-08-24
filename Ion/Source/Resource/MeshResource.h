@@ -27,7 +27,7 @@ namespace Ion
 	struct MeshResourceRenderData
 	{
 		TRef<RHIVertexBuffer> VertexBuffer;
-		std::shared_ptr<RHIIndexBuffer> IndexBuffer;
+		TRef<RHIIndexBuffer> IndexBuffer;
 
 		bool IsAvailable() const
 		{
@@ -130,7 +130,7 @@ namespace Ion
 				m_RenderData.VertexBuffer = RHIVertexBuffer::Create(meshData->Vertices.Ptr, meshData->Vertices.Count);
 
 				// RHIIndexBuffer:
-				m_RenderData.IndexBuffer = RHIIndexBuffer::CreateShared(meshData->Indices.Ptr, (uint32)meshData->Indices.Count);
+				m_RenderData.IndexBuffer = RHIIndexBuffer::Create(meshData->Indices.Ptr, (uint32)meshData->Indices.Count);
 
 				m_RenderData.VertexBuffer->SetLayout(meshData->Layout);
 

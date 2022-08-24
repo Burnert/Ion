@@ -262,7 +262,7 @@ namespace Ion
 		m_ScreenTextureRenderData.VertexBuffer->SetLayout(quadLayout);
 		m_ScreenTextureRenderData.VertexBuffer->SetLayoutShader(m_ScreenTextureRenderData.Shader);
 
-		m_ScreenTextureRenderData.IndexBuffer = RHIIndexBuffer::CreateShared(quadIndices, sizeof(quadIndices) / sizeof(uint32));
+		m_ScreenTextureRenderData.IndexBuffer = RHIIndexBuffer::Create(quadIndices, sizeof(quadIndices) / sizeof(uint32));
 	}
 
 	void Renderer::InitUtilityPrimitives()
@@ -291,7 +291,7 @@ namespace Ion
 		vb->SetLayout(quadLayout);
 		vb->SetLayoutShader(m_BasicUnlitMaskedShader);
 
-		std::shared_ptr<RHIIndexBuffer> ib = RHIIndexBuffer::CreateShared(quadIndices, sizeof(quadIndices) / sizeof(uint32));
+		TRef<RHIIndexBuffer> ib = RHIIndexBuffer::Create(quadIndices, sizeof(quadIndices) / sizeof(uint32));
 
 		m_BillboardMesh = Mesh::Create();
 		m_BillboardMesh->SetVertexBuffer(vb);

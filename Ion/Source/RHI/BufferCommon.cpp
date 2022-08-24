@@ -28,24 +28,19 @@ namespace Ion
 	}
 
 	// Index Buffer
-	RHIIndexBuffer* RHIIndexBuffer::Create(uint32* indices, uint32 count)
+	TRef<RHIIndexBuffer> RHIIndexBuffer::Create(uint32* indices, uint32 count)
 	{
 		switch (RHI::GetCurrent())
 		{
 		case ERHI::OpenGL:
-			return new OpenGLIndexBuffer(indices, count);
+			return MakeRef<OpenGLIndexBuffer>(indices, count);
 		case ERHI::DX10:
-			return new DX10IndexBuffer(indices, count);
+			return MakeRef<DX10IndexBuffer>(indices, count);
 		case ERHI::DX11:
-			return new DX11IndexBuffer(indices, count);
+			return MakeRef<DX11IndexBuffer>(indices, count);
 		default:
 			return nullptr;
 		}
-	}
-
-	std::shared_ptr<RHIIndexBuffer> RHIIndexBuffer::CreateShared(uint32* indices, uint32 count)
-	{
-		return std::shared_ptr<RHIIndexBuffer>(Create(indices, count));
 	}
 
 	// Uniform Buffer

@@ -34,7 +34,7 @@ namespace Ion
 	{
 		std::shared_ptr<RHIShader> Shader;
 		TRef<RHIVertexBuffer> VertexBuffer;
-		std::shared_ptr<RHIIndexBuffer> IndexBuffer;
+		TRef<RHIIndexBuffer> IndexBuffer;
 	};
 
 	struct RendererClearOptions

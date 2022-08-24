@@ -91,7 +91,7 @@ namespace Ion::Editor
 		gridVB->SetLayout(gridLayout);
 		gridVB->SetLayoutShader(EditorMeshes::ShaderGrid);
 
-		std::shared_ptr<RHIIndexBuffer> gridIB = RHIIndexBuffer::CreateShared(gridIndices, sizeof(gridIndices) / sizeof(uint32));
+		TRef<RHIIndexBuffer> gridIB = RHIIndexBuffer::Create(gridIndices, sizeof(gridIndices) / sizeof(uint32));
 
 		EditorMeshes::MeshGrid = Mesh::Create();
 		EditorMeshes::MeshGrid->SetVertexBuffer(gridVB);

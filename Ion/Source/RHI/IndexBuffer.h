@@ -4,11 +4,10 @@
 
 namespace Ion
 {
-	class ION_API RHIIndexBuffer
+	class ION_API RHIIndexBuffer : public RefCountable
 	{
 	public:
-		static RHIIndexBuffer* Create(uint32* indices, uint32 count);
-		static std::shared_ptr<RHIIndexBuffer> CreateShared(uint32* indices, uint32 count);
+		static TRef<RHIIndexBuffer> Create(uint32* indices, uint32 count);
 
 		virtual ~RHIIndexBuffer() { }
 
