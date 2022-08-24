@@ -52,6 +52,8 @@ namespace Ion
 		TResourceRef& operator=(const TResourceRef& other) noexcept;
 		TResourceRef& operator=(TResourceRef&& other) noexcept;
 
+		bool operator==(const TResourceRef& other) const noexcept;
+
 		void Swap(TResourceRef& other) noexcept;
 
 		NODISCARD T* operator->() const noexcept;
@@ -120,6 +122,12 @@ namespace Ion
 	{
 		TResourceRef(Move(other)).Swap(*this);
 		return *this;
+	}
+
+	template<typename T>
+	inline bool TResourceRef<T>::operator==(const TResourceRef& other) const noexcept
+	{
+		return m_ResourcePtr == other.m_ResourcePtr;
 	}
 
 	template<typename T>

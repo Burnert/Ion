@@ -225,14 +225,16 @@ namespace Ion
 		}
 
 		// The asset handle has changed
-		if (!m_TextureResource || m_Value != m_TextureResource->GetAssetHandle())
+		if (m_Value != (m_TextureResource ? m_TextureResource->GetAssetHandle() : Asset::None))
 		{
 			m_TextureResource = TextureResource::Query(m_Value);
 
 			// @TODO: Make sure the instance is not deleted before this gets done
-			m_TextureResource->Take([this](const TextureResourceRenderData& data)
+			m_TextureResource->Take([this, currentResource = m_TextureResource](const TextureResourceRenderData& data)
 			{
-				m_Texture = data.Texture;
+				// Check to avoid overriding the texture when it's already been changed to a different one.
+				if (currentResource == m_TextureResource)
+					m_Texture = data.Texture;
 			});
 		}
 	}
