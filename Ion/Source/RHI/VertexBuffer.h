@@ -15,7 +15,7 @@ namespace Ion
 
 		virtual ~RHIVertexBuffer() { }
 
-		virtual void SetLayout(const std::shared_ptr<RHIVertexLayout>& layout) = 0;
+		virtual void SetLayout(const TRef<RHIVertexLayout>& layout) = 0;
 		virtual Result<void, RHIError> SetLayoutShader(const std::shared_ptr<RHIShader>& shader) = 0;
 
 		virtual uint32 GetVertexCount() const = 0;

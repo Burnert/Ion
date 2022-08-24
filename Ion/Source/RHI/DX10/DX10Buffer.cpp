@@ -30,7 +30,7 @@ namespace Ion
 		COMRelease(m_InputLayout);
 	}
 
-	void DX10VertexBuffer::SetLayout(const std::shared_ptr<RHIVertexLayout>& layout)
+	void DX10VertexBuffer::SetLayout(const TRef<RHIVertexLayout>& layout)
 	{
 		TRACE_FUNCTION();
 

@@ -14,7 +14,7 @@ namespace Ion
 		uint32* Indices;
 		uint64 VertexAttributeCount;
 		uint64 IndexCount;
-		std::shared_ptr<RHIVertexLayout> Layout;
+		TRef<RHIVertexLayout> Layout;
 	};
 
 	class ION_API ColladaDocument : public XMLDocument
@@ -38,7 +38,7 @@ namespace Ion
 
 			Result<TriangleInput*, IOError> AddTriangleInput(XMLNode* meshNode, XMLNode* inputNode);
 			uint32 GetFullStride() const;
-			std::shared_ptr<RHIVertexLayout> CreateLayout() const;
+			TRef<RHIVertexLayout> CreateLayout() const;
 
 			TArray<TriangleInput> m_TriangleInputs;
 			uint32 m_AttributeCount = 0;

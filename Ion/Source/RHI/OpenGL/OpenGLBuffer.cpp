@@ -27,7 +27,7 @@ namespace Ion
 		glDeleteBuffers(1, &m_ID);
 	}
 
-	void OpenGLVertexBuffer::SetLayout(const std::shared_ptr<RHIVertexLayout>& layout)
+	void OpenGLVertexBuffer::SetLayout(const TRef<RHIVertexLayout>& layout)
 	{
 		m_VertexLayout = layout;
 	}

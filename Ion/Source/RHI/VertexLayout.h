@@ -2,9 +2,8 @@
 
 namespace Ion
 {
-	class ION_API RHIVertexLayout
+	class ION_API RHIVertexLayout : public RefCountable
 	{
-		friend class RHIVertexBuffer;
 	public:
 		RHIVertexLayout(uint32 initialAttributeCount);
 
@@ -35,5 +34,7 @@ namespace Ion
 	private:
 		uint64 m_Offset;
 		TArray<VertexAttribute> m_Attributes;
+
+		friend class RHIVertexBuffer;
 	};
 }

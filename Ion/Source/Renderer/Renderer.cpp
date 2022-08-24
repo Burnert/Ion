@@ -254,7 +254,7 @@ namespace Ion
 			2, 0, 3,
 		};
 
-		std::shared_ptr<RHIVertexLayout> quadLayout = std::make_shared<RHIVertexLayout>(2);
+		TRef<RHIVertexLayout> quadLayout = MakeRef<RHIVertexLayout>(2);
 		quadLayout->AddAttribute(EVertexAttributeSemantic::Position, EVertexAttributeType::Float, 3, false);
 		quadLayout->AddAttribute(EVertexAttributeSemantic::TexCoord, EVertexAttributeType::Float, 2, false);
 
@@ -282,7 +282,7 @@ namespace Ion
 			2, 0, 3,
 		};
 
-		std::shared_ptr<RHIVertexLayout> quadLayout = std::make_shared<RHIVertexLayout>(2);
+		TRef<RHIVertexLayout> quadLayout = MakeRef<RHIVertexLayout>(2);
 		quadLayout->AddAttribute(EVertexAttributeSemantic::Position, EVertexAttributeType::Float, 3, false);
 		quadLayout->AddAttribute(EVertexAttributeSemantic::TexCoord, EVertexAttributeType::Float, 2, false);
 		quadLayout->AddAttribute(EVertexAttributeSemantic::Normal,   EVertexAttributeType::Float, 3, true);

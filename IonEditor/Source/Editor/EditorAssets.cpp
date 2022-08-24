@@ -82,7 +82,7 @@ namespace Ion::Editor
 			2, 3, 0,
 		};
 
-		std::shared_ptr<RHIVertexLayout> gridLayout = std::make_shared<RHIVertexLayout>(2);
+		TRef<RHIVertexLayout> gridLayout = MakeRef<RHIVertexLayout>(2);
 		gridLayout->AddAttribute(EVertexAttributeSemantic::Position, EVertexAttributeType::Float, 3, false);
 		gridLayout->AddAttribute(EVertexAttributeSemantic::TexCoord, EVertexAttributeType::Float, 2, false);
 		gridLayout->AddAttribute(EVertexAttributeSemantic::Normal, EVertexAttributeType::Float, 3, true);

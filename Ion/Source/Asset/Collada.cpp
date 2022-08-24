@@ -475,11 +475,11 @@ namespace Ion
 		return stride;
 	}
 
-	std::shared_ptr<RHIVertexLayout> ColladaDocument::TrianglesNodeData::CreateLayout() const
+	TRef<RHIVertexLayout> ColladaDocument::TrianglesNodeData::CreateLayout() const
 	{
 		TRACE_FUNCTION();
 
-		std::shared_ptr<RHIVertexLayout> layout = std::shared_ptr<RHIVertexLayout>(new RHIVertexLayout((uint32)m_TriangleInputs.size()));
+		TRef<RHIVertexLayout> layout = MakeRef<RHIVertexLayout>((uint32)m_TriangleInputs.size());
 		for (const TriangleInput& input : m_TriangleInputs)
 		{
 			EVertexAttributeSemantic semantic = EVertexAttributeSemantic::Null;

@@ -14,7 +14,7 @@ namespace Ion
 		OpenGLVertexBuffer(float* vertexAttributes, uint64 count);
 		virtual ~OpenGLVertexBuffer() override;
 
-		virtual void SetLayout(const std::shared_ptr<RHIVertexLayout>& layout) override;
+		virtual void SetLayout(const TRef<RHIVertexLayout>& layout) override;
 		virtual Result<void, RHIError> SetLayoutShader(const std::shared_ptr<RHIShader>& shader) override;
 
 		virtual uint32 GetVertexCount() const override;
@@ -44,7 +44,7 @@ namespace Ion
 	private:
 		uint32 m_ID;
 		uint32 m_VertexCount;
-		std::shared_ptr<RHIVertexLayout> m_VertexLayout;
+		TRef<RHIVertexLayout> m_VertexLayout;
 	};
 
 	class ION_API OpenGLIndexBuffer : public RHIIndexBuffer

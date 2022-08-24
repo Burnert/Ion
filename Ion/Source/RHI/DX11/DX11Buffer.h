@@ -13,7 +13,7 @@ namespace Ion
 		DX11VertexBuffer(float* vertexAttributes, uint64 count);
 		virtual ~DX11VertexBuffer() override;
 
-		virtual void SetLayout(const std::shared_ptr<RHIVertexLayout>& layout) override;
+		virtual void SetLayout(const TRef<RHIVertexLayout>& layout) override;
 		virtual Result<void, RHIError> SetLayoutShader(const std::shared_ptr<RHIShader>& shader) override;
 
 		Result<void, RHIError> CreateDX11Layout(const std::shared_ptr<class DX11Shader>& shader);
@@ -42,7 +42,7 @@ namespace Ion
 	private:
 		uint32 m_ID;
 		uint32 m_VertexCount;
-		std::shared_ptr<RHIVertexLayout> m_VertexLayout;
+		TRef<RHIVertexLayout> m_VertexLayout;
 		TArray<D3D11_INPUT_ELEMENT_DESC> m_IEDArray;
 
 		ID3D11Buffer* m_Buffer;

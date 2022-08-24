@@ -110,7 +110,7 @@ namespace Ion
 	{
 		TMemoryBlock<float> Vertices;
 		TMemoryBlock<uint32> Indices;
-		std::shared_ptr<RHIVertexLayout> Layout;
+		TRef<RHIVertexLayout> Layout;
 
 		MeshAssetData() :
 			Vertices({ }),

@@ -37,7 +37,7 @@ namespace Ion
 		COMRelease(m_InputLayout);
 	}
 
-	void DX11VertexBuffer::SetLayout(const std::shared_ptr<RHIVertexLayout>& layout)
+	void DX11VertexBuffer::SetLayout(const TRef<RHIVertexLayout>& layout)
 	{
 		TRACE_FUNCTION();
 
