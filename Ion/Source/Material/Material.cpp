@@ -889,7 +889,7 @@ namespace Ion
 		// Update the constant buffer fields from parameters
 		// Textures need to be loaded and bound normally
 
-		std::shared_ptr<RHIUniformBufferDynamic> constants = m_ParentMaterial->m_MaterialConstants;
+		TRef<RHIUniformBufferDynamic> constants = m_ParentMaterial->m_MaterialConstants;
 		constants->Bind(2);
 
 		for (auto& [name, parameter] : m_ParameterInstances)

@@ -50,7 +50,7 @@ namespace Ion
 		m_IndexBuffer(nullptr),
 		m_VertexCount(0),
 		m_TriangleCount(0),
-		m_UniformBuffer(std::shared_ptr<RHIUniformBuffer>(RHIUniformBuffer::Create<MeshUniforms>())),
+		m_UniformBuffer(RHIUniformBuffer::Create<MeshUniforms>()),
 		m_MaterialSlots(1, MaterialSlot())
 	{
 	}
@@ -170,6 +170,6 @@ namespace Ion
 
 	const RHIUniformBuffer* Mesh::GetUniformBufferRaw() const
 	{
-		return m_UniformBuffer.get();
+		return m_UniformBuffer.Raw();
 	}
 }

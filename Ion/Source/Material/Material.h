@@ -452,7 +452,7 @@ namespace Ion
 		THashMap<EShaderUsage, ShaderPermutation> m_Shaders;
 		THashMap<String, IMaterialParameter*> m_Parameters;
 		THashMap<MaterialInstance*, std::weak_ptr<MaterialInstance>> m_MaterialInstances;
-		std::shared_ptr<RHIUniformBufferDynamic> m_MaterialConstants;
+		TRef<RHIUniformBufferDynamic> m_MaterialConstants;
 		uint64 m_Usage;
 		String m_MaterialCode;
 

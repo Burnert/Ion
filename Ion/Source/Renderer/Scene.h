@@ -66,7 +66,7 @@ namespace Ion
 		DirectionalLight* m_ActiveDirectionalLight;
 		THashSet<Light*> m_Lights;
 
-		std::shared_ptr<RHIUniformBuffer> m_SceneUniformBuffer;
+		TRef<RHIUniformBuffer> m_SceneUniformBuffer;
 
 		// Render Thread: -------------------------------------
 

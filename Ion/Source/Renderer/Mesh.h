@@ -74,7 +74,7 @@ namespace Ion
 
 		TRef<RHIVertexBuffer> m_VertexBuffer;
 		TRef<RHIIndexBuffer> m_IndexBuffer;
-		std::shared_ptr<RHIUniformBuffer> m_UniformBuffer;
+		TRef<RHIUniformBuffer> m_UniformBuffer;
 
 		TResourceRef<MeshResource> m_MeshResource;
 

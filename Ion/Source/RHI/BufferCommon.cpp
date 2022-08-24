@@ -44,29 +44,29 @@ namespace Ion
 	}
 
 	// Uniform Buffer
-	RHIUniformBuffer* RHIUniformBuffer::Create(void* initialData, size_t size)
+	TRef<RHIUniformBuffer> RHIUniformBuffer::Create(void* initialData, size_t size)
 	{
 		switch (RHI::GetCurrent())
 		{
 		case ERHI::DX10:
-			return new DX10UniformBuffer(initialData, size);
+			return MakeRef<DX10UniformBuffer>(initialData, size);
 		case ERHI::DX11:
-			return new DX11UniformBuffer(initialData, size);
+			return MakeRef<DX11UniformBuffer>(initialData, size);
 		case ERHI::OpenGL:
-			return new OpenGLUniformBuffer(initialData, size);
+			return MakeRef<OpenGLUniformBuffer>(initialData, size);
 		default:
 			return nullptr;
 		}
 	}
 
-	RHIUniformBufferDynamic* RHIUniformBufferDynamic::Create(void* data, size_t size, const UniformDataMap& uniforms)
+	TRef<RHIUniformBufferDynamic> RHIUniformBufferDynamic::Create(void* data, size_t size, const UniformDataMap& uniforms)
 	{
 		switch (RHI::GetCurrent())
 		{
 		case ERHI::DX10:
-			return new DX10UniformBufferDynamic(data, size, uniforms);
+			return MakeRef<DX10UniformBufferDynamic>(data, size, uniforms);
 		case ERHI::DX11:
-			return new DX11UniformBufferDynamic(data, size, uniforms);
+			return MakeRef<DX11UniformBufferDynamic>(data, size, uniforms);
 		default:
 			return nullptr;
 		}

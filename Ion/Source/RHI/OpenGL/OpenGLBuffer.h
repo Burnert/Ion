@@ -88,5 +88,6 @@ namespace Ion
 
 		friend class OpenGLRenderer;
 		friend class RHIUniformBuffer;
+		FRIEND_MAKE_REF;
 	};
 }

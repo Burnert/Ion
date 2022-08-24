@@ -39,7 +39,7 @@ namespace Ion
 #endif
 	}
 
-	std::shared_ptr<RHIUniformBufferDynamic> UniformBufferFactory::Construct()
+	TRef<RHIUniformBufferDynamic> UniformBufferFactory::Construct()
 	{
 		void* data = _malloca(m_CurrentSize);
 		size_t size = m_CurrentSize;
@@ -49,7 +49,7 @@ namespace Ion
 			GetDefaultUniformValue(uniform.Type, (uint8*)data + uniform.Offset);
 		}
 
-		std::shared_ptr<RHIUniformBufferDynamic> buffer(RHIUniformBufferDynamic::Create(data, size, m_Uniforms));
+		TRef<RHIUniformBufferDynamic> buffer = RHIUniformBufferDynamic::Create(data, size, m_Uniforms);
 
 		_freea(data);
 

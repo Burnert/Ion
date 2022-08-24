@@ -100,6 +100,7 @@ namespace Ion
 
 		friend class DX10Renderer;
 		friend class RHIUniformBuffer;
+		FRIEND_MAKE_REF;
 	};
 
 	class ION_API DX10UniformBufferDynamic : public RHIUniformBufferDynamic
@@ -121,5 +122,6 @@ namespace Ion
 		_DX10UniformBufferCommon m_Common;
 
 		friend class RHIUniformBufferDynamic;
+		FRIEND_MAKE_REF;
 	};
 }

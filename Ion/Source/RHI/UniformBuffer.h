@@ -138,14 +138,14 @@ template<> constexpr EUniformType TTypeToUniformTypeV<type> = EUniformType::name
 		void Add(const String& name, EUniformType type);
 		void Remove(const String& name);
 
-		std::shared_ptr<RHIUniformBufferDynamic> Construct();
+		TRef<RHIUniformBufferDynamic> Construct();
 
 	private:
 		UniformDataMap m_Uniforms;
 		uint32 m_CurrentSize;
 	};
 
-	class IRHIUniformBuffer
+	class NOVTABLE IRHIUniformBuffer
 	{
 	public:
 		virtual Result<void, RHIError> Bind(uint32 slot = 0) const = 0;
@@ -160,21 +160,21 @@ template<> constexpr EUniformType TTypeToUniformTypeV<type> = EUniformType::name
 		friend class Material;
 	};
 
-	class ION_API RHIUniformBuffer : public IRHIUniformBuffer
+	class ION_API RHIUniformBuffer : public RefCountable, public IRHIUniformBuffer
 	{
 	public:
-		static RHIUniformBuffer* Create(void* initialData, size_t size);
+		static TRef<RHIUniformBuffer> Create(void* initialData, size_t size);
 
 		/* Creates a UniformBuffer with specified struct data. */
 		template<typename T>
-		static RHIUniformBuffer* Create(T& initialData)
+		static TRef<RHIUniformBuffer> Create(T& initialData)
 		{
 			return Create(&initialData, sizeof(T));
 		}
 
 		/* Creates a UniformBuffer with a specified struct type. */
 		template<typename T>
-		static RHIUniformBuffer* Create()
+		static TRef<RHIUniformBuffer> Create()
 		{
 			T initialData { };
 			return Create(&initialData, sizeof(T));
@@ -209,10 +209,10 @@ template<> constexpr EUniformType TTypeToUniformTypeV<type> = EUniformType::name
 		friend class DX11Renderer;
 	};
 
-	class ION_API RHIUniformBufferDynamic : public IRHIUniformBuffer
+	class ION_API RHIUniformBufferDynamic : public RefCountable, public IRHIUniformBuffer
 	{
 	public:
-		static RHIUniformBufferDynamic* Create(void* initialData, size_t size, const UniformDataMap& uniforms);
+		static TRef<RHIUniformBufferDynamic> Create(void* initialData, size_t size, const UniformDataMap& uniforms);
 
 		const UniformDataMap& GetUniformDataMap() const;
 
