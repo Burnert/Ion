@@ -54,16 +54,25 @@ namespace Ion
 		/**
 		 * @brief Used to access the Texture owned by the Resource.
 		 * 
-		 * @tparam Lambda params - (const TextureResourceRenderDataShared&)
+		 * @details Use the GetRenderData function to retrieve the loaded objects.
+		 * 
+		 * @tparam Lambda params - (const TResourceRef<TextureResource>&)
 		 * @see TFuncResourceOnTake
 		 * 
 		 * @param onTake If the resource is ready, called immediately,
-		 * else, called as soon as the resource is loaded.
+		 * else, called as soon as the resource is loaded (on the main thread).
 		 * 
 		 * @return Returns true if the resource is available instantly.
 		 */
 		template<typename Lambda>
 		bool Take(Lambda onTake);
+
+		/**
+		 * @brief Get the resource render data, even if it hasn't been loaded yet.
+		 * 
+		 * @return TextureResource render data
+		 */
+		const TextureResourceRenderData& GetRenderData() const;
 
 		virtual bool IsLoaded() const override;
 
@@ -100,13 +109,15 @@ namespace Ion
 	template<typename Lambda>
 	inline bool TextureResource::Take(Lambda onTake)
 	{
-		static_assert(TIsConvertibleV<Lambda, TFuncResourceOnTake<TextureResourceRenderData>>);
+		static_assert(TIsConvertibleV<Lambda, TFuncResourceOnTake<TextureResource>>);
 
 		ionassert(m_Asset);
 
+		TResourceRef<TextureResource> self = AsRef();
+
 		if (m_RenderData.IsAvailable())
 		{
-			onTake(m_RenderData);
+			onTake(self);
 			return true;
 		}
 
@@ -117,7 +128,7 @@ namespace Ion
 				return AssetImporter::ImportImageAsset(block);
 			},
 			// Store the ref (self) so the resource doesn't get deleted before it's loaded
-			[this, self = AsRef(), onTake](std::shared_ptr<Image> image)
+			[this, self, onTake](std::shared_ptr<Image> image)
 			{
 				ionassert(m_Asset);
 				ionassert(m_Asset->GetType() == EAssetType::Image);
@@ -136,7 +147,7 @@ namespace Ion
 
 				m_RenderData.Texture->UpdateSubresource(image.get());
 
-				onTake(m_RenderData);
+				onTake(self);
 
 				ResourceLogger.Trace("Imported Texture Resource from Asset \"{}\" successfully.", m_Asset->GetVirtualPath());
 			},
@@ -145,4 +156,8 @@ namespace Ion
 		return false;
 	}
 
+	inline const TextureResourceRenderData& TextureResource::GetRenderData() const
+	{
+		return m_RenderData;
+	}
 }

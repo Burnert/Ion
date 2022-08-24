@@ -45,16 +45,25 @@ namespace Ion
 		/**
 		 * @brief Used to access the mesh render data owned by the Resource.
 		 * 
-		 * @tparam Lambda params - (const MeshResourceRenderDataShared&)
+		 * @details Use the GetRenderData function to retrieve the loaded objects.
+		 * 
+		 * @tparam Lambda params - (const TResourceRef<MeshResource>&)
 		 * @see TFuncResourceOnTake
 		 * 
 		 * @param onTake If the resource is ready, called immediately,
-		 * else, called as soon as the resource is loaded.
+		 * else, called as soon as the resource is loaded (on the main thread).
 		 * 
 		 * @return Returns true if the resource is available instantly.
 		 */
 		template<typename Lambda>
 		bool Take(Lambda onTake);
+
+		/**
+		 * @brief Get the resource render data, even if it hasn't been loaded yet.
+		 * 
+		 * @return TextureResource render data
+		 */
+		const MeshResourceRenderData& GetRenderData() const;
 
 		const MeshResourceDefaults& GetDefaults() const;
 
@@ -93,13 +102,15 @@ namespace Ion
 	template<typename Lambda>
 	inline bool MeshResource::Take(Lambda onTake)
 	{
-		static_assert(TIsConvertibleV<Lambda, TFuncResourceOnTake<MeshResourceRenderData>>);
+		static_assert(TIsConvertibleV<Lambda, TFuncResourceOnTake<MeshResource>>);
 
 		ionassert(m_Asset);
 
+		TResourceRef<MeshResource> self = AsRef();
+
 		if (m_RenderData.IsAvailable())
 		{
-			onTake(m_RenderData);
+			onTake(self);
 			return true;
 		}
 
@@ -110,7 +121,7 @@ namespace Ion
 				return AssetImporter::ImportColladaMeshAsset(block);
 			},
 			// Store the ref (self) so the resource doesn't get deleted before it's loaded
-			[this, self = AsRef(), onTake](std::shared_ptr<MeshAssetData> meshData)
+			[this, self, onTake](std::shared_ptr<MeshAssetData> meshData)
 			{
 				ionassert(m_Asset);
 				ionassert(m_Asset->GetType() == EAssetType::Mesh);
@@ -123,13 +134,18 @@ namespace Ion
 
 				m_RenderData.VertexBuffer->SetLayout(meshData->Layout);
 
-				onTake(m_RenderData);
+				onTake(self);
 
 				ResourceLogger.Trace("Imported Mesh Resource from Asset \"{}\" successfully.", m_Asset->GetVirtualPath());
 			},
 			[&](auto& result) { ResourceLogger.Error("Failed to import Mesh Resource from Asset \"{}\". {}", m_Asset->GetVirtualPath(), result.GetErrorMessage()); }
 		);
 		return false;
+	}
+
+	inline const MeshResourceRenderData& MeshResource::GetRenderData() const
+	{
+		return m_RenderData;
 	}
 
 	inline const MeshResourceDefaults& MeshResource::GetDefaults() const

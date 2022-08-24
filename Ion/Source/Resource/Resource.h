@@ -163,7 +163,7 @@ namespace Ion
 	// ------------------------------------------------------------
 
 	template<typename T>
-	using TFuncResourceOnTake = TFunction<void(const T&)>;
+	using TFuncResourceOnTake = TFunction<void(const TResourceRef<T>&)>;
 
 	/**
 	 * @brief Base Resource class
@@ -171,6 +171,9 @@ namespace Ion
 	class ION_API Resource
 	{
 	public:
+		/**
+		 * @return true if the resource render data is available.
+		 */
 		virtual bool IsLoaded() const = 0;
 
 		/**
