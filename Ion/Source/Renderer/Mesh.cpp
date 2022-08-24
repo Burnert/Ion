@@ -16,15 +16,20 @@ namespace Ion
 	{
 		std::shared_ptr<Mesh> mesh = Mesh::Create();
 
-		resource->Take([mesh](const TResourceRef<MeshResource>& resource)
-		{
-			mesh->SetVertexBuffer(resource->GetRenderData().VertexBuffer);
-			mesh->SetIndexBuffer(resource->GetRenderData().IndexBuffer);
-		});
 		// Reference the resource, so it doesn't get deleted until the mesh is alive.
 		mesh->m_MeshResource = resource;
 
-		const MeshResourceDefaults& defaults = resource->GetDefaults();
+		mesh->m_MeshResource->Take([mesh](const TResourceRef<MeshResource>& resource)
+		{
+			// Check to avoid overriding the buffers when the resource has already been changed to a different one.
+			if (resource == mesh->GetMeshResource())
+			{
+				mesh->SetVertexBuffer(resource->GetRenderData().VertexBuffer);
+				mesh->SetIndexBuffer(resource->GetRenderData().IndexBuffer);
+			}
+		});
+
+		const MeshResourceDefaults& defaults = mesh->m_MeshResource->GetDefaults();
 
 		for (int32 i = 0; i < defaults.MaterialAssets.size(); ++i)
 		{
