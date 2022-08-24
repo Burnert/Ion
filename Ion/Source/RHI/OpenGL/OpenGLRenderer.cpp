@@ -183,17 +183,17 @@ namespace Ion
 		return GLPolygonModeToPolygonDrawMode(polygonMode);
 	}
 
-	Result<void, RHIError> OpenGLRenderer::SetRenderTarget(const std::shared_ptr<RHITexture>& targetTexture)
+	Result<void, RHIError> OpenGLRenderer::SetRenderTarget(const TRef<RHITexture>& targetTexture)
 	{
 		ionassert(!targetTexture || targetTexture->GetDescription().bUseAsRenderTarget);
 
 		m_CurrentRenderTarget = targetTexture ?
-			((OpenGLTexture*)targetTexture.get())->m_FramebufferID : 0;
+			((OpenGLTexture*)targetTexture.Raw())->m_FramebufferID : 0;
 		glBindFramebuffer(GL_FRAMEBUFFER, m_CurrentRenderTarget);
 		return Ok();
 	}
 
-	Result<void, RHIError> OpenGLRenderer::SetDepthStencil(const std::shared_ptr<RHITexture>& targetTexture)
+	Result<void, RHIError> OpenGLRenderer::SetDepthStencil(const TRef<RHITexture>& targetTexture)
 	{
 		return Ok();
 	}

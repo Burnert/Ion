@@ -5,7 +5,7 @@
 
 namespace Ion
 {
-	REGISTER_LOGGER(RefCountLogger, "Core::Memory::RefCount", /*ELoggerFlags::DisabledByDefault*/);
+	REGISTER_LOGGER(RefCountLogger, "Core::Memory::RefCount", ELoggerFlags::DisabledByDefault);
 
 #pragma region Intrusive
 
@@ -39,10 +39,10 @@ namespace Ion
 	private:
 		size_t m_Count;
 
-		size_t IncRef();
-		size_t DecRef();
+		size_t IncRef() noexcept;
+		size_t DecRef() noexcept;
 
-		void DeleteThis();
+		void DeleteThis() noexcept;
 
 		template<typename T>
 		friend class TRef;
@@ -64,14 +64,14 @@ namespace Ion
 		return m_Count;
 	}
 
-	inline size_t RefCountable::IncRef()
+	inline size_t RefCountable::IncRef() noexcept
 	{
 		++m_Count;
 		RefCountLogger.Debug("RefCountable {{{}}} incremented the ref count by 1. Current ref count: {}", (void*)this, m_Count);
 		return m_Count;
 	}
 
-	inline size_t RefCountable::DecRef()
+	inline size_t RefCountable::DecRef() noexcept
 	{
 		ionassert(m_Count > 0);
 
@@ -89,10 +89,11 @@ namespace Ion
 		return m_Count;
 	}
 
-	inline void RefCountable::DeleteThis()
+	inline void RefCountable::DeleteThis() noexcept
 	{
+		void* _this = this;
 		delete this;
-		RefCountLogger.Debug("RefCountable {{{}}} deleted ref countable object.", (void*)this);
+		RefCountLogger.Debug("RefCountable {{{}}} deleted ref countable object.", (void*)_this);
 	}
 
 	#pragma endregion
@@ -105,8 +106,6 @@ namespace Ion
 	class TRef
 	{
 	public:
-		static_assert(TIsBaseOfV<RefCountable, T>, "Object cannot be used with TRef if it's not derived from RefCountable.");
-
 		using TElement = T;
 
 		/**
@@ -237,6 +236,9 @@ namespace Ion
 
 		void Delete();
 
+		void IncRef() noexcept;
+		void DecRef() noexcept;
+
 	private:
 		T* m_Object;
 
@@ -272,11 +274,10 @@ namespace Ion
 	inline TRef<T>::TRef(T* ptr) :
 		m_Object(ptr)
 	{
+		static_assert(TIsBaseOfV<RefCountable, T>, "Object cannot be used with TRef if it's not derived from RefCountable.");
+
 		RefCountLogger.Debug("TRef {{{}}} has been constructed.", (void*)m_Object);
-		if (m_Object)
-		{
-			m_Object->IncRef();
-		}
+		IncRef();
 	}
 
 	template<typename T>
@@ -412,11 +413,8 @@ namespace Ion
 	template<typename T>
 	inline void TRef<T>::Delete()
 	{
-		if (m_Object)
-		{
-			m_Object->DecRef();
-			m_Object = nullptr;
-		}
+		DecRef();
+		m_Object = nullptr;
 	}
 
 	template<typename T>
@@ -425,10 +423,7 @@ namespace Ion
 	{
 		m_Object = other.m_Object;
 		RefCountLogger.Debug("TRef {{{}}} has been copy constructed.", (void*)m_Object);
-		if (m_Object)
-		{
-			m_Object->IncRef();
-		}
+		IncRef();
 	}
 
 	template<typename T>
@@ -447,10 +442,7 @@ namespace Ion
 	{
 		m_Object = static_cast<T*>(other.m_Object);
 		RefCountLogger.Debug("TRef {{{}}} has been copy cast constructed.", (void*)m_Object);
-		if (m_Object)
-		{
-			m_Object->IncRef();
-		}
+		IncRef();
 	}
 
 	template<typename T>
@@ -463,15 +455,39 @@ namespace Ion
 		other.m_Object = nullptr;
 	}
 
+	template<typename T>
+	inline void TRef<T>::IncRef() noexcept
+	{
+		if (m_Object)
+		{
+			((RefCountable*)m_Object)->IncRef();
+		}
+	}
+
+	template<typename T>
+	inline void TRef<T>::DecRef() noexcept
+	{
+		if (m_Object)
+		{
+			((RefCountable*)m_Object)->DecRef();
+		}
+	}
+
 	#pragma endregion
 
 #pragma endregion
 
 #pragma region MakeRef / RefCast / DynamicRefCast
 
+#define FRIEND_MAKE_REF \
+	template<typename T, typename... Args> \
+	friend Ion::TRef<T> Ion::MakeRef(Args&&... args)
+
 	template<typename T, typename... Args>
 	inline TRef<T> MakeRef(Args&&... args)
 	{
+		static_assert(TIsBaseOfV<RefCountable, T>, "Object cannot be used with TRef if it's not derived from RefCountable.");
+
 		return TRef<T>(new T(Forward<Args>(args)...));
 	}
 

@@ -322,7 +322,7 @@ namespace Ion
 		Asset m_Value;
 
 		TResourceRef<TextureResource> m_TextureResource;
-		std::shared_ptr<RHITexture> m_Texture;
+		TRef<RHITexture> m_Texture;
 	};
 
 	inline void MaterialParameterInstanceTexture2D::SetValue(Asset value)

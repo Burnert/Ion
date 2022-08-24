@@ -68,10 +68,10 @@ namespace Ion
 	struct EditorPassData
 	{
 		/* UInt128GUID */
-		std::shared_ptr<RHITexture> RTObjectID;
-		std::shared_ptr<RHITexture> RTObjectIDDepth;
+		TRef<RHITexture> RTObjectID;
+		TRef<RHITexture> RTObjectIDDepth;
 		/* Mainly Depth */
-		std::shared_ptr<RHITexture> RTSelectionDepth;
+		TRef<RHITexture> RTSelectionDepth;
 
 		TArray<REditorPassPrimitive> Primitives;
 		TArray<REditorPassPrimitive> SelectedPrimitives;
@@ -99,8 +99,8 @@ namespace Ion
 		void Draw(const RPrimitiveRenderProxy& primitive, const Scene* targetScene = nullptr) const;
 		/** Draw a screen aligned quad positioned in world space. */
 		void DrawBillboard(const RBillboardRenderProxy& billboard, const RHIShader* shader, const Scene* targetScene) const;
-		void DrawScreenTexture(const std::shared_ptr<RHITexture>& texture) const;
-		void DrawScreenTexture(const std::shared_ptr<RHITexture>& texture, const RHIShader* shader) const;
+		void DrawScreenTexture(const TRef<RHITexture>& texture) const;
+		void DrawScreenTexture(const TRef<RHITexture>& texture, const RHIShader* shader) const;
 
 		virtual Result<void, RHIError> Clear(const RendererClearOptions& options) const = 0;
 
@@ -120,9 +120,9 @@ namespace Ion
 		virtual Result<EPolygonDrawMode, RHIError> GetPolygonDrawMode() const = 0;
 
 		/* Sets the render target (resets the depth stencil to null) */
-		virtual Result<void, RHIError> SetRenderTarget(const std::shared_ptr<RHITexture>& targetTexture) = 0;
+		virtual Result<void, RHIError> SetRenderTarget(const TRef<RHITexture>& targetTexture) = 0;
 		/* Sets the depth stencil target (call this only after SetRenderTarget) */
-		virtual Result<void, RHIError> SetDepthStencil(const std::shared_ptr<RHITexture>& targetTexture) = 0;
+		virtual Result<void, RHIError> SetDepthStencil(const TRef<RHITexture>& targetTexture) = 0;
 
 		void RenderEditorPass(const Scene* scene, const EditorPassData& data);
 
@@ -166,7 +166,7 @@ namespace Ion
 			return Renderer::Get()->m_BillboardMesh;
 		}
 
-		inline static const std::shared_ptr<RHITexture>& GetWhiteTexture()
+		inline static const TRef<RHITexture>& GetWhiteTexture()
 		{
 			return Renderer::Get()->m_WhiteTexture;
 		}
@@ -207,7 +207,7 @@ namespace Ion
 
 		std::shared_ptr<Mesh> m_BillboardMesh;
 
-		std::shared_ptr<RHITexture> m_WhiteTexture;
+		TRef<RHITexture> m_WhiteTexture;
 
 		static Renderer* s_Instance;
 	};

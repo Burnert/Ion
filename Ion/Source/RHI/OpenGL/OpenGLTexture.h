@@ -16,7 +16,7 @@ namespace Ion
 		virtual Result<void, RHIError> Bind(uint32 slot = 0) const override;
 		virtual Result<void, RHIError> Unbind() const override;
 
-		virtual Result<void, RHIError> CopyTo(const std::shared_ptr<RHITexture>& destination) const override;
+		virtual Result<void, RHIError> CopyTo(const TRef<RHITexture>& destination) const override;
 		virtual Result<void, RHIError> Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType) override;
 		virtual Result<void, RHIError> Unmap() override;
 
@@ -68,5 +68,6 @@ namespace Ion
 
 		friend class RHITexture;
 		friend class OpenGLRenderer;
+		FRIEND_MAKE_REF;
 	};
 }

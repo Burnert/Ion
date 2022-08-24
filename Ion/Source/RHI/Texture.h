@@ -127,11 +127,12 @@ namespace Ion
 		}
 	};
 
-	class ION_API RHITexture
+	class ION_API RHITexture : public RefCountable
 	{
 	public:
-		static RHITexture* Create(const TextureDescription& desc);
-		static std::shared_ptr<RHITexture> CreateShared(const TextureDescription& desc);
+		//static RHITexture* Create(const TextureDescription& desc);
+		//static std::shared_ptr<RHITexture> CreateShared(const TextureDescription& desc);
+		static TRef<RHITexture> CreateRef(const TextureDescription& desc);
 
 		virtual ~RHITexture();
 
@@ -141,16 +142,16 @@ namespace Ion
 		virtual Result<void, RHIError> Bind(uint32 slot = 0) const = 0;
 		virtual Result<void, RHIError> Unbind() const = 0;
 
-		virtual Result<void, RHIError> CopyTo(const std::shared_ptr<RHITexture>& destination) const = 0;
+		virtual Result<void, RHIError> CopyTo(const TRef<RHITexture>& destination) const = 0;
 		virtual Result<void, RHIError> Map(void*& outBuffer, int32& outLineSize, ETextureMapType mapType) = 0;
 		virtual Result<void, RHIError> Unmap() = 0;
 
 		virtual void* GetNativeID() const = 0;
 
-		FORCEINLINE TextureDimensions GetDimensions() const;
-		FORCEINLINE const TextureDescription& GetDescription() const;
-		FORCEINLINE bool IsRenderTarget() const;
-		FORCEINLINE bool IsDepthStencil() const;
+		TextureDimensions GetDimensions() const;
+		const TextureDescription& GetDescription() const;
+		bool IsRenderTarget() const;
+		bool IsDepthStencil() const;
 
 	protected:
 		RHITexture(const TextureDescription& desc);

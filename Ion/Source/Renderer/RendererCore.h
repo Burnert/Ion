@@ -16,9 +16,9 @@ namespace Ion
 
 	struct EditorViewportTextures
 	{
-		std::shared_ptr<RHITexture> SceneFinalColor;
-		std::shared_ptr<RHITexture> SceneFinalDepth;
-		std::shared_ptr<RHITexture> SelectedDepth;
+		TRef<RHITexture> SceneFinalColor;
+		TRef<RHITexture> SceneFinalDepth;
+		TRef<RHITexture> SelectedDepth;
 	};
 
 	struct ViewportDescription

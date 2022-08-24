@@ -177,7 +177,7 @@ namespace Ion
 		return rd.FillMode == D3D10_FILL_WIREFRAME ? EPolygonDrawMode::Lines : EPolygonDrawMode::Fill;
 	}
 
-	Result<void, RHIError> DX10Renderer::SetRenderTarget(const std::shared_ptr<RHITexture>& targetTexture)
+	Result<void, RHIError> DX10Renderer::SetRenderTarget(const TRef<RHITexture>& targetTexture)
 	{
 		ionassert(!targetTexture || targetTexture->GetDescription().bUseAsRenderTarget);
 		ionassert(!targetTexture || UVector2(targetTexture->GetDimensions()) == m_CurrentViewport.GetSize());
@@ -186,7 +186,7 @@ namespace Ion
 
 		if (targetTexture)
 		{
-			DX10Texture* dx11Texture = (DX10Texture*)targetTexture.get();
+			DX10Texture* dx11Texture = (DX10Texture*)targetTexture.Raw();
 			m_CurrentRTV = dx11Texture->m_RTV;
 		}
 		else
@@ -206,7 +206,7 @@ namespace Ion
 		return Ok();
 	}
 
-	Result<void, RHIError> DX10Renderer::SetDepthStencil(const std::shared_ptr<RHITexture>& targetTexture)
+	Result<void, RHIError> DX10Renderer::SetDepthStencil(const TRef<RHITexture>& targetTexture)
 	{
 		ionassert(!targetTexture || targetTexture->GetDescription().bUseAsDepthStencil);
 		ionassert(!targetTexture || UVector2(targetTexture->GetDimensions()) == m_CurrentViewport.GetSize());
@@ -215,7 +215,7 @@ namespace Ion
 
 		if (targetTexture)
 		{
-			DX10Texture* dx11Texture = (DX10Texture*)targetTexture.get();
+			DX10Texture* dx11Texture = (DX10Texture*)targetTexture.Raw();
 			m_CurrentDSV = dx11Texture->m_DSV;
 		}
 		else

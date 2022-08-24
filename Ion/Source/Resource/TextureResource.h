@@ -27,7 +27,7 @@ namespace Ion
 
 	struct TextureResourceRenderData
 	{
-		std::shared_ptr<RHITexture> Texture;
+		TRef<RHITexture> Texture;
 
 		bool IsAvailable() const
 		{
@@ -132,7 +132,7 @@ namespace Ion
 
 				desc.SetFilterAll(m_Description.Properties.Filter);
 
-				m_RenderData.Texture = RHITexture::CreateShared(desc);
+				m_RenderData.Texture = RHITexture::CreateRef(desc);
 
 				m_RenderData.Texture->UpdateSubresource(image.get());
 

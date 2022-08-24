@@ -102,8 +102,8 @@ namespace Ion
 	protected:
 		static void SetDisplayVersion(const char* version);
 
-		static Result<std::shared_ptr<RHITexture>, RHIError> CreateRenderTarget();
-		static Result<std::shared_ptr<RHITexture>, RHIError> CreateDepthStencil(uint32 width, uint32 height);
+		static Result<TRef<RHITexture>, RHIError> CreateRenderTarget();
+		static Result<TRef<RHITexture>, RHIError> CreateDepthStencil(uint32 width, uint32 height);
 
 	private:
 		virtual void InitImGuiBackend() override;

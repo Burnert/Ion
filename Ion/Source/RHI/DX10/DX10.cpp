@@ -389,7 +389,7 @@ namespace Ion
 		return DXCommon::GetShaderModelString((D3D_FEATURE_LEVEL)s_FeatureLevel);
 	}
 
-	Result<std::shared_ptr<RHITexture>, RHIError> DX10::CreateRenderTarget()
+	Result<TRef<RHITexture>, RHIError> DX10::CreateRenderTarget()
 	{
 		TRACE_FUNCTION();
 
@@ -406,12 +406,10 @@ namespace Ion
 		desc.Dimensions = { t2dDesc.Width, t2dDesc.Height };
 		desc.DebugName = "Window_BackBuffer_RT";
 
-		// @TODO: The Result should get constructed if the type can be implicitly converted to it's Ok variant.
-		// (no static_pointer_cast should be needed here)
-		return std::shared_ptr<RHITexture>(new DX10Texture(desc, backBuffer));
+		return TRef<DX10Texture>(new DX10Texture(desc, backBuffer));
 	}
 
-	Result<std::shared_ptr<RHITexture>, RHIError> DX10::CreateDepthStencil(uint32 width, uint32 height)
+	Result<TRef<RHITexture>, RHIError> DX10::CreateDepthStencil(uint32 width, uint32 height)
 	{
 		TRACE_FUNCTION();
 
@@ -421,7 +419,7 @@ namespace Ion
 		desc.Dimensions = { width, height };
 		desc.DebugName = "Window_BackBuffer_DS";
 
-		return RHITexture::CreateShared(desc);
+		return RHITexture::CreateRef(desc);
 	}
 
 	void DX10::InitImGuiBackend()

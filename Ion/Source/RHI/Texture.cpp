@@ -9,24 +9,39 @@
 
 namespace Ion
 {
-	RHITexture* RHITexture::Create(const TextureDescription& desc)
+	//RHITexture* RHITexture::Create(const TextureDescription& desc)
+	//{
+	//	switch (RHI::GetCurrent())
+	//	{
+	//		case ERHI::OpenGL:
+	//			return new OpenGLTexture(desc);
+	//		case ERHI::DX10:
+	//			return new DX10Texture(desc);
+	//		case ERHI::DX11:
+	//			return new DX11Texture(desc);
+	//		default:
+	//			return nullptr;
+	//	}
+	//}
+
+	//std::shared_ptr<RHITexture> RHITexture::CreateShared(const TextureDescription& desc)
+	//{
+	//	return std::shared_ptr<RHITexture>(Create(desc));
+	//}
+
+	TRef<RHITexture> RHITexture::CreateRef(const TextureDescription& desc)
 	{
 		switch (RHI::GetCurrent())
 		{
-			case ERHI::OpenGL:
-				return new OpenGLTexture(desc);
-			case ERHI::DX10:
-				return new DX10Texture(desc);
-			case ERHI::DX11:
-				return new DX11Texture(desc);
-			default:
-				return nullptr;
+		case ERHI::OpenGL:
+			return MakeRef<OpenGLTexture>(desc);
+		case ERHI::DX10:
+			return MakeRef<DX10Texture>(desc);
+		case ERHI::DX11:
+			return MakeRef<DX11Texture>(desc);
+		default:
+			return nullptr;
 		}
-	}
-
-	std::shared_ptr<RHITexture> RHITexture::CreateShared(const TextureDescription& desc)
-	{
-		return std::shared_ptr<RHITexture>(Create(desc));
 	}
 
 	RHITexture::RHITexture(const TextureDescription& desc)

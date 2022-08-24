@@ -390,7 +390,7 @@ namespace Ion
 		strcpy_s((s_DisplayName + length), 120 - length, version);
 	}
 
-	Result<std::shared_ptr<RHITexture>, RHIError> DX11::CreateRenderTarget()
+	Result<TRef<RHITexture>, RHIError> DX11::CreateRenderTarget()
 	{
 		TRACE_FUNCTION();
 
@@ -408,10 +408,10 @@ namespace Ion
 		desc.Dimensions = { t2dDesc.Width, t2dDesc.Height };
 		desc.DebugName = "Window_BackBuffer_RT";
 
-		return std::shared_ptr<RHITexture>(new DX11Texture(desc, backBuffer));
+		return TRef<RHITexture>(new DX11Texture(desc, backBuffer));
 	}
 
-	Result<std::shared_ptr<RHITexture>, RHIError> DX11::CreateDepthStencil(uint32 width, uint32 height)
+	Result<TRef<RHITexture>, RHIError> DX11::CreateDepthStencil(uint32 width, uint32 height)
 	{
 		TRACE_FUNCTION();
 
@@ -421,7 +421,7 @@ namespace Ion
 		desc.Dimensions = { width, height };
 		desc.DebugName = "Window_BackBuffer_DS";
 
-		return RHITexture::CreateShared(desc);
+		return RHITexture::CreateRef(desc);
 	}
 
 	void DX11::InitImGuiBackend()

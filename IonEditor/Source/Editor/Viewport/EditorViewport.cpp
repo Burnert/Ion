@@ -66,7 +66,7 @@ namespace Ion::Editor
 					DispatchOnResize(m_Size);
 				}
 
-				std::shared_ptr<RHITexture> viewportFramebuffer = m_Owner->GetViewportFramebuffer();
+				TRef<RHITexture> viewportFramebuffer = m_Owner->GetViewportFramebuffer();
 				if (viewportFramebuffer)
 				{
 					ImVec2 startCursor = ImGui::GetCursorPos();
@@ -443,7 +443,7 @@ namespace Ion::Editor
 			SceneComponent* sceneComponent = (SceneComponent*)component;
 
 			RBillboardRenderProxy billboard;
-			billboard.Texture = EditorBillboards::GetComponentBillboardTexture(component->GetFinalTypeID()).get();
+			billboard.Texture = EditorBillboards::GetComponentBillboardTexture(component->GetFinalTypeID()).Raw();
 			billboard.LocationWS = sceneComponent->GetWorldTransform().GetLocation();
 			billboard.Scale = 0.2f;
 
@@ -468,7 +468,7 @@ namespace Ion::Editor
 		desc.VWrapMode = ETextureWrapMode::Clamp;
 		desc.SetFilterAll(ETextureFilteringMethod::Linear);
 
-		m_ViewportFinalColor = RHITexture::CreateShared(desc);
+		m_ViewportFinalColor = RHITexture::CreateRef(desc);
 
 		desc = { };
 		desc.DebugName = "ViewportPreFX";
@@ -480,7 +480,7 @@ namespace Ion::Editor
 		desc.VWrapMode = ETextureWrapMode::Clamp;
 		desc.SetFilterAll(ETextureFilteringMethod::Linear);
 
-		m_ViewportPreFX = RHITexture::CreateShared(desc);
+		m_ViewportPreFX = RHITexture::CreateRef(desc);
 
 		CreateFinalSceneFramebuffer(size);
 		CreateEditorPassFramebuffers(size);
@@ -495,12 +495,12 @@ namespace Ion::Editor
 		TextureDescription desc = m_ViewportFinalColor->GetDescription();
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
-		m_ViewportFinalColor = RHITexture::CreateShared(desc);
+		m_ViewportFinalColor = RHITexture::CreateRef(desc);
 
 		desc = m_ViewportPreFX->GetDescription();
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
-		m_ViewportPreFX = RHITexture::CreateShared(desc);
+		m_ViewportPreFX = RHITexture::CreateRef(desc);
 
 		ResizeFinalSceneFramebuffer(size);
 		ResizeEditorPassFramebuffers(size);
@@ -535,7 +535,7 @@ namespace Ion::Editor
 		desc.VWrapMode = ETextureWrapMode::Clamp;
 		desc.SetFilterAll(ETextureFilteringMethod::Linear);
 
-		m_ViewportTextures.SceneFinalColor = RHITexture::CreateShared(desc);
+		m_ViewportTextures.SceneFinalColor = RHITexture::CreateRef(desc);
 
 		desc = { };
 		desc.DebugName = "FinalSceneDepth";
@@ -549,7 +549,7 @@ namespace Ion::Editor
 		desc.VWrapMode = ETextureWrapMode::Clamp;
 		desc.SetFilterAll(ETextureFilteringMethod::Linear);
 
-		m_ViewportTextures.SceneFinalDepth = RHITexture::CreateShared(desc);
+		m_ViewportTextures.SceneFinalDepth = RHITexture::CreateRef(desc);
 	}
 
 	void EditorViewport::ResizeFinalSceneFramebuffer(const UVector2& size)
@@ -560,13 +560,13 @@ namespace Ion::Editor
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
 		desc.MultiSampling = m_bEnableMSAA ? ETextureMSMode::X4 : ETextureMSMode::X1;
-		m_ViewportTextures.SceneFinalColor = RHITexture::CreateShared(desc);
+		m_ViewportTextures.SceneFinalColor = RHITexture::CreateRef(desc);
 
 		desc = m_ViewportTextures.SceneFinalDepth->GetDescription();
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
 		desc.MultiSampling = m_bEnableMSAA ? ETextureMSMode::X4 : ETextureMSMode::X1;
-		m_ViewportTextures.SceneFinalDepth = RHITexture::CreateShared(desc);
+		m_ViewportTextures.SceneFinalDepth = RHITexture::CreateRef(desc);
 	}
 
 	void EditorViewport::CreateEditorPassFramebuffers(const UVector2& size)
@@ -584,7 +584,7 @@ namespace Ion::Editor
 		desc.VWrapMode = ETextureWrapMode::Clamp;
 		desc.SetFilterAll(ETextureFilteringMethod::Linear);
 
-		m_ViewportTextures.SelectedDepth = RHITexture::CreateShared(desc);
+		m_ViewportTextures.SelectedDepth = RHITexture::CreateRef(desc);
 
 		desc = { };
 		desc.DebugName = "EditorObjectID";
@@ -597,7 +597,7 @@ namespace Ion::Editor
 		desc.VWrapMode = ETextureWrapMode::Clamp;
 		desc.SetFilterAll(ETextureFilteringMethod::Linear);
 
-		m_ObjectIDColor = RHITexture::CreateShared(desc);
+		m_ObjectIDColor = RHITexture::CreateRef(desc);
 
 		desc = { };
 		desc.DebugName = "EditorObjectIDDepth";
@@ -609,7 +609,7 @@ namespace Ion::Editor
 		desc.VWrapMode = ETextureWrapMode::Clamp;
 		desc.SetFilterAll(ETextureFilteringMethod::Linear);
 
-		m_ObjectIDDepthStencil = RHITexture::CreateShared(desc);
+		m_ObjectIDDepthStencil = RHITexture::CreateRef(desc);
 
 		desc = { };
 		desc.DebugName = "EditorObjectIDStaging";
@@ -622,7 +622,7 @@ namespace Ion::Editor
 		desc.VWrapMode = ETextureWrapMode::Clamp;
 		desc.SetFilterAll(ETextureFilteringMethod::Linear); 
 
-		m_ObjectIDStaging = RHITexture::CreateShared(desc);
+		m_ObjectIDStaging = RHITexture::CreateRef(desc);
 	}
 
 	void EditorViewport::ResizeEditorPassFramebuffers(const UVector2& size)
@@ -632,21 +632,21 @@ namespace Ion::Editor
 		TextureDescription desc = m_ViewportTextures.SelectedDepth->GetDescription();
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
-		m_ViewportTextures.SelectedDepth = RHITexture::CreateShared(desc);
+		m_ViewportTextures.SelectedDepth = RHITexture::CreateRef(desc);
 
 		desc = m_ObjectIDColor->GetDescription();
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
-		m_ObjectIDColor = RHITexture::CreateShared(desc);
+		m_ObjectIDColor = RHITexture::CreateRef(desc);
 
 		desc = m_ObjectIDDepthStencil->GetDescription();
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
-		m_ObjectIDDepthStencil = RHITexture::CreateShared(desc);
+		m_ObjectIDDepthStencil = RHITexture::CreateRef(desc);
 
 		desc = m_ObjectIDStaging->GetDescription();
 		desc.Dimensions.Width = size.x;
 		desc.Dimensions.Height = size.y;
-		m_ObjectIDStaging = RHITexture::CreateShared(desc);
+		m_ObjectIDStaging = RHITexture::CreateRef(desc);
 	}
 }

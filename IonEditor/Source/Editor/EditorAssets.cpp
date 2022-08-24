@@ -17,7 +17,7 @@
 
 namespace Ion::Editor
 {
-	static void LoadTexture(TResourceRef<TextureResource>& outResource, std::shared_ptr<RHITexture>& texture, const String& vp)
+	static void LoadTexture(TResourceRef<TextureResource>& outResource, TRef<RHITexture>& texture, const String& vp)
 	{
 		Asset asset = Asset::Resolve(vp).UnwrapOr(Asset::None);
 		
@@ -53,7 +53,7 @@ namespace Ion::Editor
 		LoadTexture(ResourceBillboardNoMesh,    BillboardNoMesh,    VPNoMesh);
 	}
 
-	const std::shared_ptr<RHITexture>& EditorBillboards::GetComponentBillboardTexture(ComponentTypeID id)
+	const TRef<RHITexture>& EditorBillboards::GetComponentBillboardTexture(ComponentTypeID id)
 	{
 		if (id == LightComponent::GetTypeID())
 			return BillboardLightbulb;

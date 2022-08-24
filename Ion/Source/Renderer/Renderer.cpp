@@ -193,7 +193,7 @@ namespace Ion
 		DrawIndexed(ib->GetIndexCount());
 	}
 
-	void Renderer::DrawScreenTexture(const std::shared_ptr<RHITexture>& texture) const
+	void Renderer::DrawScreenTexture(const TRef<RHITexture>& texture) const
 	{
 		TRACE_FUNCTION();
 
@@ -204,7 +204,7 @@ namespace Ion
 		DrawIndexed(6);
 	}
 
-	void Renderer::DrawScreenTexture(const std::shared_ptr<RHITexture>& texture, const RHIShader* shader) const
+	void Renderer::DrawScreenTexture(const TRef<RHITexture>& texture, const RHIShader* shader) const
 	{
 		TRACE_FUNCTION();
 
@@ -308,7 +308,7 @@ namespace Ion
 		whiteDesc.bCreateSampler = true;
 		whiteDesc.DebugName = "WhiteTex";
 		whiteDesc.InitialData = whiteTex;
-		m_WhiteTexture = RHITexture::CreateShared(whiteDesc);
+		m_WhiteTexture = RHITexture::CreateRef(whiteDesc);
 	}
 
 	void Renderer::InitScreenTextureRendering()

@@ -2,6 +2,7 @@
 
 #include "GenericWindow.h"
 #include "Application/Application.h"
+#include "RHI/Texture.h"
 
 namespace Ion
 {
