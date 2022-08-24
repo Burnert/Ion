@@ -419,7 +419,7 @@ namespace Ion
 		desc.Dimensions = { width, height };
 		desc.DebugName = "Window_BackBuffer_DS";
 
-		return RHITexture::CreateRef(desc);
+		return RHITexture::Create(desc);
 	}
 
 	void DX10::InitImGuiBackend()

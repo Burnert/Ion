@@ -308,7 +308,7 @@ namespace Ion
 		whiteDesc.bCreateSampler = true;
 		whiteDesc.DebugName = "WhiteTex";
 		whiteDesc.InitialData = whiteTex;
-		m_WhiteTexture = RHITexture::CreateRef(whiteDesc);
+		m_WhiteTexture = RHITexture::Create(whiteDesc);
 	}
 
 	void Renderer::InitScreenTextureRendering()

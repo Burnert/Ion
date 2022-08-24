@@ -143,7 +143,7 @@ namespace Ion
 
 				desc.SetFilterAll(m_Description.Properties.Filter);
 
-				m_RenderData.Texture = RHITexture::CreateRef(desc);
+				m_RenderData.Texture = RHITexture::Create(desc);
 
 				m_RenderData.Texture->UpdateSubresource(image.get());
 

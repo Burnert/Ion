@@ -130,9 +130,7 @@ namespace Ion
 	class ION_API RHITexture : public RefCountable
 	{
 	public:
-		//static RHITexture* Create(const TextureDescription& desc);
-		//static std::shared_ptr<RHITexture> CreateShared(const TextureDescription& desc);
-		static TRef<RHITexture> CreateRef(const TextureDescription& desc);
+		static TRef<RHITexture> Create(const TextureDescription& desc);
 
 		virtual ~RHITexture();
 
