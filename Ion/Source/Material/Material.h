@@ -455,6 +455,7 @@ namespace Ion
 		TRef<RHIUniformBufferDynamic> m_MaterialConstants;
 		uint64 m_Usage;
 		String m_MaterialCode;
+		FilePath m_MaterialShaderPath;
 
 		Asset m_Asset;
 

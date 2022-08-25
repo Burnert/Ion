@@ -33,10 +33,17 @@ namespace Ion
 
 		if (!m_bCompiled && m_Shaders.find(type) == m_Shaders.end())
 		{
-			DXShader shader { };
-			shader.Type = type;
-			shader.Source = source;
-			m_Shaders[type] = Move(shader);
+			m_Shaders.emplace(type, DXShader(DXShaderSource(source, FilePath()), type));
+		}
+	}
+
+	void DX11Shader::AddShaderSource(EShaderType type, const String& source, const FilePath& sourcePath)
+	{
+		TRACE_FUNCTION();
+
+		if (!m_bCompiled && m_Shaders.find(type) == m_Shaders.end())
+		{
+			m_Shaders.emplace(type, DXShader(DXShaderSource(source, sourcePath), type));
 		}
 	}
 
@@ -46,13 +53,11 @@ namespace Ion
 
 		ionassert(!m_bCompiled, "Shader has already been compiled.");
 
-		DXInclude includeHandler;
-
 		for (auto& entry : m_Shaders)
 		{
 			DXShader& shader = entry.second;
 
-			if (shader.Source.empty())
+			if (shader.Source.Code.empty())
 			{
 				shader.ShaderPtr = nullptr;
 				continue;
@@ -69,11 +74,22 @@ namespace Ion
 #endif
 			ID3DBlob* errorMessagesBlob = nullptr;
 
+			String sourceName =
+				shader.Source.bFromFile ?
+				shader.Source.Path.ToString() :
+				"[TODO: SHADER FROM MEMORY NAME]";
+
+			DXInclude includeHandler = 
+				shader.Source.bFromFile ?
+				DXInclude(shader.Source.Path / "..") :
+				DXInclude();
+
 			dxcall_throw(
 				D3DCompile(
-					shader.Source.c_str(),
-					shader.Source.length(),
-					nullptr, nullptr,
+					shader.Source.Code.c_str(),
+					shader.Source.Code.length(),
+					sourceName.c_str(),
+					nullptr,
 					&includeHandler,
 					DXCommon::ShaderTypeToEntryPoint(shader.Type),
 					DXCommon::FormatShaderTarget(DX11::GetFeatureLevel(), shader.Type).c_str(),

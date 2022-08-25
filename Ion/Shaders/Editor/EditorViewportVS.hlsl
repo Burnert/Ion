@@ -1,4 +1,4 @@
-#include "ShaderCommon.hlsl"
+#include <ShaderCommon.hlsl>
 
 BasicPixel VSMain(BasicVertex vertex)
 {

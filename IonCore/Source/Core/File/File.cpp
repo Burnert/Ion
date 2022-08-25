@@ -217,14 +217,11 @@ namespace Ion
 
 	FilePath& FilePath::ChangePath(const FilePath& path)
 	{
-		String newPath;
 		for (const String& dir : path.m_Path)
 		{
-			newPath = m_PathName.empty() ? dir : m_PathName + "/" + dir;
-			
 			m_Path.push_back(dir);
-			m_PathName = newPath;
 		}
+		Fix();
 
 		return *this;
 	}

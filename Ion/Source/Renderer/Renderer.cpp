@@ -225,18 +225,18 @@ namespace Ion
 		String pixelSrc;
 		if (RHI::GetCurrent() != ERHI::OpenGL)
 		{
-			vertexSrc = File::ReadToString(EnginePath::GetShadersPath() + "TextureRenderVS.hlsl").Unwrap();
-			pixelSrc  = File::ReadToString(EnginePath::GetShadersPath() + "TextureRenderPS.hlsl").Unwrap();
+			vertexSrc = File::ReadToString(EnginePath::GetShadersPath() / "TextureRenderVS.hlsl").Unwrap();
+			pixelSrc  = File::ReadToString(EnginePath::GetShadersPath() / "TextureRenderPS.hlsl").Unwrap();
 		}
 		else
 		{
-			vertexSrc = File::ReadToString(EnginePath::GetShadersPath() + "TextureRender.vert").Unwrap();
-			pixelSrc  = File::ReadToString(EnginePath::GetShadersPath() + "TextureRender.frag").Unwrap();
+			vertexSrc = File::ReadToString(EnginePath::GetShadersPath() / "TextureRender.vert").Unwrap();
+			pixelSrc  = File::ReadToString(EnginePath::GetShadersPath() / "TextureRender.frag").Unwrap();
 		}
 
 		m_ScreenTextureRenderData.Shader = RHIShader::Create();
-		m_ScreenTextureRenderData.Shader->AddShaderSource(EShaderType::Vertex, vertexSrc);
-		m_ScreenTextureRenderData.Shader->AddShaderSource(EShaderType::Pixel, pixelSrc);
+		m_ScreenTextureRenderData.Shader->AddShaderSource(EShaderType::Vertex, vertexSrc, EnginePath::GetShadersPath() / "TextureRenderVS.hlsl");
+		m_ScreenTextureRenderData.Shader->AddShaderSource(EShaderType::Pixel, pixelSrc, EnginePath::GetShadersPath() / "TextureRenderPS.hlsl");
 
 		m_ScreenTextureRenderData.Shader->Compile().Unwrap();
 
@@ -356,18 +356,18 @@ namespace Ion
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() != ERHI::OpenGL)
 		{
-			vertexSrc = File::ReadToString(shadersPath + "BasicVS.hlsl").Unwrap();
-			pixelSrc  = File::ReadToString(shadersPath + "BasicPS.hlsl").Unwrap();
+			vertexSrc = File::ReadToString(shadersPath / "BasicVS.hlsl").Unwrap();
+			pixelSrc  = File::ReadToString(shadersPath / "BasicPS.hlsl").Unwrap();
 		}
 		else
 		{
-			vertexSrc = File::ReadToString(shadersPath + "Basic.vert").Unwrap();
-			pixelSrc  = File::ReadToString(shadersPath + "Basic.frag").Unwrap();
+			vertexSrc = File::ReadToString(shadersPath / "Basic.vert").Unwrap();
+			pixelSrc  = File::ReadToString(shadersPath / "Basic.frag").Unwrap();
 		}
 
 		m_BasicShader = RHIShader::Create();
-		m_BasicShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
-		m_BasicShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
+		m_BasicShader->AddShaderSource(EShaderType::Vertex, vertexSrc, shadersPath / "BasicVS.hlsl");
+		m_BasicShader->AddShaderSource(EShaderType::Pixel, pixelSrc, shadersPath / "BasicPS.hlsl");
 
 		m_BasicShader->Compile()
 			.Err<ShaderCompilationError>([](auto& err) { RendererLogger.Error("Could not compile the Basic Shader."); })
@@ -384,18 +384,18 @@ namespace Ion
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() != ERHI::OpenGL)
 		{
-			vertexSrc = File::ReadToString(shadersPath + "BasicVS.hlsl").Unwrap();
-			pixelSrc  = File::ReadToString(shadersPath + "BasicUnlitMaskedPS.hlsl").Unwrap();
+			vertexSrc = File::ReadToString(shadersPath / "BasicVS.hlsl").Unwrap();
+			pixelSrc  = File::ReadToString(shadersPath / "BasicUnlitMaskedPS.hlsl").Unwrap();
 		}
 		else
 		{
-			vertexSrc = File::ReadToString(shadersPath + "Basic.vert").Unwrap();
-			pixelSrc  = File::ReadToString(shadersPath + "BasicUnlitMasked.frag").Unwrap();
+			vertexSrc = File::ReadToString(shadersPath / "Basic.vert").Unwrap();
+			pixelSrc  = File::ReadToString(shadersPath / "BasicUnlitMasked.frag").Unwrap();
 		}
 
 		m_BasicUnlitMaskedShader = RHIShader::Create();
-		m_BasicUnlitMaskedShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
-		m_BasicUnlitMaskedShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
+		m_BasicUnlitMaskedShader->AddShaderSource(EShaderType::Vertex, vertexSrc, shadersPath / "BasicVS.hlsl");
+		m_BasicUnlitMaskedShader->AddShaderSource(EShaderType::Pixel, pixelSrc, shadersPath / "BasicUnlitMaskedPS.hlsl");
 
 		m_BasicUnlitMaskedShader->Compile()
 			.Err<ShaderCompilationError>([](auto& err) { RendererLogger.Error("Could not compile the Basic Unlit Masked Shader."); })
@@ -412,18 +412,18 @@ namespace Ion
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() != ERHI::OpenGL)
 		{
-			vertexSrc = File::ReadToString(shadersPath + "TextureRenderVS.hlsl").Unwrap();
-			pixelSrc  = File::ReadToString(shadersPath + "PP_FXAAPS.hlsl").Unwrap();
+			vertexSrc = File::ReadToString(shadersPath / "TextureRenderVS.hlsl").Unwrap();
+			pixelSrc  = File::ReadToString(shadersPath / "PP_FXAAPS.hlsl").Unwrap();
 		}
 		else
 		{
-			vertexSrc = File::ReadToString(shadersPath + "TextureRender.vert").Unwrap();
-			pixelSrc  = File::ReadToString(shadersPath + "PP_FXAA.frag").Unwrap();
+			vertexSrc = File::ReadToString(shadersPath / "TextureRender.vert").Unwrap();
+			pixelSrc  = File::ReadToString(shadersPath / "PP_FXAA.frag").Unwrap();
 		}
 
 		m_PPFXAAShader = RHIShader::Create();
-		m_PPFXAAShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
-		m_PPFXAAShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
+		m_PPFXAAShader->AddShaderSource(EShaderType::Vertex, vertexSrc, shadersPath / "TextureRenderVS.hlsl");
+		m_PPFXAAShader->AddShaderSource(EShaderType::Pixel, pixelSrc, shadersPath / "PP_FXAAPS.hlsl");
 
 		m_PPFXAAShader->Compile()
 			.Err<ShaderCompilationError>([](auto& err) { RendererLogger.Error("Could not compile the PostProcess FXAA Shader."); })
@@ -440,18 +440,18 @@ namespace Ion
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() != ERHI::OpenGL)
 		{
-			vertexSrc = File::ReadToString(shadersPath + "Editor/EditorObjectIDVS.hlsl").Unwrap();
-			pixelSrc  = File::ReadToString(shadersPath + "Editor/EditorObjectIDPS.hlsl").Unwrap();
+			vertexSrc = File::ReadToString(shadersPath / "Editor/EditorObjectIDVS.hlsl").Unwrap();
+			pixelSrc  = File::ReadToString(shadersPath / "Editor/EditorObjectIDPS.hlsl").Unwrap();
 		}
 		else
 		{
-			vertexSrc = File::ReadToString(shadersPath + "Editor/EditorObjectID.vert").Unwrap();
-			pixelSrc  = File::ReadToString(shadersPath + "Editor/EditorObjectID.frag").Unwrap();
+			vertexSrc = File::ReadToString(shadersPath / "Editor/EditorObjectID.vert").Unwrap();
+			pixelSrc  = File::ReadToString(shadersPath / "Editor/EditorObjectID.frag").Unwrap();
 		}
 
 		m_EditorObjectIDShader = RHIShader::Create();
-		m_EditorObjectIDShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
-		m_EditorObjectIDShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
+		m_EditorObjectIDShader->AddShaderSource(EShaderType::Vertex, vertexSrc, shadersPath / "Editor/EditorObjectIDVS.hlsl");
+		m_EditorObjectIDShader->AddShaderSource(EShaderType::Pixel, pixelSrc, shadersPath / "Editor/EditorObjectIDPS.hlsl");
 
 		m_EditorObjectIDShader->Compile()
 			.Err<ShaderCompilationError>([](auto& err) { RendererLogger.Error("Could not compile the EditorObjectID Shader."); })
@@ -468,17 +468,17 @@ namespace Ion
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() != ERHI::OpenGL)
 		{
-			vertexSrc = File::ReadToString(shadersPath + "Editor/EditorSelectedVS.hlsl").Unwrap();
-			pixelSrc  = File::ReadToString(shadersPath + "BasicUnlitMaskedPS.hlsl").Unwrap();
+			vertexSrc = File::ReadToString(shadersPath / "Editor/EditorSelectedVS.hlsl").Unwrap();
+			pixelSrc  = File::ReadToString(shadersPath / "BasicUnlitMaskedPS.hlsl").Unwrap();
 		}
 		else
 		{
-			vertexSrc = File::ReadToString(shadersPath + "Editor/EditorSelected.vert").Unwrap();
+			vertexSrc = File::ReadToString(shadersPath / "Editor/EditorSelected.vert").Unwrap();
 		}
 
 		m_EditorSelectedShader = RHIShader::Create();
-		m_EditorSelectedShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
-		m_EditorSelectedShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
+		m_EditorSelectedShader->AddShaderSource(EShaderType::Vertex, vertexSrc, shadersPath / "Editor/EditorSelectedVS.hlsl");
+		m_EditorSelectedShader->AddShaderSource(EShaderType::Pixel, pixelSrc, shadersPath / "BasicUnlitMaskedPS.hlsl");
 
 		m_EditorSelectedShader->Compile()
 			.Err<ShaderCompilationError>([](auto& err) { RendererLogger.Error("Could not compile the EditorSelected Shader."); })
@@ -495,18 +495,18 @@ namespace Ion
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() != ERHI::OpenGL)
 		{
-			vertexSrc = File::ReadToString(shadersPath + "Editor/EditorViewportVS.hlsl").Unwrap();
-			pixelSrc  = File::ReadToString(shadersPath + "Editor/EditorViewportPS.hlsl").Unwrap();
+			vertexSrc = File::ReadToString(shadersPath / "Editor/EditorViewportVS.hlsl").Unwrap();
+			pixelSrc  = File::ReadToString(shadersPath / "Editor/EditorViewportPS.hlsl").Unwrap();
 		}
 		else
 		{
-			vertexSrc = File::ReadToString(shadersPath + "Editor/EditorViewport.vert").Unwrap();
-			pixelSrc  = File::ReadToString(shadersPath + "Editor/EditorViewport.frag").Unwrap();
+			vertexSrc = File::ReadToString(shadersPath / "Editor/EditorViewport.vert").Unwrap();
+			pixelSrc  = File::ReadToString(shadersPath / "Editor/EditorViewport.frag").Unwrap();
 		}
 
 		m_EditorViewportShader = RHIShader::Create();
-		m_EditorViewportShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
-		m_EditorViewportShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
+		m_EditorViewportShader->AddShaderSource(EShaderType::Vertex, vertexSrc, shadersPath / "Editor/EditorViewportVS.hlsl");
+		m_EditorViewportShader->AddShaderSource(EShaderType::Pixel, pixelSrc, shadersPath / "Editor/EditorViewportPS.hlsl");
 
 		m_EditorViewportShader->Compile()
 			.Err<ShaderCompilationError>([](auto& err) { RendererLogger.Error("Could not compile the EditorViewport Shader."); })
@@ -523,18 +523,18 @@ namespace Ion
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() != ERHI::OpenGL)
 		{
-			vertexSrc = File::ReadToString(shadersPath + "Editor/EditorViewportVS.hlsl").Unwrap();
-			pixelSrc  = File::ReadToString(shadersPath + "Editor/EditorViewportMSPS.hlsl").Unwrap();
+			vertexSrc = File::ReadToString(shadersPath / "Editor/EditorViewportVS.hlsl").Unwrap();
+			pixelSrc  = File::ReadToString(shadersPath / "Editor/EditorViewportMSPS.hlsl").Unwrap();
 		}
 		else
 		{
-			vertexSrc = File::ReadToString(shadersPath + "Editor/EditorViewport.vert").Unwrap();
-			pixelSrc  = File::ReadToString(shadersPath + "Editor/EditorViewport.frag").Unwrap();
+			vertexSrc = File::ReadToString(shadersPath / "Editor/EditorViewport.vert").Unwrap();
+			pixelSrc  = File::ReadToString(shadersPath / "Editor/EditorViewport.frag").Unwrap();
 		}
 
 		m_EditorViewportMSShader = RHIShader::Create();
-		m_EditorViewportMSShader->AddShaderSource(EShaderType::Vertex, vertexSrc);
-		m_EditorViewportMSShader->AddShaderSource(EShaderType::Pixel, pixelSrc);
+		m_EditorViewportMSShader->AddShaderSource(EShaderType::Vertex, vertexSrc, shadersPath / "Editor/EditorViewportVS.hlsl");
+		m_EditorViewportMSShader->AddShaderSource(EShaderType::Pixel, pixelSrc, shadersPath / "Editor/EditorViewportMSPS.hlsl");
 
 		m_EditorViewportMSShader->Compile()
 			.Err<ShaderCompilationError>([](auto& err) { RendererLogger.Error("Could not compile the EditorViewportMS Shader."); })

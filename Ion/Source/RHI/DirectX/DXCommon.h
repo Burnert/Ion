@@ -13,12 +13,36 @@
 
 namespace Ion
 {
+	struct DXShaderSource
+	{
+		String Code;
+		FilePath Path;
+		bool bFromFile;
+
+		DXShaderSource(
+			const String& code,
+			const FilePath& path
+		) : Code(code),
+			Path(path),
+			bFromFile(!path.IsEmpty())
+		{
+		}
+	};
+
 	struct DXShader
 	{
 		void* ShaderPtr;
 		ID3DBlob* ShaderBlob;
-		String Source;
+		DXShaderSource Source;
 		EShaderType Type;
+
+		DXShader(const DXShaderSource& source, EShaderType type) :
+			ShaderPtr(nullptr),
+			ShaderBlob(nullptr),
+			Source(source),
+			Type(type)
+		{
+		}
 	};
 
 	struct DXVertexAttributeFormat

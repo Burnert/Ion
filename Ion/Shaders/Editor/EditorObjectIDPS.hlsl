@@ -1,4 +1,4 @@
-#include "ShaderCommon.hlsl"
+#include <ShaderCommon.hlsl>
 
 Texture2D g_AlphaMaskTexture;
 SamplerState g_Sampler;

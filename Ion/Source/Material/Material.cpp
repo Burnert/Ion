@@ -305,8 +305,8 @@ namespace Ion
 			ionassert(shaderPerm.Shader);
 			ionassert(!shaderPerm.bCompiled);
 
-			shaderPerm.Shader->AddShaderSource(EShaderType::Vertex, m_MaterialCode);
-			shaderPerm.Shader->AddShaderSource(EShaderType::Pixel, m_MaterialCode);
+			shaderPerm.Shader->AddShaderSource(EShaderType::Vertex, m_MaterialCode, m_MaterialShaderPath);
+			shaderPerm.Shader->AddShaderSource(EShaderType::Pixel, m_MaterialCode, m_MaterialShaderPath);
 
 			// Compile the shaders using the Engine Task Queue
 			AsyncTask compileTask([material = shared_from_this(), shaderUsage, &shaderPerm](IMessageQueueProvider& queue)
@@ -343,8 +343,8 @@ namespace Ion
 			ionassert(shaderPerm.Shader);
 			ionassert(!shaderPerm.bCompiled);
 
-			shaderPerm.Shader->AddShaderSource(EShaderType::Vertex, m_MaterialCode);
-			shaderPerm.Shader->AddShaderSource(EShaderType::Pixel, m_MaterialCode);
+			shaderPerm.Shader->AddShaderSource(EShaderType::Vertex, m_MaterialCode, m_MaterialShaderPath);
+			shaderPerm.Shader->AddShaderSource(EShaderType::Pixel, m_MaterialCode, m_MaterialShaderPath);
 
 			// Compile the shaders using the Engine Task Queue
 			AsyncTask compileTask([material = shared_from_this(), shaderUsage, &shaderPerm, counter, onCompiled](IMessageQueueProvider& queue)
@@ -698,6 +698,7 @@ namespace Ion
 			melse return false;
 		);
 
+		m_MaterialShaderPath = path;
 		SetMaterialCode(source);
 
 		return true;

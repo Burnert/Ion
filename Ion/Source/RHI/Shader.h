@@ -21,6 +21,7 @@ namespace Ion
 		virtual ~RHIShader();
 
 		virtual void AddShaderSource(EShaderType type, const String& source) = 0;
+		virtual void AddShaderSource(EShaderType type, const String& source, const FilePath& sourcePath) = 0;
 
 		virtual Result<void, RHIError, ShaderCompilationError> Compile() = 0;
 		virtual bool IsCompiled() = 0;

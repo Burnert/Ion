@@ -8,6 +8,7 @@ namespace Ion
 	{
 	public:
 		DXInclude();
+		DXInclude(const FilePath& sourceDir);
 
 		virtual HRESULT WINAPI Open(
 			D3D_INCLUDE_TYPE IncludeType,
@@ -20,5 +21,8 @@ namespace Ion
 		virtual HRESULT WINAPI Close(
 			LPCVOID pData
 		) override;
+
+	private:
+		FilePath m_SourceDir;
 	};
 }

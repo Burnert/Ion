@@ -5,31 +5,58 @@
 
 namespace Ion
 {
-	DXInclude::DXInclude() { }
+	DXInclude::DXInclude()
+	{
+	}
+
+	DXInclude::DXInclude(const FilePath& sourceDir) :
+		m_SourceDir(sourceDir)
+	{
+		ionassert(sourceDir.IsDirectory());
+	}
 
 	HRESULT DXInclude::Open(D3D_INCLUDE_TYPE IncludeType, LPCSTR pFileName, LPCVOID pParentData, LPCVOID* ppData, UINT* pBytes)
 	{
-		FilePath includePath("");
+		// @TODO: Finish the local includes
+
+		FilePath fullIncludePath;
 
 		switch (IncludeType)
 		{
-		case D3D_INCLUDE_LOCAL:
-			includePath = EnginePath::GetShadersPath();
+			case D3D_INCLUDE_LOCAL:
+			{
+				if (!m_SourceDir.IsEmpty())
+				{
+					FilePath includeRelativeToSource = m_SourceDir / pFileName;
+					if (includeRelativeToSource.IsFile())
+					{
+						fullIncludePath = includeRelativeToSource;
+						break;
+					}
+				}
+
+				// @TODO: Depends on the current project include paths
+				fullIncludePath = EnginePath::GetShadersPath() / pFileName;
+			}
 			break;
-		// case D3D_INCLUDE_SYSTEM:
-			// @TODO: Add system includes
-		default:
-			return E_FAIL;
+			case D3D_INCLUDE_SYSTEM:
+			{
+				// Engine shaders library
+				fullIncludePath = EnginePath::GetShadersPath() / pFileName;
+			}
+			break;
+			default: return E_FAIL;
 		}
 
-		File includeFile(includePath + pFileName);
+		File includeFile(fullIncludePath);
 		includeFile.Open();
 
 		int64 size = includeFile.GetSize();
 		ionassert(size <= std::numeric_limits<UINT>::max(), "The include file is too big.");
 		char* buffer = (char*)malloc(size);
+		ionverify(buffer);
 
-		if (!buffer || !includeFile.Read(buffer, size))
+		if (!includeFile.Read(buffer, size))
 		{
 			return E_FAIL;
 		}

@@ -108,18 +108,18 @@ namespace Ion::Editor
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() != ERHI::OpenGL)
 		{
-			vertexSrc = File::ReadToString(shadersPath + "Editor/EditorGridVS.hlsl").Unwrap();
-			pixelSrc  = File::ReadToString(shadersPath + "Editor/EditorGridPS.hlsl").Unwrap();
+			vertexSrc = File::ReadToString(shadersPath / "Editor/EditorGridVS.hlsl").Unwrap();
+			pixelSrc  = File::ReadToString(shadersPath / "Editor/EditorGridPS.hlsl").Unwrap();
 		}
 		else
 		{
-			vertexSrc = File::ReadToString(shadersPath + "Basic.vert").Unwrap();
-			pixelSrc  = File::ReadToString(shadersPath + "Basic.frag").Unwrap();
+			vertexSrc = File::ReadToString(shadersPath / "Basic.vert").Unwrap();
+			pixelSrc  = File::ReadToString(shadersPath / "Basic.frag").Unwrap();
 		}
 
 		EditorMeshes::ShaderGrid = RHIShader::Create();
-		EditorMeshes::ShaderGrid->AddShaderSource(EShaderType::Vertex, vertexSrc);
-		EditorMeshes::ShaderGrid->AddShaderSource(EShaderType::Pixel, pixelSrc);
+		EditorMeshes::ShaderGrid->AddShaderSource(EShaderType::Vertex, vertexSrc, shadersPath / "Editor/EditorGridVS.hlsl");
+		EditorMeshes::ShaderGrid->AddShaderSource(EShaderType::Pixel, pixelSrc, shadersPath / "Editor/EditorGridPS.hlsl");
 
 		EditorMeshes::ShaderGrid->Compile()
 			.Err<ShaderCompilationError>([](auto& err) { EditorLogger.Error("Could not compile the Editor Grid Shader."); })

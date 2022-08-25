@@ -43,6 +43,11 @@ namespace Ion
 		}
 	}
 
+	void OpenGLShader::AddShaderSource(EShaderType type, const String& source, const FilePath& sourcePath)
+	{
+		ionbreak();
+	}
+
 	Result<void, RHIError, ShaderCompilationError> OpenGLShader::Compile()
 	{
 		TRACE_FUNCTION();

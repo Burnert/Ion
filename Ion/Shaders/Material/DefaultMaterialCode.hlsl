@@ -1,4 +1,4 @@
-#include "Material/BasicLit.hlsl"
+#include "BasicLit.hlsl"
 
 cbuffer MaterialParameters : register(b2)
 {

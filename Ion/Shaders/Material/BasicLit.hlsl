@@ -1,7 +1,7 @@
 #ifndef __BASIC_LIT_HLSL__
 #define __BASIC_LIT_HLSL__
 
-#include "Material/Material.hlsl"
+#include "Material.hlsl"
 
 // Vertex Shader ---------------------------------------------------------------------------------------
 

@@ -1,4 +1,4 @@
-#include "ShaderCommon.hlsl"
+#include <ShaderCommon.hlsl>
 
 Texture2D g_SceneTexture : register(t0);
 Texture2D g_SceneDepthTexture : register(t1);

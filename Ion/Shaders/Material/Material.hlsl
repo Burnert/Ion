@@ -1,7 +1,7 @@
 #ifndef __MATERIAL_HLSL__
 #define __MATERIAL_HLSL__
 
-#include "ShaderCommon.hlsl"
+#include <ShaderCommon.hlsl>
 
 // Mark entry functions with this
 #define ENTRY

@@ -1,4 +1,4 @@
-#include "ShaderCommon.hlsl"
+#include <ShaderCommon.hlsl>
 
 static const float LARGE_GRID_DENSITY = 1.0f;
 static const float SMALL_GRID_DENSITY = 10.0f;
