@@ -13,10 +13,10 @@ namespace Ion
 
 	DEFINE_ERROR_TYPE(ShaderCompilationError);
 
-	class ION_API RHIShader
+	class ION_API RHIShader : public RefCountable
 	{
 	public:
-		static std::shared_ptr<RHIShader> Create();
+		static TRef<RHIShader> Create();
 
 		virtual ~RHIShader() { }
 

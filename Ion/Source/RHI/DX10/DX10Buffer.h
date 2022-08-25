@@ -14,9 +14,9 @@ namespace Ion
 		virtual ~DX10VertexBuffer() override;
 
 		virtual void SetLayout(const TRef<RHIVertexLayout>& layout) override;
-		virtual Result<void, RHIError> SetLayoutShader(const std::shared_ptr<RHIShader>& shader) override;
+		virtual Result<void, RHIError> SetLayoutShader(const TRef<RHIShader>& shader) override;
 
-		Result<void, RHIError> CreateDX10Layout(const std::shared_ptr<class DX10Shader>& shader);
+		Result<void, RHIError> CreateDX10Layout(const TRef<class DX10Shader>& shader);
 
 		virtual uint32 GetVertexCount() const override;
 

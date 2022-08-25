@@ -81,7 +81,7 @@ namespace Ion
 
 		Transform worldTransform = GetWorldTransform();
 
-		RHIShader* shader = Renderer::Get()->GetBasicShader().get();
+		RHIShader* shader = Renderer::Get()->GetBasicShader().Raw();
 
 		std::shared_ptr<MaterialInstance> materialInstance = m_Mesh->GetMaterialInSlot(0);
 		if (materialInstance)
@@ -89,7 +89,7 @@ namespace Ion
 			const std::shared_ptr<Material>& material = materialInstance->GetBaseMaterial();
 			if (material)
 			{
-				shader = material->GetShader(EShaderUsage::StaticMesh).get();
+				shader = material->GetShader(EShaderUsage::StaticMesh).Raw();
 			}
 		}
 

@@ -62,12 +62,12 @@ namespace Ion
 		}
 	}
 
-	Result<void, RHIError> DX11VertexBuffer::SetLayoutShader(const std::shared_ptr<RHIShader>& shader)
+	Result<void, RHIError> DX11VertexBuffer::SetLayoutShader(const TRef<RHIShader>& shader)
 	{
-		return CreateDX11Layout(std::static_pointer_cast<DX11Shader>(shader));
+		return CreateDX11Layout(RefCast<DX11Shader>(shader));
 	}
 
-	Result<void, RHIError> DX11VertexBuffer::CreateDX11Layout(const std::shared_ptr<DX11Shader>& shader)
+	Result<void, RHIError> DX11VertexBuffer::CreateDX11Layout(const TRef<DX11Shader>& shader)
 	{
 		TRACE_FUNCTION();
 

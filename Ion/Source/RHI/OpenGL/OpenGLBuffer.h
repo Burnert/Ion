@@ -15,7 +15,7 @@ namespace Ion
 		virtual ~OpenGLVertexBuffer() override;
 
 		virtual void SetLayout(const TRef<RHIVertexLayout>& layout) override;
-		virtual Result<void, RHIError> SetLayoutShader(const std::shared_ptr<RHIShader>& shader) override;
+		virtual Result<void, RHIError> SetLayoutShader(const TRef<RHIShader>& shader) override;
 
 		virtual uint32 GetVertexCount() const override;
 

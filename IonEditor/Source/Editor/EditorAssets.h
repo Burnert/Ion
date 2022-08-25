@@ -70,7 +70,7 @@ namespace Ion::Editor
 	public:
 		static inline std::shared_ptr<Mesh> MeshGrid;
 
-		static inline std::shared_ptr<RHIShader> ShaderGrid;
+		static inline TRef<RHIShader> ShaderGrid;
 
 		static void Init();
 	};

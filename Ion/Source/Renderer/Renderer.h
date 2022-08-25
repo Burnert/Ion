@@ -32,7 +32,7 @@ namespace Ion
 
 	struct ScreenTextureRenderData
 	{
-		std::shared_ptr<RHIShader> Shader;
+		TRef<RHIShader> Shader;
 		TRef<RHIVertexBuffer> VertexBuffer;
 		TRef<RHIIndexBuffer> IndexBuffer;
 	};
@@ -126,37 +126,37 @@ namespace Ion
 
 		void RenderEditorPass(const Scene* scene, const EditorPassData& data);
 
-		inline static const std::shared_ptr<RHIShader>& GetBasicShader()
+		inline static const TRef<RHIShader>& GetBasicShader()
 		{
 			return Renderer::Get()->m_BasicShader;
 		}
 
-		inline static const std::shared_ptr<RHIShader>& GetBasicUnlitMaskedShader()
+		inline static const TRef<RHIShader>& GetBasicUnlitMaskedShader()
 		{
 			return Renderer::Get()->m_BasicUnlitMaskedShader;
 		}
 
-		inline static const std::shared_ptr<RHIShader>& GetEditorObjectIDShader()
+		inline static const TRef<RHIShader>& GetEditorObjectIDShader()
 		{
 			return Renderer::Get()->m_EditorObjectIDShader;
 		}
 
-		inline static const std::shared_ptr<RHIShader>& GetEditorSelectedShader()
+		inline static const TRef<RHIShader>& GetEditorSelectedShader()
 		{
 			return Renderer::Get()->m_EditorSelectedShader;
 		}
 
-		inline static const std::shared_ptr<RHIShader>& GetEditorViewportShader()
+		inline static const TRef<RHIShader>& GetEditorViewportShader()
 		{
 			return Renderer::Get()->m_EditorViewportShader;
 		}
 
-		inline static const std::shared_ptr<RHIShader>& GetEditorViewportMSShader()
+		inline static const TRef<RHIShader>& GetEditorViewportMSShader()
 		{
 			return Renderer::Get()->m_EditorViewportMSShader;
 		}
 
-		inline static const std::shared_ptr<RHIShader>& GetFXAAShader()
+		inline static const TRef<RHIShader>& GetFXAAShader()
 		{
 			return Renderer::Get()->m_PPFXAAShader;
 		}
@@ -195,15 +195,15 @@ namespace Ion
 	private:
 		ScreenTextureRenderData m_ScreenTextureRenderData;
 
-		std::shared_ptr<RHIShader> m_BasicShader;
-		std::shared_ptr<RHIShader> m_BasicUnlitMaskedShader;
+		TRef<RHIShader> m_BasicShader;
+		TRef<RHIShader> m_BasicUnlitMaskedShader;
 
-		std::shared_ptr<RHIShader> m_PPFXAAShader;
+		TRef<RHIShader> m_PPFXAAShader;
 
-		std::shared_ptr<RHIShader> m_EditorObjectIDShader;
-		std::shared_ptr<RHIShader> m_EditorSelectedShader;
-		std::shared_ptr<RHIShader> m_EditorViewportShader;
-		std::shared_ptr<RHIShader> m_EditorViewportMSShader;
+		TRef<RHIShader> m_EditorObjectIDShader;
+		TRef<RHIShader> m_EditorSelectedShader;
+		TRef<RHIShader> m_EditorViewportShader;
+		TRef<RHIShader> m_EditorViewportMSShader;
 
 		std::shared_ptr<Mesh> m_BillboardMesh;
 

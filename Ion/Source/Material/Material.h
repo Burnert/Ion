@@ -17,7 +17,7 @@ namespace Ion
 
 	struct ShaderPermutation
 	{
-		std::shared_ptr<RHIShader> Shader;
+		TRef<RHIShader> Shader;
 		EShaderUsage Usage;
 		bool bCompiled;
 
@@ -409,7 +409,7 @@ namespace Ion
 		bool IsCompiled(EShaderUsage usage) const;
 
 		bool BindShader(EShaderUsage usage) const;
-		const std::shared_ptr<RHIShader>& GetShader(EShaderUsage usage) const;
+		const TRef<RHIShader>& GetShader(EShaderUsage usage) const;
 
 		void UpdateConstantBuffer() const;
 

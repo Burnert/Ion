@@ -32,7 +32,7 @@ namespace Ion
 		m_VertexLayout = layout;
 	}
 
-	Result<void, RHIError> OpenGLVertexBuffer::SetLayoutShader(const std::shared_ptr<RHIShader>& shader)
+	Result<void, RHIError> OpenGLVertexBuffer::SetLayoutShader(const TRef<RHIShader>& shader)
 	{
 		return Ok();
 	}

@@ -320,7 +320,7 @@ namespace Ion
 
 	void Renderer::BindScreenTexturePrimitives() const
 	{
-		BindScreenTexturePrimitives(m_ScreenTextureRenderData.Shader.get());
+		BindScreenTexturePrimitives(m_ScreenTextureRenderData.Shader.Raw());
 	}
 
 	void Renderer::BindScreenTexturePrimitives(const RHIShader* customShader) const
@@ -572,7 +572,7 @@ namespace Ion
 			prim.VertexBuffer = editorPrim.VertexBuffer;
 			prim.IndexBuffer = editorPrim.IndexBuffer;
 			prim.UniformBuffer = editorPrim.UniformBuffer;
-			prim.Shader = GetEditorObjectIDShader().get();
+			prim.Shader = GetEditorObjectIDShader().Raw();
 			prim.Transform = editorPrim.Transform;
 
 			// Load the GUID
@@ -595,7 +595,7 @@ namespace Ion
 			MeshUniforms& meshUniforms = billboardMesh->GetUniformsDataRef();
 			meshUniforms.RenderGuid = *(UVector4*)billboardPrim.Guid.GetRawBytes().data();
 
-			DrawBillboard(billboardPrim.BillboardRenderProxy, GetEditorObjectIDShader().get(), scene);
+			DrawBillboard(billboardPrim.BillboardRenderProxy, GetEditorObjectIDShader().Raw(), scene);
 
 			// Reset
 			meshUniforms.RenderGuid = UVector4();
@@ -615,7 +615,7 @@ namespace Ion
 				prim.VertexBuffer = editorPrim.VertexBuffer;
 				prim.IndexBuffer = editorPrim.IndexBuffer;
 				prim.UniformBuffer = editorPrim.UniformBuffer;
-				prim.Shader = GetEditorSelectedShader().get();
+				prim.Shader = GetEditorSelectedShader().Raw();
 				prim.Transform = editorPrim.Transform;
 
 				m_WhiteTexture->Bind(0);
@@ -628,7 +628,7 @@ namespace Ion
 		{
 			for (const REditorPassBillboardPrimitive& billboardPrim : data.SelectedBillboards)
 			{
-				DrawBillboard(billboardPrim.BillboardRenderProxy, GetEditorSelectedShader().get(), scene);
+				DrawBillboard(billboardPrim.BillboardRenderProxy, GetEditorSelectedShader().Raw(), scene);
 			}
 		}
 	}

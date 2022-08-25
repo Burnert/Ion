@@ -284,12 +284,12 @@ namespace Ion::Editor
 			Renderer::Get()->Clear();
 			m_ViewportTextures.SceneFinalDepth->Bind(1);
 			m_ViewportTextures.SelectedDepth->Bind(2);
-			std::shared_ptr<RHIShader> viewportShader =
+			TRef<RHIShader> viewportShader =
 				// Select the proper shader
 				m_ViewportTextures.SceneFinalColor->GetDescription().IsMultiSampled() ?
 				Renderer::Get()->GetEditorViewportMSShader() :
 				Renderer::Get()->GetEditorViewportShader();
-			Renderer::Get()->DrawScreenTexture(m_ViewportTextures.SceneFinalColor, viewportShader.get());
+			Renderer::Get()->DrawScreenTexture(m_ViewportTextures.SceneFinalColor, viewportShader.Raw());
 			Renderer::Get()->UnbindResources();
 
 			// Render to the final viewport framebuffer
@@ -298,7 +298,7 @@ namespace Ion::Editor
 			Renderer::Get()->Clear();
 			if (m_bEnableFXAA)
 			{
-				Renderer::Get()->DrawScreenTexture(m_ViewportPreFX, Renderer::Get()->GetFXAAShader().get());
+				Renderer::Get()->DrawScreenTexture(m_ViewportPreFX, Renderer::Get()->GetFXAAShader().Raw());
 			}
 			else
 			{
@@ -415,7 +415,7 @@ namespace Ion::Editor
 	{
 		RPrimitiveRenderProxy grid { };
 		grid.Transform     = Transform().GetMatrix();
-		grid.Shader        = EditorMeshes::ShaderGrid.get();
+		grid.Shader        = EditorMeshes::ShaderGrid.Raw();
 		grid.VertexBuffer  = EditorMeshes::MeshGrid->GetVertexBufferRaw();
 		grid.IndexBuffer   = EditorMeshes::MeshGrid->GetIndexBufferRaw();
 		grid.UniformBuffer = EditorMeshes::MeshGrid->GetUniformBufferRaw();
@@ -447,7 +447,7 @@ namespace Ion::Editor
 			billboard.LocationWS = sceneComponent->GetWorldTransform().GetLocation();
 			billboard.Scale = 0.2f;
 
-			const RHIShader* billboardShader = Renderer::Get()->GetBasicUnlitMaskedShader().get();
+			const RHIShader* billboardShader = Renderer::Get()->GetBasicUnlitMaskedShader().Raw();
 			Renderer::Get()->DrawBillboard(billboard, billboardShader, editorWorld->GetScene());
 		});
 	}

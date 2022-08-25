@@ -9,18 +9,18 @@
 
 namespace Ion
 {
-	std::shared_ptr<RHIShader> RHIShader::Create()
+	TRef<RHIShader> RHIShader::Create()
 	{
 		switch (RHI::GetCurrent())
 		{
 		case ERHI::OpenGL:
-			return std::make_shared<OpenGLShader>();
+			return MakeRef<OpenGLShader>();
 		case ERHI::DX10:
-			return std::make_shared<DX10Shader>();
+			return MakeRef<DX10Shader>();
 		case ERHI::DX11:
-			return std::make_shared<DX11Shader>();
+			return MakeRef<DX11Shader>();
 		default:
-			return std::shared_ptr<RHIShader>(nullptr);
+			return nullptr;
 		}
 	}
 }

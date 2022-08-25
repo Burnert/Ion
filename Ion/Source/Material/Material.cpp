@@ -395,7 +395,7 @@ namespace Ion
 		return true;
 	}
 
-	const std::shared_ptr<RHIShader>& Material::GetShader(EShaderUsage usage) const
+	const TRef<RHIShader>& Material::GetShader(EShaderUsage usage) const
 	{
 		ionassert(m_Shaders.find(usage) != m_Shaders.end());
 
