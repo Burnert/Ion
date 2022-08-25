@@ -60,7 +60,7 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		// Set global matrices and other scene data
-		SceneUniforms& uniforms = scene->m_SceneUniformBuffer->DataRef<SceneUniforms>();
+		SceneUniforms& uniforms = scene->m_SceneUniformBuffer->Data<SceneUniforms>();
 		uniforms.ViewMatrix = scene->m_RenderCamera.ViewMatrix;
 		uniforms.ProjectionMatrix = scene->m_RenderCamera.ProjectionMatrix;
 		uniforms.ViewProjectionMatrix = scene->m_RenderCamera.ViewProjectionMatrix;
@@ -145,7 +145,7 @@ namespace Ion
 		const Matrix4& viewProjectionMatrix = targetScene->m_RenderCamera.ViewProjectionMatrix;
 		const Matrix4& modelMatrix = primitive.Transform;
 
-		MeshUniforms& uniformData = primitive.UniformBuffer->DataRef<MeshUniforms>();
+		MeshUniforms& uniformData = primitive.UniformBuffer->Data<MeshUniforms>();
 		uniformData.TransformMatrix = modelMatrix;
 		uniformData.InverseTransposeMatrix = Math::InverseTranspose(modelMatrix);
 		uniformData.ModelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
@@ -181,7 +181,7 @@ namespace Ion
 		transform.SetScale(Vector3(billboard.Scale));
 		transform.SetRotation(cameraTransform.GetRotation());
 
-		MeshUniforms& uniforms = billboardMesh->GetUniformsDataRef();
+		MeshUniforms& uniforms = billboardMesh->GetUniformsData();
 		uniforms.TransformMatrix = transform.GetMatrix();
 		uniforms.ModelViewProjectionMatrix = targetScene->m_RenderCamera.ViewProjectionMatrix * transform.GetMatrix();
 
@@ -558,7 +558,7 @@ namespace Ion
 		SetDepthStencil(data.RTObjectIDDepth);
 		Clear(clearOptions);
 
-		SceneUniforms& uniforms = scene->m_SceneUniformBuffer->DataRef<SceneUniforms>();
+		SceneUniforms& uniforms = scene->m_SceneUniformBuffer->Data<SceneUniforms>();
 		uniforms.ViewMatrix = scene->m_RenderCamera.ViewMatrix;
 		uniforms.ProjectionMatrix = scene->m_RenderCamera.ProjectionMatrix;
 		uniforms.ViewProjectionMatrix = scene->m_RenderCamera.ViewProjectionMatrix;
@@ -576,7 +576,7 @@ namespace Ion
 			prim.Transform = editorPrim.Transform;
 
 			// Load the GUID
-			MeshUniforms& meshUniforms = prim.UniformBuffer->DataRef<MeshUniforms>();
+			MeshUniforms& meshUniforms = prim.UniformBuffer->Data<MeshUniforms>();
 			meshUniforms.RenderGuid = *(UVector4*)editorPrim.Guid.GetRawBytes().data();
 
 			m_WhiteTexture->Bind(0);
@@ -592,7 +592,7 @@ namespace Ion
 			std::shared_ptr<Mesh> billboardMesh = GetBillboardMesh();
 
 			// Load the GUID
-			MeshUniforms& meshUniforms = billboardMesh->GetUniformsDataRef();
+			MeshUniforms& meshUniforms = billboardMesh->GetUniformsData();
 			meshUniforms.RenderGuid = *(UVector4*)billboardPrim.Guid.GetRawBytes().data();
 
 			DrawBillboard(billboardPrim.BillboardRenderProxy, GetEditorObjectIDShader().Raw(), scene);

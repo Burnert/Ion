@@ -16,8 +16,6 @@ namespace Ion
 		virtual void SetLayout(const TRef<RHIVertexLayout>& layout) override;
 		virtual Result<void, RHIError> SetLayoutShader(const TRef<RHIShader>& shader) override;
 
-		Result<void, RHIError> CreateDX11Layout(const TRef<class DX11Shader>& shader);
-
 		virtual uint32 GetVertexCount() const override;
 
 		static constexpr const char* GetSemanticName(const EVertexAttributeSemantic semantic)
@@ -38,6 +36,8 @@ namespace Ion
 
 	private:
 		Result<void, RHIError> CreateBuffer(float* vertexAttributes, uint64 count);
+
+		Result<void, RHIError> CreateDX11Layout(const TRef<class DX11Shader>& shader);
 
 	private:
 		uint32 m_ID;

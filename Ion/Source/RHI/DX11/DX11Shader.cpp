@@ -75,8 +75,8 @@ namespace Ion
 					shader.Source.length(),
 					nullptr, nullptr,
 					&includeHandler,
-					ShaderTypeToEntryPoint(shader.Type),
-					FormatShaderTarget(shader.Type),
+					DXCommon::ShaderTypeToEntryPoint(shader.Type),
+					DXCommon::FormatShaderTarget(DX11::GetFeatureLevel(), shader.Type).c_str(),
 					compileFlags, 0,
 					&shader.ShaderBlob,
 					&errorMessagesBlob

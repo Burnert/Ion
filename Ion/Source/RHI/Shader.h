@@ -28,19 +28,21 @@ namespace Ion
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 
-		FORCEINLINE static constexpr const char* ShaderTypeToString(EShaderType type)
-		{
-			switch (type)
-			{
-			case EShaderType::Vertex:  return "Vertex Shader";
-			case EShaderType::Pixel:   return "Pixel Shader";
-			default:                   return "Unknown Shader";
-			}
-		}
+		static constexpr const char* ShaderTypeToString(EShaderType type);
 
 	protected:
 		RHIShader();
 
 		friend class Renderer;
 	};
+
+	FORCEINLINE constexpr const char* RHIShader::ShaderTypeToString(EShaderType type)
+	{
+		switch (type)
+		{
+		case EShaderType::Vertex:  return "Vertex Shader";
+		case EShaderType::Pixel:   return "Pixel Shader";
+		default:                   return "Unknown Shader";
+		}
+	}
 }

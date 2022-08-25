@@ -56,7 +56,7 @@ namespace Ion
 		void AssignMaterialToSlot(uint16 index, const std::shared_ptr<MaterialInstance>& material);
 		std::shared_ptr<MaterialInstance> GetMaterialInSlot(uint16 slot) const;
 
-		MeshUniforms& GetUniformsDataRef();
+		MeshUniforms& GetUniformsData();
 
 		bool LoadFromAsset(Asset& asset);
 

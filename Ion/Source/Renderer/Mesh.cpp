@@ -153,9 +153,9 @@ namespace Ion
 		return slot.MaterialInstance;
 	}
 
-	MeshUniforms& Mesh::GetUniformsDataRef()
+	MeshUniforms& Mesh::GetUniformsData()
 	{
-		return m_UniformBuffer->DataRef<MeshUniforms>();
+		return m_UniformBuffer->Data<MeshUniforms>();
 	}
 
 	const RHIVertexBuffer* Mesh::GetVertexBufferRaw() const

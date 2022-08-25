@@ -59,10 +59,7 @@ namespace Ion
 		virtual void ImGuiRender(ImDrawData* drawData) = 0;
 		virtual void ImGuiShutdown() = 0;
 
-		static FORCEINLINE ERHI GetCurrent()
-		{
-			return s_CurrentRHI;
-		}
+		static ERHI GetCurrent();
 
 	private:
 		static ERHI s_CurrentRHI;
@@ -73,5 +70,10 @@ namespace Ion
 	{
 		ionassert(s_RHI);
 		return s_RHI;
+	}
+
+	FORCEINLINE ERHI RHI::GetCurrent()
+	{
+		return s_CurrentRHI;
 	}
 }

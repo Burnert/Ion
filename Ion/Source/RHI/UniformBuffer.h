@@ -167,34 +167,16 @@ template<> constexpr EUniformType TTypeToUniformTypeV<type> = EUniformType::name
 
 		/* Creates a UniformBuffer with specified struct data. */
 		template<typename T>
-		static TRef<RHIUniformBuffer> Create(T& initialData)
-		{
-			return Create(&initialData, sizeof(T));
-		}
+		static TRef<RHIUniformBuffer> Create(T& initialData);
 
 		/* Creates a UniformBuffer with a specified struct type. */
 		template<typename T>
-		static TRef<RHIUniformBuffer> Create()
-		{
-			T initialData { };
-			return Create(&initialData, sizeof(T));
-		}
-
-		// Returns a pointer to the uniform buffer data on the CPU side.
-		// Make sure to call this with the right type.
-		template<typename T>
-		T* Data() const
-		{
-			return (T*)GetDataPtr();
-		}
+		static TRef<RHIUniformBuffer> Create();
 
 		// Returns a reference to the uniform buffer data on the CPU side.
 		// Make sure to call this with the right type.
 		template<typename T>
-		T& DataRef() const
-		{
-			return *(T*)GetDataPtr();
-		}
+		T& Data() const;
 
 		virtual ~RHIUniformBuffer();
 
@@ -208,6 +190,26 @@ template<> constexpr EUniformType TTypeToUniformTypeV<type> = EUniformType::name
 		friend class OpenGLRenderer;
 		friend class DX11Renderer;
 	};
+
+	template<typename T>
+	inline TRef<RHIUniformBuffer> RHIUniformBuffer::Create(T& initialData)
+	{
+		return Create(&initialData, sizeof(T));
+	}
+
+	template<typename T>
+	inline TRef<RHIUniformBuffer> RHIUniformBuffer::Create()
+	{
+		T initialData { };
+		return Create(&initialData, sizeof(T));
+	}
+
+	template<typename T>
+	inline T& RHIUniformBuffer::Data() const
+	{
+		ionassert(GetDataPtr());
+		return *(T*)GetDataPtr();
+	}
 
 	class ION_API RHIUniformBufferDynamic : public RefCountable, public IRHIUniformBuffer
 	{

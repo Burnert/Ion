@@ -176,7 +176,7 @@ namespace Ion
 
 		// Create Texture2D
 
-		DXGI_FORMAT resourceFormat = DXCommon::TextureFormatToDXGIFormat(desc.Format, EDX11FormatUsage::Resource);
+		DXGI_FORMAT resourceFormat = DXCommon::TextureFormatToDXGIFormat(desc.Format, EDXTextureFormatUsage::Resource);
 
 		int32 mipLevels = desc.bGenerateMips ? 0 : 1;
 		int32 sampleCount = (bool)desc.MultiSampling ? (int32)desc.MultiSampling : 1;
@@ -234,7 +234,7 @@ namespace Ion
 			// Create RTV (Render Target View)
 
 			D3D11_RENDER_TARGET_VIEW_DESC rtvDesc { };
-			rtvDesc.Format = DXCommon::TextureFormatToDXGIFormat(desc.Format, EDX11FormatUsage::RTV);
+			rtvDesc.Format = DXCommon::TextureFormatToDXGIFormat(desc.Format, EDXTextureFormatUsage::RTV);
 			rtvDesc.ViewDimension = IsMultiSampled(desc) ?
 				D3D11_RTV_DIMENSION_TEXTURE2DMS :
 				D3D11_RTV_DIMENSION_TEXTURE2D;
@@ -252,7 +252,7 @@ namespace Ion
 			// Create DSV (Depth Stencil View)
 
 			D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc { };
-			dsvDesc.Format = DXCommon::TextureFormatToDXGIFormat(desc.Format, EDX11FormatUsage::DSV);
+			dsvDesc.Format = DXCommon::TextureFormatToDXGIFormat(desc.Format, EDXTextureFormatUsage::DSV);
 			dsvDesc.ViewDimension = IsMultiSampled(desc) ?
 				D3D11_DSV_DIMENSION_TEXTURE2DMS :
 				D3D11_DSV_DIMENSION_TEXTURE2D;
@@ -281,7 +281,7 @@ namespace Ion
 			// Create SRV (Shader Resource View)
 
 			D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc { };
-			srvDesc.Format = DXCommon::TextureFormatToDXGIFormat(desc.Format, EDX11FormatUsage::SRV);
+			srvDesc.Format = DXCommon::TextureFormatToDXGIFormat(desc.Format, EDXTextureFormatUsage::SRV);
 			srvDesc.ViewDimension = IsMultiSampled(desc) ?
 				D3D11_SRV_DIMENSION_TEXTURE2DMS :
 				D3D11_SRV_DIMENSION_TEXTURE2D;
