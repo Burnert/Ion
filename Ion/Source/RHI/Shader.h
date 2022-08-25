@@ -18,7 +18,7 @@ namespace Ion
 	public:
 		static TRef<RHIShader> Create();
 
-		virtual ~RHIShader() { }
+		virtual ~RHIShader();
 
 		virtual void AddShaderSource(EShaderType type, const String& source) = 0;
 
@@ -39,7 +39,7 @@ namespace Ion
 		}
 
 	protected:
-		RHIShader() { }
+		RHIShader();
 
 		friend class Renderer;
 	};

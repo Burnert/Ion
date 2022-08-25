@@ -180,8 +180,6 @@ template<> constexpr EUniformType TTypeToUniformTypeV<type> = EUniformType::name
 			return Create(&initialData, sizeof(T));
 		}
 
-		virtual ~RHIUniformBuffer() { }
-
 		// Returns a pointer to the uniform buffer data on the CPU side.
 		// Make sure to call this with the right type.
 		template<typename T>
@@ -198,8 +196,10 @@ template<> constexpr EUniformType TTypeToUniformTypeV<type> = EUniformType::name
 			return *(T*)GetDataPtr();
 		}
 
+		virtual ~RHIUniformBuffer();
+
 	protected:
-		RHIUniformBuffer() { };
+		RHIUniformBuffer();
 
 		virtual void* GetDataPtr() const = 0;
 
@@ -222,6 +222,8 @@ template<> constexpr EUniformType TTypeToUniformTypeV<type> = EUniformType::name
 		virtual const UniformData* GetUniformData(const String& name) const = 0;
 
 		bool HasUniform(const String& name) const;
+
+		virtual ~RHIUniformBufferDynamic();
 
 	protected:
 		RHIUniformBufferDynamic(const UniformDataMap& uniforms);

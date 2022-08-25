@@ -23,4 +23,14 @@ namespace Ion
 			return nullptr;
 		}
 	}
+
+	RHIShader::RHIShader()
+	{
+		RHILogger.Info("RHIShader \"TODO\" object has been created.");
+	}
+
+	RHIShader::~RHIShader()
+	{
+		RHILogger.Info("RHIShader \"TODO\" object has been destroyed.");
+	}
 }

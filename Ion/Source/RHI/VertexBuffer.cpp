@@ -20,4 +20,14 @@ namespace Ion
 		m_Attributes.push_back({ m_Offset, semantic, attributeType, elementCount, bNormalized });
 		m_Offset += elementCount * GetSizeOfAttributeType(attributeType);
 	}
+
+	RHIVertexBuffer::RHIVertexBuffer()
+	{
+		RHILogger.Info("RHIVertexBuffer \"TODO\" object has been created.");
+	}
+
+	RHIVertexBuffer::~RHIVertexBuffer()
+	{
+		RHILogger.Info("RHIVertexBuffer \"TODO\" object has been destroyed.");
+	}
 }

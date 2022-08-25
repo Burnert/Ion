@@ -13,7 +13,7 @@ namespace Ion
 	public:
 		static TRef<RHIVertexBuffer> Create(float* vertexAttributes, uint64 count);
 
-		virtual ~RHIVertexBuffer() { }
+		virtual ~RHIVertexBuffer();
 
 		virtual void SetLayout(const TRef<RHIVertexLayout>& layout) = 0;
 		virtual Result<void, RHIError> SetLayoutShader(const TRef<RHIShader>& shader) = 0;
@@ -21,7 +21,7 @@ namespace Ion
 		virtual uint32 GetVertexCount() const = 0;
 
 	protected:
-		RHIVertexBuffer() { }
+		RHIVertexBuffer();
 
 		virtual Result<void, RHIError> Bind() const = 0;
 		virtual Result<void, RHIError> BindLayout() const = 0;
