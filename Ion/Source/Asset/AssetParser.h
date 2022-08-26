@@ -2,10 +2,6 @@
 
 #include "Asset.h"
 
-// @TODO: Out of module include
-#include "Material/MaterialCommon.h"
-#include "Resource/ResourceCommon.h"
-
 namespace Ion
 {
 	// Asset Parser Base ------------------------------------------------------------------------
@@ -64,17 +60,5 @@ namespace Ion
 		 * @brief Fails if the actual type is different than the specified one.
 		 */
 		AssetParser& ExpectType(EAssetType type);
-	};
-
-	struct MaterialAssetParameterValues
-	{
-		TMaterialParameterTypeVariant Default;
-		TMaterialParameterTypeVariant Min;
-		TMaterialParameterTypeVariant Max;
-	};
-
-	struct MaterialInstanceAssetParameterInstanceValues
-	{
-		TMaterialParameterTypeVariant Value;
 	};
 }

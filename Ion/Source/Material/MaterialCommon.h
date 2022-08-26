@@ -50,4 +50,16 @@ namespace Ion
 	}
 
 	using TMaterialParameterTypeVariant = TVariant<float, Vector4, String>;
+
+	struct MaterialAssetParameterValues
+	{
+		TMaterialParameterTypeVariant Default;
+		TMaterialParameterTypeVariant Min;
+		TMaterialParameterTypeVariant Max;
+	};
+
+	struct MaterialInstanceAssetParameterInstanceValues
+	{
+		TMaterialParameterTypeVariant Value;
+	};
 }
