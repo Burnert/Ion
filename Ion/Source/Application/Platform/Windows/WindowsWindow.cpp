@@ -158,6 +158,14 @@ namespace Ion
 				WindowFocusEvent event((uint64)hWnd);
 				PostDeferredEvent(event);
 
+				// BUGFIX: When the exclusive fullscreen mode is disrupted in any way
+				// (like changing windows) it doesn't continue and there is input lag.
+				// @TODO: Might be a weird fix but it works.
+				if (windowRef.m_bFullScreenMode)
+				{
+					windowRef.EnableFullScreen(true);
+				}
+
 				return 0;
 			}
 
@@ -819,32 +827,35 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		// Enable
-		if (!m_bFullScreenMode && bFullscreen)
+		if (bFullscreen)
 		{
-			WINDOWPLACEMENT windowPlacement { };
-			windowPlacement.length = sizeof(WINDOWPLACEMENT);
+			DWORD style = GetWindowLong(m_WindowHandle, GWL_STYLE);
 
-			ionverify(GetWindowPlacement(m_WindowHandle, &windowPlacement));
+			if (!m_bFullScreenMode)
+			{
+				WINDOWPLACEMENT windowPlacement { };
+				windowPlacement.length = sizeof(WINDOWPLACEMENT);
 
-			bool bMaximized = windowPlacement.showCmd == SW_MAXIMIZE;
+				ionverify(GetWindowPlacement(m_WindowHandle, &windowPlacement));
+
+				bool bMaximized = windowPlacement.showCmd == SW_MAXIMIZE;
+
+				RECT clientRect { };
+				GetClientRect(m_WindowHandle, &clientRect);
+
+				m_WindowBeforeFullScreen = WindowDataBeforeFullScreen {
+					windowPlacement,
+					clientRect,
+					style,
+					bMaximized,
+				};
+			}
 
 			MONITORINFO monitorInfo { };
 			monitorInfo.cbSize = sizeof(MONITORINFO);
 
 			HMONITOR hMonitor = MonitorFromWindow(m_WindowHandle, MONITOR_DEFAULTTOPRIMARY);
 			ionverify(GetMonitorInfo(hMonitor, &monitorInfo));
-
-			DWORD style = GetWindowLong(m_WindowHandle, GWL_STYLE);
-
-			RECT clientRect { };
-			GetClientRect(m_WindowHandle, &clientRect);
-
-			m_WindowBeforeFullScreen = WindowDataBeforeFullScreen {
-				windowPlacement,
-				clientRect,
-				style,
-				bMaximized,
-			};
 
 			// This here changes to "real" fullscreen without any input lag.
 			DEVMODE devMode { };
@@ -867,7 +878,7 @@ namespace Ion
 			PostEvent(event);
 		}
 		// Disable
-		else if (m_bFullScreenMode && !bFullscreen)
+		else
 		{
 			ionverify(SetWindowLong(m_WindowHandle, GWL_STYLE, m_WindowBeforeFullScreen.Style));
 
@@ -877,19 +888,22 @@ namespace Ion
 
 			RHI::Get()->ChangeDisplayMode(GetRHIData(), EWindowDisplayMode::Windowed, clientWidth, clientHeight);
 
-			RECT& windowRect = m_WindowBeforeFullScreen.WindowPlacement.rcNormalPosition;
-			int32 x = windowRect.left;
-			int32 y = windowRect.top;
-			int32 width = windowRect.right - windowRect.left;
-			int32 height = windowRect.bottom - windowRect.top;
+			if (m_bFullScreenMode)
+			{
+				RECT& windowRect = m_WindowBeforeFullScreen.WindowPlacement.rcNormalPosition;
+				int32 x = windowRect.left;
+				int32 y = windowRect.top;
+				int32 width = windowRect.right - windowRect.left;
+				int32 height = windowRect.bottom - windowRect.top;
 
-			if (m_WindowBeforeFullScreen.bMaximized)
-			{
-				ionverify(ShowWindow(m_WindowHandle, SW_MAXIMIZE));
-			}
-			else
-			{
-				ionverify(SetWindowPos(m_WindowHandle, HWND_NOTOPMOST, x, y, width, height, SWP_NOOWNERZORDER | SWP_FRAMECHANGED));
+				if (m_WindowBeforeFullScreen.bMaximized)
+				{
+					ionverify(ShowWindow(m_WindowHandle, SW_MAXIMIZE));
+				}
+				else
+				{
+					ionverify(SetWindowPos(m_WindowHandle, HWND_NOTOPMOST, x, y, width, height, SWP_NOOWNERZORDER | SWP_FRAMECHANGED));
+				}
 			}
 
 			m_bFullScreenMode = false;
