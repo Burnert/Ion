@@ -55,11 +55,15 @@ namespace Ion
 		m_Fonts()
 	{
 		ionassert(clientApp);
+
+		ApplicationLogger.Info("Application has been created.");
 	}
 
 	Application::~Application()
 	{
 		Shutdown();
+
+		ApplicationLogger.Info("Application has been destroyed.");
 	}
 
 	void Application::Start()
@@ -70,6 +74,8 @@ namespace Ion
 	void Application::Init()
 	{
 		TRACE_FUNCTION();
+
+		ApplicationLogger.Info("Initializing application.");
 
 		EngineTaskQueue::Init();
 
@@ -116,6 +122,8 @@ namespace Ion
 	void Application::Shutdown()
 	{
 		TRACE_FUNCTION();
+
+		ApplicationLogger.Info("Shutting down application.");
 
 		ShutdownImGui();
 
@@ -299,6 +307,8 @@ namespace Ion
 		if (width == 0 || height == 0)
 			return;
 
+		ApplicationLogger.Trace("Resizing application window buffers to [{}x{}].", width, height);
+
 		//Renderer::Get()->SetViewportDimensions(ViewportDimensions { 0, 0, width, height });
 		RHI::Get()->ResizeBuffers(*GetWindow().get(), { width, height });
 	}
@@ -344,6 +354,8 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
+		ApplicationLogger.Trace("Starting application loop.");
+
 		// Application loop
 		while (m_bRunning)
 		{
@@ -367,6 +379,8 @@ namespace Ion
 	void Application::InitImGui() const
 	{
 		TRACE_FUNCTION();
+
+		ApplicationLogger.Info("Initializing ImGui.");
 
 		// Setup Dear ImGui context
 		IMGUI_CHECKVERSION();
@@ -398,6 +412,8 @@ namespace Ion
 	void Application::ShutdownImGui() const
 	{
 		TRACE_FUNCTION();
+
+		ApplicationLogger.Info("Shutting down ImGui.");
 
 		ImGuiShutdownPlatform();
 		ImGui::DestroyContext();

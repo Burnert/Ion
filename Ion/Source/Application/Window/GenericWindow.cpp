@@ -9,17 +9,19 @@ namespace Ion
 	GenericWindow::GenericWindow() :
 		m_bCursorLocked(false),
 		m_bCursorShown(true)
-	{ }
+	{
+		WindowLogger.Info("Window has been created.");
+	}
 
 	bool GenericWindow::Initialize()
 	{
-		ApplicationLogger.Critical("{0} is not implemented!", __FUNCTION__);
+		WindowLogger.Critical("{0} is not implemented!", __FUNCTION__);
 		return false;
 	}
 
 	bool GenericWindow::Initialize(const std::shared_ptr<GenericWindow>& parentWindow)
 	{
-		ApplicationLogger.Critical("{0} is not implemented!", __FUNCTION__);
+		WindowLogger.Critical("{0} is not implemented!", __FUNCTION__);
 		return false;
 	}
 

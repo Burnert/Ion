@@ -16,6 +16,8 @@ namespace Ion
 
 	void WindowsApplication::Start()
 	{
+		WindowsApplicationLogger.Info("Starting Windows application.");
+
 		SetThreadDescription(GetCurrentThread(), L"MainThread");
 		// Init
 		TRACE_SESSION_BEGIN("Init");
@@ -52,6 +54,8 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
+		WindowsApplicationLogger.Info("Initializing Windows application.");
+
 		m_HInstance = hInstance;
 
 		LARGE_INTEGER largeInteger { 0 };
@@ -71,6 +75,7 @@ namespace Ion
 		m_RequestedCursor(0),
 		m_CursorHandles()
 	{
+		WindowsApplicationLogger.Info("Windows application has been created.");
 	}
 
 	void WindowsApplication::PollEvents()
@@ -135,6 +140,8 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
+		WindowsApplicationLogger.Info("Destroying window {{{}}}.", event.GetWindowHandle());
+
 		DestroyWindow((HWND)event.GetWindowHandle());
 		Application::OnWindowCloseEvent_Internal(event);
 	}
@@ -149,6 +156,8 @@ namespace Ion
 
 	void WindowsApplication::LoadCursors()
 	{
+		WindowsApplicationLogger.Info("Loading cursors.");
+
 		constexpr size_t count = (size_t)ECursorType::_Count;
 		String cursorPath;
 		for (int32 i = 0; i < count; ++i)
@@ -236,6 +245,8 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
+		WindowsApplicationLogger.Info("Initializing ImGui Windows backend.");
+
 		std::shared_ptr<WindowsWindow> windowsWindow = std::static_pointer_cast<WindowsWindow>(window);
 		ImGui_ImplWin32_Init((HWND)windowsWindow->GetNativeHandle());
 		RHI::Get()->InitImGuiBackend();
@@ -266,6 +277,8 @@ namespace Ion
 	void WindowsApplication::ImGuiShutdownPlatform() const
 	{
 		TRACE_FUNCTION();
+
+		WindowsApplicationLogger.Info("Shutting down ImGui Windows backend.");
 
 		RHI::Get()->ImGuiShutdown();
 		ImGui_ImplWin32_Shutdown();

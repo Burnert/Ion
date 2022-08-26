@@ -54,7 +54,6 @@ namespace Ion
 
 	std::shared_ptr<WindowsWindow> WindowsWindow::Create()
 	{
-		WindowsApplicationLogger.Trace("Creating Windows window.");
 		return std::shared_ptr<WindowsWindow>(new WindowsWindow);
 	}
 
@@ -62,7 +61,9 @@ namespace Ion
 		m_WindowHandle(NULL),
 		m_DeviceContext(NULL),
 		m_RenderingContext(NULL)
-	{ }
+	{
+		WindowsWindowLogger.Info("Window has been created.");
+	}
 
 	void WindowsWindow::PollEvents_Application()
 	{
@@ -579,11 +580,14 @@ namespace Ion
 	WindowsWindow::~WindowsWindow() 
 	{
 		DeleteRenderingContext();
+		WindowsWindowLogger.Info("Window \"{}\" has been destroyed.", StringConverter::WStringToString(m_Title));
 	}
 
 	bool WindowsWindow::RegisterWindowClass(HINSTANCE hInstance, LPCWSTR className)
 	{
 		TRACE_FUNCTION();
+
+		WindowsWindowLogger.Trace("Registering window class \"{}\"...", StringConverter::WStringToString(className));
 
 		WNDCLASS wc = { };
 
@@ -604,6 +608,8 @@ namespace Ion
 			return false;
 		}
 
+		WindowsWindowLogger.Info("Window class \"{}\" has been registered.", StringConverter::WStringToString(className));
+
 		return true;
 	}
 
@@ -617,6 +623,8 @@ namespace Ion
 	bool WindowsWindow::Initialize(const std::shared_ptr<GenericWindow>& parentWindow)
 	{
 		TRACE_FUNCTION();
+
+		WindowsWindowLogger.Trace("Initializing a window...");
 
 		HINSTANCE hInstance = WindowsApplication::GetHInstance();
 
@@ -698,6 +706,8 @@ namespace Ion
 			WindowsApplicationLogger.Warn("Cannot register Raw Input devices!");
 		}
 
+		WindowsWindowLogger.Info("Window \"{}\" has been created.", StringConverter::WStringToString(m_Title));
+
 		return true;
 	}
 
@@ -707,7 +717,7 @@ namespace Ion
 
 		if (m_WindowHandle == NULL)
 		{
-			WindowsApplicationLogger.Critical(_windowNoInitMessage, "show the window");
+			WindowsWindowLogger.Critical(_windowNoInitMessage, "show the window");
 			return;
 		}
 
@@ -726,7 +736,7 @@ namespace Ion
 
 		if (m_WindowHandle == NULL)
 		{
-			WindowsApplicationLogger.Critical(_windowNoInitMessage, "hide the window");
+			WindowsWindowLogger.Critical(_windowNoInitMessage, "hide the window");
 			return;
 		}
 
@@ -744,7 +754,7 @@ namespace Ion
 
 		if (m_WindowHandle == NULL)
 		{
-			WindowsApplicationLogger.Critical(_windowNoInitMessage, "maximize the window");
+			WindowsWindowLogger.Critical(_windowNoInitMessage, "maximize the window");
 			return;
 		}
 
@@ -761,7 +771,7 @@ namespace Ion
 
 		if (m_WindowHandle == NULL)
 		{
-			WindowsApplicationLogger.Critical(_windowNoInitMessage, "set the title");
+			WindowsWindowLogger.Critical(_windowNoInitMessage, "set the title");
 			return;
 		}
 
@@ -776,7 +786,7 @@ namespace Ion
 
 		if (m_WindowHandle == NULL)
 		{
-			WindowsApplicationLogger.Critical(_windowNoInitMessage, "enable the window");
+			WindowsWindowLogger.Critical(_windowNoInitMessage, "enable the window");
 			return;
 		}
 
@@ -792,7 +802,7 @@ namespace Ion
 	{
 		if (m_WindowHandle == NULL)
 		{
-			WindowsApplicationLogger.Error(_windowNoInitMessage, "get window dimensions");
+			WindowsWindowLogger.Error(_windowNoInitMessage, "get window dimensions");
 			return { 0, 0 };
 		}
 		
@@ -960,7 +970,7 @@ namespace Ion
 
 		if (m_WindowHandle == NULL)
 		{
-			WindowsApplicationLogger.Critical(_windowNoInitMessage, "create OpenGL rendering context");
+			WindowsWindowLogger.Critical(_windowNoInitMessage, "create OpenGL rendering context");
 			return NULL;
 		}
 
@@ -1003,7 +1013,7 @@ namespace Ion
 	{
 		if (m_WindowHandle == NULL)
 		{
-			WindowsApplicationLogger.Critical(_windowNoInitMessage, "get the Device Context");
+			WindowsWindowLogger.Critical(_windowNoInitMessage, "get the Device Context");
 			return NULL;
 		}
 
@@ -1014,7 +1024,7 @@ namespace Ion
 	{
 		if (m_WindowHandle == NULL)
 		{
-			WindowsApplicationLogger.Critical(_windowNoInitMessage, "get the Rendering Context");
+			WindowsWindowLogger.Critical(_windowNoInitMessage, "get the Rendering Context");
 			return NULL;
 		}
 

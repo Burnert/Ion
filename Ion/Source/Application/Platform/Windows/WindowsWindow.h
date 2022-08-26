@@ -7,6 +7,8 @@
 
 namespace Ion
 {
+	REGISTER_LOGGER(WindowsWindowLogger, "Platform::Windows::Window");
+
 	struct WindowDataBeforeFullScreen
 	{
 		WINDOWPLACEMENT WindowPlacement;

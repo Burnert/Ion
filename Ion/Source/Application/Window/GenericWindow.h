@@ -4,6 +4,8 @@
 
 namespace Ion
 {
+	REGISTER_LOGGER(WindowLogger, "Application::Window");
+
 	struct WindowDimensions
 	{
 		int32 Width;
