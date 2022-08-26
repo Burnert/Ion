@@ -5,8 +5,6 @@
 #include "AssetParser.h"
 #include "Asset.h"
 
-#include "Application/EnginePath.h"
-
 namespace Ion
 {
 	// AssetDefinition ----------------------------------------------------------------

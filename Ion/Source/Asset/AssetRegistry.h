@@ -82,7 +82,7 @@ namespace Ion
 		 */
 		static void RegisterEngineAssets();
 
-		static void RegisterEngineVirtualRoots();
+		static void RegisterEngineVirtualRoots(const FilePath& content, const FilePath& shaders);
 
 		static void RegisterVirtualRoot(const String& root, const FilePath& physicalPath);
 

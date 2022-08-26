@@ -98,7 +98,7 @@ namespace Ion
 
 		//AssetManager::Init();
 
-		AssetRegistry::RegisterEngineVirtualRoots();
+		AssetRegistry::RegisterEngineVirtualRoots(EnginePath::GetEngineContentPath(), EnginePath::GetShadersPath());
 
 		AssetRegistry::RegisterEngineAssets();
 

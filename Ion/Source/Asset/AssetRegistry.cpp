@@ -4,8 +4,6 @@
 #include "AssetDefinition.h"
 #include "Asset.h"
 
-#include "Application/EnginePath.h"
-
 #define ASSET_REGISTRY_ASSET_MAP_BUCKETS 256
 
 namespace Ion
@@ -97,12 +95,12 @@ namespace Ion
 		AssetLogger.Info("Registered Engine Assets.");
 	}
 
-	void AssetRegistry::RegisterEngineVirtualRoots()
+	void AssetRegistry::RegisterEngineVirtualRoots(const FilePath& content, const FilePath& shaders)
 	{
 		AssetLogger.Info("Registering Engine Virtual Roots...");
 
-		AssetRegistry::RegisterVirtualRoot(Asset::VirtualRoot::Engine, EnginePath::GetEngineContentPath());
-		AssetRegistry::RegisterVirtualRoot(Asset::VirtualRoot::Shaders, EnginePath::GetShadersPath());
+		AssetRegistry::RegisterVirtualRoot(Asset::VirtualRoot::Engine, content);
+		AssetRegistry::RegisterVirtualRoot(Asset::VirtualRoot::Shaders, shaders);
 		// @TODO: AssetRegistry::RegisterVirtualRoot(Asset::VirtualRoot::Game, X);
 
 		AssetLogger.Info("Registered Engine Virtual Roots.");
