@@ -58,22 +58,22 @@ namespace Ion
 
 	RHIUniformBuffer::RHIUniformBuffer()
 	{
-		RHILogger.Info("RHIUniformBuffer \"TODO\" object has been created.");
+		RHILogger.Info("RHIUniformBuffer \"TODO\" has been created.");
 	}
 
 	RHIUniformBuffer::~RHIUniformBuffer()
 	{
-		RHILogger.Info("RHIUniformBuffer \"TODO\" object has been destroyed.");
+		RHILogger.Info("RHIUniformBuffer \"TODO\" has been destroyed.");
 	}
 
 	RHIUniformBufferDynamic::RHIUniformBufferDynamic(const UniformDataMap& uniforms) :
 		m_UniformDataMap(uniforms)
 	{
-		RHILogger.Info("RHIUniformBufferDynamic \"TODO\" object has been created.");
+		RHILogger.Info("RHIUniformBufferDynamic \"TODO\" has been created.");
 	}
 
 	RHIUniformBufferDynamic::~RHIUniformBufferDynamic()
 	{
-		RHILogger.Info("RHIUniformBufferDynamic \"TODO\" object has been destroyed.");
+		RHILogger.Info("RHIUniformBufferDynamic \"TODO\" has been destroyed.");
 	}
 }

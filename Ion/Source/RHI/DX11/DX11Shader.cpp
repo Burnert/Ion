@@ -12,7 +12,7 @@ namespace Ion
 	DX11Shader::DX11Shader() :
 		m_bCompiled(false)
 	{
-		DX11Logger.Trace("Created DX11Shader object.");
+		DX11Logger.Info("DX11Shader has been created.");
 	}
 
 	DX11Shader::~DX11Shader()
@@ -25,6 +25,8 @@ namespace Ion
 			COMRelease(shader.ShaderPtr);
 			COMRelease(shader.ShaderBlob);
 		});
+
+		DX11Logger.Info("DX11Shader has been destroyed.");
 	}
 
 	void DX11Shader::AddShaderSource(EShaderType type, const String& source)
@@ -84,6 +86,8 @@ namespace Ion
 				DXInclude(shader.Source.Path / "..") :
 				DXInclude();
 
+			DX11Logger.Trace("DX11Shader compiling {}...", ShaderTypeToString(shader.Type));
+
 			dxcall_throw(
 				D3DCompile(
 					shader.Source.Code.c_str(),
@@ -105,6 +109,8 @@ namespace Ion
 					return errorMessage;
 				}());
 
+			DX11Logger.Trace("DX11Shader {} has been compiled.", ShaderTypeToString(shader.Type));
+
 			if (errorMessagesBlob)
 			{
 				DX11Logger.Warn("{} compilation generated some warnings.\n{}", ShaderTypeToString(shader.Type), (char*)errorMessagesBlob->GetBufferPointer());
@@ -118,11 +124,15 @@ namespace Ion
 			{
 				dxcall(device->CreateVertexShader(blobPtr, blobSize, nullptr, (ID3D11VertexShader**)&shader.ShaderPtr),
 					"Could not create Vertex Shader");
+
+				DX11Logger.Debug("DX11Shader Vertex Shader object has been created.");
 			}
 			else if (shader.Type == EShaderType::Pixel)
 			{
 				dxcall(device->CreatePixelShader(blobPtr, blobSize, nullptr, (ID3D11PixelShader**)&shader.ShaderPtr),
 					"Could not create Pixel Shader");
+
+				DX11Logger.Debug("DX11Shader Pixel Shader object has been created.");
 			}
 			else
 			{

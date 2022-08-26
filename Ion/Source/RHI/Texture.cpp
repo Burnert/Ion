@@ -14,11 +14,11 @@ namespace Ion
 	{
 		ionassert(!desc.DebugName.empty(), "Specify a debug name to avoid future problems.");
 
-		RHILogger.Info("RHITexture \"{}\" object has been created.", desc.DebugName);
+		RHILogger.Info("RHITexture \"{}\" has been created.", desc.DebugName);
 	}
 
 	RHITexture::~RHITexture()
 	{
-		RHILogger.Info("RHITexture \"{}\" object has been destroyed.", m_Description.DebugName);
+		RHILogger.Info("RHITexture \"{}\" has been destroyed.", m_Description.DebugName);
 	}
 }

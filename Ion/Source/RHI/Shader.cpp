@@ -11,11 +11,11 @@ namespace Ion
 {
 	RHIShader::RHIShader()
 	{
-		RHILogger.Info("RHIShader \"TODO\" object has been created.");
+		RHILogger.Info("RHIShader \"TODO\" has been created.");
 	}
 
 	RHIShader::~RHIShader()
 	{
-		RHILogger.Info("RHIShader \"TODO\" object has been destroyed.");
+		RHILogger.Info("RHIShader \"TODO\" has been destroyed.");
 	}
 }

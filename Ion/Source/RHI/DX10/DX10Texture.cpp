@@ -13,6 +13,7 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		ReleaseResources();
+		DX10Logger.Info("DX10Texture \"{}\" has been destroyed.", m_Description.DebugName);
 	}
 
 	Result<void, RHIError> DX10Texture::SetDimensions(TextureDimensions dimensions)
@@ -118,6 +119,8 @@ namespace Ion
 		m_SRV(nullptr),
 		m_SamplerState(nullptr)
 	{
+		DX10Logger.Info("DX10Texture \"{}\" has been created.", desc.DebugName);
+
 		CreateTexture(desc)
 			.Err([&](Error& error) { DX10Logger.Critical("{}: Cannot create a Texture.\n{}", desc.DebugName, error.Message); })
 			.Unwrap();
@@ -131,8 +134,6 @@ namespace Ion
 				.Err([&](Error& error) { DX10Logger.Critical("{}: Cannot create a Sampler.\n{}", desc.DebugName, error.Message); })
 				.Unwrap();
 		}
-
-		DX10Logger.Trace("Created DX10Texture object \"{}\".", desc.DebugName);
 	}
 
 	DX10Texture::DX10Texture(const TextureDescription& desc, ID3D10Texture2D* existingResource) :
@@ -143,6 +144,8 @@ namespace Ion
 		m_SRV(nullptr),
 		m_SamplerState(nullptr)
 	{
+		DX10Logger.Info("DX10Texture \"{}\" has been created.", desc.DebugName);
+
 		// Can't do any of this if this is a staging texture
 		if (desc.Usage != ETextureUsage::Staging)
 		{
@@ -153,8 +156,6 @@ namespace Ion
 				.Err([&](Error& error) { DX10Logger.Critical("{}: Cannot create a Sampler.\n{}", desc.DebugName, error.Message); })
 				.Unwrap();
 		}
-
-		DX10Logger.Trace("Created DX10Texture object \"{}\".", desc.DebugName);
 	}
 
 	static bool IsMultiSampled(const TextureDescription& desc)
@@ -217,6 +218,8 @@ namespace Ion
 		dxcall(device->CreateTexture2D(&tex2DDesc, desc.InitialData ? &sd : nullptr, &m_Texture));
 		DX10::SetDebugName(m_Texture, "Texture2D_" + desc.DebugName);
 
+		DX10Logger.Debug("DX10Texture Texture2D object has been created.");
+
 		return Ok();
 	}
 
@@ -244,6 +247,8 @@ namespace Ion
 
 			dxcall(device->CreateRenderTargetView(m_Texture, &rtvDesc, &m_RTV));
 			DX10::SetDebugName(m_RTV, "RTV_"+ desc.DebugName);
+
+			DX10Logger.Debug("DX10Texture Render Target View object has been created.");
 		}
 
 		if (desc.bUseAsDepthStencil)
@@ -262,6 +267,8 @@ namespace Ion
 
 			dxcall(device->CreateDepthStencilView(m_Texture, &dsvDesc, &m_DSV));
 			DX10::SetDebugName(m_DSV, "DSV_" + desc.DebugName);
+
+			DX10Logger.Debug("DX10Texture Depth Stencil View object has been created.");
 		}
 
 		return Ok();
@@ -292,6 +299,8 @@ namespace Ion
 			dxcall(device->CreateShaderResourceView(m_Texture, &srvDesc, &m_SRV));
 			DX10::SetDebugName(m_SRV, "SRV_" + desc.DebugName);
 
+			DX10Logger.Debug("DX10Texture Shader Resource View object has been created.");
+
 			// Create Sampler State
 
 			D3D10_SAMPLER_DESC samplerDesc { };
@@ -307,6 +316,8 @@ namespace Ion
 
 			dxcall(device->CreateSamplerState(&samplerDesc, &m_SamplerState));
 			DX10::SetDebugName(m_SamplerState, "SamplerState_" + desc.DebugName);
+
+			DX10Logger.Debug("DX10Texture Sampler State object has been created.");
 		}
 
 		return Ok();

@@ -82,7 +82,7 @@ namespace Ion
 		// Associate the resource with the asset
 		instance.m_AssetToResources[asset].push_back(resource);
 
-		ResourceLogger.Trace("Registered resource \"{}\".", asset->GetVirtualPath());
+		ResourceLogger.Info("Registered resource \"{}\".", asset->GetVirtualPath());
 
 		return TResourceRef<T>(resource);
 	}

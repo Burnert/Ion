@@ -121,15 +121,18 @@ namespace Ion
 			return true;
 		}
 
-		ResourceLogger.Trace("Importing Texture Resource from Asset \"{}\".", m_Asset->GetVirtualPath());
+		ResourceLogger.Trace("Texture Resource \"{}\" render data is unavailable.", m_Asset->GetVirtualPath());
 		m_Asset->Import(
-			[](std::shared_ptr<AssetFileMemoryBlock> block)
+			[self](std::shared_ptr<AssetFileMemoryBlock> block)
 			{
+				ResourceLogger.Trace("Importing Texture Resource from Asset \"{}\"...", self->m_Asset->GetVirtualPath());
 				return AssetImporter::ImportImageAsset(block);
 			},
 			// Store the ref (self) so the resource doesn't get deleted before it's loaded
 			[this, self, onTake](std::shared_ptr<Image> image)
 			{
+				ResourceLogger.Info("Texture Resource from Asset \"{}\" has been imported successfully.", m_Asset->GetVirtualPath());
+
 				ionassert(m_Asset);
 				ionassert(m_Asset->GetType() == EAssetType::Image);
 
@@ -147,11 +150,11 @@ namespace Ion
 
 				m_RenderData.Texture->UpdateSubresource(image.get());
 
-				onTake(self);
+				ResourceLogger.Trace("Texture Resource \"{}\" render data is now available.", m_Asset->GetVirtualPath());
 
-				ResourceLogger.Trace("Imported Texture Resource from Asset \"{}\" successfully.", m_Asset->GetVirtualPath());
+				onTake(self);
 			},
-			[&](auto& result) { ResourceLogger.Error("Failed to import Texture Resource from Asset \"{}\". {}", m_Asset->GetVirtualPath(), result.GetErrorMessage()); }
+			[self](auto& result) { ResourceLogger.Error("Failed to import Texture Resource from Asset \"{}\". {}", self->m_Asset->GetVirtualPath(), result.GetErrorMessage()); }
 		);
 		return false;
 	}

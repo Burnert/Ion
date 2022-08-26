@@ -100,6 +100,8 @@ namespace Ion
 	public:
 		virtual Result<void, RHIError> Bind(uint32 slot = 0) const override;
 
+		virtual ~DX11UniformBuffer() override;
+
 	protected:
 		DX11UniformBuffer(void* initialData, size_t size);
 
@@ -116,12 +118,14 @@ namespace Ion
 
 	class ION_API DX11UniformBufferDynamic : public RHIUniformBufferDynamic
 	{
-	protected:
+	public:
 		DX11UniformBufferDynamic(void* initialData, size_t size, const UniformDataMap& uniforms);
 
 		virtual Result<void, RHIError> Bind(uint32 slot = 0) const override;
 
 		virtual const UniformData* GetUniformData(const String& name) const override;
+
+		virtual ~DX11UniformBufferDynamic() override;
 
 	protected:
 		virtual Result<void, RHIError> UpdateData() const override;

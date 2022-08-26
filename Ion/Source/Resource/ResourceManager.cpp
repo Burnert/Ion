@@ -38,7 +38,7 @@ namespace Ion
 
 		instance.m_Resources.erase(resource);
 
-		ResourceLogger.Trace("Unregistered resource \"{}\".", assetHandle->GetVirtualPath());
+		ResourceLogger.Info("Unregistered resource \"{}\".", assetHandle->GetVirtualPath());
 	}
 
 	bool ResourceManager::IsAnyResourceAvailable(const Asset& asset)

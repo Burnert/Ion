@@ -6,11 +6,11 @@ namespace Ion
 {
 	RHIIndexBuffer::RHIIndexBuffer()
 	{
-		RHILogger.Info("RHIIndexBuffer \"TODO\" object has been created.");
+		RHILogger.Info("RHIIndexBuffer \"TODO\" has been created.");
 	}
 
 	RHIIndexBuffer::~RHIIndexBuffer()
 	{
-		RHILogger.Info("RHIIndexBuffer \"TODO\" object has been destroyed.");
+		RHILogger.Info("RHIIndexBuffer \"TODO\" has been destroyed.");
 	}
 }

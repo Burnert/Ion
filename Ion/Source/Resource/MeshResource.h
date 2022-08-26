@@ -114,31 +114,31 @@ namespace Ion
 			return true;
 		}
 
-		ResourceLogger.Trace("Importing Mesh Resource from Asset \"{}\".", m_Asset->GetVirtualPath());
+		ResourceLogger.Trace("Mesh Resource \"{}\" render data is unavailable.", m_Asset->GetVirtualPath());
 		m_Asset->Import(
-			[](std::shared_ptr<AssetFileMemoryBlock> block)
+			[self](std::shared_ptr<AssetFileMemoryBlock> block)
 			{
+				ResourceLogger.Trace("Importing Mesh Resource from Asset \"{}\"...", self->m_Asset->GetVirtualPath());
 				return AssetImporter::ImportColladaMeshAsset(block);
 			},
 			// Store the ref (self) so the resource doesn't get deleted before it's loaded
 			[this, self, onTake](std::shared_ptr<MeshAssetData> meshData)
 			{
+				ResourceLogger.Info("Mesh Resource from Asset \"{}\" has been imported successfully.", m_Asset->GetVirtualPath());
+
 				ionassert(m_Asset);
 				ionassert(m_Asset->GetType() == EAssetType::Mesh);
 
-				// RHIVertexBuffer:
 				m_RenderData.VertexBuffer = RHIVertexBuffer::Create(meshData->Vertices.Ptr, meshData->Vertices.Count);
-
-				// RHIIndexBuffer:
 				m_RenderData.IndexBuffer = RHIIndexBuffer::Create(meshData->Indices.Ptr, (uint32)meshData->Indices.Count);
 
 				m_RenderData.VertexBuffer->SetLayout(meshData->Layout);
 
-				onTake(self);
+				ResourceLogger.Trace("Mesh Resource \"{}\" render data is now available.", m_Asset->GetVirtualPath());
 
-				ResourceLogger.Trace("Imported Mesh Resource from Asset \"{}\" successfully.", m_Asset->GetVirtualPath());
+				onTake(self);
 			},
-			[&](auto& result) { ResourceLogger.Error("Failed to import Mesh Resource from Asset \"{}\". {}", m_Asset->GetVirtualPath(), result.GetErrorMessage()); }
+			[self](auto& result) { ResourceLogger.Error("Failed to import Mesh Resource from Asset \"{}\". {}", self->m_Asset->GetVirtualPath(), result.GetErrorMessage()); }
 		);
 		return false;
 	}

@@ -21,6 +21,8 @@ namespace Ion
 		m_Buffer(nullptr),
 		m_InputLayout(nullptr)
 	{
+		DX10Logger.Info("DX10VertexBuffer has been created.");
+
 		CreateBuffer(vertexAttributes, count)
 			.Err([](Error& error) { DX10Logger.Critical("Cannot create a Vertex Buffer.\n{}", error.Message); })
 			.Unwrap();
@@ -32,6 +34,8 @@ namespace Ion
 
 		COMRelease(m_Buffer);
 		COMRelease(m_InputLayout);
+
+		DX10Logger.Info("DX10VertexBuffer has been destroyed.");
 	}
 
 	void DX10VertexBuffer::SetLayout(const TRef<RHIVertexLayout>& layout)
@@ -80,7 +84,7 @@ namespace Ion
 		dxcall(device->CreateInputLayout(m_IEDArray.data(), (uint32)m_IEDArray.size(), blob->GetBufferPointer(), blob->GetBufferSize(), &m_InputLayout),
 			"Could not create Input Layout.");
 
-		DX10Logger.Trace("Created DX10VertexBuffer Input Layout object.");
+		DX10Logger.Debug("DX10VertexBuffer Input Layout object has been created.");
 
 		return Ok();
 	}
@@ -147,7 +151,7 @@ namespace Ion
 			"Could not create Vertex Buffer.");
 
 		// @TODO: SetDebugName on buffers
-		DX10Logger.Trace("Created DX10VertexBuffer object.");
+		DX10Logger.Debug("DX10VertexBuffer Buffer object has been created.");
 
 		return Ok();
 	}
@@ -161,6 +165,8 @@ namespace Ion
 		m_TriangleCount(count / 3),
 		m_ID(0)
 	{
+		DX10Logger.Info("DX10IndexBuffer has been created.");
+
 		CreateBuffer(indices, count)
 			.Err([](Error& error) { DX10Logger.Critical("Cannot create an Index Buffer.\n{}", error.Message); })
 			.Unwrap();
@@ -171,6 +177,8 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		COMRelease(m_Buffer);
+
+		DX10Logger.Info("DX10IndexBuffer has been destroyed.");
 	}
 
 	uint32 DX10IndexBuffer::GetIndexCount() const
@@ -223,7 +231,7 @@ namespace Ion
 		dxcall(device->CreateBuffer(&bd, &sd, &m_Buffer),
 			"Could not create Index Buffer.");
 
-		DX10Logger.Trace("Created DX10IndexBuffer object.");
+		DX10Logger.Debug("DX10IndexBuffer Buffer object has been created.");
 
 		return Ok();
 	}
@@ -238,6 +246,8 @@ namespace Ion
 		DataSize(size),
 		Buffer(nullptr)
 	{
+		DX10Logger.Debug("DX10UniformBufferCommon has been created.");
+
 		CreateBuffer(initialData, size)
 			.Err([](Error& error) { DX10Logger.Critical("Cannot create a Uniform Buffer.\n{}", error.Message); })
 			.Unwrap();
@@ -250,6 +260,8 @@ namespace Ion
 		COMRelease(Buffer);
 
 		_aligned_free(Data);
+
+		DX10Logger.Debug("DX10UniformBufferCommon has been destroyed.");
 	}
 
 	Result<void, RHIError> _DX10UniformBufferCommon::Bind(uint32 slot) const
@@ -304,6 +316,8 @@ namespace Ion
 		dxcall(device->CreateBuffer(&bd, &sd, &Buffer),
 			"Could not create Constant Buffer.");
 
+		DX10Logger.Debug("DX10UniformBufferCommon Buffer object has been created.");
+
 		return Ok();
 	}
 
@@ -312,7 +326,12 @@ namespace Ion
 	DX10UniformBuffer::DX10UniformBuffer(void* initialData, size_t size) :
 		m_Common(initialData, size)
 	{
-		DX10Logger.Trace("Created DX10UniformBuffer object.");
+		DX10Logger.Info("DX10UniformBuffer has been created.");
+	}
+
+	DX10UniformBuffer::~DX10UniformBuffer()
+	{
+		DX10Logger.Info("DX10UniformBuffer has been destroyed.");
 	}
 
 	Result<void, RHIError> DX10UniformBuffer::Bind(uint32 slot) const
@@ -334,7 +353,12 @@ namespace Ion
 		RHIUniformBufferDynamic(uniforms),
 		m_Common(initialData, size)
 	{
-		DX10Logger.Trace("Created DX10UniformBufferDynamic object.");
+		DX10Logger.Info("DX10UniformBufferDynamic has been created.");
+	}
+
+	DX10UniformBufferDynamic::~DX10UniformBufferDynamic()
+	{
+		DX10Logger.Info("DX10UniformBufferDynamic has been destroyed.");
 	}
 
 	Result<void, RHIError> DX10UniformBufferDynamic::Bind(uint32 slot) const

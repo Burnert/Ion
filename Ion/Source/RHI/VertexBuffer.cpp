@@ -23,11 +23,11 @@ namespace Ion
 
 	RHIVertexBuffer::RHIVertexBuffer()
 	{
-		RHILogger.Info("RHIVertexBuffer \"TODO\" object has been created.");
+		RHILogger.Info("RHIVertexBuffer \"TODO\" has been created.");
 	}
 
 	RHIVertexBuffer::~RHIVertexBuffer()
 	{
-		RHILogger.Info("RHIVertexBuffer \"TODO\" object has been destroyed.");
+		RHILogger.Info("RHIVertexBuffer \"TODO\" has been destroyed.");
 	}
 }

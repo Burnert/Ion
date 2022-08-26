@@ -178,6 +178,8 @@ namespace Ion
 				onReady(imported);
 			}));
 		}).Schedule();
+
+		AssetLogger.Trace("Asset \"{}\" import task has been scheduled.", m_VirtualPath);
 	}
 
 	inline EAssetType AssetDefinition::GetType() const
