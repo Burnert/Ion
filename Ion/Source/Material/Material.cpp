@@ -1,13 +1,12 @@
 #include "IonPCH.h"
 
 #include "Material.h"
+#include "RHI/RHI.h"
 #include "RHI/Shader.h"
 #include "RHI/UniformBuffer.h"
 
 #include "Asset/AssetRegistry.h"
 #include "Asset/AssetParser.h"
-
-#include "Application/EnginePath.h"
 
 namespace Ion
 {
@@ -543,7 +542,7 @@ namespace Ion
 			.ParseAttributes(IASSET_NODE_Material_Code,
 				IASSET_ATTR_source, [this](String source)
 				{
-					FilePath path = EnginePath::GetShadersPath() + "Material" + source;
+					FilePath path = RHI::GetEngineShadersPath() + "Material" + source;
 					return LoadExternalMaterialCode(path);
 				}
 			)
