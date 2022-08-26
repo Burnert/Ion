@@ -21,7 +21,18 @@ namespace Ion
 	{
 		class TrianglesNodeData
 		{
-			friend class ColladaDocument;
+		public:
+			// @TODO: Create a TConstMap
+
+			inline static const THashMap<String, const EVertexAttributeSemantic> SemanticStringToEnum = {
+				{ "VERTEX",   EVertexAttributeSemantic::Position },
+				{ "NORMAL",   EVertexAttributeSemantic::Normal   },
+				{ "TEXCOORD", EVertexAttributeSemantic::TexCoord },
+			};
+
+			static bool IsSemanticTranslatable(const char* name);
+			static EVertexAttributeSemantic TranslateSemantic(const char* name);
+
 		private:
 			struct TriangleInput
 			{
@@ -43,75 +54,30 @@ namespace Ion
 			TArray<TriangleInput> m_TriangleInputs;
 			uint32 m_AttributeCount = 0;
 
-		public:
-			// @TODO: Create a TConstMap
-
-			inline static const THashMap<String, const EVertexAttributeSemantic> SemanticStringToEnum = {
-				{ "VERTEX",   EVertexAttributeSemantic::Position },
-				{ "NORMAL",   EVertexAttributeSemantic::Normal   },
-				{ "TEXCOORD", EVertexAttributeSemantic::TexCoord },
-			};
-
-			inline static bool IsSemanticTranslatable(const char* name)
-			{
-				return SemanticStringToEnum.find(name) != SemanticStringToEnum.end();
-			}
-
-			inline static EVertexAttributeSemantic TranslateSemantic(const char* name)
-			{
-				return SemanticStringToEnum.at(name);
-			}
+			friend class ColladaDocument;
 		};
 
 		class Vertex
 		{
-			friend class ColladaDocument;
 		public:
 			constexpr static uint32 MaxVertexElements = 64;
 
-			Vertex(float* elements, uint32 elementCount) :
-				m_ElementCount(elementCount)
-			{
-				ionassert(elementCount <= MaxVertexElements, "Too many vertex elements.");
-				memcpy(&m_Elements[0], elements, elementCount * sizeof(float));
-			}
-			Vertex(const Vertex& other) = default;
-			Vertex(Vertex&& other) noexcept = default;
+			Vertex(float* elements, uint32 elementCount);
+			Vertex(const Vertex&) = default;
+			Vertex(Vertex&&) noexcept = default;
 
-			inline bool operator==(const Vertex& other) const
-			{
-				if (m_ElementCount != other.m_ElementCount)
-				{
-					return false;
-				}
-
-				for (uint32 i = 0; i < m_ElementCount; ++i)
-				{
-					if (m_Elements[i] != other.m_Elements[i])
-					{
-						return false;
-					}
-				}
-				return true;
-			}
+			bool operator==(const Vertex& other) const;
 
 			struct Hash
 			{
-				size_t operator() (const Vertex& vertex) const
-				{
-					size_t hash = 0;
-					std::hash<float> hasher;
-					for (uint32 i = 0; i < vertex.m_ElementCount; ++i)
-					{
-						hash ^= hasher(vertex.m_Elements[i]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-					}
-					return hash;
-				}
+				size_t operator() (const Vertex& vertex) const;
 			};
 
 		private:
 			uint32 m_ElementCount;
 			float m_Elements[MaxVertexElements];
+
+			friend class ColladaDocument;
 		};
 
 	public:
@@ -122,8 +88,6 @@ namespace Ion
 		ColladaDocument(char* collada);
 		ColladaDocument() = delete;
 		~ColladaDocument();
-
-		inline const ColladaData& GetData() const { ionbreak("DEPRECATED, Use Parse once instead."); return m_Data; }
 
 		Result<ColladaData, IOError> Parse();
 
@@ -147,4 +111,49 @@ namespace Ion
 		ColladaData m_Data;
 		bool m_bParsed;
 	};
+
+	inline bool ColladaDocument::TrianglesNodeData::IsSemanticTranslatable(const char* name)
+	{
+		return SemanticStringToEnum.find(name) != SemanticStringToEnum.end();
+	}
+
+	inline EVertexAttributeSemantic ColladaDocument::TrianglesNodeData::TranslateSemantic(const char* name)
+	{
+		return SemanticStringToEnum.at(name);
+	}
+
+	inline ColladaDocument::Vertex::Vertex(float* elements, uint32 elementCount) :
+		m_ElementCount(elementCount)
+	{
+		ionassert(elementCount <= MaxVertexElements, "Too many vertex elements.");
+		memcpy(&m_Elements[0], elements, elementCount * sizeof(float));
+	}
+
+	inline bool ColladaDocument::Vertex::operator==(const Vertex& other) const
+	{
+		if (m_ElementCount != other.m_ElementCount)
+		{
+			return false;
+		}
+
+		for (uint32 i = 0; i < m_ElementCount; ++i)
+		{
+			if (m_Elements[i] != other.m_Elements[i])
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	inline size_t ColladaDocument::Vertex::Hash::operator() (const Vertex& vertex) const
+	{
+		size_t hash = 0;
+		std::hash<float> hasher;
+		for (uint32 i = 0; i < vertex.m_ElementCount; ++i)
+		{
+			hash ^= hasher(vertex.m_Elements[i]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		}
+		return hash;
+	}
 }
