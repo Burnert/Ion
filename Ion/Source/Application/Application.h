@@ -162,6 +162,8 @@ namespace Ion
 		virtual void OnWindowCloseEvent_Internal(const WindowCloseEvent& event); // Virtual because it's overriden in WindowsApplication
 		void OnWindowResizeEvent_Internal(const WindowResizeEvent& event);
 		void OnWindowChangeDisplayModeEvent_Internal(const WindowChangeDisplayModeEvent& event);
+		void OnWindowLostFocusEvent_Internal(const WindowLostFocusEvent& event);
+		void OnWindowFocusEvent_Internal(const WindowFocusEvent& event);
 
 		void OnKeyPressedEvent_Internal(const KeyPressedEvent& event);
 		void OnKeyReleasedEvent_Internal(const KeyReleasedEvent& event);
@@ -174,6 +176,8 @@ namespace Ion
 			TMemberEventFunction<Application, WindowCloseEvent, &Application::OnWindowCloseEvent_Internal>,
 			TMemberEventFunction<Application, WindowResizeEvent, &Application::OnWindowResizeEvent_Internal>,
 			TMemberEventFunction<Application, WindowChangeDisplayModeEvent, &Application::OnWindowChangeDisplayModeEvent_Internal>,
+			TMemberEventFunction<Application, WindowLostFocusEvent, &Application::OnWindowLostFocusEvent_Internal>,
+			TMemberEventFunction<Application, WindowFocusEvent, &Application::OnWindowFocusEvent_Internal>,
 			TMemberEventFunction<Application, KeyPressedEvent, &Application::OnKeyPressedEvent_Internal>,
 			TMemberEventFunction<Application, KeyReleasedEvent, &Application::OnKeyReleasedEvent_Internal>,
 			TMemberEventFunction<Application, KeyRepeatedEvent, &Application::OnKeyRepeatedEvent_Internal>
@@ -254,6 +258,7 @@ namespace Ion
 
 		float m_GlobalDeltaTime;
 
+		bool m_bInFocus;
 		bool m_bRunning;
 
 		template<typename T>

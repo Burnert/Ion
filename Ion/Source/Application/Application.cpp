@@ -52,7 +52,8 @@ namespace Ion
 		m_MainThreadId(std::this_thread::get_id()),
 		m_bRunning(true),
 		m_ClientApp(clientApp),
-		m_Fonts()
+		m_Fonts(),
+		m_bInFocus(false)
 	{
 		ionassert(clientApp);
 
@@ -318,6 +319,22 @@ namespace Ion
 	{
 	}
 
+	void Application::OnWindowLostFocusEvent_Internal(const WindowLostFocusEvent& event)
+	{
+		if (m_Window->GetNativeHandle() == (void*)event.GetWindowHandle())
+		{
+			m_bInFocus = false;
+		}
+	}
+
+	void Application::OnWindowFocusEvent_Internal(const WindowFocusEvent& event)
+	{
+		if (m_Window->GetNativeHandle() == (void*)event.GetWindowHandle())
+		{
+			m_bInFocus = true;
+		}
+	}
+
 	void Application::OnKeyPressedEvent_Internal(const KeyPressedEvent& event)
 	{
 		// Toggle fullscreen with Alt + Enter
@@ -374,6 +391,12 @@ namespace Ion
 			Render();
 
 			m_EventQueue->ProcessEvents();
+
+			if (!m_bInFocus)
+			{
+				using namespace std::chrono_literals;
+				std::this_thread::sleep_for(100ms);
+			}
 		}
 	}
 
