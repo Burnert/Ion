@@ -8,21 +8,19 @@
 
 #include "UserInterface/ImGui.h"
 
-#include "Application/Window/GenericWindow.h"
-
 namespace Ion
 {
-	Result<void, RHIError> OpenGL::Init(GenericWindow* window)
+	Result<void, RHIError> OpenGL::Init(RHIWindowData& mainWindow)
 	{
 #ifdef ION_PLATFORM_WINDOWS
-		OpenGLWindows::Init(window);
+		OpenGLWindows::Init(mainWindow);
 #else
 		OpenGLLogger.Critical("OpenGL implementation is not defined on this platform!");
 #endif
 		return Ok();
 	}
 
-	Result<void, RHIError> OpenGL::InitWindow(GenericWindow& window)
+	Result<void, RHIError> OpenGL::InitWindow(RHIWindowData& window)
 	{
 		ionthrow(RHIError);
 	}
@@ -31,7 +29,7 @@ namespace Ion
 	{
 	}
 
-	void OpenGL::ShutdownWindow(GenericWindow& window)
+	void OpenGL::ShutdownWindow(RHIWindowData& window)
 	{
 	}
 
@@ -40,18 +38,18 @@ namespace Ion
 		return Ok();
 	}
 
-	Result<void, RHIError> OpenGL::EndFrame(GenericWindow& window)
+	Result<void, RHIError> OpenGL::EndFrame(RHIWindowData& window)
 	{
-		window.SwapBuffers();
+		//window.SwapBuffers();
 		return Ok();
 	}
 
-	Result<void, RHIError> OpenGL::ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height)
+	Result<void, RHIError> OpenGL::ChangeDisplayMode(RHIWindowData& window, EWindowDisplayMode mode, uint32 width, uint32 height)
 	{
 		return Ok();
 	}
 
-	Result<void, RHIError> OpenGL::ResizeBuffers(GenericWindow& window, const TextureDimensions& size)
+	Result<void, RHIError> OpenGL::ResizeBuffers(RHIWindowData& window, const TextureDimensions& size)
 	{
 		return Ok();
 	}

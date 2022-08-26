@@ -27,16 +27,16 @@ namespace Ion
 	class ION_API DX10 : public RHI
 	{
 	public:
-		virtual Result<void, RHIError> Init(GenericWindow* window) override;
-		virtual Result<void, RHIError> InitWindow(GenericWindow& window) override;
+		virtual Result<void, RHIError> Init(RHIWindowData& mainWindow) override;
+		virtual Result<void, RHIError> InitWindow(RHIWindowData& window) override;
 		virtual void Shutdown() override;
-		virtual void ShutdownWindow(GenericWindow& window) override;
+		virtual void ShutdownWindow(RHIWindowData& window) override;
 
 		virtual Result<void, RHIError> BeginFrame() override;
-		virtual Result<void, RHIError> EndFrame(GenericWindow& window) override;
+		virtual Result<void, RHIError> EndFrame(RHIWindowData& window) override;
 
-		virtual Result<void, RHIError> ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height) override;
-		virtual Result<void, RHIError> ResizeBuffers(GenericWindow& window, const TextureDimensions& size) override;
+		virtual Result<void, RHIError> ChangeDisplayMode(RHIWindowData& window, EWindowDisplayMode mode, uint32 width, uint32 height) override;
+		virtual Result<void, RHIError> ResizeBuffers(RHIWindowData& window, const TextureDimensions& size) override;
 
 		virtual String GetCurrentDisplayName() override;
 

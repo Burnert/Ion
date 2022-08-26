@@ -5,8 +5,6 @@
 #include "DX11.h"
 #include "RHI/DX11/DX11Texture.h"
 
-#include "Application/Platform/Windows/WindowsWindow.h"
-
 #include "Renderer/Renderer.h"
 
 #include "UserInterface/ImGui.h"
@@ -29,11 +27,9 @@ namespace Ion
 		DX11::PrintDebugMessages();
 	}
 
-	Result<void, RHIError> DX11::Init(GenericWindow* window)
+	Result<void, RHIError> DX11::Init(RHIWindowData& mainWindow)
 	{
 		TRACE_FUNCTION();
-
-		ionassert(window);
 
 		// No delete, persistent object
 		g_DXDebugMessageQueue = new DX11DebugMessageQueue;
@@ -42,7 +38,7 @@ namespace Ion
 		InitDebugLayer()
 			.Err([](Error& error) { DX11Logger.Error(error.Message); });
 
-		fwdthrowall(InitWindow(*window));
+		fwdthrowall(InitWindow(mainWindow));
 
 		SetDisplayVersion(DXCommon::D3DFeatureLevelToString(s_FeatureLevel));
 		DX11Logger.Info("Renderer: DirectX {}", GetFeatureLevelString());
@@ -51,12 +47,11 @@ namespace Ion
 		return Ok();
 	}
 
-	Result<void, RHIError> DX11::InitWindow(GenericWindow& window)
+	Result<void, RHIError> DX11::InitWindow(RHIWindowData& window)
 	{
 		TRACE_FUNCTION();
 
-		WindowsWindow& windowsWindow = (WindowsWindow&)window;
-		HWND hwnd = (HWND)window.GetNativeHandle();
+		HWND hwnd = reinterpret_cast<HWND>(window.NativeHandle);
 
 		// Create Device and Swap Chain
 		DXGI_SWAP_CHAIN_DESC scd { };
@@ -114,7 +109,7 @@ namespace Ion
 		}
 		// Create Render Target
 
-		safe_unwrap(window.m_WindowColorTexture, CreateRenderTarget());
+		safe_unwrap(window.ColorTexture, CreateRenderTarget());
 
 		// Create Rasterizer State
 		{
@@ -173,13 +168,13 @@ namespace Ion
 			dxcall(s_Context->OMSetDepthStencilState(s_DepthStencilState, 1));
 
 			dxcall(s_SwapChain->GetDesc(&scd));
-			safe_unwrap(window.m_WindowDepthStencilTexture, CreateDepthStencil(scd.BufferDesc.Width, scd.BufferDesc.Height));
+			safe_unwrap(window.DepthStencilTexture, CreateDepthStencil(scd.BufferDesc.Width, scd.BufferDesc.Height));
 		}
 		// Set Viewports
 		{
 			TRACE_SCOPE("DX11::Init - Set Viewports");
 
-			WindowDimensions dimensions = window.GetDimensions();
+			TextureDimensions dimensions = window.ColorTexture->GetDimensions();
 
 			D3D11_VIEWPORT viewport { };
 			viewport.TopLeftX = 0.0f;
@@ -223,7 +218,7 @@ namespace Ion
 		COMRelease(s_DebugInfoQueue);
 	}
 
-	void DX11::ShutdownWindow(GenericWindow& window)
+	void DX11::ShutdownWindow(RHIWindowData& window)
 	{
 
 	}
@@ -237,7 +232,7 @@ namespace Ion
 		return Ok();
 	}
 
-	Result<void, RHIError> DX11::EndFrame(GenericWindow& window)
+	Result<void, RHIError> DX11::EndFrame(RHIWindowData& window)
 	{
 		TRACE_FUNCTION();
 
@@ -246,27 +241,27 @@ namespace Ion
 		return Ok();
 	}
 
-	Result<void, RHIError> DX11::ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height)
+	Result<void, RHIError> DX11::ChangeDisplayMode(RHIWindowData& window, EWindowDisplayMode mode, uint32 width, uint32 height)
 	{
 		TRACE_FUNCTION();
 
-		dxcall(s_SwapChain->SetFullscreenState(mode == EDisplayMode::FullScreen, nullptr));
+		dxcall(s_SwapChain->SetFullscreenState(mode == EWindowDisplayMode::FullScreen, nullptr));
 
 		return ResizeBuffers(window, { width, height });
 	}
 
-	Result<void, RHIError> DX11::ResizeBuffers(GenericWindow& window, const TextureDimensions& size)
+	Result<void, RHIError> DX11::ResizeBuffers(RHIWindowData& window, const TextureDimensions& size)
 	{
 		TRACE_FUNCTION();
 
-		window.m_WindowColorTexture = nullptr;
-		window.m_WindowDepthStencilTexture = nullptr;
+		window.ColorTexture = nullptr;
+		window.DepthStencilTexture = nullptr;
 
 		dxcall(s_SwapChain->ResizeBuffers(2, size.Width, size.Height, DXGI_FORMAT_UNKNOWN, 0),
 			"Cannot resize buffers.");
 
-		safe_unwrap(window.m_WindowColorTexture, CreateRenderTarget());
-		safe_unwrap(window.m_WindowDepthStencilTexture, CreateDepthStencil(size.Width, size.Height));
+		safe_unwrap(window.ColorTexture, CreateRenderTarget());
+		safe_unwrap(window.DepthStencilTexture, CreateDepthStencil(size.Width, size.Height));
 
 		return Ok();
 	}

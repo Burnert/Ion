@@ -1,7 +1,7 @@
 #include "IonPCH.h"
 
 #include "DXInclude.h"
-#include "Application/EnginePath.h"
+#include "RHI/RHI.h"
 
 namespace Ion
 {
@@ -36,13 +36,13 @@ namespace Ion
 				}
 
 				// @TODO: Depends on the current project include paths
-				fullIncludePath = EnginePath::GetShadersPath() / pFileName;
+				fullIncludePath = RHI::GetEngineShadersPath() / pFileName;
 			}
 			break;
 			case D3D_INCLUDE_SYSTEM:
 			{
 				// Engine shaders library
-				fullIncludePath = EnginePath::GetShadersPath() / pFileName;
+				fullIncludePath = RHI::GetEngineShadersPath() / pFileName;
 			}
 			break;
 			default: return E_FAIL;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Application/Event/Event.h"
+#include "RHI/RHI.h"
 
 namespace Ion
 {
@@ -78,6 +79,8 @@ namespace Ion
 
 		const TRef<RHITexture>& GetWindowColorTexture() const;
 		const TRef<RHITexture>& GetWindowDepthStencilTexture() const;
+
+		RHIWindowData GetRHIData();
 
 	public:
 		// Implemented per platform.

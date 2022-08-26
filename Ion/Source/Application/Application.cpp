@@ -89,7 +89,8 @@ namespace Ion
 
 		// Current thread will render graphics in this window.
 		RHI::Create(ERHI::DX11);
-		RHI::Get()->Init(m_Window.get()).Unwrap();
+		RHI::SetEngineShadersPath(EnginePath::GetShadersPath());
+		RHI::Get()->Init(RHIWindowData(m_Window->GetRHIData())).Unwrap();
 
 		Renderer* renderer = Renderer::Create();
 		renderer->Init();
@@ -217,7 +218,7 @@ namespace Ion
 			ImGuiRenderPlatform(ImGui::GetDrawData());
 		}
 
-		RHI::Get()->EndFrame(*m_Window);
+		RHI::Get()->EndFrame(m_Window->GetRHIData());
 	}
 
 	void Application::SetRenderTargetToMainWindow()
@@ -310,7 +311,7 @@ namespace Ion
 		ApplicationLogger.Trace("Resizing application window buffers to [{}x{}].", width, height);
 
 		//Renderer::Get()->SetViewportDimensions(ViewportDimensions { 0, 0, width, height });
-		RHI::Get()->ResizeBuffers(*GetWindow().get(), { width, height });
+		RHI::Get()->ResizeBuffers(GetWindow()->GetRHIData(), { width, height });
 	}
 
 	void Application::OnWindowChangeDisplayModeEvent_Internal(const WindowChangeDisplayModeEvent& event)

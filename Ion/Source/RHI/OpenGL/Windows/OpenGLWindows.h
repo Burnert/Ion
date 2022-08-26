@@ -18,7 +18,7 @@ namespace Ion
 
 	public:
 		/* Called by the Application class */
-		static void Init(GenericWindow* window);
+		static void Init(RHIWindowData& window);
 
 		static HGLRC CreateGLContext(HDC hdc, HGLRC shareContext = nullptr);
 		static void MakeContextCurrent(HDC hdc, HGLRC hglrc);

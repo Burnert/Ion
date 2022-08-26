@@ -12,8 +12,6 @@
 #include "DX11/DX11.h"
 #endif
 
-#include "Application/Window/GenericWindow.h"
-
 //DECLARE_PERFORMANCE_COUNTER(RenderAPI_InitTime, "RenderAPI Init Time", "Init");
 
 namespace Ion
@@ -39,6 +37,14 @@ namespace Ion
 		return nullptr;
 	}
 
+	void RHI::SetEngineShadersPath(const FilePath& path)
+	{
+		ionassert(s_EngineShadersPath.IsEmpty(), "Engine shaders path should be only set once.");
+		s_EngineShadersPath = path;
+	}
+
 	ERHI RHI::s_CurrentRHI = ERHI::None;
 	RHI* RHI::s_RHI = nullptr;
+
+	FilePath RHI::s_EngineShadersPath;
 }

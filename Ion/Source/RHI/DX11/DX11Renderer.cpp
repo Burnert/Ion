@@ -8,8 +8,6 @@
 
 #include "Renderer/Scene.h"
 
-#include "Application/EnginePath.h"
-
 #include "Engine/Entity/Entity.h"
 #include "Engine/Components/MeshComponent.h"
 

@@ -32,7 +32,27 @@ namespace Ion
 		return "";
 	}
 
-	class GenericWindow;
+	struct RHIWindowData
+	{
+		TRef<RHITexture>& ColorTexture;
+		TRef<RHITexture>& DepthStencilTexture;
+		void* NativeHandle;
+
+		RHIWindowData(TRef<RHITexture>& color, TRef<RHITexture>& depthStencil, void* handle) :
+			ColorTexture(color),
+			DepthStencilTexture(depthStencil),
+			NativeHandle(handle)
+		{
+		}
+	};
+
+	enum class EWindowDisplayMode : uint8
+	{
+		Windowed,
+		BorderlessWindow,
+		FullScreen,
+	};
+
 	enum class EDisplayMode : uint8;
 
 	class ION_API RHI
@@ -41,16 +61,19 @@ namespace Ion
 		static RHI* Create(ERHI rhi);
 		static RHI* Get();
 
-		virtual Result<void, RHIError> Init(GenericWindow* window) = 0;
-		virtual Result<void, RHIError> InitWindow(GenericWindow& window) = 0;
+		static void SetEngineShadersPath(const FilePath& path);
+		static const FilePath& GetEngineShadersPath();
+
+		virtual Result<void, RHIError> Init(RHIWindowData& mainWindow) = 0;
+		virtual Result<void, RHIError> InitWindow(RHIWindowData& window) = 0;
 		virtual void Shutdown() = 0;
-		virtual void ShutdownWindow(GenericWindow& window) = 0;
+		virtual void ShutdownWindow(RHIWindowData& window) = 0;
 
 		virtual Result<void, RHIError> BeginFrame() = 0;
-		virtual Result<void, RHIError> EndFrame(GenericWindow& window) = 0;
+		virtual Result<void, RHIError> EndFrame(RHIWindowData& window) = 0;
 
-		virtual Result<void, RHIError> ChangeDisplayMode(GenericWindow& window, EDisplayMode mode, uint32 width, uint32 height) = 0;
-		virtual Result<void, RHIError> ResizeBuffers(GenericWindow& window, const TextureDimensions& size) = 0;
+		virtual Result<void, RHIError> ChangeDisplayMode(RHIWindowData& window, EWindowDisplayMode mode, uint32 width, uint32 height) = 0;
+		virtual Result<void, RHIError> ResizeBuffers(RHIWindowData& window, const TextureDimensions& size) = 0;
 
 		virtual String GetCurrentDisplayName() = 0;
 
@@ -64,12 +87,19 @@ namespace Ion
 	private:
 		static ERHI s_CurrentRHI;
 		static RHI* s_RHI;
+
+		static FilePath s_EngineShadersPath;
 	};
 
 	FORCEINLINE RHI* RHI::Get()
 	{
 		ionassert(s_RHI);
 		return s_RHI;
+	}
+
+	FORCEINLINE const FilePath& RHI::GetEngineShadersPath()
+	{
+		return s_EngineShadersPath;
 	}
 
 	FORCEINLINE ERHI RHI::GetCurrent()

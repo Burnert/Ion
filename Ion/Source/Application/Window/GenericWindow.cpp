@@ -50,4 +50,9 @@ namespace Ion
 	{
 		return nullptr;
 	}
+
+	RHIWindowData GenericWindow::GetRHIData()
+	{
+		return RHIWindowData(m_WindowColorTexture, m_WindowDepthStencilTexture, GetNativeHandle());
+	}
 }

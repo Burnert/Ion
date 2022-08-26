@@ -3,8 +3,6 @@
 #include "OpenGLWindows.h"
 #include "glad/glad_wgl.h"
 
-#include "Application/Platform/Windows/WindowsWindow.h"
-
 #include "UserInterface/ImGui.h"
 
 #pragma comment(lib, "opengl32.lib")
@@ -63,16 +61,16 @@ namespace Ion
 		s_GLInitialized = true;
 	}
 
-	void OpenGLWindows::Init(GenericWindow* window)
+	void OpenGLWindows::Init(RHIWindowData& window)
 	{
 		TRACE_FUNCTION();
 
 		InitOpenGL();
 
-		WindowsWindow* windowsWindow = (WindowsWindow*)window;
-		windowsWindow->m_RenderingContext = CreateGLContext(windowsWindow->m_DeviceContext);
+		//WindowsWindow* windowsWindow = (WindowsWindow*)window;
+		//windowsWindow->m_RenderingContext = CreateGLContext(windowsWindow->m_DeviceContext);
 
-		MakeContextCurrent(windowsWindow->m_DeviceContext, windowsWindow->m_RenderingContext);
+		//MakeContextCurrent(windowsWindow->m_DeviceContext, windowsWindow->m_RenderingContext);
 	}
 
 	void OpenGLWindows::InitLibraries()

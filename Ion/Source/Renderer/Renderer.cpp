@@ -7,8 +7,6 @@
 #include "RHI/DX10/DX10Renderer.h"
 #include "RHI/DX11/DX11Renderer.h"
 
-#include "Application/EnginePath.h"
-
 namespace Ion
 {
 	Renderer* Renderer::Create()
@@ -225,18 +223,18 @@ namespace Ion
 		String pixelSrc;
 		if (RHI::GetCurrent() != ERHI::OpenGL)
 		{
-			vertexSrc = File::ReadToString(EnginePath::GetShadersPath() / "TextureRenderVS.hlsl").Unwrap();
-			pixelSrc  = File::ReadToString(EnginePath::GetShadersPath() / "TextureRenderPS.hlsl").Unwrap();
+			vertexSrc = File::ReadToString(RHI::GetEngineShadersPath() / "TextureRenderVS.hlsl").Unwrap();
+			pixelSrc  = File::ReadToString(RHI::GetEngineShadersPath() / "TextureRenderPS.hlsl").Unwrap();
 		}
 		else
 		{
-			vertexSrc = File::ReadToString(EnginePath::GetShadersPath() / "TextureRender.vert").Unwrap();
-			pixelSrc  = File::ReadToString(EnginePath::GetShadersPath() / "TextureRender.frag").Unwrap();
+			vertexSrc = File::ReadToString(RHI::GetEngineShadersPath() / "TextureRender.vert").Unwrap();
+			pixelSrc  = File::ReadToString(RHI::GetEngineShadersPath() / "TextureRender.frag").Unwrap();
 		}
 
 		m_ScreenTextureRenderData.Shader = RHIShader::Create();
-		m_ScreenTextureRenderData.Shader->AddShaderSource(EShaderType::Vertex, vertexSrc, EnginePath::GetShadersPath() / "TextureRenderVS.hlsl");
-		m_ScreenTextureRenderData.Shader->AddShaderSource(EShaderType::Pixel, pixelSrc, EnginePath::GetShadersPath() / "TextureRenderPS.hlsl");
+		m_ScreenTextureRenderData.Shader->AddShaderSource(EShaderType::Vertex, vertexSrc, RHI::GetEngineShadersPath() / "TextureRenderVS.hlsl");
+		m_ScreenTextureRenderData.Shader->AddShaderSource(EShaderType::Pixel, pixelSrc, RHI::GetEngineShadersPath() / "TextureRenderPS.hlsl");
 
 		m_ScreenTextureRenderData.Shader->Compile().Unwrap();
 
@@ -351,7 +349,7 @@ namespace Ion
 		String vertexSrc;
 		String pixelSrc;
 
-		FilePath shadersPath = EnginePath::GetShadersPath();
+		const FilePath& shadersPath = RHI::GetEngineShadersPath();
 
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() != ERHI::OpenGL)
@@ -379,7 +377,7 @@ namespace Ion
 		String vertexSrc;
 		String pixelSrc;
 
-		FilePath shadersPath = EnginePath::GetShadersPath();
+		const FilePath& shadersPath = RHI::GetEngineShadersPath();
 
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() != ERHI::OpenGL)
@@ -407,7 +405,7 @@ namespace Ion
 		String vertexSrc;
 		String pixelSrc;
 
-		FilePath shadersPath = EnginePath::GetShadersPath();
+		const FilePath& shadersPath = RHI::GetEngineShadersPath();
 
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() != ERHI::OpenGL)
@@ -435,7 +433,7 @@ namespace Ion
 		String vertexSrc;
 		String pixelSrc;
 
-		FilePath shadersPath = EnginePath::GetShadersPath();
+		const FilePath& shadersPath = RHI::GetEngineShadersPath();
 
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() != ERHI::OpenGL)
@@ -463,7 +461,7 @@ namespace Ion
 		String vertexSrc;
 		String pixelSrc;
 
-		FilePath shadersPath = EnginePath::GetShadersPath();
+		const FilePath& shadersPath = RHI::GetEngineShadersPath();
 
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() != ERHI::OpenGL)
@@ -490,7 +488,7 @@ namespace Ion
 		String vertexSrc;
 		String pixelSrc;
 
-		FilePath shadersPath = EnginePath::GetShadersPath();
+		const FilePath& shadersPath = RHI::GetEngineShadersPath();
 
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() != ERHI::OpenGL)
@@ -518,7 +516,7 @@ namespace Ion
 		String vertexSrc;
 		String pixelSrc;
 
-		FilePath shadersPath = EnginePath::GetShadersPath();
+		const FilePath& shadersPath = RHI::GetEngineShadersPath();
 
 		// @TODO: This needs a refactor
 		if (RHI::GetCurrent() != ERHI::OpenGL)
