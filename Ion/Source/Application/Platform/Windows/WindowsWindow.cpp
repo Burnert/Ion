@@ -579,7 +579,7 @@ namespace Ion
 
 	WindowsWindow::~WindowsWindow() 
 	{
-		DeleteRenderingContext();
+		//DeleteRenderingContext();
 		WindowsWindowLogger.Info("Window \"{}\" has been destroyed.", StringConverter::WStringToString(m_Title));
 	}
 
@@ -964,36 +964,36 @@ namespace Ion
 		}
 	}
 
-	HGLRC WindowsWindow::CreateRenderingContext(HDC deviceContext, HGLRC parentContext)
-	{
-		TRACE_FUNCTION();
+	//HGLRC WindowsWindow::CreateRenderingContext(HDC deviceContext, HGLRC parentContext)
+	//{
+	//	TRACE_FUNCTION();
 
-		if (m_WindowHandle == NULL)
-		{
-			WindowsWindowLogger.Critical(_windowNoInitMessage, "create OpenGL rendering context");
-			return NULL;
-		}
+	//	if (m_WindowHandle == NULL)
+	//	{
+	//		WindowsWindowLogger.Critical(_windowNoInitMessage, "create OpenGL rendering context");
+	//		return NULL;
+	//	}
 
-		// Setup Rendering Context
-		m_RenderingContext = OpenGLWindows::CreateGLContext(deviceContext, parentContext);
-		return m_RenderingContext;
-	}
+	//	// Setup Rendering Context
+	//	m_RenderingContext = OpenGLWindows::CreateGLContext(deviceContext, parentContext);
+	//	return m_RenderingContext;
+	//}
 
-	void WindowsWindow::DeleteRenderingContext()
-	{
-		if (m_RenderingContext != NULL)
-		{
-			wglDeleteContext(m_RenderingContext);
-		}
-	}
+	//void WindowsWindow::DeleteRenderingContext()
+	//{
+	//	if (m_RenderingContext != NULL)
+	//	{
+	//		wglDeleteContext(m_RenderingContext);
+	//	}
+	//}
 
-	void WindowsWindow::MakeRenderingContextCurrent()
-	{
-		// @TODO: Move this whole "MakeContextCurrent" thing into RenderAPI specific files
-		// It shouldn't be tied to the window at all
+	//void WindowsWindow::MakeRenderingContextCurrent()
+	//{
+	//	// @TODO: Move this whole "MakeContextCurrent" thing into RenderAPI specific files
+	//	// It shouldn't be tied to the window at all
 
-		OpenGLWindows::MakeContextCurrent(m_DeviceContext, m_RenderingContext);
-	}
+	//	OpenGLWindows::MakeContextCurrent(m_DeviceContext, m_RenderingContext);
+	//}
 
 	void WindowsWindow::SwapBuffers()
 	{

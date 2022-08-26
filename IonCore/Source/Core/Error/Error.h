@@ -98,7 +98,7 @@ namespace Ion
 
 #if _SHOW_ABORT_MESSAGE_BOX
 		String reason = fmt::format("Error: => {}", TError::ClassName);
-		AbortMessageBox<false>(_FWD_ASSERT_ARGS, reason.c_str(), message.c_str());
+		AbortMessageBox<false>(_FWD_ASSERT_ARGS, reason.c_str(), error.Message.c_str());
 #endif
 	}
 

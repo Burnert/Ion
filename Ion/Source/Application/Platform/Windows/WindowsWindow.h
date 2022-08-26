@@ -56,7 +56,7 @@ namespace Ion
 
 		virtual void* GetNativeHandle() const override;
 
-		virtual void MakeRenderingContextCurrent() override;
+		//virtual void MakeRenderingContextCurrent() override;
 
 		virtual void SwapBuffers() override;
 
@@ -71,8 +71,8 @@ namespace Ion
 		FORCEINLINE static HGLRC GetCurrentRenderingContext() { return wglGetCurrentContext(); }
 
 	protected:
-		HGLRC CreateRenderingContext(HDC deviceContext, HGLRC parentContext = nullptr);
-		void DeleteRenderingContext();
+		//HGLRC CreateRenderingContext(HDC deviceContext, HGLRC parentContext = nullptr);
+		//void DeleteRenderingContext();
 
 	protected:
 		// Protected constructor: Only shared_ptrs of this class can be made.

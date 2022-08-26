@@ -1,5 +1,9 @@
 #include "IonPCH.h"
 
+#include "RHI/RHICore.h"
+
+#if RHI_BUILD_DX10
+
 #include "DX10Shader.h"
 #include "RHI/DirectX/DXInclude.h"
 #include "Renderer/RendererCore.h"
@@ -172,3 +176,5 @@ namespace Ion
 		dxcall_nocheck(device->PSSetShader(nullptr));
 	}
 }
+
+#endif // RHI_BUILD_DX10

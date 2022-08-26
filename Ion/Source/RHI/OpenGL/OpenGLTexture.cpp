@@ -1,5 +1,9 @@
 #include "IonPCH.h"
 
+#include "RHI/RHICore.h"
+
+#if RHI_BUILD_OPENGL
+
 #include "OpenGLTexture.h"
 #include "OpenGLRenderer.h"
 
@@ -154,3 +158,5 @@ namespace Ion
 		m_ID = 0;
 	}
 }
+
+#endif // RHI_BUILD_OPENGL

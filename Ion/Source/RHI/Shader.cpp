@@ -9,21 +9,6 @@
 
 namespace Ion
 {
-	TRef<RHIShader> RHIShader::Create()
-	{
-		switch (RHI::GetCurrent())
-		{
-		case ERHI::OpenGL:
-			return MakeRef<OpenGLShader>();
-		case ERHI::DX10:
-			return MakeRef<DX10Shader>();
-		case ERHI::DX11:
-			return MakeRef<DX11Shader>();
-		default:
-			return nullptr;
-		}
-	}
-
 	RHIShader::RHIShader()
 	{
 		RHILogger.Info("RHIShader \"TODO\" object has been created.");

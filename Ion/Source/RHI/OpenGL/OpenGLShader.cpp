@@ -1,5 +1,9 @@
 #include "IonPCH.h"
 
+#include "RHI/RHICore.h"
+
+#if RHI_BUILD_OPENGL
+
 #include "OpenGLShader.h"
 
 namespace Ion
@@ -190,3 +194,5 @@ namespace Ion
 		m_UniformCache.clear();
 	}
 }
+
+#endif // RHI_BUILD_OPENGL

@@ -1,5 +1,9 @@
 #include "IonPCH.h"
 
+#include "RHI/RHICore.h"
+
+#if RHI_BUILD_OPENGL
+
 #include "OpenGL.h"
 
 #ifdef ION_PLATFORM_WINDOWS
@@ -111,3 +115,5 @@ namespace Ion
 		ImGui_ImplOpenGL3_Shutdown();
 	}
 }
+
+#endif // RHI_BUILD_OPENGL

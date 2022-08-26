@@ -1,5 +1,9 @@
 #include "IonPCH.h"
 
+#include "RHI/RHICore.h"
+
+#if RHI_BUILD_DX11
+
 #include "Core/Platform/Windows.h"
 
 #include "DX11.h"
@@ -491,3 +495,5 @@ namespace Ion
 	DX11::DXGIGetDebugInterfaceProc DX11::DXGIGetDebugInterface = nullptr;
 	IDXGIInfoQueue* DX11::s_DebugInfoQueue = nullptr;
 }
+
+#endif // RHI_BUILD_DX11

@@ -1,5 +1,9 @@
 #include "IonPCH.h"
 
+#include "RHI/RHICore.h"
+
+#if RHI_BUILD_DX10
+
 #include "DX10.h"
 #include "DX10Renderer.h"
 #include "DX10Buffer.h"
@@ -226,3 +230,5 @@ namespace Ion
 		return Ok();
 	}
 }
+
+#endif // RHI_BUILD_DX10

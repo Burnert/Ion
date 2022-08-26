@@ -1,5 +1,9 @@
 #include "IonPCH.h"
 
+#include "RHI/RHICore.h"
+
+#if RHI_BUILD_OPENGL
+
 #include "OpenGLRenderer.h"
 
 #include "OpenGLBuffer.h"
@@ -198,3 +202,5 @@ namespace Ion
 		return Ok();
 	}
 }
+
+#endif // RHI_BUILD_OPENGL

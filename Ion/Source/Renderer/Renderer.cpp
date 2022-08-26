@@ -3,9 +3,15 @@
 #include "Renderer.h"
 
 #include "RHI/RHI.h"
+#if RHI_BUILD_OPENGL
 #include "RHI/OpenGL/OpenGLRenderer.h"
+#endif
+#if RHI_BUILD_DX10
 #include "RHI/DX10/DX10Renderer.h"
+#endif
+#if RHI_BUILD_DX11
 #include "RHI/DX11/DX11Renderer.h"
+#endif
 
 namespace Ion
 {
@@ -19,17 +25,23 @@ namespace Ion
 		{
 			case ERHI::OpenGL:
 			{
+#if RHI_BUILD_OPENGL
 				s_Instance = new OpenGLRenderer;
+#endif
 				break;
 			}
 			case ERHI::DX10:
 			{
+#if RHI_BUILD_DX10
 				s_Instance = new DX10Renderer;
+#endif
 				break;
 			}
 			case ERHI::DX11:
 			{
+#if RHI_BUILD_DX11
 				s_Instance = new DX11Renderer;
+#endif
 				break;
 			}
 			default:

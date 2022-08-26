@@ -1,5 +1,9 @@
 #include "IonPCH.h"
 
+#include "RHI/RHICore.h"
+
+#if RHI_BUILD_OPENGL
+
 #include "OpenGLBuffer.h"
 
 #pragma warning(disable:6387)
@@ -186,3 +190,5 @@ namespace Ion
 		return Ok();
 	}
 }
+
+#endif // RHI_BUILD_OPENGL

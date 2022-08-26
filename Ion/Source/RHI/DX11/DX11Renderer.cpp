@@ -1,5 +1,9 @@
 #include "IonPCH.h"
 
+#include "RHI/RHICore.h"
+
+#if RHI_BUILD_DX11
+
 #include "DX11.h"
 #include "DX11Renderer.h"
 #include "DX11Buffer.h"
@@ -237,3 +241,5 @@ namespace Ion
 		return Ok();
 	}
 }
+
+#endif // RHI_BUILD_DX11

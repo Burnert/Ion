@@ -1,5 +1,9 @@
 #include "IonPCH.h"
 
+#include "RHI/RHICore.h"
+
+#if RHI_BUILD_DX10
+
 #include "DX10Buffer.h"
 #include "DX10Shader.h"
 
@@ -377,3 +381,5 @@ namespace Ion
 		return (uint8*)m_Common.Data + it->second.Offset;
 	}
 }
+
+#endif // RHI_BUILD_DX10

@@ -1,5 +1,9 @@
 #include "IonPCH.h"
 
+#include "RHI/RHICore.h"
+
+#if RHI_BUILD_OPENGL
+
 #include "OpenGLWindows.h"
 #include "glad/glad_wgl.h"
 
@@ -400,3 +404,5 @@ namespace Ion
 		}
 	}
 }
+
+#endif // RHI_BUILD_OPENGL

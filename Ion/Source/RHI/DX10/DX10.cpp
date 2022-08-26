@@ -1,5 +1,9 @@
 #include "IonPCH.h"
 
+#include "RHI/RHICore.h"
+
+#if RHI_BUILD_DX10
+
 #include "Core/Platform/Windows.h"
 
 #include "DX10.h"
@@ -11,6 +15,7 @@
 
 #pragma comment(lib, "D3D10_1.lib")
 #pragma comment(lib, "DXGI.lib")
+#pragma comment(lib, "dxguid.lib")
 
 #pragma warning(disable:6001)
 #pragma warning(disable:6387)
@@ -461,3 +466,5 @@ namespace Ion
 	bool DX10::s_Initialized = false;
 	D3D10_FEATURE_LEVEL1 DX10::s_FeatureLevel = D3D10_FEATURE_LEVEL_9_1;
 }
+
+#endif // RHI_BUILD_DX10

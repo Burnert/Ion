@@ -9,21 +9,6 @@
 
 namespace Ion
 {
-	TRef<RHITexture> RHITexture::Create(const TextureDescription& desc)
-	{
-		switch (RHI::GetCurrent())
-		{
-		case ERHI::OpenGL:
-			return MakeRef<OpenGLTexture>(desc);
-		case ERHI::DX10:
-			return MakeRef<DX10Texture>(desc);
-		case ERHI::DX11:
-			return MakeRef<DX11Texture>(desc);
-		default:
-			return nullptr;
-		}
-	}
-
 	RHITexture::RHITexture(const TextureDescription& desc)
 		: m_Description(desc)
 	{

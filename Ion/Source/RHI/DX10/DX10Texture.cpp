@@ -1,5 +1,9 @@
 #include "IonPCH.h"
 
+#include "RHI/RHICore.h"
+
+#if RHI_BUILD_DX10
+
 #include "DX10Texture.h"
 
 namespace Ion
@@ -319,3 +323,5 @@ namespace Ion
 		COMRelease(m_SamplerState);
 	}
 }
+
+#endif // RHI_BUILD_DX10

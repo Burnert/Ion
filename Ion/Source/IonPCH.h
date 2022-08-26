@@ -2,6 +2,9 @@
 
 #include "Core/CorePCH.h"
 #include "Core.h"
+
+#include "Config.h"
+
 #include "Engine/EngineFwd.h"
 #include "Material/MaterialFwd.h"
 #include "Renderer/RendererFwd.h"

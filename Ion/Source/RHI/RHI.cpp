@@ -2,17 +2,19 @@
 
 #include "RHI.h"
 
-#if PLATFORM_SUPPORTS_OPENGL
+#if RHI_BUILD_OPENGL
 #include "OpenGL/OpenGL.h"
 #endif
-#if PLATFORM_SUPPORTS_DX10
+#if RHI_BUILD_DX10
 #include "DX10/DX10.h"
 #endif
-#if PLATFORM_SUPPORTS_DX11
+#if RHI_BUILD_DX11
 #include "DX11/DX11.h"
 #endif
 
 //DECLARE_PERFORMANCE_COUNTER(RenderAPI_InitTime, "RenderAPI Init Time", "Init");
+
+#define NOT_SUPPORTED_ERROR ionerror(RHIError, "{} RHI is not supported on this platform.", ERHIAsString(s_CurrentRHI));
 
 namespace Ion
 {
@@ -20,20 +22,37 @@ namespace Ion
 	{
 		s_CurrentRHI = rhi;
 
-		switch (rhi)
+		switch (s_CurrentRHI)
 		{
-#if PLATFORM_SUPPORTS_OPENGL
-			case ERHI::OpenGL: return s_RHI = new OpenGL;
+		case ERHI::OpenGL:
+#if RHI_BUILD_OPENGL
+			return s_RHI = new OpenGL;
+#elif !PLATFORM_SUPPORTS_OPENGL
+			NOT_SUPPORTED_ERROR
 #endif
-#if PLATFORM_SUPPORTS_DX10
-			case ERHI::DX10:   return s_RHI = new DX10;
+			break;
+
+		case ERHI::DX10:
+#if RHI_BUILD_DX10
+			return s_RHI = new DX10;
+#elif !PLATFORM_SUPPORTS_DX10
+			NOT_SUPPORTED_ERROR
 #endif
-#if PLATFORM_SUPPORTS_DX11
-			case ERHI::DX11:   return s_RHI = new DX11;
+			break;
+
+		case ERHI::DX11:
+#if RHI_BUILD_DX11
+			return s_RHI = new DX11;
+#elif !PLATFORM_SUPPORTS_DX11
+			NOT_SUPPORTED_ERROR
 #endif
+			break;
+
+		default:
+			s_CurrentRHI = ERHI::None;
 		}
-		s_CurrentRHI = ERHI::None;
-		ionassert(0, "{0} RHI not supported on this platform.", ERHIAsString(rhi));
+
+		ionerror(RHIError, "{} RHI has been disabled in the build config.", ERHIAsString(s_CurrentRHI));
 		return nullptr;
 	}
 
