@@ -37,6 +37,13 @@ namespace Ion::Editor
 		m_DraggedWorldTreeNodeInfo(0),
 		m_HoveredWorldTreeNodeDragTarget(nullptr)
 	{
+		m_EventDispatcher.RegisterEventFunction(&EditorLayer::OnMouseButtonPressedEvent);
+		m_EventDispatcher.RegisterEventFunction(&EditorLayer::OnMouseButtonReleasedEvent);
+		m_EventDispatcher.RegisterEventFunction(&EditorLayer::OnMouseDoubleClickEvent);
+		m_EventDispatcher.RegisterEventFunction(&EditorLayer::OnRawInputMouseMovedEvent);
+		m_EventDispatcher.RegisterEventFunction(&EditorLayer::OnRawInputMouseScrolledEvent);
+		m_EventDispatcher.RegisterEventFunction(&EditorLayer::OnKeyPressedEvent);
+		m_EventDispatcher.RegisterEventFunction(&EditorLayer::OnKeyReleasedEvent);
 	}
 
 	void EditorLayer::OnAttach()

@@ -21,9 +21,7 @@ namespace Ion
 
 		virtual void OnEvent(const Event& event) override;
 
-		using EventFunctions = TEventFunctionPack<>;
-
 	private:
-		EventDispatcher<EventFunctions, ImGuiLayer> m_EventDispatcher;
+		TEventDispatcher<ImGuiLayer> m_EventDispatcher;
 	};
 }

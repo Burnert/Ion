@@ -32,6 +32,12 @@ namespace Ion
 		m_MouseInputType(MouseInputType::RawInput)
 	{
 		memset(m_InputStates, 0, sizeof(m_InputStates));
+
+		m_EventDispatcher.RegisterEventFunction(&InputManager::OnKeyPressedEvent);
+		m_EventDispatcher.RegisterEventFunction(&InputManager::OnKeyReleasedEvent);
+		m_EventDispatcher.RegisterEventFunction(&InputManager::OnKeyRepeatedEvent);
+		m_EventDispatcher.RegisterEventFunction(&InputManager::OnMouseButtonPressedEvent);
+		m_EventDispatcher.RegisterEventFunction(&InputManager::OnMouseButtonReleasedEvent);
 	}
 
 	bool InputManager::IsKeyPressed(KeyCode keyCode)
@@ -127,6 +133,13 @@ namespace Ion
 		// Mouse states are stored in the same array as key states
 		uint8* statePtr = &m_InputStates[buttonCode];
 		UnsetBitflags(*statePtr, InputPressedFlag);
+	}
+
+	void InputManager::OnEvent(const Event& e)
+	{
+		TRACE_FUNCTION();
+
+		m_EventDispatcher.Dispatch(e);
 	}
 
 	std::shared_ptr<InputManager> InputManager::s_Instance = nullptr;

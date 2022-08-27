@@ -22,9 +22,7 @@ namespace Ion
 
 		virtual void OnEvent(const Event& event) override;
 
-		using EventFunctions = TEventFunctionPack<>;
-
 	private:
-		EventDispatcher<EventFunctions, GameLayer> m_EventDispatcher;
+		TEventDispatcher<GameLayer> m_EventDispatcher;
 	};
 }

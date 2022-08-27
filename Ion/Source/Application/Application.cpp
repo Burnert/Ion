@@ -59,6 +59,15 @@ namespace Ion
 		ionassert(clientApp);
 
 		ApplicationLogger.Info("Application has been created.");
+
+		m_EventDispatcher.RegisterEventFunction(&Application::OnWindowCloseEvent_Internal);
+		m_EventDispatcher.RegisterEventFunction(&Application::OnWindowResizeEvent_Internal);
+		m_EventDispatcher.RegisterEventFunction(&Application::OnWindowChangeDisplayModeEvent_Internal);
+		m_EventDispatcher.RegisterEventFunction(&Application::OnWindowLostFocusEvent_Internal);
+		m_EventDispatcher.RegisterEventFunction(&Application::OnWindowFocusEvent_Internal);
+		m_EventDispatcher.RegisterEventFunction(&Application::OnKeyPressedEvent_Internal);
+		m_EventDispatcher.RegisterEventFunction(&Application::OnKeyReleasedEvent_Internal);
+		m_EventDispatcher.RegisterEventFunction(&Application::OnKeyRepeatedEvent_Internal);
 	}
 
 	Application::~Application()
@@ -143,6 +152,28 @@ namespace Ion
 		g_Engine->Shutdown();
 
 		EngineTaskQueue::Shutdown();
+	}
+
+	void Application::PostEvent(const Event& e)
+	{
+		DispatchEvent(e);
+	}
+
+
+
+	void Application::DispatchEvent(const Event& e)
+	{
+		TRACE_FUNCTION();
+
+		m_EventDispatcher.Dispatch(e);
+
+		m_InputManager->OnEvent(e);
+		m_LayerStack->OnEvent(e);
+
+		TRACE_BEGIN(0, "Application - Client::OnEvent");
+		OnEvent(e);
+		CallClientAppOnEvent(e);
+		TRACE_END(0);
 	}
 
 	void Application::Exit()

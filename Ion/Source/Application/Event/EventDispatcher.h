@@ -4,130 +4,138 @@
 
 namespace Ion
 {
-	template<typename EventT, void Func(const EventT&)>
-	struct TEventFunction
-	{
-		using EventType = EventT;
+#pragma region Event Function Pointer Wrapper
 
-		static void Call(const EventT& event)
-		{
-			(*Func)(event);
-		}
-	};
+	template<typename TClass, typename TEvent>
+	using TEventMemberFunctionPointer = void(TClass::*)(const TEvent&);
 
-	template<typename ClassT, typename EventT, void (ClassT::*Func)(const EventT&)>
-	struct TMemberEventFunction
-	{
-		using EventType = EventT;
-		
-		static void Call(ClassT* object, const EventT& event)
-		{
-			(object->*Func)(event);
-		}
-	};
-
-	template<typename... Functions>
-	struct TEventFunctionPack;
-
-	template<>
-	struct TEventFunctionPack<> { };
-
-	template<typename First, typename... Other>
-	struct TEventFunctionPack<First, Other...> : private TEventFunctionPack<Other...>
-	{
-		using ThisFunction = First;
-		using OtherFunctions = TEventFunctionPack<Other...>;
-	};
-
-	template<typename EventFunctions, typename ClassT = void>
-	class EventDispatcher
+	template<typename TClass>
+	class TIEventFunctionWrapper
 	{
 	public:
-		EventDispatcher(ClassT* owner)
-			: m_Owner(owner)
-		{ }
-
-		template<typename EventT>
-		void Dispatch(const EventT& event)
-		{
-			TRACE_FUNCTION();
-
-			DispatchExpand<EventT, EventFunctions>(event);
-		}
-
-		// Runtime version of Dispatch (used when the event type is not known at compile time)
-		void Dispatch(const Event& event)
-		{
-			TRACE_FUNCTION();
-
-			DispatchExpandRuntime<EventFunctions>(event);
-		}
-
-	private:
-		// Member function version
-		template<typename EventT, typename FuncPack>
-		void DispatchExpand(const EventT& event)
-		{
-			// Find the correct type
-			if constexpr (TIsSameV<FuncPack::ThisFunction::EventType, EventT>)
-			{
-				FuncPack::ThisFunction::Call(m_Owner, event);
-			}
-			else if constexpr (!TIsSameV<FuncPack::OtherFunctions, TEventFunctionPack<>>)
-			{
-				// Recursive template iterate if possible
-				DispatchExpand<EventT, FuncPack::OtherFunctions>(event);
-			}
-		}
-
-		template<typename FuncPack>
-		void DispatchExpandRuntime(const Event& event)
-		{
-			// Find the correct type at runtime
-			if (FuncPack::ThisFunction::EventType::_GetType() == event.GetType())
-			{
-				// Cast to the correct type (based on EventDispatcher template arguments)
-				FuncPack::ThisFunction::EventType* eventPtr = (FuncPack::ThisFunction::EventType*)&event;
-				FuncPack::ThisFunction::Call(m_Owner, *eventPtr);
-			}
-			else if constexpr (!TIsSameV<FuncPack::OtherFunctions, TEventFunctionPack<>>)
-			{
-				// Recursive template iterate if possible
-				DispatchExpandRuntime<FuncPack::OtherFunctions>(event);
-			}
-		}
-
-		ClassT* m_Owner;
+		virtual void Call(TClass* object, const Event& e) = 0;
 	};
 
-	template<typename EventFunctions>
-	class EventDispatcher<EventFunctions, void>
+	template<typename TClass, typename TEvent>
+	class TEventFunctionWrapper : public TIEventFunctionWrapper<TClass>
 	{
 	public:
-		template<typename EventT>
-		void Dispatch(const EventT& event)
-		{
-			TRACE_FUNCTION();
+		TEventFunctionWrapper(TEventMemberFunctionPointer<TClass, TEvent> func);
 
-			DispatchExpand<EventT, EventFunctions>(event);
-		}
+		virtual void Call(TClass* object, const Event& e) override;
 
 	private:
-		// Non-member function version
-		template<typename EventT, typename FuncPack>
-		void DispatchExpand(const EventT& event)
-		{
-			// Find the correct type
-			if constexpr (TIsSameV<FuncPack::ThisFunction::EventType, EventT>)
-			{
-				FuncPack::ThisFunction::Call(event);
-			}
-			else if constexpr (!TIsSameV<FuncPack::OtherFunctions, TEventFunctionPack<>>)
-			{
-				// Recursive template iterate if possible
-				DispatchExpand<EventT, FuncPack::OtherFunctions>(event);
-			}
-		}
+		TEventMemberFunctionPointer<TClass, TEvent> m_Function;
 	};
 
+	#pragma region TEventFunctionWrapper Implementation
+
+	template<typename TClass, typename TEvent>
+	inline TEventFunctionWrapper<TClass, TEvent>::TEventFunctionWrapper(TEventMemberFunctionPointer<TClass, TEvent> func) :
+		m_Function(func)
+	{
+		ionassert(func);
+	}
+
+	template<typename TClass, typename TEvent>
+	inline void TEventFunctionWrapper<TClass, TEvent>::Call(TClass* object, const Event& e)
+	{
+		ionassert(object);
+		(object->*m_Function)(static_cast<const TEvent&>(e));
+	}
+
+	#pragma endregion
+
+#pragma endregion
+
+#pragma region Event Dispatcher
+
+	/**
+	 * @brief Dynamic, automated dispatcher for native events.
+	 * 
+	 * @tparam TClass Listener class (a class which has event callback functions)
+	 */
+	template<typename TClass>
+	class TEventDispatcher
+	{
+	public:
+		/**
+		 * @brief Create an Event Dispatcher with a specified listener object.
+		 * 
+		 * @param listener 
+		 */
+		TEventDispatcher(TClass* listener);
+
+		/**
+		 * @brief Register a function as an event callback.
+		 * 
+		 * @tparam TEvent Event type to dispatch to the callback function
+		 * @param func The callback member function pointer
+		 */
+		template<typename TEvent, TEnableIfT<TIsBaseOfV<Event, TEvent>>* = 0>
+		void RegisterEventFunction(TEventMemberFunctionPointer<TClass, TEvent> func);
+
+		/**
+		 * @brief Unregister an event callback function.
+		 * 
+		 * @tparam TEvent Event type to dispatch to the callback function
+		 * @param func The callback member function pointer
+		 */
+		template<typename TEvent, TEnableIfT<TIsBaseOfV<Event, TEvent>>* = 0>
+		void UnregisterEventFunction(TEventMemberFunctionPointer<TClass, TEvent> func);
+
+		/**
+		 * @brief Dispatch an event to a previously registered
+		 * callback function which takes a proper event type.
+		 * 
+		 * @param e Generic Event reference (the actual type will be resolved automatically)
+		 */
+		void Dispatch(const Event& e);
+
+	private:
+		TClass* m_Listener;
+		TFixedArray<std::unique_ptr<TIEventFunctionWrapper<TClass>>, (size_t)EEventType::_Count> m_EventFunctions;
+	};
+
+	#pragma region TEventDispatcher Implementation
+
+	template<typename TClass>
+	TEventDispatcher<TClass>::TEventDispatcher(TClass* listener) :
+		m_Listener(listener),
+		m_EventFunctions()
+	{
+		ionassert(m_Listener, "Event Listener cannot be null.");
+	}
+
+	template<typename TClass>
+	template<typename TEvent, TEnableIfT<TIsBaseOfV<Event, TEvent>>*>
+	inline void TEventDispatcher<TClass>::RegisterEventFunction(TEventMemberFunctionPointer<TClass, TEvent> func)
+	{
+		EEventType type = TEvent::_GetType();
+
+		ionassert(!m_EventFunctions[(size_t)type], "Event function for that event type has already been registered.");
+		m_EventFunctions[(size_t)type] = std::make_unique<TEventFunctionWrapper<TClass, TEvent>>(func);
+	}
+
+	template<typename TClass>
+	template<typename TEvent, TEnableIfT<TIsBaseOfV<Event, TEvent>>*>
+	inline void TEventDispatcher<TClass>::UnregisterEventFunction(TEventMemberFunctionPointer<TClass, TEvent> func)
+	{
+		EEventType type = TEvent::_GetType();
+
+		m_EventFunctions[(size_t)type] = nullptr;
+	}
+
+	template<typename TClass>
+	inline void TEventDispatcher<TClass>::Dispatch(const Event& e)
+	{
+		EEventType type = e.GetType();
+
+		if (m_EventFunctions[(size_t)type])
+			m_EventFunctions[(size_t)type]->Call(m_Listener, e);
+	}
+
+	#pragma endregion
+
+#pragma endregion
 }

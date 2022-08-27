@@ -91,14 +91,7 @@ namespace Ion::Editor
 	private:
 		static EditorApplication* s_Instance;
 
-		using EventFunctions = TEventFunctionPack<
-			TMemberEventFunction<EditorApplication, WindowResizeEvent,        &OnWindowResizeEvent>,
-			TMemberEventFunction<EditorApplication, MouseButtonPressedEvent,  &OnMouseButtonPressedEvent>,
-			TMemberEventFunction<EditorApplication, MouseButtonReleasedEvent, &OnMouseButtonReleasedEvent>,
-			TMemberEventFunction<EditorApplication, RawInputMouseMovedEvent,  &OnRawInputMouseMovedEvent>,
-			TMemberEventFunction<EditorApplication, KeyPressedEvent,          &OnKeyPressedEvent>
-		>;
-		EventDispatcher<EventFunctions, EditorApplication> m_EventDispatcher;
+		TEventDispatcher<EditorApplication> m_EventDispatcher;
 
 		std::shared_ptr<EditorLayer> m_EditorLayer;
 

@@ -35,6 +35,12 @@ namespace Ion::Editor
 	{
 		ionassert(!s_Instance);
 		s_Instance = this;
+
+		m_EventDispatcher.RegisterEventFunction(&EditorApplication::OnWindowResizeEvent);
+		m_EventDispatcher.RegisterEventFunction(&EditorApplication::OnMouseButtonPressedEvent);
+		m_EventDispatcher.RegisterEventFunction(&EditorApplication::OnMouseButtonReleasedEvent);
+		m_EventDispatcher.RegisterEventFunction(&EditorApplication::OnRawInputMouseMovedEvent);
+		m_EventDispatcher.RegisterEventFunction(&EditorApplication::OnKeyPressedEvent);
 	}
 
 	EditorApplication::~EditorApplication()

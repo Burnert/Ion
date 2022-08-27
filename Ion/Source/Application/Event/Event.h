@@ -35,6 +35,8 @@ namespace Ion
 		MouseScrolled,
 		RawInputMouseMoved,
 		RawInputMouseScrolled,
+
+		_Count
 	};
 
 	enum EEventCategory : uint32

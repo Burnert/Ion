@@ -103,16 +103,7 @@ namespace Ion::Editor
 		void OnKeyReleasedEvent(const KeyReleasedEvent& event);
 
 	private:
-		using EventFunctions = TEventFunctionPack<
-			TMemberEventFunction<EditorLayer, MouseButtonPressedEvent,    &OnMouseButtonPressedEvent>,
-			TMemberEventFunction<EditorLayer, MouseButtonReleasedEvent,   &OnMouseButtonReleasedEvent>,
-			TMemberEventFunction<EditorLayer, MouseDoubleClickEvent,      &OnMouseDoubleClickEvent>,
-			TMemberEventFunction<EditorLayer, RawInputMouseMovedEvent,    &OnRawInputMouseMovedEvent>,
-			TMemberEventFunction<EditorLayer, RawInputMouseScrolledEvent, &OnRawInputMouseScrolledEvent>,
-			TMemberEventFunction<EditorLayer, KeyPressedEvent,            &OnKeyPressedEvent>,
-			TMemberEventFunction<EditorLayer, KeyReleasedEvent,           &OnKeyReleasedEvent>
-		>;
-		EventDispatcher<EventFunctions, EditorLayer> m_EventDispatcher;
+		TEventDispatcher<EditorLayer> m_EventDispatcher;
 
 		TArray<WorldTreeNode*> m_ExpandWorldTreeChain;
 

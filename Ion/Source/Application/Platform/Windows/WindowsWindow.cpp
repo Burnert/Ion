@@ -29,18 +29,16 @@ namespace Ion
 	static const char* _windowNoInitMessage = "Cannot {0} before the window is initialized!";
 
 	// Post events directly to Application
-	// This is needed for compile time event dispatch
-	template<typename T>
-	inline void PostEvent(const T& event)
+	inline void PostEvent(const Event& e)
 	{
-		Application::Get()->PostEvent(event);
+		Application::Get()->PostEvent(e);
 	}
 	// Post events directly to Application
 	// The type is needed for copying the events to the event queue
 	template<typename T>
-	inline void PostDeferredEvent(const T& event)
+	inline void PostDeferredEvent(const T& e)
 	{
-		Application::Get()->PostDeferredEvent(event);
+		Application::Get()->PostDeferredEvent(e);
 	}
 
 	// Generic Window

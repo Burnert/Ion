@@ -99,20 +99,17 @@ namespace Ion
 
 		// Event system related functions
 
-		template<typename T>
-		friend void PostEvent(const T& event);
+		friend void PostEvent(const Event& e);
+
+		void PostEvent(const Event& e);
 
 		template<typename T>
-		void PostEvent(const T& event);
+		friend void PostDeferredEvent(const T& e);
 
 		template<typename T>
-		friend void PostDeferredEvent(const T& event);
+		void PostDeferredEvent(const T& e);
 
-		template<typename T>
-		void PostDeferredEvent(const T& event);
-
-		template<typename T>
-		void DispatchEvent(const T& event);
+		void DispatchEvent(const Event& e);
 
 		// Static event handler for EventQueue
 		static void EventHandler(const Event& event);
@@ -128,20 +125,6 @@ namespace Ion
 		void OnKeyPressedEvent_Internal(const KeyPressedEvent& event);
 		void OnKeyReleasedEvent_Internal(const KeyReleasedEvent& event);
 		void OnKeyRepeatedEvent_Internal(const KeyRepeatedEvent& event);
-
-		// @TODO: If possible, make this system set the event functions automatically based on function signatures
-		// because writing this big type thing is a bit unnecessary 
-
-		using ApplicationEventFunctions = TEventFunctionPack<
-			TMemberEventFunction<Application, WindowCloseEvent, &Application::OnWindowCloseEvent_Internal>,
-			TMemberEventFunction<Application, WindowResizeEvent, &Application::OnWindowResizeEvent_Internal>,
-			TMemberEventFunction<Application, WindowChangeDisplayModeEvent, &Application::OnWindowChangeDisplayModeEvent_Internal>,
-			TMemberEventFunction<Application, WindowLostFocusEvent, &Application::OnWindowLostFocusEvent_Internal>,
-			TMemberEventFunction<Application, WindowFocusEvent, &Application::OnWindowFocusEvent_Internal>,
-			TMemberEventFunction<Application, KeyPressedEvent, &Application::OnKeyPressedEvent_Internal>,
-			TMemberEventFunction<Application, KeyReleasedEvent, &Application::OnKeyReleasedEvent_Internal>,
-			TMemberEventFunction<Application, KeyRepeatedEvent, &Application::OnKeyRepeatedEvent_Internal>
-		>;
 
 		/* Platform specific method for polling application events / messages. */
 		virtual void PollEvents();
@@ -205,7 +188,7 @@ namespace Ion
 		std::shared_ptr<GenericWindow> m_Window;
 		std::shared_ptr<InputManager> m_InputManager;
 
-		EventDispatcher<ApplicationEventFunctions, Application> m_EventDispatcher;
+		TEventDispatcher<Application> m_EventDispatcher;
 		std::unique_ptr<EventQueue<EventHandler>> m_EventQueue;
 		std::unique_ptr<LayerStack> m_LayerStack;
 
@@ -278,31 +261,9 @@ namespace Ion
 	}
 
 	template<typename T>
-	inline void Application::PostEvent(const T& event)
+	inline void Application::PostDeferredEvent(const T& e)
 	{
-		DispatchEvent(event);
-	}
-
-	template<typename T>
-	inline void Application::PostDeferredEvent(const T& event)
-	{
-		m_EventQueue->PushEvent(event);
-	}
-
-	template<typename T>
-	inline void Application::DispatchEvent(const T& event)
-	{
-		TRACE_FUNCTION();
-
-		m_EventDispatcher.Dispatch(event);
-
-		m_InputManager->DispatchEvent(event);
-		m_LayerStack->OnEvent(event);
-
-		TRACE_BEGIN(0, "Application - Client::OnEvent");
-		OnEvent(event);
-		CallClientAppOnEvent(event);
-		TRACE_END(0);
+		m_EventQueue->PushEvent(e);
 	}
 
 	// Static event handler for EventQueue

@@ -206,30 +206,18 @@ namespace Ion
 		InputManager();
 		virtual ~InputManager() { }
 
+		void OnEvent(const Event& e);
+
 		static uint8 InputPressedFlag;
 		static uint8 InputRepeatedFlag;
 
-		template<typename T>
-		void DispatchEvent(const T& event)
-		{
-			TRACE_FUNCTION();
-			m_EventDispatcher.Dispatch(event);
-		}
-
 	private:
-		using InputEventFunctions = TEventFunctionPack<
-			TMemberEventFunction<InputManager, KeyPressedEvent,          &OnKeyPressedEvent>,
-			TMemberEventFunction<InputManager, KeyReleasedEvent,         &OnKeyReleasedEvent>,
-			TMemberEventFunction<InputManager, KeyRepeatedEvent,         &OnKeyRepeatedEvent>,
-			TMemberEventFunction<InputManager, MouseButtonPressedEvent,  &OnMouseButtonPressedEvent>,
-			TMemberEventFunction<InputManager, MouseButtonReleasedEvent, &OnMouseButtonReleasedEvent>
-		>;
-		EventDispatcher<InputEventFunctions, InputManager> m_EventDispatcher;
+		TEventDispatcher<InputManager> m_EventDispatcher;
+
+		uint8 m_InputStates[256];
+		MouseInputType m_MouseInputType;
 
 		static std::shared_ptr<InputManager> s_Instance;
-		uint8 m_InputStates[256];
-
-		MouseInputType m_MouseInputType;
 
 		friend class Application;
 	};
