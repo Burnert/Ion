@@ -24,7 +24,7 @@ namespace Ion
 		ShaderPermutation(EShaderUsage usage);
 	};
 
-	// IMaterialParameter Interface -------------------------------------------------------
+#pragma region Material Parameter
 
 	class IMaterialParameter
 	{
@@ -33,6 +33,8 @@ namespace Ion
 		virtual const String& GetName() const = 0;
 
 		virtual ~IMaterialParameter() { }
+
+		static TMaterialParameterTypeVariant ParseParamValue(const String& val, EMaterialParameterType type, class AssetParser& parser);
 
 	private:
 		void SetValues(const TMaterialParameterTypeVariant& def, const TMaterialParameterTypeVariant& min, const TMaterialParameterTypeVariant& max);
@@ -218,146 +220,9 @@ namespace Ion
 		m_DefaultValue = value;
 	}
 
-	// IMaterialParameterInstance -------------------------------------------------------
+#pragma endregion
 
-	class IMaterialParameterInstance
-	{
-	public:
-		virtual IMaterialParameter* GetParameter() const = 0;
-		inline EMaterialParameterType GetType() const
-		{
-			return GetParameter()->GetType();
-		}
-
-		virtual ~IMaterialParameterInstance() { }
-
-	private:
-		void SetValue(const TMaterialParameterTypeVariant& value);
-
-		friend class Material;
-		friend class MaterialInstance;
-	};
-
-	// MaterialParameterInstance Implementations -------------------------------------------------------
-
-	class MaterialParameterInstanceScalar : public IMaterialParameterInstance
-	{
-	public:
-		MaterialParameterInstanceScalar(MaterialParameterScalar* parentParameter, float value);
-
-		virtual IMaterialParameter* GetParameter() const override;
-
-		virtual ~MaterialParameterInstanceScalar() override { }
-
-		MaterialParameterScalar* GetParameterScalar() const;
-
-		void SetValue(float value);
-		float GetValue() const;
-
-	private:
-		MaterialParameterScalar* m_Parameter;
-		float m_Value;
-	};
-
-	inline void MaterialParameterInstanceScalar::SetValue(float value)
-	{
-		m_Value = value;
-	}
-
-	inline float MaterialParameterInstanceScalar::GetValue() const
-	{
-		return m_Value;
-	}
-
-	class MaterialParameterInstanceVector : public IMaterialParameterInstance
-	{
-	public:
-		MaterialParameterInstanceVector(MaterialParameterVector* parentParameter, const Vector4& value);
-
-		virtual IMaterialParameter* GetParameter() const override;
-
-		virtual ~MaterialParameterInstanceVector() override { }
-
-		MaterialParameterVector* GetParameterVector() const;
-
-		void SetValue(const Vector4& value);
-		const Vector4& GetValue() const;
-
-	private:
-		MaterialParameterVector* m_Parameter;
-		Vector4 m_Value;
-	};
-
-	inline void MaterialParameterInstanceVector::SetValue(const Vector4& value)
-	{
-		m_Value = value;
-	}
-
-	inline const Vector4& MaterialParameterInstanceVector::GetValue() const
-	{
-		return m_Value;
-	}
-
-	class MaterialParameterInstanceTexture2D : public IMaterialParameterInstance
-	{
-	public:
-		MaterialParameterInstanceTexture2D(MaterialParameterTexture2D* parentParameter, Asset value);
-
-		virtual IMaterialParameter* GetParameter() const override;
-
-		virtual ~MaterialParameterInstanceTexture2D() override { }
-
-		MaterialParameterTexture2D* GetParameterTexture2D() const;
-
-		void SetValue(Asset value);
-		Asset GetValue() const;
-
-		void Bind(uint32 slot);
-
-	private:
-		void UpdateTexture();
-
-	private:
-		MaterialParameterTexture2D* m_Parameter;
-		Asset m_Value;
-
-		TResourceRef<TextureResource> m_TextureResource;
-		TRef<RHITexture> m_Texture;
-	};
-
-	inline void MaterialParameterInstanceTexture2D::SetValue(Asset value)
-	{
-		m_Value = value;
-		UpdateTexture();
-	}
-
-	inline Asset MaterialParameterInstanceTexture2D::GetValue() const
-	{
-		return m_Value;
-	}
-
-	class ION_API MaterialRegistry
-	{
-	public:
-		static std::shared_ptr<Material> QueryMaterial(Asset materialAsset);
-		static std::shared_ptr<MaterialInstance> QueryMaterialInstance(Asset materialInstanceAsset);
-
-	private:
-		static MaterialRegistry& Get();
-
-	private:
-		THashMap<Asset, std::weak_ptr<Material>> m_Materials;
-		THashMap<Asset, std::weak_ptr<MaterialInstance>> m_MaterialInstances;
-
-		static MaterialRegistry* s_Instance;
-	};
-
-	inline MaterialRegistry& MaterialRegistry::Get()
-	{
-		return *(s_Instance ? s_Instance : s_Instance = new MaterialRegistry);
-	}
-
-	// Shader compilation counter ----------------------------------------------------------
+#pragma region Shaders Compiled Counter
 
 	using FOnShadersCompiled = TFunction<void(const ShaderPermutation&)>;
 
@@ -391,7 +256,9 @@ namespace Ion
 		return m_Count == m_Max;
 	}
 
-	// Material Class -------------------------------------------------------------------
+#pragma endregion
+
+#pragma region Material
 
 	class ION_API Material : public std::enable_shared_from_this<Material>
 	{
@@ -478,69 +345,7 @@ namespace Ion
 		return m_Asset;
 	}
 
-	// MaterialInstance Class -------------------------------------------------------------------
-
-	class ION_API MaterialInstance
-	{
-	public:
-		static std::shared_ptr<MaterialInstance> Create(const std::shared_ptr<Material>& parentMaterial);
-		static std::shared_ptr<MaterialInstance> CreateFromAsset(Asset materialInstanceAsset);
-
-		void BindTextures() const;
-
-		IMaterialParameterInstance* GetMaterialParameterInstance(const String& name) const;
-
-		template<typename T>
-		T* GetMaterialParameterInstanceTyped(const String& name) const;
-
-		const std::shared_ptr<Material>& GetBaseMaterial() const;
-
-		/**
-		 * @brief Set the values in the associated material uniform buffer
-		 * to the parameter instance values
-		 */
-		void TransferParameters() const;
-
-		Asset GetAsset() const;
-
-		~MaterialInstance();
-
-	private:
-		MaterialInstance(const std::shared_ptr<Material>& parentMaterial);
-		MaterialInstance(Asset materialInstanceAsset);
-
-		void SetParentMaterial(const std::shared_ptr<Material>& material);
-
-		void CreateParameterInstances();
-		void DestroyParameterInstances();
-
-		bool ParseAsset(Asset materialInstanceAsset);
-
-	private:
-		std::shared_ptr<Material> m_ParentMaterial;
-
-		THashMap<String, IMaterialParameterInstance*> m_ParameterInstances;
-		THashSet<MaterialParameterInstanceTexture2D*> m_TextureParameterInstances;
-
-		Asset m_Asset;
-	};
-
-	template<typename T>
-	inline T* MaterialInstance::GetMaterialParameterInstanceTyped(const String& name) const
-	{
-		ionassert(dynamic_cast<T*>(GetMaterialParameterInstance(name)));
-		return (T*)GetMaterialParameterInstance(name);
-	}
-
-	inline const std::shared_ptr<Material>& MaterialInstance::GetBaseMaterial() const
-	{
-		return m_ParentMaterial;
-	}
-
-	inline Asset MaterialInstance::GetAsset() const
-	{
-		return m_Asset;
-	}
+#pragma endregion
 }
 
 template<>

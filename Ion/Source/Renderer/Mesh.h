@@ -10,7 +10,8 @@
 #include "RHI/VertexBuffer.h"
 #include "RHI/IndexBuffer.h"
 
-#include "Material/Material.h"
+#include "Material/MaterialInstance.h"
+#include "Material/MaterialRegistry.h"
 
 namespace Ion
 {
