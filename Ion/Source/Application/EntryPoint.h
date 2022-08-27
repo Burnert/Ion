@@ -30,7 +30,7 @@ static int32 MainShared()
 
 #ifdef ION_DEBUG
 #ifndef DISABLE_PAUSE_ON_EXIT
-	GEngineLogger.Debug("Press Enter to close.");
+	ApplicationLogger.Debug("Press Enter to close.");
 	(void)getchar();
 #endif
 #endif

@@ -19,13 +19,12 @@ namespace Ion
 
 	class ION_API WindowsWindow : public GenericWindow
 	{
-		friend class WindowsApplication;
 	public:
 		static std::shared_ptr<WindowsWindow> Create();
 
 		// GenericWindow:
 
-		virtual ~WindowsWindow();
+		virtual ~WindowsWindow() override;
 
 		virtual bool Initialize() override;
 		virtual bool Initialize(const std::shared_ptr<GenericWindow>& parentWindow) override;
@@ -64,11 +63,11 @@ namespace Ion
 
 		HDC GetDeviceContext() const;
 		HGLRC GetRenderingContext() const;
-		FORCEINLINE HWND GetWindowHandle() const { return m_WindowHandle; }
+		HWND GetWindowHandle() const;
 
 		static bool RegisterWindowClass(HINSTANCE hInstance, LPCWSTR className);
 
-		FORCEINLINE static HGLRC GetCurrentRenderingContext() { return wglGetCurrentContext(); }
+		static HGLRC GetCurrentRenderingContext();
 
 	protected:
 		//HGLRC CreateRenderingContext(HDC deviceContext, HGLRC parentContext = nullptr);
@@ -101,5 +100,16 @@ namespace Ion
 		static MouseButton MouseButtonFromMessage(UINT uMsg, WPARAM wParam);
 
 		friend class OpenGLWindows;
+		friend class WindowsApplication;
 	};
+
+	FORCEINLINE HWND WindowsWindow::GetWindowHandle() const
+	{
+		return m_WindowHandle;
+	}
+
+	FORCEINLINE HGLRC WindowsWindow::GetCurrentRenderingContext()
+	{
+		return wglGetCurrentContext();
+	}
 }

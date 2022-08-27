@@ -53,7 +53,8 @@ namespace Ion
 		m_bRunning(true),
 		m_ClientApp(clientApp),
 		m_Fonts(),
-		m_bInFocus(false)
+		m_bInFocus(false),
+		m_GlobalDeltaTime(0.016f)
 	{
 		ionassert(clientApp);
 

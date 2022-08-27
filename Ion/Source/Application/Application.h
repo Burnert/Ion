@@ -61,7 +61,6 @@ namespace Ion
 
 	class ION_API Application
 	{
-		friend GenericWindow;
 	public:
 		using EventPtr = std::shared_ptr<Event>;
 
@@ -86,25 +85,10 @@ namespace Ion
 
 		static Renderer* GetRenderer();
 
-		FORCEINLINE static const std::shared_ptr<GenericWindow>& GetWindow()
-		{
-			return Get()->m_Window;
-		}
-
-		FORCEINLINE static const std::shared_ptr<InputManager>& GetInputManager()
-		{
-			return Get()->m_InputManager;
-		}
-
-		FORCEINLINE static LayerStack* GetLayerStack()
-		{
-			return Get()->m_LayerStack.get();
-		}
-
-		FORCEINLINE static float GetGlobalDeltaTime()
-		{
-			return Get()->m_GlobalDeltaTime;
-		}
+		static const std::shared_ptr<GenericWindow>& GetWindow();
+		static const std::shared_ptr<InputManager>& GetInputManager();
+		static LayerStack* GetLayerStack();
+		static float GetGlobalDeltaTime();
 
 	protected:
 		Application(App* clientApp);
@@ -119,43 +103,19 @@ namespace Ion
 		friend void PostEvent(const T& event);
 
 		template<typename T>
-		void PostEvent(const T& event)
-		{
-			DispatchEvent(event);
-		}
+		void PostEvent(const T& event);
 
 		template<typename T>
 		friend void PostDeferredEvent(const T& event);
 
 		template<typename T>
-		void PostDeferredEvent(const T& event)
-		{
-			m_EventQueue->PushEvent(event);
-		}
+		void PostDeferredEvent(const T& event);
 
 		template<typename T>
-		void DispatchEvent(const T& event)
-		{
-			TRACE_FUNCTION();
-
-			m_EventDispatcher.Dispatch(event);
-
-			m_InputManager->DispatchEvent(event);
-			m_LayerStack->OnEvent(event);
-
-			TRACE_BEGIN(0, "Application - Client::OnEvent");
-			OnEvent(event);
-			CallClientAppOnEvent(event);
-			TRACE_END(0);
-		}
+		void DispatchEvent(const T& event);
 
 		// Static event handler for EventQueue
-		static inline void EventHandler(const Event& event)
-		{
-			TRACE_FUNCTION();
-
-			Application::Get()->DispatchEvent(event);
-		}
+		static void EventHandler(const Event& event);
 
 		// Event functions
 
@@ -261,6 +221,7 @@ namespace Ion
 		bool m_bInFocus;
 		bool m_bRunning;
 
+		friend GenericWindow;
 		template<typename T>
 		friend void ParseCommandLineArgs(int32 argc, T* argv[]);
 	};
@@ -294,5 +255,61 @@ namespace Ion
 	inline EngineFonts& Application::GetEngineFonts()
 	{
 		return m_Fonts;
+	}
+
+	FORCEINLINE const std::shared_ptr<GenericWindow>& Application::GetWindow()
+	{
+		return Get()->m_Window;
+	}
+
+	FORCEINLINE const std::shared_ptr<InputManager>& Application::GetInputManager()
+	{
+		return Get()->m_InputManager;
+	}
+
+	FORCEINLINE LayerStack* Application::GetLayerStack()
+	{
+		return Get()->m_LayerStack.get();
+	}
+
+	FORCEINLINE float Application::GetGlobalDeltaTime()
+	{
+		return Get()->m_GlobalDeltaTime;
+	}
+
+	template<typename T>
+	inline void Application::PostEvent(const T& event)
+	{
+		DispatchEvent(event);
+	}
+
+	template<typename T>
+	inline void Application::PostDeferredEvent(const T& event)
+	{
+		m_EventQueue->PushEvent(event);
+	}
+
+	template<typename T>
+	inline void Application::DispatchEvent(const T& event)
+	{
+		TRACE_FUNCTION();
+
+		m_EventDispatcher.Dispatch(event);
+
+		m_InputManager->DispatchEvent(event);
+		m_LayerStack->OnEvent(event);
+
+		TRACE_BEGIN(0, "Application - Client::OnEvent");
+		OnEvent(event);
+		CallClientAppOnEvent(event);
+		TRACE_END(0);
+	}
+
+	// Static event handler for EventQueue
+	inline void Application::EventHandler(const Event& event)
+	{
+		TRACE_FUNCTION();
+
+		Application::Get()->DispatchEvent(event);
 	}
 }

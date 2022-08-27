@@ -14,7 +14,6 @@ namespace Ion
 
 	class ION_API WindowsApplication : public Application
 	{
-		friend class Application;
 	public:
 		static WindowsApplication* Get();
 
@@ -26,9 +25,9 @@ namespace Ion
 
 		void InitWindows(HINSTANCE hInstance);
 
-		FORCEINLINE static HINSTANCE GetHInstance() { return m_HInstance; }
+		static HINSTANCE GetHInstance();
 
-		static float GetPerformanceFrequency() { return s_PerformanceFrequency; }
+		static float GetPerformanceFrequency();
 
 	protected:
 		WindowsApplication(App* clientApp);
@@ -65,5 +64,16 @@ namespace Ion
 
 		friend Application* InstantiateApplication();
 		friend class WindowsWindow;
+		friend class Application;
 	};
+
+	FORCEINLINE HINSTANCE WindowsApplication::GetHInstance()
+	{
+		return m_HInstance;
+	}
+
+	FORCEINLINE float WindowsApplication::GetPerformanceFrequency()
+	{
+		return s_PerformanceFrequency;
+	}
 }

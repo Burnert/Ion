@@ -5,37 +5,15 @@ namespace Ion
 	class ION_API EnginePath
 	{
 	public:
-		static inline const FilePath& GetEnginePath()
-		{
-			return s_EnginePath;
-		}
-
-		static inline FilePath GetShadersPath()
-		{
-			return s_EnginePath / "Shaders";
-		}
-
-		static inline FilePath GetEngineContentPath()
-		{
-			return s_EnginePath / "Content";
-		}
-
-		static inline FilePath GetFontsPath()
-		{
-			return GetEngineContentPath() / "Fonts";
-		}
-
-		static inline FilePath GetEditorContentPath()
-		{
-			return GetEngineContentPath() / "Editor";
-		}
+		static const FilePath& GetEnginePath();
+		static FilePath GetShadersPath();
+		static FilePath GetEngineContentPath();
+		static FilePath GetFontsPath();
+		static FilePath GetEditorContentPath();
 
 	protected:
 		template<typename T>
-		static inline void SetEnginePath(const T& path)
-		{
-			s_EnginePath.Set(path);
-		}
+		static void SetEnginePath(const T& path);
 
 	private:
 		EnginePath() = delete;
@@ -47,4 +25,35 @@ namespace Ion
 		template<typename T>
 		friend void ParseCommandLineArgs(int32 argc, T* argv[]);
 	};
+
+	inline const FilePath& EnginePath::GetEnginePath()
+	{
+		return s_EnginePath;
+	}
+
+	inline FilePath EnginePath::GetShadersPath()
+	{
+		return s_EnginePath / "Shaders";
+	}
+
+	inline FilePath EnginePath::GetEngineContentPath()
+	{
+		return s_EnginePath / "Content";
+	}
+
+	inline FilePath EnginePath::GetFontsPath()
+	{
+		return GetEngineContentPath() / "Fonts";
+	}
+
+	inline FilePath EnginePath::GetEditorContentPath()
+	{
+		return GetEngineContentPath() / "Editor";
+	}
+
+	template<typename T>
+	inline void EnginePath::SetEnginePath(const T& path)
+	{
+		s_EnginePath.Set(path);
+	}
 }

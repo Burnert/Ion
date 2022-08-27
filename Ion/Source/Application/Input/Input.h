@@ -179,7 +179,7 @@ namespace Ion
 		static bool IsKeyRepeated(KeyCode keyCode);
 		static bool IsMouseButtonPressed(MouseButton mouseButton);
 
-		static IVector2 GetCursorPosition() { return s_Instance->GetCursorPosition_Internal(); }
+		static IVector2 GetCursorPosition();
 
 		static std::shared_ptr<InputManager> Create();
 
@@ -187,10 +187,10 @@ namespace Ion
 		   for LShift returns Shift, etc. */
 		static KeyCode TransformKeyCode(KeyCode actualKeyCode);
 
-		FORCEINLINE static MouseInputType GetMouseInputType() { return s_Instance->m_MouseInputType; }
+		FORCEINLINE static MouseInputType GetMouseInputType();
 
 		// @TODO: you know what
-		static bool IsRawInputEnabled() { return true; }
+		static bool IsRawInputEnabled();
 
 	protected:
 		void OnKeyPressedEvent(const KeyPressedEvent& event);
@@ -233,4 +233,20 @@ namespace Ion
 
 		friend class Application;
 	};
+
+	FORCEINLINE IVector2 InputManager::GetCursorPosition()
+	{
+		return s_Instance->GetCursorPosition_Internal();
+	}
+
+	FORCEINLINE MouseInputType InputManager::GetMouseInputType()
+	{
+		return s_Instance->m_MouseInputType;
+	}
+
+	// @TODO: you know what
+	FORCEINLINE bool InputManager::IsRawInputEnabled()
+	{
+		return true;
+	}
 }

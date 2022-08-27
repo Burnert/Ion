@@ -65,7 +65,7 @@ namespace Ion
 		virtual void LockCursor() { }
 		virtual void LockCursor(bool bLock) { }
 		virtual void UnlockCursor() { }
-		FORCEINLINE bool IsCursorLocked() const { return m_bCursorLocked; }
+		bool IsCursorLocked() const;
 
 		virtual void ShowCursor(bool bShow) { }
 
@@ -110,5 +110,10 @@ namespace Ion
 	inline const TRef<RHITexture>& GenericWindow::GetWindowDepthStencilTexture() const
 	{
 		return m_WindowDepthStencilTexture;
+	}
+
+	FORCEINLINE bool GenericWindow::IsCursorLocked() const
+	{
+		return m_bCursorLocked;
 	}
 }
