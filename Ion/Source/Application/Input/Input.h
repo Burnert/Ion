@@ -164,13 +164,13 @@ namespace Ion
 		RawInput = 2,
 	};
 
-	class KeyPressedEvent;
-	class KeyReleasedEvent;
-	class KeyRepeatedEvent;
+	struct KeyPressedEvent;
+	struct KeyReleasedEvent;
+	struct KeyRepeatedEvent;
 
-	class MouseButtonPressedEvent;
-	class MouseButtonReleasedEvent;
-	class MouseMovedEvent;
+	struct MouseButtonPressedEvent;
+	struct MouseButtonReleasedEvent;
+	struct MouseMovedEvent;
 
 	class ION_API InputManager
 	{

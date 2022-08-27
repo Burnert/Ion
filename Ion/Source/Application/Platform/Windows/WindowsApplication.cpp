@@ -140,9 +140,9 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		WindowsApplicationLogger.Info("Destroying window {{{}}}.", event.GetWindowHandle());
+		WindowsApplicationLogger.Info("Destroying window {{{:#x}}}.", event.WindowHandle);
 
-		DestroyWindow((HWND)event.GetWindowHandle());
+		DestroyWindow((HWND)event.WindowHandle);
 		Application::OnWindowCloseEvent_Internal(event);
 	}
 

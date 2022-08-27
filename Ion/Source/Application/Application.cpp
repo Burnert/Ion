@@ -6,7 +6,7 @@
 
 #include "Asset/AssetRegistry.h"
 
-#include "Application/Event/InputEvent.h"
+#include "Application/Event/Event.h"
 #include "Application/Event/EventQueue.h"
 #include "Application/Event/EventDispatcher.h"
 #include "Application/Input/Input.h"
@@ -333,8 +333,8 @@ namespace Ion
 
 	void Application::OnWindowResizeEvent_Internal(const WindowResizeEvent& event)
 	{
-		uint32 width = event.GetWidth();
-		uint32 height = event.GetHeight();
+		uint32 width = event.Width;
+		uint32 height = event.Height;
 
 		// Cannot create a texture with a width or height of 0.
 		// This happens when the window is minimized
@@ -353,7 +353,7 @@ namespace Ion
 
 	void Application::OnWindowLostFocusEvent_Internal(const WindowLostFocusEvent& event)
 	{
-		if (m_Window->GetNativeHandle() == (void*)event.GetWindowHandle())
+		if (m_Window->GetNativeHandle() == event.WindowHandle)
 		{
 			m_bInFocus = false;
 		}
@@ -361,7 +361,7 @@ namespace Ion
 
 	void Application::OnWindowFocusEvent_Internal(const WindowFocusEvent& event)
 	{
-		if (m_Window->GetNativeHandle() == (void*)event.GetWindowHandle())
+		if (m_Window->GetNativeHandle() == event.WindowHandle)
 		{
 			m_bInFocus = true;
 		}
@@ -370,7 +370,7 @@ namespace Ion
 	void Application::OnKeyPressedEvent_Internal(const KeyPressedEvent& event)
 	{
 		// Toggle fullscreen with Alt + Enter
-		if (event.GetKeyCode() == Key::Enter)
+		if (event.KeyCode == Key::Enter)
 		{
 			if (GetInputManager()->IsKeyPressed(Key::LAlt))
 			{
@@ -381,7 +381,7 @@ namespace Ion
 			}
 		}
 		// Exit application with Alt + F4
-		else if (event.GetKeyCode() == Key::F4)
+		else if (event.KeyCode == Key::F4)
 		{
 			if (GetInputManager()->IsKeyPressed(Key::LAlt))
 			{

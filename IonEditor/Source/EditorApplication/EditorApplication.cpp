@@ -465,12 +465,12 @@ namespace Ion::Editor
 
 	void EditorApplication::OnRawInputMouseMovedEvent(const RawInputMouseMovedEvent& event)
 	{
-		DriveCapturedViewportCameraRotation({ event.GetY(), event.GetX() });
+		DriveCapturedViewportCameraRotation({ event.Y, event.X });
 	}
 
 	void EditorApplication::OnKeyPressedEvent(const KeyPressedEvent& event)
 	{
-		switch (event.GetActualKeyCode())
+		switch (event.ActualKeyCode)
 		{
 			case Key::Escape:
 			{

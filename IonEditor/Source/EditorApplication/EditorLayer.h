@@ -4,7 +4,7 @@
 #include "Engine/Components/Component.h"
 #include "Asset/Asset.h"
 #include "Application/Layer/Layer.h"
-#include "Application/Event/InputEvent.h"
+#include "Application/Event/Event.h"
 #include "Application/Event/EventDispatcher.h"
 #include "Core/Logging/LogManager.h"
 

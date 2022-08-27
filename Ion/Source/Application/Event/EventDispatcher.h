@@ -111,7 +111,7 @@ namespace Ion
 	template<typename TEvent, TEnableIfT<TIsBaseOfV<Event, TEvent>>*>
 	inline void TEventDispatcher<TClass>::RegisterEventFunction(TEventMemberFunctionPointer<TClass, TEvent> func)
 	{
-		EEventType type = TEvent::_GetType();
+		EEventType type = TEvent::GetClassType();
 
 		ionassert(!m_EventFunctions[(size_t)type], "Event function for that event type has already been registered.");
 		m_EventFunctions[(size_t)type] = std::make_unique<TEventFunctionWrapper<TClass, TEvent>>(func);
@@ -121,7 +121,7 @@ namespace Ion
 	template<typename TEvent, TEnableIfT<TIsBaseOfV<Event, TEvent>>*>
 	inline void TEventDispatcher<TClass>::UnregisterEventFunction(TEventMemberFunctionPointer<TClass, TEvent> func)
 	{
-		EEventType type = TEvent::_GetType();
+		EEventType type = TEvent::GetClassType();
 
 		m_EventFunctions[(size_t)type] = nullptr;
 	}
@@ -129,7 +129,7 @@ namespace Ion
 	template<typename TClass>
 	inline void TEventDispatcher<TClass>::Dispatch(const Event& e)
 	{
-		EEventType type = e.GetType();
+		EEventType type = e.Type;
 
 		if (m_EventFunctions[(size_t)type])
 			m_EventFunctions[(size_t)type]->Call(m_Listener, e);

@@ -6,8 +6,6 @@
 #include "WindowsApplication.h"
 
 #include "Application/Event/Event.h"
-#include "Application/Event/WindowEvent.h"
-#include "Application/Event/InputEvent.h"
 #include "Application/Input/Input.h"
 #include "Application/Platform/Windows/WindowsInput.h"
 
@@ -153,7 +151,7 @@ namespace Ion
 
 			case WM_SETFOCUS:
 			{
-				WindowFocusEvent event((uint64)hWnd);
+				WindowFocusEvent event((void*)hWnd, EVENT_DEBUG_NAME(windowRef.m_Title));
 				PostDeferredEvent(event);
 
 				// BUGFIX: When the exclusive fullscreen mode is disrupted in any way
@@ -169,7 +167,7 @@ namespace Ion
 
 			case WM_KILLFOCUS:
 			{
-				WindowLostFocusEvent event((uint64)hWnd);
+				WindowLostFocusEvent event((void*)hWnd, EVENT_DEBUG_NAME(windowRef.m_Title));
 				PostDeferredEvent(event);
 
 				return 0;
@@ -177,7 +175,7 @@ namespace Ion
 
 			case WM_CLOSE:
 			{
-				WindowCloseEvent event((uint64)hWnd);
+				WindowCloseEvent event((void*)hWnd, EVENT_DEBUG_NAME(windowRef.m_Title));
 				PostDeferredEvent(event);
 
 				return 0;
@@ -198,7 +196,7 @@ namespace Ion
 				POINTS pos = MAKEPOINTS(lParam);
 				int32 xPos = pos.x;
 				int32 yPos = pos.y;
-				WindowMovedEvent event((uint64)hWnd, xPos, yPos);
+				WindowMovedEvent event((void*)hWnd, xPos, yPos, EVENT_DEBUG_NAME(windowRef.m_Title));
 				PostEvent(event);
 
 				return 0;
@@ -208,7 +206,7 @@ namespace Ion
 			{
 				int32 width  = LOWORD(lParam);
 				int32 height = HIWORD(lParam);
-				WindowResizeEvent event((uint64)hWnd, width, height);
+				WindowResizeEvent event((void*)hWnd, width, height, EVENT_DEBUG_NAME(windowRef.m_Title));
 				PostEvent(event);
 
 				return 0;
@@ -872,7 +870,7 @@ namespace Ion
 
 			RHI::Get()->ChangeDisplayMode(GetRHIData(), EWindowDisplayMode::FullScreen, width, height);
 
-			WindowChangeDisplayModeEvent event((uint64)m_WindowHandle, EDisplayMode::FullScreen, width, height);
+			WindowChangeDisplayModeEvent event((void*)m_WindowHandle, EDisplayMode::FullScreen, width, height, EVENT_DEBUG_NAME(m_Title));
 			PostEvent(event);
 		}
 		// Disable
@@ -906,7 +904,7 @@ namespace Ion
 
 			m_bFullScreenMode = false;
 
-			WindowChangeDisplayModeEvent event((uint64)m_WindowHandle, EDisplayMode::Windowed, clientWidth, clientHeight);
+			WindowChangeDisplayModeEvent event((void*)m_WindowHandle, EDisplayMode::Windowed, clientWidth, clientHeight, EVENT_DEBUG_NAME(m_Title));
 			PostEvent(event);
 		}
 	}

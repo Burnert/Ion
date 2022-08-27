@@ -2,8 +2,7 @@
 
 #include "Core.h"
 #include "Application/Input/Input.h"
-#include "Application/Event/InputEvent.h"
-#include "Application/Event/WindowEvent.h"
+#include "Application/Event/Event.h"
 #include "Application/Event/EventDispatcher.h"
 #include "Application/Event/EventQueue.h"
 #include "Application/Layer/LayerStack.h"
@@ -21,8 +20,6 @@ namespace Ion
 
 	template<void(const Event&)>
 	class EventQueue;
-
-	class InputManager;
 
 	class Renderer;
 

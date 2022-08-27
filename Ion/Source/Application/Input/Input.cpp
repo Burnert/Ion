@@ -1,7 +1,7 @@
 #include "IonPCH.h"
 
 #include "Input.h"
-#include "Application/Event/InputEvent.h"
+#include "Application/Event/Event.h"
 
 namespace Ion
 {
@@ -59,14 +59,14 @@ namespace Ion
 
 	void InputManager::OnKeyPressedEvent(const KeyPressedEvent& event)
 	{
-		KeyCode actualKeyCode = (KeyCode)event.GetActualKeyCode();
+		KeyCode actualKeyCode = (KeyCode)event.ActualKeyCode;
 		// Set states on receiving event
 		uint8* keyPtr = &m_InputStates[actualKeyCode];
 		SetBitflags(*keyPtr, InputPressedFlag);
 
 		// If the normal key code is different than actual
 		// (Shift, Alt, etc.), update it too.
-		KeyCode keyCode = (KeyCode)event.GetKeyCode();
+		KeyCode keyCode = (KeyCode)event.KeyCode;
 		if (keyCode != actualKeyCode)
 		{
 			keyPtr = &m_InputStates[keyCode];
@@ -76,7 +76,7 @@ namespace Ion
 
 	void InputManager::OnKeyReleasedEvent(const KeyReleasedEvent& event)
 	{
-		KeyCode actualKeyCode = (KeyCode)event.GetActualKeyCode();
+		KeyCode actualKeyCode = (KeyCode)event.ActualKeyCode;
 		// Unset states on receiving event
 		uint8* keyPtr = &m_InputStates[actualKeyCode];
 		UnsetBitflags(*keyPtr, InputPressedFlag);
@@ -85,7 +85,7 @@ namespace Ion
 		// If the normal key code is different than actual
 		// (Shift, Alt, etc.), unset it if the other actual
 		// key is not pressed.
-		KeyCode keyCode = (KeyCode)event.GetKeyCode();
+		KeyCode keyCode = (KeyCode)event.KeyCode;
 		if (keyCode != actualKeyCode)
 		{
 			if (actualKeyCode == Key::LShift   && !IsKeyPressed(Key::RShift)   ||
@@ -104,14 +104,14 @@ namespace Ion
 
 	void InputManager::OnKeyRepeatedEvent(const KeyRepeatedEvent& event)
 	{
-		KeyCode actualKeyCode = (KeyCode)event.GetActualKeyCode();
+		KeyCode actualKeyCode = (KeyCode)event.ActualKeyCode;
 		// Set states on receiving event
 		uint8* keyPtr = &m_InputStates[actualKeyCode];
 		SetBitflags(*keyPtr, InputRepeatedFlag);
 
 		// If the normal key code is different than actual
 		// (Shift, Alt, etc.), update it too.
-		KeyCode keyCode = (KeyCode)event.GetKeyCode();
+		KeyCode keyCode = (KeyCode)event.KeyCode;
 		if (keyCode != actualKeyCode)
 		{
 			keyPtr = &m_InputStates[keyCode];
@@ -121,7 +121,7 @@ namespace Ion
 
 	void InputManager::OnMouseButtonPressedEvent(const MouseButtonPressedEvent& event)
 	{
-		MouseButton buttonCode = (MouseButton)event.GetMouseButton();
+		MouseButton buttonCode = (MouseButton)event.Button;
 		// Mouse states are stored in the same array as key states
 		uint8* statePtr = &m_InputStates[buttonCode];
 		SetBitflags(*statePtr, InputPressedFlag);
@@ -129,7 +129,7 @@ namespace Ion
 
 	void InputManager::OnMouseButtonReleasedEvent(const MouseButtonReleasedEvent& event)
 	{
-		MouseButton buttonCode = (MouseButton)event.GetMouseButton();
+		MouseButton buttonCode = (MouseButton)event.Button;
 		// Mouse states are stored in the same array as key states
 		uint8* statePtr = &m_InputStates[buttonCode];
 		UnsetBitflags(*statePtr, InputPressedFlag);
