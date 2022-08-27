@@ -786,6 +786,67 @@ namespace Ion
 
 #pragma endregion
 
+#pragma region TPtrDeleterRefCountBlock
+
+	template<typename T, typename FDeleter>
+	class TPtrDeleterRefCountBlock : public RefCountBase
+	{
+	public:
+		static_assert(!TIsReferenceV<T>);
+
+		/**
+		 * @brief Construct a ref count block with a custom deleter.
+		 * 
+		 * @param ptr Pointer to take the ownership of.
+		 */
+		TPtrDeleterRefCountBlock(T* ptr, FDeleter deleter) noexcept;
+
+	private:
+		virtual void Destroy() noexcept override;
+		virtual void DestroySelf() noexcept override;
+
+	private:
+		/**
+		 * @brief Owned pointer
+		 */
+		T* m_Ptr;
+		FDeleter m_Deleter;
+	};
+
+	#pragma region TPtrDeleterRefCountBlock Implementation
+
+	template<typename T, typename FDeleter>
+	inline TPtrDeleterRefCountBlock<T, FDeleter>::TPtrDeleterRefCountBlock(T* ptr, FDeleter deleter) noexcept :
+		m_Ptr(ptr),
+		m_Deleter(deleter)
+	{
+		RefCountLogger.Trace("TPtrDeleterRefCountBlock {{{}}} has been constructed with a pointer to {} {{{}}} and a custom deleter.", (void*)this, typeid(T).name(), (void*)ptr);
+	}
+
+	template<typename T, typename FDeleter>
+	inline void TPtrDeleterRefCountBlock<T, FDeleter>::Destroy() noexcept
+	{
+		if (m_Ptr)
+		{
+			RefCountLogger.Trace("TPtrDeleterRefCountBlock {{{}}} is deleting the owned object {} {{{}}} using a custom deleter...", (void*)this, typeid(T).name(), (void*)m_Ptr);
+			m_Deleter(m_Ptr);
+			RefCountLogger.Debug("TPtrDeleterRefCountBlock {{{}}} has deleted the owned object {} {{{}}} using a custom deleter.", (void*)this, typeid(T).name(), (void*)m_Ptr);
+		}
+	}
+
+	template<typename T, typename FDeleter>
+	inline void TPtrDeleterRefCountBlock<T, FDeleter>::DestroySelf() noexcept
+	{
+		void* ptr = this;
+		RefCountLogger.Trace("TPtrDeleterRefCountBlock {{{}}} is deleting itself...", ptr);
+		delete this;
+		RefCountLogger.Debug("TPtrDeleterRefCountBlock {{{}}} has deleted itself.", ptr);
+	}
+
+	#pragma endregion
+
+#pragma endregion
+
 #pragma region TPtrBase
 
 	template<typename T>
@@ -817,6 +878,18 @@ namespace Ion
 		 */
 		template<typename T0>
 		void ConstructShared(T0* ptr);
+
+		/**
+		 * @brief Constructs a ref count control block with a custom deleter that owns the pointer.
+		 *
+		 * @tparam T0 Element type
+		 * @tparam FDeleter Deleter function type - void(T0*)
+		 * 
+		 * @param ptr Pointer to take the ownership of.
+		 * @param deleter Deleter function, called when the ref count reached zero.
+		 */
+		template<typename T0, typename FDeleter>
+		void ConstructSharedWithDeleter(T0* ptr, FDeleter deleter);
 
 		/**
 		 * @brief Makes this pointer a shared pointer that points
@@ -962,6 +1035,17 @@ namespace Ion
 
 		m_Ptr = ptr;
 		m_Rep = new TPtrRefCountBlock(ptr);
+	}
+
+	template<typename T>
+	template<typename T0, typename FDeleter>
+	inline void TPtrBase<T>::ConstructSharedWithDeleter(T0* ptr, FDeleter deleter)
+	{
+		static_assert(std::is_nothrow_invocable_v<FDeleter, T0*>);
+		ionassert(ptr);
+
+		m_Ptr = ptr;
+		m_Rep = new TPtrDeleterRefCountBlock(ptr, deleter);
 	}
 
 	template<typename T>
@@ -1132,6 +1216,20 @@ namespace Ion
 		explicit TSharedPtr(T0* ptr);
 
 		/**
+		 * @brief Construct a shared pointer with a custom deleter that owns the pointer.
+		 *
+		 * @tparam T0 Element type
+		 * @tparam FDeleter Deleter function type - void(T0*)
+		 *
+		 * @param ptr Pointer to take the ownership of.
+		 * @param deleter Deleter function, called when the ref count reached zero.
+		 */
+		template<typename T0, typename FDeleter,
+			TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0,
+			TEnableIfT<std::is_nothrow_invocable_v<FDeleter, T*>>* = 0>
+		TSharedPtr(T0* ptr, FDeleter deleter);
+
+		/**
 		 * @brief Make a copy of another shared pointer.
 		 * 
 		 * @param other Other shared pointer
@@ -1293,6 +1391,16 @@ namespace Ion
 	{
 		ConstructShared(ptr);
 		RefCountLogger.Debug("TSharedPtr {{{}}} has been constructed with a pointer to {} {{{}}}.", (void*)m_Rep, typeid(T0).name(), (void*)ptr);
+	}
+
+	template<typename T>
+	template<typename T0, typename FDeleter,
+		TEnableIfT<TIsPtrCompatibleV<T0, T>>*,
+		TEnableIfT<std::is_nothrow_invocable_v<FDeleter, T*>>*>
+	inline TSharedPtr<T>::TSharedPtr(T0* ptr, FDeleter deleter)
+	{
+		ConstructSharedWithDeleter(ptr, deleter);
+		RefCountLogger.Debug("TSharedPtr {{{}}} has been constructed with a pointer to {} {{{}}} and a custom deleter.", (void*)m_Rep, typeid(T0).name(), (void*)ptr);
 	}
 
 	template<typename T>
@@ -1783,6 +1891,21 @@ namespace Ion
 	inline TSharedPtr<T> MakeSharedFrom(T* ptr)
 	{
 		return TSharedPtr<T>(ptr);
+	}
+
+	/**
+	 * @brief Make a shared pointer with a custom deleter from a raw pointer and take the ownership of it.
+	 * 
+	 * @tparam T Pointer type
+	 * @tparam FDeleter Deleter function type - void(T*)
+	 * 
+	 * @param ptr Raw pointer
+	 * @param deleter Deleter function, called when the ref count reached zero.
+	 */
+	template<typename T, typename FDeleter, TEnableIfT<std::is_nothrow_invocable_v<FDeleter, T*>>* = 0>
+	inline TSharedPtr<T> MakeSharedFrom(T* ptr, FDeleter deleter)
+	{
+		return TSharedPtr<T>(ptr, deleter);
 	}
 
 #pragma endregion
