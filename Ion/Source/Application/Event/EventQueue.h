@@ -4,46 +4,39 @@
 
 namespace Ion
 {
-	template<void Handler(const Event&)>
 	class EventQueue
 	{
 	public:
-		template<typename EventT>
-		void PushEvent(const EventT& event)
-		{
-			Event* e = new EventT(event);
-			m_Events.push_back(e);
-		}
+		void PushEvent(const Event& e);
 
-		bool ProcessEvents()
-		{
-			TRACE_FUNCTION();
+		template<typename F>
+		void ProcessEvents(F handler);
 
-			if (!m_Events.empty())
-			{
-				for (int i = 0; i < m_Events.size(); ++i)
-				{
-					const Event* e = m_Events[i];
-					Handler(*e);
-				}
-
-				Clear();
-				return true;
-			}
-			return false;
-		}
-
-		void Clear()
-		{
-			for (int i = 0; i < m_Events.size(); ++i)
-			{
-				Event* e = m_Events[i];
-				delete e;
-			}
-			m_Events.clear();
-		}
+		void Clear();
 
 	private:
-		TArray<Event*> m_Events;
+		TArray<std::unique_ptr<const Event>> m_Events;
 	};
+
+	inline void EventQueue::PushEvent(const Event& e)
+	{
+		m_Events.push_back(e.Defer());
+	}
+
+	template<typename F>
+	inline void EventQueue::ProcessEvents(F handler)
+	{
+		TRACE_FUNCTION();
+
+		for (std::unique_ptr<const Event>& e : m_Events)
+		{
+			handler(*e);
+		}
+		Clear();
+	}
+
+	inline void EventQueue::Clear()
+	{
+		m_Events.clear();
+	}
 }

@@ -18,9 +18,6 @@ namespace Ion
 
 	class App;
 
-	template<void(const Event&)>
-	class EventQueue;
-
 	class Renderer;
 
 	class RHIShader;
@@ -97,19 +94,12 @@ namespace Ion
 		// Event system related functions
 
 		friend void PostEvent(const Event& e);
+		friend void PostDeferredEvent(const Event& e);
 
 		void PostEvent(const Event& e);
-
-		template<typename T>
-		friend void PostDeferredEvent(const T& e);
-
-		template<typename T>
-		void PostDeferredEvent(const T& e);
+		void PostDeferredEvent(const Event& e);
 
 		void DispatchEvent(const Event& e);
-
-		// Static event handler for EventQueue
-		static void EventHandler(const Event& event);
 
 		// Event functions
 
@@ -186,7 +176,8 @@ namespace Ion
 		std::shared_ptr<InputManager> m_InputManager;
 
 		TEventDispatcher<Application> m_EventDispatcher;
-		std::unique_ptr<EventQueue<EventHandler>> m_EventQueue;
+		EventQueue m_EventQueue;
+
 		std::unique_ptr<LayerStack> m_LayerStack;
 
 		std::thread::id m_MainThreadId;
@@ -255,19 +246,5 @@ namespace Ion
 	FORCEINLINE float Application::GetGlobalDeltaTime()
 	{
 		return Get()->m_GlobalDeltaTime;
-	}
-
-	template<typename T>
-	inline void Application::PostDeferredEvent(const T& e)
-	{
-		m_EventQueue->PushEvent(e);
-	}
-
-	// Static event handler for EventQueue
-	inline void Application::EventHandler(const Event& event)
-	{
-		TRACE_FUNCTION();
-
-		Application::Get()->DispatchEvent(event);
 	}
 }

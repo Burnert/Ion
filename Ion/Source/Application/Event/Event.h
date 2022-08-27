@@ -62,9 +62,11 @@ namespace Ion
 #define SET_DEBUG_STRING(format, ...)
 #endif
 
-#define STATIC_EVENT_CLASS_TYPE_GETTER(type) FORCEINLINE static EEventType GetClassType() { return type; }
+#define EVENT_CLASS_BODY(type) \
+virtual std::unique_ptr<const Event> Defer() const override { return std::make_unique<TRemoveRef<decltype(*this)>>(*this); } \
+FORCEINLINE static EEventType GetClassType() { return type; }
 
-	struct Event
+	struct NOVTABLE Event
 	{
 #if ION_DEBUG
 	protected:
@@ -77,11 +79,13 @@ namespace Ion
 		Event(EEventType type, uint32 category);
 
 		bool IsInCategory(EEventCategory::Type category) const;
+
+		virtual std::unique_ptr<const Event> Defer() const = 0;
 	};
 
 	inline Event::Event(EEventType type, uint32 category) :
-		Type(type),
-		CategoryFlags(category)
+		CategoryFlags(category),
+		Type(type)
 	{
 	}
 
@@ -116,7 +120,7 @@ namespace Ion
 		}
 	};
 
-	struct WindowCloseEvent : WindowEvent
+	struct WindowCloseEvent final : WindowEvent
 	{
 		WindowCloseEvent(void* const windowHandle, const String& debugName = EmptyString) :
 			WindowEvent(EEventType::WindowClose, windowHandle)
@@ -124,10 +128,10 @@ namespace Ion
 			SET_DEBUG_STRING("WindowCloseEvent: {{ Name: \"{}\", Handle: {{{}}} }}", debugName, WindowHandle);
 		}
 
-		STATIC_EVENT_CLASS_TYPE_GETTER(EEventType::WindowClose)
+		EVENT_CLASS_BODY(EEventType::WindowClose)
 	};
 
-	struct WindowResizeEvent : WindowEvent
+	struct WindowResizeEvent final : WindowEvent
 	{
 		const uint32 Width;
 		const uint32 Height;
@@ -140,10 +144,10 @@ namespace Ion
 			SET_DEBUG_STRING("WindowResizeEvent: {{ Name: \"{}\", Handle: {{{}}}, Width: {}, Height: {} }}", debugName, WindowHandle, Width, Height);
 		}
 
-		STATIC_EVENT_CLASS_TYPE_GETTER(EEventType::WindowResize)
+		EVENT_CLASS_BODY(EEventType::WindowResize)
 	};
 
-	struct WindowMovedEvent : WindowEvent
+	struct WindowMovedEvent final : WindowEvent
 	{
 		const int32 X;
 		const int32 Y;
@@ -156,10 +160,10 @@ namespace Ion
 			SET_DEBUG_STRING("WindowMovedEvent: {{ Name: \"{}\", Handle: {{{}}}, X: {}, Y: {} }}", debugName, WindowHandle, X, Y);
 		}
 
-		STATIC_EVENT_CLASS_TYPE_GETTER(EEventType::WindowMoved)
+		EVENT_CLASS_BODY(EEventType::WindowMoved)
 	};
 
-	struct WindowFocusEvent : WindowEvent
+	struct WindowFocusEvent final : WindowEvent
 	{
 		WindowFocusEvent(void* const windowHandle, const String& debugName = EmptyString) :
 			WindowEvent(EEventType::WindowFocus, windowHandle)
@@ -167,10 +171,10 @@ namespace Ion
 			SET_DEBUG_STRING("WindowFocusEvent: {{ Name: \"{}\", Handle: {{{}}} }}", debugName, WindowHandle);
 		}
 
-		STATIC_EVENT_CLASS_TYPE_GETTER(EEventType::WindowFocus);
+		EVENT_CLASS_BODY(EEventType::WindowFocus);
 	};
 
-	struct WindowLostFocusEvent : WindowEvent
+	struct WindowLostFocusEvent final : WindowEvent
 	{
 		WindowLostFocusEvent(void* const windowHandle, const String& debugName = EmptyString) :
 			WindowEvent(EEventType::WindowLostFocus, windowHandle)
@@ -178,12 +182,12 @@ namespace Ion
 			SET_DEBUG_STRING("WindowLostFocusEvent: {{ Name: \"{}\", Handle: {{{}}} }}", debugName, WindowHandle);
 		}
 
-		STATIC_EVENT_CLASS_TYPE_GETTER(EEventType::WindowLostFocus);
+		EVENT_CLASS_BODY(EEventType::WindowLostFocus);
 	};
 
 	enum class EDisplayMode : uint8;
 
-	struct WindowChangeDisplayModeEvent : WindowEvent
+	struct WindowChangeDisplayModeEvent final : WindowEvent
 	{
 		const EDisplayMode DisplayMode;
 		const uint32 Width;
@@ -198,7 +202,7 @@ namespace Ion
 			SET_DEBUG_STRING("WindowChangeDisplayModeEvent: {{ Name: \"{}\", Handle: {{{}}}, Mode: {}, Width: {}, Height: {} }}", debugName, WindowHandle, (uint8)DisplayMode, Width, Height);
 		}
 
-		STATIC_EVENT_CLASS_TYPE_GETTER(EEventType::WindowChangeDisplayMode);
+		EVENT_CLASS_BODY(EEventType::WindowChangeDisplayMode);
 	};
 
 #pragma endregion
@@ -221,7 +225,7 @@ namespace Ion
 		}
 	};
 
-	struct KeyPressedEvent : KeyboardEvent
+	struct KeyPressedEvent final : KeyboardEvent
 	{
 		KeyPressedEvent(uint32 keyCode, uint32 actualKeyCode) :
 			KeyboardEvent(EEventType::KeyPressed, keyCode, actualKeyCode)
@@ -229,10 +233,10 @@ namespace Ion
 			SET_DEBUG_STRING("KeyPressedEvent: {{ KeyCode: {:#x}, ActualKeyCode: {:#x} }}", KeyCode, ActualKeyCode);
 		}
 
-		STATIC_EVENT_CLASS_TYPE_GETTER(EEventType::KeyPressed);
+		EVENT_CLASS_BODY(EEventType::KeyPressed);
 	};
 
-	struct KeyReleasedEvent : KeyboardEvent
+	struct KeyReleasedEvent final : KeyboardEvent
 	{
 		KeyReleasedEvent(uint32 keyCode, uint32 actualKeyCode) :
 			KeyboardEvent(EEventType::KeyReleased, keyCode, actualKeyCode)
@@ -240,10 +244,10 @@ namespace Ion
 			SET_DEBUG_STRING("KeyReleasedEvent: {{ KeyCode: {:#x}, ActualKeyCode: {:#x} }}", KeyCode, ActualKeyCode);
 		}
 
-		STATIC_EVENT_CLASS_TYPE_GETTER(EEventType::KeyReleased);
+		EVENT_CLASS_BODY(EEventType::KeyReleased);
 	};
 
-	struct KeyRepeatedEvent : KeyboardEvent
+	struct KeyRepeatedEvent final : KeyboardEvent
 	{
 		KeyRepeatedEvent(uint32 keyCode, uint32 actualKeyCode) :
 			KeyboardEvent(EEventType::KeyRepeated, keyCode, actualKeyCode)
@@ -251,14 +255,14 @@ namespace Ion
 			SET_DEBUG_STRING("KeyRepeatedEvent: {{ KeyCode: {:#x}, ActualKeyCode: {:#x} }}", KeyCode, ActualKeyCode);
 		}
 
-		STATIC_EVENT_CLASS_TYPE_GETTER(EEventType::KeyRepeated);
+		EVENT_CLASS_BODY(EEventType::KeyRepeated);
 	};
 
 #pragma endregion
 
 #pragma region Mouse
 
-	struct MouseMovedEvent : Event
+	struct MouseMovedEvent final : Event
 	{
 		const float X;
 		const float Y;
@@ -275,10 +279,10 @@ namespace Ion
 			SET_DEBUG_STRING("MouseMovedEvent: {{ X: {:.2}, Y: {:.2}, SSX: {}, SSY: {} }}", X, Y, ScreenX, ScreenY);
 		}
 
-		STATIC_EVENT_CLASS_TYPE_GETTER(EEventType::MouseMoved);
+		EVENT_CLASS_BODY(EEventType::MouseMoved);
 	};
 
-	struct MouseScrolledEvent : Event
+	struct MouseScrolledEvent final : Event
 	{
 		const float Offset;
 
@@ -289,7 +293,7 @@ namespace Ion
 			SET_DEBUG_STRING("MouseScrolledEvent: {{ Offset: {:.2} }}", Offset);
 		}
 
-		STATIC_EVENT_CLASS_TYPE_GETTER(EEventType::MouseScrolled);
+		EVENT_CLASS_BODY(EEventType::MouseScrolled);
 	};
 
 	// Mouse Button Events
@@ -306,7 +310,7 @@ namespace Ion
 		}
 	};
 
-	struct MouseButtonPressedEvent : MouseButtonEvent
+	struct MouseButtonPressedEvent final : MouseButtonEvent
 	{
 		MouseButtonPressedEvent(uint32 button) :
 			MouseButtonEvent(EEventType::MouseButtonPressed, button)
@@ -314,10 +318,10 @@ namespace Ion
 			SET_DEBUG_STRING("MouseButtonPressedEvent: {{ Button: {} }}", Button);
 		}
 
-		STATIC_EVENT_CLASS_TYPE_GETTER(EEventType::MouseButtonPressed);
+		EVENT_CLASS_BODY(EEventType::MouseButtonPressed);
 	};
 
-	struct MouseDoubleClickEvent : MouseButtonEvent
+	struct MouseDoubleClickEvent final : MouseButtonEvent
 	{
 		MouseDoubleClickEvent(uint32 button) :
 			MouseButtonEvent(EEventType::MouseDoubleClick, button)
@@ -325,10 +329,10 @@ namespace Ion
 			SET_DEBUG_STRING("MouseDoubleClickEvent: {{ Button: {} }}", Button);
 		}
 
-		STATIC_EVENT_CLASS_TYPE_GETTER(EEventType::MouseDoubleClick);
+		EVENT_CLASS_BODY(EEventType::MouseDoubleClick);
 	};
 
-	struct MouseButtonReleasedEvent : MouseButtonEvent
+	struct MouseButtonReleasedEvent final : MouseButtonEvent
 	{
 		MouseButtonReleasedEvent(uint32 button) :
 			MouseButtonEvent(EEventType::MouseButtonReleased, button)
@@ -336,7 +340,7 @@ namespace Ion
 			SET_DEBUG_STRING("MouseButtonReleasedEvent: {{ Button: {} }}", Button);
 		}
 
-		STATIC_EVENT_CLASS_TYPE_GETTER(EEventType::MouseButtonReleased);
+		EVENT_CLASS_BODY(EEventType::MouseButtonReleased);
 	};
 
 #pragma endregion
@@ -345,7 +349,7 @@ namespace Ion
 
 	// Mouse events
 
-	struct RawInputMouseMovedEvent : Event
+	struct RawInputMouseMovedEvent final : Event
 	{
 		const float X;
 		const float Y;
@@ -358,10 +362,10 @@ namespace Ion
 			SET_DEBUG_STRING("RawInputMouseMovedEvent: {{ X: {:.2}, Y: {:.2} }}", X, Y);
 		}
 
-		STATIC_EVENT_CLASS_TYPE_GETTER(EEventType::RawInputMouseMoved);
+		EVENT_CLASS_BODY(EEventType::RawInputMouseMoved);
 	};
 
-	struct RawInputMouseScrolledEvent : Event
+	struct RawInputMouseScrolledEvent final : Event
 	{
 		const float Offset;
 
@@ -372,7 +376,7 @@ namespace Ion
 			SET_DEBUG_STRING("RawInputMouseScrolledEvent: {{ Offset: {:.2} }}", Offset);
 		}
 
-		STATIC_EVENT_CLASS_TYPE_GETTER(EEventType::RawInputMouseScrolled);
+		EVENT_CLASS_BODY(EEventType::RawInputMouseScrolled);
 	};
 
 	// Mouse Button Events
@@ -389,7 +393,7 @@ namespace Ion
 		}
 	};
 
-	struct RawInputMouseButtonPressedEvent : RawInputMouseButtonEvent
+	struct RawInputMouseButtonPressedEvent final : RawInputMouseButtonEvent
 	{
 		RawInputMouseButtonPressedEvent(uint32 button) :
 			RawInputMouseButtonEvent(EEventType::RawInputMouseButtonPressed, button)
@@ -397,10 +401,10 @@ namespace Ion
 			SET_DEBUG_STRING("RawInputMouseButtonPressedEvent: {{ Button: {} }}", Button);
 		}
 
-		STATIC_EVENT_CLASS_TYPE_GETTER(EEventType::RawInputMouseButtonPressed);
+		EVENT_CLASS_BODY(EEventType::RawInputMouseButtonPressed);
 	};
 
-	struct RawInputMouseButtonReleasedEvent : RawInputMouseButtonEvent
+	struct RawInputMouseButtonReleasedEvent final : RawInputMouseButtonEvent
 	{
 		RawInputMouseButtonReleasedEvent(uint32 button) :
 			RawInputMouseButtonEvent(EEventType::RawInputMouseButtonReleased, button)
@@ -408,7 +412,7 @@ namespace Ion
 			SET_DEBUG_STRING("RawInputMouseButtonReleasedEvent: {{ Button: {} }}", Button);
 		}
 
-		STATIC_EVENT_CLASS_TYPE_GETTER(EEventType::RawInputMouseButtonReleased);
+		EVENT_CLASS_BODY(EEventType::RawInputMouseButtonReleased);
 	};
 
 #pragma endregion

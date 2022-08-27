@@ -47,7 +47,6 @@ namespace Ion
 
 	Application::Application(App* clientApp) :
 		m_EventDispatcher(this),
-		m_EventQueue(std::make_unique<EventQueue<EventHandler>>()),
 		m_LayerStack(std::make_unique<LayerStack>()),
 		m_MainThreadId(std::this_thread::get_id()),
 		m_bRunning(true),
@@ -159,7 +158,10 @@ namespace Ion
 		DispatchEvent(e);
 	}
 
-
+	void Application::PostDeferredEvent(const Event& e)
+	{
+		m_EventQueue.PushEvent(e);
+	}
 
 	void Application::DispatchEvent(const Event& e)
 	{
@@ -422,7 +424,10 @@ namespace Ion
 
 			Render();
 
-			m_EventQueue->ProcessEvents();
+			m_EventQueue.ProcessEvents([this](const Event& e)
+			{
+				DispatchEvent(e);
+			});
 
 			if (!m_bInFocus)
 			{

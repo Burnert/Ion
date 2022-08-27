@@ -32,9 +32,7 @@ namespace Ion
 		Application::Get()->PostEvent(e);
 	}
 	// Post events directly to Application
-	// The type is needed for copying the events to the event queue
-	template<typename T>
-	inline void PostDeferredEvent(const T& e)
+	inline void PostDeferredEvent(const Event& e)
 	{
 		Application::Get()->PostDeferredEvent(e);
 	}
