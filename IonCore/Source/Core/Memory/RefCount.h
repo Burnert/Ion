@@ -1848,7 +1848,16 @@ namespace Ion
 		TSharedPtr<T> Lock() const;
 
 		/**
+		 * @brief Get the Raw pointer. Make sure to call IsExpired() to check if the pointer is valid.
+		 * If this function is called when the pointer is expired, the application will abort.
+		 *
+		 * @return T* Raw pointer
+		 */
+		T* Raw() const noexcept;
+
+		/**
 		 * @brief Checks if the weak pointer no longer points to a valid object
+		 * It will return false if the pointer is null.
 		 */
 		bool IsExpired() const;
 
@@ -1990,15 +1999,22 @@ namespace Ion
 	}
 
 	template<typename T>
+	inline T* TWeakPtr<T>::Raw() const noexcept
+	{
+		ionverify(!IsExpired(), "Called TWeakPtr::Raw() when the pointer was expired.");
+		return m_Ptr;
+	}
+
+	template<typename T>
 	inline bool TWeakPtr<T>::IsExpired() const
 	{
-		return RefCount() == 0;
+		return m_Rep && RefCount() == 0;
 	}
 
 	template<typename T>
 	inline bool TWeakPtr<T>::IsValid() const
 	{
-		return m_Rep && m_Ptr && !IsExpired();
+		return m_Rep && m_Ptr && (RefCount() > 0);
 	}
 
 	template<typename T>
