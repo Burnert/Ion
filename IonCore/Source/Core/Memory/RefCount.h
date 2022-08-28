@@ -594,8 +594,10 @@ namespace Ion
 	template<typename TFrom, typename TTo>
 	static constexpr bool TIsPtrCompatibleV = TIsPtrCompatible<TFrom, TTo>::value;
 
+	template<typename T, typename = void>
+	struct TCanEnableSFT : TBool<false> { };
 	template<typename T>
-	struct TCanEnableSFT : TIsBaseOf<TEnableSFT<T>, T> { };
+	struct TCanEnableSFT<T, std::void_t<typename T::TEnableSFTType>> : TIsConvertible<std::remove_cv_t<T>*, typename T::TEnableSFTType*> { };
 
 	template<typename T>
 	static constexpr bool TCanEnableSFTV = TCanEnableSFT<T>::value;
@@ -2053,6 +2055,8 @@ namespace Ion
 	class TEnableSFT
 	{
 	public:
+		using TEnableSFTType = TEnableSFT;
+
 		TSharedPtr<T> SharedFromThis();
 		TSharedPtr<const T> SharedFromThis() const;
 		TWeakPtr<T> WeakFromThis() noexcept;
