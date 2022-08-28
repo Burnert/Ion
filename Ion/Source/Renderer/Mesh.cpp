@@ -12,14 +12,14 @@ namespace Ion
 		return std::shared_ptr<Mesh>(new Mesh);
 	}
 
-	std::shared_ptr<Mesh> Mesh::CreateFromResource(const TResourceRef<MeshResource>& resource)
+	std::shared_ptr<Mesh> Mesh::CreateFromResource(const TSharedPtr<MeshResource>& resource)
 	{
 		std::shared_ptr<Mesh> mesh = Mesh::Create();
 
 		// Reference the resource, so it doesn't get deleted until the mesh is alive.
 		mesh->m_MeshResource = resource;
 
-		mesh->m_MeshResource->Take([mesh](const TResourceRef<MeshResource>& resource)
+		mesh->m_MeshResource->Take([mesh](const TSharedPtr<MeshResource>& resource)
 		{
 			// Check to avoid overriding the buffers when the resource has already been changed to a different one.
 			if (resource == mesh->GetMeshResource())

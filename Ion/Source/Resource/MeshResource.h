@@ -40,14 +40,14 @@ namespace Ion
 	public:
 		using TResourceDescription = MeshResourceDescription;
 
-		static TResourceRef<MeshResource> Query(const Asset& asset);
+		static TSharedPtr<MeshResource> Query(const Asset& asset);
 
 		/**
 		 * @brief Used to access the mesh render data owned by the Resource.
 		 * 
 		 * @details Use the GetRenderData function to retrieve the loaded objects.
 		 * 
-		 * @tparam Lambda params - (const TResourceRef<MeshResource>&)
+		 * @tparam Lambda params - (const TSharedPtr<MeshResource>&)
 		 * @see TFuncResourceOnTake
 		 * 
 		 * @param onTake If the resource is ready, called immediately,
@@ -82,8 +82,6 @@ namespace Ion
 		 */
 		static bool ParseAssetFile(const Asset& asset, GUID& outGuid, MeshResourceDescription& outDescription);
 
-		DEFINE_RESOURCE_AS_REF(MeshResource)
-
 	protected:
 		MeshResource(const Asset& asset, const MeshResourceDescription& desc) :
 			Resource(asset),
@@ -97,6 +95,7 @@ namespace Ion
 		MeshResourceDescription m_Description;
 
 		friend class Resource;
+		FRIEND_MAKE_SHARED;
 	};
 
 	template<typename Lambda>
@@ -106,7 +105,7 @@ namespace Ion
 
 		ionassert(m_Asset);
 
-		TResourceRef<MeshResource> self = AsRef();
+		TSharedPtr<MeshResource> self = PtrCast<MeshResource>(SharedFromThis());
 
 		if (m_RenderData.IsAvailable())
 		{

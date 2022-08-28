@@ -4,18 +4,6 @@
 
 namespace Ion
 {
-	struct ResourceControlBlock
-	{
-		Resource* ResourcePtr;
-		size_t RefCount;
-
-		ResourceControlBlock(Resource* resource) :
-			ResourcePtr(resource),
-			RefCount(0)
-		{
-		}
-	};
-
 	/**
 	 * @brief Resource Manager class
 	 * 
@@ -31,113 +19,101 @@ namespace Ion
 		static ResourceManager& Get();
 
 		template<typename T, TEnableIfT<TIsResourceV<T>>* = 0>
-		static TResourceRef<T> Register(T* resource);
-		static void Unregister(Resource* resource);
+		static void Register(const TSharedPtr<T>& resource);
+		static void Unregister(Resource& resource);
 
 		template<typename T, TEnableIfT<TIsResourceV<T>>* = 0>
-		static TResourceRef<T> FindAssociatedResource(const Asset& asset);
+		static TSharedPtr<T> FindAssociatedResource(const Asset& asset);
 		static bool IsAnyResourceAvailable(const Asset& asset);
 
 		template<typename T, TEnableIfT<TIsResourceV<T>>* = 0>
-		static TArray<TResourceRef<T>> GetResourcesOfType();
+		static TArray<TSharedPtr<T>> GetResourcesOfType();
 
 		/**
 		 * @brief Checks if the Asset is in use by a Resource
 		 * 
 		 * @param asset The Asset to check for
 		 */
-		static bool IsRegistered(Resource* resource);
+		static bool IsRegistered(const Resource& resource);
 
 		static inline constexpr size_t ResourceMapBucketCount = 256;
 
 	private:
 		ResourceManager();
 
-		static ResourceControlBlock* GetControlBlock(Resource* resource) noexcept;
-
 	private:
-		THashMap<Resource*, ResourceControlBlock> m_Resources;
-		THashMap<Asset, TArray<Resource*>> m_AssetToResources;
+		THashMap<Resource*, TWeakPtr<Resource>> m_Resources;
+		THashMap<Asset, TArray<TWeakPtr<Resource>>> m_AssetToResources;
 
 		static ResourceManager* s_Instance;
 
 		friend class ResourceMemory;
 		template<typename T>
 		friend class TResoureRef;
-		friend class _Detail::ResourceRefHelper;
 	};
 
 	// ResourceManager inline implementation
 
 	template<typename T, TEnableIfT<TIsResourceV<T>>*>
-	inline TResourceRef<T> ResourceManager::Register(T* resource)
+	inline void ResourceManager::Register(const TSharedPtr<T>& resource)
 	{
-		ionassert(!IsRegistered(resource));
+		ionassert(!IsRegistered(*resource));
 
 		ResourceManager& instance = Get();
 
-		instance.m_Resources.emplace(resource, ResourceControlBlock(resource));
+		instance.m_Resources.emplace(resource.Raw(), TWeakPtr<Resource>(resource));
 
 		const Asset& asset = resource->GetAssetHandle();
 		// Associate the resource with the asset
 		instance.m_AssetToResources[asset].push_back(resource);
 
 		ResourceLogger.Info("Registered resource \"{}\".", asset->GetVirtualPath());
-
-		return TResourceRef<T>(resource);
 	}
 
 	template<typename T, TEnableIfT<TIsResourceV<T>>*>
-	TResourceRef<T> ResourceManager::FindAssociatedResource(const Asset& asset)
+	TSharedPtr<T> ResourceManager::FindAssociatedResource(const Asset& asset)
 	{
 		ResourceManager& instance = Get();
 
 		auto it = instance.m_AssetToResources.find(asset);
 		if (it == instance.m_AssetToResources.end())
-			return TResourceRef<T>();
+			return nullptr;
 
-		const TArray<Resource*>& resources = it->second;
+		const TArray<TWeakPtr<Resource>>& resources = it->second;
 		ionassert(!resources.empty());
 
-		for (Resource* resource : resources)
+		for (const TWeakPtr<Resource>& resource : resources)
 		{
-			if (T* castResource = dynamic_cast<T*>(resource))
+			ionassert(!resource.IsExpired());
+			
+			if (dynamic_cast<T*>(resource.Raw()))
 			{
-				return TResourceRef<T>(castResource);
+				return PtrCast<T>(resource.Lock());
 			}
 		}
-		return TResourceRef<T>();
+		return nullptr;
 	}
 
 	template<typename T, TEnableIfT<TIsResourceV<T>>*>
-	inline TArray<TResourceRef<T>> ResourceManager::GetResourcesOfType()
+	inline TArray<TSharedPtr<T>> ResourceManager::GetResourcesOfType()
 	{
 		ResourceManager& instance = Get();
 
 		// @TODO: all the types should be indexed somewhere,
 		// so that no searching is needed.
 
-		TArray<TResourceRef<T>> resources;
+		TArray<TSharedPtr<T>> resources;
 	
-		for (auto& [resource, block] : instance.m_Resources)
+		for (auto& [raw, weak] : instance.m_Resources)
 		{
-			if (T* castResource = dynamic_cast<T*>(block.ResourcePtr))
+			ionassert(!weak.IsExpired());
+
+			if (dynamic_cast<T*>(weak.Raw()))
 			{
-				resources.emplace_back(TResourceRef<T>(castResource));
+				resources.emplace_back(PtrCast<T>(weak.Lock()));
 			}
 		}
 
 		return resources;
-	}
-
-	inline ResourceControlBlock* ResourceManager::GetControlBlock(Resource* resource) noexcept
-	{
-		ResourceManager& instance = Get();
-
-		auto it = instance.m_Resources.find(resource);
-		if (it == instance.m_Resources.end())
-			return nullptr;
-
-		return &it->second;
 	}
 }

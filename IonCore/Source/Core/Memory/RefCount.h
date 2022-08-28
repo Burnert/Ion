@@ -2194,6 +2194,12 @@ namespace Ion
 
 #pragma region MakeShared / MakeSharedDC
 
+	#define FRIEND_MAKE_SHARED \
+	template<typename _T> \
+	friend class TObjectRefCountBlock; \
+	template<typename _T, typename _F> \
+	friend class TObjectDestroyRefCountBlock
+
 	/**
 	 * @brief Make a shared pointer with an element constructed in-place.
 	 */

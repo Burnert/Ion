@@ -173,7 +173,7 @@ namespace Ion::Editor
 
 		MeshEntity* meshEntity = m_EditorMainWorld->SpawnEntityOfClass<MeshEntity>();
 
-		TResourceRef<MeshResource> meshResource = MeshResource::Query(Asset::Resolve("[Example]/models/4pak").UnwrapOr(Asset::None));
+		TSharedPtr<MeshResource> meshResource = MeshResource::Query(Asset::Resolve("[Example]/models/4pak").UnwrapOr(Asset::None));
 		std::shared_ptr<Mesh> mesh = Mesh::CreateFromResource(meshResource);
 		meshEntity->SetMesh(mesh);
 		meshEntity->SetName("MaterialExampleMesh");

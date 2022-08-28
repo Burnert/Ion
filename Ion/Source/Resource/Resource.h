@@ -8,167 +8,23 @@
 
 namespace Ion
 {
-	class Resource;
-
 	template<typename T>
 	struct TIsResource : TIsBaseOf<Resource, T> { };
 
 	template<typename T>
 	static constexpr bool TIsResourceV = TIsResource<T>::value;
 
-	template<typename T>
-	class TResourceRef;
-
-	namespace _Detail
-	{
-		class ResourceRefHelper
-		{
-			static bool IsRegistered(Resource* resource) noexcept;
-
-			static size_t IncRef(Resource* resource) noexcept;
-			static size_t DecRef(Resource* resource) noexcept;
-
-			template<typename T>
-			friend class TResourceRef;
-		};
-	}
-
-#define DEFINE_RESOURCE_AS_REF(type) inline TResourceRef<type> AsRef() { return TResourceRef<type>(this); }
-
-	template<typename T>
-	class TResourceRef
-	{
-	public:
-		static_assert(TIsResourceV<T>);
-
-		TResourceRef() noexcept;
-		TResourceRef(T* resource) noexcept;
-
-		TResourceRef(const TResourceRef& other) noexcept;
-		TResourceRef(TResourceRef&& other) noexcept;
-
-		~TResourceRef() noexcept;
-
-		TResourceRef& operator=(const TResourceRef& other) noexcept;
-		TResourceRef& operator=(TResourceRef&& other) noexcept;
-
-		bool operator==(const TResourceRef& other) const noexcept;
-
-		void Swap(TResourceRef& other) noexcept;
-
-		NODISCARD T* operator->() const noexcept;
-		NODISCARD T& operator*() const noexcept;
-
-		operator bool() const noexcept;
-
-	private:
-		T* m_ResourcePtr;
-	};
-
-#define _UNREGISTERED_RESOURCE_REF_CREATION_MESSAGE "Tried to create a TResourceRef of an unregistered resource."
-
-	template<typename T>
-	inline TResourceRef<T>::TResourceRef() noexcept :
-		m_ResourcePtr(nullptr)
-	{
-	}
-
-	template<typename T>
-	inline TResourceRef<T>::TResourceRef(T* resource) noexcept :
-		m_ResourcePtr(resource)
-	{
-		ionverify(_Detail::ResourceRefHelper::IsRegistered(resource), _UNREGISTERED_RESOURCE_REF_CREATION_MESSAGE);
-		_Detail::ResourceRefHelper::IncRef(resource);
-	}
-
-	template<typename T>
-	inline TResourceRef<T>::TResourceRef(const TResourceRef& other) noexcept
-	{
-		if (other.m_ResourcePtr)
-		{
-			ionassert(_Detail::ResourceRefHelper::IsRegistered(other.m_ResourcePtr), _UNREGISTERED_RESOURCE_REF_CREATION_MESSAGE);
-			_Detail::ResourceRefHelper::IncRef(other.m_ResourcePtr);
-		}
-		m_ResourcePtr = other.m_ResourcePtr;
-	}
-
-	template<typename T>
-	inline TResourceRef<T>::TResourceRef(TResourceRef&& other) noexcept
-	{
-		ionassert(!other.m_ResourcePtr || _Detail::ResourceRefHelper::IsRegistered(other.m_ResourcePtr), _UNREGISTERED_RESOURCE_REF_CREATION_MESSAGE);
-		m_ResourcePtr = other.m_ResourcePtr;
-		other.m_ResourcePtr = nullptr;
-	}
-
-	template<typename T>
-	inline TResourceRef<T>::~TResourceRef() noexcept
-	{
-		if (m_ResourcePtr)
-		{
-			ionassert(_Detail::ResourceRefHelper::IsRegistered(m_ResourcePtr));
-			_Detail::ResourceRefHelper::DecRef(m_ResourcePtr);
-		}
-	}
-
-	template<typename T>
-	inline TResourceRef<T>& TResourceRef<T>::operator=(const TResourceRef& other) noexcept
-	{
-		TResourceRef(other).Swap(*this);
-		return *this;
-	}
-
-	template<typename T>
-	inline TResourceRef<T>&  TResourceRef<T>::operator=(TResourceRef&& other) noexcept
-	{
-		TResourceRef(Move(other)).Swap(*this);
-		return *this;
-	}
-
-	template<typename T>
-	inline bool TResourceRef<T>::operator==(const TResourceRef& other) const noexcept
-	{
-		return m_ResourcePtr == other.m_ResourcePtr;
-	}
-
-	template<typename T>
-	inline void TResourceRef<T>::Swap(TResourceRef& other) noexcept
-	{
-		std::swap(m_ResourcePtr, other.m_ResourcePtr);
-	}
-
-	template<typename T>
-	inline T* TResourceRef<T>::operator->() const noexcept
-	{
-		ionassert(m_ResourcePtr);
-		ionassert(_Detail::ResourceRefHelper::IsRegistered(m_ResourcePtr));
-		return m_ResourcePtr;
-	}
-
-	template<typename T>
-	inline T& TResourceRef<T>::operator*() const noexcept
-	{
-		ionassert(m_ResourcePtr);
-		ionassert(_Detail::ResourceRefHelper::IsRegistered(m_ResourcePtr));
-		return *m_ResourcePtr;
-	}
-
-	template<typename T>
-	inline TResourceRef<T>::operator bool() const noexcept
-	{
-		return m_ResourcePtr;
-	}
-
 	// ------------------------------------------------------------
 	// Base Resource
 	// ------------------------------------------------------------
 
 	template<typename T>
-	using TFuncResourceOnTake = TFunction<void(const TResourceRef<T>&)>;
+	using TFuncResourceOnTake = TFunction<void(const TSharedPtr<T>&)>;
 
 	/**
 	 * @brief Base Resource class
 	 */
-	class ION_API Resource
+	class ION_API Resource : public TEnableSFT<Resource>
 	{
 	public:
 		/**
@@ -195,7 +51,7 @@ namespace Ion
 		 * @return Shared pointer to the Resource
 		 */
 		template<typename T>
-		static TResourceRef<T> Query(const Asset& asset);
+		static TSharedPtr<T> Query(const Asset& asset);
 
 	protected:
 		Asset m_Asset;
@@ -209,7 +65,7 @@ namespace Ion
 	}
 
 	template<typename T>
-	inline TResourceRef<T> Resource::Query(const Asset& asset)
+	inline TSharedPtr<T> Resource::Query(const Asset& asset)
 	{
 		static_assert(TIsBaseOfV<Resource, T>);
 
@@ -218,7 +74,7 @@ namespace Ion
 		ionassert(asset);
 
 		// Find a resource of type T
-		TResourceRef<T> resource = ResourceManager::FindAssociatedResource<T>(asset);
+		TSharedPtr<T> resource = ResourceManager::FindAssociatedResource<T>(asset);
 
 		if (resource)
 		{
@@ -230,10 +86,15 @@ namespace Ion
 		GUID guid = GUID::Zero;
 		if (T::ParseAssetFile(asset, guid, desc))
 		{
-			return ResourceManager::Register(new T(asset, desc));
+			TSharedPtr<T> resource = MakeSharedDC<T>([](T& res) {
+				ResourceManager::Unregister(res);
+			}, asset, desc);
+
+			ResourceManager::Register(resource);
+			return resource;
 		}
 
-		return TResourceRef<T>();
+		return nullptr;
 	}
 
 	inline Asset Resource::GetAssetHandle() const

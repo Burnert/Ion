@@ -60,7 +60,7 @@ namespace Ion
 		m_MeshAsset = asset;
 	}
 
-	void MeshComponent::SetMeshResource(const TResourceRef<MeshResource>& resource)
+	void MeshComponent::SetMeshResource(const TSharedPtr<MeshResource>& resource)
 	{
 		m_MeshResource = resource;
 	}

@@ -17,13 +17,13 @@
 
 namespace Ion::Editor
 {
-	static void LoadTexture(TResourceRef<TextureResource>& outResource, TRef<RHITexture>& texture, const String& vp)
+	static void LoadTexture(TSharedPtr<TextureResource>& outResource, TRef<RHITexture>& texture, const String& vp)
 	{
 		Asset asset = Asset::Resolve(vp).Unwrap();
 		
 		outResource = TextureResource::Query(asset);
 
-		outResource->Take([&texture](const TResourceRef<TextureResource>& resource)
+		outResource->Take([&texture](const TSharedPtr<TextureResource>& resource)
 		{
 			texture = resource->GetRenderData().Texture;
 		});

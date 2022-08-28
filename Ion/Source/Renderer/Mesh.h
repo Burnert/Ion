@@ -44,7 +44,7 @@ namespace Ion
 	{
 	public:
 		static std::shared_ptr<Mesh> Create();
-		static std::shared_ptr<Mesh> CreateFromResource(const TResourceRef<MeshResource>& resource);
+		static std::shared_ptr<Mesh> CreateFromResource(const TSharedPtr<MeshResource>& resource);
 
 		virtual ~Mesh() { }
 
@@ -65,7 +65,7 @@ namespace Ion
 		const RHIIndexBuffer* GetIndexBufferRaw() const;
 		const RHIUniformBuffer* GetUniformBufferRaw() const;
 
-		const TResourceRef<MeshResource>& GetMeshResource() const;
+		const TSharedPtr<MeshResource>& GetMeshResource() const;
 
 	private:
 		Mesh();
@@ -77,15 +77,15 @@ namespace Ion
 		TRef<RHIIndexBuffer> m_IndexBuffer;
 		TRef<RHIUniformBuffer> m_UniformBuffer;
 
-		TResourceRef<MeshResource> m_MeshResource;
+		TSharedPtr<MeshResource> m_MeshResource;
 
-		TResourceRef<TextureResource> m_Texture;
+		TSharedPtr<TextureResource> m_Texture;
 
 		uint32 m_VertexCount;
 		uint32 m_TriangleCount;
 	};
 
-	inline const TResourceRef<MeshResource>& Mesh::GetMeshResource() const
+	inline const TSharedPtr<MeshResource>& Mesh::GetMeshResource() const
 	{
 		return m_MeshResource;
 	}

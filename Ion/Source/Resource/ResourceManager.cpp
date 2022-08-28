@@ -13,18 +13,20 @@ namespace Ion
 		return *s_Instance;
 	}
 
-	void ResourceManager::Unregister(Resource* resource)
+	void ResourceManager::Unregister(Resource& resource)
 	{
-		ionassert(resource);
 		ionassert(IsRegistered(resource));
 
 		ResourceManager& instance = Get();
 
-		const Asset& assetHandle = resource->GetAssetHandle();
+		const Asset& assetHandle = resource.GetAssetHandle();
 
 		// Erase the resource from the associated asset
-		TArray<Resource*>& resources = instance.m_AssetToResources[assetHandle];
-		auto it = std::find(resources.begin(), resources.end(), resource);
+		TArray<TWeakPtr<Resource>>& resources = instance.m_AssetToResources[assetHandle];
+		auto it = std::find_if(resources.begin(), resources.end(), [&resource](TWeakPtr<Resource>& res)
+		{
+			return res.Raw() == &resource;
+		});
 		if (it != resources.end())
 		{
 			resources.erase(it);
@@ -36,7 +38,7 @@ namespace Ion
 			}
 		}
 
-		instance.m_Resources.erase(resource);
+		instance.m_Resources.erase(&resource);
 
 		ResourceLogger.Info("Unregistered resource \"{}\".", assetHandle->GetVirtualPath());
 	}
@@ -49,11 +51,11 @@ namespace Ion
 		return it != instance.m_AssetToResources.end();
 	}
 
-	bool ResourceManager::IsRegistered(Resource* resource)
+	bool ResourceManager::IsRegistered(const Resource& resource)
 	{
 		ResourceManager& instance = Get();
 
-		auto it = instance.m_Resources.find(resource);
+		auto it = instance.m_Resources.find(const_cast<Resource*>(&resource));
 		return it != instance.m_Resources.end();
 	}
 

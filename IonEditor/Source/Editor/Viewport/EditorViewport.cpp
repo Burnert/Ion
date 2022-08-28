@@ -93,7 +93,7 @@ namespace Ion::Editor
 
 							DNDAssetData& data = *(DNDAssetData*)payload->Data;
 
-							TResourceRef<MeshResource> meshResource = MeshResource::Query(data.AssetHandle);
+							TSharedPtr<MeshResource> meshResource = MeshResource::Query(data.AssetHandle);
 							std::shared_ptr<Mesh> mesh = Mesh::CreateFromResource(meshResource);
 
 							World* world = EditorApplication::Get()->GetEditorWorld();

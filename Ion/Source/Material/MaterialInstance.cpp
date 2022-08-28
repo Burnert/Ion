@@ -122,7 +122,7 @@ namespace Ion
 			m_TextureResource = TextureResource::Query(m_Value);
 
 			// @TODO: Make sure the instance is not deleted before this gets done
-			m_TextureResource->Take([this](const TResourceRef<TextureResource>& resource)
+			m_TextureResource->Take([this](const TSharedPtr<TextureResource>& resource)
 			{
 				// Check to avoid overriding the texture when it's already been changed to a different one.
 				if (resource == m_TextureResource)

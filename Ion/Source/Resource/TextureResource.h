@@ -49,14 +49,14 @@ namespace Ion
 		 * @param asset Asset associated with the Resource
 		 * @return Shared pointer to the Resource
 		 */
-		static TResourceRef<TextureResource> Query(const Asset& asset);
+		static TSharedPtr<TextureResource> Query(const Asset& asset);
 
 		/**
 		 * @brief Used to access the Texture owned by the Resource.
 		 * 
 		 * @details Use the GetRenderData function to retrieve the loaded objects.
 		 * 
-		 * @tparam Lambda params - (const TResourceRef<TextureResource>&)
+		 * @tparam Lambda params - (const TSharedPtr<TextureResource>&)
 		 * @see TFuncResourceOnTake
 		 * 
 		 * @param onTake If the resource is ready, called immediately,
@@ -89,8 +89,6 @@ namespace Ion
 		 */
 		static bool ParseAssetFile(const Asset& asset, GUID& outGuid, TextureResourceDescription& outDescription);
 
-		DEFINE_RESOURCE_AS_REF(TextureResource)
-
 	protected:
 		TextureResource(const Asset& asset, const TextureResourceDescription& desc) :
 			Resource(asset),
@@ -104,6 +102,7 @@ namespace Ion
 		TextureResourceDescription m_Description;
 
 		friend class Resource;
+		FRIEND_MAKE_SHARED;
 	};
 
 	template<typename Lambda>
@@ -113,7 +112,7 @@ namespace Ion
 
 		ionassert(m_Asset);
 
-		TResourceRef<TextureResource> self = AsRef();
+		TSharedPtr<TextureResource> self = PtrCast<TextureResource>(SharedFromThis());
 
 		if (m_RenderData.IsAvailable())
 		{

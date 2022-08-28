@@ -16,8 +16,8 @@ namespace Ion::Editor
 		Asset TextureAsset;
 		Asset MaterialAsset;
 
-		TResourceRef<MeshResource> MeshResource;
-		TResourceRef<TextureResource> TextureResource;
+		TSharedPtr<MeshResource> MeshResource;
+		TSharedPtr<TextureResource> TextureResource;
 
 		String Name;
 
