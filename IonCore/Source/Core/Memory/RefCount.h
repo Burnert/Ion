@@ -1834,7 +1834,7 @@ namespace Ion
 		 * 
 		 * @param other Other weak pointer
 		 */
-		TWeakPtr& operator=(TWeakPtr&& other);
+		TWeakPtr& operator=(TWeakPtr&& other) noexcept;
 
 		/**
 		 * @brief Move assign other weak pointer to this pointer
@@ -1843,7 +1843,7 @@ namespace Ion
 		 * @param other Other weak pointer
 		 */
 		template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0>
-		TWeakPtr& operator=(TWeakPtr<T0>&& other);
+		TWeakPtr& operator=(TWeakPtr<T0>&& other) noexcept;
 
 		/**
 		 * @brief Assign a shared pointer to this weak pointer.
@@ -1870,8 +1870,8 @@ namespace Ion
 		TSharedPtr<T> Lock() const;
 
 		/**
-		 * @brief Get the Raw pointer. Make sure to call IsExpired() to check if the pointer is valid.
-		 * If this function is called when the pointer is expired, the application will abort.
+		 * @brief Get the Raw pointer. Make sure to call IsExpired() 
+		 * to check if the pointer is valid before dereferencing it.
 		 *
 		 * @return T* Raw pointer
 		 */
@@ -1972,7 +1972,7 @@ namespace Ion
 	}
 
 	template<typename T>
-	inline TWeakPtr<T>& TWeakPtr<T>::operator=(TWeakPtr&& other)
+	inline TWeakPtr<T>& TWeakPtr<T>::operator=(TWeakPtr&& other) noexcept
 	{
 		RefCountLogger.Debug("TWeakPtr {{{}}} has been move assigned to TWeakPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
 		TWeakPtr(Move(other)).Swap(*this);
@@ -1981,7 +1981,7 @@ namespace Ion
 
 	template<typename T>
 	template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>*>
-	inline TWeakPtr<T>& TWeakPtr<T>::operator=(TWeakPtr<T0>&& other)
+	inline TWeakPtr<T>& TWeakPtr<T>::operator=(TWeakPtr<T0>&& other) noexcept
 	{
 		RefCountLogger.Debug("TWeakPtr {{{}}} has been move assigned to TWeakPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
 		TWeakPtr(Move(other)).Swap(*this);
@@ -2023,7 +2023,6 @@ namespace Ion
 	template<typename T>
 	inline T* TWeakPtr<T>::Raw() const noexcept
 	{
-		ionverify(!IsExpired(), "Called TWeakPtr::Raw() when the pointer was expired.");
 		return m_Ptr;
 	}
 
