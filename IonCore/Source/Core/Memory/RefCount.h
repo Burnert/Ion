@@ -918,6 +918,74 @@ namespace Ion
 
 #pragma endregion
 
+#pragma region TObjectDestroyRefCountBlock
+
+	template<typename T, typename FOnDestroy>
+	class TObjectDestroyRefCountBlock : public RefCountBase
+	{
+	public:
+		static_assert(!TIsReferenceV<T>);
+
+		/**
+		 * @brief Create a ref counter that has the element constructed in place
+		 * and has a destroy callback function.
+		 */
+		template<typename... Args>
+		TObjectDestroyRefCountBlock(FOnDestroy onDestroy, Args&&... args);
+
+		~TObjectDestroyRefCountBlock() { }
+
+	private:
+		virtual void Destroy() noexcept override;
+		virtual void DestroySelf() noexcept override;
+
+	private:
+		union
+		{
+			/** Owned object */
+			_Memory_Detail::TWrapper<T> m_Object;
+		};
+		FOnDestroy m_OnDestroy;
+
+		template<typename T0>
+		friend class TPtrBase;
+	};
+
+	#pragma region TObjectDestroyRefCountBlock Implementation
+
+	template<typename T, typename FOnDestroy>
+	template<typename... Args>
+	inline TObjectDestroyRefCountBlock<T, FOnDestroy>::TObjectDestroyRefCountBlock(FOnDestroy onDestroy, Args&&... args) :
+		m_OnDestroy(onDestroy)
+	{
+		new((void*)&m_Object.Object) T(Forward<Args>(args)...);
+		RefCountLogger.Trace("TObjectDestroyRefCountBlock {{{}}} has been constructed in place with an object of type {} and a destroy callback.", (void*)this, typeid(T).name());
+	}
+
+	template<typename T, typename FOnDestroy>
+	inline void TObjectDestroyRefCountBlock<T, FOnDestroy>::Destroy() noexcept
+	{
+		static_assert(std::is_invocable_v<FOnDestroy, TRemoveRef<T>&>);
+
+		RefCountLogger.Trace("TObjectDestroyRefCountBlock {{{}}} is calling the object destructor...", (void*)this);
+		m_OnDestroy(m_Object.Object);
+		m_Object.Object.~T();
+		RefCountLogger.Debug("TObjectDestroyRefCountBlock {{{}}} has destroyed the object.", (void*)this);
+	}
+
+	template<typename T, typename FOnDestroy>
+	inline void TObjectDestroyRefCountBlock<T, FOnDestroy>::DestroySelf() noexcept
+	{
+		void* ptr = this;
+		RefCountLogger.Trace("TObjectDestroyRefCountBlock {{{}}} is deleting itself...", ptr);
+		delete this;
+		RefCountLogger.Debug("TObjectDestroyRefCountBlock {{{}}} has deleted itself.", ptr);
+	}
+
+	#pragma endregion
+
+#pragma endregion
+
 #pragma region TPtrBase
 
 	template<typename T>
@@ -967,6 +1035,17 @@ namespace Ion
 		 */
 		template<typename T0, typename FDeleter>
 		void ConstructSharedWithDeleter(T0* ptr, FDeleter deleter);
+
+		/**
+		 * @brief Constructs a ref count control block with an element of type T constructed in place
+		 * and a custom destroy callback, that will be called right before the object is destroyed.
+		 * 
+		 * @tparam FOnDestroy Destroy callback type - void(T&)
+		 * 
+		 * @param onDestroy Destroy callback function, called before the object is destroyed.
+		 */
+		template<typename FOnDestroy, typename... Args>
+		void ConstructSharedInPlaceWithDestroyCallback(FOnDestroy onDestroy, Args&&... args);
 
 		/**
 		 * @brief Makes this pointer a shared pointer that points
@@ -1072,6 +1151,9 @@ namespace Ion
 
 		template<typename T0, typename... Args>
 		friend TSharedPtr<T0> MakeShared(Args&&... args);
+
+		template<typename T, typename FOnDestroy, typename... Args>
+		friend TEnableIfT<std::is_invocable_v<FOnDestroy, TRemoveRef<T>&>, TSharedPtr<T>> MakeSharedDC(FOnDestroy onDestroy, Args&&... args);
 	};
 
 	#pragma region TPtrBase Implementation
@@ -1136,6 +1218,16 @@ namespace Ion
 
 		m_Ptr = ptr;
 		m_Rep = new TPtrDeleterRefCountBlock(ptr, deleter);
+	}
+
+	template<typename T>
+	template<typename FOnDestroy, typename... Args>
+	inline void TPtrBase<T>::ConstructSharedInPlaceWithDestroyCallback(FOnDestroy onDestroy, Args&&... args)
+	{
+		auto block = new TObjectDestroyRefCountBlock<T, FOnDestroy>(onDestroy, Forward<Args>(args)...);
+
+		m_Ptr = &block->m_Object.Object;
+		m_Rep = block;
 	}
 
 	template<typename T>
@@ -1989,7 +2081,7 @@ namespace Ion
 
 #pragma endregion
 
-#pragma region MakeShared
+#pragma region MakeShared / MakeSharedDC
 
 	/**
 	 * @brief Make a shared pointer with an element constructed in-place.
@@ -2003,23 +2095,20 @@ namespace Ion
 		return ptr;
 	}
 
-	// @TODO:
 	/**
-	 * @brief Make a shared pointer with a custom deleter from a raw pointer and take the ownership of it.
+	 * @brief Make a shared pointer with an element of type T constructed in place
+	 * and a custom destroy callback, that will be called right before the object is destroyed.
 	 *
-	 * @tparam T Pointer type
-	 * @tparam FDeleter Deleter function type - void(T*)
+	 * @tparam FOnDestroy Destroy callback type - void(T&)
 	 *
-	 * @param ptr Raw pointer
-	 * @param deleter Deleter function, called when the ref count reached zero.
+	 * @param onDestroy Destroy callback function, called before the object is destroyed.
 	 */
-	template<typename T, typename FOnDelete,
-		TEnableIfT<std::is_nothrow_invocable_v<FOnDelete>>* = 0,
-		typename... Args>
-	inline TSharedPtr<T> MakeShared(FOnDelete onDelete, Args&&... args)
+	template<typename T, typename FOnDestroy, typename... Args>
+	inline TEnableIfT<std::is_invocable_v<FOnDestroy, TRemoveRef<T>&>, TSharedPtr<T>> MakeSharedDC(FOnDestroy onDestroy, Args&&... args)
 	{
 		TSharedPtr<T> ptr;
-		ptr.ConstructInPlace();
+		ptr.ConstructSharedInPlaceWithDestroyCallback(onDestroy, Forward<Args>(args)...);
+		RefCountLogger.Debug("TSharedPtr {{{}}} has been constructed in place with an object of type {} and a destroy callback.", (void*)ptr.m_Rep, typeid(T).name());
 		return ptr;
 	}
 
