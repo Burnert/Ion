@@ -544,6 +544,9 @@ namespace Ion
 	template<typename T>
 	class TWeakPtr;
 
+	template<typename T>
+	class TEnableSFT;
+
 	/**
 	 * @brief Checks if T is a ref-count pointer type
 	 * 
@@ -590,6 +593,12 @@ namespace Ion
 
 	template<typename TFrom, typename TTo>
 	static constexpr bool TIsPtrCompatibleV = TIsPtrCompatible<TFrom, TTo>::value;
+
+	template<typename T>
+	struct TCanEnableSFT : TIsBaseOf<TEnableSFT<T>, T> { };
+
+	template<typename T>
+	static constexpr bool TCanEnableSFTV = TCanEnableSFT<T>::value;
 
 #pragma endregion
 
@@ -1120,6 +1129,9 @@ namespace Ion
 		template<typename T0>
 		void AliasConstructShared(TSharedPtr<T0>&& other, TElement* ptr);
 
+		template<typename T0>
+		void SetPtrRepEnableSFT(T0* ptr, RefCountBase* rep);
+
 		void Swap(TPtrBase& other);
 
 		/**
@@ -1195,8 +1207,7 @@ namespace Ion
 	{
 		ionassert(ptr);
 
-		m_Ptr = ptr;
-		m_Rep = new TPtrRefCountBlock(ptr);
+		SetPtrRepEnableSFT(ptr, new TPtrRefCountBlock(ptr));
 	}
 
 	template<typename T>
@@ -1205,8 +1216,7 @@ namespace Ion
 	{
 		TObjectRefCountBlock<T>* block = new TObjectRefCountBlock<T>(Forward<Args>(args)...);
 
-		m_Ptr = &block->m_Object.Object;
-		m_Rep = block;
+		SetPtrRepEnableSFT(&block->m_Object.Object, block);
 	}
 
 	template<typename T>
@@ -1216,8 +1226,7 @@ namespace Ion
 		static_assert(std::is_nothrow_invocable_v<FDeleter, T0*>);
 		ionassert(ptr);
 
-		m_Ptr = ptr;
-		m_Rep = new TPtrDeleterRefCountBlock(ptr, deleter);
+		SetPtrRepEnableSFT(ptr, new TPtrDeleterRefCountBlock(ptr, deleter));
 	}
 
 	template<typename T>
@@ -1226,8 +1235,7 @@ namespace Ion
 	{
 		auto block = new TObjectDestroyRefCountBlock<T, FOnDestroy>(onDestroy, Forward<Args>(args)...);
 
-		m_Ptr = &block->m_Object.Object;
-		m_Rep = block;
+		SetPtrRepEnableSFT(&block->m_Object.Object, block);
 	}
 
 	template<typename T>
@@ -1334,6 +1342,18 @@ namespace Ion
 
 		other.m_Ptr = nullptr;
 		other.m_Rep = nullptr;
+	}
+
+	template<typename T>
+	template<typename T0>
+	inline void TPtrBase<T>::SetPtrRepEnableSFT(T0* ptr, RefCountBase* rep)
+	{
+		m_Ptr = ptr;
+		m_Rep = rep;
+		if constexpr (TCanEnableSFTV<T0>)
+		{
+			m_Ptr->m_WeakSFT = TSharedPtr<T0>(*static_cast<TSharedPtr<T>*>(this), ptr);
+		}
 	}
 
 	template<typename T>
@@ -2021,6 +2041,78 @@ namespace Ion
 	inline TWeakPtr<T>::operator bool() const
 	{
 		return IsValid();
+	}
+
+	#pragma endregion
+
+#pragma endregion
+
+#pragma region Enable Shared From This
+
+	template<typename T>
+	class TEnableSFT
+	{
+	public:
+		TSharedPtr<T> SharedFromThis();
+		TSharedPtr<const T> SharedFromThis() const;
+		TWeakPtr<T> WeakFromThis() noexcept;
+		TWeakPtr<const T> WeakFromThis() const noexcept;
+
+	protected:
+		TEnableSFT() noexcept;
+		TEnableSFT(const TEnableSFT&) noexcept;
+		~TEnableSFT() = default;
+		TEnableSFT& operator=(const TEnableSFT&) noexcept;
+
+	private:
+		mutable TWeakPtr<T> m_WeakSFT;
+
+		template<typename T0>
+		friend class TPtrBase;
+	};
+
+	#pragma region TEnableSFT Implementation
+
+	template<typename T>
+	inline TSharedPtr<T> TEnableSFT<T>::SharedFromThis()
+	{
+		return m_WeakSFT.Lock();
+	}
+
+	template<typename T>
+	inline TSharedPtr<const T> TEnableSFT<T>::SharedFromThis() const
+	{
+		return m_WeakSFT.Lock();
+	}
+
+	template<typename T>
+	inline TWeakPtr<T> TEnableSFT<T>::WeakFromThis() noexcept
+	{
+		return m_WeakSFT;
+	}
+
+	template<typename T>
+	inline TWeakPtr<const T> TEnableSFT<T>::WeakFromThis() const noexcept
+	{
+		return m_WeakSFT;
+	}
+
+	template<typename T>
+	inline TEnableSFT<T>::TEnableSFT() noexcept :
+		m_WeakSFT()
+	{
+	}
+
+	template<typename T>
+	inline TEnableSFT<T>::TEnableSFT(const TEnableSFT&) noexcept :
+		m_WeakSFT()
+	{
+	}
+
+	template<typename T>
+	inline TEnableSFT<T>& TEnableSFT<T>::operator=(const TEnableSFT&) noexcept
+	{
+		return *this;
 	}
 
 	#pragma endregion
