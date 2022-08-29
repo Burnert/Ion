@@ -35,3 +35,5 @@
 
 #define SPDLOG_COMPILED_LIB
 #include "spdlog/fmt/fmt.h"
+
+#include "CoreConfig.h"
