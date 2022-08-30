@@ -7,6 +7,16 @@ namespace Ion
 {
 	REGISTER_LOGGER(RefCountLogger, "Core::Memory::RefCount", ELoggerFlags::DisabledByDefault);
 
+	/**
+	 * @brief RefCounter Concurrency Mode - whether the ref counter should use
+	 * thread-safe atomic operations or not.
+	 */
+	enum class ERCMode : uint8
+	{
+		ThreadSafe,
+		NonThreadSafe,
+	};
+
 #pragma region Intrusive
 
 #pragma region Templates (type traits)
@@ -535,16 +545,16 @@ namespace Ion
 
 #pragma region Templates (type traits)
 
-	template<typename T>
+	template<typename T, ERCMode RC>
 	class TPtrBase;
 
-	template<typename T>
+	template<typename T, ERCMode RC>
 	class TSharedPtr;
 
-	template<typename T>
+	template<typename T, ERCMode RC>
 	class TWeakPtr;
 
-	template<typename T>
+	template<typename T, ERCMode RC>
 	class TEnableSFT;
 
 	/**
@@ -559,22 +569,22 @@ namespace Ion
 		static constexpr inline bool value = false;
 	};
 
-	template<typename T>
-	struct TIsRefCountPtr<TPtrBase<T>>
+	template<typename T, ERCMode RC>
+	struct TIsRefCountPtr<TPtrBase<T, RC>>
 	{
 		static constexpr inline bool Value = true;
 		static constexpr inline bool value = true;
 	};
 
-	template<typename T>
-	struct TIsRefCountPtr<TSharedPtr<T>>
+	template<typename T, ERCMode RC>
+	struct TIsRefCountPtr<TSharedPtr<T, RC>>
 	{
 		static constexpr inline bool Value = true;
 		static constexpr inline bool value = true;
 	};
 
-	template<typename T>
-	struct TIsRefCountPtr<TWeakPtr<T>>
+	template<typename T, ERCMode RC>
+	struct TIsRefCountPtr<TWeakPtr<T, RC>>
 	{
 		static constexpr inline bool Value = true;
 		static constexpr inline bool value = true;
@@ -604,51 +614,204 @@ namespace Ion
 
 #pragma endregion
 
-#pragma region RefCountBase
+#pragma region TRefCountBase
 
 	/**
 	 * @brief Ref counting block base for shared pointers
 	 */
-	class RefCountBase
+	template<ERCMode RC>
+	class TRefCountBase
 	{
 	public:
-		RefCountBase();
+		using TRefCounter = TIf<RC == ERCMode::ThreadSafe, TAtomic<uint32>, uint32>;
+
+		FORCEINLINE TRefCountBase() :
+			m_Count(1),
+			m_WeakCount(1)
+		{
+		}
 
 		/**
 		 * @brief Increments the strong reference count
-		 *
-		 * @return uint32 Reference count after incrementing
 		 */
-		uint32 IncRef();
+		FORCEINLINE void IncRef()
+		{
+			if constexpr (RC == ERCMode::ThreadSafe)
+			{
+				// Cannot read the incremented value here, because it uses a different
+				// instruction (lock xadd) instead of the desired (lock inc).
+				++m_Count;
+
+				// That is why m_Count.load(std::memory_order_relaxed) is used for the logging.
+				RefCountLogger.Debug("TRefCountBase<ThreadSafe> {{{}}} Atomically (lock inc) incremented the ref count. Current ref count: {}", (void*)this, m_Count.load(std::memory_order_relaxed));
+			}
+			else
+			{
+				++m_Count;
+
+				RefCountLogger.Debug("TRefCountBase {{{}}} Incremented the ref count by 1. Current ref count: {}", (void*)this, m_Count);
+			}
+		}
+
+		FORCEINLINE bool IncRefNonZero()
+		{
+			// This function is only used in the TWeakPtr.Lock() method.
+			if constexpr (RC == ERCMode::ThreadSafe)
+			{
+				uint32 originalCount = m_Count.load(std::memory_order_relaxed);
+
+				while (1)
+				{
+					// Don't increment if the count is 0 at any time.
+					// The pointer has been destroyed already.
+					if (originalCount == 0)
+						return false;
+
+					// Increment the count if it hasn't changed, or try again otherwise.
+					if (m_Count.compare_exchange_weak(originalCount, originalCount + 1, std::memory_order_relaxed))
+					{
+						RefCountLogger.Debug("TRefCountBase<ThreadSafe> {{{}}} Atomically (lock cmpxchg) incremented the ref count. Current ref count: {}", (void*)this, originalCount + 1);
+
+						return true;
+					}
+				}
+			}
+			else
+			{
+				if (m_Count == 0)
+					return false;
+
+				++m_Count;
+
+				RefCountLogger.Debug("TRefCountBase {{{}}} Incremented the ref count by 1. Current ref count: {}", (void*)this, m_Count);
+
+				return true;
+			}
+		}
 
 		/**
 		 * @brief Decrements the strong reference count
 		 *
 		 * @details Deletes the owned pointer if the reference count is 0
 		 * and decrements the weak reference count.
-		 *
-		 * @return uint32 Reference count after decrementing
 		 */
-		uint32 DecRef();
+		FORCEINLINE void DecRef()
+		{
+			if constexpr (RC == ERCMode::ThreadSafe)
+			{
+				uint32 originalCount = m_Count.fetch_sub(1, std::memory_order_release);
+				ionassert(originalCount > 0);
+
+				RefCountLogger.Debug("TRefCountBase<ThreadSafe> {{{}}} Atomically (lock xadd) decremented the ref count. Current ref count: {}", (void*)this, originalCount - 1);
+
+				if (originalCount == 1)
+				{
+					std::atomic_thread_fence(std::memory_order_acquire);
+
+					RefCountLogger.Trace("TRefCountBase<ThreadSafe> {{{}}} Strong ref count reached 0.", (void*)this);
+
+					Destroy();
+					DecWeak();
+				}
+			}
+			else
+			{
+				ionassert(m_Count > 0);
+				--m_Count;
+
+				RefCountLogger.Debug("TRefCountBase {{{}}} Decremented the ref count by 1. Current ref count: {}", (void*)this, m_Count);
+
+				if (m_Count == 0)
+				{
+					RefCountLogger.Trace("TRefCountBase {{{}}} Strong ref count reached 0.", (void*)this);
+
+					Destroy();
+					DecWeak();
+				}
+			}
+		}
 
 		/**
 		 * @brief Increments the weak reference count
-		 *
-		 * @return uint32 Weak reference count after incrementing
 		 */
-		uint32 IncWeak();
+		FORCEINLINE void IncWeak()
+		{
+			if constexpr (RC == ERCMode::ThreadSafe)
+			{
+				++m_WeakCount;
+
+				RefCountLogger.Debug("TRefCountBase<ThreadSafe> {{{}}} Atomically (lock inc) incremented the weak ref count. Current weak ref count: {}", (void*)this, m_Count.load(std::memory_order_relaxed));
+			}
+			else
+			{
+				++m_WeakCount;
+
+				RefCountLogger.Debug("TRefCountBase {{{}}} Incremented the weak ref count by 1. Current weak ref count: {}", (void*)this, m_WeakCount);
+			}
+		}
 
 		/**
 		 * @brief Decrements the weak reference count
 		 *
 		 * @details Destroys this control block if the reference count is 0.
-		 *
-		 * @return uint32 Weak reference count after decrementing
 		 */
-		uint32 DecWeak();
+		FORCEINLINE void DecWeak()
+		{
+			if constexpr (RC == ERCMode::ThreadSafe)
+			{
+				uint32 originalCount = m_WeakCount.fetch_sub(1, std::memory_order_release);
+				ionassert(originalCount > 0);
 
-		uint32 RefCount() const;
-		uint32 WeakRefCount() const;
+				RefCountLogger.Debug("TRefCountBase<ThreadSafe> {{{}}} Decremented the weak ref count by 1. Current weak ref count: {}", (void*)this, originalCount - 1);
+
+				if (originalCount == 1)
+				{
+					std::atomic_thread_fence(std::memory_order_acquire);
+
+					RefCountLogger.Trace("TRefCountBase<ThreadSafe> {{{}}} Weak ref count reached 0.", (void*)this);
+
+					DestroySelf();
+				}
+			}
+			else
+			{
+				ionassert(m_WeakCount > 0);
+				--m_WeakCount;
+
+				RefCountLogger.Debug("TRefCountBase {{{}}} Decremented the weak ref count by 1. Current weak ref count: {}", (void*)this, m_WeakCount);
+
+				if (m_WeakCount == 0)
+				{
+					RefCountLogger.Trace("TRefCountBase {{{}}} Weak ref count reached 0.", (void*)this);
+
+					DestroySelf();
+				}
+			}
+		}
+
+		FORCEINLINE uint32 RefCount() const
+		{
+			if constexpr (RC == ERCMode::ThreadSafe)
+			{
+				return m_Count.load(std::memory_order_relaxed);
+			}
+			else
+			{
+				return m_Count;
+			}
+		}
+
+		FORCEINLINE uint32 WeakRefCount() const
+		{
+			if constexpr (RC == ERCMode::ThreadSafe)
+			{
+				return m_WeakCount.load(std::memory_order_relaxed);
+			}
+			else
+			{
+				return m_WeakCount;
+			}
+		}
 
 	protected:
 		/**
@@ -661,87 +824,19 @@ namespace Ion
 		virtual void DestroySelf() noexcept = 0;
 
 	private:
-		/**
-		 * @brief Current reference count
-		 */
-		uint32 m_Count;
-		/**
-		 * @brief Current weak reference count
-		 *
-		 * @details It is 1 if there are no weak pointers.
-		 * The ref counting block kind of is a weak reference.
-		 */
-		uint32 m_WeakCount;
+		TRefCounter m_Count;
+		TRefCounter m_WeakCount;
 
-		template<typename T0>
+		template<typename T0, ERCMode RC0>
 		friend class TPtrBase;
 	};
-
-	#pragma region RefCountBase Implementation
-
-	inline RefCountBase::RefCountBase() :
-		m_Count(1),
-		m_WeakCount(1)
-	{
-	}
-
-	inline uint32 RefCountBase::IncRef()
-	{
-		++m_Count;
-		RefCountLogger.Debug("RefCountBase {{{}}} Incremented the ref count by 1. Current ref count: {}", (void*)this, m_Count);
-		return m_Count;
-	}
-
-	inline uint32 RefCountBase::DecRef()
-	{
-		--m_Count;
-		RefCountLogger.Debug("RefCountBase {{{}}} Decremented the ref count by 1. Current ref count: {}", (void*)this, m_Count);
-		if (m_Count == 0)
-		{
-			RefCountLogger.Trace("RefCountBase {{{}}} Strong ref count reached 0.", (void*)this);
-			Destroy();
-			DecWeak();
-		}
-		return m_Count;
-	}
-
-	inline uint32 RefCountBase::IncWeak()
-	{
-		++m_WeakCount;
-		RefCountLogger.Debug("RefCountBase {{{}}} Incremented the weak ref count by 1. Current weak ref count: {}", (void*)this, m_WeakCount);
-		return m_WeakCount;
-	}
-
-	inline uint32 RefCountBase::DecWeak()
-	{
-		uint32 count = --m_WeakCount;
-		RefCountLogger.Debug("RefCountBase {{{}}} Decremented the weak ref count by 1. Current weak ref count: {}", (void*)this, m_WeakCount);
-		if (m_WeakCount == 0)
-		{
-			RefCountLogger.Trace("RefCountBase {{{}}} Weak ref count reached 0.", (void*)this);
-			DestroySelf();
-		}
-		return count;
-	}
-
-	inline uint32 RefCountBase::RefCount() const
-	{
-		return m_Count;
-	}
-
-	inline uint32 RefCountBase::WeakRefCount() const
-	{
-		return m_WeakCount;
-	}
-
-	#pragma endregion
 
 #pragma endregion
 
 #pragma region TPtrRefCountBlock
 
-	template<typename T>
-	class TPtrRefCountBlock : public RefCountBase
+	template<typename T, ERCMode RC>
+	class TPtrRefCountBlock : public TRefCountBase<RC>
 	{
 	public:
 		static_assert(!TIsReferenceV<T>);
@@ -751,11 +846,30 @@ namespace Ion
 		 * 
 		 * @param ptr Pointer to take the ownership of.
 		 */
-		TPtrRefCountBlock(T* ptr);
+		FORCEINLINE TPtrRefCountBlock(T* ptr) :
+			m_Ptr(ptr)
+		{
+			RefCountLogger.Trace("TPtrRefCountBlock {{{}}} has been constructed with a pointer to {} {{{}}}.", (void*)this, typeid(T).name(), (void*)ptr);
+		}
 
 	private:
-		virtual void Destroy() noexcept override;
-		virtual void DestroySelf() noexcept override;
+		virtual void Destroy() noexcept override
+		{
+			if (m_Ptr)
+			{
+				RefCountLogger.Trace("TPtrRefCountBlock {{{}}} is deleting the owned object {} {{{}}}...", (void*)this, typeid(T).name(), (void*)m_Ptr);
+				delete m_Ptr;
+				RefCountLogger.Debug("TPtrRefCountBlock {{{}}} has deleted the owned object {} {{{}}}.", (void*)this, typeid(T).name(), (void*)m_Ptr);
+			}
+		}
+
+		virtual void DestroySelf() noexcept override
+		{
+			void* ptr = this;
+			RefCountLogger.Trace("TPtrRefCountBlock {{{}}} is deleting itself...", ptr);
+			delete this;
+			RefCountLogger.Debug("TPtrRefCountBlock {{{}}} has deleted itself.", ptr);
+		}
 
 	private:
 		/**
@@ -764,43 +878,12 @@ namespace Ion
 		T* m_Ptr;
 	};
 
-	#pragma region TPtrRefCountBlock Implementation
-
-	template<typename T>
-	inline TPtrRefCountBlock<T>::TPtrRefCountBlock(T* ptr) :
-		m_Ptr(ptr)
-	{
-		RefCountLogger.Trace("TPtrRefCountBlock {{{}}} has been constructed with a pointer to {} {{{}}}.", (void*)this, typeid(T).name(), (void*)ptr);
-	}
-
-	template<typename T>
-	inline void TPtrRefCountBlock<T>::Destroy() noexcept
-	{
-		if (m_Ptr)
-		{
-			RefCountLogger.Trace("TPtrRefCountBlock {{{}}} is deleting the owned object {} {{{}}}...", (void*)this, typeid(T).name(), (void*)m_Ptr);
-			delete m_Ptr;
-			RefCountLogger.Debug("TPtrRefCountBlock {{{}}} has deleted the owned object {} {{{}}}.", (void*)this, typeid(T).name(), (void*)m_Ptr);
-		}
-	}
-
-	template<typename T>
-	inline void TPtrRefCountBlock<T>::DestroySelf() noexcept
-	{
-		void* ptr = this;
-		RefCountLogger.Trace("TPtrRefCountBlock {{{}}} is deleting itself...", ptr);
-		delete this;
-		RefCountLogger.Debug("TPtrRefCountBlock {{{}}} has deleted itself.", ptr);
-	}
-
-	#pragma endregion
-
 #pragma endregion
 
 #pragma region TPtrDeleterRefCountBlock
 
-	template<typename T, typename FDeleter>
-	class TPtrDeleterRefCountBlock : public RefCountBase
+	template<typename T, typename FDeleter, ERCMode RC>
+	class TPtrDeleterRefCountBlock : public TRefCountBase<RC>
 	{
 	public:
 		static_assert(!TIsReferenceV<T>);
@@ -810,11 +893,31 @@ namespace Ion
 		 * 
 		 * @param ptr Pointer to take the ownership of.
 		 */
-		TPtrDeleterRefCountBlock(T* ptr, FDeleter deleter) noexcept;
+		FORCEINLINE TPtrDeleterRefCountBlock(T* ptr, FDeleter deleter) noexcept :
+			m_Ptr(ptr),
+			m_Deleter(deleter)
+		{
+			RefCountLogger.Trace("TPtrDeleterRefCountBlock {{{}}} has been constructed with a pointer to {} {{{}}} and a custom deleter.", (void*)this, typeid(T).name(), (void*)ptr);
+		}
 
 	private:
-		virtual void Destroy() noexcept override;
-		virtual void DestroySelf() noexcept override;
+		virtual void Destroy() noexcept override
+		{
+			if (m_Ptr)
+			{
+				RefCountLogger.Trace("TPtrDeleterRefCountBlock {{{}}} is deleting the owned object {} {{{}}} using a custom deleter...", (void*)this, typeid(T).name(), (void*)m_Ptr);
+				m_Deleter(m_Ptr);
+				RefCountLogger.Debug("TPtrDeleterRefCountBlock {{{}}} has deleted the owned object {} {{{}}} using a custom deleter.", (void*)this, typeid(T).name(), (void*)m_Ptr);
+			}
+		}
+
+		virtual void DestroySelf() noexcept override
+		{
+			void* ptr = this;
+			RefCountLogger.Trace("TPtrDeleterRefCountBlock {{{}}} is deleting itself...", ptr);
+			delete this;
+			RefCountLogger.Debug("TPtrDeleterRefCountBlock {{{}}} has deleted itself.", ptr);
+		}
 
 	private:
 		/**
@@ -823,38 +926,6 @@ namespace Ion
 		T* m_Ptr;
 		FDeleter m_Deleter;
 	};
-
-	#pragma region TPtrDeleterRefCountBlock Implementation
-
-	template<typename T, typename FDeleter>
-	inline TPtrDeleterRefCountBlock<T, FDeleter>::TPtrDeleterRefCountBlock(T* ptr, FDeleter deleter) noexcept :
-		m_Ptr(ptr),
-		m_Deleter(deleter)
-	{
-		RefCountLogger.Trace("TPtrDeleterRefCountBlock {{{}}} has been constructed with a pointer to {} {{{}}} and a custom deleter.", (void*)this, typeid(T).name(), (void*)ptr);
-	}
-
-	template<typename T, typename FDeleter>
-	inline void TPtrDeleterRefCountBlock<T, FDeleter>::Destroy() noexcept
-	{
-		if (m_Ptr)
-		{
-			RefCountLogger.Trace("TPtrDeleterRefCountBlock {{{}}} is deleting the owned object {} {{{}}} using a custom deleter...", (void*)this, typeid(T).name(), (void*)m_Ptr);
-			m_Deleter(m_Ptr);
-			RefCountLogger.Debug("TPtrDeleterRefCountBlock {{{}}} has deleted the owned object {} {{{}}} using a custom deleter.", (void*)this, typeid(T).name(), (void*)m_Ptr);
-		}
-	}
-
-	template<typename T, typename FDeleter>
-	inline void TPtrDeleterRefCountBlock<T, FDeleter>::DestroySelf() noexcept
-	{
-		void* ptr = this;
-		RefCountLogger.Trace("TPtrDeleterRefCountBlock {{{}}} is deleting itself...", ptr);
-		delete this;
-		RefCountLogger.Debug("TPtrDeleterRefCountBlock {{{}}} has deleted itself.", ptr);
-	}
-
-	#pragma endregion
 
 #pragma endregion
 
@@ -869,8 +940,8 @@ namespace Ion
 		};
 	}
 
-	template<typename T>
-	class TObjectRefCountBlock : public RefCountBase
+	template<typename T, ERCMode RC>
+	class TObjectRefCountBlock : public TRefCountBase<RC>
 	{
 	public:
 		static_assert(!TIsReferenceV<T>);
@@ -879,13 +950,31 @@ namespace Ion
 		 * @brief Create a ref counter that has the element constructed in place.
 		 */
 		template<typename... Args>
-		TObjectRefCountBlock(Args&&... args);
+		FORCEINLINE TObjectRefCountBlock(Args&&... args)
+		{
+			new((void*)&m_Object.Object) T(Forward<Args>(args)...);
+			RefCountLogger.Trace("TObjectRefCountBlock {{{}}} has been constructed in place with an object of type {}.", (void*)this, typeid(T).name());
+		}
 
-		~TObjectRefCountBlock() { }
+		FORCEINLINE ~TObjectRefCountBlock()
+		{
+		}
 
 	private:
-		virtual void Destroy() noexcept override;
-		virtual void DestroySelf() noexcept override;
+		virtual void Destroy() noexcept override
+		{
+			RefCountLogger.Trace("TObjectRefCountBlock {{{}}} is calling the object destructor...", (void*)this);
+			m_Object.Object.~T();
+			RefCountLogger.Debug("TObjectRefCountBlock {{{}}} has destroyed the object.", (void*)this);
+		}
+
+		virtual void DestroySelf() noexcept override
+		{
+			void* ptr = this;
+			RefCountLogger.Trace("TObjectRefCountBlock {{{}}} is deleting itself...", ptr);
+			delete this;
+			RefCountLogger.Debug("TObjectRefCountBlock {{{}}} has deleted itself.", ptr);
+		}
 
 	private:
 		union
@@ -894,45 +983,16 @@ namespace Ion
 			_Memory_Detail::TWrapper<T> m_Object;
 		};
 
-		template<typename T0>
+		template<typename T0, ERCMode RC0>
 		friend class TPtrBase;
 	};
-
-	#pragma region TObjectRefCountBlock Implementation
-
-	template<typename T>
-	template<typename... Args>
-	inline TObjectRefCountBlock<T>::TObjectRefCountBlock(Args&&... args)
-	{
-		new((void*)&m_Object.Object) T(Forward<Args>(args)...);
-		RefCountLogger.Trace("TObjectRefCountBlock {{{}}} has been constructed in place with an object of type {}.", (void*)this, typeid(T).name());
-	}
-
-	template<typename T>
-	inline void TObjectRefCountBlock<T>::Destroy() noexcept
-	{
-		RefCountLogger.Trace("TObjectRefCountBlock {{{}}} is calling the object destructor...", (void*)this);
-		m_Object.Object.~T();
-		RefCountLogger.Debug("TObjectRefCountBlock {{{}}} has destroyed the object.", (void*)this);
-	}
-
-	template<typename T>
-	inline void TObjectRefCountBlock<T>::DestroySelf() noexcept
-	{
-		void* ptr = this;
-		RefCountLogger.Trace("TObjectRefCountBlock {{{}}} is deleting itself...", ptr);
-		delete this;
-		RefCountLogger.Debug("TObjectRefCountBlock {{{}}} has deleted itself.", ptr);
-	}
-
-	#pragma endregion
 
 #pragma endregion
 
 #pragma region TObjectDestroyRefCountBlock
 
-	template<typename T, typename FOnDestroy>
-	class TObjectDestroyRefCountBlock : public RefCountBase
+	template<typename T, typename FOnDestroy, ERCMode RC>
+	class TObjectDestroyRefCountBlock : public TRefCountBase<RC>
 	{
 	public:
 		static_assert(!TIsReferenceV<T>);
@@ -942,13 +1002,35 @@ namespace Ion
 		 * and has a destroy callback function.
 		 */
 		template<typename... Args>
-		TObjectDestroyRefCountBlock(FOnDestroy onDestroy, Args&&... args);
+		FORCEINLINE TObjectDestroyRefCountBlock(FOnDestroy onDestroy, Args&&... args) :
+			m_OnDestroy(onDestroy)
+		{
+			new((void*)&m_Object.Object) T(Forward<Args>(args)...);
+			RefCountLogger.Trace("TObjectDestroyRefCountBlock {{{}}} has been constructed in place with an object of type {} and a destroy callback.", (void*)this, typeid(T).name());
+		}
 
-		~TObjectDestroyRefCountBlock() { }
+		FORCEINLINE ~TObjectDestroyRefCountBlock()
+		{
+		}
 
 	private:
-		virtual void Destroy() noexcept override;
-		virtual void DestroySelf() noexcept override;
+		virtual void Destroy() noexcept override
+		{
+			static_assert(std::is_invocable_v<FOnDestroy, TRemoveRef<T>&>);
+
+			RefCountLogger.Trace("TObjectDestroyRefCountBlock {{{}}} is calling the object destructor...", (void*)this);
+			m_OnDestroy(m_Object.Object);
+			m_Object.Object.~T();
+			RefCountLogger.Debug("TObjectDestroyRefCountBlock {{{}}} has destroyed the object.", (void*)this);
+		}
+
+		virtual void DestroySelf() noexcept override
+		{
+			void* ptr = this;
+			RefCountLogger.Trace("TObjectDestroyRefCountBlock {{{}}} is deleting itself...", ptr);
+			delete this;
+			RefCountLogger.Debug("TObjectDestroyRefCountBlock {{{}}} has deleted itself.", ptr);
+		}
 
 	private:
 		union
@@ -958,67 +1040,55 @@ namespace Ion
 		};
 		FOnDestroy m_OnDestroy;
 
-		template<typename T0>
+		template<typename T0, ERCMode RC0>
 		friend class TPtrBase;
 	};
-
-	#pragma region TObjectDestroyRefCountBlock Implementation
-
-	template<typename T, typename FOnDestroy>
-	template<typename... Args>
-	inline TObjectDestroyRefCountBlock<T, FOnDestroy>::TObjectDestroyRefCountBlock(FOnDestroy onDestroy, Args&&... args) :
-		m_OnDestroy(onDestroy)
-	{
-		new((void*)&m_Object.Object) T(Forward<Args>(args)...);
-		RefCountLogger.Trace("TObjectDestroyRefCountBlock {{{}}} has been constructed in place with an object of type {} and a destroy callback.", (void*)this, typeid(T).name());
-	}
-
-	template<typename T, typename FOnDestroy>
-	inline void TObjectDestroyRefCountBlock<T, FOnDestroy>::Destroy() noexcept
-	{
-		static_assert(std::is_invocable_v<FOnDestroy, TRemoveRef<T>&>);
-
-		RefCountLogger.Trace("TObjectDestroyRefCountBlock {{{}}} is calling the object destructor...", (void*)this);
-		m_OnDestroy(m_Object.Object);
-		m_Object.Object.~T();
-		RefCountLogger.Debug("TObjectDestroyRefCountBlock {{{}}} has destroyed the object.", (void*)this);
-	}
-
-	template<typename T, typename FOnDestroy>
-	inline void TObjectDestroyRefCountBlock<T, FOnDestroy>::DestroySelf() noexcept
-	{
-		void* ptr = this;
-		RefCountLogger.Trace("TObjectDestroyRefCountBlock {{{}}} is deleting itself...", ptr);
-		delete this;
-		RefCountLogger.Debug("TObjectDestroyRefCountBlock {{{}}} has deleted itself.", ptr);
-	}
-
-	#pragma endregion
 
 #pragma endregion
 
 #pragma region TPtrBase
 
-	template<typename T>
+	template<typename T, ERCMode RC>
 	class TPtrBase
 	{
 	public:
 		using TElement  = T;
-		using TThis     = TPtrBase<T>;
+		using TThis     = TPtrBase<T, RC>;
+		static constexpr ERCMode Concurrency = RC;
 
-		uint32 RefCount() const;
-		uint32 WeakRefCount() const;
+		FORCEINLINE uint32 RefCount() const
+		{
+			if (!m_Rep)
+				return 0;
+
+			return m_Rep->RefCount();
+		}
+
+		FORCEINLINE uint32 WeakRefCount() const
+		{
+			if (!m_Rep)
+				return 0;
+
+			return m_Rep->WeakRefCount();
+		}
 
 	protected:
 		/**
 		 * @brief Construct a null pointer base
 		 */
-		TPtrBase();
+		FORCEINLINE TPtrBase() :
+			TPtrBase(nullptr)
+		{
+		}
 
 		/**
 		 * @brief Construct a null pointer base
 		 */
-		TPtrBase(nullptr_t);
+		FORCEINLINE TPtrBase(nullptr_t) :
+			m_Ptr(nullptr),
+			m_Rep(nullptr)
+		{
+		}
 
 		/**
 		 * @brief Constructs a ref count control block that owns the pointer.
@@ -1027,13 +1097,23 @@ namespace Ion
 		 * @param ptr Pointer to take the ownership of.
 		 */
 		template<typename T0>
-		void ConstructShared(T0* ptr);
+		FORCEINLINE void ConstructShared(T0* ptr)
+		{
+			ionassert(ptr);
+
+			SetPtrRepEnableSFT(ptr, new TPtrRefCountBlock<T0, RC>(ptr));
+		}
 
 		/**
 		 * @brief Constructs a ref count control block with an element of type T constructed in place.
 		 */
 		template<typename... Args>
-		void ConstructSharedInPlace(Args&&... args);
+		FORCEINLINE void ConstructSharedInPlace(Args&&... args)
+		{
+			TObjectRefCountBlock<T, RC>* block = new TObjectRefCountBlock<T, RC>(Forward<Args>(args)...);
+
+			SetPtrRepEnableSFT(&block->m_Object.Object, block);
+		}
 
 		/**
 		 * @brief Constructs a ref count control block with a custom deleter that owns the pointer.
@@ -1045,7 +1125,13 @@ namespace Ion
 		 * @param deleter Deleter function, called when the ref count reached zero.
 		 */
 		template<typename T0, typename FDeleter>
-		void ConstructSharedWithDeleter(T0* ptr, FDeleter deleter);
+		FORCEINLINE void ConstructSharedWithDeleter(T0* ptr, FDeleter deleter)
+		{
+			static_assert(std::is_nothrow_invocable_v<FDeleter, T0*>);
+			ionassert(ptr);
+
+			SetPtrRepEnableSFT(ptr, new TPtrDeleterRefCountBlock<T0, FDeleter, RC>(ptr, deleter));
+		}
 
 		/**
 		 * @brief Constructs a ref count control block with an element of type T constructed in place
@@ -1056,7 +1142,12 @@ namespace Ion
 		 * @param onDestroy Destroy callback function, called before the object is destroyed.
 		 */
 		template<typename FOnDestroy, typename... Args>
-		void ConstructSharedInPlaceWithDestroyCallback(FOnDestroy onDestroy, Args&&... args);
+		FORCEINLINE void ConstructSharedInPlaceWithDestroyCallback(FOnDestroy onDestroy, Args&&... args)
+		{
+			auto block = new TObjectDestroyRefCountBlock<T, FOnDestroy, RC>(onDestroy, Forward<Args>(args)...);
+
+			SetPtrRepEnableSFT(&block->m_Object.Object, block);
+		}
 
 		/**
 		 * @brief Makes this pointer a shared pointer that points
@@ -1066,7 +1157,16 @@ namespace Ion
 		 * @param ptr Weak pointer
 		 */
 		template<typename T0>
-		void ConstructSharedFromWeak(const TWeakPtr<T0>& ptr);
+		FORCEINLINE void ConstructSharedFromWeak(const TWeakPtr<T0, RC>& ptr)
+		{
+			static_assert(TIsBaseOfV<TElement, T0>);
+
+			if (ptr.m_Rep && ptr.m_Rep->IncRefNonZero())
+			{
+				m_Ptr = ptr.m_Ptr;
+				m_Rep = ptr.m_Rep;
+			}
+		}
 
 		/**
 		 * @brief Makes this pointer a weak pointer that points
@@ -1076,7 +1176,20 @@ namespace Ion
 		 * @param ptr Shared pointer
 		 */
 		template<typename T0>
-		void ConstructWeak(const TSharedPtr<T0>& ptr);
+		FORCEINLINE void ConstructWeak(const TSharedPtr<T0, RC>& ptr)
+		{
+			static_assert(TIsBaseOfV<TElement, T0>);
+
+			if (ptr.m_Rep)
+			{
+				ionassert(ptr.m_Ptr);
+
+				m_Ptr = ptr.m_Ptr;
+				m_Rep = ptr.m_Rep;
+
+				m_Rep->IncWeak();
+			}
+		}
 
 		/**
 		 * @brief Copies the other shared pointer to this pointer
@@ -1085,7 +1198,20 @@ namespace Ion
 		 * @param other Other shared pointer
 		 */
 		template<typename T0>
-		void CopyConstructShared(const TSharedPtr<T0>& other);
+		FORCEINLINE void CopyConstructShared(const TSharedPtr<T0, RC>& other)
+		{
+			static_assert(TIsBaseOfV<TElement, T0>);
+
+			m_Ptr = other.m_Ptr;
+			m_Rep = other.m_Rep;
+
+			if (m_Rep)
+			{
+				ionassert(m_Ptr);
+
+				m_Rep->IncRef();
+			}
+		}
 
 		/**
 		 * @brief Copies the other weak pointer to this pointer
@@ -1094,7 +1220,20 @@ namespace Ion
 		 * @param other Other weak pointer
 		 */
 		template<typename T0>
-		void CopyConstructWeak(const TWeakPtr<T0>& other);
+		FORCEINLINE void CopyConstructWeak(const TWeakPtr<T0, RC>& other)
+		{
+			static_assert(TIsBaseOfV<TElement, T0>);
+
+			m_Ptr = other.m_Ptr;
+			m_Rep = other.m_Rep;
+
+			if (m_Rep)
+			{
+				ionassert(m_Ptr);
+
+				m_Rep->IncWeak();
+			}
+		}
 
 		/**
 		 * @brief Moves the other pointer to this pointer
@@ -1103,7 +1242,18 @@ namespace Ion
 		 * @param other Other pointer
 		 */
 		template<typename TPtr>
-		void MoveConstruct(TPtr&& other);
+		FORCEINLINE void MoveConstruct(TPtr&& other)
+		{
+			static_assert(TIsRefCountPtrV<TPtr>);
+			static_assert(TIsBaseOfV<TElement, typename TPtr::TElement>);
+			static_assert(RC == TPtr::Concurrency);
+
+			m_Ptr = other.m_Ptr;
+			m_Rep = other.m_Rep;
+
+			other.m_Ptr = nullptr;
+			other.m_Rep = nullptr;
+		}
 
 		/**
 		 * @brief Makes this pointer point to the specified raw pointer,
@@ -1116,7 +1266,18 @@ namespace Ion
 		 * @param ptr Raw pointer to point to.
 		 */
 		template<typename T0>
-		void AliasConstructShared(const TSharedPtr<T0>& other, TElement* ptr);
+		FORCEINLINE void AliasConstructShared(const TSharedPtr<T0, RC>& other, TElement* ptr)
+		{
+			m_Ptr = ptr;
+			m_Rep = other.m_Rep;
+
+			if (m_Rep)
+			{
+				ionassert(m_Ptr);
+
+				m_Rep->IncRef();
+			}
+		}
 
 		/**
 		 * @brief Makes this pointer point to the specified raw pointer,
@@ -1129,287 +1290,110 @@ namespace Ion
 		 * @param ptr Raw pointer to point to.
 		 */
 		template<typename T0>
-		void AliasConstructShared(TSharedPtr<T0>&& other, TElement* ptr);
+		FORCEINLINE void AliasConstructShared(TSharedPtr<T0, RC>&& other, TElement* ptr)
+		{
+			m_Ptr = ptr;
+			m_Rep = other.m_Rep;
+
+			other.m_Ptr = nullptr;
+			other.m_Rep = nullptr;
+		}
 
 		template<typename T0>
-		void SetPtrRepEnableSFT(T0* ptr, RefCountBase* rep);
+		FORCEINLINE void SetPtrRepEnableSFT(T0* ptr, TRefCountBase<RC>* rep)
+		{
+			m_Ptr = ptr;
+			m_Rep = rep;
+			if constexpr (TCanEnableSFTV<T0>)
+			{
+				m_Ptr->m_WeakSFT = TSharedPtr<T0, RC>(*static_cast<TSharedPtr<T, RC>*>(this), ptr);
+			}
+		}
 
-		void Swap(TPtrBase& other);
+		FORCEINLINE void Swap(TPtrBase& other)
+		{
+			std::swap(m_Ptr, other.m_Ptr);
+			std::swap(m_Rep, other.m_Rep);
+		}
 
 		/**
 		 * @brief Delete the shared pointer
 		 * 
 		 * @details Decrements the strong reference count.
 		 */
-		void DeleteShared();
+		FORCEINLINE void DeleteShared()
+		{
+			if (m_Rep)
+			{
+				m_Rep->DecRef();
+			}
+
+			m_Ptr = nullptr;
+			m_Rep = nullptr;
+		}
 
 		/**
 		 * @brief Delete the weak pointer
 		 * 
 		 * @details Decrements the weak reference count.
 		 */
-		void DeleteWeak();
+		FORCEINLINE void DeleteWeak()
+		{
+			if (m_Rep)
+			{
+				m_Rep->DecWeak();
+			}
+
+			m_Ptr = nullptr;
+			m_Rep = nullptr;
+		}
 
 	private:
 		T* m_Ptr;
-		RefCountBase* m_Rep;
+		TRefCountBase<RC>* m_Rep;
 
-		template<typename T0>
+		template<typename T0, ERCMode RC0>
 		friend class TSharedPtr;
 
-		template<typename T0>
+		template<typename T0, ERCMode RC0>
 		friend class TWeakPtr;
 
-		template<typename T0>
+		template<typename T0, ERCMode RC0>
 		friend class TPtrBase;
 
-		template<typename T0, typename... Args>
-		friend TSharedPtr<T0> MakeShared(Args&&... args);
+		template<typename T0, ERCMode RC0, typename... Args>
+		friend TSharedPtr<T0, RC0> MakeShared(Args&&... args);
 
-		template<typename T, typename FOnDestroy, typename... Args>
-		friend TEnableIfT<std::is_invocable_v<FOnDestroy, TRemoveRef<T>&>, TSharedPtr<T>> MakeSharedDC(FOnDestroy onDestroy, Args&&... args);
+		template<typename T, ERCMode RC0, typename FOnDestroy, typename... Args>
+		friend TEnableIfT<std::is_invocable_v<FOnDestroy, TRemoveRef<T>&>, TSharedPtr<T, RC0>> MakeSharedDC(FOnDestroy onDestroy, Args&&... args);
 	};
-
-	#pragma region TPtrBase Implementation
-
-	template<typename T>
-	inline uint32 TPtrBase<T>::RefCount() const
-	{
-		if (!m_Rep)
-			return 0;
-
-		return m_Rep->RefCount();
-	}
-
-	template<typename T>
-	inline uint32 TPtrBase<T>::WeakRefCount() const
-	{
-		if (!m_Rep)
-			return 0;
-
-		return m_Rep->WeakRefCount();
-	}
-
-	template<typename T>
-	inline TPtrBase<T>::TPtrBase() :
-		TPtrBase(nullptr)
-	{
-	}
-
-	template<typename T>
-	inline TPtrBase<T>::TPtrBase(nullptr_t) :
-		m_Ptr(nullptr),
-		m_Rep(nullptr)
-	{
-	}
-
-	template<typename T>
-	template<typename T0>
-	inline void TPtrBase<T>::ConstructShared(T0* ptr)
-	{
-		ionassert(ptr);
-
-		SetPtrRepEnableSFT(ptr, new TPtrRefCountBlock(ptr));
-	}
-
-	template<typename T>
-	template<typename... Args>
-	void TPtrBase<T>::ConstructSharedInPlace(Args&&... args)
-	{
-		TObjectRefCountBlock<T>* block = new TObjectRefCountBlock<T>(Forward<Args>(args)...);
-
-		SetPtrRepEnableSFT(&block->m_Object.Object, block);
-	}
-
-	template<typename T>
-	template<typename T0, typename FDeleter>
-	inline void TPtrBase<T>::ConstructSharedWithDeleter(T0* ptr, FDeleter deleter)
-	{
-		static_assert(std::is_nothrow_invocable_v<FDeleter, T0*>);
-		ionassert(ptr);
-
-		SetPtrRepEnableSFT(ptr, new TPtrDeleterRefCountBlock(ptr, deleter));
-	}
-
-	template<typename T>
-	template<typename FOnDestroy, typename... Args>
-	inline void TPtrBase<T>::ConstructSharedInPlaceWithDestroyCallback(FOnDestroy onDestroy, Args&&... args)
-	{
-		auto block = new TObjectDestroyRefCountBlock<T, FOnDestroy>(onDestroy, Forward<Args>(args)...);
-
-		SetPtrRepEnableSFT(&block->m_Object.Object, block);
-	}
-
-	template<typename T>
-	template<typename T0>
-	inline void TPtrBase<T>::ConstructSharedFromWeak(const TWeakPtr<T0>& ptr)
-	{
-		static_assert(TIsBaseOfV<TElement, T0>);
-
-		if (ptr.IsValid())
-		{
-			m_Ptr = ptr.m_Ptr;
-			m_Rep = ptr.m_Rep;
-
-			m_Rep->IncRef();
-		}
-	}
-
-	template<typename T>
-	template<typename T0>
-	inline void TPtrBase<T>::ConstructWeak(const TSharedPtr<T0>& ptr)
-	{
-		static_assert(TIsBaseOfV<TElement, T0>);
-
-		if (ptr.m_Rep)
-		{
-			ionassert(ptr.m_Ptr);
-
-			m_Ptr = ptr.m_Ptr;
-			m_Rep = ptr.m_Rep;
-
-			m_Rep->IncWeak();
-		}
-	}
-
-	template<typename T>
-	template<typename T0>
-	inline void TPtrBase<T>::CopyConstructShared(const TSharedPtr<T0>& other)
-	{
-		static_assert(TIsBaseOfV<TElement, T0>);
-
-		m_Ptr = other.m_Ptr;
-		m_Rep = other.m_Rep;
-
-		if (m_Rep)
-		{
-			ionassert(m_Ptr);
-
-			m_Rep->IncRef();
-		}
-	}
-
-	template<typename T>
-	template<typename T0>
-	inline void TPtrBase<T>::CopyConstructWeak(const TWeakPtr<T0>& other)
-	{
-		static_assert(TIsBaseOfV<TElement, T0>);
-
-		m_Ptr = other.m_Ptr;
-		m_Rep = other.m_Rep;
-
-		if (m_Rep)
-		{
-			ionassert(m_Ptr);
-
-			m_Rep->IncWeak();
-		}
-	}
-
-	template<typename T>
-	template<typename TPtr>
-	inline void TPtrBase<T>::MoveConstruct(TPtr&& other)
-	{
-		static_assert(TIsRefCountPtrV<TPtr>);
-		static_assert(TIsBaseOfV<TElement, typename TPtr::TElement>);
-
-		m_Ptr = other.m_Ptr;
-		m_Rep = other.m_Rep;
-
-		other.m_Ptr = nullptr;
-		other.m_Rep = nullptr;
-	}
-
-	template<typename T>
-	template<typename T0>
-	inline void TPtrBase<T>::AliasConstructShared(const TSharedPtr<T0>& other, TElement* ptr)
-	{
-		m_Ptr = ptr;
-		m_Rep = other.m_Rep;
-
-		if (m_Rep)
-		{
-			ionassert(m_Ptr);
-
-			m_Rep->IncRef();
-		}
-	}
-
-	template<typename T>
-	template<typename T0>
-	inline void TPtrBase<T>::AliasConstructShared(TSharedPtr<T0>&& other, TElement* ptr)
-	{
-		m_Ptr = ptr;
-		m_Rep = other.m_Rep;
-
-		other.m_Ptr = nullptr;
-		other.m_Rep = nullptr;
-	}
-
-	template<typename T>
-	template<typename T0>
-	inline void TPtrBase<T>::SetPtrRepEnableSFT(T0* ptr, RefCountBase* rep)
-	{
-		m_Ptr = ptr;
-		m_Rep = rep;
-		if constexpr (TCanEnableSFTV<T0>)
-		{
-			m_Ptr->m_WeakSFT = TSharedPtr<T0>(*static_cast<TSharedPtr<T>*>(this), ptr);
-		}
-	}
-
-	template<typename T>
-	inline void TPtrBase<T>::Swap(TPtrBase<T>& other)
-	{
-		std::swap(m_Ptr, other.m_Ptr);
-		std::swap(m_Rep, other.m_Rep);
-	}
-
-	template<typename T>
-	inline void TPtrBase<T>::DeleteShared()
-	{
-		if (m_Rep)
-		{
-			m_Rep->DecRef();
-		}
-
-		m_Ptr = nullptr;
-		m_Rep = nullptr;
-	}
-
-	template<typename T>
-	inline void TPtrBase<T>::DeleteWeak()
-	{
-		if (m_Rep)
-		{
-			m_Rep->DecWeak();
-		}
-
-		m_Ptr = nullptr;
-		m_Rep = nullptr;
-	}
-
-	#pragma endregion
 
 #pragma endregion
 
 #pragma region TSharedPtr
 
-	template<typename T>
-	class TSharedPtr : public TPtrBase<T>
+	template<typename T, ERCMode RC = ERCMode::ThreadSafe>
+	class TSharedPtr : public TPtrBase<T, RC>
 	{
 	public:
-		using TBase = TPtrBase<T>;
+		using TBase = TPtrBase<T, RC>;
 
 		/**
 		 * @brief Construct a null shared pointer
 		 */
-		TSharedPtr();
+		FORCEINLINE TSharedPtr() :
+			TSharedPtr(nullptr)
+		{
+		}
 
 		/**
 		 * @brief Construct a null shared pointer
 		 */
-		TSharedPtr(nullptr_t);
+		FORCEINLINE TSharedPtr(nullptr_t) :
+			TBase(nullptr)
+		{
+			RefCountLogger.Debug("TSharedPtr {{{}}} has been null constructed.", (void*)m_Rep);
+		}
 
 		/**
 		 * @brief Construct a shared pointer that owns the ptr
@@ -1417,7 +1401,11 @@ namespace Ion
 		 * @param ptr Pointer to take the ownership of.
 		 */
 		template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0>
-		explicit TSharedPtr(T0* ptr);
+		FORCEINLINE explicit TSharedPtr(T0* ptr)
+		{
+			ConstructShared(ptr);
+			RefCountLogger.Debug("TSharedPtr {{{}}} has been constructed with a pointer to {} {{{}}}.", (void*)m_Rep, typeid(T0).name(), (void*)ptr);
+		}
 
 		/**
 		 * @brief Construct a shared pointer with a custom deleter that owns the pointer.
@@ -1431,14 +1419,22 @@ namespace Ion
 		template<typename T0, typename FDeleter,
 			TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0,
 			TEnableIfT<std::is_nothrow_invocable_v<FDeleter, T*>>* = 0>
-		TSharedPtr(T0* ptr, FDeleter deleter);
+		FORCEINLINE TSharedPtr(T0* ptr, FDeleter deleter)
+		{
+			ConstructSharedWithDeleter(ptr, deleter);
+			RefCountLogger.Debug("TSharedPtr {{{}}} has been constructed with a pointer to {} {{{}}} and a custom deleter.", (void*)m_Rep, typeid(T0).name(), (void*)ptr);
+		}
 
 		/**
 		 * @brief Make a copy of another shared pointer.
 		 * 
 		 * @param other Other shared pointer
 		 */
-		TSharedPtr(const TSharedPtr& other);
+		FORCEINLINE TSharedPtr(const TSharedPtr& other)
+		{
+			RefCountLogger.Debug("TSharedPtr {{{}}} has been copy constructed.", (void*)other.m_Rep);
+			CopyConstructShared(other);
+		}
 
 		/**
 		 * @brief Make a copy of another shared pointer.
@@ -1447,14 +1443,22 @@ namespace Ion
 		 * @param other Other shared pointer
 		 */
 		template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0>
-		TSharedPtr(const TSharedPtr<T0>& other);
+		FORCEINLINE TSharedPtr(const TSharedPtr<T0>& other)
+		{
+			RefCountLogger.Debug("TSharedPtr {{{}}} has been copy constructed.", (void*)other.m_Rep);
+			CopyConstructShared(other);
+		}
 
 		/**
 		 * @brief Move another shared pointer.
 		 * 
 		 * @param other Other shared pointer
 		 */
-		TSharedPtr(TSharedPtr&& other) noexcept;
+		FORCEINLINE TSharedPtr(TSharedPtr&& other) noexcept
+		{
+			RefCountLogger.Debug("TSharedPtr {{{}}} has been move constructed.", (void*)other.m_Rep);
+			MoveConstruct(Move(other));
+		}
 
 		/**
 		 * @brief Move another shared pointer.
@@ -1463,7 +1467,11 @@ namespace Ion
 		 * @param other Other shared pointer
 		 */
 		template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0>
-		TSharedPtr(TSharedPtr<T0>&& other) noexcept;
+		FORCEINLINE TSharedPtr(TSharedPtr<T0>&& other) noexcept
+		{
+			RefCountLogger.Debug("TSharedPtr {{{}}} has been move constructed.", (void*)other.m_Rep);
+			MoveConstruct(Move(other));
+		}
 
 		/**
 		 * @brief Create an alias pointer of another shared pointer.
@@ -1476,7 +1484,11 @@ namespace Ion
 		 * @param ptr Raw pointer to point to
 		 */
 		template<typename T0>
-		TSharedPtr(const TSharedPtr<T0>& other, TElement* ptr);
+		FORCEINLINE TSharedPtr(const TSharedPtr<T0>& other, TElement* ptr)
+		{
+			RefCountLogger.Debug("TSharedPtr {{{}}} has been alias constructed with a pointer to {} {{{}}}.", (void*)other.m_Rep, typeid(TElement).name(), (void*)ptr);
+			AliasConstructShared(other, ptr);
+		}
 
 		/**
 		 * @brief Create an alias pointer of another shared pointer.
@@ -1489,16 +1501,29 @@ namespace Ion
 		 * @param ptr Raw pointer to point to
 		 */
 		template<typename T0>
-		TSharedPtr(TSharedPtr<T0>&& other, TElement* ptr);
+		FORCEINLINE TSharedPtr(TSharedPtr<T0>&& other, TElement* ptr)
+		{
+			RefCountLogger.Debug("TSharedPtr {{{}}} has been alias move constructed with a pointer to {} {{{}}}.", (void*)other.m_Rep, typeid(TElement).name(), (void*)ptr);
+			AliasConstructShared(Move(other), ptr);
+		}
 
-		~TSharedPtr();
+		FORCEINLINE ~TSharedPtr()
+		{
+			RefCountLogger.Debug("TSharedPtr {{{}}} has been destroyed.", (void*)m_Rep);
+			DeleteShared();
+		}
 
 		/**
 		 * @brief Copy assign other shared pointer to this pointer
 		 * 
 		 * @param other Other shared pointer
 		 */
-		TSharedPtr& operator=(const TSharedPtr& other);
+		FORCEINLINE TSharedPtr& operator=(const TSharedPtr& other)
+		{
+			RefCountLogger.Debug("TSharedPtr {{{}}} has been copy assigned to TSharedPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
+			TSharedPtr(other).Swap(*this);
+			return *this;
+		}
 
 		/**
 		 * @brief Copy assign other shared pointer to this pointer
@@ -1507,14 +1532,24 @@ namespace Ion
 		 * @param other Other shared pointer
 		 */
 		template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0>
-		TSharedPtr& operator=(const TSharedPtr<T0>& other);
+		FORCEINLINE TSharedPtr& operator=(const TSharedPtr<T0>& other)
+		{
+			RefCountLogger.Debug("TSharedPtr {{{}}} has been copy assigned to TSharedPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
+			TSharedPtr(other).Swap(*this);
+			return *this;
+		}
 
 		/**
 		 * @brief Move assign other shared pointer to this pointer
 		 * 
 		 * @param other Other shared pointer
 		 */
-		TSharedPtr& operator=(TSharedPtr&& other);
+		FORCEINLINE TSharedPtr& operator=(TSharedPtr&& other)
+		{
+			RefCountLogger.Debug("TSharedPtr {{{}}} has been move assigned to TSharedPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
+			TSharedPtr(Move(other)).Swap(*this);
+			return *this;
+		}
 
 		/**
 		 * @brief Move assign other shared pointer to this pointer
@@ -1523,12 +1558,22 @@ namespace Ion
 		 * @param other Other shared pointer
 		 */
 		template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0>
-		TSharedPtr& operator=(TSharedPtr<T0>&& other);
+		FORCEINLINE TSharedPtr& operator=(TSharedPtr<T0>&& other)
+		{
+			RefCountLogger.Debug("TSharedPtr {{{}}} has been move assigned to TSharedPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
+			TSharedPtr(Move(other)).Swap(*this);
+			return *this;
+		}
 
 		/**
 		 * @brief Make this a null pointer
 		 */
-		TSharedPtr& operator=(nullptr_t);
+		FORCEINLINE TSharedPtr& operator=(nullptr_t)
+		{
+			RefCountLogger.Debug("Null has been assigned to TSharedPtr {{{}}}.", (void*)m_Rep);
+			DeleteShared();
+			return *this;
+		}
 
 		/**
 		 * @brief Check if two pointers point to the same object
@@ -1536,7 +1581,10 @@ namespace Ion
 		 * @param other Other shared pointer
 		 */
 		template<typename T0>
-		bool operator==(const TSharedPtr<T0>& other);
+		FORCEINLINE bool operator==(const TSharedPtr<T0>& other)
+		{
+			return m_Ptr == other.m_Ptr;
+		}
 
 		/**
 		 * @brief Check if two pointers don't point to the same object
@@ -1544,231 +1592,82 @@ namespace Ion
 		 * @param other Other shared pointer
 		 */
 		template<typename T0>
-		bool operator!=(const TSharedPtr<T0>& other);
+		FORCEINLINE bool operator!=(const TSharedPtr<T0>& other)
+		{
+			return m_Ptr != other.m_Ptr;
+		}
 
 		/**
 		 * @brief Get the Raw pointer
 		 * 
 		 * @return T* Raw pointer
 		 */
-		T* Raw() const;
+		FORCEINLINE T* Raw() const
+		{
+			return m_Ptr;
+		}
 
 		/**
 		 * @brief Access the pointer
 		 */
-		T* operator->() const;
+		FORCEINLINE T* operator->() const
+		{
+			ionassert(m_Ptr);
+			return m_Ptr;
+		}
 
 		/**
 		 * @brief Dereference the pointer
 		 */
-		T& operator*() const;
+		FORCEINLINE T& operator*() const
+		{
+			ionassert(m_Ptr);
+			return *m_Ptr;
+		}
 
 		/**
 		 * @brief Check if this pointer is not null.
 		 */
-		bool IsValid() const;
+		FORCEINLINE bool IsValid() const
+		{
+			return m_Rep && m_Ptr;
+		}
 
 		/**
 		 * @see IsValid()
 		 */
-		operator bool() const;
+		FORCEINLINE operator bool() const
+		{
+			return IsValid();
+		}
 	};
-
-	#pragma region TSharedPtr Implementation
-
-	template<typename T>
-	inline TSharedPtr<T>::TSharedPtr() :
-		TSharedPtr(nullptr)
-	{
-	}
-
-	template<typename T>
-	inline TSharedPtr<T>::TSharedPtr(nullptr_t) :
-		TBase(nullptr)
-	{
-		RefCountLogger.Debug("TSharedPtr {{{}}} has been null constructed.", (void*)m_Rep);
-	}
-
-	template<typename T>
-	template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>*>
-	inline TSharedPtr<T>::TSharedPtr(T0* ptr)
-	{
-		ConstructShared(ptr);
-		RefCountLogger.Debug("TSharedPtr {{{}}} has been constructed with a pointer to {} {{{}}}.", (void*)m_Rep, typeid(T0).name(), (void*)ptr);
-	}
-
-	template<typename T>
-	template<typename T0, typename FDeleter,
-		TEnableIfT<TIsPtrCompatibleV<T0, T>>*,
-		TEnableIfT<std::is_nothrow_invocable_v<FDeleter, T*>>*>
-	inline TSharedPtr<T>::TSharedPtr(T0* ptr, FDeleter deleter)
-	{
-		ConstructSharedWithDeleter(ptr, deleter);
-		RefCountLogger.Debug("TSharedPtr {{{}}} has been constructed with a pointer to {} {{{}}} and a custom deleter.", (void*)m_Rep, typeid(T0).name(), (void*)ptr);
-	}
-
-	template<typename T>
-	inline TSharedPtr<T>::TSharedPtr(const TSharedPtr& other)
-	{
-		RefCountLogger.Debug("TSharedPtr {{{}}} has been copy constructed.", (void*)other.m_Rep);
-		CopyConstructShared(other);
-	}
-
-	template<typename T>
-	template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>*>
-	inline TSharedPtr<T>::TSharedPtr(const TSharedPtr<T0>& other)
-	{
-		RefCountLogger.Debug("TSharedPtr {{{}}} has been copy constructed.", (void*)other.m_Rep);
-		CopyConstructShared(other);
-	}
-
-	template<typename T>
-	inline TSharedPtr<T>::TSharedPtr(TSharedPtr&& other) noexcept
-	{
-		RefCountLogger.Debug("TSharedPtr {{{}}} has been move constructed.", (void*)other.m_Rep);
-		MoveConstruct(Move(other));
-	}
-
-	template<typename T>
-	template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>*>
-	inline TSharedPtr<T>::TSharedPtr(TSharedPtr<T0>&& other) noexcept
-	{
-		RefCountLogger.Debug("TSharedPtr {{{}}} has been move constructed.", (void*)other.m_Rep);
-		MoveConstruct(Move(other));
-	}
-
-	template<typename T>
-	template<typename T0>
-	inline TSharedPtr<T>::TSharedPtr(const TSharedPtr<T0>& other, TElement* ptr)
-	{
-		RefCountLogger.Debug("TSharedPtr {{{}}} has been alias constructed with a pointer to {} {{{}}}.", (void*)other.m_Rep, typeid(TElement).name(), (void*)ptr);
-		AliasConstructShared(other, ptr);
-	}
-
-	template<typename T>
-	template<typename T0>
-	inline TSharedPtr<T>::TSharedPtr(TSharedPtr<T0>&& other, TElement* ptr)
-	{
-		RefCountLogger.Debug("TSharedPtr {{{}}} has been alias move constructed with a pointer to {} {{{}}}.", (void*)other.m_Rep, typeid(TElement).name(), (void*)ptr);
-		AliasConstructShared(Move(other), ptr);
-	}
-
-	template<typename T>
-	inline TSharedPtr<T>::~TSharedPtr()
-	{
-		RefCountLogger.Debug("TSharedPtr {{{}}} has been destroyed.", (void*)m_Rep);
-		DeleteShared();
-	}
-
-	template<typename T>
-	inline TSharedPtr<T>& TSharedPtr<T>::operator=(const TSharedPtr& other)
-	{
-		RefCountLogger.Debug("TSharedPtr {{{}}} has been copy assigned to TSharedPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
-		TSharedPtr(other).Swap(*this);
-		return *this;
-	}
-
-	template<typename T>
-	template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>*>
-	inline TSharedPtr<T>& TSharedPtr<T>::operator=(const TSharedPtr<T0>& other)
-	{
-		RefCountLogger.Debug("TSharedPtr {{{}}} has been copy assigned to TSharedPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
-		TSharedPtr(other).Swap(*this);
-		return *this;
-	}
-
-	template<typename T>
-	inline TSharedPtr<T>& TSharedPtr<T>::operator=(TSharedPtr&& other)
-	{
-		RefCountLogger.Debug("TSharedPtr {{{}}} has been move assigned to TSharedPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
-		TSharedPtr(Move(other)).Swap(*this);
-		return *this;
-	}
-
-	template<typename T>
-	template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>*>
-	inline TSharedPtr<T>& TSharedPtr<T>::operator=(TSharedPtr<T0>&& other)
-	{
-		RefCountLogger.Debug("TSharedPtr {{{}}} has been move assigned to TSharedPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
-		TSharedPtr(Move(other)).Swap(*this);
-		return *this;
-	}
-
-	template<typename T>
-	inline TSharedPtr<T>& TSharedPtr<T>::operator=(nullptr_t)
-	{
-		RefCountLogger.Debug("Null has been assigned to TSharedPtr {{{}}}.", (void*)m_Rep);
-		DeleteShared();
-		return *this;
-	}
-
-	template<typename T>
-	template<typename T0>
-	inline bool TSharedPtr<T>::operator==(const TSharedPtr<T0>& other)
-	{
-		return m_Ptr == other.m_Ptr;
-	}
-
-	template<typename T>
-	template<typename T0>
-	inline bool TSharedPtr<T>::operator!=(const TSharedPtr<T0>& other)
-	{
-		return m_Ptr != other.m_Ptr;
-	}
-
-	template<typename T>
-	inline T* TSharedPtr<T>::Raw() const
-	{
-		return m_Ptr;
-	}
-
-	template<typename T>
-	inline T* TSharedPtr<T>::operator->() const
-	{
-		ionassert(m_Ptr);
-		return m_Ptr;
-	}
-
-	template<typename T>
-	inline T& TSharedPtr<T>::operator*() const
-	{
-		ionassert(m_Ptr);
-		return *m_Ptr;
-	}
-
-	template<typename T>
-	inline bool TSharedPtr<T>::IsValid() const
-	{
-		return m_Rep && m_Ptr;
-	}
-
-	template<typename T>
-	inline TSharedPtr<T>::operator bool() const
-	{
-		return IsValid();
-	}
-
-	#pragma endregion
 
 #pragma endregion
 
 #pragma region TWeakPtr
 
-	template<typename T>
-	class TWeakPtr : public TPtrBase<T>
+	template<typename T, ERCMode RC = ERCMode::ThreadSafe>
+	class TWeakPtr : public TPtrBase<T, RC>
 	{
 	public:
-		using TBase = TPtrBase<T>;
+		using TBase = TPtrBase<T, RC>;
 
 		/**
 		 * @brief Construct a null weak pointer
 		 */
-		TWeakPtr();
+		FORCEINLINE TWeakPtr() :
+			TWeakPtr(nullptr)
+		{
+		}
 
 		/**
 		 * @brief Construct a null weak pointer
 		 */
-		TWeakPtr(nullptr_t);
+		FORCEINLINE TWeakPtr(nullptr_t) :
+			TBase(nullptr)
+		{
+			RefCountLogger.Debug("TWeakPtr {{{}}} has been null constructed.", (void*)m_Ptr);
+		}
 
 		/**
 		 * @brief Construct a Weak pointer based on a Shared pointer
@@ -1776,15 +1675,23 @@ namespace Ion
 		 * @tparam T0 Shared pointer element type
 		 * @param ptr Shared pointer
 		 */
-		template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0>
-		TWeakPtr(const TSharedPtr<T0>& shared);
+		template<typename T0, ERCMode RC0, TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0>
+		FORCEINLINE TWeakPtr(const TSharedPtr<T0, RC0>& shared)
+		{
+			ConstructWeak(shared);
+			RefCountLogger.Debug("TWeakPtr {{{}}} has been constructed from TSharedPtr {{{}}}.", (void*)m_Rep, (void*)shared.m_Rep);
+		}
 
 		/**
 		 * @brief Make a copy of another weak pointer.
 		 * 
 		 * @param other Other weak pointer
 		 */
-		TWeakPtr(const TWeakPtr& other);
+		FORCEINLINE TWeakPtr(const TWeakPtr& other)
+		{
+			RefCountLogger.Debug("TWeakPtr {{{}}} has been copy constructed.", (void*)other.m_Rep);
+			CopyConstructWeak(other);
+		}
 
 		/**
 		 * @brief Make a copy of another weak pointer.
@@ -1792,15 +1699,23 @@ namespace Ion
 		 * @tparam T0 Other pointer element type
 		 * @param other Other weak pointer
 		 */
-		template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0>
-		TWeakPtr(const TWeakPtr<T0>& other);
+		template<typename T0, ERCMode RC0, TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0>
+		FORCEINLINE TWeakPtr(const TWeakPtr<T0, RC0>& other)
+		{
+			RefCountLogger.Debug("TWeakPtr {{{}}} has been copy constructed.", (void*)other.m_Rep);
+			CopyConstructWeak(other);
+		}
 
 		/**
 		 * @brief Move another weak pointer.
 		 * 
 		 * @param other Other weak pointer
 		 */
-		TWeakPtr(TWeakPtr&& other);
+		FORCEINLINE TWeakPtr(TWeakPtr&& other)
+		{
+			RefCountLogger.Debug("TWeakPtr {{{}}} has been move constructed.", (void*)other.m_Rep);
+			MoveConstruct(Move(other));
+		}
 
 		/**
 		 * @brief Move another weak pointer.
@@ -1808,17 +1723,30 @@ namespace Ion
 		 * @tparam T0 Other pointer element type
 		 * @param other Other weak pointer
 		 */
-		template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0>
-		TWeakPtr(TWeakPtr<T0>&& other);
+		template<typename T0, ERCMode RC0, TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0>
+		FORCEINLINE TWeakPtr(TWeakPtr<T0, RC0>&& other)
+		{
+			RefCountLogger.Debug("TWeakPtr {{{}}} has been move constructed.", (void*)other.m_Rep);
+			MoveConstruct(Move(other));
+		}
 
-		~TWeakPtr();
+		FORCEINLINE ~TWeakPtr()
+		{
+			RefCountLogger.Debug("TWeakPtr {{{}}} has been destroyed.", (void*)m_Rep);
+			DeleteWeak();
+		}
 
 		/**
 		 * @brief Copy assign other weak pointer to this pointer
 		 * 
 		 * @param other Other weak pointer
 		 */
-		TWeakPtr& operator=(const TWeakPtr& other);
+		FORCEINLINE TWeakPtr& operator=(const TWeakPtr& other)
+		{
+			RefCountLogger.Debug("TWeakPtr {{{}}} has been copy assigned to TWeakPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
+			TWeakPtr(other).Swap(*this);
+			return *this;
+		}
 
 		/**
 		 * @brief Copy assign other weak pointer to this pointer
@@ -1826,15 +1754,25 @@ namespace Ion
 		 * @tparam T0 Other pointer element type
 		 * @param other Other weak pointer
 		 */
-		template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0>
-		TWeakPtr& operator=(const TWeakPtr<T0>& other);
+		template<typename T0, ERCMode RC0, TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0>
+		FORCEINLINE TWeakPtr& operator=(const TWeakPtr<T0, RC0>& other)
+		{
+			RefCountLogger.Debug("TWeakPtr {{{}}} has been copy assigned to TWeakPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
+			TWeakPtr(other).Swap(*this);
+			return *this;
+		}
 
 		/**
 		 * @brief Move assign other weak pointer to this pointer
 		 * 
 		 * @param other Other weak pointer
 		 */
-		TWeakPtr& operator=(TWeakPtr&& other) noexcept;
+		FORCEINLINE TWeakPtr& operator=(TWeakPtr&& other) noexcept
+		{
+			RefCountLogger.Debug("TWeakPtr {{{}}} has been move assigned to TWeakPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
+			TWeakPtr(Move(other)).Swap(*this);
+			return *this;
+		}
 
 		/**
 		 * @brief Move assign other weak pointer to this pointer
@@ -1842,8 +1780,13 @@ namespace Ion
 		 * @tparam T0 Other pointer element type
 		 * @param other Other weak pointer
 		 */
-		template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0>
-		TWeakPtr& operator=(TWeakPtr<T0>&& other) noexcept;
+		template<typename T0, ERCMode RC0, TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0>
+		FORCEINLINE TWeakPtr& operator=(TWeakPtr<T0, RC0>&& other) noexcept
+		{
+			RefCountLogger.Debug("TWeakPtr {{{}}} has been move assigned to TWeakPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
+			TWeakPtr(Move(other)).Swap(*this);
+			return *this;
+		}
 
 		/**
 		 * @brief Assign a shared pointer to this weak pointer.
@@ -1851,15 +1794,25 @@ namespace Ion
 		 * @tparam T0 Shared pointer element type
 		 * @param shared Shared pointer
 		 */
-		template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0>
-		TWeakPtr& operator=(const TSharedPtr<T0>& shared);
+		template<typename T0, ERCMode RC0, TEnableIfT<TIsPtrCompatibleV<T0, T>>* = 0>
+		FORCEINLINE TWeakPtr& operator=(const TSharedPtr<T0, RC0>& shared)
+		{
+			RefCountLogger.Debug("TSharedPtr {{{}}} has been assigned to TWeakPtr {{{}}}.", (void*)shared.m_Rep, (void*)m_Rep);
+			TWeakPtr(shared).Swap(*this);
+			return *this;
+		}
 
 		/**
 		 * @brief Make this a null weak pointer
 		 * 
 		 * @return This pointer
 		 */
-		TWeakPtr& operator=(nullptr_t);
+		FORCEINLINE TWeakPtr& operator=(nullptr_t)
+		{
+			RefCountLogger.Debug("Null has been assigned to TWeakPtr {{{}}}.", (void*)m_Rep);
+			DeleteWeak();
+			return *this;
+		}
 
 		/**
 		 * @brief Make a shared pointer out of this weak pointer
@@ -1867,7 +1820,19 @@ namespace Ion
 		 * @return If the weak pointer has not expired, a shared pointer
 		 * that points to the same object, else a null shared pointer.
 		 */
-		TSharedPtr<T> Lock() const;
+		FORCEINLINE TSharedPtr<T, RC> Lock() const
+		{
+			if (IsExpired())
+			{
+				return TSharedPtr<T>();
+			}
+
+			RefCountLogger.Debug("TWeakPtr {{{}}} has been locked.", (void*)m_Rep);
+			TSharedPtr<T, RC> shared;
+			shared.ConstructSharedFromWeak(*this);
+			RefCountLogger.Debug("TSharedPtr {{{}}} has been constructed from TWeakPtr {{{}}}.", (void*)shared.m_Rep, (void*)m_Rep);
+			return shared;
+		}
 
 		/**
 		 * @brief Get the Raw pointer. Make sure to call IsExpired() 
@@ -1875,250 +1840,91 @@ namespace Ion
 		 *
 		 * @return T* Raw pointer
 		 */
-		T* Raw() const noexcept;
+		FORCEINLINE T* Raw() const noexcept
+		{
+			return m_Ptr;
+		}
 
 		/**
 		 * @brief Checks if the weak pointer no longer points to a valid object
 		 * It will return false if the pointer is null.
 		 */
-		bool IsExpired() const;
+		FORCEINLINE bool IsExpired() const
+		{
+			return m_Rep && RefCount() == 0;
+		}
 
 		/**
 		 * @brief Check if this pointer is not null and not expired.
 		 */
-		bool IsValid() const;
+		FORCEINLINE bool IsValid() const
+		{
+			return m_Rep && m_Ptr && (RefCount() > 0);
+		}
 
 		/**
 		 * @see IsValid()
 		 */
-		operator bool() const;
-	};
-
-	#pragma region TWeakPtr Implementation
-
-	template<typename T>
-	inline TWeakPtr<T>::TWeakPtr() :
-		TWeakPtr(nullptr)
-	{
-	}
-
-	template<typename T>
-	inline TWeakPtr<T>::TWeakPtr(nullptr_t) :
-		TBase(nullptr)
-	{
-		RefCountLogger.Debug("TWeakPtr {{{}}} has been null constructed.", (void*)m_Ptr);
-	}
-
-	template<typename T>
-	template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>*>
-	inline TWeakPtr<T>::TWeakPtr(const TSharedPtr<T0>& ptr)
-	{
-		ConstructWeak(ptr);
-		RefCountLogger.Debug("TWeakPtr {{{}}} has been constructed from TSharedPtr {{{}}}.", (void*)m_Rep, (void*)ptr.m_Rep);
-	}
-
-	template<typename T>
-	inline TWeakPtr<T>::TWeakPtr(const TWeakPtr& other)
-	{
-		RefCountLogger.Debug("TWeakPtr {{{}}} has been copy constructed.", (void*)other.m_Rep);
-		CopyConstructWeak(other);
-	}
-
-	template<typename T>
-	template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>*>
-	inline TWeakPtr<T>::TWeakPtr(const TWeakPtr<T0>& other)
-	{
-		RefCountLogger.Debug("TWeakPtr {{{}}} has been copy constructed.", (void*)other.m_Rep);
-		CopyConstructWeak(other);
-	}
-
-	template<typename T>
-	inline TWeakPtr<T>::TWeakPtr(TWeakPtr&& other)
-	{
-		RefCountLogger.Debug("TWeakPtr {{{}}} has been move constructed.", (void*)other.m_Rep);
-		MoveConstruct(Move(other));
-	}
-
-	template<typename T>
-	template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>*>
-	inline TWeakPtr<T>::TWeakPtr(TWeakPtr<T0>&& other)
-	{
-		RefCountLogger.Debug("TWeakPtr {{{}}} has been move constructed.", (void*)other.m_Rep);
-		MoveConstruct(Move(other));
-	}
-
-	template<typename T>
-	inline TWeakPtr<T>::~TWeakPtr()
-	{
-		RefCountLogger.Debug("TWeakPtr {{{}}} has been destroyed.", (void*)m_Rep);
-		DeleteWeak();
-	}
-
-	template<typename T>
-	inline TWeakPtr<T>& TWeakPtr<T>::operator=(const TWeakPtr& other)
-	{
-		RefCountLogger.Debug("TWeakPtr {{{}}} has been copy assigned to TWeakPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
-		TWeakPtr(other).Swap(*this);
-		return *this;
-	}
-
-	template<typename T>
-	template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>*>
-	inline TWeakPtr<T>& TWeakPtr<T>::operator=(const TWeakPtr<T0>& other)
-	{
-		RefCountLogger.Debug("TWeakPtr {{{}}} has been copy assigned to TWeakPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
-		TWeakPtr(other).Swap(*this);
-		return *this;
-	}
-
-	template<typename T>
-	inline TWeakPtr<T>& TWeakPtr<T>::operator=(TWeakPtr&& other) noexcept
-	{
-		RefCountLogger.Debug("TWeakPtr {{{}}} has been move assigned to TWeakPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
-		TWeakPtr(Move(other)).Swap(*this);
-		return *this;
-	}
-
-	template<typename T>
-	template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>*>
-	inline TWeakPtr<T>& TWeakPtr<T>::operator=(TWeakPtr<T0>&& other) noexcept
-	{
-		RefCountLogger.Debug("TWeakPtr {{{}}} has been move assigned to TWeakPtr {{{}}}.", (void*)other.m_Rep, (void*)m_Rep);
-		TWeakPtr(Move(other)).Swap(*this);
-		return *this;
-	}
-
-	template<typename T>
-	template<typename T0, TEnableIfT<TIsPtrCompatibleV<T0, T>>*>
-	inline TWeakPtr<T>& TWeakPtr<T>::operator=(const TSharedPtr<T0>& shared)
-	{
-		RefCountLogger.Debug("TSharedPtr {{{}}} has been assigned to TWeakPtr {{{}}}.", (void*)shared.m_Rep, (void*)m_Rep);
-		TWeakPtr(shared).Swap(*this);
-		return *this;
-	}
-
-	template<typename T>
-	inline TWeakPtr<T>& TWeakPtr<T>::operator=(nullptr_t)
-	{
-		RefCountLogger.Debug("Null has been assigned to TWeakPtr {{{}}}.", (void*)m_Rep);
-		DeleteWeak();
-		return *this;
-	}
-
-	template<typename T>
-	inline TSharedPtr<T> TWeakPtr<T>::Lock() const
-	{
-		if (IsExpired())
+		FORCEINLINE operator bool() const
 		{
-			return TSharedPtr<T>();
+			return IsValid();
 		}
-
-		RefCountLogger.Debug("TWeakPtr {{{}}} has been locked.", (void*)m_Rep);
-		TSharedPtr<T> shared;
-		shared.ConstructSharedFromWeak(*this);
-		RefCountLogger.Debug("TSharedPtr {{{}}} has been constructed from TWeakPtr {{{}}}.", (void*)shared.m_Rep, (void*)m_Rep);
-		return shared;
-	}
-
-	template<typename T>
-	inline T* TWeakPtr<T>::Raw() const noexcept
-	{
-		return m_Ptr;
-	}
-
-	template<typename T>
-	inline bool TWeakPtr<T>::IsExpired() const
-	{
-		return m_Rep && RefCount() == 0;
-	}
-
-	template<typename T>
-	inline bool TWeakPtr<T>::IsValid() const
-	{
-		return m_Rep && m_Ptr && (RefCount() > 0);
-	}
-
-	template<typename T>
-	inline TWeakPtr<T>::operator bool() const
-	{
-		return IsValid();
-	}
-
-	#pragma endregion
+	};
 
 #pragma endregion
 
 #pragma region Enable Shared From This
 
-	template<typename T>
+	template<typename T, ERCMode RC = ERCMode::ThreadSafe>
 	class TEnableSFT
 	{
 	public:
 		using TEnableSFTType = TEnableSFT;
 
-		TSharedPtr<T> SharedFromThis();
-		TSharedPtr<const T> SharedFromThis() const;
-		TWeakPtr<T> WeakFromThis() noexcept;
-		TWeakPtr<const T> WeakFromThis() const noexcept;
+		FORCEINLINE TSharedPtr<T, RC> SharedFromThis()
+		{
+			return m_WeakSFT.Lock();
+		}
+
+		FORCEINLINE TSharedPtr<const T, RC> SharedFromThis() const
+		{
+			return m_WeakSFT.Lock();
+		}
+
+		FORCEINLINE TWeakPtr<T, RC> WeakFromThis() noexcept
+		{
+			return m_WeakSFT;
+		}
+
+		FORCEINLINE TWeakPtr<const T, RC> WeakFromThis() const noexcept
+		{
+			return m_WeakSFT;
+		}
 
 	protected:
-		TEnableSFT() noexcept;
-		TEnableSFT(const TEnableSFT&) noexcept;
-		~TEnableSFT() = default;
-		TEnableSFT& operator=(const TEnableSFT&) noexcept;
+		FORCEINLINE TEnableSFT() noexcept :
+			m_WeakSFT()
+		{
+		}
+
+		FORCEINLINE TEnableSFT(const TEnableSFT&) noexcept :
+			m_WeakSFT()
+		{
+		}
+
+		FORCEINLINE ~TEnableSFT() = default;
+
+		FORCEINLINE TEnableSFT& operator=(const TEnableSFT&) noexcept
+		{
+			return *this;
+		}
 
 	private:
-		mutable TWeakPtr<T> m_WeakSFT;
+		mutable TWeakPtr<T, RC> m_WeakSFT;
 
-		template<typename T0>
+		template<typename T0, ERCMode RC0>
 		friend class TPtrBase;
 	};
-
-	#pragma region TEnableSFT Implementation
-
-	template<typename T>
-	inline TSharedPtr<T> TEnableSFT<T>::SharedFromThis()
-	{
-		return m_WeakSFT.Lock();
-	}
-
-	template<typename T>
-	inline TSharedPtr<const T> TEnableSFT<T>::SharedFromThis() const
-	{
-		return m_WeakSFT.Lock();
-	}
-
-	template<typename T>
-	inline TWeakPtr<T> TEnableSFT<T>::WeakFromThis() noexcept
-	{
-		return m_WeakSFT;
-	}
-
-	template<typename T>
-	inline TWeakPtr<const T> TEnableSFT<T>::WeakFromThis() const noexcept
-	{
-		return m_WeakSFT;
-	}
-
-	template<typename T>
-	inline TEnableSFT<T>::TEnableSFT() noexcept :
-		m_WeakSFT()
-	{
-	}
-
-	template<typename T>
-	inline TEnableSFT<T>::TEnableSFT(const TEnableSFT&) noexcept :
-		m_WeakSFT()
-	{
-	}
-
-	template<typename T>
-	inline TEnableSFT<T>& TEnableSFT<T>::operator=(const TEnableSFT&) noexcept
-	{
-		return *this;
-	}
-
-	#pragma endregion
 
 #pragma endregion
 
@@ -2132,8 +1938,8 @@ namespace Ion
 	 * @param other Other shared pointer
 	 * @return A new, statically cast shared pointer
 	 */
-	template<typename T1, typename T2>
-	inline TSharedPtr<T1> PtrCast(const TSharedPtr<T2>& other)
+	template<typename T1, typename T2, ERCMode RC>
+	FORCEINLINE TSharedPtr<T1, RC> PtrCast(const TSharedPtr<T2, RC>& other)
 	{
 		T2* rawPtr = other.Raw();
 		RefCountLogger.Debug("TSharedPtr {{{}}} has been copy cast to {}.", (void*)rawPtr, typeid(T1).name());
@@ -2148,8 +1954,8 @@ namespace Ion
 	 * @param other Other shared pointer
 	 * @return A new, statically cast shared pointer
 	 */
-	template<typename T1, typename T2>
-	inline TSharedPtr<T1> PtrCast(TSharedPtr<T2>&& other)
+	template<typename T1, typename T2, ERCMode RC>
+	FORCEINLINE TSharedPtr<T1, RC> PtrCast(TSharedPtr<T2, RC>&& other)
 	{
 		T2* rawPtr = other.Raw();
 		RefCountLogger.Debug("TSharedPtr {{{}}} has been move cast to {}.", (void*)rawPtr, typeid(T1).name());
@@ -2164,11 +1970,11 @@ namespace Ion
 	 * @param other Other shared pointer
 	 * @return On a succeeded cast, a statically cast shared pointer; null shared pointer otherwise
 	 */
-	template<typename T1, typename T2>
-	inline TSharedPtr<T1> DynamicPtrCast(const TSharedPtr<T2>& other)
+	template<typename T1, typename T2, ERCMode RC>
+	FORCEINLINE TSharedPtr<T1, RC> DynamicPtrCast(const TSharedPtr<T2, RC>& other)
 	{
 		if (!dynamic_cast<T1*>(other.Raw()))
-			return TSharedPtr<T1>();
+			return TSharedPtr<T1, RC>();
 
 		return PtrCast<T1>(other);
 	}
@@ -2181,11 +1987,11 @@ namespace Ion
 	 * @param other Other shared pointer
 	 * @return On a succeeded cast, a statically cast shared pointer; null shared pointer otherwise
 	 */
-	template<typename T1, typename T2>
-	inline TSharedPtr<T1> DynamicPtrCast(TSharedPtr<T2>&& other)
+	template<typename T1, typename T2, ERCMode RC>
+	FORCEINLINE TSharedPtr<T1, RC> DynamicPtrCast(TSharedPtr<T2, RC>&& other)
 	{
 		if (!dynamic_cast<T1*>(other.Raw()))
-			return TSharedPtr<T1>();
+			return TSharedPtr<T1, RC>();
 
 		return PtrCast<T1>(Move(other));
 	}
@@ -2195,18 +2001,18 @@ namespace Ion
 #pragma region MakeShared / MakeSharedDC
 
 	#define FRIEND_MAKE_SHARED \
-	template<typename _T> \
+	template<typename _T, ERCMode _RC> \
 	friend class TObjectRefCountBlock; \
-	template<typename _T, typename _F> \
+	template<typename _T, typename _F, ERCMode _RC> \
 	friend class TObjectDestroyRefCountBlock
 
 	/**
 	 * @brief Make a shared pointer with an element constructed in-place.
 	 */
-	template<typename T, typename... Args>
-	inline TSharedPtr<T> MakeShared(Args&&... args)
+	template<typename T, ERCMode RC = ERCMode::ThreadSafe, typename... Args>
+	FORCEINLINE TSharedPtr<T, RC> MakeShared(Args&&... args)
 	{
-		TSharedPtr<T> ptr;
+		TSharedPtr<T, RC> ptr;
 		ptr.ConstructSharedInPlace(Forward<Args>(args)...);
 		RefCountLogger.Debug("TSharedPtr {{{}}} has been constructed in place with an object of type {}.", (void*)ptr.m_Rep, typeid(T).name());
 		return ptr;
@@ -2220,10 +2026,10 @@ namespace Ion
 	 *
 	 * @param onDestroy Destroy callback function, called before the object is destroyed.
 	 */
-	template<typename T, typename FOnDestroy, typename... Args>
-	inline TEnableIfT<std::is_invocable_v<FOnDestroy, TRemoveRef<T>&>, TSharedPtr<T>> MakeSharedDC(FOnDestroy onDestroy, Args&&... args)
+	template<typename T, ERCMode RC = ERCMode::ThreadSafe, typename FOnDestroy, typename... Args>
+	FORCEINLINE TEnableIfT<std::is_invocable_v<FOnDestroy, TRemoveRef<T>&>, TSharedPtr<T, RC>> MakeSharedDC(FOnDestroy onDestroy, Args&&... args)
 	{
-		TSharedPtr<T> ptr;
+		TSharedPtr<T, RC> ptr;
 		ptr.ConstructSharedInPlaceWithDestroyCallback(onDestroy, Forward<Args>(args)...);
 		RefCountLogger.Debug("TSharedPtr {{{}}} has been constructed in place with an object of type {} and a destroy callback.", (void*)ptr.m_Rep, typeid(T).name());
 		return ptr;
@@ -2239,10 +2045,10 @@ namespace Ion
 	 * @tparam T Pointer type
 	 * @param ptr Raw pointer
 	 */
-	template<typename T>
-	inline TSharedPtr<T> MakeSharedFrom(T* ptr)
+	template<typename T, ERCMode RC = ERCMode::ThreadSafe>
+	FORCEINLINE TSharedPtr<T, RC> MakeSharedFrom(T* ptr)
 	{
-		return TSharedPtr<T>(ptr);
+		return TSharedPtr<T, RC>(ptr);
 	}
 
 	/**
@@ -2254,10 +2060,10 @@ namespace Ion
 	 * @param ptr Raw pointer
 	 * @param deleter Deleter function, called when the ref count reached zero.
 	 */
-	template<typename T, typename FDeleter, TEnableIfT<std::is_nothrow_invocable_v<FDeleter, T*>>* = 0>
-	inline TSharedPtr<T> MakeSharedFrom(T* ptr, FDeleter deleter)
+	template<typename T, ERCMode RC = ERCMode::ThreadSafe, typename FDeleter, TEnableIfT<std::is_nothrow_invocable_v<FDeleter, T*>>* = 0>
+	FORCEINLINE TSharedPtr<T, RC> MakeSharedFrom(T* ptr, FDeleter deleter)
 	{
-		return TSharedPtr<T>(ptr, deleter);
+		return TSharedPtr<T, RC>(ptr, deleter);
 	}
 
 #pragma endregion

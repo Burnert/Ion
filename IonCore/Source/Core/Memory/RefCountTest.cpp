@@ -1,6 +1,7 @@
 #include "Core/CorePCH.h"
 
 #include "RefCount.h"
+#include "Core/Diagnostics/DebugTime.h"
 
 //#if ION_TEST
 
@@ -395,6 +396,95 @@ namespace Ion
 
 		TWeakPtr<PtrTest> wptr2 = sptr0;
 		ionassert(wptr2);
+
+		// Concurrency ---------------------------------------------------------
+
+		if (1)
+		{
+			TSharedPtr<PtrTest> cPtr = MakeShared<PtrTest>("Text");
+
+			auto fThread = [&](uint32 id, TWeakPtr<PtrTest> ptr)
+			{
+				Platform::SetCurrentThreadDescription(fmt::format(L"SharedPtrTest_{}", id));
+
+				TSharedPtr<PtrTest> thsPtr = ptr.Lock();
+
+				TSharedPtr<PtrTest> cPtr2 = MakeShared<PtrTest>("Textxx");
+
+				for (uint32 i = 0; i < 10000; ++i)
+				{
+					TSharedPtr<PtrTest> thPtr0 = cPtr;
+					{
+						TWeakPtr<PtrTest> thWPtr0 = thPtr0;
+						ionverify(thWPtr0.WeakRefCount() > 1);
+						TSharedPtr<PtrTest> thPtr1 = thWPtr0.Lock();
+						ionverify(thPtr1.RefCount() > 2);
+					}
+					ionverify(thPtr0.IsValid());
+					ionverify(thPtr0.RefCount() > 1);
+				}
+			};
+
+			double totalTime = 0;
+			for (uint32 i = 0; i < 50; ++i)
+			{
+				DebugTimer timer;
+
+				TFixedArray<Thread, 24> threads;
+				uint32 id = 0;
+				{
+					TSharedPtr<PtrTest> thsPtr = MakeShared<PtrTest>("X");
+					for (Thread& th : threads)
+						th = Thread(fThread, id++, TWeakPtr<PtrTest>(thsPtr));
+				}
+				for (Thread& th : threads)
+					th.join();
+
+				ionverify(cPtr.IsValid());
+				ionverify(cPtr.RefCount() == 1);
+				ionverify(cPtr.WeakRefCount() == 1);
+
+				timer.Stop();
+				totalTime += timer.GetTime(EDebugTimerTimeUnit::Millisecond);
+
+				CoreLogger.Debug("[{:2}]  Time: {:.5}ms", i, timer.GetTime(EDebugTimerTimeUnit::Millisecond));
+			}
+			ionverify(cPtr.IsValid());
+			ionverify(cPtr.RefCount() == 1);
+			ionverify(cPtr.WeakRefCount() == 1);
+
+			CoreLogger.Debug("Total Time: {:.5}ms, Average: {:.5}ms", totalTime, totalTime / 50.0);
+
+			ionbreak();
+		}
+
+		if (0)
+		{
+			for (uint32 i = 0; i < 2000; ++i)
+			{
+				TSharedPtr<PtrTest> thPtr0 = MakeShared<PtrTest>("Text");
+				TWeakPtr<PtrTest> thWPtr0 = thPtr0;
+
+				auto fTestThread = [&thWPtr0] {
+					{
+						TSharedPtr<PtrTest> thPtr2 = thWPtr0.Lock();
+					}
+				};
+
+				TFixedArray<Thread, 24> threads;
+				threads[0] = Thread([&thPtr0] {
+					{
+						thPtr0 = nullptr;
+					}
+				});
+				std::for_each(threads.begin() + 1, threads.end(), [&fTestThread](Thread& th) { th = Thread(fTestThread); });
+
+				for (Thread& th : threads)
+					th.join();
+			}
+
+			ionbreak();
+		}
 
 		return 0;
 	}
