@@ -5,7 +5,7 @@
 
 namespace Ion
 {
-	Logger& LogManager::RegisterLogger(const String& name, uint8 loggerFlags, ELogLevel defaultLogLevel)
+	Logger& LogManager::RegisterLogger(const String& name, uint8 loggerFlags, ELogLevel defaultLogLevel, bool bDebugOnly)
 	{
 		LogManager& instance = Get();
 
@@ -13,11 +13,24 @@ namespace Ion
 		ionassert(instance.m_Loggers.find(name) == instance.m_Loggers.end(), "A logger with name \"{}\" already exists.", name);
 
 		LoggerMapEntry& entry = instance.m_Loggers.emplace(name, LoggerMapEntry { Logger(name, loggerFlags), nullptr }).first->second;
+		entry.Logger.m_bDebugOnly = bDebugOnly;
 		entry.Logger.SetLevel(defaultLogLevel);
 
 		entry.HierarchyNode = &AddHierarchyNode(entry.Logger);
 
 		return entry.Logger;
+	}
+
+	Logger_NoImpl LogManager::RegisterNoImplDebugLogger(const String& name, uint8 loggerFlags, ELogLevel defaultLogLevel)
+	{
+		LogManager& instance = Get();
+
+		ionassert(IsLoggerNameValid(name), "Logger name \"{}\" is invalid.", name);
+		ionassert(instance.m_Loggers.find(name) == instance.m_Loggers.end(), "A logger with name \"{}\" already exists.", name);
+
+		AddUnavailableHierarchyNode(name);
+
+		return Logger_NoImpl();
 	}
 
 	Logger& LogManager::GetLogger(const String& name)
@@ -144,9 +157,9 @@ namespace Ion
 		return true;
 	}
 
-	LogManager::HierarchyNode& LogManager::AddHierarchyNode(Logger& logger)
+	LogManager::HierarchyNode* LogManager::AddHierarchyNodeHelper(const String& name)
 	{
-		TArray<String> splitName = SplitString(logger.m_Name, "::"s);
+		TArray<String> splitName = SplitString(name, "::"s);
 
 		HierarchyNode* currentNode = Get().m_LoggerHierarchy.get();
 		for (auto segmentIt = splitName.begin(); segmentIt != splitName.end(); ++segmentIt)
@@ -158,15 +171,29 @@ namespace Ion
 			if (it == children.end())
 			{
 				String fullName = JoinString(TArray<String>(splitName.begin(), segmentIt + 1), "::"s);
-				currentNode = &currentNode->Insert(HierarchyNode::Make(LoggerHierarchyEntry { segment, fullName, nullptr }));
+				currentNode = &currentNode->Insert(HierarchyNode::Make(LoggerHierarchyEntry { segment, fullName, nullptr, false }));
 			}
 			else
 			{
 				currentNode = *it;
 			}
 		}
-		currentNode->Get().Logger = &logger;
-		return *currentNode;
+		return currentNode;
+	}
+
+	LogManager::HierarchyNode& LogManager::AddHierarchyNode(Logger& logger)
+	{
+		HierarchyNode* node = AddHierarchyNodeHelper(logger.m_Name);
+		node->Get().Logger = &logger;
+		node->Get().bDebugOnly = logger.IsDebugOnly();
+		return *node;
+	}
+
+	LogManager::HierarchyNode& LogManager::AddUnavailableHierarchyNode(const String& name)
+	{
+		HierarchyNode* node = AddHierarchyNodeHelper(name);
+		node->Get().bDebugOnly = true;
+		return *node;
 	}
 
 	LogManager::HierarchyNode* LogManager::FindGroupNode(const String& groupName)

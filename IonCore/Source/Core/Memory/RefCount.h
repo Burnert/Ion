@@ -5,7 +5,7 @@
 
 namespace Ion
 {
-	REGISTER_LOGGER(RefCountLogger, "Core::Memory::RefCount", ELoggerFlags::DisabledByDefault);
+	REGISTER_DEBUG_LOGGER(RefCountLogger, "Core::Memory::RefCount", ELoggerFlags::DisabledByDefault);
 
 	/**
 	 * @brief RefCounter Concurrency Mode - whether the ref counter should use

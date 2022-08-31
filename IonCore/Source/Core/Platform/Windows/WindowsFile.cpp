@@ -12,7 +12,7 @@
 
 namespace Ion
 {
-	REGISTER_LOGGER(WindowsFileLogger, "Platform::Windows::File", ELoggerFlags::None, ELogLevel::Warn);
+	REGISTER_DEBUG_LOGGER(WindowsFileLogger, "Platform::Windows::File", ELoggerFlags::None, ELogLevel::Warn);
 
 	static HANDLE& GetNative(File* file)
 	{

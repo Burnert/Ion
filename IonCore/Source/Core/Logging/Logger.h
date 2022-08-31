@@ -10,15 +10,30 @@
 
 namespace Ion
 {
-/**
- * @brief Create a static logger.
- * 
- * @param varName Logger reference variable name
- * @param fullname Full name of a logger (e.g. Core::File::XMLParser)
- * @param va_0 *optional: ELoggerFlags logger flags
- * @param va_1 *optional: ELogLevel default log level
- */
+	/**
+	 * @brief Create a static logger.
+	 *
+	 * @param varName Logger reference variable name
+	 * @param fullname Full name of a logger (e.g. Core::File::XMLParser)
+	 * @param va_0 *optional: ELoggerFlags logger flags
+	 * @param va_1 *optional: ELogLevel default log level
+	 */
 #define REGISTER_LOGGER(varName, fullname, ...) inline Logger& varName = Logger::Register(fullname, __VA_ARGS__)
+
+#if ION_DEBUG
+#define _REGISTER_DEBUG_LOGGER(varName, fullname, ...) inline Logger& varName = Logger::RegisterDebug(fullname, __VA_ARGS__)
+#else
+#define _REGISTER_DEBUG_LOGGER(varName, fullname, ...) inline Logger_NoImpl varName = Logger_NoImpl::Register(fullname, __VA_ARGS__);
+#endif
+	/**
+	* @brief Create a static logger, that compiles only on the Debug configuration
+	*
+	* @param varName Logger reference variable name
+	* @param fullname Full name of a logger (e.g. Core::File::XMLParser)
+	* @param va_0 *optional: ELoggerFlags logger flags
+	* @param va_1 *optional: ELogLevel default log level
+	*/
+#define REGISTER_DEBUG_LOGGER(varName, fullname, ...) _REGISTER_DEBUG_LOGGER(varName, fullname, __VA_ARGS__)
 
 	namespace ELoggerFlags
 	{
@@ -40,10 +55,45 @@ namespace Ion
 		Critical,
 	};
 
+	// Logger class with no implementation that's used when a debug logger is created on non-debug builds.
+	// When any of its method is called, it does nothing, so the compiler optimizes the arguments away.
+	class Logger_NoImpl
+	{
+	public:
+		static Logger_NoImpl Register(const String& name, uint8 loggerFlags = ELoggerFlags::None, ELogLevel defaultLogLevel = ELogLevel::Trace);
+		template<typename TStr, typename... Args>
+		FORCEINLINE void Trace(const TStr& str, Args&&... args) const { }
+		template<typename TStr, typename... Args>
+		FORCEINLINE void Debug(const TStr& str, Args&&... args) const { }
+		template<typename TStr, typename... Args>
+		FORCEINLINE void Info(const TStr& str, Args&&... args) const { }
+		template<typename TStr, typename... Args>
+		FORCEINLINE void Warn(const TStr& str, Args&&... args) const { }
+		template<typename TStr, typename... Args>
+		FORCEINLINE void Error(const TStr& str, Args&&... args) const { }
+		template<typename TStr, typename... Args>
+		FORCEINLINE void Critical(const TStr& str, Args&&... args) const { }
+		template<typename TStr, typename... Args>
+		FORCEINLINE void Log(ELogLevel logLevel, const TStr& str, Args&&... args) const { }
+		FORCEINLINE void SetLevel(ELogLevel logLevel) { }
+		FORCEINLINE ELogLevel GetLevel() const { }
+		FORCEINLINE void SetState(bool bEnabled) { }
+		FORCEINLINE bool GetState() const { }
+		FORCEINLINE void Solo() { }
+		FORCEINLINE void Unsolo() { }
+		FORCEINLINE bool IsSoloed() const { }
+		FORCEINLINE bool IsAlwaysActive() const { }
+		FORCEINLINE bool IsDebugOnly() const { return true; }
+		FORCEINLINE const String& GetName() const { }
+	};
+
 	class ION_API Logger
 	{
 	public:
+		// Don't call this method directly, use the REGISTER_LOGGER macro instead.
 		static Logger& Register(const String& name, uint8 loggerFlags = ELoggerFlags::None, ELogLevel defaultLogLevel = ELogLevel::Trace);
+		// Don't call this method directly, use the REGISTER_DEBUG_LOGGER macro instead.
+		static Logger& RegisterDebug(const String& name, uint8 loggerFlags = ELoggerFlags::None, ELogLevel defaultLogLevel = ELogLevel::Trace);
 
 		template<typename TStr, typename... Args>
 		void Trace(const TStr& str, Args&&... args) const;
@@ -72,6 +122,7 @@ namespace Ion
 		bool IsSoloed() const;
 
 		bool IsAlwaysActive() const;
+		bool IsDebugOnly() const;
 
 		const String& GetName() const;
 
@@ -88,6 +139,7 @@ namespace Ion
 		ELogLevel m_LogLevel;
 		bool m_bEnabled;
 		bool m_bAlwaysActive;
+		bool m_bDebugOnly;
 
 		friend class LogManager;
 	};
@@ -152,6 +204,11 @@ namespace Ion
 	inline bool Logger::IsAlwaysActive() const
 	{
 		return m_bAlwaysActive;
+	}
+
+	inline bool Logger::IsDebugOnly() const
+	{
+		return m_bDebugOnly;
 	}
 
 	inline const String& Logger::GetName() const

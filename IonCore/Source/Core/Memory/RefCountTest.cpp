@@ -399,7 +399,7 @@ namespace Ion
 
 		// Concurrency ---------------------------------------------------------
 
-		if (1)
+		if (0)
 		{
 			TSharedPtr<PtrTest> cPtr = MakeShared<PtrTest>("Text");
 

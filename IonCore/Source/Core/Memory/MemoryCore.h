@@ -5,7 +5,7 @@
 
 namespace Ion
 {
-	REGISTER_LOGGER(MemoryLogger, "Core::Memory");
+	REGISTER_DEBUG_LOGGER(MemoryLogger, "Core::Memory", ELoggerFlags::DisabledByDefault);
 
 	template<typename T>
 	struct TMemoryBlock

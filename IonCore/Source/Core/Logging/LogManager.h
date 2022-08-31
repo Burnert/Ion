@@ -14,6 +14,7 @@ namespace Ion
 		String Name;
 		String GroupName;
 		Logger* Logger;
+		bool bDebugOnly;
 	};
 
 	struct LoggerMapEntry
@@ -27,7 +28,8 @@ namespace Ion
 	public:
 		using HierarchyNode = TTreeNode<LoggerHierarchyEntry>;
 
-		static Logger& RegisterLogger(const String& name, uint8 loggerFlags, ELogLevel defaultLogLevel);
+		static Logger& RegisterLogger(const String& name, uint8 loggerFlags, ELogLevel defaultLogLevel, bool bDebugOnly);
+		static Logger_NoImpl RegisterNoImplDebugLogger(const String& name, uint8 loggerFlags, ELogLevel defaultLogLevel);
 
 		static Logger& GetLogger(const String& name);
 
@@ -53,7 +55,9 @@ namespace Ion
 	private:
 		static bool IsLoggerNameValid(const String& name);
 
+		static HierarchyNode* AddHierarchyNodeHelper(const String& name);
 		static HierarchyNode& AddHierarchyNode(Logger& logger);
+		static HierarchyNode& AddUnavailableHierarchyNode(const String& name);
 
 		static HierarchyNode* FindGroupNode(const String& groupName);
 

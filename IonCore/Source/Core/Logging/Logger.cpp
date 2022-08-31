@@ -6,9 +6,19 @@
 
 namespace Ion
 {
+	Logger_NoImpl Logger_NoImpl::Register(const String& name, uint8 loggerFlags, ELogLevel defaultLogLevel)
+	{
+		return LogManager::RegisterNoImplDebugLogger(name, loggerFlags, defaultLogLevel);
+	}
+
 	Logger& Logger::Register(const String& name, uint8 loggerFlags, ELogLevel defaultLogLevel)
 	{
-		return LogManager::RegisterLogger(name, loggerFlags, defaultLogLevel);
+		return LogManager::RegisterLogger(name, loggerFlags, defaultLogLevel, false);
+	}
+
+	Logger& Logger::RegisterDebug(const String& name, uint8 loggerFlags, ELogLevel defaultLogLevel)
+	{
+		return LogManager::RegisterLogger(name, loggerFlags, defaultLogLevel, true);
 	}
 
 	Logger::Logger(const String& name, uint8 loggerFlags) :
@@ -16,6 +26,7 @@ namespace Ion
 		m_LogLevel(ELogLevel::Trace),
 		m_bEnabled(!(loggerFlags & ELoggerFlags::DisabledByDefault)),
 		m_bAlwaysActive(loggerFlags & ELoggerFlags::AlwaysActive),
+		m_bDebugOnly(false),
 		m_Logger(spdlog::stdout_color_mt(name))
 	{
 		if (m_bAlwaysActive)

@@ -15,7 +15,7 @@
 
 namespace Ion
 {
-	REGISTER_LOGGER(FileLogger, "Core::File", ELoggerFlags::None, ELogLevel::Warn);
+	REGISTER_DEBUG_LOGGER(FileLogger, "Core::File", ELoggerFlags::None, ELogLevel::Warn);
 
 #pragma region Enums
 

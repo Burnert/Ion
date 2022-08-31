@@ -83,15 +83,28 @@ namespace Ion::Editor
 	{
 		const LoggerHierarchyEntry& entry = node.Get();
 		bool bAlwaysActive = entry.Logger && entry.Logger->IsAlwaysActive();
-		String nodeName = 
-			bAlwaysActive ?
-			entry.Name + "!" :
-			entry.Name;
+#if ION_DEBUG
+		// All loggers are available on debug builds.
+		bool bUnavailable = false;
+#else
+		// Debug only loggers are unavailable on non-debug builds.
+		bool bUnavailable = entry.bDebugOnly;
+#endif
+		String nodeName =
+			entry.Name +
+			(bAlwaysActive ? "!" : "") +
+			(bUnavailable ? " (UNAVAILABLE)" : (entry.bDebugOnly ? " (DEBUG ONLY)" : ""));
 
 		ImGui::TableNextRow();
 
+		if (entry.bDebugOnly)
+			ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg1, ImGui::GetColorU32(ImVec4(0.9f, 1.0f, 0.8f, 0.05f)));
+
 		// Logger
 		ImGui::TableNextColumn();
+
+		if (bUnavailable)
+			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
 
 		// Change the color for always active loggers
 		if (bAlwaysActive)
@@ -153,14 +166,14 @@ namespace Ion::Editor
 				ImGui::EndPopup();
 			}
 
-			// Make the checkboxes smaller
-			ImGuiStyle& style = ImGui::GetStyle();
-			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(style.FramePadding.x, (float)(int)(style.FramePadding.y * 0.60f)));
-			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, (float)(int)(style.ItemSpacing.y * 0.60f)));
-
-			// Don't show controls if a logger does not exist in this node.
+			// Don't show controls if a logger does not exist in this node or is unavailable.
 			if (entry.Logger)
 			{
+				// Make the checkboxes smaller
+				ImGuiStyle& style = ImGui::GetStyle();
+				ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(style.FramePadding.x, (float)(int)(style.FramePadding.y * 0.60f)));
+				ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, (float)(int)(style.ItemSpacing.y * 0.60f)));
+				
 				// Log level
 				ImGui::TableNextColumn();
 				ELogLevel logLevel = entry.Logger->GetLevel();
@@ -204,11 +217,14 @@ namespace Ion::Editor
 					else
 						entry.Logger->Unsolo();
 				}
-			}
 
-			ImGui::PopStyleVar(2);
+				ImGui::PopStyleVar(2);
+			}
 		}
 		ImGui::PopID();
+
+		if (bUnavailable)
+			ImGui::PopStyleVar(); // Alpha = 0.5f
 
 		if (bNodeOpen)
 		{
