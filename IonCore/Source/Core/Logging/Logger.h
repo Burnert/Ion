@@ -18,29 +18,29 @@ namespace Ion
 	 * @param va_0 *optional: ELoggerFlags logger flags
 	 * @param va_1 *optional: ELogLevel default log level
 	 */
-#define REGISTER_LOGGER(varName, fullname, ...) inline Logger& varName = Logger::Register(fullname, __VA_ARGS__)
+	#define REGISTER_LOGGER(varName, fullname, ...) inline Logger& varName = Logger::Register(fullname, __VA_ARGS__)
 
 #if ION_DEBUG
-#define _REGISTER_DEBUG_LOGGER(varName, fullname, ...) inline Logger& varName = Logger::RegisterDebug(fullname, __VA_ARGS__)
+	#define _REGISTER_DEBUG_LOGGER(varName, fullname, ...) inline Logger& varName = Logger::RegisterDebug(fullname, __VA_ARGS__)
 #else
-#define _REGISTER_DEBUG_LOGGER(varName, fullname, ...) inline Logger_NoImpl varName = Logger_NoImpl::Register(fullname, __VA_ARGS__);
+	#define _REGISTER_DEBUG_LOGGER(varName, fullname, ...) inline Logger_NoImpl varName = Logger_NoImpl::Register(fullname, __VA_ARGS__);
 #endif
 	/**
-	* @brief Create a static logger, that compiles only on the Debug configuration
-	*
-	* @param varName Logger reference variable name
-	* @param fullname Full name of a logger (e.g. Core::File::XMLParser)
-	* @param va_0 *optional: ELoggerFlags logger flags
-	* @param va_1 *optional: ELogLevel default log level
-	*/
-#define REGISTER_DEBUG_LOGGER(varName, fullname, ...) _REGISTER_DEBUG_LOGGER(varName, fullname, __VA_ARGS__)
+	 * @brief Create a static logger, that compiles only on the Debug configuration
+	 *
+	 * @param varName Logger reference variable name
+	 * @param fullname Full name of a logger (e.g. Core::File::XMLParser)
+	 * @param va_0 *optional: ELoggerFlags logger flags
+	 * @param va_1 *optional: ELogLevel default log level
+	 */
+	#define REGISTER_DEBUG_LOGGER(varName, fullname, ...) _REGISTER_DEBUG_LOGGER(varName, fullname, __VA_ARGS__)
 
 	namespace ELoggerFlags
 	{
 		enum Type : uint8
 		{
 			None = 0,
-			AlwaysActive = 1 << 0,      // A logger that is active even if logger solo mode is enabled.
+			AlwaysActive      = 1 << 0, // A logger that is active even if logger solo mode is enabled.
 			DisabledByDefault = 1 << 1, // The logger is insignificant and will be disabled by default.
 		};
 	}
@@ -145,43 +145,43 @@ namespace Ion
 	};
 
 	template<typename TStr, typename... Args>
-	inline void Logger::Trace(const TStr& str, Args&&... args) const
+	FORCEINLINE void Logger::Trace(const TStr& str, Args&&... args) const
 	{
 		Log(ELogLevel::Trace, str, Forward<Args>(args)...);
 	}
 
 	template<typename TStr, typename... Args>
-	inline void Logger::Debug(const TStr& str, Args&&... args) const
+	FORCEINLINE void Logger::Debug(const TStr& str, Args&&... args) const
 	{
 		Log(ELogLevel::Debug, str, Forward<Args>(args)...);
 	}
 
 	template<typename TStr, typename... Args>
-	inline void Logger::Info(const TStr& str, Args&&... args) const
+	FORCEINLINE void Logger::Info(const TStr& str, Args&&... args) const
 	{
 		Log(ELogLevel::Info, str, Forward<Args>(args)...);
 	}
 
 	template<typename TStr, typename... Args>
-	inline void Logger::Warn(const TStr& str, Args&&... args) const
+	FORCEINLINE void Logger::Warn(const TStr& str, Args&&... args) const
 	{
 		Log(ELogLevel::Warn, str, Forward<Args>(args)...);
 	}
 
 	template<typename TStr, typename... Args>
-	inline void Logger::Error(const TStr& str, Args&&... args) const
+	FORCEINLINE void Logger::Error(const TStr& str, Args&&... args) const
 	{
 		Log(ELogLevel::Error, str, Forward<Args>(args)...);
 	}
 
 	template<typename TStr, typename... Args>
-	inline void Logger::Critical(const TStr& str, Args&&... args) const
+	FORCEINLINE void Logger::Critical(const TStr& str, Args&&... args) const
 	{
 		Log(ELogLevel::Critical, str, Forward<Args>(args)...);
 	}
 
 	template<typename TStr, typename... Args>
-	inline void Logger::Log(ELogLevel logLevel, const TStr& str, Args&&... args) const
+	FORCEINLINE void Logger::Log(ELogLevel logLevel, const TStr& str, Args&&... args) const
 	{
 #if !ION_DIST
 		if (ShouldLog())
@@ -191,27 +191,27 @@ namespace Ion
 #endif
 	}
 
-	inline void Logger::SetState(bool bEnabled)
+	FORCEINLINE void Logger::SetState(bool bEnabled)
 	{
 		m_bEnabled = bEnabled;
 	}
 
-	inline bool Logger::GetState() const
+	FORCEINLINE bool Logger::GetState() const
 	{
 		return m_bEnabled;
 	}
 
-	inline bool Logger::IsAlwaysActive() const
+	FORCEINLINE bool Logger::IsAlwaysActive() const
 	{
 		return m_bAlwaysActive;
 	}
 
-	inline bool Logger::IsDebugOnly() const
+	FORCEINLINE bool Logger::IsDebugOnly() const
 	{
 		return m_bDebugOnly;
 	}
 
-	inline const String& Logger::GetName() const
+	FORCEINLINE const String& Logger::GetName() const
 	{
 		return m_Name;
 	}

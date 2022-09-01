@@ -92,13 +92,19 @@ namespace Ion::Editor
 #endif
 		String nodeName =
 			entry.Name +
-			(bAlwaysActive ? "!" : "") +
+			(bAlwaysActive ? " (ALWAYS ACTIVE)" : "") +
 			(bUnavailable ? " (UNAVAILABLE)" : (entry.bDebugOnly ? " (DEBUG ONLY)" : ""));
 
 		ImGui::TableNextRow();
 
 		if (entry.bDebugOnly)
-			ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg1, ImGui::GetColorU32(ImVec4(0.9f, 1.0f, 0.8f, 0.05f)));
+			ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg1, ImGui::GetColorU32(bUnavailable ? 
+				ImVec4(0.6f, 1.0f, 0.8f, 0.05f) :
+				ImVec4(0.5f, 1.0f, 0.7f, 0.15f)));
+
+		// Change the background for always active loggers
+		if (bAlwaysActive)
+			ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg1, ImGui::GetColorU32(ImVec4(1.0f, 0.4f, 0.4f, 0.15f)));
 
 		// Logger
 		ImGui::TableNextColumn();
@@ -106,19 +112,12 @@ namespace Ion::Editor
 		if (bUnavailable)
 			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
 
-		// Change the color for always active loggers
-		if (bAlwaysActive)
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.8f, 0.3f, 1.0f));
-
 		ImGuiTreeNodeFlags nodeFlags =
 			ImGuiTreeNodeFlags_NoTreePushOnOpen |
 			ImGuiTreeNodeFlags_SpanFullWidth    |
 			FlagsIf(!node.HasChildren(), ImGuiTreeNodeFlags_Leaf);
 
 		bool bNodeOpen = ImGui::TreeNodeEx(nodeName.c_str(), nodeFlags) && node.HasChildren();
-		
-		if (bAlwaysActive)
-			ImGui::PopStyleColor();
 
 		// Push ID for the controls
 		ImGui::PushID(nodeName.c_str());
