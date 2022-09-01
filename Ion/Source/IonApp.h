@@ -10,12 +10,12 @@ namespace Ion
 	public:
 		App();
 
-		virtual void OnInit() { };
-		virtual void OnUpdate(float deltaTime) { };
-		virtual void PostUpdate() { };
-		virtual void OnRender() { };
-		virtual void OnShutdown() { };
-		virtual void OnEvent(const Event& event) { };
+		virtual void OnInit() { }
+		virtual void OnUpdate(float deltaTime) { }
+		virtual void PostUpdate() { }
+		virtual void OnRender() { }
+		virtual void OnShutdown() { }
+		virtual void OnEvent(const Event& event) { }
 
 		void Exit();
 		void SetApplicationTitle(const WString& title);

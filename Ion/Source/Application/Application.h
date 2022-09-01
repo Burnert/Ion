@@ -14,9 +14,9 @@ struct ImFont;
 
 namespace Ion
 {
-	REGISTER_LOGGER(ApplicationLogger, "Application");
+	extern class App* const g_pClientApplication;
 
-	class App;
+	REGISTER_LOGGER(ApplicationLogger, "Application");
 
 	class Renderer;
 
@@ -75,7 +75,7 @@ namespace Ion
 
 		static Application* Get();
 		template<typename T>
-		static Application* Create(App* clientApp);
+		static Application* Create();
 
 		static Renderer* GetRenderer();
 
@@ -85,7 +85,7 @@ namespace Ion
 		static float GetGlobalDeltaTime();
 
 	protected:
-		Application(App* clientApp);
+		Application();
 
 		void Init();
 		void Run();
@@ -170,8 +170,6 @@ namespace Ion
 		virtual void ImGuiShutdownPlatform() const { }
 
 	private:
-		App* m_ClientApp;
-
 		std::shared_ptr<GenericWindow> m_Window;
 		std::shared_ptr<InputManager> m_InputManager;
 
@@ -193,34 +191,15 @@ namespace Ion
 		bool m_bRunning;
 
 		friend GenericWindow;
-		template<typename T>
-		friend void ParseCommandLineArgs(int32 argc, T* argv[]);
+		friend void ParseCommandLineArgs(int32 argc, tchar* argv[]);
 	};
 
 	template<typename T>
-	void ParseCommandLineArgs(int32 argc, T* argv[])
-	{
-		// @TODO: Save engine path in system environment variables or something
-
-		for (int32 i = 0; i < argc; ++i)
-		{
-			bool bHasNextArg = i + 1 < argc;
-			T* arg = argv[i];
-			T* nextArg = bHasNextArg ? argv[i + 1] : nullptr;
-			if (!tstrcmp(arg, STR_LITERAL_AS("--enginePath", T)) && bHasNextArg)
-			{
-				EnginePath::SetEnginePath(nextArg);
-				i++;
-			}
-		}
-	}
-
-	template<typename T>
-	inline Application* Application::Create(App* clientApp)
+	inline Application* Application::Create()
 	{
 		static_assert(TIsBaseOfV<Application, T>);
 		ionassert(!s_Instance);
-		return s_Instance = new T(clientApp);
+		return s_Instance = new T;
 	}
 
 	inline EngineFonts& Application::GetEngineFonts()

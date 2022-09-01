@@ -30,7 +30,7 @@ namespace Ion
 		static float GetPerformanceFrequency();
 
 	protected:
-		WindowsApplication(App* clientApp);
+		WindowsApplication();
 
 		// Tagged as final so it cannot be overriden in the client
 

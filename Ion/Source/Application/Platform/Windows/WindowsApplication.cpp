@@ -69,8 +69,7 @@ namespace Ion
 		Init();
 	}
 
-	WindowsApplication::WindowsApplication(App* clientApp) :
-		Application(clientApp),
+	WindowsApplication::WindowsApplication() :
 		m_CurrentCursor(0),
 		m_RequestedCursor(0),
 		m_CursorHandles()

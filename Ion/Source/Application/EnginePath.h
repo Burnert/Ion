@@ -22,8 +22,7 @@ namespace Ion
 	private:
 		static inline FilePath s_EnginePath = "";
 
-		template<typename T>
-		friend void ParseCommandLineArgs(int32 argc, T* argv[]);
+		friend void ParseCommandLineArgs(int32 argc, tchar* argv[]);
 	};
 
 	inline const FilePath& EnginePath::GetEnginePath()

@@ -255,7 +255,7 @@ project "IonExample"
 		staticruntime "On"
 		systemversion "latest"
 		
-		debugargs { "--enginePath", "%{wks.location}Ion" }
+		debugargs { "-e", "%{wks.location}Ion" }
 
 		defines {
 			"ION_PLATFORM_WINDOWS"

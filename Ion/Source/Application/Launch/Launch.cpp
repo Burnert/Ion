@@ -1,0 +1,71 @@
+#include "IonPCH.h"
+
+#if ION_PLATFORM_WINDOWS
+#include "Application/Platform/Windows/WindowsApplication.h"
+#else
+#error Current platform is not supported.
+#endif
+
+#include "Application/Application.h"
+#include "IonApp.h"
+
+namespace Ion
+{
+	void ParseCommandLineArgs(int32 argc, tchar* argv[])
+	{
+		// @TODO: Save engine path in system environment variables or something
+
+		for (int32 i = 0; i < argc; ++i)
+		{
+			bool bHasNextArg = i + 1 < argc;
+			tchar* arg = argv[i];
+			tchar* nextArg = bHasNextArg ? argv[i + 1] : nullptr;
+			if ((
+				tstrcmp(arg, TEXT("--enginePath")) == 0 ||
+				tstrcmp(arg, TEXT("-e")) == 0
+				) && bHasNextArg)
+			{
+				EnginePath::SetEnginePath(nextArg);
+				++i;
+			}
+		}
+	}
+
+#if ION_PLATFORM_WINDOWS
+	static Application* InstantiateApplication()
+	{
+		Application* engineApp = Application::Create<WindowsApplication>();
+		g_pClientApplication->m_EngineApplication = engineApp;
+		return engineApp;
+	}
+#endif
+
+	int32 MainShared(int32 argc, tchar* argv[])
+	{
+		ParseCommandLineArgs(argc, argv);
+
+#if ION_ENABLE_TRACING
+		DebugTracing::Init();
+#endif
+		DebugTimer::InitPlatform();
+
+		Platform::_Detail::SetMainThreadId();
+
+		Platform::SetConsoleOutputUTF8();
+
+		Application* application = InstantiateApplication();
+		application->Start();
+
+		TRACE_SESSION_BEGIN("Shutdown");
+		TRACE_RECORD_START();
+		delete application;
+		TRACE_RECORD_STOP();
+		TRACE_SESSION_END();
+
+#if ION_ENABLE_TRACING
+		DebugTracing::Shutdown();
+#endif
+
+		return 0;
+	}
+}

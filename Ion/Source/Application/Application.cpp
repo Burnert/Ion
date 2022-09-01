@@ -45,17 +45,16 @@ namespace Ion
 		return Renderer::Get();
 	}
 
-	Application::Application(App* clientApp) :
+	Application::Application() :
 		m_EventDispatcher(this),
 		m_LayerStack(std::make_unique<LayerStack>()),
 		m_MainThreadId(std::this_thread::get_id()),
 		m_bRunning(true),
-		m_ClientApp(clientApp),
 		m_Fonts(),
 		m_bInFocus(false),
 		m_GlobalDeltaTime(0.016f)
 	{
-		ionassert(clientApp);
+		ionassert(g_pClientApplication, "Client application has not been set. ION_DEFINE_MAIN_APPLICATION_CLASS might not have been used.");
 
 		ApplicationLogger.Info("Application has been created.");
 
@@ -126,7 +125,7 @@ namespace Ion
 		TRACE_BEGIN(0, "Application - Client::OnInit");
 		// Call client overriden Init function
 		OnInit();
-		m_ClientApp->OnInit();
+		g_pClientApplication->OnInit();
 		TRACE_END(0);
 	}
 
@@ -141,7 +140,7 @@ namespace Ion
 		TRACE_BEGIN(0, "Application - Client::OnShutdown");
 		// Call client overriden Shutdown function
 		OnShutdown();
-		m_ClientApp->OnShutdown();
+		g_pClientApplication->OnShutdown();
 		TRACE_END(0);
 
 		//AssetManager::Shutdown();
@@ -214,7 +213,7 @@ namespace Ion
 		
 		TRACE_BEGIN(0, "Application - Client::OnUpdate");
 		OnUpdate(deltaTime);
-		m_ClientApp->OnUpdate(deltaTime);
+		g_pClientApplication->OnUpdate(deltaTime);
 		TRACE_END(0);
 
 		m_LayerStack->OnUpdate(deltaTime);
@@ -240,7 +239,7 @@ namespace Ion
 
 		TRACE_BEGIN(0, "Application - Client::OnRender");
 		OnRender();
-		m_ClientApp->OnRender();
+		g_pClientApplication->OnRender();
 		TRACE_END(0);
 
 		m_LayerStack->OnRender();
@@ -277,7 +276,7 @@ namespace Ion
 
 	void Application::CallClientAppOnEvent(const Event& event)
 	{
-		m_ClientApp->OnEvent(event);
+		g_pClientApplication->OnEvent(event);
 	}
 
 	void Application::SetApplicationTitle(const WString& title)
@@ -417,7 +416,7 @@ namespace Ion
 
 			m_GlobalDeltaTime = CalculateFrameTime();
 			Update(m_GlobalDeltaTime);
-			m_ClientApp->PostUpdate();
+			g_pClientApplication->PostUpdate();
 			// This will eventually need to be called after Update,
 			// but during the time the render thread is rendering
 			g_Engine->BuildRendererData(m_GlobalDeltaTime);
