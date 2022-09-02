@@ -5,22 +5,22 @@
 
 namespace Ion
 {
-	uint8 InputManager::InputPressedFlag = Bitflag(0);
-	uint8 InputManager::InputRepeatedFlag = Bitflag(1);
+	uint8 InputManager::InputPressedFlag  = 1 << 0;
+	uint8 InputManager::InputRepeatedFlag = 1 << 1;
 
-	KeyCode InputManager::TransformKeyCode(KeyCode actualKeyCode)
+	EKey::Type InputManager::TransformKeyCode(EKey::Type actualKeyCode)
 	{
 		switch (actualKeyCode)
 		{
-		case Key::LShift:
-		case Key::RShift:
-			return Key::Shift;
-		case Key::LAlt:
-		case Key::RAlt:
-			return Key::Alt;
-		case Key::LControl:
-		case Key::RControl:
-			return Key::Control;
+		case EKey::LShift:
+		case EKey::RShift:
+			return EKey::Shift;
+		case EKey::LAlt:
+		case EKey::RAlt:
+			return EKey::Alt;
+		case EKey::LControl:
+		case EKey::RControl:
+			return EKey::Control;
 		default:
 			return actualKeyCode;
 		}
@@ -28,11 +28,10 @@ namespace Ion
 
 	InputManager::InputManager() :
 		m_EventDispatcher(this),
-		// Use Raw Input by default
-		m_MouseInputType(MouseInputType::RawInput)
+		m_MouseInputType(EMouseInputType::RawInput),
+		m_bRawInputAvailable(true),
+		m_InputStates()
 	{
-		memset(m_InputStates, 0, sizeof(m_InputStates));
-
 		m_EventDispatcher.RegisterEventFunction(&InputManager::OnKeyPressedEvent);
 		m_EventDispatcher.RegisterEventFunction(&InputManager::OnKeyReleasedEvent);
 		m_EventDispatcher.RegisterEventFunction(&InputManager::OnKeyRepeatedEvent);
@@ -40,33 +39,33 @@ namespace Ion
 		m_EventDispatcher.RegisterEventFunction(&InputManager::OnMouseButtonReleasedEvent);
 	}
 
-	bool InputManager::IsKeyPressed(KeyCode keyCode)
+	bool InputManager::IsKeyPressed(EKey::Type keyCode)
 	{
 		// @TODO: This is getting bugged when the program freezes
 		// It's because this is event based and the program doesn't receive KeyUp events
-		return (bool)(s_Instance->m_InputStates[keyCode] & InputPressedFlag);
+		return (bool)(Get()->m_InputStates[keyCode] & InputPressedFlag);
 	}
 
-	bool InputManager::IsKeyRepeated(KeyCode keyCode)
+	bool InputManager::IsKeyRepeated(EKey::Type keyCode)
 	{
-		return (bool)(s_Instance->m_InputStates[keyCode] & InputRepeatedFlag);
+		return (bool)(Get()->m_InputStates[keyCode] & InputRepeatedFlag);
 	}
 
-	bool InputManager::IsMouseButtonPressed(MouseButton mouseButton)
+	bool InputManager::IsMouseButtonPressed(EMouse::Type mouseButton)
 	{
-		return (bool)(s_Instance->m_InputStates[mouseButton] & InputPressedFlag);
+		return (bool)(Get()->m_InputStates[mouseButton] & InputPressedFlag);
 	}
 
-	void InputManager::OnKeyPressedEvent(const KeyPressedEvent& event)
+	void InputManager::OnKeyPressedEvent(const KeyPressedEvent& e)
 	{
-		KeyCode actualKeyCode = (KeyCode)event.ActualKeyCode;
+		EKey::Type actualKeyCode = (EKey::Type)e.ActualKeyCode;
 		// Set states on receiving event
 		uint8* keyPtr = &m_InputStates[actualKeyCode];
 		SetBitflags(*keyPtr, InputPressedFlag);
 
 		// If the normal key code is different than actual
 		// (Shift, Alt, etc.), update it too.
-		KeyCode keyCode = (KeyCode)event.KeyCode;
+		EKey::Type keyCode = (EKey::Type)e.KeyCode;
 		if (keyCode != actualKeyCode)
 		{
 			keyPtr = &m_InputStates[keyCode];
@@ -74,9 +73,9 @@ namespace Ion
 		}
 	}
 
-	void InputManager::OnKeyReleasedEvent(const KeyReleasedEvent& event)
+	void InputManager::OnKeyReleasedEvent(const KeyReleasedEvent& e)
 	{
-		KeyCode actualKeyCode = (KeyCode)event.ActualKeyCode;
+		EKey::Type actualKeyCode = (EKey::Type)e.ActualKeyCode;
 		// Unset states on receiving event
 		uint8* keyPtr = &m_InputStates[actualKeyCode];
 		UnsetBitflags(*keyPtr, InputPressedFlag);
@@ -85,15 +84,15 @@ namespace Ion
 		// If the normal key code is different than actual
 		// (Shift, Alt, etc.), unset it if the other actual
 		// key is not pressed.
-		KeyCode keyCode = (KeyCode)event.KeyCode;
+		EKey::Type keyCode = (EKey::Type)e.KeyCode;
 		if (keyCode != actualKeyCode)
 		{
-			if (actualKeyCode == Key::LShift   && !IsKeyPressed(Key::RShift)   ||
-				actualKeyCode == Key::RShift   && !IsKeyPressed(Key::LShift)   ||
-				actualKeyCode == Key::LAlt     && !IsKeyPressed(Key::RAlt)     ||
-				actualKeyCode == Key::RAlt     && !IsKeyPressed(Key::LAlt)     ||
-				actualKeyCode == Key::LControl && !IsKeyPressed(Key::RControl) ||
-				actualKeyCode == Key::RControl && !IsKeyPressed(Key::LControl))
+			if (actualKeyCode == EKey::LShift   && !IsKeyPressed(EKey::RShift)   ||
+				actualKeyCode == EKey::RShift   && !IsKeyPressed(EKey::LShift)   ||
+				actualKeyCode == EKey::LAlt     && !IsKeyPressed(EKey::RAlt)     ||
+				actualKeyCode == EKey::RAlt     && !IsKeyPressed(EKey::LAlt)     ||
+				actualKeyCode == EKey::LControl && !IsKeyPressed(EKey::RControl) ||
+				actualKeyCode == EKey::RControl && !IsKeyPressed(EKey::LControl))
 			{
 				keyPtr = &m_InputStates[keyCode];
 				UnsetBitflags(*keyPtr, InputPressedFlag);
@@ -102,16 +101,16 @@ namespace Ion
 		}
 	}
 
-	void InputManager::OnKeyRepeatedEvent(const KeyRepeatedEvent& event)
+	void InputManager::OnKeyRepeatedEvent(const KeyRepeatedEvent& e)
 	{
-		KeyCode actualKeyCode = (KeyCode)event.ActualKeyCode;
+		EKey::Type actualKeyCode = (EKey::Type)e.ActualKeyCode;
 		// Set states on receiving event
 		uint8* keyPtr = &m_InputStates[actualKeyCode];
 		SetBitflags(*keyPtr, InputRepeatedFlag);
 
 		// If the normal key code is different than actual
 		// (Shift, Alt, etc.), update it too.
-		KeyCode keyCode = (KeyCode)event.KeyCode;
+		EKey::Type keyCode = (EKey::Type)e.KeyCode;
 		if (keyCode != actualKeyCode)
 		{
 			keyPtr = &m_InputStates[keyCode];
@@ -119,17 +118,17 @@ namespace Ion
 		}
 	}
 
-	void InputManager::OnMouseButtonPressedEvent(const MouseButtonPressedEvent& event)
+	void InputManager::OnMouseButtonPressedEvent(const MouseButtonPressedEvent& e)
 	{
-		MouseButton buttonCode = (MouseButton)event.Button;
+		EMouse::Type buttonCode = (EMouse::Type)e.Button;
 		// Mouse states are stored in the same array as key states
 		uint8* statePtr = &m_InputStates[buttonCode];
 		SetBitflags(*statePtr, InputPressedFlag);
 	}
 
-	void InputManager::OnMouseButtonReleasedEvent(const MouseButtonReleasedEvent& event)
+	void InputManager::OnMouseButtonReleasedEvent(const MouseButtonReleasedEvent& e)
 	{
-		MouseButton buttonCode = (MouseButton)event.Button;
+		EMouse::Type buttonCode = (EMouse::Type)e.Button;
 		// Mouse states are stored in the same array as key states
 		uint8* statePtr = &m_InputStates[buttonCode];
 		UnsetBitflags(*statePtr, InputPressedFlag);
@@ -142,5 +141,23 @@ namespace Ion
 		m_EventDispatcher.Dispatch(e);
 	}
 
-	std::shared_ptr<InputManager> InputManager::s_Instance = nullptr;
+	void InputManager::RegisterRawInputDevices()
+	{
+		TRACE_FUNCTION();
+
+		RegisterRawInputDevices_Native()
+			.Err([this](Error& err)
+			{
+				InputLogger.Warn("Cannot register raw input devices. Default input mode will be used instead.\n{}", err.Message);
+				m_MouseInputType = EMouseInputType::Default;
+				m_bRawInputAvailable = false;
+			})
+			.Ok([this]
+			{
+				InputLogger.Info("Raw input devices have been registered successfully.");
+				m_bRawInputAvailable = true;
+			});
+	}
+
+	InputManager* InputManager::s_Instance = nullptr;
 }

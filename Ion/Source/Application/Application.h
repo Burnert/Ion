@@ -77,7 +77,6 @@ namespace Ion
 		static Renderer* GetRenderer();
 
 		static const std::shared_ptr<GenericWindow>& GetWindow();
-		static const std::shared_ptr<InputManager>& GetInputManager();
 		static LayerStack* GetLayerStack();
 		static float GetGlobalDeltaTime();
 
@@ -90,8 +89,6 @@ namespace Ion
 
 		virtual void PlatformInit() = 0;
 		virtual void PlatformShutdown() = 0;
-
-		virtual void RegisterRawInputDevices() = 0;
 
 		// Event system related functions
 
@@ -146,7 +143,6 @@ namespace Ion
 
 	private:
 		std::shared_ptr<GenericWindow> m_Window;
-		std::shared_ptr<InputManager> m_InputManager;
 
 		TEventDispatcher<Application> m_EventDispatcher;
 		EventQueue m_EventQueue;
@@ -184,11 +180,6 @@ namespace Ion
 	FORCEINLINE const std::shared_ptr<GenericWindow>& Application::GetWindow()
 	{
 		return Get()->m_Window;
-	}
-
-	FORCEINLINE const std::shared_ptr<InputManager>& Application::GetInputManager()
-	{
-		return Get()->m_InputManager;
 	}
 
 	FORCEINLINE LayerStack* Application::GetLayerStack()

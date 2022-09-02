@@ -468,12 +468,12 @@ namespace Ion::Editor
 	{
 		switch (event.ActualKeyCode)
 		{
-			case Key::Escape:
+			case EKey::Escape:
 			{
 				DeselectCurrentObject();
 				break;
 			}
-			case Key::Delete:
+			case EKey::Delete:
 			{
 				DeleteSelectedObject();
 				break;
@@ -488,27 +488,27 @@ namespace Ion::Editor
 		{
 			Vector3 axisValues { };
 
-			if (GetInputManager()->IsKeyPressed(Key::W))
+			if (InputManager::IsKeyPressed(EKey::W))
 			{
 				axisValues.z += 1.0f;
 			}
-			if (GetInputManager()->IsKeyPressed(Key::S))
+			if (InputManager::IsKeyPressed(EKey::S))
 			{
 				axisValues.z += -1.0f;
 			}
-			if (GetInputManager()->IsKeyPressed(Key::A))
+			if (InputManager::IsKeyPressed(EKey::A))
 			{
 				axisValues.x += -1.0f;
 			}
-			if (GetInputManager()->IsKeyPressed(Key::D))
+			if (InputManager::IsKeyPressed(EKey::D))
 			{
 				axisValues.x += 1.0f;
 			}
-			if (GetInputManager()->IsKeyPressed(Key::Q))
+			if (InputManager::IsKeyPressed(EKey::Q))
 			{
 				axisValues.y += -1.0f;
 			}
-			if (GetInputManager()->IsKeyPressed(Key::E))
+			if (InputManager::IsKeyPressed(EKey::E))
 			{
 				axisValues.y += 1.0f;
 			}

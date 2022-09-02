@@ -2,7 +2,7 @@
 
 #include "WindowsApplication.h"
 #include "WindowsWindow.h"
-#include "WindowsInput.h"
+#include "Application/Input/Input.h"
 
 #include "RHI/RHI.h"
 
@@ -14,18 +14,18 @@ namespace Ion
 {
 	Application* const g_pEngineApplication = new WindowsApplication;
 
-	FORCEINLINE static MouseButton MouseButtonFromMessage(UINT uMsg, WPARAM wParam)
+	FORCEINLINE static EMouse::Type MouseButtonFromMessage(UINT uMsg, WPARAM wParam)
 	{
 		if (uMsg <= WM_LBUTTONDBLCLK)
-			return Mouse::Left;
+			return EMouse::Left;
 		else if (uMsg <= WM_RBUTTONDBLCLK)
-			return Mouse::Right;
+			return EMouse::Right;
 		else if (uMsg <= WM_MBUTTONDBLCLK)
-			return Mouse::Middle;
+			return EMouse::Middle;
 		else if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1)
-			return Mouse::Button4;
+			return EMouse::Button4;
 		else
-			return Mouse::Button5;
+			return EMouse::Button5;
 	}
 
 	void WindowsApplication::PostEvent(const Event& e)
@@ -272,25 +272,25 @@ namespace Ion
 				}
 
 				// Translate Windows keycodes to internal ones
-				WindowsInputManager::TranslateWindowsKeyCode(&keyCode);
-				WindowsInputManager::TranslateWindowsKeyCode(&actualKeyCode);
+				InputManager::TranslateNativeKeyCode(&keyCode);
+				InputManager::TranslateNativeKeyCode(&actualKeyCode);
 
 				// HACK:
 				// Windows doesn't have a separate keycode for keypad Enter button,
 				// but the key is extended in this case. Therefore, if the keycode
 				// is an extended Enter key, change the internal (translated)
 				// keycode to KP_Enter.
-				if (keyCode == Key::Enter && bExtendedKey)
+				if (keyCode == EKey::Enter && bExtendedKey)
 				{
-					keyCode = Key::KP_Enter;
-					actualKeyCode = Key::KP_Enter;
+					keyCode       = EKey::KP_Enter;
+					actualKeyCode = EKey::KP_Enter;
 				}
 
 				// Down: true, Up: false
 				if (bState)
 				{
 					// If the key is already pressed it means it was repeated
-					bool bRepeated = InputManager::IsKeyPressed((KeyCode)actualKeyCode);
+					bool bRepeated = InputManager::IsKeyPressed((EKey::Type)actualKeyCode);
 
 					if (bRepeated)
 					{
@@ -309,7 +309,7 @@ namespace Ion
 					// Print screen key doesn't send a key down message,
 					// so upon release send PressedEvent before the ReleaseEvent.
 					// At this point keycode variables are already translated.
-					if (keyCode == Key::PrintScr)
+					if (keyCode == EKey::PrintScr)
 					{
 						KeyPressedEvent printScreenPressed(keyCode, actualKeyCode);
 						PostEvent(printScreenPressed);
@@ -416,7 +416,7 @@ namespace Ion
 			case WM_INPUT:
 			{
 				// Don't bother if RawInput is not enabled.
-				if (!InputManager::IsRawInputEnabled())
+				if (!InputManager::IsRawInputAvailable())
 					break;
 
 				uint32 size;
@@ -433,13 +433,13 @@ namespace Ion
 
 				RAWINPUT* rawInput = (RAWINPUT*)buffer;
 
-				// Mouse Input
-				if (rawInput->header.dwType == RIM_TYPEMOUSE)
+				if (InputManager::IsRawInputEnabled())
 				{
-					RAWMOUSE* data = &rawInput->data.mouse;
-
-					if (InputManager::GetMouseInputType() == MouseInputType::RawInput)
+					// Mouse Input
+					if (rawInput->header.dwType == RIM_TYPEMOUSE)
 					{
+						RAWMOUSE* data = &rawInput->data.mouse;
+
 						// Note: Literally every input action can be packed
 						// as a single event so everything here has to be checked
 						// each time to make sure not to miss any.
@@ -474,11 +474,11 @@ namespace Ion
 									uint32 button;
 									switch (buttonFlag)
 									{
-									case RI_MOUSE_LEFT_BUTTON_DOWN:     button = Mouse::Left;      break;
-									case RI_MOUSE_RIGHT_BUTTON_DOWN:    button = Mouse::Right;     break;
-									case RI_MOUSE_MIDDLE_BUTTON_DOWN:   button = Mouse::Middle;    break;
-									case RI_MOUSE_BUTTON_4_DOWN:        button = Mouse::Button4;   break;
-									case RI_MOUSE_BUTTON_5_DOWN:        button = Mouse::Button5;   break;
+									case RI_MOUSE_LEFT_BUTTON_DOWN:     button = EMouse::Left;      break;
+									case RI_MOUSE_RIGHT_BUTTON_DOWN:    button = EMouse::Right;     break;
+									case RI_MOUSE_MIDDLE_BUTTON_DOWN:   button = EMouse::Middle;    break;
+									case RI_MOUSE_BUTTON_4_DOWN:        button = EMouse::Button4;   break;
+									case RI_MOUSE_BUTTON_5_DOWN:        button = EMouse::Button5;   break;
 									}
 
 									RawInputMouseButtonPressedEvent event(button);
@@ -500,11 +500,11 @@ namespace Ion
 									uint32 button;
 									switch (buttonFlag)
 									{
-									case RI_MOUSE_LEFT_BUTTON_UP:     button = Mouse::Left;      break;
-									case RI_MOUSE_RIGHT_BUTTON_UP:    button = Mouse::Right;     break;
-									case RI_MOUSE_MIDDLE_BUTTON_UP:   button = Mouse::Middle;    break;
-									case RI_MOUSE_BUTTON_4_UP:        button = Mouse::Button4;   break;
-									case RI_MOUSE_BUTTON_5_UP:        button = Mouse::Button5;   break;
+									case RI_MOUSE_LEFT_BUTTON_UP:     button = EMouse::Left;      break;
+									case RI_MOUSE_RIGHT_BUTTON_UP:    button = EMouse::Right;     break;
+									case RI_MOUSE_MIDDLE_BUTTON_UP:   button = EMouse::Middle;    break;
+									case RI_MOUSE_BUTTON_4_UP:        button = EMouse::Button4;   break;
+									case RI_MOUSE_BUTTON_5_UP:        button = EMouse::Button5;   break;
 									}
 
 									RawInputMouseButtonReleasedEvent event(button);
@@ -575,22 +575,6 @@ namespace Ion
 		TRACE_FUNCTION();
 
 		WindowsApplicationLogger.Info("Shutting down Windows application.");
-	}
-
-	void WindowsApplication::RegisterRawInputDevices()
-	{
-		RAWINPUTDEVICE mouseRid;
-		mouseRid.usUsagePage = 0x01;
-		mouseRid.usUsage = 0x02;
-		mouseRid.dwFlags = 0;
-		mouseRid.hwndTarget = (HWND)GetWindow()->GetNativeHandle();
-
-		if (!::RegisterRawInputDevices(&mouseRid, 1, sizeof(mouseRid)))
-		{
-			WindowsApplicationLogger.Warn("Cannot register Raw Input devices.");
-		}
-
-		WindowsApplicationLogger.Info("Raw Input devices have been registered.");
 	}
 
 	void WindowsApplication::PollEvents()
@@ -766,12 +750,12 @@ namespace Ion
 				uint32 actualKeyCode;
 				// Left shift held, so right shift released and vice-versa
 				if (keyState == 0x2)
-					actualKeyCode = Key::RShift;
+					actualKeyCode = EKey::RShift;
 				else
-					actualKeyCode = Key::LShift;
+					actualKeyCode = EKey::LShift;
 				bBothShiftsPressed = false;
 
-				KeyReleasedEvent event(Key::Shift, actualKeyCode);
+				KeyReleasedEvent event(EKey::Shift, actualKeyCode);
 				PostEvent(event);
 			}
 		}

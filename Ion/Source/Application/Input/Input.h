@@ -4,9 +4,11 @@
 
 namespace Ion
 {
-	namespace Mouse
+	REGISTER_LOGGER(InputLogger, "Application::Input");
+
+	namespace EMouse
 	{
-		enum Mouse : uint8
+		enum Type : uint8
 		{
 			Invalid         = 0x00,
 
@@ -18,9 +20,9 @@ namespace Ion
 		};
 	}
 	
-	namespace Key
+	namespace EKey
 	{
-		enum Key : uint8
+		enum Type : uint8
 		{
 			Invalid         = 0x00,
 
@@ -37,16 +39,16 @@ namespace Ion
 			Apostrophe      = 0x2A,
 			Grave           = 0x2B,
 
-			Zero            = 0x30,
-			One             = 0x31,
-			Two             = 0x32,
-			Three           = 0x33,
-			Four            = 0x34,
-			Five            = 0x35,
-			Six             = 0x36,
-			Seven           = 0x37,
-			Eight           = 0x38,
-			Nine            = 0x39,
+			D0              = 0x30,
+			D1              = 0x31,
+			D2              = 0x32,
+			D3              = 0x33,
+			D4              = 0x34,
+			D5              = 0x35,
+			D6              = 0x36,
+			D7              = 0x37,
+			D8              = 0x38,
+			D9              = 0x39,
 
 			A               = 0x41,
 			B               = 0x42,
@@ -155,86 +157,103 @@ namespace Ion
 		};
 	}
 
-	using MouseButton = Mouse::Mouse;
-	using KeyCode = Key::Key;
-
-	enum class MouseInputType : uint8
+	enum class EMouseInputType : uint8
 	{
-		Default = 1,
-		RawInput = 2,
+		Default  = 0,
+		RawInput = 1,
 	};
-
-	struct KeyPressedEvent;
-	struct KeyReleasedEvent;
-	struct KeyRepeatedEvent;
-
-	struct MouseButtonPressedEvent;
-	struct MouseButtonReleasedEvent;
-	struct MouseMovedEvent;
 
 	class ION_API InputManager
 	{
 	public:
-		static bool IsKeyPressed(KeyCode keyCode);
-		static bool IsKeyRepeated(KeyCode keyCode);
-		static bool IsMouseButtonPressed(MouseButton mouseButton);
+		static InputManager* Get();
+
+		static bool IsKeyPressed(EKey::Type keyCode);
+		static bool IsKeyRepeated(EKey::Type keyCode);
+		static bool IsMouseButtonPressed(EMouse::Type mouseButton);
 
 		static IVector2 GetCursorPosition();
 
-		static std::shared_ptr<InputManager> Create();
-
 		/* Transforms ActualKeyCode to normal KeyCode
 		   for LShift returns Shift, etc. */
-		static KeyCode TransformKeyCode(KeyCode actualKeyCode);
+		static EKey::Type TransformKeyCode(EKey::Type actualKeyCode);
 
-		FORCEINLINE static MouseInputType GetMouseInputType();
-
-		// @TODO: you know what
+		static EMouseInputType GetMouseInputType();
 		static bool IsRawInputEnabled();
+		static bool IsRawInputAvailable();
 
-	protected:
-		void OnKeyPressedEvent(const KeyPressedEvent& event);
-		void OnKeyReleasedEvent(const KeyReleasedEvent& event);
-		void OnKeyRepeatedEvent(const KeyRepeatedEvent& event);
-
-		void OnMouseButtonPressedEvent(const MouseButtonPressedEvent& event);
-		void OnMouseButtonReleasedEvent(const MouseButtonReleasedEvent& event);
-
-		virtual IVector2 GetCursorPosition_Internal() const = 0;
+		static bool TranslateNativeKeyCode(uint32* nativeKeyCode);
+		static bool TranslateInternalKeyCode(uint32* internalKeyCode);
 
 	protected:
 		InputManager();
-		virtual ~InputManager() { }
 
+		void RegisterRawInputDevices();
 		void OnEvent(const Event& e);
 
 		static uint8 InputPressedFlag;
 		static uint8 InputRepeatedFlag;
 
 	private:
+		static Result<void, PlatformError> RegisterRawInputDevices_Native();
+
+		void OnKeyPressedEvent(const KeyPressedEvent& e);
+		void OnKeyReleasedEvent(const KeyReleasedEvent& e);
+		void OnKeyRepeatedEvent(const KeyRepeatedEvent& e);
+
+		void OnMouseButtonPressedEvent(const MouseButtonPressedEvent& e);
+		void OnMouseButtonReleasedEvent(const MouseButtonReleasedEvent& e);
+
+		static IVector2 GetCursorPosition_Native();
+		static bool TranslateNativeKeyCode_Native(uint32* nativeKeyCode);
+		static bool TranslateInternalKeyCode_Native(uint32* internalKeyCode);
+
+	private:
 		TEventDispatcher<InputManager> m_EventDispatcher;
 
-		uint8 m_InputStates[256];
-		MouseInputType m_MouseInputType;
+		TFixedArray<uint8, 256> m_InputStates;
+		EMouseInputType m_MouseInputType;
+		bool m_bRawInputAvailable;
 
-		static std::shared_ptr<InputManager> s_Instance;
+		static InputManager* s_Instance;
 
 		friend class Application;
 	};
 
+	FORCEINLINE InputManager* InputManager::Get()
+	{
+		if (!s_Instance)
+			s_Instance = new InputManager;
+		return s_Instance;
+	}
+
 	FORCEINLINE IVector2 InputManager::GetCursorPosition()
 	{
-		return s_Instance->GetCursorPosition_Internal();
+		return GetCursorPosition_Native();
 	}
 
-	FORCEINLINE MouseInputType InputManager::GetMouseInputType()
+	FORCEINLINE EMouseInputType InputManager::GetMouseInputType()
 	{
-		return s_Instance->m_MouseInputType;
+		return Get()->m_MouseInputType;
 	}
 
-	// @TODO: you know what
 	FORCEINLINE bool InputManager::IsRawInputEnabled()
 	{
-		return true;
+		return Get()->m_MouseInputType == EMouseInputType::RawInput;
+	}
+
+	FORCEINLINE bool InputManager::IsRawInputAvailable()
+	{
+		return Get()->m_bRawInputAvailable;
+	}
+
+	FORCEINLINE bool InputManager::TranslateNativeKeyCode(uint32* nativeKeyCode)
+	{
+		return TranslateNativeKeyCode_Native(nativeKeyCode);
+	}
+
+	FORCEINLINE bool InputManager::TranslateInternalKeyCode(uint32* internalKeyCode)
+	{
+		return TranslateInternalKeyCode_Native(internalKeyCode);
 	}
 }

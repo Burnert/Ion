@@ -75,13 +75,11 @@ namespace Ion
 
 		EngineTaskQueue::Init();
 
-		m_InputManager = InputManager::Create();
-
 		// Create a platform specific window.
 		m_Window = GenericWindow::Create();
 		m_Window->Initialize();
 
-		RegisterRawInputDevices();
+		InputManager::Get()->RegisterRawInputDevices();
 
 		g_Engine->Init();
 
@@ -187,7 +185,7 @@ namespace Ion
 
 		m_EventDispatcher.Dispatch(e);
 
-		m_InputManager->OnEvent(e);
+		InputManager::Get()->OnEvent(e);
 		m_LayerStack->OnEvent(e);
 
 		{
@@ -209,7 +207,7 @@ namespace Ion
 		EngineTaskQueue::Update();
 
 		// Don't reset the cursor if the mouse is being held
-		if (!InputManager::IsMouseButtonPressed(Mouse::Left))
+		if (!InputManager::IsMouseButtonPressed(EMouse::Left))
 		{
 			// Reset the cursor
 			SetCursor(ECursorType::Arrow);
@@ -358,9 +356,9 @@ namespace Ion
 	void Application::OnKeyPressedEvent(const KeyPressedEvent& e)
 	{
 		// Toggle fullscreen with Alt + Enter
-		if (e.KeyCode == Key::Enter)
+		if (e.KeyCode == EKey::Enter)
 		{
-			if (GetInputManager()->IsKeyPressed(Key::LAlt))
+			if (InputManager::IsKeyPressed(EKey::LAlt))
 			{
 				ApplicationLogger.Debug("Fullscreen Toggle");
 
@@ -369,9 +367,9 @@ namespace Ion
 			}
 		}
 		// Exit application with Alt + F4
-		else if (e.KeyCode == Key::F4)
+		else if (e.KeyCode == EKey::F4)
 		{
-			if (GetInputManager()->IsKeyPressed(Key::LAlt))
+			if (InputManager::IsKeyPressed(EKey::LAlt))
 			{
 				Exit();
 			}

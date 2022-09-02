@@ -34,8 +34,6 @@ namespace Ion
 		virtual void PlatformInit() override;
 		virtual void PlatformShutdown() override;
 
-		virtual void RegisterRawInputDevices() override;
-
 		virtual void PollEvents() override;
 		virtual void Update(float DeltaTime) override;
 		virtual void Render() override;
