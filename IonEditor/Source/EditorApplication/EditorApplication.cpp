@@ -43,10 +43,6 @@ namespace Ion::Editor
 		m_EventDispatcher.RegisterEventFunction(&EditorApplication::OnKeyPressedEvent);
 	}
 
-	EditorApplication::~EditorApplication()
-	{
-	}
-
 	constexpr int32 g_nHarnasSqrt = 20;
 	static TArray<Entity*> g_HarnasArray;
 

@@ -20,13 +20,14 @@ namespace Ion::Editor
 		std::shared_ptr<EditorViewport> Viewport;
 	};
 
-	class EDITOR_API EditorApplication : public App
+	class EDITOR_API EditorApplication : public IApp
 	{
 	public:
 		inline static EditorApplication* Get() { return s_Instance; }
 
 		EditorApplication();
-		virtual ~EditorApplication();
+
+		// IApp overrides:
 
 		virtual void OnInit() override;
 		virtual void OnUpdate(float deltaTime) override;
@@ -34,6 +35,8 @@ namespace Ion::Editor
 		virtual void OnRender() override;
 		virtual void OnShutdown() override;
 		virtual void OnEvent(const Event& event) override;
+
+		// End of IApp overrides
 
 		Entity* GetSelectedEntity() const;
 		Component* GetSelectedComponent() const;

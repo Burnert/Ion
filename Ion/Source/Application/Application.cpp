@@ -32,14 +32,6 @@ namespace Ion
 		return ECursorType::Arrow;
 	}
 
-	Application* Application::Get()
-	{
-		// This goes off when Application was not yet created.
-		// (shouldn't ever happen, unless you're doing something weird)
-		ionassert(s_Instance);
-		return s_Instance;
-	}
-
 	Renderer* Application::GetRenderer()
 	{
 		return Renderer::Get();
@@ -70,8 +62,6 @@ namespace Ion
 
 	Application::~Application()
 	{
-		Shutdown();
-
 		ApplicationLogger.Info("Application has been destroyed.");
 	}
 

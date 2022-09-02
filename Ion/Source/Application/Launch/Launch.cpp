@@ -31,15 +31,6 @@ namespace Ion
 		}
 	}
 
-#if ION_PLATFORM_WINDOWS
-	static Application* InstantiateApplication()
-	{
-		Application* engineApp = Application::Create<WindowsApplication>();
-		g_pClientApplication->m_EngineApplication = engineApp;
-		return engineApp;
-	}
-#endif
-
 	int32 MainShared(int32 argc, tchar* argv[])
 	{
 		ParseCommandLineArgs(argc, argv);
@@ -53,14 +44,20 @@ namespace Ion
 
 		Platform::SetConsoleOutputUTF8();
 
-		Application* application = InstantiateApplication();
-		application->Start();
+		g_pEngineApplication->Start();
 
-		TRACE_SESSION_BEGIN("Shutdown");
-		TRACE_RECORD_START();
-		delete application;
-		TRACE_RECORD_STOP();
-		TRACE_SESSION_END();
+		{
+			TRACE_SESSION_BEGIN("Shutdown");
+			TRACE_RECORD_START();
+
+			g_pEngineApplication->Shutdown();
+
+			delete g_pClientApplication;
+			delete g_pEngineApplication;
+
+			TRACE_RECORD_STOP();
+			TRACE_SESSION_END();
+		}
 
 #if ION_ENABLE_TRACING
 		DebugTracing::Shutdown();

@@ -14,7 +14,11 @@ struct ImFont;
 
 namespace Ion
 {
-	extern class App* const g_pClientApplication;
+	// Global Engine Application pointer (never null)
+	extern class Application* const g_pEngineApplication;
+
+	// Global Client Application pointer (never null)
+	extern class IApp* const g_pClientApplication;
 
 	REGISTER_LOGGER(ApplicationLogger, "Application");
 
@@ -56,8 +60,6 @@ namespace Ion
 	class ION_API Application
 	{
 	public:
-		using EventPtr = std::shared_ptr<Event>;
-
 		virtual ~Application();
 
 		/* Called by the Entry Point */
@@ -74,8 +76,6 @@ namespace Ion
 		EngineFonts& GetEngineFonts();
 
 		static Application* Get();
-		template<typename T>
-		static Application* Create();
 
 		static Renderer* GetRenderer();
 
@@ -191,15 +191,13 @@ namespace Ion
 		bool m_bRunning;
 
 		friend GenericWindow;
+		friend int32 MainShared(int32 argc, tchar* argv[]);
 		friend void ParseCommandLineArgs(int32 argc, tchar* argv[]);
 	};
 
-	template<typename T>
-	inline Application* Application::Create()
+	FORCEINLINE Application* Application::Get()
 	{
-		static_assert(TIsBaseOfV<Application, T>);
-		ionassert(!s_Instance);
-		return s_Instance = new T;
+		return g_pEngineApplication;
 	}
 
 	inline EngineFonts& Application::GetEngineFonts()

@@ -9,9 +9,19 @@
 
 namespace Ion
 {
+	Application* const g_pEngineApplication = new WindowsApplication;
+
+	WindowsApplication::WindowsApplication() :
+		m_CurrentCursor(0),
+		m_RequestedCursor(0),
+		m_CursorHandles()
+	{
+		WindowsApplicationLogger.Info("Windows application has been created.");
+	}
+
 	WindowsApplication* WindowsApplication::Get()
 	{
-		return static_cast<WindowsApplication*>(Application::Get());
+		return static_cast<WindowsApplication*>(g_pEngineApplication);
 	}
 
 	void WindowsApplication::Start()
@@ -22,8 +32,7 @@ namespace Ion
 		// Init
 		TRACE_SESSION_BEGIN("Init");
 		TRACE_RECORD_START();
-		HINSTANCE hInstance = GetModuleHandle(nullptr);
-		InitWindows(hInstance);
+		InitWindows(GetModuleHandle(nullptr));
 		TRACE_RECORD_STOP();
 		TRACE_SESSION_END();
 
@@ -67,14 +76,6 @@ namespace Ion
 		LoadCursors();
 
 		Init();
-	}
-
-	WindowsApplication::WindowsApplication() :
-		m_CurrentCursor(0),
-		m_RequestedCursor(0),
-		m_CursorHandles()
-	{
-		WindowsApplicationLogger.Info("Windows application has been created.");
 	}
 
 	void WindowsApplication::PollEvents()
@@ -139,7 +140,7 @@ namespace Ion
 	{
 		TRACE_FUNCTION();
 
-		WindowsApplicationLogger.Info("Destroying window {{{:#x}}}.", event.WindowHandle);
+		WindowsApplicationLogger.Info("Destroying window {{{}}}.", event.WindowHandle);
 
 		DestroyWindow((HWND)event.WindowHandle);
 		Application::OnWindowCloseEvent_Internal(event);

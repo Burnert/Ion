@@ -3,7 +3,7 @@
 /* Specifies the main class of the application (can be used only once) */
 #define ION_DEFINE_MAIN_APPLICATION_CLASS(className) \
 namespace Ion { \
-	inline App* const g_pClientApplication = new className; \
+	inline IApp* const g_pClientApplication = new className; \
 }
 
 namespace Ion {

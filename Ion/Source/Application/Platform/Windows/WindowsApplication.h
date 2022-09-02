@@ -15,6 +15,8 @@ namespace Ion
 	class ION_API WindowsApplication : public Application
 	{
 	public:
+		WindowsApplication();
+
 		static WindowsApplication* Get();
 
 		/* Called by the Entry Point */
@@ -30,8 +32,6 @@ namespace Ion
 		static float GetPerformanceFrequency();
 
 	protected:
-		WindowsApplication();
-
 		// Tagged as final so it cannot be overriden in the client
 
 		virtual void PollEvents() final override;
@@ -62,7 +62,6 @@ namespace Ion
 		int32 m_CurrentCursor;
 		int32 m_RequestedCursor;
 
-		friend Application* InstantiateApplication();
 		friend class WindowsWindow;
 		friend class Application;
 	};
