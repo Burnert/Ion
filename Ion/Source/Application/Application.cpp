@@ -81,6 +81,8 @@ namespace Ion
 		m_Window = GenericWindow::Create();
 		m_Window->Initialize();
 
+		RegisterRawInputDevices();
+
 		g_Engine->Init();
 
 		// Current thread will render graphics in this window.

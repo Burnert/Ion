@@ -91,10 +91,9 @@ namespace Ion
 		virtual void PlatformInit() = 0;
 		virtual void PlatformShutdown() = 0;
 
-		// Event system related functions
+		virtual void RegisterRawInputDevices() = 0;
 
-		friend void PostEvent(const Event& e);
-		friend void PostDeferredEvent(const Event& e);
+		// Event system related functions
 
 		void PostEvent(const Event& e);
 		void PostDeferredEvent(const Event& e);
@@ -167,6 +166,7 @@ namespace Ion
 		bool m_bRunning;
 
 		friend GenericWindow;
+		friend class WindowsApplication;
 		friend int32 MainShared(int32 argc, tchar* argv[]);
 		friend void ParseCommandLineArgs(int32 argc, tchar* argv[]);
 	};

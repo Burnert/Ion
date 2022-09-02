@@ -77,10 +77,6 @@ namespace Ion
 		// Protected constructor: Only shared_ptrs of this class can be made.
 		WindowsWindow();
 
-		void PollEvents_Application();
-
-		static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
 	private:
 		HWND  m_WindowHandle;
 		HDC   m_DeviceContext;
@@ -90,14 +86,10 @@ namespace Ion
 		bool m_bVisible = false;
 
 		// Should be true after Initialize() has been called one time.
-		static bool s_bRegistered;
-
-		static bool m_bBothShiftsPressed;
+		static bool s_bClassRegistered;
 
 		bool m_bFullScreenMode = false;
 		WindowDataBeforeFullScreen m_WindowBeforeFullScreen { };
-
-		static MouseButton MouseButtonFromMessage(UINT uMsg, WPARAM wParam);
 
 		friend class OpenGLWindows;
 		friend class WindowsApplication;

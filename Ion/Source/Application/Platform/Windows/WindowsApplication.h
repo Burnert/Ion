@@ -15,6 +15,10 @@ namespace Ion
 	class ION_API WindowsApplication : public Application
 	{
 	public:
+		static void PostEvent(const Event& e);
+		static void PostDeferredEvent(const Event& e);
+		static LRESULT CALLBACK WindowEventHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
 		WindowsApplication();
 
 		static WindowsApplication* Get();
@@ -30,6 +34,8 @@ namespace Ion
 		virtual void PlatformInit() override;
 		virtual void PlatformShutdown() override;
 
+		virtual void RegisterRawInputDevices() override;
+
 		virtual void PollEvents() override;
 		virtual void Update(float DeltaTime) override;
 		virtual void Render() override;
@@ -39,6 +45,8 @@ namespace Ion
 	private:
 		void LoadCursors();
 		bool UpdateMouseCursor();
+
+		void EventFixes();
 
 		virtual void InitImGuiBackend(const std::shared_ptr<GenericWindow>& window) const override;
 		virtual void ImGuiNewFramePlatform() const override;
