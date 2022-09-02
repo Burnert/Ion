@@ -50,14 +50,14 @@ namespace Ion
 
 		ApplicationLogger.Info("Application has been created.");
 
-		m_EventDispatcher.RegisterEventFunction(&Application::OnWindowCloseEvent_Internal);
-		m_EventDispatcher.RegisterEventFunction(&Application::OnWindowResizeEvent_Internal);
-		m_EventDispatcher.RegisterEventFunction(&Application::OnWindowChangeDisplayModeEvent_Internal);
-		m_EventDispatcher.RegisterEventFunction(&Application::OnWindowLostFocusEvent_Internal);
-		m_EventDispatcher.RegisterEventFunction(&Application::OnWindowFocusEvent_Internal);
-		m_EventDispatcher.RegisterEventFunction(&Application::OnKeyPressedEvent_Internal);
-		m_EventDispatcher.RegisterEventFunction(&Application::OnKeyReleasedEvent_Internal);
-		m_EventDispatcher.RegisterEventFunction(&Application::OnKeyRepeatedEvent_Internal);
+		m_EventDispatcher.RegisterEventFunction(&Application::OnWindowCloseEvent);
+		m_EventDispatcher.RegisterEventFunction(&Application::OnWindowResizeEvent);
+		m_EventDispatcher.RegisterEventFunction(&Application::OnWindowChangeDisplayModeEvent);
+		m_EventDispatcher.RegisterEventFunction(&Application::OnWindowLostFocusEvent);
+		m_EventDispatcher.RegisterEventFunction(&Application::OnWindowFocusEvent);
+		m_EventDispatcher.RegisterEventFunction(&Application::OnKeyPressedEvent);
+		m_EventDispatcher.RegisterEventFunction(&Application::OnKeyReleasedEvent);
+		m_EventDispatcher.RegisterEventFunction(&Application::OnKeyRepeatedEvent);
 	}
 
 	Application::~Application()
@@ -65,16 +65,13 @@ namespace Ion
 		ApplicationLogger.Info("Application has been destroyed.");
 	}
 
-	void Application::Start()
-	{
-		ionassert(0, "Start function not implemented!");
-	}
-
 	void Application::Init()
 	{
 		TRACE_FUNCTION();
 
 		ApplicationLogger.Info("Initializing application.");
+
+		PlatformInit();
 
 		EngineTaskQueue::Init();
 
@@ -89,16 +86,13 @@ namespace Ion
 		// Current thread will render graphics in this window.
 		RHI::Create(ERHI::DX11);
 		RHI::SetEngineShadersPath(EnginePath::GetShadersPath());
-		RHI::Get()->Init(RHIWindowData(m_Window->GetRHIData())).Unwrap();
+		RHI::Get()->Init(m_Window->GetRHIData()).Unwrap();
 
 		Renderer* renderer = Renderer::Create();
 		renderer->Init();
 		renderer->SetVSyncEnabled(false);
 
-		//AssetManager::Init();
-
 		AssetRegistry::RegisterEngineVirtualRoots(EnginePath::GetEngineContentPath(), EnginePath::GetShadersPath());
-
 		AssetRegistry::RegisterEngineAssets();
 
 		InitImGui();
@@ -112,11 +106,45 @@ namespace Ion
 		SetupWindowTitle();
 		m_Window->Show();
 
-		TRACE_BEGIN(0, "Application - Client::OnInit");
-		// Call client overriden Init function
-		OnInit();
-		g_pClientApplication->OnInit();
-		TRACE_END(0);
+		{
+			TRACE_SCOPE("Application - Client::OnInit");
+			g_pClientApplication->OnInit();
+		}
+	}
+
+	void Application::RunLoop()
+	{
+		TRACE_FUNCTION();
+
+		ApplicationLogger.Trace("Starting application loop.");
+
+		// Application loop
+		while (m_bRunning)
+		{
+			TRACE_SCOPE("Application Loop");
+
+			PollEvents();
+
+			m_GlobalDeltaTime = CalculateFrameTime();
+			Update(m_GlobalDeltaTime);
+			g_pClientApplication->PostUpdate();
+			// This will eventually need to be called after Update,
+			// but during the time the render thread is rendering
+			g_Engine->BuildRendererData(m_GlobalDeltaTime);
+
+			Render();
+
+			m_EventQueue.ProcessEvents([this](const Event& e)
+			{
+				DispatchEvent(e);
+			});
+
+			if (!m_bInFocus)
+			{
+				using namespace std::chrono_literals;
+				std::this_thread::sleep_for(100ms);
+			}
+		}
 	}
 
 	void Application::Shutdown()
@@ -127,19 +155,18 @@ namespace Ion
 
 		ShutdownImGui();
 
-		TRACE_BEGIN(0, "Application - Client::OnShutdown");
-		// Call client overriden Shutdown function
-		OnShutdown();
-		g_pClientApplication->OnShutdown();
-		TRACE_END(0);
-
-		//AssetManager::Shutdown();
+		{
+			TRACE_SCOPE("Application - Client::OnShutdown");
+			g_pClientApplication->OnShutdown();
+		}
 
 		RHI::Get()->Shutdown();
 
 		g_Engine->Shutdown();
 
 		EngineTaskQueue::Shutdown();
+
+		PlatformShutdown();
 	}
 
 	void Application::PostEvent(const Event& e)
@@ -161,21 +188,16 @@ namespace Ion
 		m_InputManager->OnEvent(e);
 		m_LayerStack->OnEvent(e);
 
-		TRACE_BEGIN(0, "Application - Client::OnEvent");
-		OnEvent(e);
-		CallClientAppOnEvent(e);
-		TRACE_END(0);
+		{
+			TRACE_SCOPE("Application - Client::OnEvent");
+			g_pClientApplication->OnEvent(e);
+		}
 	}
 
 	void Application::Exit()
 	{
 		// @TODO: Exit
 		ApplicationLogger.Critical("TODO: Implement Exit!");
-	}
-
-	void Application::PollEvents()
-	{
-		// Platform specific
 	}
 
 	void Application::Update(float deltaTime)
@@ -201,10 +223,10 @@ namespace Ion
 
 		//AssetManager::Update();
 		
-		TRACE_BEGIN(0, "Application - Client::OnUpdate");
-		OnUpdate(deltaTime);
-		g_pClientApplication->OnUpdate(deltaTime);
-		TRACE_END(0);
+		{
+			TRACE_SCOPE("Application - Client::OnUpdate");
+			g_pClientApplication->OnUpdate(deltaTime);
+		}
 
 		m_LayerStack->OnUpdate(deltaTime);
 
@@ -227,10 +249,10 @@ namespace Ion
 		RHI::Get()->BeginFrame();
 		SetRenderTargetToMainWindow();
 
-		TRACE_BEGIN(0, "Application - Client::OnRender");
-		OnRender();
-		g_pClientApplication->OnRender();
-		TRACE_END(0);
+		{
+			TRACE_SCOPE("Application - Client::OnRender");
+			g_pClientApplication->OnRender();
+		}
 
 		m_LayerStack->OnRender();
 
@@ -264,9 +286,9 @@ namespace Ion
 		Renderer::Get()->SetDepthStencil(GetWindow()->GetWindowDepthStencilTexture());
 	}
 
-	void Application::CallClientAppOnEvent(const Event& event)
+	void Application::CallClientAppOnEvent(const Event& e)
 	{
-		g_pClientApplication->OnEvent(event);
+		
 	}
 
 	void Application::SetApplicationTitle(const WString& title)
@@ -290,42 +312,15 @@ namespace Ion
 		//m_Window->SetTitle(m_BaseWindowTitle + fps);
 	}
 
-	/*
-	void Application::DispatchEvent(const Event& event)
-	{
-		TRACE_FUNCTION();
-
-		dispatcher.Dispatch<KeyPressedEvent>(
-			[this](KeyPressedEvent& event)
-			{
-				// Toggle VSync with 2 key
-				if (event.GetKeyCode() == Key::Two)
-				{
-					bool vsync = GetRenderer()->IsVSyncEnabled();
-					GetRenderer()->SetVSyncEnabled(!vsync);
-				}
-				else if (event.GetKeyCode() == Key::F1)
-				{
-					if (GetInputManager()->IsKeyPressed(Key::LShift))
-					{
-						GetWindow()->UnlockCursor();
-						GetWindow()->ShowCursor(true);
-					}
-				}
-				return true;
-			});
-	}
-	*/
-
-	void Application::OnWindowCloseEvent_Internal(const WindowCloseEvent& event)
+	void Application::OnWindowCloseEvent(const WindowCloseEvent& e)
 	{
 		m_bRunning = false;
 	}
 
-	void Application::OnWindowResizeEvent_Internal(const WindowResizeEvent& event)
+	void Application::OnWindowResizeEvent(const WindowResizeEvent& e)
 	{
-		uint32 width = event.Width;
-		uint32 height = event.Height;
+		uint32 width = e.Width;
+		uint32 height = e.Height;
 
 		// Cannot create a texture with a width or height of 0.
 		// This happens when the window is minimized
@@ -338,30 +333,30 @@ namespace Ion
 		RHI::Get()->ResizeBuffers(GetWindow()->GetRHIData(), { width, height });
 	}
 
-	void Application::OnWindowChangeDisplayModeEvent_Internal(const WindowChangeDisplayModeEvent& event)
+	void Application::OnWindowChangeDisplayModeEvent(const WindowChangeDisplayModeEvent& e)
 	{
 	}
 
-	void Application::OnWindowLostFocusEvent_Internal(const WindowLostFocusEvent& event)
+	void Application::OnWindowLostFocusEvent(const WindowLostFocusEvent& e)
 	{
-		if (m_Window->GetNativeHandle() == event.WindowHandle)
+		if (m_Window->GetNativeHandle() == e.WindowHandle)
 		{
 			m_bInFocus = false;
 		}
 	}
 
-	void Application::OnWindowFocusEvent_Internal(const WindowFocusEvent& event)
+	void Application::OnWindowFocusEvent(const WindowFocusEvent& e)
 	{
-		if (m_Window->GetNativeHandle() == event.WindowHandle)
+		if (m_Window->GetNativeHandle() == e.WindowHandle)
 		{
 			m_bInFocus = true;
 		}
 	}
 
-	void Application::OnKeyPressedEvent_Internal(const KeyPressedEvent& event)
+	void Application::OnKeyPressedEvent(const KeyPressedEvent& e)
 	{
 		// Toggle fullscreen with Alt + Enter
-		if (event.KeyCode == Key::Enter)
+		if (e.KeyCode == Key::Enter)
 		{
 			if (GetInputManager()->IsKeyPressed(Key::LAlt))
 			{
@@ -372,7 +367,7 @@ namespace Ion
 			}
 		}
 		// Exit application with Alt + F4
-		else if (event.KeyCode == Key::F4)
+		else if (e.KeyCode == Key::F4)
 		{
 			if (GetInputManager()->IsKeyPressed(Key::LAlt))
 			{
@@ -381,49 +376,14 @@ namespace Ion
 		}
 	}
 
-	void Application::OnKeyReleasedEvent_Internal(const KeyReleasedEvent& event)
+	void Application::OnKeyReleasedEvent(const KeyReleasedEvent& e)
 	{
 
 	}
 
-	void Application::OnKeyRepeatedEvent_Internal(const KeyRepeatedEvent& event)
+	void Application::OnKeyRepeatedEvent(const KeyRepeatedEvent& e)
 	{
 
-	}
-
-	void Application::Run()
-	{
-		TRACE_FUNCTION();
-
-		ApplicationLogger.Trace("Starting application loop.");
-
-		// Application loop
-		while (m_bRunning)
-		{
-			TRACE_SCOPE("Application Loop");
-
-			PollEvents();
-
-			m_GlobalDeltaTime = CalculateFrameTime();
-			Update(m_GlobalDeltaTime);
-			g_pClientApplication->PostUpdate();
-			// This will eventually need to be called after Update,
-			// but during the time the render thread is rendering
-			g_Engine->BuildRendererData(m_GlobalDeltaTime);
-
-			Render();
-
-			m_EventQueue.ProcessEvents([this](const Event& e)
-			{
-				DispatchEvent(e);
-			});
-
-			if (!m_bInFocus)
-			{
-				using namespace std::chrono_literals;
-				std::this_thread::sleep_for(100ms);
-			}
-		}
 	}
 
 	void Application::InitImGui() const
@@ -516,6 +476,4 @@ namespace Ion
 
 		io.FontDefault = m_Fonts.Roboto_14;
 	}
-
-	Application* Application::s_Instance = nullptr;
 }

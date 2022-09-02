@@ -86,7 +86,7 @@ namespace Ion::Platform
 		return L"";
 	}
 
-	namespace _Detail
+	namespace Internal
 	{
 		void SetMainThreadId()
 		{

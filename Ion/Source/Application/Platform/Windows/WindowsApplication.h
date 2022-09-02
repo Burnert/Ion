@@ -19,28 +19,22 @@ namespace Ion
 
 		static WindowsApplication* Get();
 
-		/* Called by the Entry Point */
-		virtual void Start();
-
 		virtual void SetCursor(ECursorType cursor) override;
 		virtual ECursorType GetCurrentCursor() const override;
-
-		void InitWindows(HINSTANCE hInstance);
 
 		static HINSTANCE GetHInstance();
 
 		static float GetPerformanceFrequency();
 
 	protected:
-		// Tagged as final so it cannot be overriden in the client
+		virtual void PlatformInit() override;
+		virtual void PlatformShutdown() override;
 
-		virtual void PollEvents() final override;
-		virtual void Update(float DeltaTime) final override;
-		virtual void Render() final override;
+		virtual void PollEvents() override;
+		virtual void Update(float DeltaTime) override;
+		virtual void Render() override;
 
-		// End of final overrides
-
-		virtual void OnWindowCloseEvent_Internal(const WindowCloseEvent& event) override;
+		virtual void OnWindowCloseEvent(const WindowCloseEvent& e) override;
 
 	private:
 		void LoadCursors();

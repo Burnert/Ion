@@ -37,7 +37,7 @@ namespace Ion::Platform
 
 	WString GetSystemDefaultFontPath();
 
-	namespace _Detail
+	namespace Internal
 	{
 		void SetMainThreadId();
 	}

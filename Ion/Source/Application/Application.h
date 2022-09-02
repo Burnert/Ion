@@ -62,9 +62,6 @@ namespace Ion
 	public:
 		virtual ~Application();
 
-		/* Called by the Entry Point */
-		virtual void Start();
-
 		void Exit();
 
 		void SetApplicationTitle(const WString& title);
@@ -88,8 +85,11 @@ namespace Ion
 		Application();
 
 		void Init();
-		void Run();
+		void RunLoop();
 		void Shutdown();
+
+		virtual void PlatformInit() = 0;
+		virtual void PlatformShutdown() = 0;
 
 		// Event system related functions
 
@@ -103,47 +103,23 @@ namespace Ion
 
 		// Event functions
 
-		virtual void OnWindowCloseEvent_Internal(const WindowCloseEvent& event); // Virtual because it's overriden in WindowsApplication
-		void OnWindowResizeEvent_Internal(const WindowResizeEvent& event);
-		void OnWindowChangeDisplayModeEvent_Internal(const WindowChangeDisplayModeEvent& event);
-		void OnWindowLostFocusEvent_Internal(const WindowLostFocusEvent& event);
-		void OnWindowFocusEvent_Internal(const WindowFocusEvent& event);
+		virtual void OnWindowCloseEvent(const WindowCloseEvent& e);
+		void OnWindowResizeEvent(const WindowResizeEvent& e);
+		void OnWindowChangeDisplayModeEvent(const WindowChangeDisplayModeEvent& e);
+		void OnWindowLostFocusEvent(const WindowLostFocusEvent& e);
+		void OnWindowFocusEvent(const WindowFocusEvent& e);
 
-		void OnKeyPressedEvent_Internal(const KeyPressedEvent& event);
-		void OnKeyReleasedEvent_Internal(const KeyReleasedEvent& event);
-		void OnKeyRepeatedEvent_Internal(const KeyRepeatedEvent& event);
+		void OnKeyPressedEvent(const KeyPressedEvent& e);
+		void OnKeyReleasedEvent(const KeyReleasedEvent& e);
+		void OnKeyRepeatedEvent(const KeyRepeatedEvent& e);
 
 		/* Platform specific method for polling application events / messages. */
-		virtual void PollEvents();
+		virtual void PollEvents() = 0;
 
 		virtual void Update(float DeltaTime);
 		virtual void Render();
 
-	protected:
-
-		// To be overriden in client:
-
-		/* Override this in the client if you want to use it.
-		   Runs after the engine has been initialised. (before the PostInit stage) */
-		virtual void OnInit() { }
-		/* Override this in the client if you want to use it.
-		   Runs every frame. */
-		virtual void OnUpdate(float deltaTime) { }
-		/* Override this in the client if you want to use it.
-		   Runs every frame after the Update function. */
-		virtual void OnRender() { }
-		/* Override this in the client if you want to use it.
-		   Runs after the engine has been shutdown and all the resources have been freed. */
-		virtual void OnShutdown() { }
-		/* Override this in the client if you want to use it.
-		   Called when the application receives an event. */
-		virtual void OnEvent(const Event& event) { }
-
-		// End of overridables
-
-		FORCEINLINE std::shared_ptr<GenericWindow> GetApplicationWindow() const { return m_Window; }
-
-		static Application* s_Instance;
+		std::shared_ptr<GenericWindow> GetApplicationWindow() const;
 
 	private:
 		void CallClientAppOnEvent(const Event& event);
@@ -223,5 +199,10 @@ namespace Ion
 	FORCEINLINE float Application::GetGlobalDeltaTime()
 	{
 		return Get()->m_GlobalDeltaTime;
+	}
+
+	FORCEINLINE std::shared_ptr<GenericWindow> Application::GetApplicationWindow() const
+	{
+		return m_Window;
 	}
 }

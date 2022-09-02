@@ -40,24 +40,37 @@ namespace Ion
 #endif
 		DebugTimer::InitPlatform();
 
-		Platform::_Detail::SetMainThreadId();
+		Platform::Internal::SetMainThreadId();
 
 		Platform::SetConsoleOutputUTF8();
 
-		g_pEngineApplication->Start();
+		// Init
+		TRACE_SESSION_BEGIN("Init");
+		TRACE_RECORD_START();
 
-		{
-			TRACE_SESSION_BEGIN("Shutdown");
-			TRACE_RECORD_START();
+		g_pEngineApplication->Init();
 
-			g_pEngineApplication->Shutdown();
+		TRACE_RECORD_STOP();
+		TRACE_SESSION_END();
 
-			delete g_pClientApplication;
-			delete g_pEngineApplication;
+		// Run
+		TRACE_SESSION_BEGIN("Run");
 
-			TRACE_RECORD_STOP();
-			TRACE_SESSION_END();
-		}
+		g_pEngineApplication->RunLoop();
+
+		TRACE_SESSION_END();
+
+		// Shutdown
+		TRACE_SESSION_BEGIN("Shutdown");
+		TRACE_RECORD_START();
+
+		g_pEngineApplication->Shutdown();
+
+		delete g_pClientApplication;
+		delete g_pEngineApplication;
+
+		TRACE_RECORD_STOP();
+		TRACE_SESSION_END();
 
 #if ION_ENABLE_TRACING
 		DebugTracing::Shutdown();

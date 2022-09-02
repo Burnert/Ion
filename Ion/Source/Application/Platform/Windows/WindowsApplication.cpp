@@ -24,24 +24,6 @@ namespace Ion
 		return static_cast<WindowsApplication*>(g_pEngineApplication);
 	}
 
-	void WindowsApplication::Start()
-	{
-		WindowsApplicationLogger.Info("Starting Windows application.");
-
-		SetThreadDescription(GetCurrentThread(), L"MainThread");
-		// Init
-		TRACE_SESSION_BEGIN("Init");
-		TRACE_RECORD_START();
-		InitWindows(GetModuleHandle(nullptr));
-		TRACE_RECORD_STOP();
-		TRACE_SESSION_END();
-
-		// Run
-		TRACE_SESSION_BEGIN("Run");
-		Run();
-		TRACE_SESSION_END();
-	}
-
 	static LARGE_INTEGER s_FirstFrameTime;
 	static float s_LastFrameTime = 0;
 
@@ -59,13 +41,15 @@ namespace Ion
 		return (ECursorType)m_CurrentCursor;
 	}
 
-	void WindowsApplication::InitWindows(HINSTANCE hInstance)
+	void WindowsApplication::PlatformInit()
 	{
 		TRACE_FUNCTION();
 
 		WindowsApplicationLogger.Info("Initializing Windows application.");
 
-		m_HInstance = hInstance;
+		SetThreadDescription(GetCurrentThread(), L"MainThread");
+
+		m_HInstance = GetModuleHandle(nullptr);
 
 		LARGE_INTEGER largeInteger { 0 };
 		QueryPerformanceFrequency(&largeInteger);
@@ -74,8 +58,13 @@ namespace Ion
 		QueryPerformanceCounter(&s_FirstFrameTime);
 
 		LoadCursors();
+	}
 
-		Init();
+	void WindowsApplication::PlatformShutdown()
+	{
+		TRACE_FUNCTION();
+
+		WindowsApplicationLogger.Info("Shutting down Windows application.");
 	}
 
 	void WindowsApplication::PollEvents()
@@ -136,23 +125,20 @@ namespace Ion
 		return difference / WindowsApplication::s_PerformanceFrequency;
 	}
 
-	void WindowsApplication::OnWindowCloseEvent_Internal(const WindowCloseEvent& event)
+	void WindowsApplication::OnWindowCloseEvent(const WindowCloseEvent& e)
 	{
 		TRACE_FUNCTION();
 
-		WindowsApplicationLogger.Info("Destroying window {{{}}}.", event.WindowHandle);
+		WindowsApplicationLogger.Info("Destroying window {{{}}}.", e.WindowHandle);
 
-		DestroyWindow((HWND)event.WindowHandle);
-		Application::OnWindowCloseEvent_Internal(event);
+		DestroyWindow((HWND)e.WindowHandle);
+
+		Application::OnWindowCloseEvent(e);
 	}
 
 	HINSTANCE WindowsApplication::m_HInstance;
 
 	float WindowsApplication::s_PerformanceFrequency = 0;
-
-	// -------------------------------------------------------------
-	//  ImGui related  ---------------------------------------------
-	// -------------------------------------------------------------
 
 	void WindowsApplication::LoadCursors()
 	{
@@ -240,6 +226,10 @@ namespace Ion
 		::SetCursor(handle);
 		return true;
 	}
+
+	// -------------------------------------------------------------
+	//  ImGui related  ---------------------------------------------
+	// -------------------------------------------------------------
 
 	void WindowsApplication::InitImGuiBackend(const std::shared_ptr<GenericWindow>& window) const
 	{
