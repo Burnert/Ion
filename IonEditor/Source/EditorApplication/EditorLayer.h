@@ -160,7 +160,7 @@ namespace Ion::Editor
 			ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();
 
-			EditorApplication::Get()->SetCursor(
+			g_pEngineApplication->SetCursor(
 				ImGui::IsItemActive() ?
 				ECursorType::GrabClosed :
 				ECursorType::Grab);

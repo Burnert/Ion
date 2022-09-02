@@ -107,7 +107,7 @@ namespace Ion::Editor
 					}
 					if (ImGui::IsItemHovered())
 					{
-						EditorApplication::Get()->SetCursor(ECursorType::Cross);
+						g_pEngineApplication->SetCursor(ECursorType::Cross);
 					}
 					if (ImGui::IsItemClicked())
 					{

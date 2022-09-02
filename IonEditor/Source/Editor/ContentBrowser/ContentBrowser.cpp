@@ -101,7 +101,7 @@ namespace Ion::Editor
 		bool bHovered = ImGui::IsItemHovered();
 		if (bHovered)
 		{
-			EditorApplication::Get()->SetCursor(ECursorType::Hand);
+			g_pEngineApplication->SetCursor(ECursorType::Hand);
 		}
 		animData.bVisible = bHovered || bSelected;
 		float fadeInTime = 0.15f;

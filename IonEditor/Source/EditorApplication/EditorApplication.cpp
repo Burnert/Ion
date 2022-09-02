@@ -50,7 +50,7 @@ namespace Ion::Editor
 	{
 		TRACE_FUNCTION();
 
-		SetApplicationTitle(L"Ion Editor");
+		GetEngineApp()->SetApplicationTitle(L"Ion Editor");
 		GetWindow()->Maximize();
 
 		EditorIcons::LoadTextures();

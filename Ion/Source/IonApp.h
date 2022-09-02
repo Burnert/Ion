@@ -16,15 +16,8 @@ namespace Ion
 		virtual void OnEvent(const Event& event) { }
 
 		void Exit();
-		void SetApplicationTitle(const WString& title);
 
-		void SetCursor(ECursorType cursor);
-		ECursorType GetCurrentCursor() const;
-
-		EngineFonts& GetEngineFonts();
-
-		Application* GetEngineApplication() const;
-
+		Application* GetEngineApp() const;
 		const std::shared_ptr<GenericWindow>& GetWindow() const;
 		const std::shared_ptr<InputManager>& GetInputManager() const;
 		LayerStack* GetLayerStack() const;
@@ -32,53 +25,33 @@ namespace Ion
 		float GetGlobalDeltaTime() const;
 	};
 
-	inline void IApp::Exit()
+	FORCEINLINE void IApp::Exit()
 	{
 		g_pEngineApplication->Exit();
 	}
 
-	inline void IApp::SetApplicationTitle(const WString& title)
-	{
-		g_pEngineApplication->SetApplicationTitle(title);
-	}
-
-	inline Application* IApp::GetEngineApplication() const
+	FORCEINLINE Application* IApp::GetEngineApp() const
 	{
 		return g_pEngineApplication;
 	}
 
-	inline float IApp::GetGlobalDeltaTime() const
+	FORCEINLINE float IApp::GetGlobalDeltaTime() const
 	{
-		return GetEngineApplication()->GetGlobalDeltaTime();
+		return GetEngineApp()->GetGlobalDeltaTime();
 	}
 
-	inline const std::shared_ptr<GenericWindow>& IApp::GetWindow() const
+	FORCEINLINE const std::shared_ptr<GenericWindow>& IApp::GetWindow() const
 	{
-		return GetEngineApplication()->GetWindow();
+		return GetEngineApp()->GetWindow();
 	}
 
-	inline const std::shared_ptr<InputManager>& IApp::GetInputManager() const
+	FORCEINLINE const std::shared_ptr<InputManager>& IApp::GetInputManager() const
 	{
-		return GetEngineApplication()->GetInputManager();
+		return GetEngineApp()->GetInputManager();
 	}
 
-	inline LayerStack* IApp::GetLayerStack() const
+	FORCEINLINE LayerStack* IApp::GetLayerStack() const
 	{
-		return GetEngineApplication()->GetLayerStack();
-	}
-
-	inline void IApp::SetCursor(ECursorType cursor)
-	{
-		GetEngineApplication()->SetCursor(cursor);
-	}
-
-	inline ECursorType IApp::GetCurrentCursor() const
-	{
-		return GetEngineApplication()->GetCurrentCursor();
-	}
-
-	inline EngineFonts& IApp::GetEngineFonts()
-	{
-		return GetEngineApplication()->GetEngineFonts();
+		return GetEngineApp()->GetLayerStack();
 	}
 }
