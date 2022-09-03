@@ -2,6 +2,7 @@
 
 #include "Core/Base/Types.h"
 #include "Core/Error/Error.h"
+#include "Core/Serialization/Archive.h"
 
 namespace Ion
 {
@@ -69,6 +70,16 @@ namespace Ion
 #endif
 	public:
 		static inline constexpr size_t Size = sizeof(m_Bytes);
+
+		// Serialization
+		FORCEINLINE friend Archive& operator<<(Archive& ar, GUID& guid)
+		{
+			ar.SerializeBytes(&guid.m_Bytes, sizeof(guid.m_Bytes));
+#if ION_DEBUG
+			guid.CacheString();
+#endif
+			return ar;
+		}
 	};
 
 	// Inline definitions

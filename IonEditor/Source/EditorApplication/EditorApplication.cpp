@@ -144,6 +144,18 @@ namespace Ion::Editor
 		RefCountTest();
 		RefCountPtrTest();
 
+		GUID guidTest;
+
+		Archive& archive = *new BinaryArchive(EArchiveType::Loading);
+
+		File loadFile("ArchiveTest.dat");
+		archive.LoadFromFile(loadFile);
+		
+		archive << guidTest;
+
+		//File saveFile("ArchiveTest.dat");
+		//archive.SaveToFile(saveFile);
+
 		//InitExample(nullptr);
 
 		auto& hierarchy = LogManager::GetLoggerHierarchy();
