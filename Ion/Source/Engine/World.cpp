@@ -338,17 +338,9 @@ namespace Ion
 
 		//ar << &world->m_ComponentRegistry;
 
-		TArray<Entity*> allEntities;
-		if (ar.IsSaving())
-		{
-			allEntities.reserve(world->m_Entities.size());
-			for (auto& [guid, entity] : world->m_Entities)
-			{
-				allEntities.emplace_back(entity);
-			}
-		}
+		TArray<Entity*> allEntities = ar.IsSaving() ? GatherValues(world->m_Entities) : TArray<Entity*>();
 		//ar << allEntities;
-		if (ar.IsSaving())
+		if (ar.IsLoading())
 		{
 			for (Entity* entity : allEntities)
 			{

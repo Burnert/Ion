@@ -224,3 +224,29 @@ NODISCARD inline constexpr bool IsNoneOf(T&& item, Elements&&... elements)
 
 const String EmptyString = "";
 const WString EmptyWString = L"";
+
+// Container helpers
+
+template<typename K, typename V>
+NODISCARD FORCEINLINE TArray<V> GatherValues(const THashMap<K, V>& map)
+{
+	TArray<V> values;
+	values.reserve(map.size());
+	for (auto& [k, v] : map)
+	{
+		values.emplace_back(v);
+	}
+	return values;
+}
+
+template<typename K, typename V>
+NODISCARD FORCEINLINE TArray<K> GatherKeys(const THashMap<K, V>& map)
+{
+	TArray<K> values;
+	values.reserve(map.size());
+	for (auto& [k, v] : map)
+	{
+		values.emplace_back(k);
+	}
+	return values;
+}
