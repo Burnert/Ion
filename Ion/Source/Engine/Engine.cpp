@@ -55,6 +55,23 @@ namespace Ion
 		return world;
 	}
 
+	World* Engine::CreateWorld(Archive& ar)
+	{
+		TRACE_FUNCTION();
+
+		ionassert(ar.IsLoading());
+
+		World* world = World::Create(ar);
+		if (!world)
+		{
+			EngineLogger.Error("Could not deserialize the world from archive.");
+			return nullptr;
+		}
+
+		m_RegisteredWorlds.push_back(world);
+		return world;
+	}
+
 	void Engine::DestroyWorld(World* world)
 	{
 		TRACE_FUNCTION();

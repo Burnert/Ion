@@ -14,6 +14,7 @@
 
 #include "Core/Base.h"
 #include "Core/Container/Tree.h"
+#include "Core/Container/TreeSerializer.h"
 #include "Core/Diagnostics/DebugTime.h"
 #include "Core/Diagnostics/Tracing.h"
 #include "Core/Error/Error.h"

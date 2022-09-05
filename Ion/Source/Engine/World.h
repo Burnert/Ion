@@ -57,6 +57,19 @@ namespace Ion
 
 	private:
 		TMetaPointer<uint8> m_Pointer;
+
+	public:
+		FORCEINLINE friend Archive& operator<<(Archive& ar, WorldTreeNodeData& data)
+		{
+			//if (data.IsEntity())
+			//	ar << data.AsEntity();
+			//else
+			//{
+			//	WorldTreeFolder* folder = data.AsFolder();
+			//	ar << folder->Name;
+			//}
+			return ar;
+		}
 	};
 
 	struct WorldTreeFindNodeByEntityPred
@@ -91,6 +104,7 @@ namespace Ion
 
 	protected:
 		static World* Create(const WorldInitializer& initializer);
+		static World* Create(Archive& ar);
 
 	public:
 		void SetTickEnabled(bool bTick);
@@ -168,6 +182,10 @@ namespace Ion
 		bool m_bTickWorld;
 
 		friend class Engine;
+
+	public:
+		// Serialization
+		friend Archive& operator<<(Archive& ar, World* world);
 	};
 
 	// Inline definitions

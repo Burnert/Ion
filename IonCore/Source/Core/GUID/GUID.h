@@ -74,7 +74,7 @@ namespace Ion
 		// Serialization
 		FORCEINLINE friend Archive& operator<<(Archive& ar, GUID& guid)
 		{
-			ar.SerializeBytes(&guid.m_Bytes, sizeof(guid.m_Bytes));
+			ar.Serialize(&guid.m_Bytes, sizeof(guid.m_Bytes));
 #if ION_DEBUG
 			guid.CacheString();
 #endif

@@ -4,7 +4,7 @@
 
 namespace Ion
 {
-	void BinaryArchive::SerializeBytes(void* const bytes, size_t size)
+	void BinaryArchive::Serialize(void* const bytes, size_t size)
 	{
 		if (IsLoading())
 		{
@@ -21,6 +21,28 @@ namespace Ion
 			m_ByteArray.resize(newSize);
 			memcpy_s(&m_ByteArray[m_Cursor], size, bytes, size);
 			m_Cursor += size;
+		}
+	}
+
+	void BinaryArchive::Serialize(String& value)
+	{
+		if (IsLoading())
+		{
+			ionverify(m_Cursor <= m_ByteArray.size());
+			char* start = (char*)&m_ByteArray[m_Cursor];
+			// Make sure we don't go past the end of the array using strnlen_s
+			size_t maxLength = m_ByteArray.size() - m_Cursor;
+			size_t copyLength = strnlen_s(start, maxLength);
+			value.resize(copyLength, 0);
+			memcpy_s(value.data(), copyLength, start, copyLength);
+			// Add 1 to go past the terminating 0 (unless it's the end of the file).
+			m_Cursor += std::min(copyLength + 1, maxLength);
+		}
+		else if (IsSaving())
+		{
+			ionassert(strlen(value.c_str()) == value.size());
+			// Save with the null character
+			Serialize(value.data(), value.size() + 1);
 		}
 	}
 

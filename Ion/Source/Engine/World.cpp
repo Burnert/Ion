@@ -32,6 +32,21 @@ namespace Ion
 		return world;
 	}
 
+	World* World::Create(Archive& ar)
+	{
+		TRACE_FUNCTION();
+
+		ionassert(ar.IsLoading());
+
+		// @TODO: Who should own the world?
+		// Worlds have to be deleted at some point
+		World* world = new World;
+		ar << world;
+		world->OnInit();
+
+		return world;
+	}
+
 	void World::OnInit()
 	{
 		TRACE_FUNCTION();
@@ -313,5 +328,72 @@ namespace Ion
 	void World::TransferSceneRenderData()
 	{
 		// ??
+	}
+
+	Archive& operator<<(Archive& ar, World* world)
+	{
+		ionassert(world);
+
+		ar << world->m_WorldGUID;
+
+		//ar << &world->m_ComponentRegistry;
+
+		TArray<Entity*> allEntities;
+		if (ar.IsSaving())
+		{
+			allEntities.reserve(world->m_Entities.size());
+			for (auto& [guid, entity] : world->m_Entities)
+			{
+				allEntities.emplace_back(entity);
+			}
+		}
+		//ar << allEntities;
+		if (ar.IsSaving())
+		{
+			for (Entity* entity : allEntities)
+			{
+				world->m_Entities.emplace(entity->GetGuid(), entity);
+			}
+		}
+		
+		ar << TTreeSerializer(*world->m_WorldTreeRoot, world->m_WorldTreeNodeFactory);
+
+		if (ar.IsLoading())
+		{
+			// Fill in the fields which are not saved by the serializer.
+
+			TFunction<void(World::WorldTreeNode*)> LLoadWorldTreeNode = [&](World::WorldTreeNode* node)
+			{
+				ionassert(node);
+
+				if (node->Get().IsEntity())
+				{
+					Entity* entity = node->Get().AsEntity();
+					world->m_EntityToWorldTreeNodeMap.emplace(entity, node);
+
+					world->m_Entities.emplace(entity->GetGuid(), entity);
+				}
+
+				for (World::WorldTreeNode* n : node->GetChildren())
+				{
+					LLoadWorldTreeNode(n);
+				}
+			};
+
+			LLoadWorldTreeNode(world->m_WorldTreeRoot);
+
+			world->m_ChildEntities.reserve(world->m_WorldTreeRoot->GetChildren().size());
+			for (World::WorldTreeNode* worldChildNode : world->m_WorldTreeRoot->GetChildren())
+			{
+				if (worldChildNode->Get().IsEntity())
+				{
+					world->m_ChildEntities.emplace_back(worldChildNode->Get().AsEntity());
+				}
+			}
+		}
+
+		ar << world->m_bTickWorld;
+
+		return ar;
 	}
 }
