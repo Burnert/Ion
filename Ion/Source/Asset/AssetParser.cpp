@@ -20,23 +20,30 @@ namespace Ion
 		ionassert(EqualsCI(assetPath.GetExtension(), StringView(Asset::FileExtension)));
 	}
 
+	AssetParser::AssetParser(const std::shared_ptr<XMLDocument>& xml) :
+		XMLParser(xml)
+	{
+	}
+
 	AssetParser& AssetParser::BeginAsset()
 	{
-		ionassert(!IsOpen(), "Cannot open the asset while it's already open.");
-
 		Open();
 		EnterNode(IASSET_NODE_IonAsset);
 		return *this;
 	}
 
-	AssetParser& AssetParser::BeginAsset(EAssetType type)
+	AssetParser& AssetParser::BeginAsset(AssetType& type)
 	{
-		ionassert(!IsOpen(), "Cannot open the asset while it's already open.");
-
 		Open();
 		EnterNode(IASSET_NODE_IonAsset);
 		ExpectType(type);
 		return *this;
+	}
+
+	AssetParser& AssetParser::BeginAsset(const String& type)
+	{
+		ionassert(AssetRegistry::FindType(type), "An asset type with name \"{}\" does not exist.", type);
+		return BeginAsset(*AssetRegistry::FindType(type));
 	}
 
 	AssetParser& AssetParser::Begin(const String& nodeName)
@@ -51,15 +58,15 @@ namespace Ion
 		return *this;
 	}
 
-	AssetParser& AssetParser::ParseInfo(EAssetType& outType, GUID& outGuid)
+	AssetParser& AssetParser::ParseInfo(AssetType*& outType, GUID& outGuid)
 	{
 		ionassert(GetCurrentNodeName() == IASSET_NODE_IonAsset);
 
 		ParseAttributes(IASSET_NODE_Info,
-			IASSET_ATTR_type, [&outType](const XMLParser::MessageInterface& iface, String type)
+			IASSET_ATTR_type, [&outType](const XMLParser::MessageInterface& iface, String sType)
 			{
-				outType = ParseAssetTypeString(type);
-				if (outType == EAssetType::Invalid)
+				outType = AssetRegistry::FindType(sType);
+				if (!outType)
 					iface.SendFail("Invalid asset type.");
 			},
 			IASSET_ATTR_guid, [&outGuid](const XMLParser::MessageInterface& iface, String guid)
@@ -88,14 +95,15 @@ namespace Ion
 		return *this;
 	}
 
-	AssetParser& AssetParser::ExpectType(EAssetType type)
+	AssetParser& AssetParser::ExpectType(AssetType& type)
 	{
 		ionassert(GetCurrentNodeName() == IASSET_NODE_IonAsset);
 
 		ExpectAttributes(IASSET_NODE_Info,
-			IASSET_ATTR_type, [type](String sType)
+			IASSET_ATTR_type, [&type](String sType)
 			{
-				return type == ParseAssetTypeString(sType);
+				AssetType* type = AssetRegistry::FindType(sType);
+				return type && type->GetName() == sType;
 			});
 		return *this;
 	}

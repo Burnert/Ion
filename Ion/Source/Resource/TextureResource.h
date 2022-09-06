@@ -35,6 +35,32 @@ namespace Ion
 		}
 	};
 
+#pragma region Image Asset Type
+
+	class ImageAssetData : public IAssetCustomData
+	{
+	public:
+		virtual AssetType& GetType() const override;
+
+		GUID ResourceGuid;
+		TextureResourceDescription Description;
+	};
+
+	class ImageAssetType : public AssetType
+	{
+	public:
+		FORCEINLINE explicit ImageAssetType() :
+			AssetType("Ion.Image")
+		{
+		}
+
+		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) override;
+	};
+
+	REGISTER_ASSET_TYPE_CLASS(ImageAssetType);
+
+#pragma endregion
+
 	class ION_API TextureResource : public Resource
 	{
 	public:
@@ -76,25 +102,14 @@ namespace Ion
 
 		virtual bool IsLoaded() const override;
 
-		/**
-		 * @brief Parses the TextureResource node in the .iasset file.
-		 * Called by Resource::Query
-		 *
-		 * @see Resource::Query
-		 *
-		 * @param asset Asset handle
-		 * @param outGuid GUID object to write the resource Guid to.
-		 * @param outDescription TextureResourceDescription object to write to
-		 * @return True if the file has been parsed successfully.
-		 */
-		static bool ParseAssetFile(const Asset& asset, GUID& outGuid, TextureResourceDescription& outDescription);
-
 	protected:
-		TextureResource(const Asset& asset, const TextureResourceDescription& desc) :
+		TextureResource(const Asset& asset) :
 			Resource(asset),
-			m_RenderData({ }),
-			m_Description(desc)
+			m_RenderData({ })
 		{
+			ionassert(asset->GetType() == AT_ImageAssetType);
+			TSharedPtr<ImageAssetData> data = PtrCast<ImageAssetData>(asset->GetCustomData());
+			m_Description = data->Description;
 		}
 
 	private:
@@ -133,7 +148,7 @@ namespace Ion
 				ResourceLogger.Info("Texture Resource from Asset \"{}\" has been imported successfully.", m_Asset->GetVirtualPath());
 
 				ionassert(m_Asset);
-				ionassert(m_Asset->GetType() == EAssetType::Image);
+				ionassert(m_Asset->GetType() == AT_ImageAssetType);
 
 				TextureDescription desc { };
 				desc.Dimensions.Width = image->GetWidth();

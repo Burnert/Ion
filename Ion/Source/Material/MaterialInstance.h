@@ -125,6 +125,42 @@ namespace Ion
 
 #pragma endregion
 
+#pragma region Material Instance Asset Type
+
+	class MaterialInstanceAssetType : public AssetType
+	{
+	public:
+		FORCEINLINE explicit MaterialInstanceAssetType() :
+			AssetType("Ion.MaterialInstance")
+		{
+		}
+
+		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) override;
+	};
+
+	REGISTER_ASSET_TYPE_CLASS(MaterialInstanceAssetType);
+
+	class MaterialInstanceAssetData : public IAssetCustomData
+	{
+	public:
+		struct Parameter
+		{
+			MaterialInstanceAssetParameterInstanceValues Values;
+			String Name;
+			EMaterialParameterType Type;
+		};
+
+		virtual AssetType& GetType() const override
+		{
+			return AT_MaterialInstanceAssetType;
+		}
+
+		String ParentMaterialAssetVP;
+		TArray<Parameter> Parameters;
+	};
+
+#pragma endregion
+
 #pragma region Material Instance
 
 	class ION_API MaterialInstance
@@ -160,8 +196,6 @@ namespace Ion
 
 		void CreateParameterInstances();
 		void DestroyParameterInstances();
-
-		bool ParseAsset(Asset materialInstanceAsset);
 
 	private:
 		std::shared_ptr<Material> m_ParentMaterial;

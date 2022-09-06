@@ -46,7 +46,9 @@ namespace Ion
 		template<typename FImport, typename FReady, typename FError>
 		void Import(FImport onImport, FReady onReady, FError onError = nullptr);
 
-		EAssetType GetType() const;
+		AssetType& GetType() const;
+
+		TSharedPtr<IAssetCustomData> GetCustomData() const;
 
 		/**
 		 * @brief Returns the path specified in the <ImportExternal> node.
@@ -79,7 +81,7 @@ namespace Ion
 	private:
 		explicit AssetDefinition(const AssetInitializer& initializer);
 
-		bool ParseAssetDefinitionFile(const FilePath& path);
+		Result<void, IOError> ParseAssetDefinitionFile(const std::shared_ptr<XMLDocument>& xml);
 
 	private:
 		GUID m_Guid;
@@ -91,13 +93,14 @@ namespace Ion
 		FilePath m_AssetDefinitionPath;
 
 		/**
-		 * @brief Path specified in the asset definition file.
+		 * @brief Import external path specified in the asset definition file.
 		 */
-		FilePath m_AssetReferencePath;
+		FilePath m_AssetImportPath;
 
 		AssetInfo m_Info;
 
-		EAssetType m_Type;
+		AssetType* m_Type;
+		TSharedPtr<IAssetCustomData> m_CustomData;
 
 		/**
 		 * @brief Whether the asset is an external, non-native file,
@@ -127,9 +130,9 @@ namespace Ion
 			"onReady argument type and onImport return type must be the same.");
 
 		ionassert(Platform::IsMainThread(), "Asset import function can be called only on the main thread.");
-		ionassert(m_AssetReferencePath.IsFile());
+		ionassert(m_AssetImportPath.IsFile());
 
-		AssetImportData importData { m_AssetReferencePath };
+		AssetImportData importData { m_AssetImportPath };
 
 		AsyncTask([onImport, onReady, onError, importData](IMessageQueueProvider& q)
 		{
@@ -182,14 +185,20 @@ namespace Ion
 		AssetLogger.Trace("Asset \"{}\" import task has been scheduled.", m_VirtualPath);
 	}
 
-	inline EAssetType AssetDefinition::GetType() const
+	inline AssetType& AssetDefinition::GetType() const
 	{
-		return m_Type;
+		ionassert(m_Type);
+		return *m_Type;
+	}
+
+	inline TSharedPtr<IAssetCustomData> AssetDefinition::GetCustomData() const
+	{
+		return m_CustomData;
 	}
 
 	inline const FilePath& AssetDefinition::GetImportPath() const
 	{
-		return m_AssetReferencePath;
+		return m_AssetImportPath;
 	}
 
 	inline const FilePath& AssetDefinition::GetDefinitionPath() const

@@ -82,7 +82,7 @@ namespace Ion::Editor
 		ImVec2 assetIconSize = { 96, 128 };
 		float assetIconSeparation = 8;
 
-		String sType = ToString(asset->GetType());
+		String sType = asset->GetType().GetName();
 		String sName = asset->GetInfo().Name;
 
 		ImVec2 avail = ImGui::GetContentRegionAvail();
@@ -112,11 +112,9 @@ namespace Ion::Editor
 		if (ImGui::BeginDragDropSource(dndFlags))
 		{
 			const char* csPayloadType = nullptr;
-			switch (asset->GetType())
+			if (asset->GetType() == AT_MeshAssetType)
 			{
-			case EAssetType::Mesh:
 				csPayloadType = DNDID_MeshAsset;
-				break;
 			}
 
 			if (csPayloadType)
@@ -149,13 +147,15 @@ namespace Ion::Editor
 
 		ImGui::SetCursorPos(selectableCursor);
 
-		void* iconTexture;
-		switch (asset->GetType())
+		void* iconTexture = [&asset]
 		{
-		case EAssetType::Mesh:  iconTexture = EditorIcons::IconMeshAsset.Texture->GetNativeID();  break;
-		case EAssetType::Image: iconTexture = EditorIcons::IconImageAsset.Texture->GetNativeID(); break;
-		default:                iconTexture = EditorIcons::IconAsset.Texture->GetNativeID();      break;
-		}
+			if (asset->GetType() == AT_MeshAssetType)
+				return EditorIcons::IconMeshAsset.Texture->GetNativeID();
+			else if (asset->GetType() == AT_ImageAssetType)
+				return EditorIcons::IconImageAsset.Texture->GetNativeID();
+			else
+				return EditorIcons::IconAsset.Texture->GetNativeID();
+		}();
 
 		ImGui::Image(iconTexture, ImVec2(assetIconSize.x, assetIconSize.x), ImVec2(0, 1), ImVec2(1, 0));
 

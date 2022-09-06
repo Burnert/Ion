@@ -9,26 +9,23 @@
 
 namespace Ion
 {
-	TSharedPtr<MeshResource> MeshResource::Query(const Asset& asset)
+	AssetType& MeshAssetData::GetType() const
 	{
-		return Resource::Query<MeshResource>(asset);
+		return AT_MeshAssetType;
 	}
 
-	bool MeshResource::IsLoaded() const
+	Result<TSharedPtr<IAssetCustomData>, IOError> MeshAssetType::Parse(const std::shared_ptr<XMLDocument>& xml)
 	{
-		return m_RenderData.IsAvailable();
-	}
+		TSharedPtr<MeshAssetData> data = MakeShared<MeshAssetData>();
 
-	bool MeshResource::ParseAssetFile(const Asset& asset, GUID& outGuid, MeshResourceDescription& outDescription)
-	{
-		return AssetParser(asset)
-			.BeginAsset(EAssetType::Mesh)
+		XMLParserResult result = AssetParser(xml)
+			.BeginAsset(AT_MeshAssetType)
 			.Begin(IASSET_NODE_Resource) // <Resource>
 			.Begin(IASSET_NODE_Resource_Mesh) // <Mesh>
-			.ParseCurrentAttributeTyped(IASSET_ATTR_guid, outGuid)
-			.TryEnterNode(IASSET_NODE_Defaults, [&outDescription](AssetParser& parser) // <Defaults>
+			.ParseCurrentAttributeTyped(IASSET_ATTR_guid, data->ResourceGuid)
+			.TryEnterNode(IASSET_NODE_Defaults, [&data](AssetParser& parser) // <Defaults>
 			{
-				parser.EnterEachNode(IASSET_NODE_Defaults_Material, [&outDescription](AssetParser& parser)
+				parser.EnterEachNode(IASSET_NODE_Defaults_Material, [&data](AssetParser& parser)
 				{
 					uint32 index = (uint32)-1;
 					Asset asset;
@@ -42,15 +39,31 @@ namespace Ion
 
 					if (index != (uint32)-1)
 					{
-						if (index >= outDescription.Defaults.MaterialAssets.size())
-							outDescription.Defaults.MaterialAssets.resize(index + 1);
-						outDescription.Defaults.MaterialAssets[index] = asset;
+						if (index >= data->Description.Defaults.MaterialAssets.size())
+							data->Description.Defaults.MaterialAssets.resize(index + 1);
+						data->Description.Defaults.MaterialAssets[index] = asset;
 					}
 				});
 			}) // </Defaults>
 			.End() // </Mesh>
 			.End() // </Resource>
-			.Finalize()
-			.OK();
+			.Finalize();
+
+		if (!result.OK())
+		{
+			result.PrintMessages();
+			ionthrow(IOError, result.GetFailMessage());
+		}
+		return data;
+	}
+
+	TSharedPtr<MeshResource> MeshResource::Query(const Asset& asset)
+	{
+		return Resource::Query<MeshResource>(asset);
+	}
+
+	bool MeshResource::IsLoaded() const
+	{
+		return m_RenderData.IsAvailable();
 	}
 }

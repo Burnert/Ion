@@ -158,6 +158,45 @@ namespace Ion
 
 #pragma endregion
 
+	Result<TSharedPtr<IAssetCustomData>, IOError> MaterialAssetType::Parse(const std::shared_ptr<XMLDocument>& xml)
+	{
+		TSharedPtr<MaterialAssetData> data = MakeShared<MaterialAssetData>();
+
+		XMLParserResult result = AssetParser(xml)
+			.BeginAsset(AT_MaterialAssetType)
+			.Begin(IASSET_NODE_Material) // <Material>
+			.ParseAttributes(IASSET_NODE_Material_Code,
+				IASSET_ATTR_source, [&, this](String source)
+				{
+					data->MaterialShaderCodePath = RHI::GetEngineShadersPath() + "Material" + source;
+				}
+			)
+			.EnterEachNode(IASSET_NODE_Material_Parameter, [&, this](AssetParser& parser)
+			{
+				String paramName;
+				EMaterialParameterType paramType = EMaterialParameterType::Null;
+
+				parser.ParseCurrentEnumAttribute(IASSET_ATTR_type, paramType);
+				parser.GetCurrentAttribute(IASSET_ATTR_name, paramName);
+
+				MaterialAssetParameterValues values;
+				parser.TryParseNodeValue(IASSET_NODE_Material_Parameter_Default, [&](String def) { values.Default = IMaterialParameter::ParseParamValue(def, paramType, parser); });
+				parser.TryParseNodeValue(IASSET_NODE_Material_Parameter_Min,     [&](String min) { values.Min =     IMaterialParameter::ParseParamValue(min, paramType, parser); });
+				parser.TryParseNodeValue(IASSET_NODE_Material_Parameter_Max,     [&](String max) { values.Max =     IMaterialParameter::ParseParamValue(max, paramType, parser); });
+
+				data->Parameters.emplace_back(MaterialAssetData::Parameter { values, paramName, paramType, });
+			})
+			.End() // </Material>
+			.Finalize();
+
+		if (!result.OK())
+		{
+			result.PrintMessages();
+			ionthrow(IOError, result.GetFailMessage());
+		}
+		return data;
+	}
+
 #pragma region Material
 
 	std::shared_ptr<Material> Material::Create()
@@ -362,48 +401,17 @@ namespace Ion
 		m_UsedTextureSlotsMask(0),
 		m_Asset(materialAsset)
 	{
-		if (!ParseAsset(materialAsset))
+		TSharedPtr<MaterialAssetData> data = PtrCast<MaterialAssetData>(m_Asset->GetCustomData());
+		ionassert(data->MaterialShaderCodePath.IsFile());
+
+		LoadExternalMaterialCode(data->MaterialShaderCodePath);
+
+		for (const MaterialAssetData::Parameter& param : data->Parameters)
 		{
-			ionbreak("Could not parse Material asset.");
-			return;
+			IMaterialParameter* parameter = AddParameter(param.Name, param.Type);
+			parameter->SetValues(param.Values.Default, param.Values.Min, param.Values.Max);
 		}
 		BuildConstantBuffer();
-	}
-
-	bool Material::ParseAsset(Asset materialAsset)
-	{
-		ionassert(materialAsset);
-		ionassert(materialAsset->GetType() == EAssetType::Material);
-
-		return AssetParser(materialAsset)
-			.BeginAsset(EAssetType::Material)
-			.Begin(IASSET_NODE_Material) // <Material>
-			.ParseAttributes(IASSET_NODE_Material_Code,
-				IASSET_ATTR_source, [this](String source)
-				{
-					FilePath path = RHI::GetEngineShadersPath() + "Material" + source;
-					return LoadExternalMaterialCode(path);
-				}
-			)
-			.EnterEachNode(IASSET_NODE_Material_Parameter, [this](AssetParser& parser)
-			{
-				String paramName;
-				EMaterialParameterType paramType = EMaterialParameterType::Null;
-
-				parser.ParseCurrentEnumAttribute(IASSET_ATTR_type, paramType);
-				parser.GetCurrentAttribute(IASSET_ATTR_name, paramName);
-
-				MaterialAssetParameterValues values;
-				parser.TryParseNodeValue(IASSET_NODE_Material_Parameter_Default, [&](String def) { values.Default = IMaterialParameter::ParseParamValue(def, paramType, parser); });
-				parser.TryParseNodeValue(IASSET_NODE_Material_Parameter_Min,     [&](String min) { values.Min =     IMaterialParameter::ParseParamValue(min, paramType, parser); });
-				parser.TryParseNodeValue(IASSET_NODE_Material_Parameter_Max,     [&](String max) { values.Max =     IMaterialParameter::ParseParamValue(max, paramType, parser); });
-
-				IMaterialParameter* parameter = AddParameter(paramName, paramType);
-				parameter->SetValues(values.Default, values.Min, values.Max);
-			})
-			.End() // </Material>
-			.Finalize()
-			.OK();
 	}
 
 	// Code parsing ==============================================================

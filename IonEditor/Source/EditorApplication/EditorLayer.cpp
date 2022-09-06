@@ -1020,7 +1020,7 @@ namespace Ion::Editor
 					bChanged = true;
 				}
 
-				TArray<Asset> meshAssets = AssetRegistry::GetAllRegisteredAssets(EAssetType::Mesh);
+				TArray<Asset> meshAssets = AssetRegistry::GetAllRegisteredAssets(AT_MeshAssetType);
 				for (Asset& meshAsset : meshAssets)
 				{
 					bool bSelected = meshAsset == currentMeshAsset;
@@ -1063,7 +1063,7 @@ namespace Ion::Editor
 						bChanged = true;
 					}
 
-					TArray<Asset> materialAssets = AssetRegistry::GetAllRegisteredAssets(EAssetType::MaterialInstance);
+					TArray<Asset> materialAssets = AssetRegistry::GetAllRegisteredAssets(AT_MaterialInstanceAssetType);
 					for (Asset& materialAsset : materialAssets)
 					{
 						bool bSelected = materialAsset == currentMaterialAsset;

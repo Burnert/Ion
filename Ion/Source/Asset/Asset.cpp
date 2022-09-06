@@ -29,13 +29,11 @@ namespace Ion
 
 	Result<Asset, IOError, FileNotFoundError> Asset::Resolve(const String& virtualPath)
 	{
-		AssetDefinition* def = AssetRegistry::Find(virtualPath);
-		if (!def)
-		{
-			FilePath path = ResolveVirtualPath(virtualPath);
-			return RegisterAsset(path, virtualPath);
-		}
-		return def->GetHandle();
+		if (AssetDefinition* def = AssetRegistry::Find(virtualPath))
+			return def->GetHandle();
+
+		FilePath path = ResolveVirtualPath(virtualPath);
+		return RegisterAsset(path, virtualPath);
 	}
 
 	Result<Asset, IOError, FileNotFoundError> Asset::RegisterExternal(const FilePath& path, const String& customVirtualPath)
@@ -69,49 +67,6 @@ namespace Ion
 		return AssetRegistry::IsValid(m_AssetPtr) ? m_AssetPtr : nullptr;
 	}
 
-	bool Asset::Parse(AssetInitializer& inOutInitializer)
-	{
-		return AssetParser(inOutInitializer.AssetDefinitionPath)
-			.BeginAsset()
-			.Begin(IASSET_NODE_Info) // <Info>
-			.ParseCurrentAttributes(IASSET_ATTR_type, [&inOutInitializer](String type)
-			{
-				inOutInitializer.Type = ParseAssetTypeString(type);
-			})
-			.FailIf([&inOutInitializer]
-			{
-				return inOutInitializer.Type == EAssetType::Invalid;
-			}, "Invalid asset type.")
-			.ParseCurrentAttributeTyped(IASSET_ATTR_guid, inOutInitializer.Guid)
-			.End() // </Info>
-			.TryEnterNode(IASSET_NODE_ImportExternal, [&inOutInitializer](AssetParser& parser)
-			{
-				parser.ParseCurrentAttributes(IASSET_ATTR_path, [&parser, &inOutInitializer](String sPath)
-				{
-					if (sPath.empty())
-					{
-						parser.Fail("Asset Import External path is empty.");
-						return;
-					}
-
-					FilePath path = sPath;
-
-					// If the import path is relative, it means it begins in the directory
-					// the .iasset file is in. Append the paths in that case.
-					if (path.IsRelative())
-					{
-						FilePath actualPath = inOutInitializer.AssetDefinitionPath;
-						actualPath.Back();
-						path = Move(actualPath += path);
-					}
-
-					inOutInitializer.AssetReferencePath = path;
-				});
-			})
-			.Finalize()
-			.OK();
-	}
-
 	Result<Asset, IOError, FileNotFoundError> Asset::RegisterAsset(const FilePath& path, const String& virtualPath)
 	{
 		if (!path.Exists())
@@ -126,17 +81,7 @@ namespace Ion
 			melse assetDefinition = R.Unwrap();
 		);
 
-		AssetInitializer initializer;
-		initializer.IAssetXML = std::make_shared<XMLDocument>(assetDefinition);
-		initializer.AssetDefinitionPath = path;
-		initializer.VirtualPath = virtualPath;
-
-		if (!Parse(/*in out*/ initializer))
-		{
-			AssetLogger.Error("The file \"{0}\" could not be parsed.", path.ToString());
-			ionthrow(IOError, "The file \"{0}\" could not be parsed.", path.ToString());
-		}
-
+		AssetInitializer initializer(std::make_shared<XMLDocument>(assetDefinition), virtualPath, path);
 		return AssetRegistry::Register(initializer).GetHandle();
 	}
 
@@ -193,20 +138,9 @@ namespace Ion
 		return virtualPath.substr(iSlash);
 	}
 
-	EAssetType ParseAssetTypeString(const String& sType)
+	std::shared_ptr<ImportedMeshData> AssetImporter::ImportColladaMeshAsset(const std::shared_ptr<AssetFileMemoryBlock>& block)
 	{
-		// @TODO: This should eventually parse the type string as kind of a package
-		// This way custom apps would be able to make their own asset types if needed.
-		size_t ionPrefix = sType.find("Ion.");
-		if (ionPrefix == -1)
-			return EAssetType::Invalid;
-
-		return TEnumParser<EAssetType>::FromString(sType.substr(4)).value_or(EAssetType::Invalid);
-	}
-
-	std::shared_ptr<MeshAssetData> AssetImporter::ImportColladaMeshAsset(const std::shared_ptr<AssetFileMemoryBlock>& block)
-	{
-		std::shared_ptr<MeshAssetData> meshData = std::make_shared<MeshAssetData>();
+		std::shared_ptr<ImportedMeshData> meshData = std::make_shared<ImportedMeshData>();
 
 		String collada((const char*)block->Ptr, block->Count);
 

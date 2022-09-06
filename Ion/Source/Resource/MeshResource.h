@@ -35,6 +35,32 @@ namespace Ion
 		}
 	};
 
+#pragma region Mesh Asset Type
+
+	class MeshAssetData : public IAssetCustomData
+	{
+	public:
+		virtual AssetType& GetType() const override;
+
+		GUID ResourceGuid;
+		MeshResourceDescription Description;
+	};
+
+	class MeshAssetType : public AssetType
+	{
+	public:
+		FORCEINLINE explicit MeshAssetType() :
+			AssetType("Ion.Mesh")
+		{
+		}
+
+		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) override;
+	};
+
+	REGISTER_ASSET_TYPE_CLASS(MeshAssetType);
+
+#pragma endregion
+
 	class ION_API MeshResource : public Resource
 	{
 	public:
@@ -69,25 +95,14 @@ namespace Ion
 
 		virtual bool IsLoaded() const override;
 
-		/**
-		 * @brief Parses the MeshResource node in the .iasset file.
-		 * Called by Resource::Query
-		 *
-		 * @see Resource::Query
-		 *
-		 * @param asset Asset handle
-		 * @param outGuid GUID object to write the resource Guid to.
-		 * @param outDescription MeshResourceDescription object to write to
-		 * @return True if the file has been parsed successfully.
-		 */
-		static bool ParseAssetFile(const Asset& asset, GUID& outGuid, MeshResourceDescription& outDescription);
-
 	protected:
-		MeshResource(const Asset& asset, const MeshResourceDescription& desc) :
+		MeshResource(const Asset& asset) :
 			Resource(asset),
-			m_RenderData({ }),
-			m_Description(desc)
+			m_RenderData({ })
 		{
+			ionassert(asset->GetType() == AT_MeshAssetType);
+			TSharedPtr<MeshAssetData> data = PtrCast<MeshAssetData>(asset->GetCustomData());
+			m_Description = data->Description;
 		}
 
 	private:
@@ -121,12 +136,12 @@ namespace Ion
 				return AssetImporter::ImportColladaMeshAsset(block);
 			},
 			// Store the ref (self) so the resource doesn't get deleted before it's loaded
-			[this, self, onTake](std::shared_ptr<MeshAssetData> meshData)
+			[this, self, onTake](std::shared_ptr<ImportedMeshData> meshData)
 			{
 				ResourceLogger.Info("Mesh Resource from Asset \"{}\" has been imported successfully.", m_Asset->GetVirtualPath());
 
 				ionassert(m_Asset);
-				ionassert(m_Asset->GetType() == EAssetType::Mesh);
+				ionassert(m_Asset->GetType() == AT_MeshAssetType);
 
 				m_RenderData.VertexBuffer = RHIVertexBuffer::Create(meshData->Vertices.Ptr, meshData->Vertices.Count);
 				m_RenderData.IndexBuffer = RHIIndexBuffer::Create(meshData->Indices.Ptr, (uint32)meshData->Indices.Count);

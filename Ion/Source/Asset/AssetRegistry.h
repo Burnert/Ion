@@ -13,6 +13,10 @@ namespace Ion
 		 */
 		using AssetMap = THashMap<String, AssetDefinition>;
 
+		static AssetType* FindType(const String& name);
+		
+		static AssetType& RegisterType(std::unique_ptr<AssetType>&& customAssetType);
+
 		/**
 		 * @brief Registers an asset. Creates an AssetDefinition
 		 * in the asset collection using the specified initializer.
@@ -68,7 +72,7 @@ namespace Ion
 		 * 
 		 * @param type Asset type
 		 */
-		static TArray<Asset> GetAllRegisteredAssets(EAssetType type);
+		static TArray<Asset> GetAllRegisteredAssets(const AssetType& type);
 
 		/**
 		 * @brief Get the Assets Map with AssetDefinition objects
@@ -100,6 +104,8 @@ namespace Ion
 	private:
 		AssetMap m_Assets;
 		THashSet<AssetDefinition*> m_AssetPtrs;
+
+		THashMap<String, std::unique_ptr<AssetType>> m_AssetTypes;
 
 		THashMap<String, FilePath> m_VirtualRoots;
 	};

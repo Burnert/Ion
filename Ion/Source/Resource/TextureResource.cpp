@@ -8,6 +8,42 @@
 
 namespace Ion
 {
+	AssetType& ImageAssetData::GetType() const
+	{
+		return AT_ImageAssetType;
+	}
+
+	Result<TSharedPtr<IAssetCustomData>, IOError> ImageAssetType::Parse(const std::shared_ptr<XMLDocument>& xml)
+	{
+		TSharedPtr<ImageAssetData> data = MakeShared<ImageAssetData>();
+
+		XMLParserResult result = AssetParser(xml)
+			.BeginAsset(AT_ImageAssetType)
+			.Begin(IASSET_NODE_Resource) // <Resource>
+			.Begin(IASSET_NODE_Resource_Texture) // <Texture>
+			.ParseCurrentAttributeTyped(IASSET_ATTR_guid, data->ResourceGuid)
+			.TryEnterNode(IASSET_NODE_Properties, [&data](AssetParser& parser) // <Defaults>
+			{
+				parser.TryEnterNode(IASSET_NODE_Resource_Texture_Prop_Filter, [&data](AssetParser& parser)
+				{
+					ETextureFilteringMethod filter = ETextureFilteringMethod::Default;
+					parser.ParseCurrentEnumAttribute(IASSET_ATTR_value, filter);
+
+					data->Description.Properties.Filter = filter;
+				});
+			}) // </Defaults>
+			.End() // </Texture>
+			.End() // </Resource>
+			.Finalize();
+
+		if (!result.OK())
+		{
+			result.PrintMessages();
+			ionthrow(IOError, result.GetFailMessage());
+		}
+		return data;
+	}
+
 	TSharedPtr<TextureResource> TextureResource::Query(const Asset& asset)
 	{
 		return Resource::Query<TextureResource>(asset);
@@ -27,28 +63,5 @@ namespace Ion
 
 		ionbreak("Unknown filter type.");
 		return (ETextureFilteringMethod)0xFF;
-	}
-
-	bool TextureResource::ParseAssetFile(const Asset& asset, GUID& outGuid, TextureResourceDescription& outDescription)
-	{
-		return AssetParser(asset)
-			.BeginAsset(EAssetType::Image)
-			.Begin(IASSET_NODE_Resource) // <Resource>
-			.Begin(IASSET_NODE_Resource_Texture) // <Texture>
-			.ParseCurrentAttributeTyped(IASSET_ATTR_guid, outGuid)
-			.TryEnterNode(IASSET_NODE_Properties, [&outDescription](AssetParser& parser) // <Defaults>
-			{
-				parser.TryEnterNode(IASSET_NODE_Resource_Texture_Prop_Filter, [&outDescription](AssetParser& parser)
-				{
-					ETextureFilteringMethod filter = ETextureFilteringMethod::Default;
-					parser.ParseCurrentEnumAttribute(IASSET_ATTR_value, filter);
-
-					outDescription.Properties.Filter = filter;
-				});
-			}) // </Defaults>
-			.End() // </Texture>
-			.End() // </Resource>
-			.Finalize()
-			.OK();
 	}
 }

@@ -87,8 +87,6 @@ namespace Ion
 	private:
 		explicit Asset(AssetDefinition* asset);
 
-		static bool Parse(AssetInitializer& inOutInitializer);
-
 		static Result<Asset, IOError, FileNotFoundError> RegisterAsset(const FilePath& path, const String& virtualPath);
 
 	private:
@@ -146,7 +144,7 @@ namespace Ion
 	class ION_API AssetImporter
 	{
 	public:
-		static std::shared_ptr<MeshAssetData> ImportColladaMeshAsset(const std::shared_ptr<AssetFileMemoryBlock>& block);
+		static std::shared_ptr<ImportedMeshData> ImportColladaMeshAsset(const std::shared_ptr<AssetFileMemoryBlock>& block);
 		static std::shared_ptr<Image> ImportImageAsset(const std::shared_ptr<AssetFileMemoryBlock>& block);
 	};
 }
