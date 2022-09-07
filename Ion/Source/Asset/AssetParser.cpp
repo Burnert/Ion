@@ -32,7 +32,7 @@ namespace Ion
 		return *this;
 	}
 
-	AssetParser& AssetParser::BeginAsset(AssetType& type)
+	AssetParser& AssetParser::BeginAsset(const IAssetType& type)
 	{
 		Open();
 		EnterNode(IASSET_NODE_IonAsset);
@@ -58,7 +58,7 @@ namespace Ion
 		return *this;
 	}
 
-	AssetParser& AssetParser::ParseInfo(AssetType*& outType, GUID& outGuid)
+	AssetParser& AssetParser::ParseInfo(IAssetType*& outType, GUID& outGuid)
 	{
 		ionassert(GetCurrentNodeName() == IASSET_NODE_IonAsset);
 
@@ -95,15 +95,14 @@ namespace Ion
 		return *this;
 	}
 
-	AssetParser& AssetParser::ExpectType(AssetType& type)
+	AssetParser& AssetParser::ExpectType(const IAssetType& type)
 	{
 		ionassert(GetCurrentNodeName() == IASSET_NODE_IonAsset);
 
 		ExpectAttributes(IASSET_NODE_Info,
 			IASSET_ATTR_type, [&type](String sType)
 			{
-				AssetType* type = AssetRegistry::FindType(sType);
-				return type && type->GetName() == sType;
+				return type.GetName() == sType;
 			});
 		return *this;
 	}

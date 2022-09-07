@@ -10,7 +10,7 @@ namespace Ion
 {
 	// AssetRegistry ----------------------------------------------------------------
 
-	AssetType* AssetRegistry::FindType(const String& name)
+	IAssetType* AssetRegistry::FindType(const String& name)
 	{
 		AssetRegistry& instance = Get();
 
@@ -20,7 +20,7 @@ namespace Ion
 		return instance.m_AssetTypes.at(name).get();
 	}
 
-	AssetType& AssetRegistry::RegisterType(std::unique_ptr<AssetType>&& customAssetType)
+	IAssetType& AssetRegistry::RegisterType(std::unique_ptr<IAssetType>&& customAssetType)
 	{
 		AssetRegistry& instance = Get();
 
@@ -110,11 +110,9 @@ namespace Ion
 
 	void AssetRegistry::RegisterEngineAssets()
 	{
-		AssetRegistry& instance = Get();
-
 		AssetLogger.Info("Registering Engine Assets...");
 
-		instance.RegisterAssetsInVirtualRoot(Asset::VirtualRoot::Engine);
+		AssetRegistry::RegisterAssetsInVirtualRoot(Asset::VirtualRoot::Engine);
 
 		AssetLogger.Info("Registered Engine Assets.");
 	}
@@ -204,7 +202,7 @@ namespace Ion
 		return assets;
 	}
 
-	TArray<Asset> AssetRegistry::GetAllRegisteredAssets(const AssetType& type)
+	TArray<Asset> AssetRegistry::GetAllRegisteredAssets(const IAssetType& type)
 	{
 		AssetRegistry& instance = Get();
 

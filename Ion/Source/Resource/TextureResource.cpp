@@ -8,12 +8,7 @@
 
 namespace Ion
 {
-	AssetType& ImageAssetData::GetType() const
-	{
-		return AT_ImageAssetType;
-	}
-
-	Result<TSharedPtr<IAssetCustomData>, IOError> ImageAssetType::Parse(const std::shared_ptr<XMLDocument>& xml)
+	Result<TSharedPtr<IAssetCustomData>, IOError> ImageAssetType::Parse(const std::shared_ptr<XMLDocument>& xml) const
 	{
 		TSharedPtr<ImageAssetData> data = MakeShared<ImageAssetData>();
 

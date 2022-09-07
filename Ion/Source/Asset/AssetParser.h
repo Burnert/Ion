@@ -41,7 +41,7 @@ namespace Ion
 		 * 
 		 * @param type Asset type to expect
 		 */
-		AssetParser& BeginAsset(AssetType& type);
+		AssetParser& BeginAsset(const IAssetType& type);
 
 		/**
 		 * @brief Start the asset parsing, enter the <IonAsset> node
@@ -64,7 +64,7 @@ namespace Ion
 		/**
 		 * @brief Parses the <Info> node
 		 */
-		AssetParser& ParseInfo(AssetType*& outType, GUID& outGuid);
+		AssetParser& ParseInfo(IAssetType*& outType, GUID& outGuid);
 
 		/**
 		 * @brief Parses the <Name> node
@@ -74,6 +74,6 @@ namespace Ion
 		/**
 		 * @brief Fails if the actual type is different than the specified one.
 		 */
-		AssetParser& ExpectType(AssetType& type);
+		AssetParser& ExpectType(const IAssetType& type);
 	};
 }

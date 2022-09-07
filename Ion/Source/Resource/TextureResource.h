@@ -37,27 +37,31 @@ namespace Ion
 
 #pragma region Image Asset Type
 
+	class ImageAssetType : public IAssetType
+	{
+	public:
+		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) const override;
+
+		virtual const String& GetName() const override
+		{
+			static String Name = "Ion.Image";
+			return Name;
+		}
+	};
+
+	REGISTER_ASSET_TYPE_CLASS(ImageAssetType);
+
 	class ImageAssetData : public IAssetCustomData
 	{
 	public:
-		virtual AssetType& GetType() const override;
+		virtual IAssetType& GetType() const override
+		{
+			return AT_ImageAssetType;
+		}
 
 		GUID ResourceGuid;
 		TextureResourceDescription Description;
 	};
-
-	class ImageAssetType : public AssetType
-	{
-	public:
-		FORCEINLINE explicit ImageAssetType() :
-			AssetType("Ion.Image")
-		{
-		}
-
-		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) override;
-	};
-
-	REGISTER_ASSET_TYPE_CLASS(ImageAssetType);
 
 #pragma endregion
 

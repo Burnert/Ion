@@ -46,7 +46,7 @@ namespace Ion
 		template<typename FImport, typename FReady, typename FError>
 		void Import(FImport onImport, FReady onReady, FError onError = nullptr);
 
-		AssetType& GetType() const;
+		IAssetType& GetType() const;
 
 		TSharedPtr<IAssetCustomData> GetCustomData() const;
 
@@ -99,7 +99,7 @@ namespace Ion
 
 		AssetInfo m_Info;
 
-		AssetType* m_Type;
+		IAssetType* m_Type;
 		TSharedPtr<IAssetCustomData> m_CustomData;
 
 		/**
@@ -185,7 +185,7 @@ namespace Ion
 		AssetLogger.Trace("Asset \"{}\" import task has been scheduled.", m_VirtualPath);
 	}
 
-	inline AssetType& AssetDefinition::GetType() const
+	inline IAssetType& AssetDefinition::GetType() const
 	{
 		ionassert(m_Type);
 		return *m_Type;

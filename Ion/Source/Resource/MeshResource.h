@@ -37,27 +37,31 @@ namespace Ion
 
 #pragma region Mesh Asset Type
 
+	class MeshAssetType : public IAssetType
+	{
+	public:
+		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) const override;
+
+		virtual const String& GetName() const override
+		{
+			static String Name = "Ion.Mesh";
+			return Name;
+		}
+	};
+
+	REGISTER_ASSET_TYPE_CLASS(MeshAssetType);
+
 	class MeshAssetData : public IAssetCustomData
 	{
 	public:
-		virtual AssetType& GetType() const override;
+		virtual IAssetType& GetType() const override
+		{
+			return AT_MeshAssetType;
+		}
 
 		GUID ResourceGuid;
 		MeshResourceDescription Description;
 	};
-
-	class MeshAssetType : public AssetType
-	{
-	public:
-		FORCEINLINE explicit MeshAssetType() :
-			AssetType("Ion.Mesh")
-		{
-		}
-
-		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) override;
-	};
-
-	REGISTER_ASSET_TYPE_CLASS(MeshAssetType);
 
 #pragma endregion
 

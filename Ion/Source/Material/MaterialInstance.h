@@ -127,15 +127,16 @@ namespace Ion
 
 #pragma region Material Instance Asset Type
 
-	class MaterialInstanceAssetType : public AssetType
+	class MaterialInstanceAssetType : public IAssetType
 	{
 	public:
-		FORCEINLINE explicit MaterialInstanceAssetType() :
-			AssetType("Ion.MaterialInstance")
-		{
-		}
+		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) const override;
 
-		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) override;
+		virtual const String& GetName() const override
+		{
+			static String Name = "Ion.MaterialInstance";
+			return Name;
+		}
 	};
 
 	REGISTER_ASSET_TYPE_CLASS(MaterialInstanceAssetType);
@@ -150,7 +151,7 @@ namespace Ion
 			EMaterialParameterType Type;
 		};
 
-		virtual AssetType& GetType() const override
+		virtual IAssetType& GetType() const override
 		{
 			return AT_MaterialInstanceAssetType;
 		}

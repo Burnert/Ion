@@ -158,7 +158,7 @@ namespace Ion
 
 #pragma endregion
 
-	Result<TSharedPtr<IAssetCustomData>, IOError> MaterialAssetType::Parse(const std::shared_ptr<XMLDocument>& xml)
+	Result<TSharedPtr<IAssetCustomData>, IOError> MaterialAssetType::Parse(const std::shared_ptr<XMLDocument>& xml) const
 	{
 		TSharedPtr<MaterialAssetData> data = MakeShared<MaterialAssetData>();
 

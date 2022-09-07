@@ -38,21 +38,19 @@ namespace Ion
 
 #pragma region Asset Type abstract base class
 
-	class AssetType;
+	class IAssetType;
 
 	class IAssetCustomData
 	{
 	public:
-		virtual AssetType& GetType() const = 0;
+		virtual IAssetType& GetType() const = 0;
 	};
 
 #define REGISTER_ASSET_TYPE_CLASS(T) inline T& AT_##T = static_cast<T&>(AssetRegistry::RegisterType(std::make_unique<T>()))
 
-	class AssetType
+	class IAssetType
 	{
 	public:
-		explicit AssetType(const String& typeName);
-
 		/**
 		 * @brief Asset type object. Handles parsing/exporting the specific asset type.
 		 * 
@@ -63,42 +61,29 @@ namespace Ion
 		 * 
 		 * @return Pointer to IAssetCustomData with the parsed data or IOError on error.
 		 */
-		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) = 0;
+		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) const = 0;
 
-		const String& GetName() const;
+		virtual const String& GetName() const = 0;
 
-		bool operator==(const AssetType& other) const;
-		bool operator!=(const AssetType& other) const;
+		bool operator==(const IAssetType& other) const;
+		bool operator!=(const IAssetType& other) const;
 
 		size_t GetHash() const;
-
-	private:
-		String m_Name;
 	};
 
-	FORCEINLINE AssetType::AssetType(const String& typeName) :
-		m_Name(typeName)
+	FORCEINLINE bool IAssetType::operator==(const IAssetType& other) const
 	{
+		return GetName() == other.GetName();
 	}
 
-	FORCEINLINE const String& AssetType::GetName() const
+	FORCEINLINE bool IAssetType::operator!=(const IAssetType& other) const
 	{
-		return m_Name;
+		return GetName() != other.GetName();
 	}
 
-	FORCEINLINE bool AssetType::operator==(const AssetType& other) const
+	FORCEINLINE size_t IAssetType::GetHash() const
 	{
-		return m_Name == other.m_Name;
-	}
-
-	FORCEINLINE bool AssetType::operator!=(const AssetType& other) const
-	{
-		return m_Name != other.m_Name;
-	}
-
-	FORCEINLINE size_t AssetType::GetHash() const
-	{
-		return THash<String>()(m_Name);
+		return THash<String>()(GetName());
 	}
 #pragma endregion
 

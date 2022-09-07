@@ -9,12 +9,7 @@
 
 namespace Ion
 {
-	AssetType& MeshAssetData::GetType() const
-	{
-		return AT_MeshAssetType;
-	}
-
-	Result<TSharedPtr<IAssetCustomData>, IOError> MeshAssetType::Parse(const std::shared_ptr<XMLDocument>& xml)
+	Result<TSharedPtr<IAssetCustomData>, IOError> MeshAssetType::Parse(const std::shared_ptr<XMLDocument>& xml) const
 	{
 		TSharedPtr<MeshAssetData> data = MakeShared<MeshAssetData>();
 
