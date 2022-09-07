@@ -84,7 +84,7 @@ static void LoadMesh(Asset& asset, TShared<Mesh>& mesh)
 
 	TOptional<AssetData> data = asset->Load([mesh](const AssetData& data) mutable
 	{
-		TShared<MeshAssetData> meshData = VariantCast<TShared<MeshAssetData>>(data.Variant);
+		TShared<ImportedMeshData> meshData = VariantCast<TShared<ImportedMeshData>>(data.Variant);
 
 		mesh = Mesh::Create();
 

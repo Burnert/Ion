@@ -89,29 +89,46 @@ if (!(attr)) \
 		EXMLParserResultType OverallResult = EXMLParserResultType::Success;
 		TArray<XMLParserMessage> Messages;
 
+		inline String GetFailMessage() const
+		{
+			if (OverallResult == EXMLParserResultType::Fail)
+			{
+				auto it = std::find_if(Messages.begin(), Messages.end(), [](const XMLParserMessage& message)
+				{
+					return message.Type == EXMLParserResultType::Fail;
+				});
+				if (it != Messages.end())
+					return it->Text;
+			}
+			return EmptyString;
+		}
+
+		inline void PrintMessages() const
+		{
+			for (const XMLParserMessage& message : Messages)
+			{
+				ELogLevel level = [&]
+				{
+					switch (message.Type)
+					{
+					case EXMLParserResultType::Success: return ELogLevel::Info;
+					case EXMLParserResultType::Warning: return ELogLevel::Warn;
+					case EXMLParserResultType::Error:   return ELogLevel::Error;
+					case EXMLParserResultType::Fail:    return ELogLevel::Critical;
+					default:                            return ELogLevel::Trace;
+					}
+				}();
+
+				XMLParserLogger.Log(level, "{}: {}", TEnumParser<EXMLParserResultType>::ToString(message.Type), message.Text);
+			}
+		}
+
 		inline bool OK() const
 		{
 #if ION_DEBUG // Always print XMLParser errors on Debug configuration
 			if (OverallResult == EXMLParserResultType::Fail)
 			{
-				XMLParserLogger.Error("XMLParser failed messages:");
-
-				for (const XMLParserMessage& message : Messages)
-				{
-					ELogLevel level = [&]
-					{
-						switch (message.Type)
-						{
-						case EXMLParserResultType::Success: return ELogLevel::Info;
-						case EXMLParserResultType::Warning: return ELogLevel::Warn;
-						case EXMLParserResultType::Error:   return ELogLevel::Error;
-						case EXMLParserResultType::Fail:    return ELogLevel::Critical;
-						default:                            return ELogLevel::Trace;
-						}
-					}();
-					
-					XMLParserLogger.Log(level, "{}: {}", TEnumParser<EXMLParserResultType>::ToString(message.Type), message.Text);
-				}
+				PrintMessages();
 			}
 #endif
 			return OverallResult != EXMLParserResultType::Fail;
@@ -150,6 +167,7 @@ if (!(attr)) \
 		using FEnterFunc = TFunction<void(TFinalClass&)>;
 
 		XMLParser(const FilePath& file);
+		XMLParser(const std::shared_ptr<XMLDocument>& xml);
 
 		TFinalClass& Open();
 
@@ -313,8 +331,20 @@ if (!(attr)) \
 	}
 
 	template<typename T>
+	XMLParser<T>::XMLParser(const std::shared_ptr<XMLDocument>& xml) :
+		m_Path(),
+		m_bFailed(false),
+		m_XML(xml),
+		m_CurrentNode(&m_XML->XML())
+	{
+	}
+
+	template<typename T>
 	typename XMLParser<T>::TFinalClass& XMLParser<T>::Open()
 	{
+		if (m_Path.IsEmpty()) // XMLParser was created using the XMLDocument constructor.
+			return *this;
+
 		ionassert(!IsOpen(), "Cannot open the file while it's already open.");
 		ionassert(m_Path.IsFile());
 

@@ -24,6 +24,13 @@ namespace Ion
 		AssetParser(const FilePath& assetPath);
 
 		/**
+		 * @brief Construct a new Asset Parser object using a previously opened XML document
+		 * 
+		 * @param xml XML document
+		 */
+		AssetParser(const std::shared_ptr<XMLDocument>& xml);
+
+		/**
 		 * @brief Start the asset parsing, enter the <IonAsset> node
 		 */
 		AssetParser& BeginAsset();
@@ -34,7 +41,15 @@ namespace Ion
 		 * 
 		 * @param type Asset type to expect
 		 */
-		AssetParser& BeginAsset(EAssetType type);
+		AssetParser& BeginAsset(const IAssetType& type);
+
+		/**
+		 * @brief Start the asset parsing, enter the <IonAsset> node
+		 * and expect a specific asset type. Fails if the actual type is different
+		 *
+		 * @param type Asset type name to expect
+		 */
+		AssetParser& BeginAsset(const String& type);
 
 		/**
 		 * @brief EnterNode wrapper
@@ -49,7 +64,7 @@ namespace Ion
 		/**
 		 * @brief Parses the <Info> node
 		 */
-		AssetParser& ParseInfo(EAssetType& outType, GUID& outGuid);
+		AssetParser& ParseInfo(IAssetType*& outType, GUID& outGuid);
 
 		/**
 		 * @brief Parses the <Name> node
@@ -59,6 +74,6 @@ namespace Ion
 		/**
 		 * @brief Fails if the actual type is different than the specified one.
 		 */
-		AssetParser& ExpectType(EAssetType type);
+		AssetParser& ExpectType(const IAssetType& type);
 	};
 }

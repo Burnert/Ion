@@ -133,6 +133,44 @@ namespace Ion
 
 #pragma endregion
 
+	Result<TSharedPtr<IAssetCustomData>, IOError> Ion::MaterialInstanceAssetType::Parse(const std::shared_ptr<XMLDocument>& xml) const
+	{
+		TSharedPtr<MaterialInstanceAssetData> data = MakeShared<MaterialInstanceAssetData>();
+
+		XMLParserResult result = AssetParser(xml)
+			.BeginAsset(AT_MaterialInstanceAssetType)
+			.Begin(IASSET_NODE_MaterialInstance) // <MaterialInstance>
+			.ParseCurrentAttributes(
+				IASSET_ATTR_parent, [&, this](String parent)
+				{
+					data->ParentMaterialAssetVP = parent;
+				}
+			)
+			.EnterEachNode(IASSET_NODE_MaterialInstance_ParameterInstance, [&, this](AssetParser& parser)
+				{
+					String paramName;
+					EMaterialParameterType paramType = EMaterialParameterType::Null;
+
+					parser.ParseCurrentEnumAttribute(IASSET_ATTR_type, paramType);
+					parser.GetCurrentAttribute(IASSET_ATTR_name, paramName);
+
+					MaterialInstanceAssetParameterInstanceValues values;
+					parser.ParseCurrentNodeValue([&](String val) { values.Value = IMaterialParameter::ParseParamValue(val, paramType, parser); });
+
+					data->Parameters.emplace_back(MaterialInstanceAssetData::Parameter { values, paramName, paramType });
+				}
+			)
+			.End() // </MaterialInstance>
+			.Finalize();
+
+		if (!result.OK())
+		{
+			result.PrintMessages();
+			ionthrow(IOError, result.GetFailMessage());
+		}
+		return data;
+	}
+
 #pragma region Material Instance
 
 	std::shared_ptr<MaterialInstance> MaterialInstance::Create(const std::shared_ptr<Material>& parentMaterial)
@@ -212,10 +250,24 @@ namespace Ion
 	{
 		ionassert(materialInstanceAsset);
 
-		if (!ParseAsset(materialInstanceAsset))
+		TSharedPtr<MaterialInstanceAssetData> data = PtrCast<MaterialInstanceAssetData>(m_Asset->GetCustomData());
+		ionassert(!data->ParentMaterialAssetVP.empty());
+
+		if (auto result = Asset::Resolve(data->ParentMaterialAssetVP)
+			.Err([&](Error& err) { MaterialLogger.Error("Could not set parent material to \"{}\".\n{}", data->ParentMaterialAssetVP, err.Message); }))
 		{
-			ionassert(false);
-			return;
+			SetParentMaterial(MaterialRegistry::QueryMaterial(result.Unwrap()));
+
+			for (MaterialInstanceAssetData::Parameter& param : data->Parameters)
+			{
+				IMaterialParameterInstance* parameter = GetMaterialParameterInstance(param.Name);
+				if (!parameter)
+				{
+					MaterialLogger.Error("Cannot find Parameter Instance with name \"{}\"", param.Name);
+					continue;
+				}
+				parameter->SetValue(param.Values.Value);
+			}
 		}
 	}
 
@@ -274,49 +326,6 @@ namespace Ion
 		}
 		m_ParameterInstances.clear();
 		m_TextureParameterInstances.clear();
-	}
-
-	bool MaterialInstance::ParseAsset(Asset materialInstanceAsset)
-	{
-		ionassert(materialInstanceAsset);
-		ionassert(materialInstanceAsset->GetType() == EAssetType::MaterialInstance);
-
-		return AssetParser(materialInstanceAsset)
-			.BeginAsset(EAssetType::MaterialInstance)
-			.Begin(IASSET_NODE_MaterialInstance) // <MaterialInstance>
-			.ParseCurrentAttributes(
-				IASSET_ATTR_parent, [this](String parent)
-				{
-					Asset asset = Asset::Resolve(parent)
-						.Err([&](auto& err) { MaterialLogger.Error("Could not set parent material to \"{}\"", parent); })
-						.UnwrapOr(Asset::None);
-					SetParentMaterial(MaterialRegistry::QueryMaterial(asset));
-				}
-			)
-			.EnterEachNode(IASSET_NODE_MaterialInstance_ParameterInstance, [this](AssetParser& parser)
-				{
-					String paramName;
-					EMaterialParameterType paramType = EMaterialParameterType::Null;
-
-					parser.ParseCurrentEnumAttribute(IASSET_ATTR_type, paramType);
-					parser.GetCurrentAttribute(IASSET_ATTR_name, paramName);
-
-					MaterialInstanceAssetParameterInstanceValues values;
-					parser.ParseCurrentNodeValue([&](String val) { values.Value = IMaterialParameter::ParseParamValue(val, paramType, parser); });
-
-					IMaterialParameterInstance* parameter = GetMaterialParameterInstance(paramName);
-					if (!parameter)
-					{
-						String message = fmt::format("Cannot find Parameter Instance with name \"{0}\"", paramName);
-						parser.GetInterface().SendError(message);
-						return;
-					}
-					parameter->SetValue(values.Value);
-				}
-			)
-			.End() // </MaterialInstance>
-			.Finalize()
-			.OK();
 	}
 
 #pragma endregion

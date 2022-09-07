@@ -10,6 +10,26 @@ namespace Ion
 {
 	// AssetRegistry ----------------------------------------------------------------
 
+	IAssetType* AssetRegistry::FindType(const String& name)
+	{
+		AssetRegistry& instance = Get();
+
+		if (instance.m_AssetTypes.find(name) == instance.m_AssetTypes.end())
+			return nullptr;
+
+		return instance.m_AssetTypes.at(name).get();
+	}
+
+	IAssetType& AssetRegistry::RegisterType(std::unique_ptr<IAssetType>&& customAssetType)
+	{
+		AssetRegistry& instance = Get();
+
+		ionverify(instance.m_AssetTypes.find(customAssetType->GetName()) == instance.m_AssetTypes.end(),
+			"An asset type with name \"{}\" already exists.", customAssetType->GetName());
+
+		return *instance.m_AssetTypes.emplace(customAssetType->GetName(), Move(customAssetType)).first->second.get();
+	}
+
 	AssetDefinition& AssetRegistry::Register(const AssetInitializer& initializer)
 	{
 		AssetRegistry& instance = Get();
@@ -23,10 +43,14 @@ namespace Ion
 			return it->second;
 		}
 
-		auto& [vp, assetDef] = *instance.m_Assets.emplace(initializer.VirtualPath, AssetDefinition(initializer)).first;
+		AssetDefinition& assetDef = instance.m_Assets.emplace(initializer.VirtualPath, AssetDefinition(initializer)).first->second;
 		instance.m_AssetPtrs.emplace(&assetDef);
 
-		AssetLogger.Info("Registered asset \"{0}\".", assetDef.GetVirtualPath());
+		AssetLogger.Info("Registered asset \"{}\".", assetDef.GetVirtualPath());
+
+		assetDef.ParseAssetDefinitionFile(initializer.AssetXML)
+			.Err([&](Error& err) { AssetLogger.Error("Asset \"{}\" could not be parsed.\n{}", assetDef.GetVirtualPath(), err.Message); })
+			.Ok([&] { AssetLogger.Trace("Asset \"{}\" parsed successfully.", assetDef.GetVirtualPath()); });
 
 		return assetDef;
 	}
@@ -86,11 +110,9 @@ namespace Ion
 
 	void AssetRegistry::RegisterEngineAssets()
 	{
-		AssetRegistry& instance = Get();
-
 		AssetLogger.Info("Registering Engine Assets...");
 
-		instance.RegisterAssetsInVirtualRoot(Asset::VirtualRoot::Engine);
+		AssetRegistry::RegisterAssetsInVirtualRoot(Asset::VirtualRoot::Engine);
 
 		AssetLogger.Info("Registered Engine Assets.");
 	}
@@ -180,9 +202,12 @@ namespace Ion
 		return assets;
 	}
 
-	TArray<Asset> AssetRegistry::GetAllRegisteredAssets(EAssetType type)
+	TArray<Asset> AssetRegistry::GetAllRegisteredAssets(const IAssetType& type)
 	{
 		AssetRegistry& instance = Get();
+
+		ionassert(instance.m_AssetTypes.find(type.GetName()) != instance.m_AssetTypes.end(),
+			"An asset type with a name \"{}\" does not exist.", type.GetName());
 
 		TArray<Asset> assets;
 

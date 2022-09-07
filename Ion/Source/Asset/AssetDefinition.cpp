@@ -10,26 +10,48 @@ namespace Ion
 	// AssetDefinition ----------------------------------------------------------------
 
 	AssetDefinition::AssetDefinition(const AssetInitializer& initializer) :
-		m_Guid(initializer.Guid),
 		m_VirtualPath(initializer.VirtualPath),
 		m_AssetDefinitionPath(initializer.AssetDefinitionPath),
-		m_AssetReferencePath(initializer.AssetReferencePath),
-		m_Type(initializer.Type),
-		m_bImportExternal(initializer.bImportExternal),
-		m_Info({ })
+		m_Type(nullptr),
+		m_Info({ }),
+		m_bImportExternal(false)
 	{
-		ParseAssetDefinitionFile(initializer.AssetDefinitionPath);
 	}
 
 	AssetDefinition::~AssetDefinition()
 	{
 	}
 
-	bool AssetDefinition::ParseAssetDefinitionFile(const FilePath& path)
+	Result<void, IOError> AssetDefinition::ParseAssetDefinitionFile(const std::shared_ptr<XMLDocument>& xml)
 	{
-		return AssetParser(path)
+		XMLParserResult result = AssetParser(xml)
 			.BeginAsset()
+			.ParseInfo(m_Type, m_Guid)
 			.ParseName(m_Info.Name)
+			.TryEnterNode(IASSET_NODE_ImportExternal, [this](AssetParser& parser)
+			{
+				parser.ParseCurrentAttributes(IASSET_ATTR_path, [&, this](String sPath)
+				{
+					if (sPath.empty())
+					{
+						parser.Fail("Asset Import External path is empty.");
+						return;
+					}
+
+					FilePath path = sPath;
+
+					// If the import path is relative, it means it begins in the directory
+					// the .iasset file is in. Append the paths in that case.
+					if (path.IsRelative())
+					{
+						FilePath actualPath = m_AssetDefinitionPath;
+						actualPath.Back();
+						path = Move(actualPath += path);
+					}
+
+					m_AssetImportPath = path;
+				});
+			})
 			.TryEnterNode(IASSET_NODE_Resource, [&](AssetParser& parser)
 			{
 				parser.EnterEachNode([&](AssetParser& parser)
@@ -37,7 +59,19 @@ namespace Ion
 					m_Info.ResourceUsage.push_back(parser.GetCurrentNodeName());
 				});
 			})
-			.Finalize()
-			.OK();
+			.Finalize();
+
+		if (!result.OK())
+		{
+			result.PrintMessages();
+			ionthrow(IOError, result.GetFailMessage());
+		}
+
+		auto customParseResult = GetType().Parse(xml);
+		fwdthrowall(customParseResult);
+
+		m_CustomData = customParseResult.Unwrap();
+
+		return Ok();
 	}
 }

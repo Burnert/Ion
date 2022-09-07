@@ -36,46 +36,61 @@ namespace Ion
 	class AssetRegistry;
 	class AssetDefinition;
 
-	/* Used in .iasset file (e.g. <Info type="Ion.Image">) */
-	enum class EAssetType : uint8
+#pragma region Asset Type abstract base class
+
+	class IAssetType;
+
+	class IAssetCustomData
 	{
-		None = 0,
-		Generic,
-		Image,
-		Mesh,
-		Data,
-		Material,
-		MaterialInstance,
-		Invalid = 0xFF,
+	public:
+		virtual IAssetType& GetType() const = 0;
 	};
 
-	template<>
-	struct TEnumParser<EAssetType>
-	{
-		ENUM_PARSER_TO_STRING_BEGIN(EAssetType)
-		ENUM_PARSER_TO_STRING_HELPER(None)
-		ENUM_PARSER_TO_STRING_HELPER(Generic)
-		ENUM_PARSER_TO_STRING_HELPER(Image)
-		ENUM_PARSER_TO_STRING_HELPER(Mesh)
-		ENUM_PARSER_TO_STRING_HELPER(Data)
-		ENUM_PARSER_TO_STRING_HELPER(Material)
-		ENUM_PARSER_TO_STRING_HELPER(MaterialInstance)
-		ENUM_PARSER_TO_STRING_HELPER(Invalid)
-		ENUM_PARSER_TO_STRING_END()
+#define REGISTER_ASSET_TYPE_CLASS(T) inline T& AT_##T = static_cast<T&>(AssetRegistry::RegisterType(std::make_unique<T>()))
+#define ASSET_TYPE_NAME_IMPL(name) \
+	virtual const String& GetName() const override { \
+		static String c_Name = name; \
+		return c_Name; \
+	}
 
-		ENUM_PARSER_FROM_STRING_BEGIN(EAssetType)
-		ENUM_PARSER_FROM_STRING_HELPER(None)
-		ENUM_PARSER_FROM_STRING_HELPER(Generic)
-		ENUM_PARSER_FROM_STRING_HELPER(Image)
-		ENUM_PARSER_FROM_STRING_HELPER(Mesh)
-		ENUM_PARSER_FROM_STRING_HELPER(Data)
-		ENUM_PARSER_FROM_STRING_HELPER(Material)
-		ENUM_PARSER_FROM_STRING_HELPER(MaterialInstance)
-		ENUM_PARSER_FROM_STRING_HELPER(Invalid)
-		ENUM_PARSER_FROM_STRING_END()
+	class IAssetType
+	{
+	public:
+		/**
+		 * @brief Asset type object. Handles parsing/exporting the specific asset type.
+		 * 
+		 * @details This function is called when registering the asset file.
+		 * On a successful parse, it returns a custom object, derived from IAssetCustomData,
+		 * which is a representation of the parsed data. It can later be cast to get
+		 * the data (e.g. when creating a mesh / texture).
+		 * 
+		 * @return Pointer to IAssetCustomData with the parsed data or IOError on error.
+		 */
+		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) const = 0;
+
+		virtual const String& GetName() const = 0;
+
+		bool operator==(const IAssetType& other) const;
+		bool operator!=(const IAssetType& other) const;
+
+		size_t GetHash() const;
 	};
 
-	EAssetType ParseAssetTypeString(const String& sType);
+	FORCEINLINE bool IAssetType::operator==(const IAssetType& other) const
+	{
+		return GetName() == other.GetName();
+	}
+
+	FORCEINLINE bool IAssetType::operator!=(const IAssetType& other) const
+	{
+		return GetName() != other.GetName();
+	}
+
+	FORCEINLINE size_t IAssetType::GetHash() const
+	{
+		return THash<String>()(GetName());
+	}
+#pragma endregion
 
 	inline static TOptional<Vector4> ParseVector4String(const char* str)
 	{
@@ -106,28 +121,28 @@ namespace Ion
 		TArray<String> ResourceUsage;
 	};
 
-	struct MeshAssetData
+	struct ImportedMeshData
 	{
 		TMemoryBlock<float> Vertices;
 		TMemoryBlock<uint32> Indices;
 		TRef<RHIVertexLayout> Layout;
 
-		MeshAssetData() :
+		ImportedMeshData() :
 			Vertices({ }),
 			Indices({ })
 		{
 		}
 
-		~MeshAssetData()
+		~ImportedMeshData()
 		{
 			Vertices.Free();
 			Indices.Free();
 		}
 
-		MeshAssetData(const MeshAssetData&) = delete;
-		MeshAssetData(MeshAssetData&&) = delete;
-		MeshAssetData& operator=(const MeshAssetData&) = delete;
-		MeshAssetData& operator=(MeshAssetData&&) = delete;
+		ImportedMeshData(const ImportedMeshData&) = delete;
+		ImportedMeshData(ImportedMeshData&&) = delete;
+		ImportedMeshData& operator=(const ImportedMeshData&) = delete;
+		ImportedMeshData& operator=(ImportedMeshData&&) = delete;
 	};
 
 	/**
@@ -135,54 +150,18 @@ namespace Ion
 	 */
 	struct AssetInitializer
 	{
-		std::shared_ptr<XMLDocument> IAssetXML;
-
+		std::shared_ptr<XMLDocument> AssetXML;
 		String VirtualPath;
-		GUID Guid;
 		FilePath AssetDefinitionPath;
-		FilePath AssetReferencePath;
-		EAssetType Type;
-		uint8 bImportExternal : 1;
-
-		/**
-		 * @brief Construct an invalid Asset Initializer
-		 */
-		static AssetInitializer Invalid()
-		{
-			AssetInitializer init;
-			init.Type = EAssetType::Invalid;
-			return init;
-		}
 
 		/**
 		 * @brief Construct a null Asset Initializer
 		 */
-		AssetInitializer() :
-			VirtualPath(),
-			Guid(GUID::Zero),
-			AssetDefinitionPath(),
-			AssetReferencePath(),
-			Type(EAssetType::None),
-			bImportExternal(false)
+		AssetInitializer(const std::shared_ptr<XMLDocument>& xml, const String& virtualPath, const FilePath& assetDefinitionPath) :
+			AssetXML(xml),
+			VirtualPath(virtualPath),
+			AssetDefinitionPath(assetDefinitionPath)
 		{
 		}
 	};
-}
-
-template<>
-NODISCARD FORCEINLINE String ToString<Ion::EAssetType>(Ion::EAssetType value)
-{
-	switch (value)
-	{
-	case Ion::EAssetType::None:              return "None";
-	case Ion::EAssetType::Generic:           return "Generic";
-	case Ion::EAssetType::Mesh:              return "Mesh";
-	case Ion::EAssetType::Image:             return "Image";
-	case Ion::EAssetType::Data:              return "Data";
-	case Ion::EAssetType::Material:          return "Material";
-	case Ion::EAssetType::MaterialInstance:  return "MaterialInstance";
-	case Ion::EAssetType::Invalid:           return "Invalid";
-	}
-	ionassert(0, "Invalid enum value.");
-	return "";
 }

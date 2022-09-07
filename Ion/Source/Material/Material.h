@@ -258,6 +258,38 @@ namespace Ion
 
 #pragma endregion
 
+#pragma region Material Asset Type
+
+	class MaterialAssetType : public IAssetType
+	{
+	public:
+		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) const override;
+		ASSET_TYPE_NAME_IMPL("Ion.Material")
+	};
+
+	REGISTER_ASSET_TYPE_CLASS(MaterialAssetType);
+
+	class MaterialAssetData : public IAssetCustomData
+	{
+	public:
+		struct Parameter
+		{
+			MaterialAssetParameterValues Values;
+			String Name;
+			EMaterialParameterType Type;
+		};
+
+		virtual IAssetType& GetType() const override
+		{
+			return AT_MaterialAssetType;
+		}
+
+		FilePath MaterialShaderCodePath;
+		TArray<Parameter> Parameters;
+	};
+
+#pragma endregion
+
 #pragma region Material
 
 	class ION_API Material : public std::enable_shared_from_this<Material>
@@ -299,7 +331,6 @@ namespace Ion
 		Material();
 		Material(Asset materialAsset);
 
-		bool ParseAsset(Asset materialAsset);
 		bool ParseMaterialCode(const String& code);
 		bool LoadExternalMaterialCode(const FilePath& path);
 

@@ -75,7 +75,6 @@ namespace Ion
 
 		// Find a resource of type T
 		TSharedPtr<T> resource = ResourceManager::FindAssociatedResource<T>(asset);
-
 		if (resource)
 		{
 			ResourceLogger.Trace("Found a resource for asset \"{}\".", asset->GetVirtualPath());
@@ -84,17 +83,13 @@ namespace Ion
 
 		ResourceDescription desc;
 		GUID guid = GUID::Zero;
-		if (T::ParseAssetFile(asset, guid, desc))
-		{
-			TSharedPtr<T> resource = MakeSharedDC<T>([](T& res) {
-				ResourceManager::Unregister(res);
-			}, asset, desc);
 
-			ResourceManager::Register(resource);
-			return resource;
-		}
+		resource = MakeSharedDC<T>([](T& res) {
+			ResourceManager::Unregister(res);
+		}, asset);
 
-		return nullptr;
+		ResourceManager::Register(resource);
+		return resource;
 	}
 
 	inline Asset Resource::GetAssetHandle() const
