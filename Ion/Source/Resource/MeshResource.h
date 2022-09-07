@@ -41,12 +41,7 @@ namespace Ion
 	{
 	public:
 		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) const override;
-
-		virtual const String& GetName() const override
-		{
-			static String Name = "Ion.Mesh";
-			return Name;
-		}
+		ASSET_TYPE_NAME_IMPL("Ion.Mesh")
 	};
 
 	REGISTER_ASSET_TYPE_CLASS(MeshAssetType);

@@ -47,6 +47,11 @@ namespace Ion
 	};
 
 #define REGISTER_ASSET_TYPE_CLASS(T) inline T& AT_##T = static_cast<T&>(AssetRegistry::RegisterType(std::make_unique<T>()))
+#define ASSET_TYPE_NAME_IMPL(name) \
+	virtual const String& GetName() const override { \
+		static String c_Name = name; \
+		return c_Name; \
+	}
 
 	class IAssetType
 	{

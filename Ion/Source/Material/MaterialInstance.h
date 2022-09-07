@@ -131,12 +131,7 @@ namespace Ion
 	{
 	public:
 		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) const override;
-
-		virtual const String& GetName() const override
-		{
-			static String Name = "Ion.MaterialInstance";
-			return Name;
-		}
+		ASSET_TYPE_NAME_IMPL("Ion.MaterialInstance")
 	};
 
 	REGISTER_ASSET_TYPE_CLASS(MaterialInstanceAssetType);
