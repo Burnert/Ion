@@ -49,10 +49,7 @@ namespace Ion
 	class MeshAssetData : public IAssetCustomData
 	{
 	public:
-		virtual IAssetType& GetType() const override
-		{
-			return AT_MeshAssetType;
-		}
+		ASSET_DATA_GETTYPE_IMPL(AT_MeshAssetType)
 
 		GUID ResourceGuid;
 		MeshResourceDescription Description;

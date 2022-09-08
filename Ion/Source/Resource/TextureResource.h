@@ -49,10 +49,7 @@ namespace Ion
 	class ImageAssetData : public IAssetCustomData
 	{
 	public:
-		virtual IAssetType& GetType() const override
-		{
-			return AT_ImageAssetType;
-		}
+		ASSET_DATA_GETTYPE_IMPL(AT_ImageAssetType)
 
 		GUID ResourceGuid;
 		TextureResourceDescription Description;

@@ -10,7 +10,12 @@ namespace Ion
 {
 	const String& WorldTreeNodeData::GetName() const
 	{
-		return IsFolder() ? AsFolder()->Name : AsEntity()->GetName();
+		return m_Entity ? m_Entity->GetName() : EmptyString;
+	}
+
+	const GUID& WorldTreeNodeData::GetEntityGuid() const
+	{
+		return m_Entity ? m_Entity->GetGuid() : GUID::Zero;
 	}
 
 	World* World::Create(const WorldInitializer& initializer)
@@ -129,7 +134,7 @@ namespace Ion
 		WorldTreeNode* parentNode = FindWorldTreeNode(attachTo);
 		ionverify(parentNode, "Entity to attach to doesn't exist in the world.");
 
-		Entity* parent = parentNode->Get().AsEntity();
+		Entity* parent = parentNode->Get().GetEntity();
 
 		InitEntity(entity);
 
@@ -358,9 +363,8 @@ namespace Ion
 			{
 				ionassert(node);
 
-				if (node->Get().IsEntity())
+				if (Entity* entity = node->Get().GetEntity())
 				{
-					Entity* entity = node->Get().AsEntity();
 					world->m_EntityToWorldTreeNodeMap.emplace(entity, node);
 
 					world->m_Entities.emplace(entity->GetGuid(), entity);
@@ -377,9 +381,9 @@ namespace Ion
 			world->m_ChildEntities.reserve(world->m_WorldTreeRoot->GetChildren().size());
 			for (World::WorldTreeNode* worldChildNode : world->m_WorldTreeRoot->GetChildren())
 			{
-				if (worldChildNode->Get().IsEntity())
+				if (Entity* entity = worldChildNode->Get().GetEntity())
 				{
-					world->m_ChildEntities.emplace_back(worldChildNode->Get().AsEntity());
+					world->m_ChildEntities.emplace_back(entity);
 				}
 			}
 		}
@@ -388,4 +392,18 @@ namespace Ion
 
 		return ar;
 	}
+
+#pragma region Map Asset
+
+	Result<TSharedPtr<IAssetCustomData>, IOError> MapAssetType::Parse(const std::shared_ptr<XMLDocument>& xml) const
+	{
+		return nullptr;
+	}
+
+	Result<std::shared_ptr<XMLDocument>, IOError> MapAssetType::Export(const TSharedPtr<IAssetCustomData>& data) const
+	{
+		return nullptr;
+	}
+
+#pragma endregion
 }

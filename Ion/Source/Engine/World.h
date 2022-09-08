@@ -1,63 +1,38 @@
 #pragma once
 
 #include "Components/Component.h"
+#include "Asset/Asset.h"
 
 namespace Ion
 {
+#pragma region World
+
 	class Entity;
 	class World;
 
-	struct WorldTreeFolder
-	{
-		String Name;
-	};
-
 	struct WorldTreeNodeData
 	{
-		inline Entity* AsEntity() const
+		FORCEINLINE Entity* GetEntity() const
 		{
-			return (Entity*)m_Pointer.Get();
-		}
-
-		inline WorldTreeFolder* AsFolder() const
-		{
-			return (WorldTreeFolder*)m_Pointer.Get();
-		}
-
-		inline bool IsFolder() const
-		{
-			return m_Pointer.GetMetaFlag<0>();
-		}
-
-		inline bool IsEntity() const
-		{
-			return !IsFolder();
+			return m_Entity;
 		}
 
 		const String& GetName() const;
+		const GUID& GetEntityGuid() const;
 
-		inline WorldTreeNodeData(Entity* entity) :
-			m_Pointer((uint8*)entity)
+		FORCEINLINE WorldTreeNodeData(Entity* entity) :
+			m_Entity(entity)
 		{
-			m_Pointer.SetMetaFlag<0>(false);
-		}
-
-		inline WorldTreeNodeData(WorldTreeFolder* folder) :
-			m_Pointer((uint8*)folder)
-		{
-			m_Pointer.SetMetaFlag<0>(true);
 		}
 
 		// Root node
-		inline WorldTreeNodeData() :
-			m_Pointer(nullptr)
+		FORCEINLINE WorldTreeNodeData() :
+			m_Entity(nullptr)
 		{
-			m_Pointer.SetMetaFlag<0>(true);
 		}
 
 	private:
-		TMetaPointer<uint8> m_Pointer;
-
+		Entity* m_Entity;
 	public:
 		FORCEINLINE friend Archive& operator<<(Archive& ar, WorldTreeNodeData& data)
 		{
@@ -78,9 +53,7 @@ namespace Ion
 
 		bool operator()(WorldTreeNodeData& nodeData)
 		{
-			if (nodeData.IsFolder())
-				return false;
-			return nodeData.AsEntity() == m_Entity;
+			return nodeData.GetEntity() == m_Entity;
 		}
 
 	private:
@@ -104,6 +77,7 @@ namespace Ion
 
 	protected:
 		static World* Create(const WorldInitializer& initializer);
+		static World* LoadFromAsset(const Asset& mapAsset);
 		static World* Create(Archive& ar);
 
 	public:
@@ -225,4 +199,30 @@ namespace Ion
 	{
 		return m_WorldGUID;
 	}
+
+#pragma endregion
+
+#pragma region Map Asset / Serialization
+
+	class MapAssetType : public IAssetType
+	{
+	public:
+		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) const override;
+		virtual Result<std::shared_ptr<XMLDocument>, IOError> Export(const TSharedPtr<IAssetCustomData>& data) const override;
+		ASSET_TYPE_NAME_IMPL("Ion.Map")
+	};
+
+	REGISTER_ASSET_TYPE_CLASS(MapAssetType);
+
+	class MapAssetData : public IAssetCustomData
+	{
+	public:
+		GUID WorldGuid;
+		TArray<Entity*> Entities;
+		// @TODO: Components here vvvvv
+
+		ASSET_DATA_GETTYPE_IMPL(AT_MapAssetType)
+	};
+
+#pragma endregion
 }
