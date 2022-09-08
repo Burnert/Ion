@@ -120,6 +120,9 @@ namespace Ion
 		   Destroys all the owned components. */
 		virtual void OnDestroy();
 
+	public:
+		virtual void Serialize(Archive& ar);
+
 	private:
 		void AddChild(Entity* child);
 		void RemoveChild(Entity* child);
@@ -153,6 +156,14 @@ namespace Ion
 
 		friend class Engine;
 		friend class World;
+
+	public:
+		FORCEINLINE friend Archive& operator<<(Archive& ar, Entity* entity)
+		{
+			ionassert(entity);
+			entity->Serialize(ar);
+			return ar;
+		}
 	};
 
 	// Inline definitions

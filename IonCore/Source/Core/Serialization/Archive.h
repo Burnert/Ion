@@ -163,6 +163,8 @@ namespace Ion
 		std::underlying_type_t<EArchiveFlags::Type> m_ArchiveFlags;
 	};
 
+#define SERIALIZE_BIT_FIELD(ar, f) { bool bField = f; ar << bField; f = bField; }
+
 	class XMLArchive;
 
 	class XMLArchiveAdapter

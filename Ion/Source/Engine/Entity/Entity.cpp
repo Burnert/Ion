@@ -215,6 +215,36 @@ namespace Ion
 
 	}
 
+	void Entity::Serialize(Archive& ar)
+	{
+		// Super::Serialize(ar);
+
+		ar << m_Name;
+		ar << m_GUID;
+
+		// Save parents and children
+		// Relationship needs to be setup after all the entities are available,
+		// which might not be the case right now.
+		if (ar.IsSaving())
+		{
+			ar << const_cast<GUID&>(m_Parent->GetGuid());
+			TArray<GUID> childrenGuids;
+			childrenGuids.reserve(m_Children.size());
+			std::transform(m_Children.begin(), m_Children.end(), std::back_inserter(childrenGuids), [](Entity* ent)
+			{
+				return ent->GetGuid();
+			});
+		}
+
+		ar << m_SceneData;
+
+		SERIALIZE_BIT_FIELD(ar, m_bCreateEmptyRootOnSpawn);
+		SERIALIZE_BIT_FIELD(ar, m_bTickEnabled);
+		SERIALIZE_BIT_FIELD(ar, m_bPendingKill);
+
+		// @TODO: serialize components
+	}
+
 	void Entity::AddChild(Entity* child)
 	{
 		ionassert(child);

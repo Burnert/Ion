@@ -33,16 +33,19 @@ namespace Ion
 
 	private:
 		Entity* m_Entity;
+
 	public:
 		FORCEINLINE friend Archive& operator<<(Archive& ar, WorldTreeNodeData& data)
 		{
-			//if (data.IsEntity())
-			//	ar << data.AsEntity();
-			//else
-			//{
-			//	WorldTreeFolder* folder = data.AsFolder();
-			//	ar << folder->Name;
-			//}
+			// Serialize the node as the entity's guid.
+			if (ar.IsSaving())
+			{
+				GUID guid = data.GetEntityGuid();
+				ar << guid;
+			}
+			// NOTE: No deserialization, because the tree
+			// is being rebuilt from the Entity hierarchy anyway.
+
 			return ar;
 		}
 	};

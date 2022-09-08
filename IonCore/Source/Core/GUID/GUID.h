@@ -86,7 +86,7 @@ namespace Ion
 					guid = GUID::FromString(sGuid).UnwrapOr(GUID::Zero);
 			}
 #if ION_DEBUG
-			guid.CacheString();
+			if (ar.IsLoading()) guid.CacheString();
 #endif
 			return ar;
 		}
