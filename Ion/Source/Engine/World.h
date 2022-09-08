@@ -7,56 +7,29 @@ namespace Ion
 	class Entity;
 	class World;
 
-	struct WorldTreeFolder
-	{
-		String Name;
-	};
-
 	struct WorldTreeNodeData
 	{
-		inline Entity* AsEntity() const
+		FORCEINLINE Entity* GetEntity() const
 		{
-			return (Entity*)m_Pointer.Get();
-		}
-
-		inline WorldTreeFolder* AsFolder() const
-		{
-			return (WorldTreeFolder*)m_Pointer.Get();
-		}
-
-		inline bool IsFolder() const
-		{
-			return m_Pointer.GetMetaFlag<0>();
-		}
-
-		inline bool IsEntity() const
-		{
-			return !IsFolder();
+			return m_Entity;
 		}
 
 		const String& GetName() const;
+		const GUID& GetEntityGuid() const;
 
-		inline WorldTreeNodeData(Entity* entity) :
-			m_Pointer((uint8*)entity)
+		FORCEINLINE WorldTreeNodeData(Entity* entity) :
+			m_Entity(entity)
 		{
-			m_Pointer.SetMetaFlag<0>(false);
-		}
-
-		inline WorldTreeNodeData(WorldTreeFolder* folder) :
-			m_Pointer((uint8*)folder)
-		{
-			m_Pointer.SetMetaFlag<0>(true);
 		}
 
 		// Root node
-		inline WorldTreeNodeData() :
-			m_Pointer(nullptr)
+		FORCEINLINE WorldTreeNodeData() :
+			m_Entity(nullptr)
 		{
-			m_Pointer.SetMetaFlag<0>(true);
 		}
 
 	private:
-		TMetaPointer<uint8> m_Pointer;
+		Entity* m_Entity;
 	};
 
 	struct WorldTreeFindNodeByEntityPred
@@ -65,9 +38,7 @@ namespace Ion
 
 		bool operator()(WorldTreeNodeData& nodeData)
 		{
-			if (nodeData.IsFolder())
-				return false;
-			return nodeData.AsEntity() == m_Entity;
+			return nodeData.GetEntity() == m_Entity;
 		}
 
 	private:

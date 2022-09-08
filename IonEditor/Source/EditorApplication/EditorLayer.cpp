@@ -394,7 +394,6 @@ namespace Ion::Editor
 	{
 		const WorldTreeNodeData& nodeData = node.Get();
 
-		bool bIsFolder = nodeData.IsFolder();
 		bool bHasChildren = node.HasChildren();
 		String nodeName;
 		Entity* entity = nullptr;
@@ -413,28 +412,21 @@ namespace Ion::Editor
 				ImGuiTreeNodeFlags_NoTreePushOnOpen;
 		}
 
-		if (bIsFolder)
+		entity = nodeData.GetEntity();
+		nodeName = entity->GetName();
+
+		// Highlight the selected entity
+		if (entity == EditorApplication::Get()->GetSelectedEntity())
 		{
-			nodeName = nodeData.AsFolder()->Name;
+			imguiNodeFlags |= ImGuiTreeNodeFlags_Selected;
 		}
-		else
+
+		// Expand (open) the tree node if it is in the expand chain
+		if (nextExpandNode == &node)
 		{
-			entity = nodeData.AsEntity();
-			nodeName = entity->GetName();
-
-			// Highlight the selected entity
-			if (entity == EditorApplication::Get()->GetSelectedEntity())
-			{
-				imguiNodeFlags |= ImGuiTreeNodeFlags_Selected;
-			}
-
-			// Expand (open) the tree node if it is in the expand chain
-			if (nextExpandNode == &node)
-			{
-				ImGui::SetNextItemOpen(true);
-				// And get the next node to expand
-				nextExpandNode = PopWorldTreeExpandChain();
-			}
+			ImGui::SetNextItemOpen(true);
+			// And get the next node to expand
+			nextExpandNode = PopWorldTreeExpandChain();
 		}
 
 		const void* nodeId = &node;
@@ -462,7 +454,7 @@ namespace Ion::Editor
 			{
 				// Show the action that is going to be performed
 				const WorldTreeNodeData& hovered = m_HoveredWorldTreeNodeDragTarget->Get();
-				bool bCanAttach = entity->CanAttachTo(hovered.AsEntity());
+				bool bCanAttach = entity->CanAttachTo(hovered.GetEntity());
 				const char* action = bCanAttach ? "Attach" : "Cannot attach";
 				ImGui::Text("%s %s to %s", action, node.Get().GetName().c_str(), hovered.GetName().c_str());
 			}
@@ -488,9 +480,9 @@ namespace Ion::Editor
 			{
 				ionassert(payload->DataSize == sizeof(WorldTreeNode*));
 				WorldTreeNode* nodePtr = *(WorldTreeNode**)payload->Data;
-				if (nodePtr->Get().IsEntity())
+				if (nodePtr->Get().GetEntity())
 				{
-					sourceEntity = nodePtr->Get().AsEntity();
+					sourceEntity = nodePtr->Get().GetEntity();
 					ionassert(sourceEntity);
 					// If the target entity is in the source entity's children,
 					// it cannot be attached to.

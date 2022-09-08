@@ -10,7 +10,12 @@ namespace Ion
 {
 	const String& WorldTreeNodeData::GetName() const
 	{
-		return IsFolder() ? AsFolder()->Name : AsEntity()->GetName();
+		return m_Entity ? m_Entity->GetName() : EmptyString;
+	}
+
+	const GUID& WorldTreeNodeData::GetEntityGuid() const
+	{
+		return m_Entity ? m_Entity->GetGuid() : GUID::Zero;
 	}
 
 	World* World::Create(const WorldInitializer& initializer)
@@ -114,7 +119,7 @@ namespace Ion
 		WorldTreeNode* parentNode = FindWorldTreeNode(attachTo);
 		ionverify(parentNode, "Entity to attach to doesn't exist in the world.");
 
-		Entity* parent = parentNode->Get().AsEntity();
+		Entity* parent = parentNode->Get().GetEntity();
 
 		InitEntity(entity);
 
