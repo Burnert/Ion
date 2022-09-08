@@ -146,10 +146,7 @@ namespace Ion
 			EMaterialParameterType Type;
 		};
 
-		virtual IAssetType& GetType() const override
-		{
-			return AT_MaterialInstanceAssetType;
-		}
+		ASSET_DATA_GETTYPE_IMPL(AT_MaterialInstanceAssetType)
 
 		String ParentMaterialAssetVP;
 		TArray<Parameter> Parameters;

@@ -8,6 +8,11 @@
 
 namespace Ion
 {
+	IAssetType& _RegisterType(std::unique_ptr<IAssetType>&& customAssetType)
+	{
+		return AssetRegistry::RegisterType(Move(customAssetType));
+	}
+
 	// AssetRegistry ----------------------------------------------------------------
 
 	IAssetType* AssetRegistry::FindType(const String& name)

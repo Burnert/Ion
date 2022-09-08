@@ -279,10 +279,7 @@ namespace Ion
 			EMaterialParameterType Type;
 		};
 
-		virtual IAssetType& GetType() const override
-		{
-			return AT_MaterialAssetType;
-		}
+		ASSET_DATA_GETTYPE_IMPL(AT_MaterialAssetType)
 
 		FilePath MaterialShaderCodePath;
 		TArray<Parameter> Parameters;

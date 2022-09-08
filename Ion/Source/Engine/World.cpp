@@ -319,4 +319,18 @@ namespace Ion
 	{
 		// ??
 	}
+
+#pragma region Map Asset
+
+	Result<TSharedPtr<IAssetCustomData>, IOError> MapAssetType::Parse(const std::shared_ptr<XMLDocument>& xml) const
+	{
+		return nullptr;
+	}
+
+	Result<std::shared_ptr<XMLDocument>, IOError> MapAssetType::Export(const TSharedPtr<IAssetCustomData>& data) const
+	{
+		return nullptr;
+	}
+
+#pragma endregion
 }

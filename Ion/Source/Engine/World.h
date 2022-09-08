@@ -1,9 +1,12 @@
 #pragma once
 
 #include "Components/Component.h"
+#include "Asset/Asset.h"
 
 namespace Ion
 {
+#pragma region World
+
 	class Entity;
 	class World;
 
@@ -62,6 +65,7 @@ namespace Ion
 
 	protected:
 		static World* Create(const WorldInitializer& initializer);
+		static World* LoadFromAsset(const Asset& mapAsset);
 
 	public:
 		void SetTickEnabled(bool bTick);
@@ -178,4 +182,30 @@ namespace Ion
 	{
 		return m_WorldGUID;
 	}
+
+#pragma endregion
+
+#pragma region Map Asset / Serialization
+
+	class MapAssetType : public IAssetType
+	{
+	public:
+		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) const override;
+		virtual Result<std::shared_ptr<XMLDocument>, IOError> Export(const TSharedPtr<IAssetCustomData>& data) const override;
+		ASSET_TYPE_NAME_IMPL("Ion.Map")
+	};
+
+	REGISTER_ASSET_TYPE_CLASS(MapAssetType);
+
+	class MapAssetData : public IAssetCustomData
+	{
+	public:
+		GUID WorldGuid;
+		TArray<Entity*> Entities;
+		// @TODO: Components here vvvvv
+
+		ASSET_DATA_GETTYPE_IMPL(AT_MapAssetType)
+	};
+
+#pragma endregion
 }
