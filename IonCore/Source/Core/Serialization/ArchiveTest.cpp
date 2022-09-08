@@ -1,6 +1,7 @@
 ﻿#include "Core/CorePCH.h"
 
 #include "Archive.h"
+#include "BinaryArchive.h"
 #include "Core/GUID/GUID.h"
 #include "Core/Container/Tree.h"
 #include "Core/Container/TreeSerializer.h"
@@ -9,7 +10,7 @@ namespace Ion::Test
 {
 	void ArchiveTest()
 	{
-		Archive& archive = *new BinaryArchive(EArchiveType::Loading);
+		Archive& archive = *new BinaryArchive(EArchiveType::Saving);
 
 		if (archive.IsLoading())
 		{

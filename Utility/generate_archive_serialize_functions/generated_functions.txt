@@ -1,0 +1,151 @@
+// INTERFACE DECL:
+
+virtual void Serialize(bool& value) = 0;
+virtual void Serialize(int8& value) = 0;
+virtual void Serialize(int16& value) = 0;
+virtual void Serialize(int32& value) = 0;
+virtual void Serialize(int64& value) = 0;
+virtual void Serialize(uint8& value) = 0;
+virtual void Serialize(uint16& value) = 0;
+virtual void Serialize(uint32& value) = 0;
+virtual void Serialize(uint64& value) = 0;
+virtual void Serialize(float& value) = 0;
+virtual void Serialize(double& value) = 0;
+
+FORCEINLINE Archive& operator<<(bool& value)
+{
+	Serialize(value);
+	return *this;
+}
+
+FORCEINLINE Archive& operator<<(int8& value)
+{
+	Serialize(value);
+	return *this;
+}
+
+FORCEINLINE Archive& operator<<(int16& value)
+{
+	Serialize(value);
+	return *this;
+}
+
+FORCEINLINE Archive& operator<<(int32& value)
+{
+	Serialize(value);
+	return *this;
+}
+
+FORCEINLINE Archive& operator<<(int64& value)
+{
+	Serialize(value);
+	return *this;
+}
+
+FORCEINLINE Archive& operator<<(uint8& value)
+{
+	Serialize(value);
+	return *this;
+}
+
+FORCEINLINE Archive& operator<<(uint16& value)
+{
+	Serialize(value);
+	return *this;
+}
+
+FORCEINLINE Archive& operator<<(uint32& value)
+{
+	Serialize(value);
+	return *this;
+}
+
+FORCEINLINE Archive& operator<<(uint64& value)
+{
+	Serialize(value);
+	return *this;
+}
+
+FORCEINLINE Archive& operator<<(float& value)
+{
+	Serialize(value);
+	return *this;
+}
+
+FORCEINLINE Archive& operator<<(double& value)
+{
+	Serialize(value);
+	return *this;
+}
+
+// OVERRIDE DECL:
+
+virtual void Serialize(bool& value) override;
+virtual void Serialize(int8& value) override;
+virtual void Serialize(int16& value) override;
+virtual void Serialize(int32& value) override;
+virtual void Serialize(int64& value) override;
+virtual void Serialize(uint8& value) override;
+virtual void Serialize(uint16& value) override;
+virtual void Serialize(uint32& value) override;
+virtual void Serialize(uint64& value) override;
+virtual void Serialize(float& value) override;
+virtual void Serialize(double& value) override;
+
+// IMPLEMENTATION:
+
+void BinaryArchive::Serialize(bool& value)
+{
+	Serialize(&value, sizeof(bool));
+}
+
+void BinaryArchive::Serialize(int8& value)
+{
+	Serialize(&value, sizeof(int8));
+}
+
+void BinaryArchive::Serialize(int16& value)
+{
+	Serialize(&value, sizeof(int16));
+}
+
+void BinaryArchive::Serialize(int32& value)
+{
+	Serialize(&value, sizeof(int32));
+}
+
+void BinaryArchive::Serialize(int64& value)
+{
+	Serialize(&value, sizeof(int64));
+}
+
+void BinaryArchive::Serialize(uint8& value)
+{
+	Serialize(&value, sizeof(uint8));
+}
+
+void BinaryArchive::Serialize(uint16& value)
+{
+	Serialize(&value, sizeof(uint16));
+}
+
+void BinaryArchive::Serialize(uint32& value)
+{
+	Serialize(&value, sizeof(uint32));
+}
+
+void BinaryArchive::Serialize(uint64& value)
+{
+	Serialize(&value, sizeof(uint64));
+}
+
+void BinaryArchive::Serialize(float& value)
+{
+	Serialize(&value, sizeof(float));
+}
+
+void BinaryArchive::Serialize(double& value)
+{
+	Serialize(&value, sizeof(double));
+}
+

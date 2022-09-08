@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Core/Base/Types.h"
+#include "Core/Base.h"
 #include "Core/Error/Error.h"
 #include "Core/Serialization/Archive.h"
 
@@ -74,7 +74,17 @@ namespace Ion
 		// Serialization
 		FORCEINLINE friend Archive& operator<<(Archive& ar, GUID& guid)
 		{
-			ar.Serialize(&guid.m_Bytes, sizeof(guid.m_Bytes));
+			if (ar.IsBinary())
+			{
+				ar.Serialize(&guid.m_Bytes, sizeof(guid.m_Bytes));
+			}
+			else if (ar.IsText())
+			{
+				String sGuid = ar.IsSaving() ? guid.ToString() : EmptyString;
+				ar.Serialize(sGuid);
+				if (ar.IsLoading())
+					guid = GUID::FromString(sGuid).UnwrapOr(GUID::Zero);
+			}
 #if ION_DEBUG
 			guid.CacheString();
 #endif
