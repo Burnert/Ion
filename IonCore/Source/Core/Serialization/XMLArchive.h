@@ -144,6 +144,11 @@ namespace Ion
 			return m_Archive;
 		}
 
+		FORCEINLINE Archive& GetUnderlyingArchive() const
+		{
+			return m_Archive;
+		}
+
 	private:
 		XMLArchive* AsXMLArchive() const;
 

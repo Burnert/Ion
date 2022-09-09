@@ -101,7 +101,36 @@ namespace Ion
 	{
 		return THash<String>()(GetName());
 	}
+
 #pragma endregion
+
+	class AssetSerializer
+	{
+	public:
+		FORCEINLINE static Result<void, IOError> EnterAssetAndSetCheckType(Archive& ar, IAssetType& type)
+		{
+			XMLArchiveAdapter xmlAr = ar;
+			xmlAr.SeekRoot();
+
+			xmlAr.EnterNode(IASSET_NODE_IonAsset);
+
+			xmlAr.EnterNode(IASSET_NODE_Info);
+
+			xmlAr.EnterAttribute(IASSET_ATTR_type);
+			String sType = type.GetName();
+			xmlAr << sType;
+
+			xmlAr.ExitAttribute(); // IASSET_ATTR_type
+
+			xmlAr.ExitNode(); // IASSET_NODE_Info
+
+			if (type.GetName() == sType); else
+			{
+				ionthrow(IOError, "Wrong asset type.");
+			}
+			return Ok();
+		}
+	};
 
 	inline static TOptional<Vector4> ParseVector4String(const char* str)
 	{

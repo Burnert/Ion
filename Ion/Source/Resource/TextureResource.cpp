@@ -47,22 +47,7 @@ namespace Ion
 		TSharedPtr<ImageAssetData> data = PtrCast<ImageAssetData>(customData);
 
 		XMLArchiveAdapter xmlAr = ar;
-		xmlAr.SeekRoot();
-
-		xmlAr.EnterNode(IASSET_NODE_IonAsset);
-
-		xmlAr.EnterNode(IASSET_NODE_Info);
-
-		xmlAr.EnterAttribute(IASSET_ATTR_type);
-		String type = AT_ImageAssetType.GetName();
-		xmlAr << type;
-		if (AT_ImageAssetType.GetName() == type); else
-		{
-			ionthrow(IOError, "Wrong asset type.");
-		}
-		xmlAr.ExitAttribute(); // IASSET_ATTR_type
-
-		xmlAr.ExitNode(); // IASSET_NODE_Info
+		fwdthrowall(AssetSerializer::EnterAssetAndSetCheckType(ar, AT_ImageAssetType));
 
 		xmlAr.EnterNode(IASSET_NODE_Resource);
 		xmlAr.EnterNode(IASSET_NODE_Resource_Texture);
