@@ -159,6 +159,12 @@ namespace Ion
 			return m_ArchiveFlags & EArchiveFlags::Text;
 		}
 
+	protected:
+		FORCEINLINE void SetFlag(EArchiveFlags::Type flag)
+		{
+			m_ArchiveFlags |= flag;
+		}
+
 	private:
 		std::underlying_type_t<EArchiveFlags::Type> m_ArchiveFlags;
 	};
@@ -170,30 +176,37 @@ namespace Ion
 	class XMLArchiveAdapter
 	{
 	public:
-		FORCEINLINE XMLArchiveAdapter(Archive& ar) :
-			m_Archive(&ar)
-		{
-		}
-
-		template<typename T>
-		FORCEINLINE void Serialize(T& value)
-		{
-			m_Archive->Serialize(value);
-		}
+		XMLArchiveAdapter(Archive& ar);
 
 		void EnterNode(const String& name);
 		bool TryEnterNode(const String& name);
+		bool TryEnterSiblingNode();
 		void ExitNode();
 
 		void EnterAttribute(const String& name);
 		bool TryEnterAttribute(const String& name);
 		void ExitAttribute();
 
-	private:
-		XMLArchive* AsXMLArchive();
+		void SeekRoot();
+
+		template<typename T>
+		FORCEINLINE void Serialize(T& value)
+		{
+			m_Archive.Serialize(value);
+		}
+
+		template<typename T>
+		FORCEINLINE Archive& operator<<(T& value)
+		{
+			m_Archive << value;
+			return m_Archive;
+		}
 
 	private:
-		Archive* m_Archive;
+		XMLArchive* AsXMLArchive() const;
+
+	private:
+		Archive& m_Archive;
 	};
 
 	// Generic array serialization

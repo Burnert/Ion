@@ -77,6 +77,8 @@ namespace Ion
 
 		virtual Result<std::shared_ptr<XMLDocument>, IOError> Export(const TSharedPtr<IAssetCustomData>& data) const { ionthrow(IOError, "Export function not implemented."); }
 
+		virtual Result<void, IOError> Serialize(Archive& ar, TSharedPtr<IAssetCustomData> customData) const { ionthrow(IOError, "Serialize function not implemented."); }
+
 		virtual const String& GetName() const = 0;
 
 		bool operator==(const IAssetType& other) const;

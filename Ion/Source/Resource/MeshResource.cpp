@@ -52,6 +52,88 @@ namespace Ion
 		return data;
 	}
 
+	Result<void, IOError> MeshAssetType::Serialize(Archive& ar, TSharedPtr<IAssetCustomData> customData) const
+	{
+		// @TODO: Make this work for binary archives too (not that trivial with xml)
+		ionassert(ar.IsText(), "Binary archives are not supported at the moment.");
+
+		TSharedPtr<MeshAssetData> data = PtrCast<MeshAssetData>(customData);
+
+		XMLArchiveAdapter xmlAr = ar;
+		xmlAr.SeekRoot();
+
+		xmlAr.EnterNode(IASSET_NODE_IonAsset);
+
+		xmlAr.EnterNode(IASSET_NODE_Info);
+
+		xmlAr.EnterAttribute(IASSET_ATTR_type);
+		String type = AT_MeshAssetType.GetName();
+		xmlAr << type;
+		if (AT_MeshAssetType.GetName() == type); else
+		{
+			ionthrow(IOError, "Wrong asset type.");
+		}
+		xmlAr.ExitAttribute(); // IASSET_ATTR_type
+
+		xmlAr.ExitNode(); // IASSET_NODE_Info
+
+		xmlAr.EnterNode(IASSET_NODE_Resource);
+		xmlAr.EnterNode(IASSET_NODE_Resource_Mesh);
+
+		xmlAr.EnterAttribute(IASSET_ATTR_guid);
+		xmlAr << data->ResourceGuid;
+		xmlAr.ExitAttribute(); // IASSET_ATTR_guid
+
+		if (ar.IsLoading() && xmlAr.TryEnterNode(IASSET_NODE_Defaults) ||
+			ar.IsSaving() && !data->Description.Defaults.MaterialAssets.empty())
+		{
+			auto LSerializeMaterial = [&](int32 index = -1)
+			{
+				ionassert(!ar.IsSaving() || index > -1);
+
+				xmlAr.EnterAttribute(IASSET_ATTR_index);
+				xmlAr << index;
+				xmlAr.ExitAttribute(); // IASSET_ATTR_index
+
+				xmlAr.EnterAttribute(IASSET_ATTR_asset);
+				String sAsset = ar.IsSaving() ? data->Description.Defaults.MaterialAssets[index]->GetVirtualPath() : EmptyString;
+				xmlAr << sAsset;
+				xmlAr.ExitAttribute(); // IASSET_ATTR_asset
+
+				if (ar.IsLoading())
+				{
+					Asset asset = Asset::Resolve(sAsset)
+						.Err([&](Error& err) { ResourceLogger.Error("Could not set Mesh material to \"{}\".\n{}", sAsset, err.Message); })
+						.UnwrapOr(Asset::None);
+
+					if (index >= data->Description.Defaults.MaterialAssets.size())
+						data->Description.Defaults.MaterialAssets.resize(index + 1);
+					data->Description.Defaults.MaterialAssets[index] = asset;
+				}
+			};
+
+			if (ar.IsLoading())
+			{
+				for (bool b = xmlAr.TryEnterNode(IASSET_NODE_Defaults_Material); b; b = xmlAr.TryEnterSiblingNode())
+					LSerializeMaterial();
+			}
+			else if (ar.IsSaving())
+			{
+				for (int32 i = 0; i < data->Description.Defaults.MaterialAssets.size(); ++i)
+					LSerializeMaterial(i);
+			}
+			
+			xmlAr.ExitNode(); // IASSET_NODE_Defaults
+		}
+
+		xmlAr.ExitNode(); // IASSET_NODE_Resource_Mesh
+		xmlAr.ExitNode(); // IASSET_NODE_Resource
+
+		xmlAr.ExitNode(); // IASSET_NODE_IonAsset
+
+		return Ok();
+	}
+
 	TSharedPtr<MeshResource> MeshResource::Query(const Asset& asset)
 	{
 		return Resource::Query<MeshResource>(asset);

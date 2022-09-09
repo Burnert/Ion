@@ -11,6 +11,7 @@ namespace Ion
 			Archive(type),
 			m_Cursor(0)
 		{
+			SetFlag(EArchiveFlags::Binary);
 		}
 
 		virtual void Serialize(void* const bytes, size_t size) override;

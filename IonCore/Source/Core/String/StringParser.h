@@ -45,6 +45,16 @@ namespace Ion
 				}
 				return val;
 			}
+			else if constexpr (TIsSameV<T, bool>)
+			{
+				if (str == "true")
+					return true;
+				else if (str == "false")
+					return false;
+
+				CoreLogger.Error("Cannot parse a bool value. -> {0}", str);
+				return NullOpt;
+			}
 			else if constexpr (TIsIntegralV<T>)
 			{
 				char* end;
@@ -94,7 +104,7 @@ namespace Ion
 			if (val > TNumericLimits<T>::max())
 			{
 				// Treat like a range error
-				*ppEnd = str;
+				*ppEnd = const_cast<char*>(str);
 				return (T)0;
 			}
 			return (T)val;

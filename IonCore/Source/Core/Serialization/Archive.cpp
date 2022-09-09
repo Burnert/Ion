@@ -5,6 +5,11 @@
 
 namespace Ion
 {
+	XMLArchiveAdapter::XMLArchiveAdapter(Archive& ar) :
+		m_Archive(ar)
+	{
+	}
+
 	void XMLArchiveAdapter::EnterNode(const String& name)
 	{
 		if (XMLArchive* ar = AsXMLArchive())
@@ -15,6 +20,13 @@ namespace Ion
 	{
 		if (XMLArchive* ar = AsXMLArchive())
 			return ar->TryEnterNode(name);
+		return false;
+	}
+
+	bool XMLArchiveAdapter::TryEnterSiblingNode()
+	{
+		if (XMLArchive* ar = AsXMLArchive())
+			return ar->TryEnterSiblingNode();
 		return false;
 	}
 
@@ -43,8 +55,14 @@ namespace Ion
 			ar->ExitAttribute();
 	}
 
-	XMLArchive* XMLArchiveAdapter::AsXMLArchive()
+	void XMLArchiveAdapter::SeekRoot()
 	{
-		return dynamic_cast<XMLArchive*>(m_Archive);
+		if (XMLArchive* ar = AsXMLArchive())
+			ar->SeekRoot();
+	}
+
+	XMLArchive* XMLArchiveAdapter::AsXMLArchive() const
+	{
+		return dynamic_cast<XMLArchive*>(&m_Archive);
 	}
 }

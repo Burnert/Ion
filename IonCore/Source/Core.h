@@ -36,6 +36,8 @@
 #include "Core/Platform/Platform.h"
 #include "Core/Profiling/DebugProfiler.h"
 #include "Core/Serialization/Archive.h"
+#include "Core/Serialization/BinaryArchive.h"
+#include "Core/Serialization/XMLArchive.h"
 #include "Core/String/StringConverter.h"
 #include "Core/String/StringUtils.h"
 #include "Core/String/StringParser.h"

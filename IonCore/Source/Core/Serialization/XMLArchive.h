@@ -13,6 +13,7 @@ namespace Ion
 			m_CurrentNode(nullptr),
 			m_CurrentAttribute(nullptr)
 		{
+			SetFlag(EArchiveFlags::Text);
 		}
 
 		virtual void Serialize(void* const bytes, size_t size) override;
@@ -33,17 +34,43 @@ namespace Ion
 
 		void EnterNode(const String& name);
 		bool TryEnterNode(const String& name);
+		bool TryEnterSiblingNode();
 		void ExitNode();
 
 		void EnterAttribute(const String& name);
 		bool TryEnterAttribute(const String& name);
 		void ExitAttribute();
 
+		void SeekRoot();
+
 		virtual void LoadFromFile(File& file) override;
 		virtual void SaveToFile(File& file) const override;
 
+		void LoadXML(const std::shared_ptr<XMLDocument>& xml);
+		std::shared_ptr<XMLDocument> SaveXML() const;
+		
 	private:
-		std::unique_ptr<XMLDocument> m_XML;
+		template<typename T, TEnableIf<std::is_fundamental_v<T>>* = 0>
+		FORCEINLINE void SerializeFundamental(T& value)
+		{
+			if (IsSaving())
+			{
+				Serialize(ToString(value));
+			}
+			else if (IsLoading())
+			{
+				String sValue;
+				Serialize(sValue);
+
+				if (TOptional<T> opt = TStringParser<T>()(sValue))
+				{
+					value = *opt;
+				}
+			}
+		}
+
+	private:
+		std::shared_ptr<XMLDocument> m_XML;
 		XMLNode* m_CurrentNode;
 		XMLAttribute* m_CurrentAttribute;
 	};

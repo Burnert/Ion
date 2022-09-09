@@ -5,6 +5,9 @@
 #include "AssetParser.h"
 #include "Asset.h"
 
+// @TODO: TEMPORARY:
+#include "Resource/MeshResource.h"
+
 namespace Ion
 {
 	// AssetDefinition ----------------------------------------------------------------
@@ -65,6 +68,21 @@ namespace Ion
 		{
 			result.PrintMessages();
 			ionthrow(IOError, result.GetFailMessage());
+		}
+
+		// @TODO: TEMPORARY:
+		if (m_Type->GetName() == "Ion.Mesh")
+		{
+			XMLArchive ar(EArchiveType::Loading);
+			ar.LoadXML(xml);
+
+			TSharedPtr<MeshAssetData> data = MakeShared<MeshAssetData>();
+
+			GetType().Serialize(ar, data).Unwrap();
+
+			m_CustomData = data;
+
+			return Ok();
 		}
 
 		auto customParseResult = GetType().Parse(xml);
