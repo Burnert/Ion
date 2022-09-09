@@ -52,12 +52,13 @@ namespace Ion
 		return data;
 	}
 
-	Result<void, IOError> MeshAssetType::Serialize(Archive& ar, TSharedPtr<IAssetCustomData> customData) const
+	Result<void, IOError> MeshAssetType::Serialize(Archive& ar, TSharedPtr<IAssetCustomData>& inOutCustomData) const
 	{
 		// @TODO: Make this work for binary archives too (not that trivial with xml)
 		ionassert(ar.IsText(), "Binary archives are not supported at the moment.");
+		ionassert(!inOutCustomData || inOutCustomData->GetType() == AT_MeshAssetType);
 
-		TSharedPtr<MeshAssetData> data = PtrCast<MeshAssetData>(customData);
+		TSharedPtr<MeshAssetData> data = inOutCustomData ? PtrCast<MeshAssetData>(inOutCustomData) : MakeShared<MeshAssetData>();
 
 		XMLArchiveAdapter xmlAr = ar;
 		fwdthrowall(AssetSerializer::EnterAssetAndSetCheckType(ar, AT_MeshAssetType));
@@ -99,11 +100,12 @@ namespace Ion
 
 			if (ar.IsLoading())
 			{
-				for (bool b = xmlAr.TryEnterNode(IASSET_NODE_Defaults_Material); b; b = xmlAr.TryEnterSiblingNode())
+				for (bool b = xmlAr.TryEnterNode(IASSET_NODE_Defaults_Material); b || (xmlAr.ExitNode(), 0); b = xmlAr.TryEnterSiblingNode())
 					LSerializeMaterial();
 			}
 			else if (ar.IsSaving())
 			{
+				// @TODO: Fix - enter nodes
 				for (int32 i = 0; i < data->Description.Defaults.MaterialAssets.size(); ++i)
 					LSerializeMaterial(i);
 			}
@@ -115,6 +117,8 @@ namespace Ion
 		xmlAr.ExitNode(); // IASSET_NODE_Resource
 
 		xmlAr.ExitNode(); // IASSET_NODE_IonAsset
+
+		inOutCustomData = data;
 
 		return Ok();
 	}

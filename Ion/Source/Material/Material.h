@@ -35,6 +35,7 @@ namespace Ion
 		virtual ~IMaterialParameter() { }
 
 		static TMaterialParameterTypeVariant ParseParamValue(const String& val, EMaterialParameterType type, class AssetParser& parser);
+		static TMaterialParameterTypeVariant ParseParamValue(const String& val, EMaterialParameterType type);
 
 	private:
 		void SetValues(const TMaterialParameterTypeVariant& def, const TMaterialParameterTypeVariant& min, const TMaterialParameterTypeVariant& max);
@@ -264,6 +265,7 @@ namespace Ion
 	{
 	public:
 		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) const override;
+		virtual Result<void, IOError> Serialize(Archive& ar, TSharedPtr<IAssetCustomData>& inOutCustomData) const override;
 		ASSET_TYPE_NAME_IMPL("Ion.Material")
 	};
 

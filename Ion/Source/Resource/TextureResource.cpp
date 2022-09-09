@@ -39,12 +39,13 @@ namespace Ion
 		return data;
 	}
 
-	Result<void, IOError> ImageAssetType::Serialize(Archive& ar, TSharedPtr<IAssetCustomData> customData) const
+	Result<void, IOError> ImageAssetType::Serialize(Archive& ar, TSharedPtr<IAssetCustomData>& inOutCustomData) const
 	{
 		// @TODO: Make this work for binary archives too (not that trivial with xml)
 		ionassert(ar.IsText(), "Binary archives are not supported at the moment.");
+		ionassert(!inOutCustomData || inOutCustomData->GetType() == AT_ImageAssetType);
 
-		TSharedPtr<ImageAssetData> data = PtrCast<ImageAssetData>(customData);
+		TSharedPtr<ImageAssetData> data = inOutCustomData ? PtrCast<ImageAssetData>(inOutCustomData) : MakeShared<ImageAssetData>();
 
 		XMLArchiveAdapter xmlAr = ar;
 		fwdthrowall(AssetSerializer::EnterAssetAndSetCheckType(ar, AT_ImageAssetType));
@@ -75,6 +76,8 @@ namespace Ion
 		xmlAr.ExitNode(); // IASSET_NODE_Resource
 
 		xmlAr.ExitNode(); // IASSET_NODE_IonAsset
+
+		inOutCustomData = data;
 
 		return Ok();
 	}

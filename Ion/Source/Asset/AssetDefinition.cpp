@@ -70,25 +70,10 @@ namespace Ion
 			ionthrow(IOError, result.GetFailMessage());
 		}
 
-		// @TODO: TEMPORARY:
-		if (m_Type->GetName() == "Ion.Mesh" || m_Type->GetName() == "Ion.Image")
-		{
-			XMLArchive ar(EArchiveType::Loading);
-			ar.LoadXML(xml);
+		XMLArchive ar(EArchiveType::Loading);
+		ar.LoadXML(xml);
 
-			TSharedPtr<MeshAssetData> data = MakeShared<MeshAssetData>();
-
-			GetType().Serialize(ar, data).Unwrap();
-
-			m_CustomData = data;
-
-			return Ok();
-		}
-
-		auto customParseResult = GetType().Parse(xml);
-		fwdthrowall(customParseResult);
-
-		m_CustomData = customParseResult.Unwrap();
+		fwdthrowall(GetType().Serialize(ar, m_CustomData));
 
 		return Ok();
 	}
