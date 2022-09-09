@@ -71,7 +71,7 @@ namespace Ion
 		}
 
 		// @TODO: TEMPORARY:
-		if (m_Type->GetName() == "Ion.Mesh")
+		if (m_Type->GetName() == "Ion.Mesh" || m_Type->GetName() == "Ion.Image")
 		{
 			XMLArchive ar(EArchiveType::Loading);
 			ar.LoadXML(xml);

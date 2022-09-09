@@ -171,44 +171,6 @@ namespace Ion
 
 #define SERIALIZE_BIT_FIELD(ar, f) { bool bField = f; ar << bField; f = bField; }
 
-	class XMLArchive;
-
-	class XMLArchiveAdapter
-	{
-	public:
-		XMLArchiveAdapter(Archive& ar);
-
-		void EnterNode(const String& name);
-		bool TryEnterNode(const String& name);
-		bool TryEnterSiblingNode();
-		void ExitNode();
-
-		void EnterAttribute(const String& name);
-		bool TryEnterAttribute(const String& name);
-		void ExitAttribute();
-
-		void SeekRoot();
-
-		template<typename T>
-		FORCEINLINE void Serialize(T& value)
-		{
-			m_Archive.Serialize(value);
-		}
-
-		template<typename T>
-		FORCEINLINE Archive& operator<<(T& value)
-		{
-			m_Archive << value;
-			return m_Archive;
-		}
-
-	private:
-		XMLArchive* AsXMLArchive() const;
-
-	private:
-		Archive& m_Archive;
-	};
-
 	// Generic array serialization
 	template<typename T>
 	FORCEINLINE Archive& operator<<(Archive& ar, TArray<T>& array)

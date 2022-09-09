@@ -41,6 +41,7 @@ namespace Ion
 	{
 	public:
 		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) const override;
+		virtual Result<void, IOError> Serialize(Archive& ar, TSharedPtr<IAssetCustomData> customData) const override;
 		ASSET_TYPE_NAME_IMPL("Ion.Image")
 	};
 

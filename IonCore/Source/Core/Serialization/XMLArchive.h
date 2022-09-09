@@ -2,6 +2,7 @@
 
 #include "Archive.h"
 #include "Core/File/XML.h"
+#include "Core/String/StringParser.h"
 
 namespace Ion
 {
@@ -31,6 +32,23 @@ namespace Ion
 		virtual void Serialize(double& value) override;
 
 		virtual void Serialize(String& value) override;
+
+		template<typename TEnum, TEnableIfT<TIsEnumV<TEnum>>* = 0>
+		FORCEINLINE void SerializeEnum(TEnum& value)
+		{
+			String sEnum = IsSaving() ? TEnumParser<TEnum>::ToString(value) : EmptyString;
+			Serialize(sEnum);
+			if (IsLoading())
+			{
+				TOptional<TEnum> opt = TEnumParser<TEnum>::FromString(sEnum);
+				if (opt); else
+				{
+					SerializationLogger.Error("Cannot parse enum value. {} -> {}", sEnum, typeid(TEnum).name());
+					return;
+				}
+				value = *opt;
+			}
+		}
 
 		void EnterNode(const String& name);
 		bool TryEnterNode(const String& name);
@@ -73,5 +91,63 @@ namespace Ion
 		std::shared_ptr<XMLDocument> m_XML;
 		XMLNode* m_CurrentNode;
 		XMLAttribute* m_CurrentAttribute;
+	};
+
+	class XMLArchiveAdapter
+	{
+	public:
+		XMLArchiveAdapter(Archive& ar);
+
+		void EnterNode(const String& name);
+		bool TryEnterNode(const String& name);
+		bool TryEnterSiblingNode();
+		void ExitNode();
+
+		void EnterAttribute(const String& name);
+		bool TryEnterAttribute(const String& name);
+		void ExitAttribute();
+
+		void SeekRoot();
+
+		template<typename T>
+		FORCEINLINE void Serialize(T& value)
+		{
+			m_Archive.Serialize(value);
+		}
+
+		template<typename T, TEnableIfT<!TIsEnumV<T>>* = 0>
+		FORCEINLINE Archive& operator<<(T& value)
+		{
+			m_Archive << value;
+			return m_Archive;
+		}
+
+		template<typename TEnum, TEnableIfT<TIsEnumV<TEnum>>* = 0>
+		FORCEINLINE void SerializeEnum(TEnum& value)
+		{
+			if (XMLArchive* ar = AsXMLArchive())
+			{
+				ar->SerializeEnum(value);
+			}
+			else
+			{
+				auto utValue = (std::underlying_type_t<TEnum>)value;
+				m_Archive << utValue;
+				value = (TEnum)utValue;
+			}
+		}
+
+		template<typename T, TEnableIfT<TIsEnumV<T>>* = 0>
+		FORCEINLINE Archive& operator<<(T& value)
+		{
+			SerializeEnum(value);
+			return m_Archive;
+		}
+
+	private:
+		XMLArchive* AsXMLArchive() const;
+
+	private:
+		Archive& m_Archive;
 	};
 }

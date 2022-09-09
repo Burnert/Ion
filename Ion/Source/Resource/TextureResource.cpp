@@ -39,6 +39,61 @@ namespace Ion
 		return data;
 	}
 
+	Result<void, IOError> ImageAssetType::Serialize(Archive& ar, TSharedPtr<IAssetCustomData> customData) const
+	{
+		// @TODO: Make this work for binary archives too (not that trivial with xml)
+		ionassert(ar.IsText(), "Binary archives are not supported at the moment.");
+
+		TSharedPtr<ImageAssetData> data = PtrCast<ImageAssetData>(customData);
+
+		XMLArchiveAdapter xmlAr = ar;
+		xmlAr.SeekRoot();
+
+		xmlAr.EnterNode(IASSET_NODE_IonAsset);
+
+		xmlAr.EnterNode(IASSET_NODE_Info);
+
+		xmlAr.EnterAttribute(IASSET_ATTR_type);
+		String type = AT_ImageAssetType.GetName();
+		xmlAr << type;
+		if (AT_ImageAssetType.GetName() == type); else
+		{
+			ionthrow(IOError, "Wrong asset type.");
+		}
+		xmlAr.ExitAttribute(); // IASSET_ATTR_type
+
+		xmlAr.ExitNode(); // IASSET_NODE_Info
+
+		xmlAr.EnterNode(IASSET_NODE_Resource);
+		xmlAr.EnterNode(IASSET_NODE_Resource_Texture);
+
+		xmlAr.EnterAttribute(IASSET_ATTR_guid);
+		xmlAr << data->ResourceGuid;
+		xmlAr.ExitAttribute(); // IASSET_ATTR_guid
+
+		if (ar.IsLoading() && xmlAr.TryEnterNode(IASSET_NODE_Properties) ||
+			ar.IsSaving())
+		{
+			if (xmlAr.TryEnterNode(IASSET_NODE_Resource_Texture_Prop_Filter))
+			{
+				xmlAr.EnterAttribute(IASSET_ATTR_value);
+				xmlAr << data->Description.Properties.Filter;
+				xmlAr.ExitAttribute();
+
+				xmlAr.ExitNode(); // IASSET_NODE_Resource_Texture_Prop_Filter
+			}
+
+			xmlAr.ExitNode(); // IASSET_NODE_Properties
+		}
+
+		xmlAr.ExitNode(); // IASSET_NODE_Resource_Texture
+		xmlAr.ExitNode(); // IASSET_NODE_Resource
+
+		xmlAr.ExitNode(); // IASSET_NODE_IonAsset
+
+		return Ok();
+	}
+
 	TSharedPtr<TextureResource> TextureResource::Query(const Asset& asset)
 	{
 		return Resource::Query<TextureResource>(asset);
