@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AssetCommon.h"
+#include "AssetType.h"
 
 namespace Ion
 {

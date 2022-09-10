@@ -77,4 +77,69 @@ namespace Ion
 
 		return Ok();
 	}
+
+	Result<void, IOError> AssetDefinition::Serialize(Archive& ar)
+	{
+		ionassert(ar.IsLoading() || m_Type);
+
+		XMLArchiveAdapter xmlAr = ar;
+		xmlAr.SeekRoot();
+
+		xmlAr.EnterNode(IASSET_NODE_IonAsset);
+
+		xmlAr.EnterNode(IASSET_NODE_Info);
+
+		xmlAr.EnterAttribute(IASSET_ATTR_type);
+		String sType = ar.IsSaving() ? m_Type->GetName() : EmptyString;
+		xmlAr << sType;
+		xmlAr.ExitAttribute(); // IASSET_ATTR_type
+
+		if (IAssetType* type = AssetRegistry::FindType(sType))
+			m_Type = type;
+		else
+			ionthrow(IOError, "\"{}\" is an invalid asset type.", sType);
+
+		xmlAr.ExitNode(); // IASSET_NODE_Info
+
+		if (xmlAr.TryEnterNode(IASSET_NODE_Name))
+		{
+			xmlAr << m_Info.Name;
+			xmlAr.ExitNode(); // IASSET_NODE_Name
+		}
+		else // Can happen only when loading
+		{
+			m_Info.Name = FilePath(m_VirtualPath).LastElement();
+		}
+
+		if (xmlAr.TryEnterNode(IASSET_NODE_ImportExternal))
+		{
+			m_bImportExternal = true;
+
+			xmlAr.EnterAttribute(IASSET_ATTR_path);
+			String sPath = ar.IsSaving() ? m_AssetImportPath.RelativeTo(m_AssetDefinitionPath / "..") : EmptyString;
+			xmlAr << sPath;
+			xmlAr.ExitAttribute();
+
+			FilePath path = sPath;
+			if (path.IsRelative())
+			{
+				path = m_AssetDefinitionPath / ".." / path;
+			}
+
+			m_AssetImportPath = path;
+
+			xmlAr.ExitNode(); // IASSET_NODE_ImportExternal
+		}
+		else
+		{
+			m_bImportExternal = false;
+		}
+
+		// Serialize the custom data (different for each asset type)
+		fwdthrowall(m_Type->Serialize(ar, m_CustomData));
+
+		xmlAr.ExitNode(); // IASSET_NODE_IonAsset
+		
+		return Ok();
+	}
 }

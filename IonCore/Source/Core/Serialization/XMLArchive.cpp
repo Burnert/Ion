@@ -96,7 +96,7 @@ namespace Ion
 		{
 			if (XMLNode* node = m_CurrentNode->first_node(name.c_str()))
 				m_CurrentNode = node;
-			else ionerror(IOError);
+			else ionerror(IOError, "Node \"{}\" not found.", name);
 		}
 		else if (IsSaving())
 		{
@@ -161,7 +161,7 @@ namespace Ion
 		{
 			if (XMLAttribute* attr = m_CurrentNode->first_attribute(name.c_str()))
 				m_CurrentAttribute = attr;
-			else ionerror(IOError);
+			else ionerror(IOError, "Attribute \"{}\" not found.", name);
 		}
 		else if (IsSaving())
 		{
@@ -225,7 +225,7 @@ namespace Ion
 		ionassert(IsSaving());
 		ionassert(m_XML);
 
-		if (file.Open(EFileMode::Write | EFileMode::CreateNew)
+		if (file.Open(EFileMode::Write | EFileMode::CreateNew | EFileMode::Reset)
 			.Err([&](Error& err) { SerializationLogger.Error("Cannot save XMLArchive to file \"{}\".\n{}", file.GetFullPath(), err.Message); }))
 		{
 			std::stringstream ss;

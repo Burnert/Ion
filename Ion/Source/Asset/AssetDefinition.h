@@ -10,6 +10,9 @@ namespace Ion
 		FilePath Path;
 	};
 
+	// @TODO: TEMPORARY
+	namespace Editor { class EditorApplication; }
+
 	/**
 	 * @brief Asset definition class
 	 *
@@ -83,6 +86,8 @@ namespace Ion
 
 		Result<void, IOError> ParseAssetDefinitionFile(const std::shared_ptr<XMLDocument>& xml);
 
+		Result<void, IOError> Serialize(Archive& ar);
+
 	private:
 		GUID m_Guid;
 		String m_VirtualPath;
@@ -109,6 +114,9 @@ namespace Ion
 		uint8 m_bImportExternal : 1;
 
 		friend class AssetRegistry;
+		friend class IAssetType;
+		// @TODO: TEMPORARY
+		friend class Editor::EditorApplication;
 	};
 
 	// AssetDefinition class inline implementation --------------------------------

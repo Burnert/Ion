@@ -180,7 +180,6 @@ namespace Ion
 		TSharedPtr<MaterialInstanceAssetData> data = inOutCustomData ? PtrCast<MaterialInstanceAssetData>(inOutCustomData) : MakeShared<MaterialInstanceAssetData>();
 
 		XMLArchiveAdapter xmlAr = ar;
-		fwdthrowall(AssetSerializer::EnterAssetAndSetCheckType(ar, AT_MaterialInstanceAssetType));
 
 		xmlAr.EnterNode(IASSET_NODE_MaterialInstance);
 
@@ -218,8 +217,6 @@ namespace Ion
 		}
 
 		xmlAr.ExitNode(); // IASSET_NODE_MaterialInstance
-
-		xmlAr.ExitNode(); // IASSET_NODE_IonAsset
 
 		inOutCustomData = data;
 

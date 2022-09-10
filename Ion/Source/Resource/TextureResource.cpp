@@ -48,7 +48,6 @@ namespace Ion
 		TSharedPtr<ImageAssetData> data = inOutCustomData ? PtrCast<ImageAssetData>(inOutCustomData) : MakeShared<ImageAssetData>();
 
 		XMLArchiveAdapter xmlAr = ar;
-		fwdthrowall(AssetSerializer::EnterAssetAndSetCheckType(ar, AT_ImageAssetType));
 
 		xmlAr.EnterNode(IASSET_NODE_Resource);
 		xmlAr.EnterNode(IASSET_NODE_Resource_Texture);
@@ -74,8 +73,6 @@ namespace Ion
 
 		xmlAr.ExitNode(); // IASSET_NODE_Resource_Texture
 		xmlAr.ExitNode(); // IASSET_NODE_Resource
-
-		xmlAr.ExitNode(); // IASSET_NODE_IonAsset
 
 		inOutCustomData = data;
 

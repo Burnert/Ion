@@ -8,7 +8,7 @@
 
 namespace Ion
 {
-	IAssetType& _RegisterType(std::unique_ptr<IAssetType>&& customAssetType)
+	IAssetType& _RegisterAssetType(std::unique_ptr<IAssetType>&& customAssetType)
 	{
 		return AssetRegistry::RegisterType(Move(customAssetType));
 	}
@@ -53,7 +53,10 @@ namespace Ion
 
 		AssetLogger.Info("Registered asset \"{}\".", assetDef.GetVirtualPath());
 
-		assetDef.ParseAssetDefinitionFile(initializer.AssetXML)
+		XMLArchive xmlAr(EArchiveType::Loading);
+		xmlAr.LoadXML(initializer.AssetXML);
+
+		assetDef.Serialize(xmlAr)
 			.Err([&](Error& err) { AssetLogger.Error("Asset \"{}\" could not be parsed.\n{}", assetDef.GetVirtualPath(), err.Message); })
 			.Ok([&] { AssetLogger.Trace("Asset \"{}\" parsed successfully.", assetDef.GetVirtualPath()); });
 

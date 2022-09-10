@@ -178,8 +178,7 @@ namespace Ion::Editor
 		meshEntity->SetName("MaterialExampleMesh");
 
 		XMLArchive xmlAr(EArchiveType::Saving);
-		TSharedPtr<IAssetCustomData> assetData = meshAsset->GetCustomData();
-		meshAsset->GetType().Serialize(xmlAr, assetData);
+		meshAsset->Serialize(xmlAr);
 
 		File saveFile("AssetArchiveTest.xml");
 		xmlAr.SaveToFile(saveFile);
