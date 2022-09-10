@@ -177,11 +177,18 @@ namespace Ion::Editor
 		meshEntity->SetMesh(mesh);
 		meshEntity->SetName("MaterialExampleMesh");
 
-		XMLArchive xmlAr(EArchiveType::Saving);
-		meshAsset->Serialize(xmlAr);
-
-		File saveFile("AssetArchiveTest.xml");
-		xmlAr.SaveToFile(saveFile);
+		{
+			FilePath(".").MkDir("AssetArchiveTest");
+			// Test Archive for all assets
+			for (Asset asset : AssetRegistry::GetAllRegisteredAssets())
+			{
+				XMLArchive xmlAr(EArchiveType::Saving);
+				asset->Serialize(xmlAr);
+				FilePath exportPath = FilePath("./AssetArchiveTest") / fmt::format("{}_{}.xml", asset->GetType().GetName(), asset->GetInfo().Name);
+				File exportFile(exportPath);
+				xmlAr.SaveToFile(exportFile);
+			}
+		}
 
 		//mesh->AssignMaterialToSlot(0, materialInstance);
 

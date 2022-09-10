@@ -111,7 +111,8 @@ namespace Ion
 			m_Info.Name = FilePath(m_VirtualPath).LastElement();
 		}
 
-		if (xmlAr.TryEnterNode(IASSET_NODE_ImportExternal))
+		if (ar.IsLoading() ? xmlAr.TryEnterNode(IASSET_NODE_ImportExternal) :
+			(ar.IsSaving() && m_bImportExternal && (xmlAr.EnterNode(IASSET_NODE_ImportExternal), 1)))
 		{
 			m_bImportExternal = true;
 

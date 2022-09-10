@@ -250,7 +250,7 @@ namespace Ion
 
 		xmlAr.EnterAttribute(IASSET_ATTR_source);
 		String sSource = ar.IsSaving() ?
-			(RHI::GetEngineShadersPath() / "Material" / data->MaterialShaderCodePath) :
+			data->MaterialShaderCodePath :
 			EmptyString;
 		xmlAr << sSource;
 		if (ar.IsLoading())
