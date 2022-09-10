@@ -303,9 +303,12 @@ namespace Ion
 		}
 		else if (ar.IsSaving())
 		{
-			// @TODO: Fix - enter nodes
 			for (int32 i = 0; i < data->Parameters.size(); ++i)
+			{
+				xmlAr.EnterNode(IASSET_NODE_Material_Parameter);
 				LSerializeParameter(&data->Parameters[i]);
+				xmlAr.ExitNode(); // IASSET_NODE_Material_Parameter
+			}
 		}
 
 		xmlAr.ExitNode(); // IASSET_NODE_Material
