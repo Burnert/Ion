@@ -14,10 +14,11 @@ namespace Ion
 	class ION_API XMLDocument
 	{
 	public:
+		// Create an empty XML document
+		XMLDocument();
 		XMLDocument(const String& xml);
 		/* Takes the ownership of the xml character buffer */
 		XMLDocument(char* xml);
-		XMLDocument() = delete;
 		~XMLDocument();
 
 		template<typename Pred>
@@ -82,12 +83,12 @@ namespace Ion
 		}
 
 	protected:
-		void InitXML(char* xml);
+		void InitXML(const String& xml);
 
 	protected:
 		rapidxml::xml_document<char> m_XML;
 
 	private:
-		char* m_XMLString;
+		String m_XMLString;
 	};
 }

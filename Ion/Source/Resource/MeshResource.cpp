@@ -70,8 +70,7 @@ namespace Ion
 		xmlAr << data->ResourceGuid;
 		xmlAr.ExitAttribute(); // IASSET_ATTR_guid
 
-		if (ar.IsLoading() && xmlAr.TryEnterNode(IASSET_NODE_Defaults) ||
-			ar.IsSaving() && !data->Description.Defaults.MaterialAssets.empty())
+		if (xmlAr.TryEnterNode(IASSET_NODE_Defaults))
 		{
 			auto LSerializeMaterial = [&](int32 index = -1)
 			{
@@ -105,9 +104,12 @@ namespace Ion
 			}
 			else if (ar.IsSaving())
 			{
-				// @TODO: Fix - enter nodes
 				for (int32 i = 0; i < data->Description.Defaults.MaterialAssets.size(); ++i)
+				{
+					xmlAr.EnterNode(IASSET_NODE_Defaults_Material);
 					LSerializeMaterial(i);
+					xmlAr.ExitNode(); // IASSET_NODE_Defaults_Material
+				}
 			}
 			
 			xmlAr.ExitNode(); // IASSET_NODE_Defaults

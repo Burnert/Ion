@@ -15,6 +15,10 @@ namespace Ion
 			m_CurrentAttribute(nullptr)
 		{
 			SetFlag(EArchiveFlags::Text);
+			if (type == EArchiveType::Saving)
+			{
+				m_XML = std::make_shared<XMLDocument>();
+			}
 		}
 
 		virtual void Serialize(void* const bytes, size_t size) override;

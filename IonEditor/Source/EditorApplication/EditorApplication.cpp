@@ -171,10 +171,18 @@ namespace Ion::Editor
 
 		MeshEntity* meshEntity = m_EditorMainWorld->SpawnEntityOfClass<MeshEntity>();
 
-		TSharedPtr<MeshResource> meshResource = MeshResource::Query(Asset::Resolve("[Example]/models/4pak").UnwrapOr(Asset::None));
+		Asset meshAsset = Asset::Resolve("[Example]/models/4pak").UnwrapOr(Asset::None);
+		TSharedPtr<MeshResource> meshResource = MeshResource::Query(meshAsset);
 		std::shared_ptr<Mesh> mesh = Mesh::CreateFromResource(meshResource);
 		meshEntity->SetMesh(mesh);
 		meshEntity->SetName("MaterialExampleMesh");
+
+		XMLArchive xmlAr(EArchiveType::Saving);
+		TSharedPtr<IAssetCustomData> assetData = meshAsset->GetCustomData();
+		meshAsset->GetType().Serialize(xmlAr, assetData);
+
+		File saveFile("AssetArchiveTest.xml");
+		xmlAr.SaveToFile(saveFile);
 
 		//mesh->AssignMaterialToSlot(0, materialInstance);
 

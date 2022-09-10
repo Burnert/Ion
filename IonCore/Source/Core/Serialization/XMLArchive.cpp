@@ -90,27 +90,61 @@ namespace Ion
 
 	void XMLArchive::EnterNode(const String& name)
 	{
-		if (XMLNode* node = m_CurrentNode->first_node(name.c_str()))
+		ionassert(!name.empty());
+
+		if (IsLoading())
+		{
+			if (XMLNode* node = m_CurrentNode->first_node(name.c_str()))
+				m_CurrentNode = node;
+			else ionerror(IOError);
+		}
+		else if (IsSaving())
+		{
+			XMLNode* node = m_XML->XML().allocate_node(rapidxml::node_element, m_XML->XML().allocate_string(name.c_str()));
+			m_CurrentNode->append_node(node);
 			m_CurrentNode = node;
-		else ionerror(IOError);
+		}
 	}
 
 	bool XMLArchive::TryEnterNode(const String& name)
 	{
-		XMLNode* node = m_CurrentNode->first_node(name.c_str());
-		if (node)
-			m_CurrentNode = node;
+		ionassert(!name.empty());
 
-		return node;
+		if (IsLoading())
+		{
+			XMLNode* node = m_CurrentNode->first_node(name.c_str());
+			if (node)
+				m_CurrentNode = node;
+			return node;
+		}
+		else if (IsSaving())
+		{
+			XMLNode* node = m_XML->XML().allocate_node(rapidxml::node_element, m_XML->XML().allocate_string(name.c_str()));
+			m_CurrentNode->append_node(node);
+			m_CurrentNode = node;
+			return true;
+		}
+		return false;
 	}
 
 	bool XMLArchive::TryEnterSiblingNode()
 	{
-		XMLNode* node = m_CurrentNode->next_sibling(m_CurrentNode->name());
-		if (node)
+		if (IsLoading())
+		{
+			XMLNode* node = m_CurrentNode->next_sibling(m_CurrentNode->name());
+			if (node)
+				m_CurrentNode = node;
+			return node;
+		}
+		else if (IsSaving())
+		{
+			ionassert(m_CurrentNode->parent());
+			XMLNode* node = m_XML->XML().allocate_node(rapidxml::node_element, m_XML->XML().allocate_string(m_CurrentNode->name()));
+			m_CurrentNode->parent()->append_node(node);
 			m_CurrentNode = node;
-
-		return node;
+			return true;
+		}
+		return false;
 	}
 
 	void XMLArchive::ExitNode()
@@ -120,20 +154,43 @@ namespace Ion
 
 	void XMLArchive::EnterAttribute(const String& name)
 	{
+		ionassert(!name.empty());
 		ionassert(!m_CurrentAttribute);
-		if (XMLAttribute* attr = m_CurrentNode->first_attribute(name.c_str()))
+
+		if (IsLoading())
+		{
+			if (XMLAttribute* attr = m_CurrentNode->first_attribute(name.c_str()))
+				m_CurrentAttribute = attr;
+			else ionerror(IOError);
+		}
+		else if (IsSaving())
+		{
+			XMLAttribute* attr = m_XML->XML().allocate_attribute(m_XML->XML().allocate_string(name.c_str()));
+			m_CurrentNode->append_attribute(attr);
 			m_CurrentAttribute = attr;
-		else ionerror(IOError);
+		}
 	}
 
 	bool XMLArchive::TryEnterAttribute(const String& name)
 	{
+		ionassert(!name.empty());
 		ionassert(!m_CurrentAttribute);
-		XMLAttribute* attr = m_CurrentNode->first_attribute(name.c_str());
-		if (attr)
-			m_CurrentAttribute = attr;
 
-		return attr;
+		if (IsLoading())
+		{
+			XMLAttribute* attr = m_CurrentNode->first_attribute(name.c_str());
+			if (attr)
+				m_CurrentAttribute = attr;
+			return attr;
+		}
+		else if (IsSaving())
+		{
+			XMLAttribute* attr = m_XML->XML().allocate_attribute(m_XML->XML().allocate_string(name.c_str()));
+			m_CurrentNode->append_attribute(attr);
+			m_CurrentAttribute = attr;
+			return true;
+		}
+		return false;
 	}
 
 	void XMLArchive::ExitAttribute()
@@ -149,6 +206,8 @@ namespace Ion
 
 	void XMLArchive::LoadFromFile(File& file)
 	{
+		ionassert(IsLoading());
+
 		if (file.Open(EFileMode::Read)
 			.Err([&](Error& err) { SerializationLogger.Error("Cannot load XMLArchive from file \"{}\".\n{}", file.GetFullPath(), err.Message); }))
 		{
@@ -163,6 +222,7 @@ namespace Ion
 
 	void XMLArchive::SaveToFile(File& file) const
 	{
+		ionassert(IsSaving());
 		ionassert(m_XML);
 
 		if (file.Open(EFileMode::Write | EFileMode::CreateNew)
@@ -180,12 +240,16 @@ namespace Ion
 
 	void XMLArchive::LoadXML(const std::shared_ptr<XMLDocument>& xml)
 	{
+		ionassert(IsLoading());
+
 		m_XML = xml;
 		SeekRoot();
 	}
 
 	std::shared_ptr<XMLDocument> XMLArchive::SaveXML() const
 	{
+		ionassert(IsSaving());
+
 		return m_XML;
 	}
 }
