@@ -36,6 +36,7 @@ namespace Ion
 
 		static TMaterialParameterTypeVariant ParseParamValue(const String& val, EMaterialParameterType type, class AssetParser& parser);
 		static TMaterialParameterTypeVariant ParseParamValue(const String& val, EMaterialParameterType type);
+		static void SerializeParamValue(Archive& ar, EMaterialParameterType type, TMaterialParameterTypeVariant& inOutParamVariant);
 
 	private:
 		void SetValues(const TMaterialParameterTypeVariant& def, const TMaterialParameterTypeVariant& min, const TMaterialParameterTypeVariant& max);

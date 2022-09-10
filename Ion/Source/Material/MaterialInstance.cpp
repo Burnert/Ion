@@ -198,10 +198,7 @@ namespace Ion
 			xmlAr << param->Name;
 			xmlAr.ExitAttribute(); // IASSET_ATTR_name
 
-			String def; // @TODO: Save
-			xmlAr << def;
-			if (ar.IsLoading())
-				param->Values.Value = IMaterialParameter::ParseParamValue(def, param->Type);
+			IMaterialParameter::SerializeParamValue(ar, param->Type, param->Values.Value);
 		};
 
 		if (ar.IsLoading())
