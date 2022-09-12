@@ -42,6 +42,7 @@ namespace Ion
 	public:
 		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) const override;
 		virtual Result<void, IOError> Serialize(Archive& ar, TSharedPtr<IAssetCustomData>& inOutCustomData) const override;
+		virtual TSharedPtr<IAssetCustomData> CreateDefaultCustomData() const override;
 		ASSET_TYPE_NAME_IMPL("Ion.Mesh")
 	};
 
@@ -55,6 +56,8 @@ namespace Ion
 		GUID ResourceGuid;
 		MeshResourceDescription Description;
 	};
+
+	ASSET_TYPE_DEFAULT_DATA_INL_IMPL(MeshAssetType, MeshAssetData)
 
 #pragma endregion
 

@@ -267,6 +267,7 @@ namespace Ion
 	public:
 		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) const override;
 		virtual Result<void, IOError> Serialize(Archive& ar, TSharedPtr<IAssetCustomData>& inOutCustomData) const override;
+		virtual TSharedPtr<IAssetCustomData> CreateDefaultCustomData() const override;
 		ASSET_TYPE_NAME_IMPL("Ion.Material")
 	};
 
@@ -287,6 +288,8 @@ namespace Ion
 		FilePath MaterialShaderCodePath;
 		TArray<Parameter> Parameters;
 	};
+
+	ASSET_TYPE_DEFAULT_DATA_INL_IMPL(MaterialAssetType, MaterialAssetData)
 
 #pragma endregion
 

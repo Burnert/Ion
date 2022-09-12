@@ -3,6 +3,7 @@
 #include "World.h"
 #include "Entity/Entity.h"
 #include "Renderer/Scene.h"
+#include "Asset/AssetDefinition.h"
 
 #pragma warning(disable:6011)
 
@@ -50,6 +51,18 @@ namespace Ion
 		world->OnInit();
 
 		return world;
+	}
+
+	void World::SaveToAsset(const Asset& mapAsset)
+	{
+		ionassert(mapAsset->GetType() == AT_MapAssetType);
+
+		TSharedPtr<MapAssetData> mapData = PtrCast<MapAssetData>(mapAsset->GetCustomData());
+
+		mapData->WorldGuid = m_WorldGUID;
+		mapData->Entities = GatherValues(m_Entities);
+
+		mapAsset->SaveToDisk();
 	}
 
 	void World::OnInit()
@@ -337,6 +350,7 @@ namespace Ion
 
 	Archive& operator<<(Archive& ar, World* world)
 	{
+		ionbreak("Not working.");
 		ionassert(world);
 
 		ar << world->m_WorldGUID;
@@ -395,14 +409,17 @@ namespace Ion
 
 #pragma region Map Asset
 
-	Result<TSharedPtr<IAssetCustomData>, IOError> MapAssetType::Parse(const std::shared_ptr<XMLDocument>& xml) const
+	Result<void, IOError> MapAssetType::Serialize(Archive& ar, TSharedPtr<IAssetCustomData>& inOutCustomData) const
 	{
-		return nullptr;
-	}
+		// @TODO: Make this work for binary archives too (not that trivial with xml)
+		ionassert(ar.IsText(), "Binary archives are not supported at the moment.");
+		ionassert(!inOutCustomData || inOutCustomData->GetType() == AT_MapAssetType);
 
-	Result<std::shared_ptr<XMLDocument>, IOError> MapAssetType::Export(const TSharedPtr<IAssetCustomData>& data) const
-	{
-		return nullptr;
+		TSharedPtr<MapAssetData> data = inOutCustomData ? PtrCast<MapAssetData>(inOutCustomData) : MakeShared<MapAssetData>();
+
+		XMLArchiveAdapter xmlAr = ar;
+
+		return Ok();
 	}
 
 #pragma endregion

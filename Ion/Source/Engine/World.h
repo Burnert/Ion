@@ -80,10 +80,12 @@ namespace Ion
 
 	protected:
 		static World* Create(const WorldInitializer& initializer);
-		static World* LoadFromAsset(const Asset& mapAsset);
 		static World* Create(Archive& ar);
 
 	public:
+		static World* LoadFromAsset(const Asset& mapAsset);
+		void SaveToAsset(const Asset& mapAsset);
+
 		void SetTickEnabled(bool bTick);
 
 		/* Instantiates an entity of type EntityT and adds it to the world. */
@@ -210,8 +212,8 @@ namespace Ion
 	class MapAssetType : public IAssetType
 	{
 	public:
-		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) const override;
-		virtual Result<std::shared_ptr<XMLDocument>, IOError> Export(const TSharedPtr<IAssetCustomData>& data) const override;
+		virtual Result<void, IOError> Serialize(Archive& ar, TSharedPtr<IAssetCustomData>& inOutCustomData) const override;
+		virtual TSharedPtr<IAssetCustomData> CreateDefaultCustomData() const override;
 		ASSET_TYPE_NAME_IMPL("Ion.Map")
 	};
 
@@ -220,12 +222,14 @@ namespace Ion
 	class MapAssetData : public IAssetCustomData
 	{
 	public:
-		GUID WorldGuid;
+		GUID WorldGuid = GUID::Zero;
 		TArray<Entity*> Entities;
 		// @TODO: Components here vvvvv
 
 		ASSET_DATA_GETTYPE_IMPL(AT_MapAssetType)
 	};
+
+	ASSET_TYPE_DEFAULT_DATA_INL_IMPL(MapAssetType, MapAssetData)
 
 #pragma endregion
 }

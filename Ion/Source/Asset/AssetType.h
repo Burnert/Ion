@@ -23,6 +23,10 @@ namespace Ion
 		static String c_Name = name; \
 		return c_Name; \
 	}
+#define ASSET_TYPE_DEFAULT_DATA_INL_IMPL(TType, TData) \
+	inline TSharedPtr<IAssetCustomData> TType::CreateDefaultCustomData() const { \
+		return MakeShared<TData>(); \
+	}
 #define ASSET_DATA_GETTYPE_IMPL(type) \
 	virtual IAssetType& GetType() const override { \
 		return type; \
@@ -41,7 +45,7 @@ namespace Ion
 		 *
 		 * @return Pointer to IAssetCustomData with the parsed data or IOError on error.
 		 */
-		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) const = 0;
+		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) const { ionthrow(IOError, "Parse function not implemented."); };
 
 		virtual Result<std::shared_ptr<XMLDocument>, IOError> Export(const TSharedPtr<IAssetCustomData>& data) const { ionthrow(IOError, "Export function not implemented."); }
 
@@ -55,6 +59,8 @@ namespace Ion
 		 * which means the XML archive will already be inside an <IonAsset> node.
 		 */
 		virtual Result<void, IOError> Serialize(Archive& ar, TSharedPtr<IAssetCustomData>& inOutCustomData) const { ionthrow(IOError, "Serialize function not implemented."); }
+
+		virtual TSharedPtr<IAssetCustomData> CreateDefaultCustomData() const = 0;
 
 		virtual const String& GetName() const = 0;
 

@@ -96,7 +96,7 @@ namespace Ion::Test
 			archive.SaveToFile(saveFile);
 		}
 
-		ionbreak();
+		//ionbreak();
 
 		delete &archive;
 	}

@@ -25,6 +25,37 @@ namespace Ion
 	{
 	}
 
+	void AssetDefinition::Refresh()
+	{
+		ionassert(!m_AssetDefinitionPath.IsEmpty());
+		ionassert(!m_VirtualPath.empty());
+		ionassert(m_CustomData);
+		ionassert(m_Type);
+
+		XMLArchive ar(EArchiveType::Loading);
+		File file(m_AssetDefinitionPath);
+		ar.LoadFromFile(file);
+
+		m_Type->Serialize(ar, m_CustomData)
+			.Err([this](Error& err) { AssetLogger.Error("Cannot refresh asset \"{}\".\n{}", m_VirtualPath, err.Message); });
+	}
+
+	void AssetDefinition::SaveToDisk()
+	{
+		ionassert(!m_AssetDefinitionPath.IsEmpty());
+		ionassert(!m_VirtualPath.empty());
+		ionassert(m_CustomData);
+		ionassert(m_Type);
+
+		XMLArchive ar(EArchiveType::Saving);
+		
+		if (!Serialize(ar).Err([this](Error& err) { AssetLogger.Error("Cannot save asset \"{}\" to file.\n{}", m_VirtualPath, err.Message); }))
+			return;
+
+		File file(m_AssetDefinitionPath);
+		ar.SaveToFile(file);
+	}
+
 	Result<void, IOError> AssetDefinition::ParseAssetDefinitionFile(const std::shared_ptr<XMLDocument>& xml)
 	{
 		XMLParserResult result = AssetParser(xml)

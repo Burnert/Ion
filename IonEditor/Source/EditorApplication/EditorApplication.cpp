@@ -190,6 +190,9 @@ namespace Ion::Editor
 			}
 		}
 
+		Asset mapAsset = Asset::Create(AT_MapAssetType, "[Example]/Maps/Dev_Map1").Unwrap();
+		m_EditorMainWorld->SaveToAsset(mapAsset);
+
 		//mesh->AssignMaterialToSlot(0, materialInstance);
 
 		//if (0)

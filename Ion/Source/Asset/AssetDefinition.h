@@ -49,8 +49,17 @@ namespace Ion
 		template<typename FImport, typename FReady, typename FError>
 		void Import(FImport onImport, FReady onReady, FError onError = nullptr);
 
+		void Refresh();
+		void SaveToDisk();
+
 		IAssetType& GetType() const;
 
+		/**
+		 * @brief Get a shared pointer to the custom asset data.
+		 * After casting this pointer to a correct type, the data can be read or written to.
+		 * 
+		 * @return Custom data shared pointer
+		 */
 		TSharedPtr<IAssetCustomData> GetCustomData() const;
 
 		/**

@@ -40,6 +40,8 @@ namespace Ion
 
 		static Result<Asset, IOError, FileNotFoundError> RegisterExternal(const FilePath& path, const String& customVirtualPath);
 
+		static Result<Asset, IOError> Create(IAssetType& type, const String& virtualPath);
+
 		static FilePath ResolveVirtualPath(const String& virtualPath);
 
 		/**
@@ -88,7 +90,7 @@ namespace Ion
 	private:
 		explicit Asset(AssetDefinition* asset);
 
-		static Result<Asset, IOError, FileNotFoundError> RegisterAsset(const FilePath& path, const String& virtualPath);
+		static Result<Asset, IOError, FileNotFoundError> RegisterExisting(const FilePath& path, const String& virtualPath);
 
 	private:
 		AssetDefinition* m_AssetPtr;
