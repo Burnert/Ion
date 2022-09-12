@@ -219,15 +219,26 @@ namespace Ion
 	{
 		// Super::Serialize(ar);
 
+		XMLArchiveAdapter xmlAr = ar;
+
+		// @TODO: Temporary solution, make some kind of a field serializer or something
+		xmlAr.EnterNode("Name");
 		ar << m_Name;
+		xmlAr.ExitNode();
+		xmlAr.EnterNode(IASSET_NODE_Guid);
 		ar << m_GUID;
+		xmlAr.ExitNode();
 
 		// Save parents and children
 		// Relationship needs to be setup after all the entities are available,
 		// which might not be the case right now.
 		if (ar.IsSaving())
 		{
-			ar << const_cast<GUID&>(m_Parent->GetGuid());
+			xmlAr.EnterNode("Parent" IASSET_NODE_Guid);
+			GUID parentGuid = m_Parent ? m_Parent->GetGuid() : GUID::Zero;
+			ar << parentGuid;
+			xmlAr.ExitNode();
+
 			TArray<GUID> childrenGuids;
 			childrenGuids.reserve(m_Children.size());
 			std::transform(m_Children.begin(), m_Children.end(), std::back_inserter(childrenGuids), [](Entity* ent)
@@ -236,11 +247,16 @@ namespace Ion
 			});
 		}
 
+		xmlAr.EnterNode("SceneData");
 		ar << m_SceneData;
+		xmlAr.ExitNode();
 
+		xmlAr.EnterNode("CreateEmptyRootOnSpawn");
 		SERIALIZE_BIT_FIELD(ar, m_bCreateEmptyRootOnSpawn);
+		xmlAr.ExitNode();
+		xmlAr.EnterNode("TickEnabled");
 		SERIALIZE_BIT_FIELD(ar, m_bTickEnabled);
-		SERIALIZE_BIT_FIELD(ar, m_bPendingKill);
+		xmlAr.ExitNode();
 
 		// @TODO: serialize components
 	}

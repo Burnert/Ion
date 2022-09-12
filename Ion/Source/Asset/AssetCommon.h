@@ -6,6 +6,7 @@
 #define IASSET_NODE_Info                 "Info"
 #define IASSET_NODE_ImportExternal       "ImportExternal"
 #define IASSET_NODE_Name                 "Name"
+#define IASSET_NODE_Guid                 "Guid"
 
 #define IASSET_ATTR_type                 "type"
 #define IASSET_ATTR_path                 "path"

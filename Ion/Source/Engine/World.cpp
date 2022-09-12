@@ -409,6 +409,10 @@ namespace Ion
 
 #pragma region Map Asset
 
+#define IASSET_NODE_World    "World"
+#define IASSET_NODE_Entity   "Entity"
+#define IASSET_NODE_Entities "Entities"
+
 	Result<void, IOError> MapAssetType::Serialize(Archive& ar, TSharedPtr<IAssetCustomData>& inOutCustomData) const
 	{
 		// @TODO: Make this work for binary archives too (not that trivial with xml)
@@ -418,6 +422,42 @@ namespace Ion
 		TSharedPtr<MapAssetData> data = inOutCustomData ? PtrCast<MapAssetData>(inOutCustomData) : MakeShared<MapAssetData>();
 
 		XMLArchiveAdapter xmlAr = ar;
+
+		xmlAr.EnterNode(IASSET_NODE_World);
+
+		xmlAr.EnterNode(IASSET_NODE_Guid);
+		xmlAr << data->WorldGuid;
+		xmlAr.ExitNode(); // IASSET_NODE_Guid
+
+		xmlAr.EnterNode(IASSET_NODE_Entities);
+		auto LSerializeEntity = [&](int32 index = -1)
+		{
+			if (ar.IsSaving())
+				xmlAr << data->Entities[index];
+			else if (ar.IsLoading())
+				xmlAr << data->Entities.emplace_back();
+		};
+		if (ar.IsLoading())
+		{
+			for (bool b = xmlAr.TryEnterNode(IASSET_NODE_Entity);
+				b || (xmlAr.ExitNode(), 0);
+				b = xmlAr.TryEnterSiblingNode())
+				LSerializeEntity();
+		}
+		else if (ar.IsSaving() && !data->Entities.empty())
+		{
+			for (int32 i = 0; i < data->Entities.size(); ++i)
+			{
+				xmlAr.EnterNode(IASSET_NODE_Entity);
+				LSerializeEntity(i);
+				xmlAr.ExitNode(); // IASSET_NODE_Entity
+			}
+		}
+		xmlAr.ExitNode(); // IASSET_NODE_Entities
+
+		xmlAr.ExitNode(); // IASSET_NODE_World
+
+		inOutCustomData = data;
 
 		return Ok();
 	}
