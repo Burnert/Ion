@@ -120,6 +120,9 @@ namespace Ion
 		   Destroys all the owned components. */
 		virtual void OnDestroy();
 
+	public:
+		virtual void Serialize(Archive& ar);
+
 	private:
 		void AddChild(Entity* child);
 		void RemoveChild(Entity* child);
@@ -129,6 +132,10 @@ namespace Ion
 		/* Called in any function that changes the relative transform. */
 		void UpdateWorldTransformCache();
 		void UpdateChildrenWorldTransformCache();
+
+	protected:
+		// @TODO: Very temporary, without reflection it's pretty much impossible to do properly.
+		String m_ClassName;
 
 	private:
 		GUID m_GUID;
@@ -153,6 +160,9 @@ namespace Ion
 
 		friend class Engine;
 		friend class World;
+
+	public:
+		friend Archive& operator<<(Archive& ar, Entity*& entity);
 	};
 
 	// Inline definitions

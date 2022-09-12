@@ -16,6 +16,7 @@ namespace Ion
 		using ElementType = T;
 		using NodeType    = TTreeNode<T, bFastNode>;
 		using NodeArray   = TArray<NodeType*>;
+		static constexpr bool bIsFastNode = bFastNode;
 
 		/**
 		 * @brief Make a normal node (allocated using new)
@@ -298,10 +299,16 @@ namespace Ion
 		template<typename U, size_t NodesInBlock>
 		friend class TTreeNodeFactory;
 		friend TFunction<bool(NodeType*, NodeType*)>;
+
+		template<typename TNode, typename TFactory>
+		friend struct TTreeSerializer;
 	};
 
 	template<typename T>
 	using TFastTreeNode = TTreeNode<T, true>;
+
+	template<typename TNode>
+	struct TIsFastTreeNode : TBool<TNode::bIsFastNode> { };
 
 #if ION_DEBUG
 #define _TREENODEALLOC_INSERT_NODE_ALLOC_DEBUG(ptr) m_Allocations_Debug.insert(ptr)

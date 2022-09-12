@@ -29,11 +29,13 @@ namespace Ion
 
 	Result<Asset, IOError, FileNotFoundError> Asset::Resolve(const String& virtualPath)
 	{
+		ionassert(!virtualPath.empty());
+
 		if (AssetDefinition* def = AssetRegistry::Find(virtualPath))
 			return def->GetHandle();
 
 		FilePath path = ResolveVirtualPath(virtualPath);
-		return RegisterAsset(path, virtualPath);
+		return RegisterExisting(path, virtualPath);
 	}
 
 	Result<Asset, IOError, FileNotFoundError> Asset::RegisterExternal(const FilePath& path, const String& customVirtualPath)
@@ -42,7 +44,28 @@ namespace Ion
 		ionassert(IsValidVirtualPath(customVirtualPath), "Invalid virtual path. -> {}", customVirtualPath);
 		ionassert(!IsStandardVirtualRoot(GetRootOfVirtualPath(customVirtualPath)), "Don't use a standard root in a custom virtual path.");
 
-		return RegisterAsset(path, customVirtualPath);
+		return RegisterExisting(path, customVirtualPath);
+	}
+
+	Result<Asset, IOError> Asset::Create(IAssetType& type, const String& virtualPath)
+	{
+		ionassert(!virtualPath.empty());
+
+		if (AssetDefinition* def = AssetRegistry::Find(virtualPath))
+			ionthrow(IOError, "An asset with virtual path \"{}\" has already been registered.", virtualPath);
+
+		FilePath path = ResolveVirtualPath(virtualPath);
+		if (path.Exists())
+		{
+			AssetLogger.Warn("Cannot create asset \"{}\". It already exists, but hasn't been registered.", virtualPath);
+			auto result = RegisterExisting(path, virtualPath);
+			fwdthrow(result, IOError);
+			return result.Unwrap();
+		}
+
+		// Register a new asset
+		AssetInitializer initializer(&type, virtualPath, path);
+		return AssetRegistry::Register(initializer).GetHandle();
 	}
 
 	FilePath Asset::ResolveVirtualPath(const String& virtualPath)
@@ -67,12 +90,12 @@ namespace Ion
 		return AssetRegistry::IsValid(m_AssetPtr) ? m_AssetPtr : nullptr;
 	}
 
-	Result<Asset, IOError, FileNotFoundError> Asset::RegisterAsset(const FilePath& path, const String& virtualPath)
+	Result<Asset, IOError, FileNotFoundError> Asset::RegisterExisting(const FilePath& path, const String& virtualPath)
 	{
 		if (!path.Exists())
 		{
-			AssetLogger.Error("The file \"{0}\" does not exist.", path.ToString());
-			ionthrow(FileNotFoundError, "The file \"{0}\" does not exist.", path.ToString());
+			AssetLogger.Error("The file \"{}\" does not exist.", path.ToString());
+			ionthrow(FileNotFoundError, "The file \"{}\" does not exist.", path.ToString());
 		}
 
 		String assetDefinition;

@@ -6,6 +6,8 @@
 
 namespace Ion
 {
+	REGISTER_LOGGER(EngineLogger, "Engine");
+
 	class ION_API Engine
 	{
 	public:
@@ -13,7 +15,13 @@ namespace Ion
 		void Shutdown();
 		void Update(float deltaTime);
 
+		// Create a world using an initializer
 		World* CreateWorld(const WorldInitializer& initializer);
+		// Create a world from an archive
+		World* CreateWorld(Archive& ar);
+
+		World* CreateWorldFromMapAsset(const Asset& mapAsset);
+
 		void DestroyWorld(World* world);
 		World* FindWorld(const GUID& worldGuid) const;
 

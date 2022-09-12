@@ -3,6 +3,7 @@
 #include "World.h"
 #include "Entity/Entity.h"
 #include "Renderer/Scene.h"
+#include "Asset/AssetDefinition.h"
 
 #pragma warning(disable:6011)
 
@@ -35,6 +36,55 @@ namespace Ion
 		world->OnInit();
 
 		return world;
+	}
+
+	World* World::Create(Archive& ar)
+	{
+		TRACE_FUNCTION();
+
+		ionassert(ar.IsLoading());
+
+		// @TODO: Who should own the world?
+		// Worlds have to be deleted at some point
+		World* world = new World;
+		ar << world;
+		world->OnInit();
+
+		return world;
+	}
+
+	World* World::LoadFromAsset(const Asset& mapAsset)
+	{
+		ionassert(mapAsset->GetType() == AT_MapAssetType);
+
+		TSharedPtr<MapAssetData> mapData = PtrCast<MapAssetData>(mapAsset->GetCustomData());
+
+		World* world = new World;
+
+		world->m_WorldGUID = mapData->WorldGuid;
+
+		for (Entity* entity : mapData->Entities)
+		{
+			world->AddEntity(entity);
+		}
+
+		// @TODO: setup relations
+
+		world->OnInit();
+
+		return world;
+	}
+
+	void World::SaveToAsset(const Asset& mapAsset)
+	{
+		ionassert(mapAsset->GetType() == AT_MapAssetType);
+
+		TSharedPtr<MapAssetData> mapData = PtrCast<MapAssetData>(mapAsset->GetCustomData());
+
+		mapData->WorldGuid = m_WorldGUID;
+		mapData->Entities = GatherValues(m_Entities);
+
+		mapAsset->SaveToDisk();
 	}
 
 	void World::OnInit()
@@ -320,16 +370,118 @@ namespace Ion
 		// ??
 	}
 
-#pragma region Map Asset
-
-	Result<TSharedPtr<IAssetCustomData>, IOError> MapAssetType::Parse(const std::shared_ptr<XMLDocument>& xml) const
+	Archive& operator<<(Archive& ar, World* world)
 	{
-		return nullptr;
+		ionbreak("Not working.");
+		ionassert(world);
+
+		ar << world->m_WorldGUID;
+
+		//ar << &world->m_ComponentRegistry;
+
+		TArray<Entity*> allEntities = ar.IsSaving() ? GatherValues(world->m_Entities) : TArray<Entity*>();
+		//ar << allEntities;
+		if (ar.IsLoading())
+		{
+			for (Entity* entity : allEntities)
+			{
+				world->m_Entities.emplace(entity->GetGuid(), entity);
+			}
+		}
+		
+		ar << TTreeSerializer(*world->m_WorldTreeRoot, world->m_WorldTreeNodeFactory);
+
+		if (ar.IsLoading())
+		{
+			// Fill in the fields which are not saved by the serializer.
+
+			TFunction<void(World::WorldTreeNode*)> LLoadWorldTreeNode = [&](World::WorldTreeNode* node)
+			{
+				ionassert(node);
+
+				if (Entity* entity = node->Get().GetEntity())
+				{
+					world->m_EntityToWorldTreeNodeMap.emplace(entity, node);
+
+					world->m_Entities.emplace(entity->GetGuid(), entity);
+				}
+
+				for (World::WorldTreeNode* n : node->GetChildren())
+				{
+					LLoadWorldTreeNode(n);
+				}
+			};
+
+			LLoadWorldTreeNode(world->m_WorldTreeRoot);
+
+			world->m_ChildEntities.reserve(world->m_WorldTreeRoot->GetChildren().size());
+			for (World::WorldTreeNode* worldChildNode : world->m_WorldTreeRoot->GetChildren())
+			{
+				if (Entity* entity = worldChildNode->Get().GetEntity())
+				{
+					world->m_ChildEntities.emplace_back(entity);
+				}
+			}
+		}
+
+		ar << world->m_bTickWorld;
+
+		return ar;
 	}
 
-	Result<std::shared_ptr<XMLDocument>, IOError> MapAssetType::Export(const TSharedPtr<IAssetCustomData>& data) const
+#pragma region Map Asset
+
+#define IASSET_NODE_World    "World"
+#define IASSET_NODE_Entity   "Entity"
+#define IASSET_NODE_Entities "Entities"
+
+	Result<void, IOError> MapAssetType::Serialize(Archive& ar, TSharedPtr<IAssetCustomData>& inOutCustomData) const
 	{
-		return nullptr;
+		// @TODO: Make this work for binary archives too (not that trivial with xml)
+		ionassert(ar.IsText(), "Binary archives are not supported at the moment.");
+		ionassert(!inOutCustomData || inOutCustomData->GetType() == AT_MapAssetType);
+
+		TSharedPtr<MapAssetData> data = inOutCustomData ? PtrCast<MapAssetData>(inOutCustomData) : MakeShared<MapAssetData>();
+
+		XMLArchiveAdapter xmlAr = ar;
+
+		xmlAr.EnterNode(IASSET_NODE_World);
+
+		xmlAr.EnterNode(IASSET_NODE_Guid);
+		xmlAr << data->WorldGuid;
+		xmlAr.ExitNode(); // IASSET_NODE_Guid
+
+		xmlAr.EnterNode(IASSET_NODE_Entities);
+		auto LSerializeEntity = [&](int32 index = -1)
+		{
+			if (ar.IsSaving())
+				xmlAr << data->Entities[index];
+			else if (ar.IsLoading())
+				xmlAr << data->Entities.emplace_back();
+		};
+		if (ar.IsLoading())
+		{
+			for (bool b = xmlAr.TryEnterNode(IASSET_NODE_Entity);
+				b || (xmlAr.ExitNode(), 0);
+				b = xmlAr.TryEnterSiblingNode())
+				LSerializeEntity();
+		}
+		else if (ar.IsSaving() && !data->Entities.empty())
+		{
+			for (int32 i = 0; i < data->Entities.size(); ++i)
+			{
+				xmlAr.EnterNode(IASSET_NODE_Entity);
+				LSerializeEntity(i);
+				xmlAr.ExitNode(); // IASSET_NODE_Entity
+			}
+		}
+		xmlAr.ExitNode(); // IASSET_NODE_Entities
+
+		xmlAr.ExitNode(); // IASSET_NODE_World
+
+		inOutCustomData = data;
+
+		return Ok();
 	}
 
 #pragma endregion

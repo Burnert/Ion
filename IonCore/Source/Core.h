@@ -14,6 +14,7 @@
 
 #include "Core/Base.h"
 #include "Core/Container/Tree.h"
+#include "Core/Container/TreeSerializer.h"
 #include "Core/Diagnostics/DebugTime.h"
 #include "Core/Diagnostics/Tracing.h"
 #include "Core/Error/Error.h"
@@ -34,7 +35,9 @@
 #include "Core/Memory/RefCount.h"
 #include "Core/Platform/Platform.h"
 #include "Core/Profiling/DebugProfiler.h"
-#include "Core/Serialisation/Serialisation.h"
+#include "Core/Serialization/Archive.h"
+#include "Core/Serialization/BinaryArchive.h"
+#include "Core/Serialization/XMLArchive.h"
 #include "Core/String/StringConverter.h"
 #include "Core/String/StringUtils.h"
 #include "Core/String/StringParser.h"

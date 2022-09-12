@@ -1,6 +1,7 @@
 #include "IonPCH.h"
 
 #include "Entity.h"
+#include "MeshEntity.h"
 #include "Engine/World.h"
 #include "Engine/Components/SceneComponent.h"
 
@@ -21,6 +22,7 @@ namespace Ion
 		m_bPendingKill(false)
 	{
 		SetName("Entity");
+		m_ClassName = "Entity";
 	}
 
 	void Entity::SetTransform(const Transform& transform)
@@ -215,6 +217,52 @@ namespace Ion
 
 	}
 
+	void Entity::Serialize(Archive& ar)
+	{
+		// Super::Serialize(ar);
+
+		XMLArchiveAdapter xmlAr = ar;
+
+		// @TODO: Temporary solution, make some kind of a field serializer or something
+		xmlAr.EnterNode("Name");
+		ar << m_Name;
+		xmlAr.ExitNode();
+		xmlAr.EnterNode(IASSET_NODE_Guid);
+		ar << m_GUID;
+		xmlAr.ExitNode();
+
+		// Save parents and children
+		// Relationship needs to be setup after all the entities are available,
+		// which might not be the case right now.
+		if (ar.IsSaving())
+		{
+			xmlAr.EnterNode("Parent" IASSET_NODE_Guid);
+			GUID parentGuid = m_Parent ? m_Parent->GetGuid() : GUID::Zero;
+			ar << parentGuid;
+			xmlAr.ExitNode();
+
+			TArray<GUID> childrenGuids;
+			childrenGuids.reserve(m_Children.size());
+			std::transform(m_Children.begin(), m_Children.end(), std::back_inserter(childrenGuids), [](Entity* ent)
+			{
+				return ent->GetGuid();
+			});
+		}
+
+		xmlAr.EnterNode("SceneData");
+		ar << m_SceneData;
+		xmlAr.ExitNode();
+
+		xmlAr.EnterNode("CreateEmptyRootOnSpawn");
+		SERIALIZE_BIT_FIELD(ar, m_bCreateEmptyRootOnSpawn);
+		xmlAr.ExitNode();
+		xmlAr.EnterNode("TickEnabled");
+		SERIALIZE_BIT_FIELD(ar, m_bTickEnabled);
+		xmlAr.ExitNode();
+
+		// @TODO: serialize components
+	}
+
 	void Entity::AddChild(Entity* child)
 	{
 		ionassert(child);
@@ -386,5 +434,29 @@ namespace Ion
 		{
 			child->UpdateWorldTransformCache();
 		}
+	}
+
+	Archive& operator<<(Archive& ar, Entity*& entity)
+	{
+		ionassert(ar.IsLoading() || entity);
+
+		XMLArchiveAdapter xmlAr = ar;
+
+		// @TODO: Very temporary, without reflection it's pretty much impossible to do properly.
+		xmlAr.EnterNode("Class");
+		String sClass = ar.IsSaving() ? entity->m_ClassName : EmptyString;
+		xmlAr << sClass;
+		xmlAr.ExitNode(); // "Class"
+
+		if (ar.IsLoading())
+		{
+			if (sClass == "Entity")
+				entity = new Entity;
+			else if (sClass == "MeshEntity")
+				entity = new MeshEntity;
+		}
+
+		entity->Serialize(ar);
+		return ar;
 	}
 }

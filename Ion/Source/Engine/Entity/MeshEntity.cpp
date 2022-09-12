@@ -1,6 +1,7 @@
 #include "IonPCH.h"
 
 #include "MeshEntity.h"
+#include "Renderer/Mesh.h"
 #include "Engine/World.h"
 
 namespace Ion
@@ -15,6 +16,7 @@ namespace Ion
 	{
 		SetNoCreateRootOnSpawn();
 		SetName("Mesh");
+		m_ClassName = "MeshEntity";
 	}
 
 	MeshComponent* MeshEntity::GetMeshComponent() const
@@ -37,6 +39,31 @@ namespace Ion
 	std::shared_ptr<Mesh> MeshEntity::GetMesh() const
 	{
 		return GetMeshComponent()->GetMesh();
+	}
+
+	void MeshEntity::Serialize(Archive& ar)
+	{
+		Entity::Serialize(ar);
+
+		XMLArchiveAdapter xmlAr = ar;
+
+		xmlAr.EnterNode("Mesh");
+		String vp = /*ar.IsSaving() ? GetMeshComponent()->GetMesh()->GetMeshResource()->GetAssetHandle()->GetVirtualPath() :*/ EmptyString;
+		xmlAr << vp;
+		xmlAr.ExitNode(); // "Mesh"
+
+		if (ar.IsLoading())
+		{
+			// @TODO: This can't be done here because the world context is not set at this point.
+
+			//Asset::Resolve(vp)
+			//	.Ok([&](const Asset& asset)
+			//	{
+			//		TSharedPtr<MeshResource> resource = MeshResource::Query(asset);
+			//		std::shared_ptr<Mesh> mesh = Mesh::CreateFromResource(resource);
+			//		SetMesh(mesh);
+			//	});
+		}
 	}
 
 	Entity* MeshEntity::Duplicate_Internal() const

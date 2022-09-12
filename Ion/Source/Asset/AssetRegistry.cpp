@@ -8,7 +8,7 @@
 
 namespace Ion
 {
-	IAssetType& _RegisterType(std::unique_ptr<IAssetType>&& customAssetType)
+	IAssetType& _RegisterAssetType(std::unique_ptr<IAssetType>&& customAssetType)
 	{
 		return AssetRegistry::RegisterType(Move(customAssetType));
 	}
@@ -53,9 +53,24 @@ namespace Ion
 
 		AssetLogger.Info("Registered asset \"{}\".", assetDef.GetVirtualPath());
 
-		assetDef.ParseAssetDefinitionFile(initializer.AssetXML)
-			.Err([&](Error& err) { AssetLogger.Error("Asset \"{}\" could not be parsed.\n{}", assetDef.GetVirtualPath(), err.Message); })
-			.Ok([&] { AssetLogger.Trace("Asset \"{}\" parsed successfully.", assetDef.GetVirtualPath()); });
+		// Load an existing asset
+		if (initializer.AssetXML)
+		{
+			XMLArchive xmlAr(EArchiveType::Loading);
+			xmlAr.LoadXML(initializer.AssetXML);
+
+			assetDef.Serialize(xmlAr)
+				.Err([&](Error& err) { AssetLogger.Error("Asset \"{}\" could not be parsed.\n{}", assetDef.GetVirtualPath(), err.Message); })
+				.Ok([&] { AssetLogger.Trace("Asset \"{}\" parsed successfully.", assetDef.GetVirtualPath()); });
+		}
+		// Create a new asset
+		else if (initializer.Type)
+		{
+			assetDef.m_Type = initializer.Type;
+			assetDef.m_CustomData = initializer.Type->CreateDefaultCustomData();
+			assetDef.m_Info.Name = FilePath(initializer.VirtualPath).LastElement();
+			assetDef.SaveToDisk();
+		}
 
 		return assetDef;
 	}
@@ -180,7 +195,7 @@ namespace Ion
 			String virtualPath = fmt::format("{}/{}/{}", virtualRoot, sRelative, last);
 
 			// Register the asset
-			Asset asset = Asset::RegisterAsset(assetNode->Get().FullPath, virtualPath).Unwrap();
+			Asset asset = Asset::RegisterExisting(assetNode->Get().FullPath, virtualPath).Unwrap();
 		}
 	}
 

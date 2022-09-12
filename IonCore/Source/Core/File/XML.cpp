@@ -4,14 +4,15 @@
 
 namespace Ion
 {
+	XMLDocument::XMLDocument()
+	{
+	}
+
 	XMLDocument::XMLDocument(const String& xml)
 	{
 		ionassert(xml.size() > 0, "XML String cannot be empty!");
 
-		char* xmlBuffer = new char[xml.size() + 1];
-		strcpy_s(xmlBuffer, xml.size() + 1, xml.c_str());
-
-		InitXML(xmlBuffer);
+		InitXML(xml);
 	}
 
 	XMLDocument::XMLDocument(char* xml)
@@ -23,15 +24,14 @@ namespace Ion
 
 	XMLDocument::~XMLDocument()
 	{
-		delete[] m_XMLString;
 	}
 
-	void XMLDocument::InitXML(char* xml)
+	void XMLDocument::InitXML(const String& xml)
 	{
 		TRACE_FUNCTION();
 
 		m_XMLString = xml;
 
-		m_XML.parse<0>(m_XMLString);
+		m_XML.parse<0>(m_XMLString.data());
 	}
 }

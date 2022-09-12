@@ -390,7 +390,7 @@ namespace Ion
 
 	bool FilePath::MkDir_Native(const wchar* name)
 	{
-		WString path = StringConverter::StringToWString(m_PathName) + L"/" + name;
+		WString path = m_PathName.empty() ? name : StringConverter::StringToWString(m_PathName) + L"/" + name;
 
 		if (!CreateDirectory(path.c_str(), NULL))
 		{

@@ -171,6 +171,58 @@ namespace Ion
 		return data;
 	}
 
+	Result<void, IOError> MaterialInstanceAssetType::Serialize(Archive& ar, TSharedPtr<IAssetCustomData>& inOutCustomData) const
+	{
+		// @TODO: Make this work for binary archives too (not that trivial with xml)
+		ionassert(ar.IsText(), "Binary archives are not supported at the moment.");
+		ionassert(!inOutCustomData || inOutCustomData->GetType() == AT_MaterialInstanceAssetType);
+
+		TSharedPtr<MaterialInstanceAssetData> data = inOutCustomData ? PtrCast<MaterialInstanceAssetData>(inOutCustomData) : MakeShared<MaterialInstanceAssetData>();
+
+		XMLArchiveAdapter xmlAr = ar;
+
+		xmlAr.EnterNode(IASSET_NODE_MaterialInstance);
+
+		xmlAr.EnterAttribute(IASSET_ATTR_parent);
+		xmlAr << data->ParentMaterialAssetVP;
+		xmlAr.ExitAttribute(); // IASSET_ATTR_parent
+
+		auto LSerializeParameterInstance = [&](MaterialInstanceAssetData::Parameter* param)
+		{
+			xmlAr.EnterAttribute(IASSET_ATTR_type);
+			xmlAr << param->Type;
+			xmlAr.ExitAttribute(); // IASSET_ATTR_type
+
+			xmlAr.EnterAttribute(IASSET_ATTR_name);
+			//String sAsset = ar.IsSaving() ? data->Description.Defaults.MaterialAssets[index]->GetVirtualPath() : EmptyString;
+			xmlAr << param->Name;
+			xmlAr.ExitAttribute(); // IASSET_ATTR_name
+
+			IMaterialParameter::SerializeParamValue(ar, param->Type, param->Values.Value);
+		};
+
+		if (ar.IsLoading())
+		{
+			for (bool b = xmlAr.TryEnterNode(IASSET_NODE_MaterialInstance_ParameterInstance); b || (xmlAr.ExitNode(), 0); b = xmlAr.TryEnterSiblingNode())
+				LSerializeParameterInstance(&data->Parameters.emplace_back());
+		}
+		else if (ar.IsSaving())
+		{
+			for (int32 i = 0; i < data->Parameters.size(); ++i)
+			{
+				xmlAr.EnterNode(IASSET_NODE_MaterialInstance_ParameterInstance);
+				LSerializeParameterInstance(&data->Parameters[i]);
+				xmlAr.ExitNode(); // IASSET_NODE_MaterialInstance_ParameterInstance
+			}
+		}
+
+		xmlAr.ExitNode(); // IASSET_NODE_MaterialInstance
+
+		inOutCustomData = data;
+
+		return Ok();
+	}
+
 #pragma region Material Instance
 
 	std::shared_ptr<MaterialInstance> MaterialInstance::Create(const std::shared_ptr<Material>& parentMaterial)

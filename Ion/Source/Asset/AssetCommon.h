@@ -6,6 +6,7 @@
 #define IASSET_NODE_Info                 "Info"
 #define IASSET_NODE_ImportExternal       "ImportExternal"
 #define IASSET_NODE_Name                 "Name"
+#define IASSET_NODE_Guid                 "Guid"
 
 #define IASSET_ATTR_type                 "type"
 #define IASSET_ATTR_path                 "path"
@@ -35,71 +36,6 @@ namespace Ion
 	// AssetRegistry.h
 	class AssetRegistry;
 	class AssetDefinition;
-
-#pragma region Asset Type abstract base class
-
-	class IAssetType;
-
-	class IAssetCustomData
-	{
-	public:
-		virtual IAssetType& GetType() const = 0;
-	};
-
-	// Implemented in AssetRegistry.cpp
-	ION_API IAssetType& _RegisterType(std::unique_ptr<IAssetType>&& customAssetType);
-
-#define REGISTER_ASSET_TYPE_CLASS(T) inline T& AT_##T = static_cast<T&>(_RegisterType(std::make_unique<T>()))
-#define ASSET_TYPE_NAME_IMPL(name) \
-	virtual const String& GetName() const override { \
-		static String c_Name = name; \
-		return c_Name; \
-	}
-#define ASSET_DATA_GETTYPE_IMPL(type) \
-	virtual IAssetType& GetType() const override { \
-		return type; \
-	}
-
-	class IAssetType
-	{
-	public:
-		/**
-		 * @brief Asset type object. Handles parsing/exporting the specific asset type.
-		 * 
-		 * @details This function is called when registering the asset file.
-		 * On a successful parse, it returns a custom object, derived from IAssetCustomData,
-		 * which is a representation of the parsed data. It can later be cast to get
-		 * the data (e.g. when creating a mesh / texture).
-		 * 
-		 * @return Pointer to IAssetCustomData with the parsed data or IOError on error.
-		 */
-		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) const = 0;
-
-		virtual Result<std::shared_ptr<XMLDocument>, IOError> Export(const TSharedPtr<IAssetCustomData>& data) const { ionthrow(IOError, "Export function not implemented."); }
-
-		virtual const String& GetName() const = 0;
-
-		bool operator==(const IAssetType& other) const;
-		bool operator!=(const IAssetType& other) const;
-
-		size_t GetHash() const;
-	};
-
-	FORCEINLINE bool IAssetType::operator==(const IAssetType& other) const
-	{
-		return GetName() == other.GetName();
-	}
-
-	FORCEINLINE bool IAssetType::operator!=(const IAssetType& other) const
-	{
-		return GetName() != other.GetName();
-	}
-
-	FORCEINLINE size_t IAssetType::GetHash() const
-	{
-		return THash<String>()(GetName());
-	}
-#pragma endregion
 
 	inline static TOptional<Vector4> ParseVector4String(const char* str)
 	{
@@ -159,15 +95,24 @@ namespace Ion
 	 */
 	struct AssetInitializer
 	{
+		class IAssetType* Type;
 		std::shared_ptr<XMLDocument> AssetXML;
 		String VirtualPath;
 		FilePath AssetDefinitionPath;
 
-		/**
-		 * @brief Construct a null Asset Initializer
-		 */
+		// Existing asset initializer
 		AssetInitializer(const std::shared_ptr<XMLDocument>& xml, const String& virtualPath, const FilePath& assetDefinitionPath) :
+			Type(nullptr),
 			AssetXML(xml),
+			VirtualPath(virtualPath),
+			AssetDefinitionPath(assetDefinitionPath)
+		{
+		}
+
+		// New asset initializer
+		AssetInitializer(IAssetType* type, const String& virtualPath, const FilePath& assetDefinitionPath) :
+			Type(type),
+			AssetXML(nullptr),
 			VirtualPath(virtualPath),
 			AssetDefinitionPath(assetDefinitionPath)
 		{

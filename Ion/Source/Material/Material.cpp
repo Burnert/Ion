@@ -57,6 +57,100 @@ namespace Ion
 		return 0.0f;
 	}
 
+	TMaterialParameterTypeVariant IMaterialParameter::ParseParamValue(const String& val, EMaterialParameterType type)
+	{
+		switch (type)
+		{
+		case EMaterialParameterType::Scalar:
+		{
+			TOptional<float> value = TStringParser<float>()(val);
+
+			if (!value)
+			{
+				//String message = fmt::format("Cannot parse the scalar parameter value string. \"{0}\" -> float", val);
+				//parser.GetInterface().SendError(message);
+				return 0.0f;
+			}
+			return *value;
+		}
+		case EMaterialParameterType::Vector:
+		{
+			TOptional<Vector4> value = ParseVector4String(val.c_str());
+
+			if (!value)
+			{
+				//String message = fmt::format("Cannot parse the vector parameter value string. \"{0}\" -> Vector4", val);
+				//parser.GetInterface().SendError(message);
+				return Vector4(0.0f);
+			}
+			return *value;
+		}
+		case EMaterialParameterType::Texture2D:
+		{
+			return val;
+		}
+		}
+		//parser.GetInterface().SendError("Tried to parse values of an invalid material parameter type.");
+		return 0.0f;
+	}
+
+	void IMaterialParameter::SerializeParamValue(Archive& ar, EMaterialParameterType type, TMaterialParameterTypeVariant& inOutParamVariant)
+	{
+		String val = ar.IsLoading() ? EmptyString : [&]() -> String
+		{
+			switch (type)
+			{
+				case EMaterialParameterType::Scalar:
+				{
+					ionassert(std::holds_alternative<float>(inOutParamVariant));
+					return fmt::format("{}", std::get<float>(inOutParamVariant));
+				}
+				case EMaterialParameterType::Vector:
+				{
+					ionassert(std::holds_alternative<Vector4>(inOutParamVariant));
+					Vector4 vec4 = std::get<Vector4>(inOutParamVariant);
+					return fmt::format("{} {} {} {}", vec4.x, vec4.y, vec4.z, vec4.w);
+				}
+				case EMaterialParameterType::Texture2D:
+				{
+					ionassert(std::holds_alternative<String>(inOutParamVariant));
+					return std::get<String>(inOutParamVariant);
+				}
+			}
+			return EmptyString;
+		}();
+
+		ar << val;
+
+		if (ar.IsLoading())
+		{
+			switch (type)
+			{
+				case EMaterialParameterType::Scalar:
+				{
+					if (TOptional<float> value = TStringParser<float>()(val))
+						inOutParamVariant = *value;
+					else
+						inOutParamVariant = 0.0f;
+					return;
+				}
+				case EMaterialParameterType::Vector:
+				{
+					if (TOptional<Vector4> value = ParseVector4String(val.c_str()))
+						inOutParamVariant = *value;
+					else
+						inOutParamVariant = Vector4(0.0f);
+					return;
+				}
+				case EMaterialParameterType::Texture2D:
+				{
+					inOutParamVariant = val;
+					return;
+				}
+			}
+		}
+	}
+
 	void IMaterialParameter::SetValues(const TMaterialParameterTypeVariant& def, const TMaterialParameterTypeVariant& min, const TMaterialParameterTypeVariant& max)
 	{
 		// @TODO: There should be a better way to set these values
@@ -195,6 +289,82 @@ namespace Ion
 			ionthrow(IOError, result.GetFailMessage());
 		}
 		return data;
+	}
+
+	Result<void, IOError> MaterialAssetType::Serialize(Archive& ar, TSharedPtr<IAssetCustomData>& inOutCustomData) const
+	{
+		// @TODO: Make this work for binary archives too (not that trivial with xml)
+		ionassert(ar.IsText(), "Binary archives are not supported at the moment.");
+		ionassert(!inOutCustomData || inOutCustomData->GetType() == AT_MaterialAssetType);
+
+		TSharedPtr<MaterialAssetData> data = inOutCustomData ? PtrCast<MaterialAssetData>(inOutCustomData) : MakeShared<MaterialAssetData>();
+
+		XMLArchiveAdapter xmlAr = ar;
+
+		xmlAr.EnterNode(IASSET_NODE_Material);
+
+		xmlAr.EnterNode(IASSET_NODE_Material_Code);
+
+		xmlAr.EnterAttribute(IASSET_ATTR_source);
+		String sSource = ar.IsSaving() ?
+			data->MaterialShaderCodePath :
+			EmptyString;
+		xmlAr << sSource;
+		if (ar.IsLoading())
+			data->MaterialShaderCodePath = RHI::GetEngineShadersPath() / "Material" / sSource;
+		xmlAr.ExitAttribute(); // IASSET_ATTR_source
+
+		xmlAr.ExitNode(); // IASSET_NODE_Material_Code
+
+		auto LSerializeParameter = [&](MaterialAssetData::Parameter* param)
+		{
+			xmlAr.EnterAttribute(IASSET_ATTR_type);
+			xmlAr << param->Type;
+			xmlAr.ExitAttribute(); // IASSET_ATTR_type
+
+			xmlAr.EnterAttribute(IASSET_ATTR_name);
+			//String sAsset = ar.IsSaving() ? data->Description.Defaults.MaterialAssets[index]->GetVirtualPath() : EmptyString;
+			xmlAr << param->Name;
+			xmlAr.ExitAttribute(); // IASSET_ATTR_name
+
+			if (xmlAr.TryEnterNode(IASSET_NODE_Material_Parameter_Default))
+			{
+				IMaterialParameter::SerializeParamValue(ar, param->Type, param->Values.Default);
+				xmlAr.ExitNode();
+			}
+			// @TODO: Very ugly workaround, bleh...
+			if (param->Type != EMaterialParameterType::Texture2D && xmlAr.TryEnterNode(IASSET_NODE_Material_Parameter_Min))
+			{
+				IMaterialParameter::SerializeParamValue(ar, param->Type, param->Values.Min);
+				xmlAr.ExitNode();
+			}
+			if (param->Type != EMaterialParameterType::Texture2D && xmlAr.TryEnterNode(IASSET_NODE_Material_Parameter_Max))
+			{
+				IMaterialParameter::SerializeParamValue(ar, param->Type, param->Values.Max);
+				xmlAr.ExitNode();
+			}
+		};
+
+		if (ar.IsLoading())
+		{
+			for (bool b = xmlAr.TryEnterNode(IASSET_NODE_Material_Parameter); b || (xmlAr.ExitNode(), 0); b = xmlAr.TryEnterSiblingNode())
+				LSerializeParameter(&data->Parameters.emplace_back());
+		}
+		else if (ar.IsSaving())
+		{
+			for (int32 i = 0; i < data->Parameters.size(); ++i)
+			{
+				xmlAr.EnterNode(IASSET_NODE_Material_Parameter);
+				LSerializeParameter(&data->Parameters[i]);
+				xmlAr.ExitNode(); // IASSET_NODE_Material_Parameter
+			}
+		}
+
+		xmlAr.ExitNode(); // IASSET_NODE_Material
+
+		inOutCustomData = data;
+
+		return Ok();
 	}
 
 #pragma region Material

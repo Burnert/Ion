@@ -55,6 +55,39 @@ namespace Ion
 		return world;
 	}
 
+	World* Engine::CreateWorld(Archive& ar)
+	{
+		TRACE_FUNCTION();
+
+		ionassert(ar.IsLoading());
+
+		World* world = World::Create(ar);
+		if (!world)
+		{
+			EngineLogger.Error("Could not deserialize the world from archive.");
+			return nullptr;
+		}
+
+		m_RegisteredWorlds.push_back(world);
+		return world;
+	}
+
+	World* Engine::CreateWorldFromMapAsset(const Asset& mapAsset)
+	{
+		TRACE_FUNCTION();
+
+		World* world = World::LoadFromAsset(mapAsset);
+		if (!world)
+		{
+			// This won't ever be reached...
+			//GEngineLogger.Error("Could not create the world.");
+			return nullptr;
+		}
+
+		m_RegisteredWorlds.push_back(world);
+		return world;
+	}
+
 	void Engine::DestroyWorld(World* world)
 	{
 		TRACE_FUNCTION();

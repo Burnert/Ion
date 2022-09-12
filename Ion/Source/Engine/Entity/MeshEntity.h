@@ -21,6 +21,8 @@ namespace Ion
 
 		// Entity overrides
 
+		virtual void Serialize(Archive& ar) override;
+
 		virtual Entity* Duplicate_Internal() const override;
 
 	protected:

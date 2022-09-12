@@ -10,6 +10,9 @@ namespace Ion
 		FilePath Path;
 	};
 
+	// @TODO: TEMPORARY
+	namespace Editor { class EditorApplication; }
+
 	/**
 	 * @brief Asset definition class
 	 *
@@ -46,8 +49,17 @@ namespace Ion
 		template<typename FImport, typename FReady, typename FError>
 		void Import(FImport onImport, FReady onReady, FError onError = nullptr);
 
+		void Refresh();
+		void SaveToDisk();
+
 		IAssetType& GetType() const;
 
+		/**
+		 * @brief Get a shared pointer to the custom asset data.
+		 * After casting this pointer to a correct type, the data can be read or written to.
+		 * 
+		 * @return Custom data shared pointer
+		 */
 		TSharedPtr<IAssetCustomData> GetCustomData() const;
 
 		/**
@@ -83,6 +95,8 @@ namespace Ion
 
 		Result<void, IOError> ParseAssetDefinitionFile(const std::shared_ptr<XMLDocument>& xml);
 
+		Result<void, IOError> Serialize(Archive& ar);
+
 	private:
 		GUID m_Guid;
 		String m_VirtualPath;
@@ -109,6 +123,9 @@ namespace Ion
 		uint8 m_bImportExternal : 1;
 
 		friend class AssetRegistry;
+		friend class IAssetType;
+		// @TODO: TEMPORARY
+		friend class Editor::EditorApplication;
 	};
 
 	// AssetDefinition class inline implementation --------------------------------
