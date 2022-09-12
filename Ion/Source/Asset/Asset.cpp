@@ -52,7 +52,7 @@ namespace Ion
 		ionassert(!virtualPath.empty());
 
 		if (AssetDefinition* def = AssetRegistry::Find(virtualPath))
-			ionthrow(IOError, "An asset with virtual path \"{}\" already exists.", virtualPath);
+			ionthrow(IOError, "An asset with virtual path \"{}\" has already been registered.", virtualPath);
 
 		FilePath path = ResolveVirtualPath(virtualPath);
 		if (path.Exists())

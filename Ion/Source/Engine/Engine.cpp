@@ -72,6 +72,22 @@ namespace Ion
 		return world;
 	}
 
+	World* Engine::CreateWorldFromMapAsset(const Asset& mapAsset)
+	{
+		TRACE_FUNCTION();
+
+		World* world = World::LoadFromAsset(mapAsset);
+		if (!world)
+		{
+			// This won't ever be reached...
+			//GEngineLogger.Error("Could not create the world.");
+			return nullptr;
+		}
+
+		m_RegisteredWorlds.push_back(world);
+		return world;
+	}
+
 	void Engine::DestroyWorld(World* world)
 	{
 		TRACE_FUNCTION();

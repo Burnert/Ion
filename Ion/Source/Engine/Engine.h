@@ -20,6 +20,8 @@ namespace Ion
 		// Create a world from an archive
 		World* CreateWorld(Archive& ar);
 
+		World* CreateWorldFromMapAsset(const Asset& mapAsset);
+
 		void DestroyWorld(World* world);
 		World* FindWorld(const GUID& worldGuid) const;
 

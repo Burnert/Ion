@@ -53,6 +53,28 @@ namespace Ion
 		return world;
 	}
 
+	World* World::LoadFromAsset(const Asset& mapAsset)
+	{
+		ionassert(mapAsset->GetType() == AT_MapAssetType);
+
+		TSharedPtr<MapAssetData> mapData = PtrCast<MapAssetData>(mapAsset->GetCustomData());
+
+		World* world = new World;
+
+		world->m_WorldGUID = mapData->WorldGuid;
+
+		for (Entity* entity : mapData->Entities)
+		{
+			world->AddEntity(entity);
+		}
+
+		// @TODO: setup relations
+
+		world->OnInit();
+
+		return world;
+	}
+
 	void World::SaveToAsset(const Asset& mapAsset)
 	{
 		ionassert(mapAsset->GetType() == AT_MapAssetType);

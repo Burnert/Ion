@@ -89,11 +89,26 @@ namespace Ion::Editor
 
 		Renderer::Get()->SetVSyncEnabled(true);
 
-		WorldInitializer worldInitializer { };
-		m_EditorMainWorld = g_Engine->CreateWorld(worldInitializer);
-
 		AssetRegistry::RegisterVirtualRoot("[Example]", EnginePath::GetEnginePath() + "../IonExample/Assets");
 		AssetRegistry::RegisterAssetsInVirtualRoot("[Example]");
+
+		if (auto result = Asset::Resolve("[Example]/Maps/Dev_Map1"))
+		{
+			m_EditorMainWorld = g_Engine->CreateWorldFromMapAsset(result.Unwrap());
+		}
+		else
+		{
+			WorldInitializer worldInitializer { };
+			m_EditorMainWorld = g_Engine->CreateWorld(worldInitializer);
+
+			MeshEntity* meshEntity = m_EditorMainWorld->SpawnEntityOfClass<MeshEntity>();
+
+			Asset meshAsset = Asset::Resolve("[Example]/models/4pak").UnwrapOr(Asset::None);
+			TSharedPtr<MeshResource> meshResource = MeshResource::Query(meshAsset);
+			std::shared_ptr<Mesh> mesh = Mesh::CreateFromResource(meshResource);
+			meshEntity->SetMesh(mesh);
+			meshEntity->SetName("MaterialExampleMesh");
+		}
 
 		// Unicode test
 		{
@@ -146,36 +161,9 @@ namespace Ion::Editor
 
 		Test::ArchiveTest();
 
-		//InitExample(nullptr);
-
 		auto& hierarchy = LogManager::GetLoggerHierarchy();
 
 		ComponentRegistry& registry = m_EditorMainWorld->GetComponentRegistry();
-
-		//Asset materialAsset = AssetFinder(EnginePath::GetEngineContentPath() + L"Materials/DefaultMaterial.iasset").Resolve();
-
-		//std::shared_ptr<Material> material = MaterialRegistry::QueryMaterial(materialAsset);
-		//material->AddUsage(EShaderUsage::StaticMesh);
-		//material->CompileShaders();
-
-		//std::this_thread::sleep_for(std::chrono::milliseconds(60));
-
-		//Asset materialInstanceAsset = AssetFinder(FilePath(L"../IonExample/Assets/Materials/ciupaga.iasset")).Resolve();
-
-		//std::shared_ptr<MaterialInstance> materialInstance = MaterialRegistry::QueryMaterialInstance(materialInstanceAsset);
-		//MaterialParameterInstanceScalar* paramBrightness = materialInstance->GetMaterialParameterInstanceTyped<MaterialParameterInstanceScalar>("Brightness");
-		//MaterialParameterInstanceVector* paramColor = materialInstance->GetMaterialParameterInstanceTyped<MaterialParameterInstanceVector>("Color");
-
-		//ionassert(paramBrightness->GetValue() == paramBrightness->GetParameterScalar()->GetDefaultValue());
-		//ionassert(paramColor->GetValue() == paramColor->GetParameterVector()->GetDefaultValue());
-
-		MeshEntity* meshEntity = m_EditorMainWorld->SpawnEntityOfClass<MeshEntity>();
-
-		Asset meshAsset = Asset::Resolve("[Example]/models/4pak").UnwrapOr(Asset::None);
-		TSharedPtr<MeshResource> meshResource = MeshResource::Query(meshAsset);
-		std::shared_ptr<Mesh> mesh = Mesh::CreateFromResource(meshResource);
-		meshEntity->SetMesh(mesh);
-		meshEntity->SetName("MaterialExampleMesh");
 
 		{
 			FilePath(".").MkDir("AssetArchiveTest");
@@ -190,8 +178,11 @@ namespace Ion::Editor
 			}
 		}
 
-		Asset mapAsset = Asset::Create(AT_MapAssetType, "[Example]/Maps/Dev_Map1").Unwrap();
-		m_EditorMainWorld->SaveToAsset(mapAsset);
+		{
+			auto result = Asset::Resolve("[Example]/Maps/Dev_Map1");
+			Asset mapAsset = result ? result.Unwrap() : Asset::Create(AT_MapAssetType, "[Example]/Maps/Dev_Map1").Unwrap();
+			m_EditorMainWorld->SaveToAsset(mapAsset);
+		}
 
 		//mesh->AssignMaterialToSlot(0, materialInstance);
 

@@ -133,6 +133,10 @@ namespace Ion
 		void UpdateWorldTransformCache();
 		void UpdateChildrenWorldTransformCache();
 
+	protected:
+		// @TODO: Very temporary, without reflection it's pretty much impossible to do properly.
+		String m_ClassName;
+
 	private:
 		GUID m_GUID;
 
@@ -158,12 +162,7 @@ namespace Ion
 		friend class World;
 
 	public:
-		FORCEINLINE friend Archive& operator<<(Archive& ar, Entity* entity)
-		{
-			ionassert(entity);
-			entity->Serialize(ar);
-			return ar;
-		}
+		friend Archive& operator<<(Archive& ar, Entity*& entity);
 	};
 
 	// Inline definitions
