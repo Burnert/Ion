@@ -8,12 +8,6 @@
 namespace Ion
 {
 	Entity::Entity() :
-		Entity(GUID())
-	{
-	}
-
-	Entity::Entity(const GUID& guid) :
-		m_GUID(guid),
 		m_WorldContext(nullptr),
 		m_Parent(nullptr),
 		m_RootComponent(nullptr),
@@ -21,7 +15,6 @@ namespace Ion
 		m_bTickEnabled(true),
 		m_bPendingKill(false)
 	{
-		SetName("Entity");
 		m_ClassName = "Entity";
 	}
 
@@ -219,17 +212,9 @@ namespace Ion
 
 	void Entity::Serialize(Archive& ar)
 	{
-		// Super::Serialize(ar);
+		Super::Serialize(ar);
 
 		XMLArchiveAdapter xmlAr = ar;
-
-		// @TODO: Temporary solution, make some kind of a field serializer or something
-		xmlAr.EnterNode("Name");
-		ar << m_Name;
-		xmlAr.ExitNode();
-		xmlAr.EnterNode(IASSET_NODE_Guid);
-		ar << m_GUID;
-		xmlAr.ExitNode();
 
 		// Save parents and children
 		// Relationship needs to be setup after all the entities are available,
@@ -249,6 +234,7 @@ namespace Ion
 			});
 		}
 
+		// @TODO: Temporary solution, make some kind of a field serializer or something
 		xmlAr.EnterNode("SceneData");
 		ar << m_SceneData;
 		xmlAr.ExitNode();
@@ -326,7 +312,7 @@ namespace Ion
 		ionassert(!IsPendingKill());
 		Entity* newEntity = Duplicate_Internal();
 
-		newEntity->m_GUID = GUID();
+		//newEntity->m_GUID = GUID();
 
 		// Children would need to be duplicated too.
 		// Delete the references from the new entity instead.

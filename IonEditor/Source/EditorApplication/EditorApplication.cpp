@@ -92,6 +92,8 @@ namespace Ion::Editor
 		AssetRegistry::RegisterVirtualRoot("[Example]", EnginePath::GetEnginePath() + "../IonExample/Assets");
 		AssetRegistry::RegisterAssetsInVirtualRoot("[Example]");
 
+		Test::MatterTest();
+
 		if (auto result = Asset::Resolve("[Example]/Maps/Dev_Map1"))
 		{
 			m_EditorMainWorld = g_Engine->CreateWorldFromMapAsset(result.Unwrap());
@@ -159,12 +161,13 @@ namespace Ion::Editor
 		RefCountTest();
 		RefCountPtrTest();
 
-		Test::ArchiveTest();
+		//Test::ArchiveTest();
 
 		auto& hierarchy = LogManager::GetLoggerHierarchy();
 
 		ComponentRegistry& registry = m_EditorMainWorld->GetComponentRegistry();
 
+		if (0)
 		{
 			FilePath(".").MkDir("AssetArchiveTest");
 			// Test Archive for all assets

@@ -8,9 +8,10 @@ namespace Ion
 {
 	class ION_API MeshEntity : public Entity
 	{
-	public:
+		MCLASS(MeshEntity)
+		using Super = Entity;
+
 		MeshEntity();
-		MeshEntity(const GUID& guid);
 
 		MeshComponent* GetMeshComponent() const;
 

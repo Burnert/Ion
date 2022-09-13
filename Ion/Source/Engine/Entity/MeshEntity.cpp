@@ -6,13 +6,7 @@
 
 namespace Ion
 {
-	MeshEntity::MeshEntity() :
-		MeshEntity(GUID())
-	{
-	}
-
-	MeshEntity::MeshEntity(const GUID& guid) :
-		Entity(guid)
+	MeshEntity::MeshEntity()
 	{
 		SetNoCreateRootOnSpawn();
 		SetName("Mesh");

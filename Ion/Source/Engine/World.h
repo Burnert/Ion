@@ -175,7 +175,7 @@ namespace Ion
 		static_assert(TIsBaseOfV<Entity, EntityT>);
 
 		// @TODO: Use some sort of an allocator here
-		EntityT* entity = new EntityT(Forward<Args>(args)...);
+		EntityT* entity = MObject::New<EntityT>(Forward<Args>(args)...);
 		AddEntity(entity);
 		return entity;
 	}
@@ -185,7 +185,7 @@ namespace Ion
 	{
 		static_assert(TIsBaseOfV<Entity, EntityT>);
 
-		EntityT* entity = new EntityT(Forward<Args>(args)...);
+		EntityT* entity = MObject::New<EntityT>(Forward<Args>(args)...);
 		AddEntity(entity, attachTo);
 		return entity;
 	}

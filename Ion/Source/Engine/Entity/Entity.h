@@ -3,18 +3,20 @@
 #include "Engine/EngineCore.h"
 #include "Engine/SceneObjectData.h"
 #include "Engine/Components/SceneComponent.h"
+#include "Matter/MatterCore.h"
 
 namespace Ion
 {
 	REGISTER_LOGGER(EntityLogger, "Engine::ECS::Entity");
 
-	class ION_API Entity
+	class ION_API Entity : public MObject
 	{
-	public:
+		MCLASS(Entity)
+		using Super = MObject;
+
 		using ComponentSet = THashSet<Component*>;
 
 		Entity();
-		Entity(const GUID& guid);
 
 		void SetTransform(const Transform& transform);
 		const Transform& GetTransform() const;
@@ -60,9 +62,6 @@ namespace Ion
 		   Updates scene component's world transform cache. */
 		void UnbindComponent(Component* component);
 
-		void SetName(const String& name);
-		const String& GetName() const;
-
 		Entity* Duplicate() const;
 	protected:
 		virtual Entity* Duplicate_Internal() const;
@@ -87,10 +86,6 @@ namespace Ion
 		bool HasChildren() const;
 		const TArray<Entity*>& GetChildren() const;
 		TArray<Entity*> GetAllChildren() const;
-
-		/* Returns the GUID of the Entity.
-		   A GUID is initiated at the creation of the Entity. */
-		const GUID& GetGuid() const;
 
 		/* Returns a pointer to the World the Entity is currently in. */
 		World* GetWorldContext() const;
@@ -121,7 +116,7 @@ namespace Ion
 		virtual void OnDestroy();
 
 	public:
-		virtual void Serialize(Archive& ar);
+		virtual void Serialize(Archive& ar) override;
 
 	private:
 		void AddChild(Entity* child);
@@ -138,8 +133,6 @@ namespace Ion
 		String m_ClassName;
 
 	private:
-		GUID m_GUID;
-
 		World* m_WorldContext;
 
 		SceneObjectData m_SceneData;
@@ -151,8 +144,6 @@ namespace Ion
 
 		Entity* m_Parent;
 		TArray<Entity*> m_Children;
-
-		String m_Name;
 
 		uint8 m_bCreateEmptyRootOnSpawn : 1;
 		uint8 m_bTickEnabled : 1;
@@ -237,16 +228,6 @@ namespace Ion
 		return m_Components;
 	}
 
-	inline void Entity::SetName(const String& name)
-	{
-		m_Name = name;
-	}
-
-	inline const String& Entity::GetName() const
-	{
-		return m_Name;
-	}
-
 	inline bool Entity::HasParent() const
 	{
 		return m_Parent;
@@ -274,11 +255,6 @@ namespace Ion
 		return children;
 	}
 
-	inline const GUID& Entity::GetGuid() const
-	{
-		return m_GUID;
-	}
-
 	inline World* Entity::GetWorldContext() const
 	{
 		return m_WorldContext;
@@ -291,11 +267,11 @@ namespace Ion
 
 	inline bool Entity::operator==(const Entity& other) const
 	{
-		return m_GUID == other.m_GUID;
+		return GetGuid() == other.GetGuid();
 	}
 
 	inline bool Entity::operator!=(const Entity& other) const
 	{
-		return m_GUID != other.m_GUID;
+		return GetGuid() != other.GetGuid();
 	}
 }
