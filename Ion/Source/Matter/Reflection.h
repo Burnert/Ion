@@ -4,6 +4,8 @@
 
 namespace Ion
 {
+#pragma region Forward Decl
+
 	class MType;
 	class MField;
 	class MMethod;
@@ -11,7 +13,15 @@ namespace Ion
 	class MReflection;
 	class MObject;
 
+#pragma endregion
+
 #pragma region Matter Reflection Type class
+
+	struct MTypeInitializer
+	{
+		String Name;
+		size_t HashCode;
+	};
 
 	class MType
 	{
@@ -24,7 +34,7 @@ namespace Ion
 		bool Is(MType* mType) const;
 
 	protected:
-		MType(const type_info& ti);
+		MType(const MTypeInitializer& initializer);
 
 	private:
 		String m_Name;
@@ -57,47 +67,79 @@ namespace Ion
 	{
 		enum Type : uint32
 		{
-			Public,
-			Protected,
-			Private,
-			Static,
+			None      = 0,
+			Public    = 1 << 0,
+			Protected = 1 << 1,
+			Private   = 1 << 2,
+			Static    = 1 << 3,
 		};
+		using UType = std::underlying_type_t<Type>;
 	}
+
+	struct MFieldInitializer
+	{
+		MClass* Class;
+		MType* FieldType;
+		String Name;
+		size_t FieldOffset;
+		union
+		{
+			EFieldFlags::UType Flags;
+			struct
+			{
+				EFieldFlags::UType bPublic : 1;
+				EFieldFlags::UType bProtected : 1;
+				EFieldFlags::UType bPrivate : 1;
+				EFieldFlags::UType bStatic : 1;
+			};
+		};
+	};
 
 	class MField
 	{
 	public:
 		const String& GetName() const;
+		const MClass* GetClass() const;
+		const MType* GetType() const;
 
 	private:
-		MField(MClass* mClass, MType* type);
+		MField(const MFieldInitializer& initializer);
 
 	private:
 		MClass* M_Class;
+
 		MType* m_FieldType;
 
 		String m_Name;
 
-#if ION_DEBUG
-		union {
-#endif
-		std::underlying_type_t<EFieldFlags::Type> m_Flags;
-#if ION_DEBUG // Flags debug visualization
+		union
+		{
+			EFieldFlags::UType m_Flags;
 			struct
 			{
-				uint32 m_bPublic : 1;
-				uint32 m_bProtected : 1;
-				uint32 m_bPrivate : 1;
-				uint32 m_bStatic : 1;
+				EFieldFlags::UType m_bPublic : 1;
+				EFieldFlags::UType m_bProtected : 1;
+				EFieldFlags::UType m_bPrivate : 1;
+				EFieldFlags::UType m_bStatic : 1;
 			};
 		};
-#endif
+
 		friend class MReflection;
 	};
 
 	FORCEINLINE const String& MField::GetName() const
 	{
 		return m_Name;
+	}
+	
+	FORCEINLINE const MClass* MField::GetClass() const
+	{
+		return M_Class;
+	}
+
+	FORCEINLINE const MType* MField::GetType() const
+	{
+		return m_FieldType;
 	}
 
 #pragma endregion
@@ -108,12 +150,14 @@ namespace Ion
 	{
 		enum Type : uint32
 		{
-			Public,
-			Protected,
-			Private,
-			Static,
-			Virtual,
+			None      = 0,
+			Public    = 1 << 0,
+			Protected = 1 << 1,
+			Private   = 1 << 2,
+			Static    = 1 << 3,
+			Virtual   = 1 << 4,
 		};
+		using UType = std::underlying_type_t<Type>;
 	}
 
 	class MMethod
@@ -128,25 +172,26 @@ namespace Ion
 		MMethod(MClass* mClass);
 
 	private:
-		MClass* M_Class;
+		MClass* m_Class;
+
+		MType* m_ReturnType;
+		TArray<MType*> m_ParameterTypes;
 
 		String m_Name;
 
-#if ION_DEBUG
-		union {
-#endif
-		std::underlying_type_t<EMethodFlags::Type> m_Flags;
-#if ION_DEBUG // Flags debug visualization
+		union
+		{
+			EMethodFlags::UType m_Flags;
 			struct
 			{
-				uint8 m_bPublic : 1;
-				uint8 m_bProtected : 1;
-				uint8 m_bPrivate : 1;
-				uint8 m_bStatic : 1;
-				uint8 m_bVirtual : 1;
+				EMethodFlags::UType m_bPublic : 1;
+				EMethodFlags::UType m_bProtected : 1;
+				EMethodFlags::UType m_bPrivate : 1;
+				EMethodFlags::UType m_bStatic : 1;
+				EMethodFlags::UType m_bVirtual : 1;
 			};
 		};
-#endif
+
 		friend class MReflection;
 	};
 
@@ -161,29 +206,34 @@ namespace Ion
 
 	using FMClassInstantiateDefault = TFunction<MObject* (MObject*)>;
 
+	struct MClassInitializer
+	{
+		String Name;
+		size_t TypeHashCode;
+		MObject* CDO;
+		MClass* SuperClass;
+		FMClassInstantiateDefault InstantiateFunc;
+	};
+
 	class MClass : public MType
 	{
 	public:
-		const String& GetName() const;
-
 		MObject* Instantiate() const;
 
 	private:
+		MClass(const MClassInitializer& initializer);
+
+		void SetupClassDefaultObject(const String& name);
+
 		template<typename T>
 		FORCEINLINE T& GetClassDefaultObject()
 		{
+			ionassert(dynamic_cast<T*>(m_CDO));
 			return *reinterpret_cast<T*>(m_CDO);
 		}
 
-		FORCEINLINE MClass(const type_info& ti) :
-			MType(ti),
-			m_CDO(nullptr)
-		{
-		}
-
 	private:
-		String m_Name;
-
+		MClass* m_SuperClass;
 		TArray<MField*> m_Fields;
 		TArray<MMethod*> m_Methods;
 
@@ -212,45 +262,95 @@ namespace Ion
 			return ar;
 		}
 	};
-	
-	FORCEINLINE const String& MClass::GetName() const
-	{
-		return m_Name;
-	}
 
 #pragma endregion
 
-#pragma region Matter Reflection Class Registry
+#pragma region Matter Reflection Registry
 
-#define MTYPE(T) inline MType* const MatterRT_##T = MReflection::RegisterType(typeid(T), #T)
+// Damn you Windows
+#undef RegisterClass
 
-#define MCLASS(T) \
-public: \
-FORCEINLINE static MClass* StaticClass() { \
-	static MClass* c_Class = MReflection::RegisterClass(typeid(T), #T, new T, \
-	/* Copy construct a new object from the CDO instance. */ \
-	[](MObject* cdo) { \
-		return new T(*static_cast<T*>(cdo)); \
-	}); \
-	return c_Class; \
-}
+	template<typename T>
+	struct TGetReflectableType { static MType* Type() { return nullptr; } };
 
-#define MFIELD(T, name)
+	template<typename T, typename = void>
+	struct TGetSuperClass { static MClass* Class() { return nullptr; } };
 
-#define MMETHOD(...)
+	template<typename T>
+	struct TGetSuperClass<T, std::void_t<typename T::Super>> { static MClass* Class() { return T::Super::StaticClass(); } };
 
 	class ION_API MReflection
 	{
 	public:
-		static MType* RegisterType(const type_info& ti, const String& name);
-		static MClass* RegisterClass(const type_info& ti, const String& name, MObject* cdo, const FMClassInstantiateDefault& instantiate);
-		static MField* RegisterField(MClass* mClass, MType* type, const String& name);
+		static MType* RegisterType(const MTypeInitializer& initializer);
+		static MClass* RegisterClass(const MClassInitializer& initializer);
+		static MField* RegisterField(const MFieldInitializer& initializer);
 		static MMethod* RegisterMethod(MClass* mClass, const String& name);
 
 	private:
 		static inline TArray<MType*> m_ReflectableTypeRegistry;
 		static inline TArray<MClass*> m_MClassRegistry;
 	};
+
+#pragma endregion
+
+#pragma region Reflection Macros
+
+#define MTYPE(T) \
+inline MType* const MatterRT_##T = [] { \
+	static MTypeInitializer c_Initializer { \
+		/* MType name (same as MClass if used as a base) */ \
+		#T, \
+		/* The compiler provided type hash code */ \
+		typeid(T).hash_code() \
+	}; \
+	return MReflection::RegisterType(c_Initializer); \
+}(); \
+template<> struct TGetReflectableType<T> { static MType* Type() { return MatterRT_##T; } };
+
+#define MCLASS(T) \
+public: \
+using TThisClass = T; \
+FORCEINLINE static MClass* StaticClass() { \
+	static MClassInitializer c_Initializer { \
+		/* Default MObject name (the MClass name is based on it) */ \
+		#T, \
+		/* The compiler provided type hash code */ \
+		typeid(T).hash_code(), \
+		/* CDO instance */ \
+		new T, \
+		/* The super class (nullptr if MObject as it doesn't inherit from anything) */ \
+		TGetSuperClass<T>::Class(), \
+		/* Instantiate function - Copy construct a new object from the CDO instance. */ \
+		[](MObject* cdo) { \
+			return new T(*static_cast<T*>(cdo)); \
+		} \
+	}; \
+	static MClass* c_Class = MReflection::RegisterClass(c_Initializer); \
+	return c_Class; \
+}
+
+#define MFIELD(name) \
+static inline MField* MatterRF_##name = [] { \
+	using TField = decltype(name); \
+	static MType* fieldType = TGetReflectableType<TField>::Type(); \
+	static MFieldInitializer c_Initializer { \
+		/* The owning class */ \
+		StaticClass(), \
+		/* Reflectable field type */ \
+		fieldType, \
+		/* The name of the field */ \
+		#name, \
+		/* The offset of the actual field */ \
+		/* @TODO: Doesn't work, figure something out... (code parsing. eh) */ \
+		0, /*offsetof(TThisClass, name),*/ \
+		/* Attributes (accessibility, static, etc.) */ \
+		EFieldFlags::None  /* @TODO: I don't think there's a way to get the visibility of a field without code parsing. */ \
+	}; \
+	return MReflection::RegisterField(c_Initializer); \
+}(); \
+
+#define MMETHOD(...)
 
 #pragma endregion
 
@@ -269,6 +369,12 @@ FORCEINLINE static MClass* StaticClass() { \
 	MTYPE(double);
 
 	// @TODO: Pointers? Might require wrappers
+
+	// @TODO: Collections:
+	// - Dynamic Array
+	// - Fixed Array
+	// - Hash Set
+	// - Hash Map
 
 #pragma endregion
 }

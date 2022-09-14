@@ -11,6 +11,8 @@ namespace Ion
 	class ION_API MObject
 	{
 	public:
+		MCLASS(MObject)
+
 		template<typename T, TEnableIfT<TIsConvertibleV<T*, MObject*>>* = 0>
 		static T* New();
 

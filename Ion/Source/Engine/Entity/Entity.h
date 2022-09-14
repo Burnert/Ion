@@ -3,7 +3,7 @@
 #include "Engine/EngineCore.h"
 #include "Engine/SceneObjectData.h"
 #include "Engine/Components/SceneComponent.h"
-#include "Matter/MatterCore.h"
+#include "Matter/MObject.h"
 
 namespace Ion
 {
@@ -15,6 +15,9 @@ namespace Ion
 		using Super = MObject;
 
 		using ComponentSet = THashSet<Component*>;
+
+		int32 IntField;
+		MFIELD(IntField)
 
 		Entity();
 

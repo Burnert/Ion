@@ -1,6 +1,6 @@
 #include "IonPCH.h"
 
-#include "MatterCore.h"
+#include "MObject.h"
 #include "Engine/Entity/Entity.h"
 
 namespace Ion::Test
