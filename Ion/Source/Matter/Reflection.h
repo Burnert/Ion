@@ -4,6 +4,8 @@
 
 namespace Ion
 {
+	REGISTER_LOGGER(MReflectionLogger, "Matter::Reflection");
+
 #pragma region Forward Decl
 
 	class MType;
@@ -244,23 +246,7 @@ namespace Ion
 		friend class MObject;
 
 	public:
-		FORCEINLINE friend Archive& operator<<(Archive& ar, MClass*& mClass)
-		{
-			XMLArchiveAdapter xmlAr = ar;
-			xmlAr.EnterNode("Class");
-			if (ar.IsSaving())
-			{
-				String className = mClass->GetName();
-				xmlAr << className;
-			}
-			else if (ar.IsLoading())
-			{
-				// @TODO: Query and load a class
-			}
-			xmlAr.ExitNode();
-
-			return ar;
-		}
+		friend Archive& operator<<(Archive& ar, MClass*& mClass);
 	};
 
 #pragma endregion
@@ -286,6 +272,9 @@ namespace Ion
 		static MClass* RegisterClass(const MClassInitializer& initializer);
 		static MField* RegisterField(const MFieldInitializer& initializer);
 		static MMethod* RegisterMethod(MClass* mClass, const String& name);
+
+		static MClass* FindClassByName(const String& name);
+		static MType* FindTypeByName(const String& name);
 
 	private:
 		static inline TArray<MType*> m_ReflectableTypeRegistry;
@@ -328,7 +317,8 @@ FORCEINLINE static MClass* StaticClass() { \
 	}; \
 	static MClass* c_Class = MReflection::RegisterClass(c_Initializer); \
 	return c_Class; \
-}
+} \
+static inline MClass* const MatterRT = StaticClass();
 
 #define MFIELD(name) \
 static inline MField* MatterRF_##name = [] { \
@@ -348,7 +338,7 @@ static inline MField* MatterRF_##name = [] { \
 		EFieldFlags::None  /* @TODO: I don't think there's a way to get the visibility of a field without code parsing. */ \
 	}; \
 	return MReflection::RegisterField(c_Initializer); \
-}(); \
+}();
 
 #define MMETHOD(...)
 
@@ -356,17 +346,17 @@ static inline MField* MatterRF_##name = [] { \
 
 #pragma region Fundamental Reflectable Types
 
-	MTYPE(int8);
-	MTYPE(int16);
-	MTYPE(int32);
-	MTYPE(int64);
-	MTYPE(uint8);
-	MTYPE(uint16);
-	MTYPE(uint32);
-	MTYPE(uint64);
-	MTYPE(bool);
-	MTYPE(float);
-	MTYPE(double);
+	MTYPE(int8)
+	MTYPE(int16)
+	MTYPE(int32)
+	MTYPE(int64)
+	MTYPE(uint8)
+	MTYPE(uint16)
+	MTYPE(uint32)
+	MTYPE(uint64)
+	MTYPE(bool)
+	MTYPE(float)
+	MTYPE(double)
 
 	// @TODO: Pointers? Might require wrappers
 

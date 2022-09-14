@@ -37,7 +37,7 @@ namespace Ion
 
 	void MeshEntity::Serialize(Archive& ar)
 	{
-		Entity::Serialize(ar);
+		Super::Serialize(ar);
 
 		XMLArchiveAdapter xmlAr = ar;
 

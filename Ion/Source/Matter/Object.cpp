@@ -1,6 +1,6 @@
 #include "IonPCH.h"
 
-#include "MObject.h"
+#include "Object.h"
 
 namespace Ion
 {
@@ -32,5 +32,33 @@ namespace Ion
 
 	MObject::~MObject()
 	{
+	}
+
+	Archive& operator<<(Archive& ar, MObject*& object)
+	{
+		XMLArchiveAdapter xmlAr = ar;
+
+		// Retreive and load the class first
+		if (ar.IsLoading())
+		{
+			xmlAr.EnterNode("Matter");
+			MClass* mClass;
+			ar << mClass;
+			xmlAr.ExitNode();
+
+			// @TODO: Seek() archive to before this read
+
+			if (!mClass)
+			{
+				// @TODO: Error here
+				return ar;
+			}
+
+			object = mClass->Instantiate();
+		}
+
+		object->Serialize(ar);
+
+		return ar;
 	}
 }

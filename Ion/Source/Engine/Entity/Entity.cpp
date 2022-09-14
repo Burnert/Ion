@@ -421,28 +421,4 @@ namespace Ion
 			child->UpdateWorldTransformCache();
 		}
 	}
-
-	Archive& operator<<(Archive& ar, Entity*& entity)
-	{
-		ionassert(ar.IsLoading() || entity);
-
-		XMLArchiveAdapter xmlAr = ar;
-
-		// @TODO: Very temporary, without reflection it's pretty much impossible to do properly.
-		xmlAr.EnterNode("Class");
-		String sClass = ar.IsSaving() ? entity->m_ClassName : EmptyString;
-		xmlAr << sClass;
-		xmlAr.ExitNode(); // "Class"
-
-		if (ar.IsLoading())
-		{
-			if (sClass == "Entity")
-				entity = new Entity;
-			else if (sClass == "MeshEntity")
-				entity = new MeshEntity;
-		}
-
-		entity->Serialize(ar);
-		return ar;
-	}
 }

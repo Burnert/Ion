@@ -3,7 +3,7 @@
 #include "Engine/EngineCore.h"
 #include "Engine/SceneObjectData.h"
 #include "Engine/Components/SceneComponent.h"
-#include "Matter/MObject.h"
+#include "Matter/Object.h"
 
 namespace Ion
 {
@@ -154,9 +154,6 @@ namespace Ion
 
 		friend class Engine;
 		friend class World;
-
-	public:
-		friend Archive& operator<<(Archive& ar, Entity*& entity);
 	};
 
 	// Inline definitions

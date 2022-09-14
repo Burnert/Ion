@@ -1,7 +1,7 @@
 #include "IonPCH.h"
 
 #include "Reflection.h"
-#include "MObject.h"
+#include "Object.h"
 
 namespace Ion
 {
@@ -60,6 +60,25 @@ namespace Ion
 		return object;
 	}
 
+	Archive& operator<<(Archive& ar, MClass*& mClass)
+	{
+		XMLArchiveAdapter xmlAr = ar;
+		xmlAr.EnterNode("Class");
+
+		String className = ar.IsSaving() ? mClass->GetName() : EmptyString;
+		xmlAr << className;
+
+		if (ar.IsLoading())
+		{
+			mClass = MReflection::FindClassByName(className);
+			if (!mClass)
+				MReflectionLogger.Error("Class \"{}\" not found.", className);
+		}
+		xmlAr.ExitNode();
+
+		return ar;
+	}
+
 	MType* MReflection::RegisterType(const MTypeInitializer& initializer)
 	{
 		ionassert(!initializer.Name.empty());
@@ -105,5 +124,27 @@ namespace Ion
 		method->m_Name = name;
 
 		return method;
+	}
+
+	MClass* MReflection::FindClassByName(const String& name)
+	{
+		auto it = std::find_if(m_MClassRegistry.begin(), m_MClassRegistry.end(), [&name](MClass* mClass)
+		{
+			return mClass->GetName() == name;
+		});
+		if (it != m_MClassRegistry.end())
+			return *it;
+		return nullptr;
+	}
+
+	MType* MReflection::FindTypeByName(const String& name)
+	{
+		auto it = std::find_if(m_ReflectableTypeRegistry.begin(), m_ReflectableTypeRegistry.end(), [&name](MType* type)
+		{
+			return type->GetName() == name;
+		});
+		if (it != m_ReflectableTypeRegistry.end())
+			return *it;
+		return nullptr;
 	}
 }

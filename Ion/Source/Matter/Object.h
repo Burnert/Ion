@@ -35,6 +35,10 @@ namespace Ion
 		
 		friend class MReflection;
 		friend class MClass;
+		friend class MObjectSerializer;
+
+	public:
+		friend Archive& operator<<(Archive& ar, MObject*& object);
 	};
 
 	template<typename T, TEnableIfT<TIsConvertibleV<T*, MObject*>>*>
@@ -65,6 +69,23 @@ namespace Ion
 	FORCEINLINE const GUID& MObject::GetGuid() const
 	{
 		return m_Guid;
+	}
+
+#pragma endregion
+
+#pragma region Matter Object Serialization
+
+	/**
+	 * @brief Helper function for passing an MObject pointer reference to an archive.
+	 * 
+	 * @tparam TMObject Type that inherits from MObject
+	 * @param object MObject non-const pointer reference
+	 * @return Pointer reference cast to MObject*&
+	 */
+	template<typename TObject>
+	FORCEINLINE MObject*& SerializeMObject(TObject*& object)
+	{
+		return reinterpret_cast<MObject*&>(object);
 	}
 
 #pragma endregion
