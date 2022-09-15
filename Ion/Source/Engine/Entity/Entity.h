@@ -16,9 +16,6 @@ namespace Ion
 
 		using ComponentSet = THashSet<Component*>;
 
-		int32 IntField;
-		MFIELD(IntField)
-
 		Entity();
 
 		void SetTransform(const Transform& transform);

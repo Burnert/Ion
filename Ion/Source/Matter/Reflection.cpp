@@ -12,17 +12,19 @@ namespace Ion
 	}
 
 	MField::MField(const MFieldInitializer& initializer) :
-		M_Class(initializer.Class),
+		m_Class(initializer.Class),
 		m_FieldType(initializer.FieldType),
 		m_Flags(initializer.Flags),
 		m_Name(initializer.Name)
 	{
 	}
 
-	MMethod::MMethod(MClass* mClass) :
-		m_Class(mClass),
-		m_ReturnType(nullptr),
-		m_Flags(0)
+	MMethod::MMethod(const MMethodInitializer& initializer) :
+		m_Class(initializer.Class),
+		m_ReturnType(initializer.ReturnType),
+		m_ParameterTypes(initializer.ParameterTypes),
+		m_Flags(initializer.Flags),
+		m_Name(initializer.Name)
 	{
 	}
 
@@ -52,7 +54,7 @@ namespace Ion
 	{
 		// @TODO: new is used here anyway (needs to be destroyed at some point)
 		// Make this thing use shared ptrs or something
-		MObject* object = m_FInstantiate(m_CDO);
+		MObject* object = m_FInstantiate(GetClassDefaultObject());
 
 		// New GUID is needed because it was just copied from the CDO.
 		object->m_Guid = GUID();
@@ -84,7 +86,7 @@ namespace Ion
 		ionassert(!initializer.Name.empty());
 		ionassert(initializer.HashCode != 0);
 
-		MType* type = m_ReflectableTypeRegistry.emplace_back(new MType(initializer));
+		MType* type = s_ReflectableTypeRegistry.emplace_back(new MType(initializer));
 
 		return type;
 	}
@@ -96,10 +98,10 @@ namespace Ion
 
 		ionassert(initializer.CDO);
 		ionassert(!initializer.Name.empty());
-		ionverify(std::find_if(m_MClassRegistry.begin(), m_MClassRegistry.end(), [&](MClass* mc) { return mc->GetName() == initializer.Name; }) == m_MClassRegistry.end());
+		ionverify(std::find_if(s_MClassRegistry.begin(), s_MClassRegistry.end(), [&](MClass* mc) { return mc->GetName() == initializer.Name; }) == s_MClassRegistry.end());
 
 		// Setup the reflectable class data
-		MClass* mClass = m_MClassRegistry.emplace_back(new MClass(initializer));
+		MClass* mClass = s_MClassRegistry.emplace_back(new MClass(initializer));
 		mClass->SetupClassDefaultObject(initializer.Name);
 		return mClass;
 	}
@@ -115,35 +117,35 @@ namespace Ion
 		return field;
 	}
 
-	MMethod* MReflection::RegisterMethod(MClass* mClass, const String& name)
+	MMethod* MReflection::RegisterMethod(const MMethodInitializer& initializer)
 	{
-		ionassert(mClass);
-		ionverify(std::find_if(mClass->m_Methods.begin(), mClass->m_Methods.end(), [&](MMethod* method) { return method->GetName() == name; }) == mClass->m_Methods.end());
+		ionassert(initializer.Class);
+		ionverify(std::find_if(initializer.Class->m_Methods.begin(), initializer.Class->m_Methods.end(), [&](MMethod* method) { return method->GetName() == initializer.Name; }) == initializer.Class->m_Methods.end());
 
-		MMethod* method = mClass->m_Methods.emplace_back(new MMethod(mClass));
-		method->m_Name = name;
+		TArray<MMethod*>& methods = initializer.Class->m_Methods;
+		MMethod* method = methods.emplace_back(new MMethod(initializer));
 
 		return method;
 	}
 
 	MClass* MReflection::FindClassByName(const String& name)
 	{
-		auto it = std::find_if(m_MClassRegistry.begin(), m_MClassRegistry.end(), [&name](MClass* mClass)
+		auto it = std::find_if(s_MClassRegistry.begin(), s_MClassRegistry.end(), [&name](MClass* mClass)
 		{
 			return mClass->GetName() == name;
 		});
-		if (it != m_MClassRegistry.end())
+		if (it != s_MClassRegistry.end())
 			return *it;
 		return nullptr;
 	}
 
 	MType* MReflection::FindTypeByName(const String& name)
 	{
-		auto it = std::find_if(m_ReflectableTypeRegistry.begin(), m_ReflectableTypeRegistry.end(), [&name](MType* type)
+		auto it = std::find_if(s_ReflectableTypeRegistry.begin(), s_ReflectableTypeRegistry.end(), [&name](MType* type)
 		{
 			return type->GetName() == name;
 		});
-		if (it != m_ReflectableTypeRegistry.end())
+		if (it != s_ReflectableTypeRegistry.end())
 			return *it;
 		return nullptr;
 	}
