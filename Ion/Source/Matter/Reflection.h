@@ -19,11 +19,31 @@ namespace Ion
 
 #pragma region Matter Reflection Type class
 
+	namespace ETypeFlags
+	{
+		enum Type
+		{
+			None        = 0,
+			Fundamental = 1 << 0,
+			Class       = 1 << 1,
+		};
+		using UType = std::underlying_type_t<Type>;
+	}
+
 	struct MTypeInitializer
 	{
 		String Name;
 		size_t HashCode;
 		size_t Size;
+		union
+		{
+			ETypeFlags::UType Flags;
+			struct
+			{
+				ETypeFlags::UType bFundamental : 1;
+				ETypeFlags::UType bClass : 1;
+			};
+		};
 	};
 
 	class MType
@@ -37,6 +57,9 @@ namespace Ion
 		bool Is() const;
 		bool Is(MType* mType) const;
 
+		bool IsFundamental() const;
+		bool IsClass() const;
+
 	protected:
 		MType(const MTypeInitializer& initializer);
 
@@ -44,6 +67,15 @@ namespace Ion
 		String m_Name;
 		size_t m_HashCode;
 		size_t m_Size;
+		union
+		{
+			ETypeFlags::UType m_Flags;
+			struct
+			{
+				ETypeFlags::UType m_bFundamental : 1;
+				ETypeFlags::UType m_bClass : 1;
+			};
+		};
 
 		friend class MReflection;
 	};
@@ -72,6 +104,16 @@ namespace Ion
 	FORCEINLINE bool MType::Is(MType* mType) const
 	{
 		return m_HashCode == mType->m_HashCode;
+	}
+
+	FORCEINLINE bool MType::IsFundamental() const
+	{
+		return m_bFundamental;
+	}
+
+	FORCEINLINE bool MType::IsClass() const
+	{
+		return m_bClass;
 	}
 
 #pragma endregion
@@ -178,8 +220,10 @@ namespace Ion
 	{
 		ionassert(object);
 		ionassert(m_FieldType->Is(TGetReflectableType<T>::Type()), "Wrong type has been passed.");
-		ionassert(m_FieldType->GetSize() == sizeof(T));
-		ionassert(m_FieldType->GetHashCode() == typeid(T).hash_code());
+		ionassert(!m_FieldType->IsClass() || TIsPointerV<T>);
+		ionassert(m_FieldType->IsClass() || !TIsPointerV<T>);
+		ionassert(m_FieldType->GetSize() == sizeof(TRemovePtr<T>));
+		ionassert(m_FieldType->GetHashCode() == typeid(TRemovePtr<T>).hash_code());
 
 		T* pValue = reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(object) + m_FieldOffset);
 		*pValue = value;
@@ -190,8 +234,10 @@ namespace Ion
 	{
 		ionassert(object);
 		ionassert(m_FieldType->Is(TGetReflectableType<T>::Type()), "Wrong type has been passed.");
-		ionassert(m_FieldType->GetSize() == sizeof(T));
-		ionassert(m_FieldType->GetHashCode() == typeid(T).hash_code());
+		ionassert(!m_FieldType->IsClass() || TIsPointerV<T>);
+		ionassert(m_FieldType->IsClass() || !TIsPointerV<T>);
+		ionassert(m_FieldType->GetSize() == sizeof(TRemovePtr<T>));
+		ionassert(m_FieldType->GetHashCode() == typeid(TRemovePtr<T>).hash_code());
 
 		T* pValue = reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(object) + m_FieldOffset);
 		return *pValue;
@@ -488,7 +534,9 @@ inline MType* const MatterRT_##T = [] { \
 		/* The compiler provided type hash code */ \
 		typeid(T).hash_code(), \
 		/* Type size in bytes */ \
-		sizeof(T) \
+		sizeof(T), \
+		/* Type attributes */ \
+		ETypeFlags::Fundamental \
 	}; \
 	return MReflection::RegisterType(c_Initializer); \
 }(); \
@@ -505,7 +553,9 @@ FORCEINLINE static MClass* StaticClass() { \
 			/* The compiler provided type hash code */ \
 			typeid(T).hash_code(), \
 			/* Type size in bytes */ \
-			sizeof(T) \
+			sizeof(T), \
+			/* Type attributes */ \
+			ETypeFlags::Class \
 		}, \
 		/* Default MObject name */ \
 		#T, \

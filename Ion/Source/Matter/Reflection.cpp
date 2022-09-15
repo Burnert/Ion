@@ -8,7 +8,8 @@ namespace Ion
 	MType::MType(const MTypeInitializer& initializer) :
 		m_Name(initializer.Name),
 		m_HashCode(initializer.HashCode),
-		m_Size(initializer.Size)
+		m_Size(initializer.Size),
+		m_Flags(initializer.Flags)
 	{
 	}
 

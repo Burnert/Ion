@@ -15,6 +15,9 @@ namespace Ion::Test
 		int64 IntField2 = 1;
 		MFIELD(IntField2)
 
+		MObject* MObjectField = nullptr;
+		MFIELD(MObjectField)
+
 		int32 Int_VoidMethod() { return 0; }
 		MMETHOD(Int_VoidMethod)
 
@@ -36,18 +39,19 @@ namespace Ion::Test
 		MMatterTest* object = MObject::New<MMatterTest>();
 		ionassert(object);
 
-		sizeof(MObject);
-
 		MClass* c = object->GetClass();
 		ionassert(c);
 		ionassert(c->GetName() == "C_MMatterTest");
 		ionassert(c->Is<MMatterTest>());
 		ionassert(c->Is(MMatterTest::StaticClass()));
 
+		// Fields
+
 		ionassert(MMatterTest::MatterRF_IntField->GetClass()->Is<MMatterTest>());
 		ionassert(MMatterTest::MatterRF_IntField->GetType() == MatterRT_int32);
 		ionassert(MMatterTest::MatterRF_IntField->GetType()->Is(MatterRT_int32));
 		ionassert(MMatterTest::MatterRF_IntField->GetType()->GetSize() == sizeof(int32));
+		ionassert(!MMatterTest::MatterRF_IntField->GetType()->IsClass());
 		ionassert(MMatterTest::MatterRF_IntField->GetName() == "IntField");
 		ionassert(MMatterTest::MatterRF_IntField->GetOffset() == offsetof(MMatterTest, IntField));
 
@@ -60,7 +64,24 @@ namespace Ion::Test
 		ionassert(MMatterTest::MatterRF_IntField2->GetType() == MatterRT_int64);
 		ionassert(MMatterTest::MatterRF_IntField2->GetType()->Is(MatterRT_int64));
 		ionassert(MMatterTest::MatterRF_IntField2->GetType()->GetSize() == sizeof(int64));
+		ionassert(!MMatterTest::MatterRF_IntField2->GetType()->IsClass());
 		ionassert(MMatterTest::MatterRF_IntField2->GetName() == "IntField2");
+		ionassert(MMatterTest::MatterRF_IntField2->GetOffset() == offsetof(MMatterTest, IntField2));
+
+		ionassert(MMatterTest::MatterRF_MObjectField->GetClass()->Is<MMatterTest>());
+		ionassert(MMatterTest::MatterRF_MObjectField->GetType() == MObject::StaticClass());
+		ionassert(MMatterTest::MatterRF_MObjectField->GetType()->Is(MObject::StaticClass()));
+		ionassert(MMatterTest::MatterRF_MObjectField->GetType()->GetSize() == sizeof(MObject));
+		ionassert(MMatterTest::MatterRF_MObjectField->GetType()->IsClass());
+		ionassert(MMatterTest::MatterRF_MObjectField->GetName() == "MObjectField");
+		ionassert(MMatterTest::MatterRF_MObjectField->GetOffset() == offsetof(MMatterTest, MObjectField));
+
+		MObject* object2 = MObject::New<MMatterTest>();
+		MMatterTest::MatterRF_MObjectField->SetValue(object, object2);
+		ionassert(object->MObjectField == object2);
+		ionassert(object->MObjectField == MMatterTest::MatterRF_MObjectField->GetValue<MObject*>(object));
+
+		// Methods
 
 		ionassert(MMatterTest::MatterRM_Int_VoidMethod->GetClass()->Is<MMatterTest>());
 		ionassert(MMatterTest::MatterRM_Int_VoidMethod->GetReturnType() == MatterRT_int32);
@@ -102,8 +123,10 @@ namespace Ion::Test
 		ionassert(MMatterTest::MatterRM_MObject_MObjectIntMethod->GetParameterTypes()[1]->Is(MatterRT_int32));
 		ionassert(MMatterTest::MatterRM_MObject_MObjectIntMethod->GetName() == "MObject_MObjectIntMethod");
 
+		// Iteration
+
 		TArray<MField*> fields = c->GetFields();
-		ionassert(fields.size() == 2);
+		ionassert(fields.size() == 3);
 		for (MField* field : fields)
 		{
 			ionassert(field->GetClass() == c);
