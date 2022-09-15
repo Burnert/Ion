@@ -23,6 +23,7 @@ namespace Ion
 	{
 		String Name;
 		size_t HashCode;
+		size_t Size;
 	};
 
 	class MType
@@ -30,6 +31,7 @@ namespace Ion
 	public:
 		const String& GetName() const;
 		size_t GetHashCode() const;
+		size_t GetSize() const;
 
 		template<typename T>
 		bool Is() const;
@@ -41,6 +43,7 @@ namespace Ion
 	private:
 		String m_Name;
 		size_t m_HashCode;
+		size_t m_Size;
 
 		friend class MReflection;
 	};
@@ -53,6 +56,11 @@ namespace Ion
 	FORCEINLINE size_t MType::GetHashCode() const
 	{
 		return m_HashCode;
+	}
+
+	FORCEINLINE size_t MType::GetSize() const
+	{
+		return m_Size;
 	}
 
 	template<typename T>
@@ -87,8 +95,8 @@ namespace Ion
 	{
 		MClass* Class;
 		MType* FieldType;
-		String Name;
 		size_t FieldOffset;
+		String Name;
 		union
 		{
 			EFieldFlags::UType Flags;
@@ -111,6 +119,14 @@ namespace Ion
 
 		const MType* GetType() const;
 
+		size_t GetOffset() const;
+
+		template<typename T>
+		void SetValue(MObject* object, const T& value);
+
+		template<typename T>
+		T GetValue(MObject* object);
+
 	private:
 		MField(const MFieldInitializer& initializer);
 
@@ -118,6 +134,7 @@ namespace Ion
 		MClass* m_Class;
 
 		MType* m_FieldType;
+		size_t m_FieldOffset;
 
 		String m_Name;
 
@@ -149,6 +166,35 @@ namespace Ion
 	FORCEINLINE const MType* MField::GetType() const
 	{
 		return m_FieldType;
+	}
+
+	FORCEINLINE size_t MField::GetOffset() const
+	{
+		return m_FieldOffset;
+	}
+
+	template<typename T>
+	FORCEINLINE void MField::SetValue(MObject* object, const T& value)
+	{
+		ionassert(object);
+		ionassert(m_FieldType->Is(TGetReflectableType<T>::Type()), "Wrong type has been passed.");
+		ionassert(m_FieldType->GetSize() == sizeof(T));
+		ionassert(m_FieldType->GetHashCode() == typeid(T).hash_code());
+
+		T* pValue = reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(object) + m_FieldOffset);
+		*pValue = value;
+	}
+
+	template<typename T>
+	FORCEINLINE T MField::GetValue(MObject* object)
+	{
+		ionassert(object);
+		ionassert(m_FieldType->Is(TGetReflectableType<T>::Type()), "Wrong type has been passed.");
+		ionassert(m_FieldType->GetSize() == sizeof(T));
+		ionassert(m_FieldType->GetHashCode() == typeid(T).hash_code());
+
+		T* pValue = reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(object) + m_FieldOffset);
+		return *pValue;
 	}
 
 #pragma endregion
@@ -257,8 +303,8 @@ namespace Ion
 
 	struct MClassInitializer
 	{
-		String Name;
-		size_t TypeHashCode;
+		MTypeInitializer TypeInitializer;
+		String CDOName;
 		MObject* CDO;
 		MClass* SuperClass;
 		FMClassInstantiateDefault InstantiateFunc;
@@ -272,11 +318,7 @@ namespace Ion
 		const MObject* GetClassDefaultObject() const;
 
 		template<typename T>
-		FORCEINLINE const T& GetClassDefaultObjectTyped() const
-		{
-			ionassert(m_CDO->GetClass()->GetHashCode() == typeid(T).hash_code());
-			return *reinterpret_cast<T*>(m_CDO);
-		}
+		const T& GetClassDefaultObjectTyped() const;
 
 		MClass* GetSuperClass() const;
 
@@ -306,6 +348,13 @@ namespace Ion
 	FORCEINLINE const MObject* MClass::GetClassDefaultObject() const
 	{
 		return m_CDO;
+	}
+
+	template<typename T>
+	FORCEINLINE const T& MClass::GetClassDefaultObjectTyped() const
+	{
+		ionassert(m_CDO->GetClass()->GetHashCode() == typeid(T).hash_code());
+		return *reinterpret_cast<T*>(m_CDO);
 	}
 
 	FORCEINLINE MClass* MClass::GetSuperClass() const
@@ -437,7 +486,9 @@ inline MType* const MatterRT_##T = [] { \
 		/* MType name (same as MClass if used as a base) */ \
 		#T, \
 		/* The compiler provided type hash code */ \
-		typeid(T).hash_code() \
+		typeid(T).hash_code(), \
+		/* Type size in bytes */ \
+		sizeof(T) \
 	}; \
 	return MReflection::RegisterType(c_Initializer); \
 }(); \
@@ -448,10 +499,16 @@ public: \
 using TThisClass = T; \
 FORCEINLINE static MClass* StaticClass() { \
 	static MClassInitializer c_Initializer { \
-		/* Default MObject name (the MClass name is based on it) */ \
+		MTypeInitializer { \
+			/* The MClass name (C_ prefix to differentiate a class name from an object name) */ \
+			"C_"s + #T, \
+			/* The compiler provided type hash code */ \
+			typeid(T).hash_code(), \
+			/* Type size in bytes */ \
+			sizeof(T) \
+		}, \
+		/* Default MObject name */ \
 		#T, \
-		/* The compiler provided type hash code */ \
-		typeid(T).hash_code(), \
 		/* CDO instance */ \
 		new T, \
 		/* The super class (nullptr if MObject as it doesn't inherit from anything) */ \
@@ -475,11 +532,10 @@ static inline MField* MatterRF_##name = [] { \
 		StaticClass(), \
 		/* Reflectable field type */ \
 		fieldType, \
+		/* Offset of the actual field (calculated using a pointer to member) */ \
+		[] { return (size_t)&(((TThisClass*)nullptr)->*(&TThisClass::name)); }(), \
 		/* The name of the field */ \
 		#name, \
-		/* The offset of the actual field */ \
-		/* @TODO: Doesn't work, figure something out... (code parsing. eh) */ \
-		0, /*offsetof(TThisClass, name),*/ \
 		/* Attributes (accessibility, static, etc.) */ \
 		EFieldFlags::None  /* @TODO: I don't think there's a way to get the visibility of a field without code parsing. */ \
 	}; \

@@ -12,6 +12,9 @@ namespace Ion::Test
 		int32 IntField = 0;
 		MFIELD(IntField)
 
+		int64 IntField2 = 1;
+		MFIELD(IntField2)
+
 		int32 Int_VoidMethod() { return 0; }
 		MMETHOD(Int_VoidMethod)
 
@@ -33,6 +36,8 @@ namespace Ion::Test
 		MMatterTest* object = MObject::New<MMatterTest>();
 		ionassert(object);
 
+		sizeof(MObject);
+
 		MClass* c = object->GetClass();
 		ionassert(c);
 		ionassert(c->GetName() == "C_MMatterTest");
@@ -42,7 +47,20 @@ namespace Ion::Test
 		ionassert(MMatterTest::MatterRF_IntField->GetClass()->Is<MMatterTest>());
 		ionassert(MMatterTest::MatterRF_IntField->GetType() == MatterRT_int32);
 		ionassert(MMatterTest::MatterRF_IntField->GetType()->Is(MatterRT_int32));
+		ionassert(MMatterTest::MatterRF_IntField->GetType()->GetSize() == sizeof(int32));
 		ionassert(MMatterTest::MatterRF_IntField->GetName() == "IntField");
+		ionassert(MMatterTest::MatterRF_IntField->GetOffset() == offsetof(MMatterTest, IntField));
+
+		int32 value0 = MMatterTest::MatterRF_IntField->GetValue<int32>(object);
+		ionassert(value0 == object->IntField);
+		MMatterTest::MatterRF_IntField->SetValue(object, (int32)69);
+		ionassert(object->IntField == 69);
+
+		ionassert(MMatterTest::MatterRF_IntField2->GetClass()->Is<MMatterTest>());
+		ionassert(MMatterTest::MatterRF_IntField2->GetType() == MatterRT_int64);
+		ionassert(MMatterTest::MatterRF_IntField2->GetType()->Is(MatterRT_int64));
+		ionassert(MMatterTest::MatterRF_IntField2->GetType()->GetSize() == sizeof(int64));
+		ionassert(MMatterTest::MatterRF_IntField2->GetName() == "IntField2");
 
 		ionassert(MMatterTest::MatterRM_Int_VoidMethod->GetClass()->Is<MMatterTest>());
 		ionassert(MMatterTest::MatterRM_Int_VoidMethod->GetReturnType() == MatterRT_int32);
@@ -85,7 +103,7 @@ namespace Ion::Test
 		ionassert(MMatterTest::MatterRM_MObject_MObjectIntMethod->GetName() == "MObject_MObjectIntMethod");
 
 		TArray<MField*> fields = c->GetFields();
-		ionassert(fields.size() == 1);
+		ionassert(fields.size() == 2);
 		for (MField* field : fields)
 		{
 			ionassert(field->GetClass() == c);

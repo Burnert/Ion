@@ -7,13 +7,15 @@ namespace Ion
 {
 	MType::MType(const MTypeInitializer& initializer) :
 		m_Name(initializer.Name),
-		m_HashCode(initializer.HashCode)
+		m_HashCode(initializer.HashCode),
+		m_Size(initializer.Size)
 	{
 	}
 
 	MField::MField(const MFieldInitializer& initializer) :
 		m_Class(initializer.Class),
 		m_FieldType(initializer.FieldType),
+		m_FieldOffset(initializer.FieldOffset),
 		m_Flags(initializer.Flags),
 		m_Name(initializer.Name)
 	{
@@ -29,8 +31,7 @@ namespace Ion
 	}
 
 	MClass::MClass(const MClassInitializer& initializer) :
-		// C_ prefix to differentiate a class name from an object name.
-		MType(MTypeInitializer { "C_" + initializer.Name, initializer.TypeHashCode }),
+		MType(initializer.TypeInitializer),
 		m_SuperClass(initializer.SuperClass),
 		m_CDO(initializer.CDO),
 		m_FInstantiate(initializer.InstantiateFunc)
@@ -94,15 +95,15 @@ namespace Ion
 	MClass* MReflection::RegisterClass(const MClassInitializer& initializer)
 	{
 		// MObject cannot inherit from itself
-		ionassert(initializer.SuperClass || initializer.Name == "MObject");
+		ionassert(initializer.SuperClass || initializer.TypeInitializer.Name == "C_MObject");
 
 		ionassert(initializer.CDO);
-		ionassert(!initializer.Name.empty());
-		ionverify(std::find_if(s_MClassRegistry.begin(), s_MClassRegistry.end(), [&](MClass* mc) { return mc->GetName() == initializer.Name; }) == s_MClassRegistry.end());
+		ionassert(!initializer.TypeInitializer.Name.empty());
+		ionverify(std::find_if(s_MClassRegistry.begin(), s_MClassRegistry.end(), [&](MClass* mc) { return mc->GetName() == initializer.TypeInitializer.Name; }) == s_MClassRegistry.end());
 
 		// Setup the reflectable class data
 		MClass* mClass = s_MClassRegistry.emplace_back(new MClass(initializer));
-		mClass->SetupClassDefaultObject(initializer.Name);
+		mClass->SetupClassDefaultObject(initializer.CDOName);
 		return mClass;
 	}
 
@@ -113,6 +114,8 @@ namespace Ion
 
 		TArray<MField*>& fields = initializer.Class->m_Fields;
 		MField* field = fields.emplace_back(new MField(initializer));
+
+		//field->InitOffset();
 
 		return field;
 	}
