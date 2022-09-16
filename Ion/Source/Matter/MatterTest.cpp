@@ -39,6 +39,13 @@ namespace Ion::Test
 
 		MObject* MObject_MObjectIntMethod(MObject* param, int32 param2) { MReflectionLogger.Debug("MObject_MObjectIntMethod called {}, {}", (void*)param, param2); return param; }
 		MMETHOD(MObject_MObjectIntMethod, MObject*, int32)
+
+		void Void_StringMethod(const String& str) { MReflectionLogger.Debug("Void_StringMethod called {}", str); }
+		MMETHOD(Void_StringMethod, const String&)
+
+		String Str420 = "-__420__-";
+		const String& String_VoidMethod() { MReflectionLogger.Debug("String_VoidMethod called"); return Str420; }
+		MMETHOD(String_VoidMethod)
 	};
 
 	void MatterTest()
@@ -185,6 +192,28 @@ namespace Ion::Test
 		MObject* mObjectRet2x = MMatterTest::MatterRM_MObject_MObjectIntMethod->Invoke<MObject*>(object, object2, 69i32);
 		ionassert(mObjectRet2x == object2);
 
+		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetClass()->Is<MMatterTest>());
+		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetReturnType() == MatterRT_void);
+		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetReturnType()->Is(MatterRT_void));
+		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetReturnType()->Is<void>());
+		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetParameterTypes().size() == 1);
+		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetParameterTypes()[0] == MatterRT_String);
+		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetParameterTypes()[0]->Is(MatterRT_String));
+		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetParameterTypes()[0]->Is<String>());
+		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetName() == "Void_StringMethod");
+
+		MMatterTest::MatterRM_Void_StringMethod->Invoke(object, "Hello"s);
+
+		ionassert(MMatterTest::MatterRM_String_VoidMethod->GetClass()->Is<MMatterTest>());
+		ionassert(MMatterTest::MatterRM_String_VoidMethod->GetReturnType() == MatterRT_String);
+		ionassert(MMatterTest::MatterRM_String_VoidMethod->GetReturnType()->Is(MatterRT_String));
+		ionassert(MMatterTest::MatterRM_String_VoidMethod->GetReturnType()->Is<String>());
+		ionassert(MMatterTest::MatterRM_String_VoidMethod->GetParameterTypes().size() == 0);
+		ionassert(MMatterTest::MatterRM_String_VoidMethod->GetName() == "String_VoidMethod");
+
+		String stringRet0 = MMatterTest::MatterRM_String_VoidMethod->Invoke<String>(object);
+		ionassert(stringRet0 == object->Str420);
+
 		// Iteration
 
 		TArray<MField*> fields = c->GetFields();
@@ -195,7 +224,7 @@ namespace Ion::Test
 		}
 
 		TArray<MMethod*> methods = c->GetMethods();
-		ionassert(methods.size() == 7);
+		ionassert(methods.size() == 9);
 		for (MMethod* method : methods)
 		{
 			ionassert(method->GetClass() == c);

@@ -19,7 +19,11 @@ namespace Ion
 		MClass* GetClass() const;
 
 		void SetName(const String& name);
+		MMETHOD(SetName, const String&)
+
 		const String& GetName() const;
+		MMETHOD(GetName)
+
 		const GUID& GetGuid() const;
 
 	protected:

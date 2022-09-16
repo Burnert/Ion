@@ -9,6 +9,7 @@ namespace Ion
 #pragma region Forward Decl
 
 	class MType;
+	class MValue;
 	class MField;
 	class MMethod;
 	class MClass;
@@ -422,9 +423,18 @@ namespace Ion
 	template<typename TRet, typename... Args>
 	FORCEINLINE TRet MMethod::Invoke(MObject* object, Args&&... args)
 	{
+		static_assert(TIsReflectableTypeV<TRet>);
+		static_assert(!TIsReferenceV<TRet>, "Invoke function cannot return a reference.");
+
 		TSharedPtr<MValue> retValue = InvokeEx(object, { MValue::Create(args)... });
 		if constexpr (!std::is_void_v<TRet>)
+		{
+			MType* retType = TGetReflectableType<TRet>::Type();
+			ionassert(retType);
+			ionassert(m_ReturnType->Is(retType), "Wrong return type has been passed to the Invoke function. {} instead of {}",
+				retType->GetName(), m_ReturnType->GetName());
 			return retValue->As<TRet>();
+		}
 	}
 
 	FORCEINLINE const String& MMethod::GetName() const
@@ -891,6 +901,8 @@ static inline MMethod* MatterRM_##name = [] { \
 	// - Fixed Array
 	// - Hash Set
 	// - Hash Map
+
+	MTYPE(String)
 
 	/* Custom void type (can't be used as a field or parameter, only method return type) */
 	inline MType* const MatterRT_void = [] {
