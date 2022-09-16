@@ -572,13 +572,13 @@ namespace Ion
 		static MClass* Class() { return static_cast<MClass*>(TGetReflectableType<T>::Type()); }
 	};
 
-	// TGetSuperClass ------------------------------------------------------------------------
+	// TGetReflectableSuperClass ------------------------------------------------------------------------
 
 	template<typename T, typename = void>
-	struct TGetSuperClass { static MClass* Class() { return nullptr; } };
+	struct TGetReflectableSuperClass { static MClass* Class() { return nullptr; } };
 
 	template<typename T>
-	struct TGetSuperClass<T, std::void_t<typename T::Super>> { static MClass* Class() { return T::Super::StaticClass(); } };
+	struct TGetReflectableSuperClass<T, std::void_t<typename T::Super>> { static MClass* Class() { return T::Super::StaticClass(); } };
 
 	// TMethodParamPack ---------------------------------------------------------------------
 
@@ -595,16 +595,22 @@ namespace Ion
 	struct TMethodParamPack<TFirst, TRest...>
 	{
 		static constexpr size_t Count = 1 + sizeof...(TRest);
-		using Type = TFirst;
-		using Rest = TMethodParamPack<TRest...>;
+		static constexpr bool bConstRef = TIsConstReferenceV<TFirst>;
+
+		using Type         = TRemoveConstRef<TFirst>;
+		using ConstRefType = TIf<bConstRef, TFirst, std::add_lvalue_reference_t<std::add_const_t<TFirst>>>;
+		using Rest         = TMethodParamPack<TRest...>;
 	};
 
 	template<typename TLast>
 	struct TMethodParamPack<TLast>
 	{
 		static constexpr size_t Count = 1;
-		using Type = TLast;
-		using Rest = TMethodParamPack<>;
+		static constexpr bool bConstRef = TIsConstReferenceV<TLast>;
+
+		using Type         = TRemoveConstRef<TLast>;
+		using ConstRefType = TIf<bConstRef, TLast, std::add_lvalue_reference_t<std::add_const_t<TLast>>>;
+		using Rest         = TMethodParamPack<>;
 	};
 
 	// TMethodGetReturnType ---------------------------------------------------------------------
@@ -629,50 +635,41 @@ namespace Ion
 		static TArray<MType*> Params() { return TArray<MType*> { TGetReflectableType<TParams>::Type()... }; }
 	};
 
-	// TGetNthParamType -------------------------------------------------------------------------
+	// TGetNthParamPack -----------------------------------------------------------------------------
 
 	template<size_t N, typename TParamPack>
-	struct TGetNthParamType { };
+	struct TGetNthParamPack { };
 
 	template<size_t N, typename... TParams>
-	struct TGetNthParamType<N, TMethodParamPack<TParams...>>
+	struct TGetNthParamPack<N, TMethodParamPack<TParams...>>
 	{
-		using Type = typename TGetNthParamType<N - 1, typename TMethodParamPack<TParams...>::Rest>::Type;
+		using Type = typename TGetNthParamPack<N - 1, typename TMethodParamPack<TParams...>::Rest>::Type;
 	};
 
 	template<typename... TParams>
-	struct TGetNthParamType<0, TMethodParamPack<TParams...>>
+	struct TGetNthParamPack<0, TMethodParamPack<TParams...>>
 	{
-		using Type = typename TMethodParamPack<TParams...>::Type;
+		using Type = TMethodParamPack<TParams...>;
+	};
+
+	template<size_t N>
+	struct TGetNthParamPack<N, TMethodParamPack<>>
+	{
+		using Type = TMethodParamPack<>;
+	};
+
+	// TGetNthParamType -------------------------------------------------------------------------
+
+	template<size_t N, typename TParamPack>
+	struct TGetNthParamType
+	{
+		using Type = typename TGetNthParamPack<N, TParamPack>::Type::Type;
 	};
 
 	template<size_t N>
 	struct TGetNthParamType<N, TMethodParamPack<>>
 	{
 		using Type = void;
-	};
-
-	// TExtractParamForInvoke ---------------------------------------------------------------------
-
-	template<typename TParamPack, size_t Index>
-	struct TExtractParamForInvoke { };
-
-	template<size_t Index, typename... TParams>
-	struct TExtractParamForInvoke<TMethodParamPack<TParams...>, Index>
-	{
-		using TParamPack = TMethodParamPack<TParams...>;
-		FORCEINLINE static auto& Extract(const TArray<TSharedPtr<MValue>>& parameters)
-		{
-			using ParamType = typename TGetNthParamType<Index, TParamPack>::Type;
-
-			const TSharedPtr<MValue>& value = parameters[Index];
-			ionassert(Index < parameters.size());
-			ionassert(value->GetType()->Is(TGetReflectableType<ParamType>::Type()),
-				"Wrong parameter type has been passed at index {}. {} instead of {}",
-				Index, value->GetType()->GetName(), TGetReflectableType<ParamType>::Type()->GetName());
-
-			return value->As<ParamType>();
-		}
 	};
 
 	// TMethodInvoker ----------------------------------------------------------------------------
@@ -706,19 +703,27 @@ namespace Ion
 
 			if constexpr (!std::is_void_v<TReturn>)
 			{
-				outRetVal = MValue::Create<TReturn>( (object->*Func)(ExtractParam<I>(parameters)...) );
+				outRetVal = MValue::Create<TReturn>( (object->*Func)(ExtractParamForInvoke<I>(parameters)...) );
 			}
 			else
 			{
-				(object->*Func)(Extract<I>(parameters)...);
+				(object->*Func)(ExtractParamForInvoke<I>(parameters)...);
 				outRetVal = nullptr;
 			}
 		}
 
-		template<size_t I>
-		FORCEINLINE static auto& ExtractParam(const TArray<TSharedPtr<MValue>>& parameters)
+		template<size_t Index>
+		FORCEINLINE static auto& ExtractParamForInvoke(const TArray<TSharedPtr<MValue>>& parameters)
 		{
-			return TExtractParamForInvoke<TParamPack, I>::Extract(parameters);
+			using ParamType = typename TGetNthParamType<Index, TParamPack>::Type;
+
+			const TSharedPtr<MValue>& value = parameters[Index];
+			ionassert(Index < parameters.size());
+			ionassert(value->GetType()->Is(TGetReflectableType<ParamType>::Type()),
+				"Wrong parameter type has been passed at index {}. {} instead of {}",
+				Index, value->GetType()->GetName(), TGetReflectableType<ParamType>::Type()->GetName());
+
+			return value->As<ParamType>();
 		}
 	};
 
@@ -786,7 +791,7 @@ FORCEINLINE static MClass* StaticClass() { \
 		/* CDO instance */ \
 		new T, \
 		/* The super class (nullptr if MObject as it doesn't inherit from anything) */ \
-		TGetSuperClass<T>::Class(), \
+		TGetReflectableSuperClass<T>::Class(), \
 		/* Instantiate function - Copy construct a new object from the CDO instance. */ \
 		[](const MObject* cdo) { \
 			return new T(*static_cast<const T*>(cdo)); \

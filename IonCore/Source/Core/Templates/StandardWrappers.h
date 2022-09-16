@@ -51,6 +51,26 @@ inline constexpr bool TNotV = std::negation_v<T>;
 template<typename T>
 using TInitializerList = std::initializer_list<T>;
 
+// Remove X
+
+template<typename T>
+using TRemoveConst = std::remove_const_t<T>;
+
+template<typename T>
+using TRemoveRef = std::remove_reference_t<T>;
+
+template<typename T>
+using TRemovePtr = std::remove_pointer_t<T>;
+
+template<typename T>
+using TRemoveConstRef = TRemoveConst<TRemoveRef<T>>;
+
+template<typename T>
+using TRemoveExtent = std::remove_extent_t<T>;
+
+template<typename T>
+using TRemoveAllExtents = std::remove_all_extents_t<T>;
+
 // EnableIf
 
 template<bool Test, typename T = void>
@@ -118,9 +138,15 @@ inline constexpr bool TIsConvertibleV = std::is_convertible_v<FromT, ToT>;
 // IsFunction
 
 template<typename T>
+using TIsFunction = std::is_function<T>;
+
+template<typename T>
 inline constexpr bool TIsFunctionV = std::is_function_v<T>;
 
 // IsPointer
+
+template<typename T>
+using TIsPointer = std::is_pointer<T>;
 
 template<typename T>
 inline constexpr bool TIsPointerV = std::is_pointer_v<T>;
@@ -128,32 +154,26 @@ inline constexpr bool TIsPointerV = std::is_pointer_v<T>;
 // IsReference
 
 template<typename T>
+using TIsReference = std::is_reference<T>;
+
+template<typename T>
 inline constexpr bool TIsReferenceV = std::is_reference_v<T>;
 
 // IsConst
 
 template<typename T>
+using TIsConst = std::is_const<T>;
+
+template<typename T>
 inline constexpr bool TIsConstV = std::is_const_v<T>;
 
-// Remove X
+// IsConstReference
 
 template<typename T>
-using TRemoveConst = std::remove_const_t<T>;
+using TIsConstReference = TAnd<TIsReference<T>, TIsConst<TRemoveRef<T>>>;
 
 template<typename T>
-using TRemoveRef = std::remove_reference_t<T>;
-
-template<typename T>
-using TRemovePtr = std::remove_pointer_t<T>;
-
-template<typename T>
-using TRemoveConstRef = TRemoveConst<TRemoveRef<T>>;
-
-template<typename T>
-using TRemoveExtent = std::remove_extent_t<T>;
-
-template<typename T>
-using TRemoveAllExtents = std::remove_all_extents_t<T>;
+inline constexpr bool TIsConstReferenceV = TIsConstReference<T>::value;
 
 // Numeric Limits
 
