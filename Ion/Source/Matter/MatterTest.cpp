@@ -18,6 +18,9 @@ namespace Ion::Test
 		MObject* MObjectField = nullptr;
 		MFIELD(MObjectField)
 
+		void Void_VoidMethod() { MReflectionLogger.Debug("Void_VoidMethod called"); }
+		MMETHOD(Void_VoidMethod)
+
 		int32 Int_VoidMethod() { MReflectionLogger.Debug("Int_VoidMethod called"); return 420; }
 		MMETHOD(Int_VoidMethod)
 
@@ -82,6 +85,15 @@ namespace Ion::Test
 		ionassert(object->MObjectField == MMatterTest::MatterRF_MObjectField->GetValue<MObject*>(object));
 
 		// Methods
+
+		ionassert(MMatterTest::MatterRM_Void_VoidMethod->GetClass()->Is<MMatterTest>());
+		ionassert(MMatterTest::MatterRM_Void_VoidMethod->GetReturnType() == MatterRT_void);
+		ionassert(MMatterTest::MatterRM_Void_VoidMethod->GetReturnType()->Is(MatterRT_void));
+		ionassert(MMatterTest::MatterRM_Void_VoidMethod->GetParameterTypes().empty());
+		ionassert(MMatterTest::MatterRM_Void_VoidMethod->GetName() == "Void_VoidMethod");
+
+		MMatterTest::MatterRM_Void_VoidMethod->InvokeEx(object);
+		MMatterTest::MatterRM_Void_VoidMethod->Invoke(object);
 
 		ionassert(MMatterTest::MatterRM_Int_VoidMethod->GetClass()->Is<MMatterTest>());
 		ionassert(MMatterTest::MatterRM_Int_VoidMethod->GetReturnType() == MatterRT_int32);
@@ -163,7 +175,7 @@ namespace Ion::Test
 		}
 
 		TArray<MMethod*> methods = c->GetMethods();
-		ionassert(methods.size() == 5);
+		ionassert(methods.size() == 6);
 		for (MMethod* method : methods)
 		{
 			ionassert(method->GetClass() == c);

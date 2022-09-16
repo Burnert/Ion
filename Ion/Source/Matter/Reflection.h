@@ -26,6 +26,7 @@ namespace Ion
 			None        = 0,
 			Fundamental = 1 << 0,
 			Class       = 1 << 1,
+			Void        = 1 << 2,
 		};
 		using UType = std::underlying_type_t<Type>;
 	}
@@ -42,6 +43,7 @@ namespace Ion
 			{
 				ETypeFlags::UType bFundamental : 1;
 				ETypeFlags::UType bClass : 1;
+				ETypeFlags::UType bVoid : 1;
 			};
 		};
 	};
@@ -74,6 +76,7 @@ namespace Ion
 			{
 				ETypeFlags::UType m_bFundamental : 1;
 				ETypeFlags::UType m_bClass : 1;
+				ETypeFlags::UType m_bVoid : 1;
 			};
 		};
 
@@ -298,6 +301,8 @@ namespace Ion
 		ionassert(m_FieldType->GetSize() == sizeof(TRemovePtr<T>));
 		ionassert(m_FieldType->GetHashCode() == typeid(TRemovePtr<T>).hash_code());
 
+		MReflectionLogger.Trace("Setting field value {}::{} in object \"{}\".", m_Class->GetName(), m_Name, object->GetName());
+
 		T* pValue = reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(object) + m_FieldOffset);
 		*pValue = value;
 	}
@@ -311,6 +316,8 @@ namespace Ion
 		ionassert(m_FieldType->IsClass() || !TIsPointerV<T>);
 		ionassert(m_FieldType->GetSize() == sizeof(TRemovePtr<T>));
 		ionassert(m_FieldType->GetHashCode() == typeid(TRemovePtr<T>).hash_code());
+
+		MReflectionLogger.Trace("Getting field value {}::{} in object \"{}\".", m_Class->GetName(), m_Name, object->GetName());
 
 		T* pValue = reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(object) + m_FieldOffset);
 		return *pValue;
@@ -818,7 +825,7 @@ static inline MMethod* MatterRM_##name = [] { \
 		#name, \
 		/* MMethod FInvoke function */ \
 		[](MObject* object, TArray<TSharedPtr<MValue>> parameters, TSharedPtr<MValue>& outRetVal) { \
-			/* Using pure black magic, invoke the function with unknown return type, parameter types or count. */ \
+			/* Using pure black magic, invoke the function with "unknown" return type, parameter types or count. */ \
 			TMethodInvoker<TThisClass, FMethod, &TThisClass::name, TReturn, TMethodParamTypes>::Invoke(static_cast<TThisClass*>(object), parameters, outRetVal); \
 		}, \
 		/* Attributes (accessibility, static, etc.) */ \
@@ -850,6 +857,18 @@ static inline MMethod* MatterRM_##name = [] { \
 	// - Fixed Array
 	// - Hash Set
 	// - Hash Map
+
+	/* Custom void type (can't be used as a field or parameter, only method return type) */
+	inline MType* const MatterRT_void = [] {
+		static MTypeInitializer c_Initializer { };
+		c_Initializer.Name = "void";
+		c_Initializer.HashCode = typeid(void).hash_code();
+		c_Initializer.Size = 0;
+		c_Initializer.Flags = ETypeFlags::Void;
+		return MReflection::RegisterType(c_Initializer);
+	}();
+	template<> struct TGetReflectableType<void> { static MType* Type() { return MatterRT_void; } };
+	template<> struct TIsReflectableType<void> { static constexpr bool Value = true; };
 
 #pragma endregion
 }

@@ -39,9 +39,19 @@ namespace Ion
 
 	TSharedPtr<MValue> MMethod::InvokeEx(MObject* object, const TArray<TSharedPtr<MValue>>& params)
 	{
-		TSharedPtr<MValue> returnVal = nullptr;
-		m_FInvoke(object, params, returnVal);
-		return returnVal;
+		MReflectionLogger.Trace("Invoking method {}::{}({}) in object \"{}\".", m_Class->GetName(), m_Name, [this] {
+			TArray<String> parameterNames;
+			parameterNames.reserve(m_ParameterTypes.size());
+			std::transform(m_ParameterTypes.begin(), m_ParameterTypes.end(), std::back_inserter(parameterNames), [](MType* type)
+			{
+				return type->GetName();
+			});
+			return JoinString(parameterNames, ", "s);
+		}(), object->GetName());
+
+		TSharedPtr<MValue> retValue = nullptr;
+		m_FInvoke(object, params, retValue);
+		return retValue;
 	}
 
 	MClass::MClass(const MClassInitializer& initializer) :
