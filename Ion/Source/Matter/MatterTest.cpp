@@ -18,19 +18,19 @@ namespace Ion::Test
 		MObject* MObjectField = nullptr;
 		MFIELD(MObjectField)
 
-		int32 Int_VoidMethod() { return 0; }
+		int32 Int_VoidMethod() { MReflectionLogger.Debug("Int_VoidMethod called"); return 420; }
 		MMETHOD(Int_VoidMethod)
 
-		int32 Int_IntMethod(int32 param) { return 0; }
+		int32 Int_IntMethod(int32 param) { MReflectionLogger.Debug("Int_IntMethod called {}", param); return param; }
 		MMETHOD(Int_IntMethod, int32)
 
-		MObject* MObject_IntMethod(int32 param) { return nullptr; }
+		MObject* MObject_IntMethod(int32 param) { MReflectionLogger.Debug("MObject_IntMethod called {}", param); return this; }
 		MMETHOD(MObject_IntMethod, int32)
 
-		MObject* MObject_MObjectMethod(MObject* param) { return nullptr; }
+		MObject* MObject_MObjectMethod(MObject* param) { MReflectionLogger.Debug("MObject_MObjectMethod called {}", (void*)param); return param; }
 		MMETHOD(MObject_MObjectMethod, MObject*)
 
-		MObject* MObject_MObjectIntMethod(MObject* param, int32 param2) { return nullptr; }
+		MObject* MObject_MObjectIntMethod(MObject* param, int32 param2) { MReflectionLogger.Debug("MObject_MObjectIntMethod called {}, {}", (void*)param, param2); return param; }
 		MMETHOD(MObject_MObjectIntMethod, MObject*, int32)
 	};
 
@@ -89,6 +89,12 @@ namespace Ion::Test
 		ionassert(MMatterTest::MatterRM_Int_VoidMethod->GetParameterTypes().empty());
 		ionassert(MMatterTest::MatterRM_Int_VoidMethod->GetName() == "Int_VoidMethod");
 
+		TSharedPtr<MValue> intRet0 = MMatterTest::MatterRM_Int_VoidMethod->InvokeEx(object);
+		ionassert(intRet0->As<int32>() == 420);
+
+		int32 intRet0x = MMatterTest::MatterRM_Int_VoidMethod->Invoke<int32>(object);
+		ionassert(intRet0x == 420);
+
 		ionassert(MMatterTest::MatterRM_Int_IntMethod->GetClass()->Is<MMatterTest>());
 		ionassert(MMatterTest::MatterRM_Int_IntMethod->GetReturnType() == MatterRT_int32);
 		ionassert(MMatterTest::MatterRM_Int_IntMethod->GetReturnType()->Is(MatterRT_int32));
@@ -96,6 +102,12 @@ namespace Ion::Test
 		ionassert(MMatterTest::MatterRM_Int_IntMethod->GetParameterTypes()[0] == MatterRT_int32);
 		ionassert(MMatterTest::MatterRM_Int_IntMethod->GetParameterTypes()[0]->Is(MatterRT_int32));
 		ionassert(MMatterTest::MatterRM_Int_IntMethod->GetName() == "Int_IntMethod");
+
+		TSharedPtr<MValue> intRet1 = MMatterTest::MatterRM_Int_IntMethod->InvokeEx(object, { MValue::Create(2137) });
+		ionassert(intRet1->As<int32>() == 2137);
+
+		int32 intRet1x = MMatterTest::MatterRM_Int_IntMethod->Invoke<int32>(object, 2137i32);
+		ionassert(intRet1x == 2137);
 
 		ionassert(MMatterTest::MatterRM_MObject_IntMethod->GetClass()->Is<MMatterTest>());
 		ionassert(MMatterTest::MatterRM_MObject_IntMethod->GetReturnType() == MObject::StaticClass());
@@ -105,6 +117,12 @@ namespace Ion::Test
 		ionassert(MMatterTest::MatterRM_MObject_IntMethod->GetParameterTypes()[0]->Is(MatterRT_int32));
 		ionassert(MMatterTest::MatterRM_MObject_IntMethod->GetName() == "MObject_IntMethod");
 
+		TSharedPtr<MValue> mObjectRet0 = MMatterTest::MatterRM_MObject_IntMethod->InvokeEx(object, { MValue::Create(2137) });
+		ionassert(mObjectRet0->As<MObject*>() == object);
+
+		MObject* mObjectRet0x = MMatterTest::MatterRM_MObject_IntMethod->Invoke<MObject*>(object, 2137i32);
+		ionassert(mObjectRet0x == object);
+
 		ionassert(MMatterTest::MatterRM_MObject_MObjectMethod->GetClass()->Is<MMatterTest>());
 		ionassert(MMatterTest::MatterRM_MObject_MObjectMethod->GetReturnType() == MObject::StaticClass());
 		ionassert(MMatterTest::MatterRM_MObject_MObjectMethod->GetReturnType()->Is(MObject::StaticClass()));
@@ -112,6 +130,12 @@ namespace Ion::Test
 		ionassert(MMatterTest::MatterRM_MObject_MObjectMethod->GetParameterTypes()[0] == MObject::StaticClass());
 		ionassert(MMatterTest::MatterRM_MObject_MObjectMethod->GetParameterTypes()[0]->Is(MObject::StaticClass()));
 		ionassert(MMatterTest::MatterRM_MObject_MObjectMethod->GetName() == "MObject_MObjectMethod");
+
+		TSharedPtr<MValue> mObjectRet1 = MMatterTest::MatterRM_MObject_MObjectMethod->InvokeEx(object, { MValue::Create(object2) });
+		ionassert(mObjectRet1->As<MObject*>() == object2);
+
+		MObject* mObjectRet1x = MMatterTest::MatterRM_MObject_MObjectMethod->Invoke<MObject*>(object, object2);
+		ionassert(mObjectRet1x == object2);
 
 		ionassert(MMatterTest::MatterRM_MObject_MObjectIntMethod->GetClass()->Is<MMatterTest>());
 		ionassert(MMatterTest::MatterRM_MObject_MObjectIntMethod->GetReturnType() == MObject::StaticClass());
@@ -122,6 +146,12 @@ namespace Ion::Test
 		ionassert(MMatterTest::MatterRM_MObject_MObjectIntMethod->GetParameterTypes()[1] == MatterRT_int32);
 		ionassert(MMatterTest::MatterRM_MObject_MObjectIntMethod->GetParameterTypes()[1]->Is(MatterRT_int32));
 		ionassert(MMatterTest::MatterRM_MObject_MObjectIntMethod->GetName() == "MObject_MObjectIntMethod");
+
+		TSharedPtr<MValue> mObjectRet2 = MMatterTest::MatterRM_MObject_MObjectIntMethod->InvokeEx(object, { MValue::Create(object2), MValue::Create(69) });
+		ionassert(mObjectRet2->As<MObject*>() == object2);
+
+		MObject* mObjectRet2x = MMatterTest::MatterRM_MObject_MObjectIntMethod->Invoke<MObject*>(object, object2, 69i32);
+		ionassert(mObjectRet2x == object2);
 
 		// Iteration
 

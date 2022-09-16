@@ -27,8 +27,21 @@ namespace Ion
 		m_ReturnType(initializer.ReturnType),
 		m_ParameterTypes(initializer.ParameterTypes),
 		m_Flags(initializer.Flags),
-		m_Name(initializer.Name)
+		m_Name(initializer.Name),
+		m_FInvoke(initializer.FInvoke)
 	{
+	}
+
+	TSharedPtr<MValue> MMethod::InvokeEx(MObject* object)
+	{
+		return InvokeEx(object, TArray<TSharedPtr<MValue>>());
+	}
+
+	TSharedPtr<MValue> MMethod::InvokeEx(MObject* object, const TArray<TSharedPtr<MValue>>& params)
+	{
+		TSharedPtr<MValue> returnVal = nullptr;
+		m_FInvoke(object, params, returnVal);
+		return returnVal;
 	}
 
 	MClass::MClass(const MClassInitializer& initializer) :

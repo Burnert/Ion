@@ -118,6 +118,79 @@ namespace Ion
 
 #pragma endregion
 
+#pragma region Matter Generic Value wrapper
+
+	class MValue
+	{
+	public:
+		template<typename T>
+		static TSharedPtr<MValue> Create(const T& value);
+
+		virtual MType* GetType() const = 0;
+
+		template<typename T>
+		const T& As() const
+		{
+			static_assert(TIsReflectableTypeV<T>);
+			ionassert(TGetReflectableType<T>::Type()->Is(GetType()));
+			return *(const T*)GetValuePointer();
+		}
+
+	protected:
+		virtual const void* GetValuePointer() const = 0;
+	};
+
+	template<typename T>
+	class TMValue : public MValue
+	{
+	public:
+		FORCEINLINE TMValue(const T& value) :
+			m_Value(value)
+		{
+			static_assert(TIsReflectableTypeV<T>);
+		}
+
+		virtual MType* GetType() const override
+		{
+			return TGetReflectableType<T>::Type();
+		}
+
+	protected:
+		virtual const void* GetValuePointer() const override
+		{
+			return &m_Value;
+		}
+
+	private:
+		T m_Value;
+	};
+
+	template<>
+	class TMValue<void> : public MValue
+	{
+	public:
+		virtual MType* GetType() const override
+		{
+			ionbreak("Called GetType on a void value.");
+			return nullptr;
+		}
+
+	protected:
+		virtual const void* GetValuePointer() const override
+		{
+			ionbreak("Called GetValuePointer on a void value.");
+			return nullptr;
+		}
+	};
+
+	template<typename T>
+	FORCEINLINE static TSharedPtr<MValue> MValue::Create(const T& value)
+	{
+		return MakeShared<TMValue<T>>(value);
+	}
+
+#pragma endregion
+
 #pragma region Matter Reflection Field class
 
 	namespace EFieldFlags
@@ -261,12 +334,16 @@ namespace Ion
 		using UType = std::underlying_type_t<Type>;
 	}
 
+	/*                               void(object,   parameters,                 out return value) */
+	using FMMethodInvoke = TFunction<void(MObject*, TArray<TSharedPtr<MValue>>, TSharedPtr<MValue>&)>;
+
 	struct MMethodInitializer
 	{
 		MClass* Class;
 		MType* ReturnType;
 		TArray<MType*> ParameterTypes;
 		String Name;
+		FMMethodInvoke FInvoke;
 		union
 		{
 			EMethodFlags::UType Flags;
@@ -284,8 +361,11 @@ namespace Ion
 	class MMethod
 	{
 	public:
-		template<typename... Args>
-		void Invoke(Args&&... args);
+		template<typename TRet = void, typename... Args>
+		TRet Invoke(MObject* object = nullptr, Args&&... args);
+
+		TSharedPtr<MValue> InvokeEx(MObject* object = nullptr);
+		TSharedPtr<MValue> InvokeEx(MObject* object, const TArray<TSharedPtr<MValue>>& params);
 
 		const String& GetName() const;
 
@@ -305,6 +385,8 @@ namespace Ion
 
 		String m_Name;
 
+		FMMethodInvoke m_FInvoke;
+
 		union
 		{
 			EMethodFlags::UType m_Flags;
@@ -320,6 +402,14 @@ namespace Ion
 
 		friend class MReflection;
 	};
+
+	template<typename TRet, typename... Args>
+	FORCEINLINE TRet MMethod::Invoke(MObject* object, Args&&... args)
+	{
+		TSharedPtr<MValue> retValue = InvokeEx(object, { MValue::Create(args)... });
+		if constexpr (!std::is_void_v<TRet>)
+			return retValue->As<TRet>();
+	}
 
 	FORCEINLINE const String& MMethod::GetName() const
 	{
@@ -433,6 +523,17 @@ namespace Ion
 	template<typename T>
 	static inline constexpr bool TIsReflectableClassV = TIsReflectableClass<T>::Value;
 
+	// TIsReflectableType --------------------------------------------------------------------
+
+	template<typename T, typename = void>
+	struct TIsReflectableType { static constexpr bool Value = false; };
+
+	template<typename T>
+	struct TIsReflectableType<T, TEnableIfT<TIsReflectableClassV<TRemovePtr<T>>>> { static constexpr bool Value = true; };
+
+	template<typename T>
+	static inline constexpr bool TIsReflectableTypeV = TIsReflectableType<T>::Value;
+
 	// TGetReflectableType -------------------------------------------------------------------
 
 	template<typename T, typename = void>
@@ -469,13 +570,26 @@ namespace Ion
 	struct TMethodParamPack { };
 
 	template<>
-	struct TMethodParamPack<> { };
+	struct TMethodParamPack<>
+	{
+		static constexpr size_t Count = 0;
+	};
 
 	template<typename TFirst, typename... TRest>
-	struct TMethodParamPack<TFirst, TRest...> { using Type = TFirst; using RestTypes = TMethodParamPack<TRest...>; };
+	struct TMethodParamPack<TFirst, TRest...>
+	{
+		static constexpr size_t Count = 1 + sizeof...(TRest);
+		using Type = TFirst;
+		using Rest = TMethodParamPack<TRest...>;
+	};
 
 	template<typename TLast>
-	struct TMethodParamPack<TLast> { using Type = TLast; using RestTypes = TMethodParamPack<>; };
+	struct TMethodParamPack<TLast>
+	{
+		static constexpr size_t Count = 1;
+		using Type = TLast;
+		using Rest = TMethodParamPack<>;
+	};
 
 	// TMethodGetReturnType ---------------------------------------------------------------------
 
@@ -497,6 +611,99 @@ namespace Ion
 	struct TMethodGetReflectableParamTypes<TMethodParamPack<TParams...>>
 	{
 		static TArray<MType*> Params() { return TArray<MType*> { TGetReflectableType<TParams>::Type()... }; }
+	};
+
+	// TGetNthParamType -------------------------------------------------------------------------
+
+	template<size_t N, typename TParamPack>
+	struct TGetNthParamType { };
+
+	template<size_t N, typename... TParams>
+	struct TGetNthParamType<N, TMethodParamPack<TParams...>>
+	{
+		using Type = typename TGetNthParamType<N - 1, typename TMethodParamPack<TParams...>::Rest>::Type;
+	};
+
+	template<typename... TParams>
+	struct TGetNthParamType<0, TMethodParamPack<TParams...>>
+	{
+		using Type = typename TMethodParamPack<TParams...>::Type;
+	};
+
+	template<size_t N>
+	struct TGetNthParamType<N, TMethodParamPack<>>
+	{
+		using Type = void;
+	};
+
+	// TExtractParamForInvoke ---------------------------------------------------------------------
+
+	template<typename TParamPack, size_t Index>
+	struct TExtractParamForInvoke { };
+
+	template<size_t Index, typename... TParams>
+	struct TExtractParamForInvoke<TMethodParamPack<TParams...>, Index>
+	{
+		using TParamPack = TMethodParamPack<TParams...>;
+		FORCEINLINE static auto& Extract(const TArray<TSharedPtr<MValue>>& parameters)
+		{
+			using ParamType = typename TGetNthParamType<Index, TParamPack>::Type;
+
+			const TSharedPtr<MValue>& value = parameters[Index];
+			ionassert(Index < parameters.size());
+			ionassert(value->GetType()->Is(TGetReflectableType<ParamType>::Type()),
+				"Wrong parameter type has been passed at index {}. {} instead of {}",
+				Index, value->GetType()->GetName(), TGetReflectableType<ParamType>::Type()->GetName());
+
+			return value->As<ParamType>();
+		}
+	};
+
+	// TMethodInvoker ----------------------------------------------------------------------------
+	
+	template<typename TClass, typename TFuncPtr, TFuncPtr Func, typename TReturn, typename TParamPack>
+	struct TMethodInvoker
+	{
+		FORCEINLINE static void Invoke(
+			TClass* object,
+			const TArray<TSharedPtr<MValue>>& parameters,
+			TSharedPtr<MValue>& outRetVal)
+		{
+			ionassert(object); // @TODO: Unless static
+			ionassert(parameters.size() == TParamPack::Count,
+				"A wrong amount of parameters has been passed to the invoke function. {} instead of {}.",
+				parameters.size(), TParamPack::Count);
+
+			Invoke_Impl(object, parameters, outRetVal, std::make_index_sequence<TParamPack::Count> {});
+		}
+
+	private:
+		template<size_t... I>
+		FORCEINLINE static void Invoke_Impl(
+			TClass* object,
+			const TArray<TSharedPtr<MValue>>& parameters,
+			TSharedPtr<MValue>& outRetVal,
+			std::index_sequence<I...> seq)
+		{
+			static_assert(sizeof...(I) == TParamPack::Count);
+			ionassert(sizeof...(I) == parameters.size());
+
+			if constexpr (!std::is_void_v<TReturn>)
+			{
+				outRetVal = MValue::Create<TReturn>( (object->*Func)(ExtractParam<I>(parameters)...) );
+			}
+			else
+			{
+				(object->*Func)(Extract<I>(parameters)...);
+				outRetVal = nullptr;
+			}
+		}
+
+		template<size_t I>
+		FORCEINLINE static auto& ExtractParam(const TArray<TSharedPtr<MValue>>& parameters)
+		{
+			return TExtractParamForInvoke<TParamPack, I>::Extract(parameters);
+		}
 	};
 
 #pragma endregion
@@ -540,7 +747,8 @@ inline MType* const MatterRT_##T = [] { \
 	}; \
 	return MReflection::RegisterType(c_Initializer); \
 }(); \
-template<> struct TGetReflectableType<T> { static MType* Type() { return MatterRT_##T; } };
+template<> struct TGetReflectableType<T> { static MType* Type() { return MatterRT_##T; } }; \
+template<> struct TIsReflectableType<T> { static constexpr bool Value = true; };
 
 #define MCLASS(T) \
 public: \
@@ -596,6 +804,7 @@ static inline MField* MatterRF_##name = [] { \
 static inline MMethod* MatterRM_##name = [] { \
 	using FMethod = decltype(&TThisClass::name); \
 	using TMethodParamTypes = TMethodParamPack<__VA_ARGS__>; \
+	static constexpr size_t ParamCount = TMethodParamTypes::Count; \
 	using TReturn = typename TMethodGetReturnType<TThisClass, FMethod, TMethodParamTypes>::Type; \
 	static TArray<MType*> parameterTypes = TMethodGetReflectableParamTypes<TMethodParamTypes>::Params(); \
 	static MMethodInitializer c_Initializer { \
@@ -607,6 +816,11 @@ static inline MMethod* MatterRM_##name = [] { \
 		parameterTypes, \
 		/* The name of the method */ \
 		#name, \
+		/* MMethod FInvoke function */ \
+		[](MObject* object, TArray<TSharedPtr<MValue>> parameters, TSharedPtr<MValue>& outRetVal) { \
+			/* Using pure black magic, invoke the function with unknown return type, parameter types or count. */ \
+			TMethodInvoker<TThisClass, FMethod, &TThisClass::name, TReturn, TMethodParamTypes>::Invoke(static_cast<TThisClass*>(object), parameters, outRetVal); \
+		}, \
 		/* Attributes (accessibility, static, etc.) */ \
 		EMethodFlags::None \
 	}; \
