@@ -21,7 +21,11 @@ namespace Ion::Test
 		void Void_VoidMethod() { MReflectionLogger.Debug("Void_VoidMethod called"); }
 		MMETHOD(Void_VoidMethod)
 
-		int32 Int_VoidMethod() { MReflectionLogger.Debug("Int_VoidMethod called"); return 420; }
+		void Void_ConstRefIntMethod(const int32& param) { MReflectionLogger.Debug("Void_ConstRefIntMethod called {}", param); }
+		MMETHOD(Void_ConstRefIntMethod, const int32&)
+
+		int32 Int420 = 420;
+		const int32& Int_VoidMethod() { MReflectionLogger.Debug("Int_VoidMethod called"); return Int420; }
 		MMETHOD(Int_VoidMethod)
 
 		int32 Int_IntMethod(int32 param) { MReflectionLogger.Debug("Int_IntMethod called {}", param); return param; }
@@ -30,8 +34,8 @@ namespace Ion::Test
 		MObject* MObject_IntMethod(int32 param) { MReflectionLogger.Debug("MObject_IntMethod called {}", param); return this; }
 		MMETHOD(MObject_IntMethod, int32)
 
-		MObject* MObject_MObjectMethod(MObject* param) { MReflectionLogger.Debug("MObject_MObjectMethod called {}", (void*)param); return param; }
-		MMETHOD(MObject_MObjectMethod, MObject*)
+		MObject* MObject_MObjectMethod(MObject* const& param) { MReflectionLogger.Debug("MObject_MObjectMethod called {}", (void*)param); return param; }
+		MMETHOD(MObject_MObjectMethod, MObject* const&)
 
 		MObject* MObject_MObjectIntMethod(MObject* param, int32 param2) { MReflectionLogger.Debug("MObject_MObjectIntMethod called {}, {}", (void*)param, param2); return param; }
 		MMETHOD(MObject_MObjectIntMethod, MObject*, int32)
@@ -101,6 +105,15 @@ namespace Ion::Test
 
 		MMatterTest::MatterRM_Void_VoidMethod->InvokeEx(object);
 		MMatterTest::MatterRM_Void_VoidMethod->Invoke(object);
+
+		ionassert(MMatterTest::MatterRM_Void_ConstRefIntMethod->GetClass()->Is<MMatterTest>());
+		ionassert(MMatterTest::MatterRM_Void_ConstRefIntMethod->GetReturnType() == MatterRT_void);
+		ionassert(MMatterTest::MatterRM_Void_ConstRefIntMethod->GetReturnType()->Is(MatterRT_void));
+		ionassert(MMatterTest::MatterRM_Void_ConstRefIntMethod->GetParameterTypes().size() == 1);
+		ionassert(MMatterTest::MatterRM_Void_ConstRefIntMethod->GetParameterTypes()[0]->Is<int32>());
+		ionassert(MMatterTest::MatterRM_Void_ConstRefIntMethod->GetName() == "Void_ConstRefIntMethod");
+
+		MMatterTest::MatterRM_Void_ConstRefIntMethod->Invoke(object, 69i32);
 
 		ionassert(MMatterTest::MatterRM_Int_VoidMethod->GetClass()->Is<MMatterTest>());
 		ionassert(MMatterTest::MatterRM_Int_VoidMethod->GetReturnType() == MatterRT_int32);
@@ -182,7 +195,7 @@ namespace Ion::Test
 		}
 
 		TArray<MMethod*> methods = c->GetMethods();
-		ionassert(methods.size() == 6);
+		ionassert(methods.size() == 7);
 		for (MMethod* method : methods)
 		{
 			ionassert(method->GetClass() == c);

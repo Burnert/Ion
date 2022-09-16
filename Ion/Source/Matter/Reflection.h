@@ -597,9 +597,13 @@ namespace Ion
 		static constexpr size_t Count = 1 + sizeof...(TRest);
 		static constexpr bool bConstRef = TIsConstReferenceV<TFirst>;
 
-		using Type         = TRemoveConstRef<TFirst>;
+		using Type         = TFirst;
+		using StrippedType = TRemoveConstRef<TFirst>;
 		using ConstRefType = TIf<bConstRef, TFirst, std::add_lvalue_reference_t<std::add_const_t<TFirst>>>;
 		using Rest         = TMethodParamPack<TRest...>;
+
+		static_assert(!TIsReferenceV<Type> || TIsConstReferenceV<Type>, "Non-const reference parameter types are unsupported right now.");
+		static_assert(TIsReflectableTypeV<StrippedType>, "The parameter type is not reflectable.");
 	};
 
 	template<typename TLast>
@@ -608,9 +612,13 @@ namespace Ion
 		static constexpr size_t Count = 1;
 		static constexpr bool bConstRef = TIsConstReferenceV<TLast>;
 
-		using Type         = TRemoveConstRef<TLast>;
+		using Type         = TLast;
+		using StrippedType = TRemoveConstRef<TLast>;
 		using ConstRefType = TIf<bConstRef, TLast, std::add_lvalue_reference_t<std::add_const_t<TLast>>>;
 		using Rest         = TMethodParamPack<>;
+
+		static_assert(!TIsReferenceV<Type> || TIsConstReferenceV<Type>, "Non-const reference parameter types are unsupported right now.");
+		static_assert(TIsReflectableTypeV<StrippedType>, "The parameter type is not reflectable.");
 	};
 
 	// TMethodGetReturnType ---------------------------------------------------------------------
@@ -632,7 +640,7 @@ namespace Ion
 	template<typename... TParams>
 	struct TMethodGetReflectableParamTypes<TMethodParamPack<TParams...>>
 	{
-		static TArray<MType*> Params() { return TArray<MType*> { TGetReflectableType<TParams>::Type()... }; }
+		static TArray<MType*> Params() { return TArray<MType*> { TGetReflectableType<TRemoveConstRef<TParams>>::Type()... }; }
 	};
 
 	// TGetNthParamPack -----------------------------------------------------------------------------
@@ -703,7 +711,7 @@ namespace Ion
 
 			if constexpr (!std::is_void_v<TReturn>)
 			{
-				outRetVal = MValue::Create<TReturn>( (object->*Func)(ExtractParamForInvoke<I>(parameters)...) );
+				outRetVal = MValue::Create<TRemoveConstRef<TReturn>>( (object->*Func)(ExtractParamForInvoke<I>(parameters)...) );
 			}
 			else
 			{
@@ -715,7 +723,7 @@ namespace Ion
 		template<size_t Index>
 		FORCEINLINE static auto& ExtractParamForInvoke(const TArray<TSharedPtr<MValue>>& parameters)
 		{
-			using ParamType = typename TGetNthParamType<Index, TParamPack>::Type;
+			using ParamType = typename TGetNthParamPack<Index, TParamPack>::Type::StrippedType;
 
 			const TSharedPtr<MValue>& value = parameters[Index];
 			ionassert(Index < parameters.size());
@@ -835,12 +843,16 @@ static inline MMethod* MatterRM_##name = [] { \
 	using TMethodParamTypes = TMethodParamPack<__VA_ARGS__>; \
 	static constexpr size_t ParamCount = TMethodParamTypes::Count; \
 	using TReturn = typename TMethodGetReturnType<TThisClass, FMethod, TMethodParamTypes>::Type; \
+	static_assert(!TIsReferenceV<TReturn> || TIsConstReferenceV<TReturn>, "Non-const reference return types are unsupported right now."); \
+	static_assert(TIsReflectableTypeV<TRemoveConstRef<TReturn>>, "The return type is not reflectable."); \
 	static TArray<MType*> parameterTypes = TMethodGetReflectableParamTypes<TMethodParamTypes>::Params(); \
+	static MType* returnType = TGetReflectableType<TRemoveConstRef<TReturn>>::Type(); \
+	ionassert(std::all_of(parameterTypes.begin(), parameterTypes.end(), [](MType* type) { return type; })); \
 	static MMethodInitializer c_Initializer { \
 		/* The owning class */ \
 		StaticClass(), \
 		/* Method return type */ \
-		TGetReflectableType<TReturn>::Type(), \
+		returnType, \
 		/* Method parameter types */ \
 		parameterTypes, \
 		/* The name of the method */ \
