@@ -209,12 +209,15 @@ namespace Ion
 		using UType = std::underlying_type_t<Type>;
 	}
 
+	using FMFieldSetterGetter = TFunction<void(MObject*, TSharedPtr<MValue>&)>;
+
 	struct MFieldInitializer
 	{
 		MClass* Class;
 		MType* FieldType;
 		size_t FieldOffset;
 		String Name;
+		FMFieldSetterGetter FSetterGetter;
 		union
 		{
 			EFieldFlags::UType Flags;
@@ -239,8 +242,12 @@ namespace Ion
 
 		size_t GetOffset() const;
 
+		void SetValue(MObject* object, const TSharedPtr<MValue>& value);
+
 		template<typename T>
 		void SetValue(MObject* object, const T& value);
+
+		TSharedPtr<MValue> GetValue(MObject* object);
 
 		template<typename T>
 		T GetValue(MObject* object);
@@ -255,6 +262,8 @@ namespace Ion
 		size_t m_FieldOffset;
 
 		String m_Name;
+
+		FMFieldSetterGetter m_FSetterGetter;
 
 		union
 		{
@@ -301,7 +310,7 @@ namespace Ion
 		ionassert(m_FieldType->GetSize() == sizeof(TRemovePtr<T>));
 		ionassert(m_FieldType->GetHashCode() == typeid(TRemovePtr<T>).hash_code());
 
-		MReflectionLogger.Trace("Setting field value {}::{} in object \"{}\".", m_Class->GetName(), m_Name, object->GetName());
+		MReflectionLogger.Trace("Setting field value {}::{} of object \"{}\".", m_Class->GetName(), m_Name, object->GetName());
 
 		T* pValue = reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(object) + m_FieldOffset);
 		*pValue = value;
@@ -317,7 +326,7 @@ namespace Ion
 		ionassert(m_FieldType->GetSize() == sizeof(TRemovePtr<T>));
 		ionassert(m_FieldType->GetHashCode() == typeid(TRemovePtr<T>).hash_code());
 
-		MReflectionLogger.Trace("Getting field value {}::{} in object \"{}\".", m_Class->GetName(), m_Name, object->GetName());
+		MReflectionLogger.Trace("Getting field value {}::{} of object \"{}\".", m_Class->GetName(), m_Name, object->GetName());
 
 		T* pValue = reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(object) + m_FieldOffset);
 		return *pValue;
@@ -801,6 +810,14 @@ static inline MField* MatterRF_##name = [] { \
 		[] { return (size_t)&(((TThisClass*)nullptr)->*(&TThisClass::name)); }(), \
 		/* The name of the field */ \
 		#name, \
+		/* MField FSetterGetter function */ \
+		[](MObject* object, TSharedPtr<MValue>& valueRef) { \
+			/* If the pointer is not null, the function should be used as a setter. */ \
+			if (valueRef) \
+				static_cast<TThisClass*>(object)->*(&TThisClass::name) = valueRef->As<TField>(); \
+			else \
+				valueRef = MakeShared<TMValue<TField>>(static_cast<TThisClass*>(object)->*(&TThisClass::name)); \
+		}, \
 		/* Attributes (accessibility, static, etc.) */ \
 		EFieldFlags::None  /* @TODO: I don't think there's a way to get the visibility of a field without code parsing. */ \
 	}; \

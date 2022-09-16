@@ -58,9 +58,16 @@ namespace Ion::Test
 		ionassert(MMatterTest::MatterRF_IntField->GetName() == "IntField");
 		ionassert(MMatterTest::MatterRF_IntField->GetOffset() == offsetof(MMatterTest, IntField));
 
+		// Direct field interaction
 		int32 value0 = MMatterTest::MatterRF_IntField->GetValue<int32>(object);
 		ionassert(value0 == object->IntField);
 		MMatterTest::MatterRF_IntField->SetValue(object, (int32)69);
+		ionassert(object->IntField == 69);
+
+		// Indirect field interaction
+		TSharedPtr<MValue> mValue0 = MMatterTest::MatterRF_IntField->GetValue(object);
+		ionassert(mValue0->As<int32>() == object->IntField);
+		MMatterTest::MatterRF_IntField->SetValue(object, MValue::Create(69i32));
 		ionassert(object->IntField == 69);
 
 		ionassert(MMatterTest::MatterRF_IntField2->GetClass()->Is<MMatterTest>());

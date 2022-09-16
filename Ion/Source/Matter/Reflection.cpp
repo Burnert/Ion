@@ -18,8 +18,30 @@ namespace Ion
 		m_FieldType(initializer.FieldType),
 		m_FieldOffset(initializer.FieldOffset),
 		m_Flags(initializer.Flags),
-		m_Name(initializer.Name)
+		m_Name(initializer.Name),
+		m_FSetterGetter(initializer.FSetterGetter)
 	{
+	}
+
+	void MField::SetValue(MObject* object, const TSharedPtr<MValue>& value)
+	{
+		ionassert(object);
+		ionassert(value);
+
+		MReflectionLogger.Trace("Indirectly setting field value {}::{} of object \"{}\".", m_Class->GetName(), m_Name, object->GetName());
+
+		m_FSetterGetter(object, const_cast<TSharedPtr<MValue>&>(value));
+	}
+
+	TSharedPtr<MValue> MField::GetValue(MObject* object)
+	{
+		ionassert(object);
+
+		MReflectionLogger.Trace("Indirectly getting field value {}::{} of object \"{}\".", m_Class->GetName(), m_Name, object->GetName());
+
+		TSharedPtr<MValue> value;
+		m_FSetterGetter(object, value);
+		return value;
 	}
 
 	MMethod::MMethod(const MMethodInitializer& initializer) :
@@ -39,7 +61,7 @@ namespace Ion
 
 	TSharedPtr<MValue> MMethod::InvokeEx(MObject* object, const TArray<TSharedPtr<MValue>>& params)
 	{
-		MReflectionLogger.Trace("Invoking method {}::{}({}) in object \"{}\".", m_Class->GetName(), m_Name, [this] {
+		MReflectionLogger.Trace("Invoking method {}::{}({}) of object \"{}\".", m_Class->GetName(), m_Name, [this] {
 			TArray<String> parameterNames;
 			parameterNames.reserve(m_ParameterTypes.size());
 			std::transform(m_ParameterTypes.begin(), m_ParameterTypes.end(), std::back_inserter(parameterNames), [](MType* type)
