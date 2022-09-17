@@ -345,7 +345,7 @@ namespace Ion
 
 	Entity* Entity::Duplicate_Internal() const
 	{
-		return new Entity(*this);
+		return nullptr;// new Entity(*this);
 	}
 
 	void Entity::Destroy(bool bReparent)

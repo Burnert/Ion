@@ -34,7 +34,7 @@ namespace Ion
 	{
 	}
 
-	Archive& operator<<(Archive& ar, MObject*& object)
+	Archive& operator<<(Archive& ar, MObjectPtr& object)
 	{
 		XMLArchiveAdapter xmlAr = ar;
 

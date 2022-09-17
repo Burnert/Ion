@@ -175,7 +175,7 @@ namespace Ion
 		static_assert(TIsBaseOfV<Entity, EntityT>);
 
 		// @TODO: Use some sort of an allocator here
-		EntityT* entity = MObject::New<EntityT>(Forward<Args>(args)...);
+		EntityT* entity = MObject::New<EntityT>(Forward<Args>(args)...).Raw();
 		AddEntity(entity);
 		return entity;
 	}

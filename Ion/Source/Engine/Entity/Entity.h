@@ -91,16 +91,6 @@ namespace Ion
 		World* GetWorldContext() const;
 
 	protected:
-		Entity(const Entity&) = default;
-	public:
-		Entity(Entity&&) noexcept = delete;
-		Entity& operator=(const Entity&) = delete;
-		Entity& operator=(Entity&&) = delete;
-
-		bool operator==(const Entity& other) const;
-		bool operator!=(const Entity& other) const;
-
-	protected:
 		void Update(float deltaTime);
 
 		/* Call in custom entity class constructor. */
@@ -260,15 +250,5 @@ namespace Ion
 	inline bool Entity::IsPendingKill() const
 	{
 		return m_bPendingKill;
-	}
-
-	inline bool Entity::operator==(const Entity& other) const
-	{
-		return GetGuid() == other.GetGuid();
-	}
-
-	inline bool Entity::operator!=(const Entity& other) const
-	{
-		return GetGuid() != other.GetGuid();
 	}
 }

@@ -62,7 +62,7 @@ namespace Ion
 
 	Entity* MeshEntity::Duplicate_Internal() const
 	{
-		return new MeshEntity(*this);
+		return nullptr;// new MeshEntity(*this);
 	}
 
 	void MeshEntity::OnSpawn(World* worldContext)

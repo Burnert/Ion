@@ -2,6 +2,8 @@
 
 #include "Core.h"
 
+#include "ObjectPtr.h"
+
 namespace Ion
 {
 	REGISTER_LOGGER(MReflectionLogger, "Matter::Reflection");
@@ -210,7 +212,7 @@ namespace Ion
 		using UType = std::underlying_type_t<Type>;
 	}
 
-	using FMFieldSetterGetter = TFunction<void(MObject*, TSharedPtr<MValue>&)>;
+	using FMFieldSetterGetter = TFunction<void(MObjectPtr, TSharedPtr<MValue>&)>;
 
 	struct MFieldInitializer
 	{
@@ -243,15 +245,19 @@ namespace Ion
 
 		size_t GetOffset() const;
 
-		void SetValue(MObject* object, const TSharedPtr<MValue>& value);
+		// Indirect setter / getter
+
+		void SetValue(MObjectPtr object, const TSharedPtr<MValue>& value);
+
+		TSharedPtr<MValue> GetValue(MObjectPtr object);
+
+		// Direct setter / getter
 
 		template<typename T>
-		void SetValue(MObject* object, const T& value);
-
-		TSharedPtr<MValue> GetValue(MObject* object);
+		void SetValue(MObjectPtr object, const T& value);
 
 		template<typename T>
-		T GetValue(MObject* object);
+		T GetValue(MObjectPtr object);
 
 	private:
 		MField(const MFieldInitializer& initializer);
@@ -302,34 +308,34 @@ namespace Ion
 	}
 
 	template<typename T>
-	FORCEINLINE void MField::SetValue(MObject* object, const T& value)
+	FORCEINLINE void MField::SetValue(MObjectPtr object, const T& value)
 	{
 		ionassert(object);
 		ionassert(m_FieldType->Is(TGetReflectableType<T>::Type()), "Wrong type has been passed.");
-		ionassert(!m_FieldType->IsClass() || TIsPointerV<T>);
-		ionassert(m_FieldType->IsClass() || !TIsPointerV<T>);
-		ionassert(m_FieldType->GetSize() == sizeof(TRemovePtr<T>));
-		ionassert(m_FieldType->GetHashCode() == typeid(TRemovePtr<T>).hash_code());
+		ionassert(!m_FieldType->IsClass() || TIsObjectPtrV<T>);
+		ionassert(m_FieldType->IsClass() || !TIsObjectPtrV<T>);
+		ionassert(m_FieldType->GetSize() == sizeof(typename TRemoveObjectPtr<T>::Type));
+		ionassert(m_FieldType->GetHashCode() == typeid(typename TRemoveObjectPtr<T>::Type).hash_code());
 
 		MReflectionLogger.Trace("Setting field value {}::{} of object \"{}\".", m_Class->GetName(), m_Name, object->GetName());
 
-		T* pValue = reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(object) + m_FieldOffset);
+		T* pValue = reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(object.Raw()) + m_FieldOffset);
 		*pValue = value;
 	}
 
 	template<typename T>
-	FORCEINLINE T MField::GetValue(MObject* object)
+	FORCEINLINE T MField::GetValue(MObjectPtr object)
 	{
 		ionassert(object);
 		ionassert(m_FieldType->Is(TGetReflectableType<T>::Type()), "Wrong type has been passed.");
-		ionassert(!m_FieldType->IsClass() || TIsPointerV<T>);
-		ionassert(m_FieldType->IsClass() || !TIsPointerV<T>);
-		ionassert(m_FieldType->GetSize() == sizeof(TRemovePtr<T>));
-		ionassert(m_FieldType->GetHashCode() == typeid(TRemovePtr<T>).hash_code());
+		ionassert(!m_FieldType->IsClass() || TIsObjectPtrV<T>);
+		ionassert(m_FieldType->IsClass() || !TIsObjectPtrV<T>);
+		ionassert(m_FieldType->GetSize() == sizeof(typename TRemoveObjectPtr<T>::Type));
+		ionassert(m_FieldType->GetHashCode() == typeid(typename TRemoveObjectPtr<T>::Type).hash_code());
 
 		MReflectionLogger.Trace("Getting field value {}::{} of object \"{}\".", m_Class->GetName(), m_Name, object->GetName());
 
-		T* pValue = reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(object) + m_FieldOffset);
+		T* pValue = reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(object.Raw()) + m_FieldOffset);
 		return *pValue;
 	}
 
@@ -351,8 +357,8 @@ namespace Ion
 		using UType = std::underlying_type_t<Type>;
 	}
 
-	/*                               void(object,   parameters,                 out return value) */
-	using FMMethodInvoke = TFunction<void(MObject*, TArray<TSharedPtr<MValue>>, TSharedPtr<MValue>&)>;
+	/*                               void(object,     parameters,                 out return value) */
+	using FMMethodInvoke = TFunction<void(MObjectPtr, TArray<TSharedPtr<MValue>>, TSharedPtr<MValue>&)>;
 
 	struct MMethodInitializer
 	{
@@ -379,10 +385,10 @@ namespace Ion
 	{
 	public:
 		template<typename TRet = void, typename... Args>
-		TRet Invoke(MObject* object = nullptr, Args&&... args);
+		TRet Invoke(MObjectPtr object = nullptr, Args&&... args);
 
-		TSharedPtr<MValue> InvokeEx(MObject* object = nullptr);
-		TSharedPtr<MValue> InvokeEx(MObject* object, const TArray<TSharedPtr<MValue>>& params);
+		TSharedPtr<MValue> InvokeEx(MObjectPtr object = nullptr);
+		TSharedPtr<MValue> InvokeEx(MObjectPtr object, const TArray<TSharedPtr<MValue>>& params);
 
 		const String& GetName() const;
 
@@ -421,7 +427,7 @@ namespace Ion
 	};
 
 	template<typename TRet, typename... Args>
-	FORCEINLINE TRet MMethod::Invoke(MObject* object, Args&&... args)
+	FORCEINLINE TRet MMethod::Invoke(MObjectPtr object, Args&&... args)
 	{
 		static_assert(TIsReflectableTypeV<TRet>);
 		static_assert(!TIsReferenceV<TRet>, "Invoke function cannot return a reference.");
@@ -461,7 +467,7 @@ namespace Ion
 
 #pragma region Matter Reflection Class class
 
-	using FMClassInstantiateDefault = TFunction<MObject* (const MObject*)>;
+	using FMClassInstantiateDefault = TFunction<MObjectPtr(const MObject*)>;
 
 	struct MClassInitializer
 	{
@@ -475,7 +481,7 @@ namespace Ion
 	class MClass : public MType
 	{
 	public:
-		MObject* Instantiate() const;
+		MObjectPtr Instantiate() const;
 
 		const MObject* GetClassDefaultObject() const;
 
@@ -555,7 +561,7 @@ namespace Ion
 	struct TIsReflectableType { static constexpr bool Value = false; };
 
 	template<typename T>
-	struct TIsReflectableType<T, TEnableIfT<TIsReflectableClassV<TRemovePtr<T>>>> { static constexpr bool Value = true; };
+	struct TIsReflectableType<T, TEnableIfT<TIsReflectableClassV<typename TRemoveObjectPtr<T>::Type>>> { static constexpr bool Value = true; };
 
 	template<typename T>
 	static inline constexpr bool TIsReflectableTypeV = TIsReflectableType<T>::Value;
@@ -566,9 +572,9 @@ namespace Ion
 	struct TGetReflectableType { static MType* Type() { return nullptr; } };
 
 	template<typename T>
-	struct TGetReflectableType<T, TEnableIfT<TIsReflectableClassV<TRemovePtr<T>>>>
+	struct TGetReflectableType<T, TEnableIfT<TIsReflectableClassV<typename TRemoveObjectPtr<T>::Type>>>
 	{
-		static MType* Type() { return TRemovePtr<T>::StaticClass(); }
+		static MType* Type() { return TRemoveObjectPtr<T>::Type::StaticClass(); }
 	};
 
 	// TGetReflectableClass -------------------------------------------------------------------
@@ -577,7 +583,7 @@ namespace Ion
 	struct TGetReflectableClass { static MClass* Class() { return nullptr; } };
 
 	template<typename T>
-	struct TGetReflectableClass<T, TEnableIfT<TIsReflectableClassV<TRemovePtr<T>>>>
+	struct TGetReflectableClass<T, TEnableIfT<TIsReflectableClassV<typename TRemoveObjectPtr<T>::Type>>>
 	{
 		static MClass* Class() { return static_cast<MClass*>(TGetReflectableType<T>::Type()); }
 	};
@@ -696,7 +702,7 @@ namespace Ion
 	struct TMethodInvoker
 	{
 		FORCEINLINE static void Invoke(
-			TClass* object,
+			const TObjectPtr<TClass>& object,
 			const TArray<TSharedPtr<MValue>>& parameters,
 			TSharedPtr<MValue>& outRetVal)
 		{
@@ -705,7 +711,7 @@ namespace Ion
 				"A wrong amount of parameters has been passed to the invoke function. {} instead of {}.",
 				parameters.size(), TParamPack::Count);
 
-			Invoke_Impl(object, parameters, outRetVal, std::make_index_sequence<TParamPack::Count> {});
+			Invoke_Impl(object.Raw(), parameters, outRetVal, std::make_index_sequence<TParamPack::Count> {});
 		}
 
 	private:
@@ -792,6 +798,9 @@ template<> struct TIsReflectableType<T> { static constexpr bool Value = true; };
 #define MCLASS(T) \
 public: \
 using TThisClass = T; \
+T(const T&) = default; \
+T(T&&) = default; \
+TObjectPtr<TThisClass> This() { return PtrCast<TThisClass>(SharedFromThis()); } \
 FORCEINLINE static MClass* StaticClass() { \
 	static MClassInitializer c_Initializer { \
 		MTypeInitializer { \
@@ -811,8 +820,8 @@ FORCEINLINE static MClass* StaticClass() { \
 		/* The super class (nullptr if MObject as it doesn't inherit from anything) */ \
 		TGetReflectableSuperClass<T>::Class(), \
 		/* Instantiate function - Copy construct a new object from the CDO instance. */ \
-		[](const MObject* cdo) { \
-			return new T(*static_cast<const T*>(cdo)); \
+		[](const MObject* cdo) -> MObjectPtr { \
+			return MakeShared<T>(*static_cast<const T*>(cdo)); \
 		} \
 	}; \
 	static MClass* c_Class = MReflection::RegisterClass(c_Initializer); \
@@ -834,12 +843,12 @@ static inline MField* MatterRF_##name = [] { \
 		/* The name of the field */ \
 		#name, \
 		/* MField FSetterGetter function */ \
-		[](MObject* object, TSharedPtr<MValue>& valueRef) { \
+		[](MObjectPtr object, TSharedPtr<MValue>& valueRef) { \
 			/* If the pointer is not null, the function should be used as a setter. */ \
 			if (valueRef) \
-				static_cast<TThisClass*>(object)->*(&TThisClass::name) = valueRef->As<TField>(); \
+				PtrCast<TThisClass>(object).Raw()->*(&TThisClass::name) = valueRef->As<TField>(); \
 			else \
-				valueRef = MakeShared<TMValue<TField>>(static_cast<TThisClass*>(object)->*(&TThisClass::name)); \
+				valueRef = MakeShared<TMValue<TField>>(PtrCast<TThisClass>(object).Raw()->*(&TThisClass::name)); \
 		}, \
 		/* Attributes (accessibility, static, etc.) */ \
 		EFieldFlags::None  /* @TODO: I don't think there's a way to get the visibility of a field without code parsing. */ \
@@ -868,9 +877,9 @@ static inline MMethod* MatterRM_##name = [] { \
 		/* The name of the method */ \
 		#name, \
 		/* MMethod FInvoke function */ \
-		[](MObject* object, TArray<TSharedPtr<MValue>> parameters, TSharedPtr<MValue>& outRetVal) { \
+		[](MObjectPtr object, TArray<TSharedPtr<MValue>> parameters, TSharedPtr<MValue>& outRetVal) { \
 			/* Using pure black magic, invoke the function with "unknown" return type, parameter types or count. */ \
-			TMethodInvoker<TThisClass, FMethod, &TThisClass::name, TReturn, TMethodParamTypes>::Invoke(static_cast<TThisClass*>(object), parameters, outRetVal); \
+			TMethodInvoker<TThisClass, FMethod, &TThisClass::name, TReturn, TMethodParamTypes>::Invoke(PtrCast<TThisClass>(object), parameters, outRetVal); \
 		}, \
 		/* Attributes (accessibility, static, etc.) */ \
 		EMethodFlags::None \

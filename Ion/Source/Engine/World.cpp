@@ -455,9 +455,9 @@ namespace Ion
 		auto LSerializeEntity = [&](int32 index = -1)
 		{
 			if (ar.IsSaving())
-				ar << SerializeMObject(data->Entities[index]);
+				;// ar << SerializeMObject(data->Entities[index]);
 			else if (ar.IsLoading())
-				ar << SerializeMObject(data->Entities.emplace_back());
+				;// ar << SerializeMObject(data->Entities.emplace_back());
 		};
 		if (ar.IsLoading())
 		{

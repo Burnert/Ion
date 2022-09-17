@@ -2,19 +2,20 @@
 
 #include "Core.h"
 
+#include "ObjectPtr.h"
 #include "Reflection.h"
 
 namespace Ion
 {
 #pragma region Matter Object base class
 
-	class ION_API MObject
+	class ION_API MObject : public TEnableSFT<MObject>
 	{
 	public:
 		MCLASS(MObject)
 
 		template<typename T, TEnableIfT<TIsConvertibleV<T*, MObject*>>* = 0>
-		static T* New();
+		static TObjectPtr<T> New();
 
 		MClass* GetClass() const;
 
@@ -31,6 +32,8 @@ namespace Ion
 		virtual void Serialize(Archive& ar);
 
 		MObject();
+
+	public:
 		virtual ~MObject();
 
 	private:
@@ -43,15 +46,15 @@ namespace Ion
 		friend class MObjectSerializer;
 
 	public:
-		friend Archive& operator<<(Archive& ar, MObject*& object);
+		friend Archive& operator<<(Archive& ar, MObjectPtr& object);
 	};
 
 	template<typename T, TEnableIfT<TIsConvertibleV<T*, MObject*>>*>
-	FORCEINLINE T* MObject::New()
+	FORCEINLINE TObjectPtr<T> MObject::New()
 	{
 		MClass* mClass = T::StaticClass();
 
-		T* object = static_cast<T*>(mClass->Instantiate());
+		TObjectPtr<T> object = PtrCast<T>(mClass->Instantiate());
 
 		return object;
 	}
@@ -78,6 +81,16 @@ namespace Ion
 
 #pragma endregion
 
+#pragma region Templates - TIsMObject
+
+	template<typename T>
+	struct TIsMObject : TIsConvertible<T*, MObject*> { };
+
+	template<typename T>
+	static inline constexpr bool TIsMObjectV = TIsMObject<T>::value;
+
+#pragma endregion
+
 #pragma region Matter Object Serialization
 
 	/**
@@ -87,10 +100,10 @@ namespace Ion
 	 * @param object MObject non-const pointer reference
 	 * @return Pointer reference cast to MObject*&
 	 */
-	template<typename TObject>
-	FORCEINLINE MObject*& SerializeMObject(TObject*& object)
+	template<typename T>
+	FORCEINLINE MObjectPtr& SerializeMObject(TObjectPtr<T>& object)
 	{
-		return reinterpret_cast<MObject*&>(object);
+		return reinterpret_cast<MObjectPtr&>(object);
 	}
 
 #pragma endregion

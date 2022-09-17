@@ -23,7 +23,7 @@ namespace Ion
 	{
 	}
 
-	void MField::SetValue(MObject* object, const TSharedPtr<MValue>& value)
+	void MField::SetValue(MObjectPtr object, const TSharedPtr<MValue>& value)
 	{
 		ionassert(object);
 		ionassert(value);
@@ -33,7 +33,7 @@ namespace Ion
 		m_FSetterGetter(object, const_cast<TSharedPtr<MValue>&>(value));
 	}
 
-	TSharedPtr<MValue> MField::GetValue(MObject* object)
+	TSharedPtr<MValue> MField::GetValue(MObjectPtr object)
 	{
 		ionassert(object);
 
@@ -54,12 +54,12 @@ namespace Ion
 	{
 	}
 
-	TSharedPtr<MValue> MMethod::InvokeEx(MObject* object)
+	TSharedPtr<MValue> MMethod::InvokeEx(MObjectPtr object)
 	{
 		return InvokeEx(object, TArray<TSharedPtr<MValue>>());
 	}
 
-	TSharedPtr<MValue> MMethod::InvokeEx(MObject* object, const TArray<TSharedPtr<MValue>>& params)
+	TSharedPtr<MValue> MMethod::InvokeEx(MObjectPtr object, const TArray<TSharedPtr<MValue>>& params)
 	{
 		MReflectionLogger.Trace("Invoking method {} {}::{}({}) of object \"{}\".", m_ReturnType->GetName(), m_Class->GetName(), m_Name, [this] {
 			TArray<String> parameterNames;
@@ -97,11 +97,11 @@ namespace Ion
 		m_CDO->m_Guid = GUID();
 	}
 
-	MObject* MClass::Instantiate() const
+	MObjectPtr MClass::Instantiate() const
 	{
 		// @TODO: new is used here anyway (needs to be destroyed at some point)
 		// Make this thing use shared ptrs or something
-		MObject* object = m_FInstantiate(GetClassDefaultObject());
+		MObjectPtr object = m_FInstantiate(GetClassDefaultObject());
 
 		// New GUID is needed because it was just copied from the CDO.
 		object->m_Guid = GUID();
