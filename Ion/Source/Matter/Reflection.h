@@ -490,8 +490,8 @@ namespace Ion
 
 		MClass* GetSuperClass() const;
 
-		const TArray<MField*>& GetFields() const;
-		const TArray<MMethod*>& GetMethods() const;
+		TArray<MField*> GetFields() const;
+		TArray<MMethod*> GetMethods() const;
 
 	private:
 		MClass(const MClassInitializer& initializer);
@@ -528,16 +528,6 @@ namespace Ion
 	FORCEINLINE MClass* MClass::GetSuperClass() const
 	{
 		return m_SuperClass;
-	}
-
-	FORCEINLINE const TArray<MField*>& MClass::GetFields() const
-	{
-		return m_Fields;
-	}
-
-	FORCEINLINE const TArray<MMethod*>& MClass::GetMethods() const
-	{
-		return m_Methods;
 	}
 
 #pragma endregion

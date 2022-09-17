@@ -109,6 +109,31 @@ namespace Ion
 		return object;
 	}
 
+	TArray<MField*> MClass::GetFields() const
+	{
+		TArray<MField*> fields = m_Fields;
+		if (m_SuperClass)
+		{
+			TArray<MField*> superFields = m_SuperClass->GetFields();
+			fields.reserve(fields.size() + superFields.size());
+			std::move(superFields.begin(), superFields.end(), fields.end());
+		}
+		return fields;
+	}
+
+	TArray<MMethod*> MClass::GetMethods() const
+	{
+		// @TODO: Handle overriden method duplication
+		TArray<MMethod*> methods = m_Methods;
+		if (m_SuperClass)
+		{
+			TArray<MMethod*> superMethods = m_SuperClass->GetMethods();
+			methods.reserve(methods.size() + superMethods.size());
+			std::move(superMethods.begin(), superMethods.end(), std::back_inserter(methods));
+		}
+		return methods;
+	}
+
 	Archive& operator<<(Archive& ar, MClass*& mClass)
 	{
 		XMLArchiveAdapter xmlAr = ar;

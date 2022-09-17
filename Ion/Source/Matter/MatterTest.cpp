@@ -243,17 +243,32 @@ namespace Ion::Test
 		// Iteration
 
 		TArray<MField*> fields = c->GetFields();
-		ionassert(fields.size() == 3);
 		for (MField* field : fields)
 		{
-			ionassert(field->GetClass() == c);
+			MReflectionLogger.Debug("Field: {} {}::{}",
+				field->GetType()->GetName(),
+				field->GetClass()->GetName(),
+				field->GetName());
 		}
 
 		TArray<MMethod*> methods = c->GetMethods();
-		ionassert(methods.size() == 10);
 		for (MMethod* method : methods)
 		{
-			ionassert(method->GetClass() == c);
+			MReflectionLogger.Debug("Method: {} {}::{}({})",
+				method->GetReturnType()->GetName(),
+				method->GetClass()->GetName(),
+				method->GetName(),
+				[method]
+				{
+					TArray<MType*> parameters = method->GetParameterTypes();
+					TArray<String> parameterNames;
+					parameterNames.reserve(parameters.size());
+					std::transform(parameters.begin(), parameters.end(), std::back_inserter(parameterNames), [](MType* type)
+					{
+						return type->GetName();
+					});
+					return JoinString(parameterNames, ", "s);
+				}());
 		}
 
 		ionbreak();
