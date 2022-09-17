@@ -25,6 +25,7 @@ namespace Ion
 		MMETHOD(GetName)
 
 		const GUID& GetGuid() const;
+		MMETHOD(GetGuid)
 
 	protected:
 		virtual void Serialize(Archive& ar);

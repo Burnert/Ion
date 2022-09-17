@@ -894,16 +894,6 @@ static inline MMethod* MatterRM_##name = [] { \
 	MTYPE(float)
 	MTYPE(double)
 
-	// @TODO: Pointers? Might require wrappers
-
-	// @TODO: Collections:
-	// - Dynamic Array
-	// - Fixed Array
-	// - Hash Set
-	// - Hash Map
-
-	MTYPE(String)
-
 	/* Custom void type (can't be used as a field or parameter, only method return type) */
 	inline MType* const MatterRT_void = [] {
 		static MTypeInitializer c_Initializer { };
@@ -915,6 +905,21 @@ static inline MMethod* MatterRM_##name = [] { \
 	}();
 	template<> struct TGetReflectableType<void> { static MType* Type() { return MatterRT_void; } };
 	template<> struct TIsReflectableType<void> { static constexpr bool Value = true; };
+
+#pragma endregion
+
+#pragma region Special Reflectable Types
+
+	// @TODO: Pointers? Might require wrappers
+
+	// @TODO: Collections:
+	// - Dynamic Array
+	// - Fixed Array
+	// - Hash Set
+	// - Hash Map
+
+	MTYPE(GUID)
+	MTYPE(String)
 
 #pragma endregion
 }

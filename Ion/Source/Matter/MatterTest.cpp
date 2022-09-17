@@ -46,6 +46,9 @@ namespace Ion::Test
 		String Str420 = "-__420__-";
 		const String& String_VoidMethod() { MReflectionLogger.Debug("String_VoidMethod called"); return Str420; }
 		MMETHOD(String_VoidMethod)
+
+		const GUID& GUID_GUIDMethod(const GUID& guid) { MReflectionLogger.Debug("GUID_GUIDMethod called {}", guid.ToString()); return guid; }
+		MMETHOD(GUID_GUIDMethod, const GUID&)
 	};
 
 	void MatterTest()
@@ -192,6 +195,8 @@ namespace Ion::Test
 		MObject* mObjectRet2x = MMatterTest::MatterRM_MObject_MObjectIntMethod->Invoke<MObject*>(object, object2, 69i32);
 		ionassert(mObjectRet2x == object2);
 
+		// String
+
 		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetClass()->Is<MMatterTest>());
 		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetReturnType() == MatterRT_void);
 		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetReturnType()->Is(MatterRT_void));
@@ -214,6 +219,22 @@ namespace Ion::Test
 		String stringRet0 = MMatterTest::MatterRM_String_VoidMethod->Invoke<String>(object);
 		ionassert(stringRet0 == object->Str420);
 
+		// GUID
+
+		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetClass()->Is<MMatterTest>());
+		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetReturnType() == MatterRT_GUID);
+		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetReturnType()->Is(MatterRT_GUID));
+		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetReturnType()->Is<GUID>());
+		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetParameterTypes().size() == 1);
+		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetParameterTypes()[0] == MatterRT_GUID);
+		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetParameterTypes()[0]->Is(MatterRT_GUID));
+		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetParameterTypes()[0]->Is<GUID>());
+		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetName() == "GUID_GUIDMethod");
+
+		GUID guid = GUID::FromString("d5e2f8b2-5727-4768-9a74-d182b92c1b6c").Unwrap();
+		GUID guidRet0 = MMatterTest::MatterRM_GUID_GUIDMethod->Invoke<GUID>(object, guid);
+		ionassert(guidRet0 == guid);
+
 		// Iteration
 
 		TArray<MField*> fields = c->GetFields();
@@ -224,7 +245,7 @@ namespace Ion::Test
 		}
 
 		TArray<MMethod*> methods = c->GetMethods();
-		ionassert(methods.size() == 9);
+		ionassert(methods.size() == 10);
 		for (MMethod* method : methods)
 		{
 			ionassert(method->GetClass() == c);
