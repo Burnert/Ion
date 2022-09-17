@@ -62,6 +62,10 @@ namespace Ion
 		bool Is() const;
 		bool Is(MType* mType) const;
 
+		template<typename T>
+		bool IsConvertibleTo() const;
+		bool IsConvertibleTo(MType* mType) const;
+
 		bool IsFundamental() const;
 		bool IsClass() const;
 
@@ -138,8 +142,8 @@ namespace Ion
 		const T& As() const
 		{
 			static_assert(TIsReflectableTypeV<T>);
-			ionassert(TGetReflectableType<T>::Type()->Is(GetType()));
-			return *(const T*)GetValuePointer();
+			ionassert(GetType()->IsConvertibleTo(TGetReflectableType<T>::Type()));
+			return *reinterpret_cast<const T*>(GetValuePointer());
 		}
 
 	protected:
@@ -310,12 +314,14 @@ namespace Ion
 	template<typename T>
 	FORCEINLINE void MField::SetValue(MObjectPtr object, const T& value)
 	{
+		static_assert(TIsReflectableTypeV<T>, "Type is not reflectable");
 		ionassert(object);
-		ionassert(m_FieldType->Is(TGetReflectableType<T>::Type()), "Wrong type has been passed.");
+		ionassert(TGetReflectableType<T>::Type()->IsConvertibleTo(m_FieldType), "Type {} is not convertible to {}.",
+			TGetReflectableType<T>::Type()->GetName(), m_FieldType->GetName());
 		ionassert(!m_FieldType->IsClass() || TIsObjectPtrV<T>);
 		ionassert(m_FieldType->IsClass() || !TIsObjectPtrV<T>);
-		ionassert(m_FieldType->GetSize() == sizeof(typename TRemoveObjectPtr<T>::Type));
-		ionassert(m_FieldType->GetHashCode() == typeid(typename TRemoveObjectPtr<T>::Type).hash_code());
+		ionassert(m_FieldType->IsClass() || m_FieldType->GetSize() == sizeof(typename TRemoveObjectPtr<T>::Type));
+		ionassert(m_FieldType->IsClass() || m_FieldType->GetHashCode() == typeid(typename TRemoveObjectPtr<T>::Type).hash_code());
 
 		MReflectionLogger.Trace("Setting field value {}::{} of object \"{}\".", m_Class->GetName(), m_Name, object->GetName());
 
@@ -326,12 +332,14 @@ namespace Ion
 	template<typename T>
 	FORCEINLINE T MField::GetValue(MObjectPtr object)
 	{
+		static_assert(TIsReflectableTypeV<T>, "Type is not reflectable");
 		ionassert(object);
-		ionassert(m_FieldType->Is(TGetReflectableType<T>::Type()), "Wrong type has been passed.");
+		ionassert(TGetReflectableType<T>::Type()->IsConvertibleTo(m_FieldType), "Type {} is not convertible to {}.",
+			TGetReflectableType<T>::Type()->GetName(), m_FieldType->GetName());
 		ionassert(!m_FieldType->IsClass() || TIsObjectPtrV<T>);
 		ionassert(m_FieldType->IsClass() || !TIsObjectPtrV<T>);
-		ionassert(m_FieldType->GetSize() == sizeof(typename TRemoveObjectPtr<T>::Type));
-		ionassert(m_FieldType->GetHashCode() == typeid(typename TRemoveObjectPtr<T>::Type).hash_code());
+		ionassert(m_FieldType->IsClass() || m_FieldType->GetSize() == sizeof(typename TRemoveObjectPtr<T>::Type));
+		ionassert(m_FieldType->IsClass() || m_FieldType->GetHashCode() == typeid(typename TRemoveObjectPtr<T>::Type).hash_code());
 
 		MReflectionLogger.Trace("Getting field value {}::{} of object \"{}\".", m_Class->GetName(), m_Name, object->GetName());
 
@@ -437,8 +445,8 @@ namespace Ion
 		{
 			MType* retType = TGetReflectableType<TRet>::Type();
 			ionassert(retType);
-			ionassert(m_ReturnType->Is(retType), "Wrong return type has been passed to the Invoke function. {} instead of {}",
-				retType->GetName(), m_ReturnType->GetName());
+			ionassert(m_ReturnType->IsConvertibleTo(retType), "Wrong return type has been passed to the Invoke function. {} is not convertible to {}.",
+				m_ReturnType->GetName(), retType->GetName());
 			return retValue->As<TRet>();
 		}
 	}
@@ -733,13 +741,45 @@ namespace Ion
 
 			const TSharedPtr<MValue>& value = parameters[Index];
 			ionassert(Index < parameters.size());
-			ionassert(value->GetType()->Is(TGetReflectableType<ParamType>::Type()),
-				"Wrong parameter type has been passed at index {}. {} instead of {}",
+			ionassert(value->GetType()->IsConvertibleTo(TGetReflectableType<ParamType>::Type()),
+				"Wrong parameter type has been passed at index {}. {} is not convertible to {}.",
 				Index, value->GetType()->GetName(), TGetReflectableType<ParamType>::Type()->GetName());
 
 			return value->As<ParamType>();
 		}
 	};
+
+#pragma endregion
+
+#pragma region Matter Type IsConvertibleTo implementation
+
+	template<typename T>
+	FORCEINLINE bool MType::IsConvertibleTo() const
+	{
+		static_assert(TIsReflectableTypeV<T>);
+		return IsConvertibleTo(TGetReflectableType<T>::Type());
+	}
+
+	FORCEINLINE bool MType::IsConvertibleTo(MType* mType) const
+	{
+		ionassert(mType);
+
+		if (Is(mType))
+			return true;
+
+		if (IsClass() && mType->IsClass())
+		{
+			MClass* fromClass = static_cast<MClass*>(const_cast<MType*>(this));
+			for (MClass* superClass = fromClass->GetSuperClass(); superClass; superClass = superClass->GetSuperClass())
+			{
+				if (superClass->Is(mType))
+					return true;
+			}
+		}
+
+		// @TODO: Implement fundamental types
+		return false;
+	}
 
 #pragma endregion
 
