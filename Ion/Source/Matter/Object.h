@@ -12,7 +12,7 @@ namespace Ion
 	class ION_API MObject : public TEnableSFT<MObject>
 	{
 	public:
-		MCLASS(MObject)
+		MATTER_DECLARE_CLASS(MObject)
 
 		template<typename T, TEnableIfT<TIsConvertibleV<T*, MObject*>>* = 0>
 		static TObjectPtr<T> New();

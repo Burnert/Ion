@@ -825,7 +825,7 @@ inline MType* const MatterRT_##T = [] { \
 template<> struct TGetReflectableType<T> { static MType* Type() { return MatterRT_##T; } }; \
 template<> struct TIsReflectableType<T> { static constexpr bool Value = true; };
 
-#define MCLASS(T) \
+#define MATTER_DECLARE_CLASS(T) \
 public: \
 using TThisClass = T; \
 T(const T&) = default; \
@@ -858,6 +858,14 @@ FORCEINLINE static MClass* StaticClass() { \
 	return c_Class; \
 } \
 static inline MClass* const MatterRT = StaticClass();
+
+#define MCLASS(T) \
+MATTER_DECLARE_CLASS(T); \
+/* Implement archive operator */ \
+FORCEINLINE friend Archive& operator<<(Archive& ar, TObjectPtr<T>& value) { \
+	ar << SerializeMObject(value); \
+	return ar; \
+}
 
 #define MFIELD(name) \
 static inline MField* MatterRF_##name = [] { \

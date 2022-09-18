@@ -270,6 +270,14 @@ namespace Ion::Test
 				}());
 		}
 
+		XMLArchive testAr(EArchiveType::Saving);
+		testAr.SeekRoot();
+		testAr << object;
+		{
+			File saveFile("MatterArchiveTest.xml");
+			testAr.SaveToFile(saveFile);
+		}
+
 		ionbreak();
 	}
 }
