@@ -130,11 +130,13 @@ namespace Ion
 
 #pragma region Matter Generic Value wrapper
 
+	using MValuePtr = TSharedPtr<class MValue>;
+
 	class MValue
 	{
 	public:
 		template<typename T>
-		static TSharedPtr<MValue> Create(const T& value);
+		static MValuePtr Create(const T& value);
 
 		virtual MType* GetType() const = 0;
 
@@ -194,7 +196,7 @@ namespace Ion
 	};
 
 	template<typename T>
-	FORCEINLINE static TSharedPtr<MValue> MValue::Create(const T& value)
+	FORCEINLINE static MValuePtr MValue::Create(const T& value)
 	{
 		return MakeShared<TMValue<T>>(value);
 	}
@@ -216,7 +218,7 @@ namespace Ion
 		using UType = std::underlying_type_t<Type>;
 	}
 
-	using FMFieldSetterGetter = TFunction<void(MObjectPtr, TSharedPtr<MValue>&)>;
+	using FMFieldSetterGetter = TFunction<void(MObjectPtr, MValuePtr&)>;
 
 	struct MFieldInitializer
 	{
@@ -251,9 +253,9 @@ namespace Ion
 
 		// Indirect setter / getter
 
-		void SetValue(MObjectPtr object, const TSharedPtr<MValue>& value);
+		void SetValue(MObjectPtr object, const MValuePtr& value);
 
-		TSharedPtr<MValue> GetValue(MObjectPtr object);
+		MValuePtr GetValue(MObjectPtr object);
 
 		// Direct setter / getter
 
@@ -366,7 +368,7 @@ namespace Ion
 	}
 
 	/*                               void(object,     parameters,                 out return value) */
-	using FMMethodInvoke = TFunction<void(MObjectPtr, TArray<TSharedPtr<MValue>>, TSharedPtr<MValue>&)>;
+	using FMMethodInvoke = TFunction<void(MObjectPtr, TArray<MValuePtr>, MValuePtr&)>;
 
 	struct MMethodInitializer
 	{
@@ -395,8 +397,8 @@ namespace Ion
 		template<typename TRet = void, typename... Args>
 		TRet Invoke(MObjectPtr object = nullptr, Args&&... args);
 
-		TSharedPtr<MValue> InvokeEx(MObjectPtr object = nullptr);
-		TSharedPtr<MValue> InvokeEx(MObjectPtr object, const TArray<TSharedPtr<MValue>>& params);
+		MValuePtr InvokeEx(MObjectPtr object = nullptr);
+		MValuePtr InvokeEx(MObjectPtr object, const TArray<MValuePtr>& params);
 
 		const String& GetName() const;
 
@@ -440,7 +442,7 @@ namespace Ion
 		static_assert(TIsReflectableTypeV<TRet>);
 		static_assert(!TIsReferenceV<TRet>, "Invoke function cannot return a reference.");
 
-		TSharedPtr<MValue> retValue = InvokeEx(object, { MValue::Create(args)... });
+		MValuePtr retValue = InvokeEx(object, { MValue::Create(args)... });
 		if constexpr (!std::is_void_v<TRet>)
 		{
 			MType* retType = TGetReflectableType<TRet>::Type();
@@ -701,8 +703,8 @@ namespace Ion
 	{
 		FORCEINLINE static void Invoke(
 			const TObjectPtr<TClass>& object,
-			const TArray<TSharedPtr<MValue>>& parameters,
-			TSharedPtr<MValue>& outRetVal)
+			const TArray<MValuePtr>& parameters,
+			MValuePtr& outRetVal)
 		{
 			ionassert(object); // @TODO: Unless static
 			ionassert(parameters.size() == TParamPack::Count,
@@ -716,8 +718,8 @@ namespace Ion
 		template<size_t... I>
 		FORCEINLINE static void Invoke_Impl(
 			TClass* object,
-			const TArray<TSharedPtr<MValue>>& parameters,
-			TSharedPtr<MValue>& outRetVal,
+			const TArray<MValuePtr>& parameters,
+			MValuePtr& outRetVal,
 			std::index_sequence<I...> seq)
 		{
 			static_assert(sizeof...(I) == TParamPack::Count);
@@ -735,11 +737,11 @@ namespace Ion
 		}
 
 		template<size_t Index>
-		FORCEINLINE static auto& ExtractParamForInvoke(const TArray<TSharedPtr<MValue>>& parameters)
+		FORCEINLINE static auto& ExtractParamForInvoke(const TArray<MValuePtr>& parameters)
 		{
 			using ParamType = typename TGetNthParamPack<Index, TParamPack>::Type::StrippedType;
 
-			const TSharedPtr<MValue>& value = parameters[Index];
+			const MValuePtr& value = parameters[Index];
 			ionassert(Index < parameters.size());
 			ionassert(value->GetType()->IsConvertibleTo(TGetReflectableType<ParamType>::Type()),
 				"Wrong parameter type has been passed at index {}. {} is not convertible to {}.",
@@ -881,7 +883,7 @@ static inline MField* MatterRF_##name = [] { \
 		/* The name of the field */ \
 		#name, \
 		/* MField FSetterGetter function */ \
-		[](MObjectPtr object, TSharedPtr<MValue>& valueRef) { \
+		[](MObjectPtr object, MValuePtr& valueRef) { \
 			/* If the pointer is not null, the function should be used as a setter. */ \
 			if (valueRef) \
 				PtrCast<TThisClass>(object).Raw()->*(&TThisClass::name) = valueRef->As<TField>(); \
@@ -915,7 +917,7 @@ static inline MMethod* MatterRM_##name = [] { \
 		/* The name of the method */ \
 		#name, \
 		/* MMethod FInvoke function */ \
-		[](MObjectPtr object, TArray<TSharedPtr<MValue>> parameters, TSharedPtr<MValue>& outRetVal) { \
+		[](MObjectPtr object, TArray<MValuePtr> parameters, MValuePtr& outRetVal) { \
 			/* Using pure black magic, invoke the function with "unknown" return type, parameter types or count. */ \
 			TMethodInvoker<TThisClass, FMethod, &TThisClass::name, TReturn, TMethodParamTypes>::Invoke(PtrCast<TThisClass>(object), parameters, outRetVal); \
 		}, \

@@ -23,23 +23,23 @@ namespace Ion
 	{
 	}
 
-	void MField::SetValue(MObjectPtr object, const TSharedPtr<MValue>& value)
+	void MField::SetValue(MObjectPtr object, const MValuePtr& value)
 	{
 		ionassert(object);
 		ionassert(value);
 
 		MReflectionLogger.Trace("Indirectly setting field value {}::{} of object \"{}\".", m_Class->GetName(), m_Name, object->GetName());
 
-		m_FSetterGetter(object, const_cast<TSharedPtr<MValue>&>(value));
+		m_FSetterGetter(object, const_cast<MValuePtr&>(value));
 	}
 
-	TSharedPtr<MValue> MField::GetValue(MObjectPtr object)
+	MValuePtr MField::GetValue(MObjectPtr object)
 	{
 		ionassert(object);
 
 		MReflectionLogger.Trace("Indirectly getting field value {}::{} of object \"{}\".", m_Class->GetName(), m_Name, object->GetName());
 
-		TSharedPtr<MValue> value;
+		MValuePtr value;
 		m_FSetterGetter(object, value);
 		return value;
 	}
@@ -54,12 +54,12 @@ namespace Ion
 	{
 	}
 
-	TSharedPtr<MValue> MMethod::InvokeEx(MObjectPtr object)
+	MValuePtr MMethod::InvokeEx(MObjectPtr object)
 	{
-		return InvokeEx(object, TArray<TSharedPtr<MValue>>());
+		return InvokeEx(object, TArray<MValuePtr>());
 	}
 
-	TSharedPtr<MValue> MMethod::InvokeEx(MObjectPtr object, const TArray<TSharedPtr<MValue>>& params)
+	MValuePtr MMethod::InvokeEx(MObjectPtr object, const TArray<MValuePtr>& params)
 	{
 		MReflectionLogger.Trace("Invoking method {} {}::{}({}) of object \"{}\".", m_ReturnType->GetName(), m_Class->GetName(), m_Name, [this] {
 			TArray<String> parameterNames;
@@ -71,7 +71,7 @@ namespace Ion
 			return JoinString(parameterNames, ", "s);
 		}(), object->GetName());
 
-		TSharedPtr<MValue> retValue = nullptr;
+		MValuePtr retValue = nullptr;
 		m_FInvoke(object, params, retValue);
 		return retValue;
 	}
