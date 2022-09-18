@@ -2,8 +2,44 @@
 
 #include "Object.h"
 
+namespace Ion
+{
+	// @TODO: FIX Enums only work in Ion namespace
+
+	enum class EMatterEnum
+	{
+		Null = 0,
+		Value1,
+		Value2,
+		Value3,
+		Value4,
+	};
+
+	template<>
+	struct TEnumParser<EMatterEnum>
+	{
+		ENUM_PARSER_TO_STRING_BEGIN(EMatterEnum)
+		ENUM_PARSER_TO_STRING_HELPER(Null)
+		ENUM_PARSER_TO_STRING_HELPER(Value1)
+		ENUM_PARSER_TO_STRING_HELPER(Value2)
+		ENUM_PARSER_TO_STRING_HELPER(Value3)
+		ENUM_PARSER_TO_STRING_HELPER(Value4)
+		ENUM_PARSER_TO_STRING_END()
+
+		ENUM_PARSER_FROM_STRING_BEGIN(EMatterEnum)
+		ENUM_PARSER_FROM_STRING_HELPER(Null)
+		ENUM_PARSER_FROM_STRING_HELPER(Value1)
+		ENUM_PARSER_FROM_STRING_HELPER(Value2)
+		ENUM_PARSER_FROM_STRING_HELPER(Value3)
+		ENUM_PARSER_FROM_STRING_HELPER(Value4)
+		ENUM_PARSER_FROM_STRING_END()
+	};
+
+	MENUM(EMatterEnum)
+}
 namespace Ion::Test
 {
+
 	class MMatterTest : public MObject
 	{
 		MCLASS(MMatterTest)
@@ -19,6 +55,9 @@ namespace Ion::Test
 
 		MObjectPtr MObjectField = nullptr;
 		MFIELD(MObjectField)
+
+		EMatterEnum EnumField = EMatterEnum::Value2;
+		MFIELD(EnumField)
 
 		void Void_VoidMethod() { MReflectionLogger.Debug("Void_VoidMethod called"); }
 		MMETHOD(Void_VoidMethod)
@@ -108,6 +147,13 @@ namespace Ion::Test
 		MMatterTest::MatterRF_MObjectField->SetValue(object, object2);
 		ionassert(object->MObjectField == object2);
 		ionassert(object->MObjectField == MMatterTest::MatterRF_MObjectField->GetValue<MObjectPtr>(object));
+
+		// Enum fields
+
+		MMatterTest::MatterRF_EnumField->SetValue(object, EMatterEnum::Value1);
+		ionassert(object->EnumField == EMatterEnum::Value1);
+		EMatterEnum enumRet0 = MMatterTest::MatterRF_EnumField->GetValue<EMatterEnum>(object);
+		ionassert(enumRet0 == EMatterEnum::Value1);
 
 		// Methods
 

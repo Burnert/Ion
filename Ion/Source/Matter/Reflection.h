@@ -29,7 +29,8 @@ namespace Ion
 			None        = 0,
 			Fundamental = 1 << 0,
 			Class       = 1 << 1,
-			Void        = 1 << 2,
+			Enum        = 1 << 2,
+			Void        = 1 << 3,
 		};
 		using UType = std::underlying_type_t<Type>;
 	}
@@ -46,6 +47,7 @@ namespace Ion
 			{
 				ETypeFlags::UType bFundamental : 1;
 				ETypeFlags::UType bClass : 1;
+				ETypeFlags::UType bEnum : 1;
 				ETypeFlags::UType bVoid : 1;
 			};
 		};
@@ -83,6 +85,7 @@ namespace Ion
 			{
 				ETypeFlags::UType m_bFundamental : 1;
 				ETypeFlags::UType m_bClass : 1;
+				ETypeFlags::UType m_bEnum : 1;
 				ETypeFlags::UType m_bVoid : 1;
 			};
 		};
@@ -542,6 +545,43 @@ namespace Ion
 
 #pragma endregion
 
+#pragma region Matter Reflection Enum class
+
+	/*                                      err  enumval  asstring */
+	using FMEnumStringConverter = TFunction<bool(uint64&, String&)>;
+
+	struct MEnumInitializer
+	{
+		MTypeInitializer TypeInitializer;
+		MType* UnderlyingType;
+		FMEnumStringConverter FConverter;
+	};
+
+	class MEnum : public MType
+	{
+	public:
+		MType* GetUnderlyingType() const;
+
+	private:
+		MEnum(const MEnumInitializer& initializer);
+
+		// @TODO: Get all the possible values and store them here
+
+	private:
+		MType* m_UnderlyingType;
+		FMEnumStringConverter m_FConverter;
+
+		friend class MReflection;
+		friend class MObject;
+	};
+
+	FORCEINLINE MType* MEnum::GetUnderlyingType() const
+	{
+		return m_UnderlyingType;
+	}
+
+#pragma endregion
+
 #pragma region Templates
 
 	// TIsReflectableClass --------------------------------------------------------------------
@@ -794,15 +834,18 @@ namespace Ion
 	{
 	public:
 		static MType* RegisterType(const MTypeInitializer& initializer);
+		static MEnum* RegisterEnum(const MEnumInitializer& initializer);
 		static MClass* RegisterClass(const MClassInitializer& initializer);
 		static MField* RegisterField(const MFieldInitializer& initializer);
 		static MMethod* RegisterMethod(const MMethodInitializer& initializer);
 
 		static MClass* FindClassByName(const String& name);
 		static MType* FindTypeByName(const String& name);
+		static MEnum* FindEnumByName(const String& name);
 
 	private:
 		static inline TArray<MType*> s_ReflectableTypeRegistry;
+		static inline TArray<MEnum*> s_ReflectableEnumRegistry;
 		static inline TArray<MClass*> s_MClassRegistry;
 	};
 
@@ -926,6 +969,42 @@ static inline MMethod* MatterRM_##name = [] { \
 	}; \
 	return MReflection::RegisterMethod(c_Initializer); \
 }();
+
+#define MENUM(T) \
+static inline MEnum* MatterRE_##T = [] { \
+	using TUnderlying = std::underlying_type_t<T>; \
+	using TParser = TEnumParser<T>; \
+	static MEnumInitializer c_Initializer { \
+		MTypeInitializer { \
+			/* The MEnum name (E_ prefix) */ \
+			"E_"s + #T, \
+			/* The compiler provided type hash code */ \
+			typeid(T).hash_code(), \
+			/* Type size in bytes */ \
+			sizeof(T), \
+			/* Type attributes */ \
+			ETypeFlags::Enum \
+		}, \
+		/* Underlying enum type */ \
+		TGetReflectableType<TUnderlying>::Type(), \
+		/* 2-way conversion function */ \
+		[](uint64& value, String& sValue) -> bool { \
+			/* If the string is empty, apply ToString conversion */ \
+			if (sValue.empty()) { \
+				sValue = TParser::ToString((T)value); \
+				return !sValue.empty(); \
+			} \
+			else { \
+				TOptional<T> opt = TParser::FromString(sValue); \
+				if (opt) value = (uint64)*opt; \
+				return (bool)opt; \
+			} \
+		} \
+	}; \
+	return MReflection::RegisterEnum(c_Initializer); \
+}(); \
+template<> struct TGetReflectableType<T> { static MType* Type() { return MatterRE_##T; } }; \
+template<> struct TIsReflectableType<T> { static constexpr bool Value = true; };
 
 #pragma endregion
 

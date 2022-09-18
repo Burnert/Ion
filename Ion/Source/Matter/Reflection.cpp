@@ -153,6 +153,13 @@ namespace Ion
 		return ar;
 	}
 
+	MEnum::MEnum(const MEnumInitializer& initializer) :
+		MType(initializer.TypeInitializer),
+		m_UnderlyingType(initializer.UnderlyingType),
+		m_FConverter(initializer.FConverter)
+	{
+	}
+
 	MType* MReflection::RegisterType(const MTypeInitializer& initializer)
 	{
 		ionassert(!initializer.Name.empty());
@@ -161,6 +168,17 @@ namespace Ion
 		MType* type = s_ReflectableTypeRegistry.emplace_back(new MType(initializer));
 
 		return type;
+	}
+
+	MEnum* MReflection::RegisterEnum(const MEnumInitializer& initializer)
+	{
+		ionassert(initializer.UnderlyingType);
+		ionassert(!initializer.TypeInitializer.Name.empty());
+		ionassert(initializer.TypeInitializer.HashCode != 0);
+
+		MEnum* mEnum = s_ReflectableEnumRegistry.emplace_back(new MEnum(initializer));
+
+		return mEnum;
 	}
 
 	MClass* MReflection::RegisterClass(const MClassInitializer& initializer)
@@ -220,6 +238,17 @@ namespace Ion
 			return type->GetName() == name;
 		});
 		if (it != s_ReflectableTypeRegistry.end())
+			return *it;
+		return nullptr;
+	}
+
+	MEnum* MReflection::FindEnumByName(const String& name)
+	{
+		auto it = std::find_if(s_ReflectableEnumRegistry.begin(), s_ReflectableEnumRegistry.end(), [&name](MEnum* mEnum)
+		{
+			return mEnum->GetName() == name;
+		});
+		if (it != s_ReflectableEnumRegistry.end())
 			return *it;
 		return nullptr;
 	}
