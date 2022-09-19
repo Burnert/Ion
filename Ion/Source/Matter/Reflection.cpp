@@ -19,7 +19,8 @@ namespace Ion
 		m_FieldOffset(initializer.FieldOffset),
 		m_Flags(initializer.Flags),
 		m_Name(initializer.Name),
-		m_FSetterGetter(initializer.FSetterGetter)
+		m_FSetterGetter(initializer.FSetterGetter),
+		m_FReferenceGetter(initializer.FReferenceGetter)
 	{
 	}
 
@@ -42,6 +43,17 @@ namespace Ion
 		MValuePtr value;
 		m_FSetterGetter(object, value);
 		return value;
+	}
+
+	MReferencePtr MField::GetReferenceEx(MObjectPtr object)
+	{
+		ionassert(object);
+
+		MReflectionLogger.Trace("Indirectly getting field reference {}::{} of object \"{}\".", m_Class->GetName(), m_Name, object->GetName());
+
+		MReferencePtr reference;
+		m_FReferenceGetter(object, reference);
+		return reference;
 	}
 
 	MMethod::MMethod(const MMethodInitializer& initializer) :

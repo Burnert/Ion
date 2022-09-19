@@ -147,15 +147,15 @@ namespace Ion
 		virtual MType* GetType() const = 0;
 
 		template<typename T>
-		const T& As() const
+		FORCEINLINE const T& As() const
 		{
 			static_assert(TIsReflectableTypeV<T>);
 			ionassert(GetType()->IsConvertibleTo(TGetReflectableType<T>::Type()));
-			return *reinterpret_cast<const T*>(GetValuePointer());
+			return *reinterpret_cast<const T*>(GetPointer());
 		}
 
 	protected:
-		virtual const void* GetValuePointer() const = 0;
+		virtual const void* GetPointer() const = 0;
 	};
 
 	template<typename T>
@@ -174,7 +174,7 @@ namespace Ion
 		}
 
 	protected:
-		virtual const void* GetValuePointer() const override
+		virtual const void* GetPointer() const override
 		{
 			return &m_Value;
 		}
@@ -194,9 +194,9 @@ namespace Ion
 		}
 
 	protected:
-		virtual const void* GetValuePointer() const override
+		virtual const void* GetPointer() const override
 		{
-			ionbreak("Called GetValuePointer on a void value.");
+			ionbreak("Called GetPointer on a void value.");
 			return nullptr;
 		}
 	};
@@ -205,6 +205,88 @@ namespace Ion
 	FORCEINLINE static MValuePtr MValue::Create(const T& value)
 	{
 		return MakeShared<TMValue<T>>(value);
+	}
+
+#pragma endregion
+
+#pragma region Generic Reference wrapper
+
+	using MReferencePtr = TSharedPtr<class MReference>;
+
+	class MReference
+	{
+	public:
+		template<typename T>
+		static MReferencePtr Create(T& reference);
+
+		virtual MType* GetType() const = 0;
+
+		template<typename T>
+		FORCEINLINE T& As()
+		{
+			static_assert(TIsReflectableTypeV<T>);
+			ionassert(GetType()->Is(TGetReflectableType<T>::Type()), "The type must be the same as the original type.");
+
+			return *reinterpret_cast<T*>(GetPointer());
+		}
+
+		template<typename T>
+		void Set(const T& value);
+		virtual void SetEx(const MValuePtr& value) = 0;
+
+		template<typename T>
+		FORCEINLINE void SetDirect(const T& value)
+		{
+			As<T>() = value;
+		}
+
+	protected:
+		virtual void* GetPointer() = 0;
+	};
+
+	template<typename T>
+	FORCEINLINE void MReference::Set(const T& value)
+	{
+		SetEx(MValue::Create(value));
+	}
+
+	template<typename T>
+	class TMReference : public MReference
+	{
+	public:
+		FORCEINLINE TMReference(T& reference) :
+			m_Reference(reference)
+		{
+			static_assert(TIsReflectableTypeV<T>, "Type is not reflectable.");
+		}
+
+		virtual MType* GetType() const override
+		{
+			return TGetReflectableType<T>::Type();
+		}
+
+		virtual void SetEx(const MValuePtr& value) override
+		{
+			ionassert(value);
+			ionassert(value->GetType()->IsConvertibleTo(GetType()));
+
+			m_Reference = value->As<T>();
+		}
+
+	protected:
+		virtual void* GetPointer() override
+		{
+			return &m_Reference;
+		}
+
+	private:
+		T& m_Reference;
+	};
+
+	template<typename T>
+	FORCEINLINE static MReferencePtr MReference::Create(T& reference)
+	{
+		return MakeShared<TMReference<T>>(reference);
 	}
 
 #pragma endregion
@@ -225,6 +307,7 @@ namespace Ion
 	}
 
 	using FMFieldSetterGetter = TFunction<void(MObjectPtr, MValuePtr&)>;
+	using FMFieldReferenceGetter = TFunction<void(MObjectPtr, MReferencePtr&)>;
 
 	struct MFieldInitializer
 	{
@@ -233,6 +316,7 @@ namespace Ion
 		size_t FieldOffset;
 		String Name;
 		FMFieldSetterGetter FSetterGetter;
+		FMFieldReferenceGetter FReferenceGetter;
 		union
 		{
 			EFieldFlags::UType Flags;
@@ -266,6 +350,10 @@ namespace Ion
 		template<typename T>
 		T GetValue(MObjectPtr object);
 		MValuePtr GetValueEx(MObjectPtr object);
+		
+		template<typename T>
+		T& GetReference(MObjectPtr object);
+		MReferencePtr GetReferenceEx(MObjectPtr object);
 
 		// Direct setter / getter
 
@@ -287,6 +375,7 @@ namespace Ion
 		String m_Name;
 
 		FMFieldSetterGetter m_FSetterGetter;
+		FMFieldReferenceGetter m_FReferenceGetter;
 
 		union
 		{
@@ -339,6 +428,15 @@ namespace Ion
 		ionassert(m_FieldType->IsClass() || !TIsObjectPtrV<T>);
 
 		return GetValueEx(object)->As<T>();
+	}
+
+	template<typename T>
+	FORCEINLINE T& MField::GetReference(MObjectPtr object)
+	{
+		ionassert(!m_FieldType->IsClass() || TIsObjectPtrV<T>);
+		ionassert(m_FieldType->IsClass() || !TIsObjectPtrV<T>);
+
+		return GetReferenceEx(object)->As<T>();
 	}
 
 	template<typename T>
@@ -962,6 +1060,11 @@ static inline MField* MatterRF_##name = [] { \
 				PtrCast<TThisClass>(object).Raw()->*(&TThisClass::name) = valueRef->As<TField>(); \
 			else \
 				valueRef = MakeShared<TMValue<TField>>(PtrCast<TThisClass>(object).Raw()->*(&TThisClass::name)); \
+		}, \
+		/* MField FReferenceGetter function */ \
+		[](MObjectPtr object, MReferencePtr& referenceRef) { \
+			TField& fieldRef = PtrCast<TThisClass>(object).Raw()->*(&TThisClass::name); \
+			referenceRef = MakeShared<TMReference<TField>>(fieldRef); \
 		}, \
 		/* Attributes (accessibility, static, etc.) */ \
 		EFieldFlags::None  /* @TODO: I don't think there's a way to get the visibility of a field without code parsing. */ \

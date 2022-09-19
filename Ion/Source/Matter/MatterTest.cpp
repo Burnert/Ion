@@ -131,6 +131,18 @@ namespace Ion::Test
 		MMatterTest::MatterRF_IntField->SetValueEx(object, MValue::Create(69i32));
 		ionassert(object->IntField == 69);
 
+		// MReference
+		MReferencePtr mRef0 = MMatterTest::MatterRF_IntField->GetReferenceEx(object);
+		ionassert(mRef0->As<int32>() == object->IntField);
+		mRef0->SetDirect(50);
+		ionassert(object->IntField == 50);
+		mRef0->Set(80);
+		ionassert(object->IntField == 80);
+		int32& mRef1 = MMatterTest::MatterRF_IntField->GetReference<int32>(object);
+		ionassert(mRef1 == mRef0->As<int32>());
+		mRef1 = 2323;
+		ionassert(object->IntField == 2323);
+
 		ionassert(MMatterTest::MatterRF_IntField2->GetClass()->Is<MMatterTest>());
 		ionassert(MMatterTest::MatterRF_IntField2->GetType() == MatterRT_int64);
 		ionassert(MMatterTest::MatterRF_IntField2->GetType()->Is(MatterRT_int64));
