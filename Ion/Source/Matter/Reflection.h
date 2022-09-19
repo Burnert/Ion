@@ -31,6 +31,7 @@ namespace Ion
 			Class       = 1 << 1,
 			Enum        = 1 << 2,
 			Void        = 1 << 3,
+			Collection  = 1 << 4,
 		};
 		using UType = std::underlying_type_t<Type>;
 	}
@@ -49,6 +50,7 @@ namespace Ion
 				ETypeFlags::UType bClass : 1;
 				ETypeFlags::UType bEnum : 1;
 				ETypeFlags::UType bVoid : 1;
+				ETypeFlags::UType bCollection: 1;
 			};
 		};
 	};
@@ -87,6 +89,7 @@ namespace Ion
 				ETypeFlags::UType m_bClass : 1;
 				ETypeFlags::UType m_bEnum : 1;
 				ETypeFlags::UType m_bVoid : 1;
+				ETypeFlags::UType m_bCollection : 1;
 			};
 		};
 
@@ -855,6 +858,7 @@ namespace Ion
 	class ION_API MReflection
 	{
 	public:
+		static MType* RegisterType(MType* type);
 		static MType* RegisterType(const MTypeInitializer& initializer);
 		static MEnum* RegisterEnum(const MEnumInitializer& initializer);
 		static MClass* RegisterClass(const MClassInitializer& initializer);
@@ -865,10 +869,14 @@ namespace Ion
 		static MType* FindTypeByName(const String& name);
 		static MEnum* FindEnumByName(const String& name);
 
+		static MType* FindTypeByHashCode(size_t hashCode);
+
 	private:
 		static inline TArray<MType*> s_ReflectableTypeRegistry;
 		static inline TArray<MEnum*> s_ReflectableEnumRegistry;
 		static inline TArray<MClass*> s_MClassRegistry;
+
+		static inline THashMap<size_t, MType*> s_TypesByHashCode;
 	};
 
 #pragma endregion
@@ -1070,6 +1078,80 @@ template<> struct TIsReflectableType<T> { static constexpr bool Value = true; };
 
 	MTYPE(GUID)
 	MTYPE(String)
+
+#pragma region Reflectable Array type
+
+	struct MArrayInitializer
+	{
+		MTypeInitializer TypeInitializer;
+		MType* ElementType;
+	};
+
+	class MArray : public MType
+	{
+	public:
+		template<typename T>
+		static MArray* QueryForElementType();
+		static MArray* FindForElementType(MType* elementType);
+
+		MType* GetElementType() const;
+
+	private:
+		MArray(const MArrayInitializer& initializer);
+
+	private:
+		MType* m_ElementType;
+
+		static inline THashMap<size_t, MArray*> s_ElementTypeHashToArray;
+	};
+
+	template<typename T>
+	FORCEINLINE MArray* MArray::QueryForElementType()
+	{
+		if (MType* type = MReflection::FindTypeByHashCode(typeid(TArray<T>).hash_code()))
+			return static_cast<MArray*>(type);
+
+		MType* elementType = TGetReflectableType<T>::Type();
+
+		// Lazily register a new type for every possible element type.
+		MArrayInitializer initializer { };
+		initializer.TypeInitializer.Name = fmt::format("Array<{}>", TGetReflectableType<T>::Type()->GetName());
+		initializer.TypeInitializer.HashCode = typeid(TArray<T>).hash_code();
+		initializer.TypeInitializer.Size = sizeof(TArray<T>);
+		initializer.TypeInitializer.Flags = ETypeFlags::Collection;
+		initializer.ElementType = elementType;
+		ionassert(initializer.ElementType);
+
+		MArray* array = new MArray(initializer);
+		MReflection::RegisterType(array);
+		s_ElementTypeHashToArray.emplace(elementType->GetHashCode(), array);
+
+		return array;
+	}
+
+	FORCEINLINE MArray* MArray::FindForElementType(MType* elementType)
+	{
+		// NOTE: Can't register the array type here, because the hash is unknown.
+
+		ionassert(elementType);
+
+		auto it = s_ElementTypeHashToArray.find(elementType->GetHashCode());
+		if (it != s_ElementTypeHashToArray.end())
+			return it->second;
+		return nullptr;
+	}
+
+	FORCEINLINE MType* MArray::GetElementType() const
+	{
+		return m_ElementType;
+	}
+
+	template<typename T>
+	struct TGetReflectableType<TArray<T>, TEnableIfT<TIsReflectableTypeV<T>>> { static MType* Type() { return MArray::QueryForElementType<T>(); } };
+	template<typename T>
+	struct TIsReflectableType<TArray<T>, TEnableIfT<TIsReflectableTypeV<T>>> { static constexpr bool Value = true; };
+
+#pragma endregion
 
 #pragma endregion
 }

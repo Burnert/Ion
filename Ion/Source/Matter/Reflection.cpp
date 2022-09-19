@@ -160,12 +160,26 @@ namespace Ion
 	{
 	}
 
+	MType* MReflection::RegisterType(MType* type)
+	{
+		ionassert(type);
+		ionassert(std::find(s_ReflectableTypeRegistry.begin(), s_ReflectableTypeRegistry.end(), type) == s_ReflectableTypeRegistry.end());
+		ionassert(std::find(s_ReflectableEnumRegistry.begin(), s_ReflectableEnumRegistry.end(), type) == s_ReflectableEnumRegistry.end());
+		ionassert(std::find(s_MClassRegistry.begin(), s_MClassRegistry.end(), type) == s_MClassRegistry.end());
+
+		s_ReflectableTypeRegistry.emplace_back(type);
+		s_TypesByHashCode.emplace(type->GetHashCode(), type);
+
+		return type;
+	}
+
 	MType* MReflection::RegisterType(const MTypeInitializer& initializer)
 	{
 		ionassert(!initializer.Name.empty());
 		ionassert(initializer.HashCode != 0);
 
 		MType* type = s_ReflectableTypeRegistry.emplace_back(new MType(initializer));
+		s_TypesByHashCode.emplace(type->GetHashCode(), type);
 
 		return type;
 	}
@@ -177,6 +191,7 @@ namespace Ion
 		ionassert(initializer.TypeInitializer.HashCode != 0);
 
 		MEnum* mEnum = s_ReflectableEnumRegistry.emplace_back(new MEnum(initializer));
+		s_TypesByHashCode.emplace(mEnum->GetHashCode(), mEnum);
 
 		return mEnum;
 	}
@@ -193,6 +208,9 @@ namespace Ion
 		// Setup the reflectable class data
 		MClass* mClass = s_MClassRegistry.emplace_back(new MClass(initializer));
 		mClass->SetupClassDefaultObject(initializer.CDOName);
+
+		s_TypesByHashCode.emplace(mClass->GetHashCode(), mClass);
+
 		return mClass;
 	}
 
@@ -203,8 +221,6 @@ namespace Ion
 
 		TArray<MField*>& fields = initializer.Class->m_Fields;
 		MField* field = fields.emplace_back(new MField(initializer));
-
-		//field->InitOffset();
 
 		return field;
 	}
@@ -251,5 +267,19 @@ namespace Ion
 		if (it != s_ReflectableEnumRegistry.end())
 			return *it;
 		return nullptr;
+	}
+
+	MType* MReflection::FindTypeByHashCode(size_t hashCode)
+	{
+		auto it = s_TypesByHashCode.find(hashCode);
+		if (it != s_TypesByHashCode.end())
+			return it->second;
+		return nullptr;
+	}
+
+	MArray::MArray(const MArrayInitializer& initializer) :
+		MType(initializer.TypeInitializer),
+		m_ElementType(initializer.ElementType)
+	{
 	}
 }

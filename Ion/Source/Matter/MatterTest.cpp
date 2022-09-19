@@ -59,6 +59,9 @@ namespace Ion::Test
 		EMatterEnum EnumField = EMatterEnum::Value2;
 		MFIELD(EnumField)
 
+		TArray<int32> ArrayField;
+		MFIELD(ArrayField)
+
 		void Void_VoidMethod() { MReflectionLogger.Debug("Void_VoidMethod called"); }
 		MMETHOD(Void_VoidMethod)
 
@@ -90,6 +93,9 @@ namespace Ion::Test
 
 		const GUID& GUID_GUIDMethod(const GUID& guid) { MReflectionLogger.Debug("GUID_GUIDMethod called {}", guid.ToString()); return guid; }
 		MMETHOD(GUID_GUIDMethod, const GUID&)
+
+		const TArray<int32>& Array_ArrayMethod(const TArray<int32>& array) { MReflectionLogger.Debug("Array_ArrayMethod called {}", [&] { std::stringstream ss; for (int32 i : array) ss << i; return ss.str(); }()); return array; };
+		MMETHOD(Array_ArrayMethod, const TArray<int32>&)
 	};
 
 	void MatterTest()
@@ -112,8 +118,6 @@ namespace Ion::Test
 		ionassert(!MMatterTest::MatterRF_IntField->GetType()->IsClass());
 		ionassert(MMatterTest::MatterRF_IntField->GetName() == "IntField");
 		ionassert(MMatterTest::MatterRF_IntField->GetOffset() == offsetof(MMatterTest, IntField));
-
-		MObjectPtr ptr = object;
 
 		// Direct field interaction
 		int32 value0 = MMatterTest::MatterRF_IntField->GetValueDirect<int32>(object);
@@ -154,6 +158,18 @@ namespace Ion::Test
 		ionassert(object->EnumField == EMatterEnum::Value1);
 		EMatterEnum enumRet0 = MMatterTest::MatterRF_EnumField->GetValueDirect<EMatterEnum>(object);
 		ionassert(enumRet0 == EMatterEnum::Value1);
+
+		// Array fields
+
+		ionassert(object->ArrayField.size() == 0);
+		MMatterTest::MatterRF_ArrayField->SetValue(object, TArray<int32> { 6, 4 });
+		ionassert(object->ArrayField.size() == 2);
+		ionassert(object->ArrayField[0] == 6);
+		ionassert(object->ArrayField[1] == 4);
+		TArray<int32> retArray0 = MMatterTest::MatterRF_ArrayField->GetValue<TArray<int32>>(object);
+		ionassert(retArray0.size() == 2);
+		ionassert(retArray0[0] == 6);
+		ionassert(retArray0[1] == 4);
 
 		// Methods
 
@@ -284,6 +300,13 @@ namespace Ion::Test
 		GUID guid = GUID::FromString("d5e2f8b2-5727-4768-9a74-d182b92c1b6c").Unwrap();
 		GUID guidRet0 = MMatterTest::MatterRM_GUID_GUIDMethod->Invoke<GUID>(object, guid);
 		ionassert(guidRet0 == guid);
+
+		// Array
+
+		TArray<int32> arr { 5, 2, 8 };
+		TArray<int32> arrRet0 = MMatterTest::MatterRM_Array_ArrayMethod->Invoke<TArray<int32>>(object, arr);
+		ionassert(arr.size() == arrRet0.size());
+		ionassert([&] { for (int32 i = 0; i < arr.size(); ++i) if (arr[i] != arrRet0[i]) return false; return true; }());
 
 		// Iteration
 
