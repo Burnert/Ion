@@ -162,7 +162,7 @@ namespace Ion
 		FORCEINLINE TMValue(const T& value) :
 			m_Value(value)
 		{
-			static_assert(TIsReflectableTypeV<T>);
+			static_assert(TIsReflectableTypeV<T>, "Type is not reflectable.");
 		}
 
 		virtual MType* GetType() const override
@@ -256,17 +256,21 @@ namespace Ion
 
 		// Indirect setter / getter
 
-		void SetValue(MObjectPtr object, const MValuePtr& value);
+		template<typename T>
+		void SetValue(MObjectPtr object, const T& value);
+		void SetValueEx(MObjectPtr object, const MValuePtr& value);
 
-		MValuePtr GetValue(MObjectPtr object);
+		template<typename T>
+		T GetValue(MObjectPtr object);
+		MValuePtr GetValueEx(MObjectPtr object);
 
 		// Direct setter / getter
 
 		template<typename T>
-		void SetValue(MObjectPtr object, const T& value);
+		void SetValueDirect(MObjectPtr object, const T& value);
 
 		template<typename T>
-		T GetValue(MObjectPtr object);
+		T GetValueDirect(MObjectPtr object);
 
 	private:
 		MField(const MFieldInitializer& initializer);
@@ -319,7 +323,25 @@ namespace Ion
 	template<typename T>
 	FORCEINLINE void MField::SetValue(MObjectPtr object, const T& value)
 	{
-		static_assert(TIsReflectableTypeV<T>, "Type is not reflectable");
+		ionassert(!m_FieldType->IsClass() || TIsObjectPtrV<T>);
+		ionassert(m_FieldType->IsClass() || !TIsObjectPtrV<T>);
+
+		SetValueEx(object, MValue::Create(value));
+	}
+
+	template<typename T>
+	FORCEINLINE T MField::GetValue(MObjectPtr object)
+	{
+		ionassert(!m_FieldType->IsClass() || TIsObjectPtrV<T>);
+		ionassert(m_FieldType->IsClass() || !TIsObjectPtrV<T>);
+
+		return GetValueEx(object)->As<T>();
+	}
+
+	template<typename T>
+	FORCEINLINE void MField::SetValueDirect(MObjectPtr object, const T& value)
+	{
+		static_assert(TIsReflectableTypeV<T>, "Type is not reflectable.");
 		ionassert(object);
 		ionassert(TGetReflectableType<T>::Type()->IsConvertibleTo(m_FieldType), "Type {} is not convertible to {}.",
 			TGetReflectableType<T>::Type()->GetName(), m_FieldType->GetName());
@@ -335,9 +357,9 @@ namespace Ion
 	}
 
 	template<typename T>
-	FORCEINLINE T MField::GetValue(MObjectPtr object)
+	FORCEINLINE T MField::GetValueDirect(MObjectPtr object)
 	{
-		static_assert(TIsReflectableTypeV<T>, "Type is not reflectable");
+		static_assert(TIsReflectableTypeV<T>, "Type is not reflectable.");
 		ionassert(object);
 		ionassert(TGetReflectableType<T>::Type()->IsConvertibleTo(m_FieldType), "Type {} is not convertible to {}.",
 			TGetReflectableType<T>::Type()->GetName(), m_FieldType->GetName());

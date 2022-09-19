@@ -116,15 +116,15 @@ namespace Ion::Test
 		MObjectPtr ptr = object;
 
 		// Direct field interaction
-		int32 value0 = MMatterTest::MatterRF_IntField->GetValue<int32>(object);
+		int32 value0 = MMatterTest::MatterRF_IntField->GetValueDirect<int32>(object);
 		ionassert(value0 == object->IntField);
-		MMatterTest::MatterRF_IntField->SetValue(object, (int32)69);
+		MMatterTest::MatterRF_IntField->SetValueDirect(object, (int32)69);
 		ionassert(object->IntField == 69);
 
 		// Indirect field interaction
-		MValuePtr mValue0 = MMatterTest::MatterRF_IntField->GetValue(object);
+		MValuePtr mValue0 = MMatterTest::MatterRF_IntField->GetValueEx(object);
 		ionassert(mValue0->As<int32>() == object->IntField);
-		MMatterTest::MatterRF_IntField->SetValue(object, MValue::Create(69i32));
+		MMatterTest::MatterRF_IntField->SetValueEx(object, MValue::Create(69i32));
 		ionassert(object->IntField == 69);
 
 		ionassert(MMatterTest::MatterRF_IntField2->GetClass()->Is<MMatterTest>());
@@ -144,15 +144,15 @@ namespace Ion::Test
 		ionassert(MMatterTest::MatterRF_MObjectField->GetOffset() == offsetof(MMatterTest, MObjectField));
 
 		TObjectPtr<MMatterTest> object2 = MObject::New<MMatterTest>();
-		MMatterTest::MatterRF_MObjectField->SetValue(object, object2);
+		MMatterTest::MatterRF_MObjectField->SetValueDirect(object, object2);
 		ionassert(object->MObjectField == object2);
-		ionassert(object->MObjectField == MMatterTest::MatterRF_MObjectField->GetValue<MObjectPtr>(object));
+		ionassert(object->MObjectField == MMatterTest::MatterRF_MObjectField->GetValueDirect<MObjectPtr>(object));
 
 		// Enum fields
 
-		MMatterTest::MatterRF_EnumField->SetValue(object, EMatterEnum::Value1);
+		MMatterTest::MatterRF_EnumField->SetValueDirect(object, EMatterEnum::Value1);
 		ionassert(object->EnumField == EMatterEnum::Value1);
-		EMatterEnum enumRet0 = MMatterTest::MatterRF_EnumField->GetValue<EMatterEnum>(object);
+		EMatterEnum enumRet0 = MMatterTest::MatterRF_EnumField->GetValueDirect<EMatterEnum>(object);
 		ionassert(enumRet0 == EMatterEnum::Value1);
 
 		// Methods

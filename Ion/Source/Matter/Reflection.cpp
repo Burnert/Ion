@@ -23,7 +23,7 @@ namespace Ion
 	{
 	}
 
-	void MField::SetValue(MObjectPtr object, const MValuePtr& value)
+	void MField::SetValueEx(MObjectPtr object, const MValuePtr& value)
 	{
 		ionassert(object);
 		ionassert(value);
@@ -33,7 +33,7 @@ namespace Ion
 		m_FSetterGetter(object, const_cast<MValuePtr&>(value));
 	}
 
-	MValuePtr MField::GetValue(MObjectPtr object)
+	MValuePtr MField::GetValueEx(MObjectPtr object)
 	{
 		ionassert(object);
 
