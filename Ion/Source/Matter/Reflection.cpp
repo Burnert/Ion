@@ -66,24 +66,24 @@ namespace Ion
 	{
 	}
 
-	MValuePtr MMethod::InvokeEx(MObjectPtr object)
+	MMethodTypeInstance MMethod::InvokeEx(MObjectPtr object)
 	{
-		return InvokeEx(object, TArray<MValuePtr>());
+		return InvokeEx(object, TArray<MMethodTypeInstance>());
 	}
 
-	MValuePtr MMethod::InvokeEx(MObjectPtr object, const TArray<MValuePtr>& params)
+	MMethodTypeInstance MMethod::InvokeEx(MObjectPtr object, const TArray<MMethodTypeInstance>& params)
 	{
-		MReflectionLogger.Trace("Invoking method {} {}::{}({}) of object \"{}\".", m_ReturnType->GetName(), m_Class->GetName(), m_Name, [this] {
+		MReflectionLogger.Trace("Invoking method {} {}::{}({}) of object \"{}\".", m_ReturnType.PlainType->GetName(), m_Class->GetName(), m_Name, [this] {
 			TArray<String> parameterNames;
 			parameterNames.reserve(m_ParameterTypes.size());
-			std::transform(m_ParameterTypes.begin(), m_ParameterTypes.end(), std::back_inserter(parameterNames), [](MType* type)
+			std::transform(m_ParameterTypes.begin(), m_ParameterTypes.end(), std::back_inserter(parameterNames), [](const MMethodType& type)
 			{
-				return type->GetName();
+				return type.PlainType->GetName();
 			});
 			return JoinString(parameterNames, ", "s);
 		}(), object->GetName());
 
-		MValuePtr retValue = nullptr;
+		MMethodTypeInstance retValue(m_ReturnType);
 		m_FInvoke(object, params, retValue);
 		return retValue;
 	}

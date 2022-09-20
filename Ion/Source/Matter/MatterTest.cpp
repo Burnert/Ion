@@ -39,7 +39,6 @@ namespace Ion
 }
 namespace Ion::Test
 {
-
 	class MMatterTest : public MObject
 	{
 		MCLASS(MMatterTest)
@@ -96,6 +95,9 @@ namespace Ion::Test
 
 		const TArray<int32>& Array_ArrayMethod(const TArray<int32>& array) { MReflectionLogger.Debug("Array_ArrayMethod called {}", [&] { std::stringstream ss; for (int32 i : array) ss << i; return ss.str(); }()); return array; };
 		MMETHOD(Array_ArrayMethod, const TArray<int32>&)
+
+		void Void_IntRefMethod(int32& intRef) { MReflectionLogger.Debug("Void_IntRefMethod called"); intRef = Int420; }
+		MMETHOD(Void_IntRefMethod, int32&)
 	};
 
 	void MatterTest()
@@ -186,8 +188,8 @@ namespace Ion::Test
 		// Methods
 
 		ionassert(MMatterTest::MatterRM_Void_VoidMethod->GetClass()->Is<MMatterTest>());
-		ionassert(MMatterTest::MatterRM_Void_VoidMethod->GetReturnType() == MatterRT_void);
-		ionassert(MMatterTest::MatterRM_Void_VoidMethod->GetReturnType()->Is(MatterRT_void));
+		ionassert(MMatterTest::MatterRM_Void_VoidMethod->GetReturnType().PlainType == MatterRT_void);
+		ionassert(MMatterTest::MatterRM_Void_VoidMethod->GetReturnType().PlainType->Is(MatterRT_void));
 		ionassert(MMatterTest::MatterRM_Void_VoidMethod->GetParameterTypes().empty());
 		ionassert(MMatterTest::MatterRM_Void_VoidMethod->GetName() == "Void_VoidMethod");
 
@@ -195,17 +197,17 @@ namespace Ion::Test
 		MMatterTest::MatterRM_Void_VoidMethod->Invoke(object);
 
 		ionassert(MMatterTest::MatterRM_Void_ConstRefIntMethod->GetClass()->Is<MMatterTest>());
-		ionassert(MMatterTest::MatterRM_Void_ConstRefIntMethod->GetReturnType() == MatterRT_void);
-		ionassert(MMatterTest::MatterRM_Void_ConstRefIntMethod->GetReturnType()->Is(MatterRT_void));
+		ionassert(MMatterTest::MatterRM_Void_ConstRefIntMethod->GetReturnType().PlainType == MatterRT_void);
+		ionassert(MMatterTest::MatterRM_Void_ConstRefIntMethod->GetReturnType().PlainType->Is(MatterRT_void));
 		ionassert(MMatterTest::MatterRM_Void_ConstRefIntMethod->GetParameterTypes().size() == 1);
-		ionassert(MMatterTest::MatterRM_Void_ConstRefIntMethod->GetParameterTypes()[0]->Is<int32>());
+		ionassert(MMatterTest::MatterRM_Void_ConstRefIntMethod->GetParameterTypes()[0].PlainType->Is<int32>());
 		ionassert(MMatterTest::MatterRM_Void_ConstRefIntMethod->GetName() == "Void_ConstRefIntMethod");
 
 		MMatterTest::MatterRM_Void_ConstRefIntMethod->Invoke(object, 69i32);
 
 		ionassert(MMatterTest::MatterRM_Int_VoidMethod->GetClass()->Is<MMatterTest>());
-		ionassert(MMatterTest::MatterRM_Int_VoidMethod->GetReturnType() == MatterRT_int32);
-		ionassert(MMatterTest::MatterRM_Int_VoidMethod->GetReturnType()->Is(MatterRT_int32));
+		ionassert(MMatterTest::MatterRM_Int_VoidMethod->GetReturnType().PlainType == MatterRT_int32);
+		ionassert(MMatterTest::MatterRM_Int_VoidMethod->GetReturnType().PlainType->Is(MatterRT_int32));
 		ionassert(MMatterTest::MatterRM_Int_VoidMethod->GetParameterTypes().empty());
 		ionassert(MMatterTest::MatterRM_Int_VoidMethod->GetName() == "Int_VoidMethod");
 
@@ -216,11 +218,11 @@ namespace Ion::Test
 		ionassert(intRet0x == 420);
 
 		ionassert(MMatterTest::MatterRM_Int_IntMethod->GetClass()->Is<MMatterTest>());
-		ionassert(MMatterTest::MatterRM_Int_IntMethod->GetReturnType() == MatterRT_int32);
-		ionassert(MMatterTest::MatterRM_Int_IntMethod->GetReturnType()->Is(MatterRT_int32));
+		ionassert(MMatterTest::MatterRM_Int_IntMethod->GetReturnType().PlainType == MatterRT_int32);
+		ionassert(MMatterTest::MatterRM_Int_IntMethod->GetReturnType().PlainType->Is(MatterRT_int32));
 		ionassert(MMatterTest::MatterRM_Int_IntMethod->GetParameterTypes().size() == 1);
-		ionassert(MMatterTest::MatterRM_Int_IntMethod->GetParameterTypes()[0] == MatterRT_int32);
-		ionassert(MMatterTest::MatterRM_Int_IntMethod->GetParameterTypes()[0]->Is(MatterRT_int32));
+		ionassert(MMatterTest::MatterRM_Int_IntMethod->GetParameterTypes()[0].PlainType == MatterRT_int32);
+		ionassert(MMatterTest::MatterRM_Int_IntMethod->GetParameterTypes()[0].PlainType->Is(MatterRT_int32));
 		ionassert(MMatterTest::MatterRM_Int_IntMethod->GetName() == "Int_IntMethod");
 
 		MValuePtr intRet1 = MMatterTest::MatterRM_Int_IntMethod->InvokeEx(object, { MValue::Create(2137) });
@@ -230,11 +232,11 @@ namespace Ion::Test
 		ionassert(intRet1x == 2137);
 
 		ionassert(MMatterTest::MatterRM_MMatterTest_IntMethod->GetClass()->Is<MMatterTest>());
-		ionassert(MMatterTest::MatterRM_MMatterTest_IntMethod->GetReturnType() == MMatterTest::StaticClass());
-		ionassert(MMatterTest::MatterRM_MMatterTest_IntMethod->GetReturnType()->Is(MMatterTest::StaticClass()));
+		ionassert(MMatterTest::MatterRM_MMatterTest_IntMethod->GetReturnType().PlainType == MMatterTest::StaticClass());
+		ionassert(MMatterTest::MatterRM_MMatterTest_IntMethod->GetReturnType().PlainType->Is(MMatterTest::StaticClass()));
 		ionassert(MMatterTest::MatterRM_MMatterTest_IntMethod->GetParameterTypes().size() == 1);
-		ionassert(MMatterTest::MatterRM_MMatterTest_IntMethod->GetParameterTypes()[0] == MatterRT_int32);
-		ionassert(MMatterTest::MatterRM_MMatterTest_IntMethod->GetParameterTypes()[0]->Is(MatterRT_int32));
+		ionassert(MMatterTest::MatterRM_MMatterTest_IntMethod->GetParameterTypes()[0].PlainType == MatterRT_int32);
+		ionassert(MMatterTest::MatterRM_MMatterTest_IntMethod->GetParameterTypes()[0].PlainType->Is(MatterRT_int32));
 		ionassert(MMatterTest::MatterRM_MMatterTest_IntMethod->GetName() == "MMatterTest_IntMethod");
 
 		MValuePtr mObjectRet0 = MMatterTest::MatterRM_MMatterTest_IntMethod->InvokeEx(object, { MValue::Create(2137) });
@@ -244,11 +246,11 @@ namespace Ion::Test
 		ionassert(mObjectRet0x == object);
 
 		ionassert(MMatterTest::MatterRM_MObject_MObjectMethod->GetClass()->Is<MMatterTest>());
-		ionassert(MMatterTest::MatterRM_MObject_MObjectMethod->GetReturnType() == MObject::StaticClass());
-		ionassert(MMatterTest::MatterRM_MObject_MObjectMethod->GetReturnType()->Is(MObject::StaticClass()));
+		ionassert(MMatterTest::MatterRM_MObject_MObjectMethod->GetReturnType().PlainType == MObject::StaticClass());
+		ionassert(MMatterTest::MatterRM_MObject_MObjectMethod->GetReturnType().PlainType->Is(MObject::StaticClass()));
 		ionassert(MMatterTest::MatterRM_MObject_MObjectMethod->GetParameterTypes().size() == 1);
-		ionassert(MMatterTest::MatterRM_MObject_MObjectMethod->GetParameterTypes()[0] == MObject::StaticClass());
-		ionassert(MMatterTest::MatterRM_MObject_MObjectMethod->GetParameterTypes()[0]->Is(MObject::StaticClass()));
+		ionassert(MMatterTest::MatterRM_MObject_MObjectMethod->GetParameterTypes()[0].PlainType == MObject::StaticClass());
+		ionassert(MMatterTest::MatterRM_MObject_MObjectMethod->GetParameterTypes()[0].PlainType->Is(MObject::StaticClass()));
 		ionassert(MMatterTest::MatterRM_MObject_MObjectMethod->GetName() == "MObject_MObjectMethod");
 
 		MValuePtr mObjectRet1 = MMatterTest::MatterRM_MObject_MObjectMethod->InvokeEx(object, { MValue::Create(object2) });
@@ -258,13 +260,13 @@ namespace Ion::Test
 		ionassert(mObjectRet1x == object2);
 
 		ionassert(MMatterTest::MatterRM_MObject_MObjectIntMethod->GetClass()->Is<MMatterTest>());
-		ionassert(MMatterTest::MatterRM_MObject_MObjectIntMethod->GetReturnType() == MObject::StaticClass());
-		ionassert(MMatterTest::MatterRM_MObject_MObjectIntMethod->GetReturnType()->Is(MObject::StaticClass()));
+		ionassert(MMatterTest::MatterRM_MObject_MObjectIntMethod->GetReturnType().PlainType == MObject::StaticClass());
+		ionassert(MMatterTest::MatterRM_MObject_MObjectIntMethod->GetReturnType().PlainType->Is(MObject::StaticClass()));
 		ionassert(MMatterTest::MatterRM_MObject_MObjectIntMethod->GetParameterTypes().size() == 2);
-		ionassert(MMatterTest::MatterRM_MObject_MObjectIntMethod->GetParameterTypes()[0] == MObject::StaticClass());
-		ionassert(MMatterTest::MatterRM_MObject_MObjectIntMethod->GetParameterTypes()[0]->Is(MObject::StaticClass()));
-		ionassert(MMatterTest::MatterRM_MObject_MObjectIntMethod->GetParameterTypes()[1] == MatterRT_int32);
-		ionassert(MMatterTest::MatterRM_MObject_MObjectIntMethod->GetParameterTypes()[1]->Is(MatterRT_int32));
+		ionassert(MMatterTest::MatterRM_MObject_MObjectIntMethod->GetParameterTypes()[0].PlainType == MObject::StaticClass());
+		ionassert(MMatterTest::MatterRM_MObject_MObjectIntMethod->GetParameterTypes()[0].PlainType->Is(MObject::StaticClass()));
+		ionassert(MMatterTest::MatterRM_MObject_MObjectIntMethod->GetParameterTypes()[1].PlainType == MatterRT_int32);
+		ionassert(MMatterTest::MatterRM_MObject_MObjectIntMethod->GetParameterTypes()[1].PlainType->Is(MatterRT_int32));
 		ionassert(MMatterTest::MatterRM_MObject_MObjectIntMethod->GetName() == "MObject_MObjectIntMethod");
 
 		MValuePtr mObjectRet2 = MMatterTest::MatterRM_MObject_MObjectIntMethod->InvokeEx(object, { MValue::Create(object2), MValue::Create(69) });
@@ -276,21 +278,21 @@ namespace Ion::Test
 		// String
 
 		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetClass()->Is<MMatterTest>());
-		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetReturnType() == MatterRT_void);
-		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetReturnType()->Is(MatterRT_void));
-		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetReturnType()->Is<void>());
+		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetReturnType().PlainType == MatterRT_void);
+		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetReturnType().PlainType->Is(MatterRT_void));
+		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetReturnType().PlainType->Is<void>());
 		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetParameterTypes().size() == 1);
-		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetParameterTypes()[0] == MatterRT_String);
-		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetParameterTypes()[0]->Is(MatterRT_String));
-		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetParameterTypes()[0]->Is<String>());
+		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetParameterTypes()[0].PlainType == MatterRT_String);
+		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetParameterTypes()[0].PlainType->Is(MatterRT_String));
+		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetParameterTypes()[0].PlainType->Is<String>());
 		ionassert(MMatterTest::MatterRM_Void_StringMethod->GetName() == "Void_StringMethod");
 
 		MMatterTest::MatterRM_Void_StringMethod->Invoke(object, "Hello"s);
 
 		ionassert(MMatterTest::MatterRM_String_VoidMethod->GetClass()->Is<MMatterTest>());
-		ionassert(MMatterTest::MatterRM_String_VoidMethod->GetReturnType() == MatterRT_String);
-		ionassert(MMatterTest::MatterRM_String_VoidMethod->GetReturnType()->Is(MatterRT_String));
-		ionassert(MMatterTest::MatterRM_String_VoidMethod->GetReturnType()->Is<String>());
+		ionassert(MMatterTest::MatterRM_String_VoidMethod->GetReturnType().PlainType == MatterRT_String);
+		ionassert(MMatterTest::MatterRM_String_VoidMethod->GetReturnType().PlainType->Is(MatterRT_String));
+		ionassert(MMatterTest::MatterRM_String_VoidMethod->GetReturnType().PlainType->Is<String>());
 		ionassert(MMatterTest::MatterRM_String_VoidMethod->GetParameterTypes().size() == 0);
 		ionassert(MMatterTest::MatterRM_String_VoidMethod->GetName() == "String_VoidMethod");
 
@@ -300,13 +302,13 @@ namespace Ion::Test
 		// GUID
 
 		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetClass()->Is<MMatterTest>());
-		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetReturnType() == MatterRT_GUID);
-		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetReturnType()->Is(MatterRT_GUID));
-		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetReturnType()->Is<GUID>());
+		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetReturnType().PlainType == MatterRT_GUID);
+		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetReturnType().PlainType->Is(MatterRT_GUID));
+		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetReturnType().PlainType->Is<GUID>());
 		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetParameterTypes().size() == 1);
-		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetParameterTypes()[0] == MatterRT_GUID);
-		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetParameterTypes()[0]->Is(MatterRT_GUID));
-		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetParameterTypes()[0]->Is<GUID>());
+		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetParameterTypes()[0].PlainType == MatterRT_GUID);
+		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetParameterTypes()[0].PlainType->Is(MatterRT_GUID));
+		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetParameterTypes()[0].PlainType->Is<GUID>());
 		ionassert(MMatterTest::MatterRM_GUID_GUIDMethod->GetName() == "GUID_GUIDMethod");
 
 		GUID guid = GUID::FromString("d5e2f8b2-5727-4768-9a74-d182b92c1b6c").Unwrap();
@@ -316,9 +318,11 @@ namespace Ion::Test
 		// Array
 
 		TArray<int32> arr { 5, 2, 8 };
-		TArray<int32> arrRet0 = MMatterTest::MatterRM_Array_ArrayMethod->Invoke<TArray<int32>>(object, arr);
-		ionassert(arr.size() == arrRet0.size());
-		ionassert([&] { for (int32 i = 0; i < arr.size(); ++i) if (arr[i] != arrRet0[i]) return false; return true; }());
+		MReferencePtr arrRet0 = MMatterTest::MatterRM_Array_ArrayMethod->InvokeEx(object, TArray<MMethodTypeInstance> { MReference::CreateConst(arr) });
+		TArray<int32>& arrRef0 = arrRet0->As<TArray<int32>>();
+		ionassert(&arrRef0 == &arr);
+		ionassert(arr.size() == arrRef0.size());
+		ionassert([&] { for (int32 i = 0; i < arr.size(); ++i) if (arr[i] != arrRef0[i]) return false; return true; }());
 
 		// Iteration
 
@@ -335,17 +339,17 @@ namespace Ion::Test
 		for (MMethod* method : methods)
 		{
 			MReflectionLogger.Debug("Method: {} {}::{}({})",
-				method->GetReturnType()->GetName(),
+				method->GetReturnType().PlainType->GetName(),
 				method->GetClass()->GetName(),
 				method->GetName(),
 				[method]
 				{
-					TArray<MType*> parameters = method->GetParameterTypes();
+					const TArray<MMethodType>& parameters = method->GetParameterTypes();
 					TArray<String> parameterNames;
 					parameterNames.reserve(parameters.size());
-					std::transform(parameters.begin(), parameters.end(), std::back_inserter(parameterNames), [](MType* type)
+					std::transform(parameters.begin(), parameters.end(), std::back_inserter(parameterNames), [](const MMethodType& type)
 					{
-						return type->GetName();
+						return type.PlainType->GetName();
 					});
 					return JoinString(parameterNames, ", "s);
 				}());

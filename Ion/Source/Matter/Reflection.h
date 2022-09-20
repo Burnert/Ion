@@ -218,8 +218,14 @@ namespace Ion
 	public:
 		template<typename T>
 		static MReferencePtr Create(T& reference);
+		template<typename T>
+		static MReferencePtr Create(const T& reference);
+		template<typename T>
+		static MReferencePtr CreateConst(const T& reference);
 
 		virtual MType* GetType() const = 0;
+
+		bool IsConst() const;
 
 		template<typename T>
 		FORCEINLINE T& As()
@@ -229,6 +235,8 @@ namespace Ion
 
 			return *reinterpret_cast<T*>(GetPointer());
 		}
+
+		virtual MValuePtr AsValue() const = 0;
 
 		template<typename T>
 		void Set(const T& value);
@@ -242,7 +250,15 @@ namespace Ion
 
 	protected:
 		virtual void* GetPointer() = 0;
+
+	protected:
+		bool m_bConst;
 	};
+
+	FORCEINLINE bool MReference::IsConst() const
+	{
+		return m_bConst;
+	}
 
 	template<typename T>
 	FORCEINLINE void MReference::Set(const T& value)
@@ -265,6 +281,11 @@ namespace Ion
 			return TGetReflectableType<T>::Type();
 		}
 
+		virtual MValuePtr AsValue() const override
+		{
+			return MValue::Create(m_Reference);
+		}
+
 		virtual void SetEx(const MValuePtr& value) override
 		{
 			ionassert(value);
@@ -284,9 +305,56 @@ namespace Ion
 	};
 
 	template<typename T>
+	class TMConstReference : public MReference
+	{
+	public:
+		FORCEINLINE TMConstReference(const T& reference) :
+			m_Reference(reference)
+		{
+			static_assert(TIsReflectableTypeV<T>, "Type is not reflectable.");
+		}
+
+		virtual MType* GetType() const override
+		{
+			return TGetReflectableType<T>::Type();
+		}
+
+		virtual MValuePtr AsValue() const override
+		{
+			return MValue::Create(m_Reference);
+		}
+
+		virtual void SetEx(const MValuePtr& value) override
+		{
+			ionbreak("Called SetEx function on a MConstReference.");
+		}
+
+	protected:
+		virtual void* GetPointer() override
+		{
+			return const_cast<T*>(&m_Reference);
+		}
+
+	private:
+		const T& m_Reference;
+	};
+
+	template<typename T>
 	FORCEINLINE static MReferencePtr MReference::Create(T& reference)
 	{
 		return MakeShared<TMReference<T>>(reference);
+	}
+
+	template<typename T>
+	FORCEINLINE static MReferencePtr MReference::Create(const T& reference)
+	{
+		return MakeShared<TMConstReference<T>>(reference);
+	}
+
+	template<typename T>
+	FORCEINLINE MReferencePtr MReference::CreateConst(const T& reference)
+	{
+		return Create(reference);
 	}
 
 #pragma endregion
@@ -493,14 +561,95 @@ namespace Ion
 		using UType = std::underlying_type_t<Type>;
 	}
 
-	/*                               void(object,     parameters,                 out return value) */
-	using FMMethodInvoke = TFunction<void(MObjectPtr, TArray<MValuePtr>, MValuePtr&)>;
+	struct MMethodType
+	{
+		MType* PlainType;
+		uint8 bConst : 1;
+		uint8 bReference : 1;
+	};
+
+	struct MMethodTypeInstance
+	{
+		TVariant<MValuePtr, MReferencePtr> ValueReferenceVariant;
+		MMethodType MethodType;
+
+		MMethodTypeInstance(const MMethodType& type) :
+			MethodType(type)
+		{
+		}
+
+		MMethodTypeInstance(const MValuePtr& value) :
+			ValueReferenceVariant(value),
+			MethodType()
+		{
+			MethodType.PlainType = value->GetType();
+			MethodType.bConst = false;
+			MethodType.bReference = false;
+		}
+
+		MMethodTypeInstance(const MReferencePtr& reference) :
+			ValueReferenceVariant(reference),
+			MethodType()
+		{
+			MethodType.PlainType = reference->GetType();
+			MethodType.bConst = reference->IsConst();
+			MethodType.bReference = true;
+		}
+
+		FORCEINLINE bool IsValue() const
+		{
+			return std::holds_alternative<MValuePtr>(ValueReferenceVariant);
+		}
+
+		FORCEINLINE bool IsReference() const
+		{
+			return std::holds_alternative<MReferencePtr>(ValueReferenceVariant);
+		}
+
+		template<typename T>
+		FORCEINLINE bool Is() const
+		{
+			return std::holds_alternative<T>(ValueReferenceVariant);
+		}
+
+		FORCEINLINE MValuePtr AsValue() const
+		{
+			// A generic reference can be assigned to a generic value,
+			// so calling this on a reference type should be defined.
+			if (IsReference())
+			{
+				return std::get<MReferencePtr>(ValueReferenceVariant)->AsValue();
+			}
+
+			ionassert(IsValue());
+			return std::get<MValuePtr>(ValueReferenceVariant);
+		}
+
+		FORCEINLINE const MReferencePtr& AsReference() const
+		{
+			ionassert(IsReference());
+			return std::get<MReferencePtr>(ValueReferenceVariant);
+		}
+
+		FORCEINLINE operator MValuePtr() const
+		{
+			return AsValue();
+		}
+
+		FORCEINLINE operator MReferencePtr() const
+		{
+			return AsReference();
+		}
+	};
+
+	/*                               void(object,     parameters,                  out return value) */
+	using FMMethodInvoke = TFunction<void(MObjectPtr, TArray<MMethodTypeInstance>, MMethodTypeInstance&)>;
 
 	struct MMethodInitializer
 	{
 		MClass* Class;
-		MType* ReturnType;
-		TArray<MType*> ParameterTypes;
+		MMethodType ReturnType;
+		TArray<MMethodType> ParameterTypes;
 		String Name;
 		FMMethodInvoke FInvoke;
 		union
@@ -523,15 +672,15 @@ namespace Ion
 		template<typename TRet = void, typename... Args>
 		TRet Invoke(MObjectPtr object = nullptr, Args&&... args);
 
-		MValuePtr InvokeEx(MObjectPtr object = nullptr);
-		MValuePtr InvokeEx(MObjectPtr object, const TArray<MValuePtr>& params);
+		MMethodTypeInstance InvokeEx(MObjectPtr object = nullptr);
+		MMethodTypeInstance InvokeEx(MObjectPtr object, const TArray<MMethodTypeInstance>& params);
 
 		const String& GetName() const;
 
 		MClass* GetClass() const;
 
-		MType* GetReturnType() const;
-		const TArray<MType*>& GetParameterTypes() const;
+		MMethodType GetReturnType() const;
+		const TArray<MMethodType>& GetParameterTypes() const;
 
 	private:
 		MMethod(const MMethodInitializer& initializer);
@@ -539,8 +688,8 @@ namespace Ion
 	private:
 		MClass* m_Class;
 
-		MType* m_ReturnType;
-		TArray<MType*> m_ParameterTypes;
+		MMethodType m_ReturnType;
+		TArray<MMethodType> m_ParameterTypes;
 
 		String m_Name;
 
@@ -573,8 +722,8 @@ namespace Ion
 		{
 			MType* retType = TGetReflectableType<TRet>::Type();
 			ionassert(retType);
-			ionassert(m_ReturnType->IsConvertibleTo(retType), "Wrong return type has been passed to the Invoke function. {} is not convertible to {}.",
-				m_ReturnType->GetName(), retType->GetName());
+			ionassert(m_ReturnType.PlainType->IsConvertibleTo(retType), "Wrong return type has been passed to the Invoke function. {} is not convertible to {}.",
+				m_ReturnType.PlainType->GetName(), retType->GetName());
 			return retValue->As<TRet>();
 		}
 	}
@@ -589,12 +738,12 @@ namespace Ion
 		return m_Class;
 	}
 
-	FORCEINLINE MType* MMethod::GetReturnType() const
+	FORCEINLINE MMethodType MMethod::GetReturnType() const
 	{
 		return m_ReturnType;
 	}
 
-	FORCEINLINE const TArray<MType*>& MMethod::GetParameterTypes() const
+	FORCEINLINE const TArray<MMethodType>& MMethod::GetParameterTypes() const
 	{
 		return m_ParameterTypes;
 	}
@@ -778,10 +927,8 @@ namespace Ion
 
 		using Type         = TFirst;
 		using StrippedType = TRemoveConstRef<TFirst>;
-		using ConstRefType = TIf<bConstRef, TFirst, std::add_lvalue_reference_t<std::add_const_t<TFirst>>>;
 		using Rest         = TMethodParamPack<TRest...>;
 
-		static_assert(!TIsReferenceV<Type> || TIsConstReferenceV<Type>, "Non-const reference parameter types are unsupported right now.");
 		static_assert(TIsReflectableTypeV<StrippedType>, "The parameter type is not reflectable.");
 	};
 
@@ -793,10 +940,8 @@ namespace Ion
 
 		using Type         = TLast;
 		using StrippedType = TRemoveConstRef<TLast>;
-		using ConstRefType = TIf<bConstRef, TLast, std::add_lvalue_reference_t<std::add_const_t<TLast>>>;
 		using Rest         = TMethodParamPack<>;
 
-		static_assert(!TIsReferenceV<Type> || TIsConstReferenceV<Type>, "Non-const reference parameter types are unsupported right now.");
 		static_assert(TIsReflectableTypeV<StrippedType>, "The parameter type is not reflectable.");
 	};
 
@@ -811,6 +956,23 @@ namespace Ion
 		using Type = std::invoke_result_t<FMethod, TClass, TParams...>;
 	};
 
+	// TMethodGetMethodType ------------------------------------------------------------------------
+
+	template<typename T>
+	struct TMethodGetMethodType
+	{
+		FORCEINLINE static MMethodType Type()
+		{
+			static MMethodType c_Type
+			{
+				TGetReflectableType<TRemoveConstRef<T>>::Type(),
+				TIsConstV<TRemoveRef<T>>,
+				TIsReferenceV<T>
+			};
+			return c_Type;
+		}
+	};
+
 	// TMethodGetReflectableParamTypes -------------------------------------------------------------
 
 	template<typename TParamPack>
@@ -819,7 +981,7 @@ namespace Ion
 	template<typename... TParams>
 	struct TMethodGetReflectableParamTypes<TMethodParamPack<TParams...>>
 	{
-		static TArray<MType*> Params() { return TArray<MType*> { TGetReflectableType<TRemoveConstRef<TParams>>::Type()... }; }
+		static TArray<MMethodType> Params() { return TArray<MMethodType> { TMethodGetMethodType<TParams>::Type()... }; }
 	};
 
 	// TGetNthParamPack -----------------------------------------------------------------------------
@@ -866,8 +1028,8 @@ namespace Ion
 	{
 		FORCEINLINE static void Invoke(
 			const TObjectPtr<TClass>& object,
-			const TArray<MValuePtr>& parameters,
-			MValuePtr& outRetVal)
+			TArray<MMethodTypeInstance>& parameters,
+			MMethodTypeInstance& outRetVal)
 		{
 			ionassert(object); // @TODO: Unless static
 			ionassert(parameters.size() == TParamPack::Count,
@@ -881,36 +1043,69 @@ namespace Ion
 		template<size_t... I>
 		FORCEINLINE static void Invoke_Impl(
 			TClass* object,
-			const TArray<MValuePtr>& parameters,
-			MValuePtr& outRetVal,
+			TArray<MMethodTypeInstance>& parameters,
+			MMethodTypeInstance& outRetVal,
 			std::index_sequence<I...> seq)
 		{
+			using TRefVal = TIf<TIsReferenceV<TReturn>, MReference, MValue>;
+
 			static_assert(sizeof...(I) == TParamPack::Count);
 			ionassert(sizeof...(I) == parameters.size());
 
 			if constexpr (!std::is_void_v<TReturn>)
 			{
-				outRetVal = MValue::Create<TRemoveConstRef<TReturn>>( (object->*Func)(ExtractParamForInvoke<I>(parameters)...) );
+				outRetVal.ValueReferenceVariant = TRefVal::Create<TRemoveConstRef<TReturn>>( (object->*Func)(ExtractParamForInvoke<I>(parameters)...) );
 			}
 			else
 			{
 				(object->*Func)(ExtractParamForInvoke<I>(parameters)...);
-				outRetVal = nullptr;
 			}
 		}
 
 		template<size_t Index>
-		FORCEINLINE static auto& ExtractParamForInvoke(const TArray<MValuePtr>& parameters)
+		FORCEINLINE static decltype(auto) ExtractParamForInvoke(const TArray<MMethodTypeInstance>& parameters)
 		{
-			using ParamType = typename TGetNthParamPack<Index, TParamPack>::Type::StrippedType;
+			using ParamType     = typename TGetNthParamPack<Index, TParamPack>::Type::StrippedType;
+			using FullParamType = typename TGetNthParamPack<Index, TParamPack>::Type::Type;
 
-			const MValuePtr& value = parameters[Index];
+			using TRefValPtr = TIf<TIsReferenceV<FullParamType>, MReferencePtr, MValuePtr>;
+
 			ionassert(Index < parameters.size());
-			ionassert(value->GetType()->IsConvertibleTo(TGetReflectableType<ParamType>::Type()),
-				"Wrong parameter type has been passed at index {}. {} is not convertible to {}.",
-				Index, value->GetType()->GetName(), TGetReflectableType<ParamType>::Type()->GetName());
 
-			return value->As<ParamType>();
+			const MMethodTypeInstance& instance = parameters[Index];
+			
+#define __ASSERT_PARAM_TYPE_CONV(refVal) \
+			ionassert(refVal->GetType()->IsConvertibleTo(TGetReflectableType<ParamType>::Type()), \
+				"Wrong parameter type has been passed at index {}. {} is not convertible to {}.", \
+				Index, refVal->GetType()->GetName(), TGetReflectableType<ParamType>::Type()->GetName())
+
+			// If the parameter type is a const reference, a value or a non-const reference
+			// can be passed, without creating any problems.
+			if constexpr (TIsConstReferenceV<FullParamType>)
+			{
+				// Both paths must return a const reference
+				if (instance.IsValue())
+				{
+					ionassert(instance.Is<MValuePtr>());
+					const MValuePtr& val = std::get<MValuePtr>(instance.ValueReferenceVariant);
+					__ASSERT_PARAM_TYPE_CONV(val);
+					return val->As<ParamType>();
+				}
+				else
+				{
+					ionassert(instance.Is<MReferencePtr>());
+					const MReferencePtr& ref = std::get<MReferencePtr>(instance.ValueReferenceVariant);
+					__ASSERT_PARAM_TYPE_CONV(ref);
+					return const_cast<const ParamType&>(ref->As<ParamType>());
+				}
+			}
+			else
+			{
+				ionassert(instance.Is<TRefValPtr>());
+				const TRefValPtr& refVal = std::get<TRefValPtr>(instance.ValueReferenceVariant);
+				__ASSERT_PARAM_TYPE_CONV(refVal);
+				return refVal->As<ParamType>();
+			}
 		}
 	};
 
@@ -1071,18 +1266,17 @@ static inline MField* MatterRF_##name = [] { \
 	}; \
 	return MReflection::RegisterField(c_Initializer); \
 }();
-
+	
 #define MMETHOD(name, ...) \
 static inline MMethod* MatterRM_##name = [] { \
 	using FMethod = decltype(&TThisClass::name); \
 	using TMethodParamTypes = TMethodParamPack<__VA_ARGS__>; \
 	static constexpr size_t ParamCount = TMethodParamTypes::Count; \
 	using TReturn = typename TMethodGetReturnType<TThisClass, FMethod, TMethodParamTypes>::Type; \
-	static_assert(!TIsReferenceV<TReturn> || TIsConstReferenceV<TReturn>, "Non-const reference return types are unsupported right now."); \
 	static_assert(TIsReflectableTypeV<TRemoveConstRef<TReturn>>, "The return type is not reflectable."); \
-	static TArray<MType*> parameterTypes = TMethodGetReflectableParamTypes<TMethodParamTypes>::Params(); \
-	static MType* returnType = TGetReflectableType<TRemoveConstRef<TReturn>>::Type(); \
-	ionassert(std::all_of(parameterTypes.begin(), parameterTypes.end(), [](MType* type) { return type; })); \
+	static TArray<MMethodType> parameterTypes = TMethodGetReflectableParamTypes<TMethodParamTypes>::Params(); \
+	static MMethodType returnType = TMethodGetMethodType<TReturn>::Type(); \
+	ionassert(std::all_of(parameterTypes.begin(), parameterTypes.end(), [](const MMethodType& type) { return type.PlainType; })); \
 	static MMethodInitializer c_Initializer { \
 		/* The owning class */ \
 		StaticClass(), \
@@ -1093,7 +1287,7 @@ static inline MMethod* MatterRM_##name = [] { \
 		/* The name of the method */ \
 		#name, \
 		/* MMethod FInvoke function */ \
-		[](MObjectPtr object, TArray<MValuePtr> parameters, MValuePtr& outRetVal) { \
+		[](MObjectPtr object, TArray<MMethodTypeInstance> parameters, MMethodTypeInstance& outRetVal) { \
 			/* Using pure black magic, invoke the function with "unknown" return type, parameter types or count. */ \
 			TMethodInvoker<TThisClass, FMethod, &TThisClass::name, TReturn, TMethodParamTypes>::Invoke(PtrCast<TThisClass>(object), parameters, outRetVal); \
 		}, \
