@@ -1368,7 +1368,6 @@ template<> struct TIsReflectableType<T> { static constexpr bool Value = true; };
 	// @TODO: Pointers? Might require wrappers
 
 	// @TODO: Collections:
-	// - Dynamic Array
 	// - Fixed Array
 	// - Hash Set
 	// - Hash Map
@@ -1387,8 +1386,21 @@ template<> struct TIsReflectableType<T> { static constexpr bool Value = true; };
 	class MArray : public MType
 	{
 	public:
+		/**
+		 * @brief Find or create a new reflectable array type for the specified element type.
+		 * 
+		 * @tparam T Element type
+		 * @return MArray* Reflectable array type
+		 */
 		template<typename T>
 		static MArray* QueryForElementType();
+
+		/**
+		 * @brief Find a reflectable array type for the specified element type.
+		 * 
+		 * @param elementType Type of array elements
+		 * @return MArray* Reflectable array type
+		 */
 		static MArray* FindForElementType(MType* elementType);
 
 		MType* GetElementType() const;
@@ -1447,6 +1459,108 @@ template<> struct TIsReflectableType<T> { static constexpr bool Value = true; };
 	struct TGetReflectableType<TArray<T>, TEnableIfT<TIsReflectableTypeV<T>>> { static MType* Type() { return MArray::QueryForElementType<T>(); } };
 	template<typename T>
 	struct TIsReflectableType<TArray<T>, TEnableIfT<TIsReflectableTypeV<T>>> { static constexpr bool Value = true; };
+
+#pragma endregion
+
+#pragma region Reflectable Hash Map type
+
+	struct MHashMapInitializer
+	{
+		MTypeInitializer TypeInitializer;
+		MType* KeyType;
+		MType* ValueType;
+	};
+
+	class MHashMap : public MType
+	{
+	public:
+		/**
+		 * @brief Find or create a new reflectable hash map type for the specified key and value types.
+		 *
+		 * @tparam K Key type
+		 * @tparam V Value type
+		 * @return MArray* Reflectable array type
+		 */
+		template<typename K, typename V>
+		static MHashMap* QueryForKVTypes();
+
+		/**
+		 * @brief Find a reflectable hash map type for the specified key and value types.
+		 *
+		 * @param keyType Type of key elements
+		 * @param valueType Type of value elements
+		 * @return MArray* Reflectable hash map type
+		 */
+		static MHashMap* FindForKVTypes(MType* keyType, MType* valueType);
+
+		MType* GetKeyType() const;
+		MType* GetValueType() const;
+
+	private:
+		MHashMap(const MHashMapInitializer& initializer);
+
+	private:
+		MType* m_KeyType;
+		MType* m_ValueType;
+
+		static inline THashMap<size_t, MHashMap*> s_KVTypesHashToHashMap;
+	};
+
+	template<typename K, typename V>
+	FORCEINLINE MHashMap* MHashMap::QueryForKVTypes()
+	{
+		if (MType* type = MReflection::FindTypeByHashCode(typeid(THashMap<K, V>).hash_code()))
+			return static_cast<MHashMap*>(type);
+
+		MType* keyType = TGetReflectableType<K>::Type();
+		MType* valueType = TGetReflectableType<V>::Type();
+
+		ionassert(keyType);
+		ionassert(valueType);
+
+		// Lazily register a new type for every possible element type.
+		MHashMapInitializer initializer { };
+		initializer.TypeInitializer.Name = fmt::format("HashMap<{}, {}>", TGetReflectableType<K>::Type()->GetName(), TGetReflectableType<V>::Type()->GetName());
+		initializer.TypeInitializer.HashCode = typeid(THashMap<K, V>).hash_code();
+		initializer.TypeInitializer.Size = sizeof(THashMap<K, V>);
+		initializer.TypeInitializer.Flags = ETypeFlags::Collection;
+		initializer.KeyType = keyType;
+		initializer.ValueType = valueType;
+
+		MHashMap* hashMap = new MHashMap(initializer);
+		MReflection::RegisterType(hashMap);
+		s_KVTypesHashToHashMap.emplace(CombineHashes(keyType->GetHashCode(), valueType->GetHashCode()), hashMap);
+
+		return hashMap;
+	}
+
+	FORCEINLINE MHashMap* MHashMap::FindForKVTypes(MType* keyType, MType* valueType)
+	{
+		// NOTE: Can't register the hash map type here, because the type hash is unknown.
+
+		ionassert(keyType);
+		ionassert(valueType);
+
+		auto it = s_KVTypesHashToHashMap.find(CombineHashes(keyType->GetHashCode(), valueType->GetHashCode()));
+		if (it != s_KVTypesHashToHashMap.end())
+			return it->second;
+		return nullptr;
+	}
+
+	FORCEINLINE MType* MHashMap::GetKeyType() const
+	{
+		return m_KeyType;
+	}
+
+	FORCEINLINE MType* MHashMap::GetValueType() const
+	{
+		return m_ValueType;
+	}
+
+	template<typename K, typename V>
+	struct TGetReflectableType<THashMap<K, V>, TEnableIfT<TIsReflectableTypeV<K> && TIsReflectableTypeV<V>>> { static MType* Type() { return MHashMap::QueryForKVTypes<K, V>(); } };
+	template<typename K, typename V>
+	struct TIsReflectableType<THashMap<K, V>, TEnableIfT<TIsReflectableTypeV<K> && TIsReflectableTypeV<V>>> { static constexpr bool Value = true; };
 
 #pragma endregion
 

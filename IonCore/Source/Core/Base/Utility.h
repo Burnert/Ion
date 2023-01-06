@@ -4,6 +4,21 @@
 #include "Types.h"
 #include "Core/Templates/Templates.h"
 
+// Hash
+
+FORCEINLINE size_t CombineHashes(size_t lhs, size_t rhs)
+{
+	if constexpr (sizeof(size_t) >= 8)
+	{
+		lhs ^= rhs + 0x517cc1b727220a95 + (lhs << 6) + (lhs >> 2);
+	}
+	else
+	{
+		lhs ^= rhs + 0x9e3779b9 + (lhs << 6) + (lhs >> 2);
+	}
+	return lhs;
+}
+
 // Bitwise :
 
 NODISCARD constexpr uint32 Bitflag(uint8 bit) noexcept { return 1u << bit; }

@@ -294,4 +294,11 @@ namespace Ion
 		m_ElementType(initializer.ElementType)
 	{
 	}
+
+	MHashMap::MHashMap(const MHashMapInitializer& initializer) :
+		MType(initializer.TypeInitializer),
+		m_KeyType(initializer.KeyType),
+		m_ValueType(initializer.ValueType)
+	{
+	}
 }

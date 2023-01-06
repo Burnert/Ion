@@ -93,8 +93,11 @@ namespace Ion::Test
 		const GUID& GUID_GUIDMethod(const GUID& guid) { MReflectionLogger.Debug("GUID_GUIDMethod called {}", guid.ToString()); return guid; }
 		MMETHOD(GUID_GUIDMethod, const GUID&)
 
-		const TArray<int32>& Array_ArrayMethod(const TArray<int32>& array) { MReflectionLogger.Debug("Array_ArrayMethod called {}", [&] { std::stringstream ss; for (int32 i : array) ss << i; return ss.str(); }()); return array; };
+		const TArray<int32>& Array_ArrayMethod(const TArray<int32>& array) { MReflectionLogger.Debug("Array_ArrayMethod called {}", [&] { std::stringstream ss; for (int32 i : array) ss << i << ","; return ss.str(); }()); return array; };
 		MMETHOD(Array_ArrayMethod, const TArray<int32>&)
+
+		const THashMap<int32, String>& HashMap_HashMapMethod(const THashMap<int32, String>& map) { MReflectionLogger.Debug("HashMap_HashMapMethod called {}", [&] { std::stringstream ss; for (const auto& [k, v] : map) ss << k << ":" << v << ","; return ss.str(); }()); return map; }
+		MMETHOD(HashMap_HashMapMethod, const THashMap<int32, String>&)
 
 		void Void_IntRefMethod(int32& intRef) { MReflectionLogger.Debug("Void_IntRefMethod called"); intRef = Int420; }
 		MMETHOD(Void_IntRefMethod, int32&)
@@ -323,6 +326,15 @@ namespace Ion::Test
 		ionassert(&arrRef0 == &arr);
 		ionassert(arr.size() == arrRef0.size());
 		ionassert([&] { for (int32 i = 0; i < arr.size(); ++i) if (arr[i] != arrRef0[i]) return false; return true; }());
+
+		// Hash map
+
+		THashMap<int32, String> map { { 1, "Test" }, { 10, "Test10" } };
+		MReferencePtr mapRet0 = MMatterTest::MatterRM_HashMap_HashMapMethod->InvokeEx(object, TArray<MMethodTypeInstance> { MReference::CreateConst(map) });
+		THashMap<int32, String>& mapRef0 = mapRet0->As<THashMap<int32, String>>();
+		ionassert(&mapRef0 == &map);
+		ionassert(map.size() == mapRef0.size());
+		ionassert([&] { for (const auto& [k, v] : map) if (mapRef0.find(k) == mapRef0.end() || v != mapRef0.at(k)) return false; return true; }());
 
 		// Iteration
 
