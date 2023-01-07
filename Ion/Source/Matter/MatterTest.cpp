@@ -188,6 +188,22 @@ namespace Ion::Test
 		ionassert(retArray0[0] == 6);
 		ionassert(retArray0[1] == 4);
 
+		// HashMap fields
+
+		ionassert(object->HashMapField.size() == 0);
+		MMatterTest::MatterRF_HashMapField->SetValue(object, THashMap<int32, String> { { 6, "Six" }, { 4, "Four" } });
+		ionassert(object->HashMapField.size() == 2);
+		ionassert(object->HashMapField.find(6) != object->HashMapField.end());
+		ionassert(object->HashMapField.at(6) == "Six");
+		ionassert(object->HashMapField.find(4) != object->HashMapField.end());
+		ionassert(object->HashMapField.at(4) == "Four");
+		THashMap<int32, String> retMap0 = MMatterTest::MatterRF_HashMapField->GetValue<THashMap<int32, String>>(object);
+		ionassert(retMap0.size() == 2);
+		ionassert(retMap0.find(6) != retMap0.end());
+		ionassert(retMap0.at(6) == "Six");
+		ionassert(retMap0.find(4) != retMap0.end());
+		ionassert(retMap0.at(4) == "Four");
+
 		// Methods
 
 		ionassert(MMatterTest::MatterRM_Void_VoidMethod->GetClass()->Is<MMatterTest>());
