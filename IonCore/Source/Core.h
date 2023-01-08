@@ -22,6 +22,7 @@
 #include "Core/File/Image.h"
 #include "Core/File/XML.h"
 #include "Core/File/XMLParser.h"
+#include "Core/File/YAML.h"
 #include "Core/GUID/GUID.h"
 #include "Core/Logging/Logger.h"
 #include "Core/Logging/LogManager.h"

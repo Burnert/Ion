@@ -163,6 +163,24 @@ namespace Ion::Editor
 
 		//Test::ArchiveTest();
 
+		// Test ryml
+		{
+			char yml_buf[] = "{foo: 1, bar: [2, 3], john: doe}";
+			ryml::Tree tree = ryml::parse_in_place(yml_buf);
+
+			size_t root_id = tree.root_id();
+			size_t bar_id = tree.find_child(root_id, "bar");
+
+			ryml::ConstNodeRef root = tree.rootref();
+			ryml::ConstNodeRef bar = tree["bar"];
+			ionassert(root.is_map());
+			ionassert(bar.is_seq());
+			// A node ref is a lightweight handle to the tree and associated id:
+			ionassert(root.tree() == &tree); // a node ref points at its tree, WITHOUT refcount
+			ionassert(root.id() == root_id); // a node ref's id is the index of the node
+			ionassert(bar.id() == bar_id);   // a node ref's id is the index of the node
+		}
+
 		auto& hierarchy = LogManager::GetLoggerHierarchy();
 
 		ComponentRegistry& registry = m_EditorMainWorld->GetComponentRegistry();

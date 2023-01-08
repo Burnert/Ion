@@ -11,10 +11,11 @@ workspace "Ion"
 outputdir = "%{cfg.system}-%{cfg.architecture}-%{cfg.buildcfg}"
 
 ThirdParty = {
-	SpdLog   = "IonCore/ThirdParty/SpdLog",
-	FreeType = "Ion/ThirdParty/FreeType",
-	Glad     = "Ion/ThirdParty/Glad",
-	ImGui    = "Ion/ThirdParty/ImGui",
+	SpdLog    = "IonCore/ThirdParty/SpdLog",
+	rapidyaml = "IonCore/ThirdParty/rapidyaml",
+	FreeType  = "Ion/ThirdParty/FreeType",
+	Glad      = "Ion/ThirdParty/Glad",
+	ImGui     = "Ion/ThirdParty/ImGui"
 }
 
 for name, dir in pairs(ThirdParty) do
@@ -22,6 +23,16 @@ for name, dir in pairs(ThirdParty) do
 end
 
 -- IonCore -----------------------------------------------------------
+
+IonCorePublicIncludeDirs = {
+	"IonCore/Source",
+	"IonCore/ThirdParty/glm",
+	"IonCore/ThirdParty/SpdLog/SpdLog/include",
+	"IonCore/ThirdParty/stb",
+	"IonCore/ThirdParty/rapidxml",
+	"IonCore/ThirdParty/rapidyaml/rapidyaml/src",
+	"IonCore/ThirdParty/rapidyaml/rapidyaml/ext/c4core/src"
+}
 
 project "IonCore"
 	location "IonCore"
@@ -43,15 +54,12 @@ project "IonCore"
 	}
 
 	includedirs {
-		"%{prj.name}/Source",
-		"%{prj.name}/ThirdParty/glm",
-		"%{prj.name}/ThirdParty/SpdLog/SpdLog/include",
-		"%{prj.name}/ThirdParty/stb",
-		"%{prj.name}/ThirdParty/rapidxml",
+		table.unpack(IonCorePublicIncludeDirs)
 	}
 
 	links {
-		"SpdLog"
+		"SpdLog",
+		"rapidyaml"
 	}
 	
 	flags {
@@ -102,15 +110,11 @@ project "Ion"
 	}
 
 	includedirs {
-		"IonCore/Source",
-		"IonCore/ThirdParty/glm",
-		"IonCore/ThirdParty/SpdLog/SpdLog/include",
-		"IonCore/ThirdParty/stb",
-		"IonCore/ThirdParty/rapidxml",
 		"%{prj.name}/Source",
 		"%{prj.name}/ThirdParty/FreeType/freetype/include",
 		"%{prj.name}/ThirdParty/Glad/include",
 		"%{prj.name}/ThirdParty/ImGui",
+		table.unpack(IonCorePublicIncludeDirs),
 	}
 
 	links {
@@ -169,15 +173,11 @@ project "IonEditor"
 	}
 
 	includedirs {
-		"IonCore/Source",
-		"IonCore/ThirdParty/glm",
-		"IonCore/ThirdParty/SpdLog/SpdLog/include",
-		"IonCore/ThirdParty/stb",
-		"IonCore/ThirdParty/rapidxml",
 		"Ion/Source",
 		"Ion/ThirdParty/Glad/include",
 		"Ion/ThirdParty/ImGui",
 		"%{prj.name}/Source",
+		table.unpack(IonCorePublicIncludeDirs),
 	}
 
 	links {

@@ -11,3 +11,6 @@
 [submodule "Ion/ThirdParty/FreeType/freetype"]
 	path = Ion/ThirdParty/FreeType/freetype
 	url = https://gitlab.freedesktop.org/freetype/freetype/
+[submodule "IonCore/ThirdParty/rapidyaml/rapidyaml"]
+	path = IonCore/ThirdParty/rapidyaml/rapidyaml
+	url = https://github.com/biojppm/rapidyaml
