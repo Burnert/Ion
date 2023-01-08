@@ -61,6 +61,9 @@ namespace Ion::Test
 		TArray<int32> ArrayField;
 		MFIELD(ArrayField)
 
+		THashMap<int32, String> HashMapField;
+		MFIELD(HashMapField)
+
 		void Void_VoidMethod() { MReflectionLogger.Debug("Void_VoidMethod called"); }
 		MMETHOD(Void_VoidMethod)
 
@@ -382,6 +385,8 @@ namespace Ion::Test
 					return JoinString(parameterNames, ", "s);
 				}());
 		}
+
+		// Archive test
 
 		XMLArchive testAr(EArchiveType::Saving);
 		testAr.SeekRoot();
