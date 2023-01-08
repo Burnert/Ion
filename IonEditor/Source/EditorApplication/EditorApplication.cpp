@@ -103,7 +103,7 @@ namespace Ion::Editor
 			WorldInitializer worldInitializer { };
 			m_EditorMainWorld = g_Engine->CreateWorld(worldInitializer);
 
-			MeshEntity* meshEntity = m_EditorMainWorld->SpawnEntityOfClass<MeshEntity>();
+			TObjectPtr<MeshEntity> meshEntity = m_EditorMainWorld->SpawnEntityOfClass<MeshEntity>();
 
 			Asset meshAsset = Asset::Resolve("[Example]/models/4pak").UnwrapOr(Asset::None);
 			TSharedPtr<MeshResource> meshResource = MeshResource::Query(meshAsset);
@@ -446,8 +446,8 @@ namespace Ion::Editor
 	void EditorApplication::DuplicateObject(Entity* entity)
 	{
 		ionassert(entity);
-		Entity* newEntity = GetEditorWorld()->DuplicateEntity(entity);
-		SetSelectedEntity(newEntity);
+		TObjectPtr<Entity> newEntity = GetEditorWorld()->DuplicateEntity(entity->This());
+		SetSelectedEntity(newEntity.Raw());
 	}
 
 	Scene* EditorApplication::GetEditorScene() const

@@ -97,7 +97,7 @@ namespace Ion::Editor
 							std::shared_ptr<Mesh> mesh = Mesh::CreateFromResource(meshResource);
 
 							World* world = EditorApplication::Get()->GetEditorWorld();
-							MeshEntity* meshEntity = world->SpawnEntityOfClass<MeshEntity>();
+							TObjectPtr<MeshEntity> meshEntity = world->SpawnEntityOfClass<MeshEntity>();
 
 							meshEntity->GetMeshComponent()->SetMeshResource(meshResource);
 							meshEntity->GetMeshComponent()->SetMeshAsset(data.AssetHandle);

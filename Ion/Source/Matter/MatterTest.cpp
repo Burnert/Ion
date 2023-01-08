@@ -396,6 +396,6 @@ namespace Ion::Test
 			testAr.SaveToFile(saveFile);
 		}
 
-		ionbreak();
+		//ionbreak();
 	}
 }

@@ -258,11 +258,11 @@ namespace Ion::Editor
 			{
 				DrawInsertPanelElement<ESceneObjectType::Entity>("Empty Entity", [](World* context, void*) -> Entity*
 				{
-					return context->SpawnEntityOfClass<Entity>();
+					return context->SpawnEntityOfClass<Entity>().Raw();
 				});
 				DrawInsertPanelElement<ESceneObjectType::Entity>("Mesh Entity", [](World* context, void*) -> Entity*
 				{
-					return context->SpawnEntityOfClass<MeshEntity>();
+					return context->SpawnEntityOfClass<MeshEntity>().Raw();
 				});
 			}
 			ImGui::EndChild();
@@ -454,7 +454,7 @@ namespace Ion::Editor
 			{
 				// Show the action that is going to be performed
 				const WorldTreeNodeData& hovered = m_HoveredWorldTreeNodeDragTarget->Get();
-				bool bCanAttach = entity->CanAttachTo(hovered.GetEntity());
+				bool bCanAttach = entity->CanAttachTo(hovered.GetEntity()->This());
 				const char* action = bCanAttach ? "Attach" : "Cannot attach";
 				ImGui::Text("%s %s to %s", action, node.Get().GetName().c_str(), hovered.GetName().c_str());
 			}
@@ -486,7 +486,7 @@ namespace Ion::Editor
 					ionassert(sourceEntity);
 					// If the target entity is in the source entity's children,
 					// it cannot be attached to.
-					bCanAttachTo = sourceEntity->CanAttachTo(entity);
+					bCanAttachTo = sourceEntity->CanAttachTo(entity->This());
 				}
 			}
 			if (bCanAttachTo)
@@ -495,7 +495,7 @@ namespace Ion::Editor
 				if (ImGui::AcceptDragDropPayload(DNDID_WorldTreeNode, ImGuiDragDropFlags_None))
 				{
 					// Attach source entity to this node's entity
-					sourceEntity->AttachTo(entity);
+					sourceEntity->AttachTo(entity->This());
 					ExpandWorldTreeToEntity(sourceEntity);
 				}
 			}
@@ -619,7 +619,7 @@ namespace Ion::Editor
 		{
 			// Parent
 
-			Entity* parent = entity.GetParent();
+			Entity* parent = entity.GetParent().Raw();
 			const String& parentNameStr = parent ? parent->GetName() : "None";
 
 			ImGui::Indent();
@@ -677,9 +677,9 @@ namespace Ion::Editor
 		if (ImGui::BeginChild("children_list", ImVec2(-FLT_MIN, 4 * ImGui::GetTextLineHeightWithSpacing()), true))
 		{
 			ImGuiStyle& style = ImGui::GetStyle();
-			const TArray<Entity*>& children = entity.GetChildren();
+			const TArray<TObjectPtr<Entity>>& children = entity.GetChildren();
 			int32 index = 0;
-			for (Entity* child : children)
+			for (const TObjectPtr<Entity>& child : children)
 			{
 				ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 
@@ -693,8 +693,8 @@ namespace Ion::Editor
 				String selectLabel = "Select"s + "##" + ToString(index++);
 				if (ImGui::Button(selectLabel.c_str()))
 				{
-					EditorApplication::Get()->SelectObject(child);
-					ExpandWorldTreeToEntity(child);
+					EditorApplication::Get()->SelectObject(child.Raw());
+					ExpandWorldTreeToEntity(child.Raw());
 				}
 				ImGui::PopStyleVar(2);
 			}
@@ -1268,7 +1268,7 @@ namespace Ion::Editor
 		// Discard the previous attempt
 		m_ExpandWorldTreeChain.clear();
 
-		WorldTreeNode* node = EditorApplication::Get()->GetEditorWorld()->FindWorldTreeNode(entity);
+		WorldTreeNode* node = EditorApplication::Get()->GetEditorWorld()->FindWorldTreeNode(entity->This());
 		// Don't include the tree root
 		while ((node = node->GetParent()) && node->HasParent())
 		{

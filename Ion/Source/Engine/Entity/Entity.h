@@ -76,16 +76,16 @@ namespace Ion
 
 		bool HasParent() const;
 		/* Returns null if the Entity is parented to the World root. */
-		Entity* GetParent() const;
+		const TObjectPtr<Entity>& GetParent() const;
 		/* If the parent paremeter is null, the Entity will be parented to the World root. */
-		void AttachTo(Entity* parent);
+		void AttachTo(const TObjectPtr<Entity>& parent);
 		/* Parent to the World root. */
 		void Detach();
-		bool CanAttachTo(Entity* parent) const;
+		bool CanAttachTo(const TObjectPtr<Entity>& parent) const;
 
 		bool HasChildren() const;
-		const TArray<Entity*>& GetChildren() const;
-		TArray<Entity*> GetAllChildren() const;
+		const TArray<TObjectPtr<Entity>>& GetChildren() const;
+		TArray<TObjectPtr<Entity>> GetAllChildren() const;
 
 		/* Returns a pointer to the World the Entity is currently in. */
 		World* GetWorldContext() const;
@@ -109,10 +109,10 @@ namespace Ion
 		virtual void Serialize(Archive& ar) override;
 
 	private:
-		void AddChild(Entity* child);
-		void RemoveChild(Entity* child);
+		void AddChild(const TObjectPtr<Entity>& child);
+		void RemoveChild(const TObjectPtr<Entity>& child);
 
-		void GetAllChildren(TArray<Entity*>& outChildren) const;
+		void GetAllChildren(TArray<TObjectPtr<Entity>>& outChildren) const;
 
 		/* Called in any function that changes the relative transform. */
 		void UpdateWorldTransformCache();
@@ -132,8 +132,8 @@ namespace Ion
 		SceneComponent* m_RootComponent;
 		THashSet<SceneComponent*> m_SceneComponents;
 
-		Entity* m_Parent;
-		TArray<Entity*> m_Children;
+		TObjectPtr<Entity> m_Parent;
+		TArray<TObjectPtr<Entity>> m_Children;
 
 		uint8 m_bCreateEmptyRootOnSpawn : 1;
 		uint8 m_bTickEnabled : 1;
@@ -220,7 +220,7 @@ namespace Ion
 		return m_Parent;
 	}
 
-	inline Entity* Entity::GetParent() const
+	inline const TObjectPtr<Entity>& Entity::GetParent() const
 	{
 		return m_Parent;
 	}
@@ -230,14 +230,14 @@ namespace Ion
 		return !m_Children.empty();
 	}
 
-	inline const TArray<Entity*>& Entity::GetChildren() const
+	inline const TArray<TObjectPtr<Entity>>& Entity::GetChildren() const
 	{
 		return m_Children;
 	}
 
-	inline TArray<Entity*> Entity::GetAllChildren() const
+	inline TArray<TObjectPtr<Entity>> Entity::GetAllChildren() const
 	{
-		TArray<Entity*> children;
+		TArray<TObjectPtr<Entity>> children;
 		GetAllChildren(children);
 		return children;
 	}

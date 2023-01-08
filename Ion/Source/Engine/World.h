@@ -2,6 +2,7 @@
 
 #include "Components/Component.h"
 #include "Asset/Asset.h"
+#include "Matter/ObjectPtr.h"
 
 namespace Ion
 {
@@ -73,7 +74,7 @@ namespace Ion
 	public:
 		using EntityArray = TArray<Entity*>;
 		using EntitySet   = THashSet<Entity*>;
-		using EntityMap   = THashMap<GUID, Entity*>;
+		using EntityMap   = THashMap<GUID, TObjectPtr<Entity>>;
 
 		using WorldTreeNodeFactory = TTreeNodeFactory<WorldTreeNodeData>;
 		using WorldTreeNode        = TFastTreeNode<WorldTreeNodeData>;
@@ -90,29 +91,29 @@ namespace Ion
 
 		/* Instantiates an entity of type EntityT and adds it to the world. */
 		template<typename EntityT, typename... Args>
-		EntityT* SpawnEntityOfClass(Args&&... args);
+		TObjectPtr<EntityT> SpawnEntityOfClass(Args&&... args);
 		/* Instantiates an entity of type EntityT, adds it to the world and parents it to the specified entity. */
 		template<typename EntityT, typename... Args>
-		EntityT* SpawnAndAttachEntityOfClass(Entity* attachTo, Args&&... args);
+		TObjectPtr<EntityT> SpawnAndAttachEntityOfClass(const TObjectPtr<Entity>& attachTo, Args&&... args);
 
-		Entity* DuplicateEntity(Entity* entity);
+		TObjectPtr<Entity> DuplicateEntity(const TObjectPtr<Entity>& entity);
 
-		bool DoesOwnEntity(Entity* entity) const;
+		bool DoesOwnEntity(const TObjectPtr<Entity>& entity) const;
 		bool DoesOwnEntity(const GUID& guid) const;
-		Entity* FindEntity(const GUID& guid);
+		TObjectPtr<Entity> FindEntity(const GUID& guid);
 
-		void ReparentEntityInWorld(Entity* entity, Entity* parent);
+		void ReparentEntityInWorld(const TObjectPtr<Entity>& entity, const TObjectPtr<Entity>& parent);
 
-		void MarkEntityForDestroy(Entity* entity);
+		void MarkEntityForDestroy(const TObjectPtr<Entity>& entity);
 
 		Scene* GetScene() const;
 
 		WorldTreeNode& GetWorldTreeRoot();
 		/* Returns nullptr if the node does not exist. */
-		WorldTreeNode* FindWorldTreeNode(Entity* entity) const;
-		WorldTreeNode& InsertWorldTreeNode(Entity* entity);
-		WorldTreeNode& InsertWorldTreeNode(Entity* entity, WorldTreeNode& parent);
-		void RemoveWorldTreeNode(Entity* entity);
+		WorldTreeNode* FindWorldTreeNode(const TObjectPtr<Entity>& entity) const;
+		WorldTreeNode& InsertWorldTreeNode(const TObjectPtr<Entity>& entity);
+		WorldTreeNode& InsertWorldTreeNode(const TObjectPtr<Entity>& entity, WorldTreeNode& parent);
+		void RemoveWorldTreeNode(const TObjectPtr<Entity>& entity);
 
 		ComponentRegistry& GetComponentRegistry();
 
@@ -121,10 +122,10 @@ namespace Ion
 		const GUID& GetGuid() const;
 
 	private:
-		void InitEntity(Entity* entity);
-		void AddEntity(Entity* entity);
-		void AddEntity(Entity* entity, Entity* attachTo);
-		void RemoveEntity(Entity* entity);
+		void InitEntity(const TObjectPtr<Entity>& entity);
+		void AddEntity(const TObjectPtr<Entity>& entity);
+		void AddEntity(const TObjectPtr<Entity>& entity, const TObjectPtr<Entity>& attachTo);
+		void RemoveEntity(const TObjectPtr<Entity>& entity);
 
 	protected:
 		void BuildRendererData(RRendererData& data, float deltaTime);
@@ -137,11 +138,11 @@ namespace Ion
 	private:
 		World();
 
-		void AddEntityToCollection(Entity* entity);
-		void RemoveEntityFromCollection(Entity* entity);
+		void AddEntityToCollection(const TObjectPtr<Entity>& entity);
+		void RemoveEntityFromCollection(const TObjectPtr<Entity>& entity);
 
-		void AddChildEntity(Entity* child);
-		void RemoveChildEntity(Entity* child);
+		void AddChildEntity(const TObjectPtr<Entity>& child);
+		void RemoveChildEntity(const TObjectPtr<Entity>& child);
 
 	private:
 		GUID m_WorldGUID;
@@ -170,18 +171,18 @@ namespace Ion
 	// Inline definitions
 
 	template<typename EntityT, typename... Args>
-	inline EntityT* World::SpawnEntityOfClass(Args&&... args)
+	inline TObjectPtr<EntityT> World::SpawnEntityOfClass(Args&&... args)
 	{
 		static_assert(TIsBaseOfV<Entity, EntityT>);
 
 		// @TODO: Use some sort of an allocator here
-		EntityT* entity = MObject::New<EntityT>(Forward<Args>(args)...).Raw();
+		TObjectPtr<EntityT> entity = MObject::New<EntityT>(Forward<Args>(args)...);
 		AddEntity(entity);
 		return entity;
 	}
 
 	template<typename EntityT, typename ...Args>
-	inline EntityT* World::SpawnAndAttachEntityOfClass(Entity* attachTo, Args&& ...args)
+	inline TObjectPtr<EntityT> World::SpawnAndAttachEntityOfClass(const TObjectPtr<Entity>& attachTo, Args&& ...args)
 	{
 		static_assert(TIsBaseOfV<Entity, EntityT>);
 

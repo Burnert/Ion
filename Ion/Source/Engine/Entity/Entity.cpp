@@ -126,7 +126,7 @@ namespace Ion
 		//return it != descendants.end();
 	}
 
-	void Entity::AttachTo(Entity* parent)
+	void Entity::AttachTo(const TObjectPtr<Entity>& parent)
 	{
 		if (!parent)
 		{
@@ -145,14 +145,14 @@ namespace Ion
 		}
 
 		// Update children in parents
-
+		
 		if (m_Parent)
-			m_Parent->RemoveChild(this);
+			m_Parent->RemoveChild(This());
 
-		parent->AddChild(this);
+		parent->AddChild(This());
 
 		m_Parent = parent;
-		m_WorldContext->ReparentEntityInWorld(this, parent);
+		m_WorldContext->ReparentEntityInWorld(This(), parent);
 
 		UpdateWorldTransformCache();
 	}
@@ -161,18 +161,18 @@ namespace Ion
 	{
 		if (m_Parent)
 		{
-			m_Parent->RemoveChild(this);
+			m_Parent->RemoveChild(This());
 			m_Parent = nullptr;
-			m_WorldContext->ReparentEntityInWorld(this, nullptr);
+			m_WorldContext->ReparentEntityInWorld(This(), nullptr);
 
 			UpdateWorldTransformCache();
 		}
 	}
 
-	bool Entity::CanAttachTo(Entity* parent) const
+	bool Entity::CanAttachTo(const TObjectPtr<Entity>& parent) const
 	{
 		// Can attach if parent isn't a part of the children
-		TArray<Entity*> children = GetAllChildren();
+		TArray<TObjectPtr<Entity>> children = GetAllChildren();
 		return std::find(children.begin(), children.end(), parent) == children.end();
 	}
 
@@ -228,7 +228,7 @@ namespace Ion
 
 			TArray<GUID> childrenGuids;
 			childrenGuids.reserve(m_Children.size());
-			std::transform(m_Children.begin(), m_Children.end(), std::back_inserter(childrenGuids), [](Entity* ent)
+			std::transform(m_Children.begin(), m_Children.end(), std::back_inserter(childrenGuids), [](const TObjectPtr<Entity>& ent)
 			{
 				return ent->GetGuid();
 			});
@@ -249,7 +249,7 @@ namespace Ion
 		// @TODO: serialize components
 	}
 
-	void Entity::AddChild(Entity* child)
+	void Entity::AddChild(const TObjectPtr<Entity>& child)
 	{
 		ionassert(child);
 		ionassert(std::find(m_Children.begin(), m_Children.end(), child) == m_Children.end());
@@ -257,7 +257,7 @@ namespace Ion
 		m_Children.push_back(child);
 	}
 
-	void Entity::RemoveChild(Entity* child)
+	void Entity::RemoveChild(const TObjectPtr<Entity>& child)
 	{
 		ionassert(child);
 
@@ -266,9 +266,9 @@ namespace Ion
 			m_Children.erase(it);
 	}
 
-	void Entity::GetAllChildren(TArray<Entity*>& outChildren) const
+	void Entity::GetAllChildren(TArray<TObjectPtr<Entity>>& outChildren) const
 	{
-		for (Entity* child : m_Children)
+		for (const TObjectPtr<Entity>& child : m_Children)
 		{
 			outChildren.push_back(child);
 			child->GetAllChildren(outChildren);
@@ -363,11 +363,11 @@ namespace Ion
 		{
 			// If it doesn't have a parent it will 
 			// get parented to the world root anyway.
-			Entity* attachTo = bReparent ?
+			TObjectPtr<Entity> attachTo = bReparent ?
 				GetParent() : // World root if none
 				nullptr;      // World root
 
-			for (Entity* child : m_Children)
+			for (const TObjectPtr<Entity>& child : m_Children)
 			{
 				child->AttachTo(attachTo);
 			}
@@ -376,7 +376,7 @@ namespace Ion
 		Detach();
 
 		// World is going to remove the entity from its collections
-		m_WorldContext->MarkEntityForDestroy(this);
+		m_WorldContext->MarkEntityForDestroy(This());
 
 		// Destroy the components too
 
@@ -398,7 +398,7 @@ namespace Ion
 	{
 		if (HasChildren())
 		{
-			for (Entity* child : m_Children)
+			for (const TObjectPtr<Entity>& child : m_Children)
 			{
 				child->DestroyWithChildren();
 			}
@@ -416,7 +416,7 @@ namespace Ion
 
 	void Entity::UpdateChildrenWorldTransformCache()
 	{
-		for (Entity* child : m_Children)
+		for (const TObjectPtr<Entity>& child : m_Children)
 		{
 			child->UpdateWorldTransformCache();
 		}

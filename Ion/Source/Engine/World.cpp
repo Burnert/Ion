@@ -65,7 +65,7 @@ namespace Ion
 
 		for (Entity* entity : mapData->Entities)
 		{
-			world->AddEntity(entity);
+			world->AddEntity(entity->This());
 		}
 
 		// @TODO: setup relations
@@ -82,7 +82,17 @@ namespace Ion
 		TSharedPtr<MapAssetData> mapData = PtrCast<MapAssetData>(mapAsset->GetCustomData());
 
 		mapData->WorldGuid = m_WorldGUID;
-		mapData->Entities = GatherValues(m_Entities);
+		mapData->Entities = [&]
+		{
+			TArray<TObjectPtr<Entity>> entities = GatherValues(m_Entities);
+			TArray<Entity*> rawPtrs;
+			rawPtrs.reserve(entities.size());
+			for (const TObjectPtr<Entity>& entity : entities)
+			{
+				rawPtrs.emplace_back(entity.Raw());
+			}
+			return rawPtrs;
+		}();
 
 		mapAsset->SaveToDisk();
 	}
@@ -103,7 +113,7 @@ namespace Ion
 		// Destroy entities that are pending kill
 		for (Entity* entity : m_EntitiesPendingKill)
 		{
-			RemoveEntity(entity);
+			RemoveEntity(entity->This());
 		}
 		m_EntitiesPendingKill.clear();
 
@@ -143,7 +153,7 @@ namespace Ion
 		m_ComponentRegistry.BuildRendererData(data);
 	}
 
-	void World::AddEntity(Entity* entity)
+	void World::AddEntity(const TObjectPtr<Entity>& entity)
 	{
 		TRACE_FUNCTION();
 
@@ -158,7 +168,7 @@ namespace Ion
 		InsertWorldTreeNode(entity);
 	}
 
-	void World::AddEntity(Entity* entity, Entity* attachTo)
+	void World::AddEntity(const TObjectPtr<Entity>& entity, const TObjectPtr<Entity>& attachTo)
 	{
 		TRACE_FUNCTION();
 
@@ -169,7 +179,7 @@ namespace Ion
 		WorldTreeNode* parentNode = FindWorldTreeNode(attachTo);
 		ionverify(parentNode, "Entity to attach to doesn't exist in the world.");
 
-		Entity* parent = parentNode->Get().GetEntity();
+		TObjectPtr<Entity> parent = parentNode->Get().GetEntity()->This();
 
 		InitEntity(entity);
 
@@ -182,7 +192,7 @@ namespace Ion
 		entity->m_Parent = parent;
 	}
 
-	void World::RemoveEntity(Entity* entity)
+	void World::RemoveEntity(const TObjectPtr<Entity>& entity)
 	{
 		TRACE_FUNCTION();
 
@@ -196,40 +206,44 @@ namespace Ion
 
 		RemoveWorldTreeNode(entity);
 
+		// The entity lifetime is now managed by Matter
+		
 		// The world owns the entity, so it should delete it.
-		delete entity;
+		//delete entity;
 	}
 
-	Entity* World::DuplicateEntity(Entity* entity)
+	TObjectPtr<Entity> World::DuplicateEntity(const TObjectPtr<Entity>& entity)
 	{
 		if (entity->IsPendingKill())
 			return nullptr;
 
 		Entity* newEntity = entity->Duplicate();
 
-		AddEntityToCollection(newEntity);
+		// @TODO: Remove this nonsense
 
-		if (entity->HasParent())
-		{
-			WorldTreeNode* parentNode = FindWorldTreeNode(entity->GetParent());
-			ionverify(parentNode, "Entity to attach to doesn't exist in the world.");
+		//AddEntityToCollection(newEntity);
 
-			// Attach the entity to the parent node
-			InsertWorldTreeNode(newEntity, *parentNode);
+		//if (entity->HasParent())
+		//{
+		//	WorldTreeNode* parentNode = FindWorldTreeNode(entity->GetParent());
+		//	ionverify(parentNode, "Entity to attach to doesn't exist in the world.");
 
-			// Update entities
-			entity->GetParent()->AddChild(newEntity);
-		}
-		else
-		{
-			InsertWorldTreeNode(newEntity);
-			AddChildEntity(newEntity);
-		}
+		//	// Attach the entity to the parent node
+		//	InsertWorldTreeNode(newEntity, *parentNode);
 
-		return newEntity;
+		//	// Update entities
+		//	entity->GetParent()->AddChild(newEntity);
+		//}
+		//else
+		//{
+		//	InsertWorldTreeNode(newEntity);
+		//	AddChildEntity(newEntity);
+		//}
+
+		return nullptr;
 	}
 
-	bool World::DoesOwnEntity(Entity* entity) const
+	bool World::DoesOwnEntity(const TObjectPtr<Entity>& entity) const
 	{
 		return DoesOwnEntity(entity->GetGuid());
 	}
@@ -239,7 +253,7 @@ namespace Ion
 		return m_Entities.find(guid) != m_Entities.end();
 	}
 
-	void World::ReparentEntityInWorld(Entity* entity, Entity* parent)
+	void World::ReparentEntityInWorld(const TObjectPtr<Entity>& entity, const TObjectPtr<Entity>& parent)
 	{
 		TRACE_FUNCTION();
 
@@ -266,12 +280,12 @@ namespace Ion
 		parentNode->Insert(entityNode->RemoveFromParent());
 	}
 
-	void World::MarkEntityForDestroy(Entity* entity)
+	void World::MarkEntityForDestroy(const TObjectPtr<Entity>& entity)
 	{
-		m_EntitiesPendingKill.push_back(entity);
+		m_EntitiesPendingKill.push_back(entity.Raw());
 	}
 
-	Entity* World::FindEntity(const GUID& guid)
+	TObjectPtr<Entity> World::FindEntity(const GUID& guid)
 	{
 		auto it = m_Entities.find(guid);
 		if (it == m_Entities.end())
@@ -280,9 +294,9 @@ namespace Ion
 		return it->second;
 	}
 
-	World::WorldTreeNode* World::FindWorldTreeNode(Entity* entity) const
+	World::WorldTreeNode* World::FindWorldTreeNode(const TObjectPtr<Entity>& entity) const
 	{
-		auto it = m_EntityToWorldTreeNodeMap.find(entity);
+		auto it = m_EntityToWorldTreeNodeMap.find(entity.Raw());
 		if (it != m_EntityToWorldTreeNodeMap.end())
 		{
 			return it->second;
@@ -290,23 +304,23 @@ namespace Ion
 		return nullptr;
 	}
 
-	World::WorldTreeNode& World::InsertWorldTreeNode(Entity* entity)
+	World::WorldTreeNode& World::InsertWorldTreeNode(const TObjectPtr<Entity>& entity)
 	{
 		return InsertWorldTreeNode(entity, *m_WorldTreeRoot);
 	}
 
-	World::WorldTreeNode& World::InsertWorldTreeNode(Entity* entity, WorldTreeNode& parent)
+	World::WorldTreeNode& World::InsertWorldTreeNode(const TObjectPtr<Entity>& entity, WorldTreeNode& parent)
 	{
 		TRACE_FUNCTION();
 
 		ionassert(!FindWorldTreeNode(entity), "The node for that entity already exists.");
 
-		WorldTreeNode& node = parent.Insert(m_WorldTreeNodeFactory.Create(WorldTreeNodeData(entity)));
-		m_EntityToWorldTreeNodeMap.insert({ entity, &node });
+		WorldTreeNode& node = parent.Insert(m_WorldTreeNodeFactory.Create(WorldTreeNodeData(entity.Raw())));
+		m_EntityToWorldTreeNodeMap.insert({ entity.Raw(), &node });
 		return node;
 	}
 
-	void World::RemoveWorldTreeNode(Entity* entity)
+	void World::RemoveWorldTreeNode(const TObjectPtr<Entity>& entity)
 	{
 		TRACE_FUNCTION();
 
@@ -314,7 +328,7 @@ namespace Ion
 		ionverify(node, "The entity was not in the world tree.");
 
 		m_WorldTreeNodeFactory.Destroy(node->RemoveFromParent());
-		m_EntityToWorldTreeNodeMap.erase(entity);
+		m_EntityToWorldTreeNodeMap.erase(entity.Raw());
 	}
 
 	World::WorldTreeNode& World::GetWorldTreeRoot()
@@ -322,7 +336,7 @@ namespace Ion
 		return *m_WorldTreeRoot;
 	}
 
-	void World::InitEntity(Entity* entity)
+	void World::InitEntity(const TObjectPtr<Entity>& entity)
 	{
 		TRACE_FUNCTION();
 
@@ -341,26 +355,26 @@ namespace Ion
 	{
 	}
 
-	void World::AddEntityToCollection(Entity* entity)
+	void World::AddEntityToCollection(const TObjectPtr<Entity>& entity)
 	{
 		ionassert(m_Entities.find(entity->GetGuid()) == m_Entities.end());
 		m_Entities.insert({ entity->GetGuid(), entity });
 	}
 
-	void World::RemoveEntityFromCollection(Entity* entity)
+	void World::RemoveEntityFromCollection(const TObjectPtr<Entity>& entity)
 	{
 		m_Entities.erase(entity->GetGuid());
 	}
 
-	void World::AddChildEntity(Entity* child)
+	void World::AddChildEntity(const TObjectPtr<Entity>& child)
 	{
-		ionassert(std::find(m_ChildEntities.begin(), m_ChildEntities.end(), child) == m_ChildEntities.end());
-		m_ChildEntities.push_back(child);
+		ionassert(std::find(m_ChildEntities.begin(), m_ChildEntities.end(), child.Raw()) == m_ChildEntities.end());
+		m_ChildEntities.push_back(child.Raw());
 	}
 
-	void World::RemoveChildEntity(Entity* child)
+	void World::RemoveChildEntity(const TObjectPtr<Entity>& child)
 	{
-		auto it = std::find(m_ChildEntities.begin(), m_ChildEntities.end(), child);
+		auto it = std::find(m_ChildEntities.begin(), m_ChildEntities.end(), child.Raw());
 		if (it != m_ChildEntities.end())
 			m_ChildEntities.erase(it);
 	}
@@ -379,11 +393,11 @@ namespace Ion
 
 		//ar << &world->m_ComponentRegistry;
 
-		TArray<Entity*> allEntities = ar.IsSaving() ? GatherValues(world->m_Entities) : TArray<Entity*>();
+		TArray<TObjectPtr<Entity>> allEntities = ar.IsSaving() ? GatherValues(world->m_Entities) : TArray<TObjectPtr<Entity>>();
 		//ar << allEntities;
 		if (ar.IsLoading())
 		{
-			for (Entity* entity : allEntities)
+			for (const TObjectPtr<Entity>& entity : allEntities)
 			{
 				world->m_Entities.emplace(entity->GetGuid(), entity);
 			}
