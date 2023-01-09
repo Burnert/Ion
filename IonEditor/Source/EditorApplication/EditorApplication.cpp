@@ -161,7 +161,7 @@ namespace Ion::Editor
 		RefCountTest();
 		RefCountPtrTest();
 
-		//Test::ArchiveTest();
+		Test::ArchiveTest();
 
 		// Test ryml
 		{

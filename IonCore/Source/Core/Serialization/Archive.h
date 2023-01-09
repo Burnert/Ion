@@ -6,6 +6,8 @@
 
 namespace Ion
 {
+	class Archive;
+
 	REGISTER_LOGGER(SerializationLogger, "Core::Serialization");
 
 	namespace EArchiveFlags
@@ -24,6 +26,38 @@ namespace Ion
 	{
 		Saving,
 		Loading,
+	};
+
+	class IArrayItem
+	{
+	public:
+		virtual void Serialize(Archive& ar) = 0;
+		virtual size_t GetIndex() const = 0;
+	};
+
+	template<typename T>
+	class TArrayItem : public IArrayItem
+	{
+	public:
+		TArrayItem(T& item, size_t index = (size_t)-1) :
+			m_Item(item),
+			m_Index(index)
+		{
+		}
+
+		virtual void Serialize(Archive& ar) override
+		{
+			ar << m_Item;
+		}
+
+		virtual size_t GetIndex() const override
+		{
+			return m_Index;
+		}
+
+	private:
+		T& m_Item;
+		size_t m_Index;
 	};
 
 	class ION_API Archive
@@ -49,6 +83,8 @@ namespace Ion
 		virtual void Serialize(uint64& value) = 0;
 		virtual void Serialize(float& value) = 0;
 		virtual void Serialize(double& value) = 0;
+
+#pragma region LeftShift Operators
 
 		FORCEINLINE Archive& operator<<(bool& value)
 		{
@@ -116,6 +152,8 @@ namespace Ion
 			return *this;
 		}
 
+#pragma endregion
+
 		virtual void Serialize(String& value) = 0;
 
 		FORCEINLINE Archive& operator<<(String& value)
@@ -165,48 +203,60 @@ namespace Ion
 			m_ArchiveFlags |= flag;
 		}
 
+		virtual void Serialize(IArrayItem& item) = 0;
+
+		virtual size_t GetCollectionSize() const { return 0; }
+
 	private:
 		std::underlying_type_t<EArchiveFlags::Type> m_ArchiveFlags;
+
+	public:
+		// Generic array serialization
+		template<typename T>
+		friend FORCEINLINE Archive& operator<<(Archive& ar, TArray<T>& array)
+		{
+			size_t count = ar.IsSaving() ? array.size() : 0;
+			if (ar.IsBinary())
+			{
+				ar << count;
+			}
+			else if (ar.IsLoading())
+			{
+				count = ar.GetCollectionSize();
+			}
+
+			// Clear and resize the array, so the memory to load into is available.
+			if (ar.IsLoading())
+			{
+				array.clear();
+				array.reserve(count);
+
+				for (size_t n = 0; n < count; ++n)
+				{
+					// Don't default construct the element
+					union {
+						T element;
+					};
+					TArrayItem<T> arrayItem(element, n);
+					ar.Serialize(arrayItem);
+					array.emplace_back(Move(element));
+				}
+			}
+			else if (ar.IsSaving())
+			{
+				for (size_t n = 0; n < count; ++n)
+				{
+					TArrayItem<T> arrayItem(array.at(n), n);
+					ar.Serialize(arrayItem);
+				}
+			}
+
+			return ar;
+		}
 	};
 
 #define SERIALIZE_BIT_FIELD(ar, f) { bool bField = f; ar << bField; f = bField; }
 
-	// Generic array serialization
-	template<typename T>
-	FORCEINLINE Archive& operator<<(Archive& ar, TArray<T>& array)
-	{
-		size_t count = ar.IsSaving() ? array.size() : 0;
-		if (ar.IsBinary())
-		{
-			ar << count;
-		}
-
-		// Clear and resize the array, so the memory to load into is available.
-		if (ar.IsLoading())
-		{
-			array.clear();
-			array.reserve(count);
-
-			for (size_t n = 0; n < count; ++n)
-			{
-				// Don't default construct the element
-				union {
-					T element;
-				};
-				ar << element;
-				array.emplace_back(Move(element));
-			}
-		}
-		else if (ar.IsSaving())
-		{
-			for (T& element : array)
-			{
-				ar << element;
-			}
-		}
-
-		return ar;
-	}
 }
 
 namespace Ion::Test { void ArchiveTest(); }

@@ -30,6 +30,8 @@ namespace Ion
 
 		virtual void Serialize(String& value) override;
 
+		virtual void Serialize(IArrayItem& item) override;
+
 		virtual void LoadFromFile(File& file) override;
 		virtual void SaveToFile(File& file) const override;
 

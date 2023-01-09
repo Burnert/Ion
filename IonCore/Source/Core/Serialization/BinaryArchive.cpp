@@ -101,6 +101,11 @@ namespace Ion
 		}
 	}
 
+	void BinaryArchive::Serialize(IArrayItem& item)
+	{
+		item.Serialize(*this);
+	}
+
 	void BinaryArchive::LoadFromFile(File& file)
 	{
 		ionassert(IsLoading());
