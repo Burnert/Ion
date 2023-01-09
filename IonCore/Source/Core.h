@@ -39,6 +39,7 @@
 #include "Core/Serialization/Archive.h"
 #include "Core/Serialization/BinaryArchive.h"
 #include "Core/Serialization/XMLArchive.h"
+#include "Core/Serialization/YAMLArchive.h"
 #include "Core/String/StringConverter.h"
 #include "Core/String/StringUtils.h"
 #include "Core/String/StringParser.h"
