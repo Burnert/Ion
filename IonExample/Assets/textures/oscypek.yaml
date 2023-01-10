@@ -1,0 +1,8 @@
+Type: Ion.Image
+Name: T_Oscypek
+ImportExternal: oscypek.png
+Resource:
+  Texture:
+    Guid: 'b203d0d2-e49f-4618-91bb-8290ee1bdf22'
+    Properties:
+      Filter: Nearest

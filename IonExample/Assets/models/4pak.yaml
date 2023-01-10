@@ -1,0 +1,10 @@
+Type: Ion.Mesh
+Name: SM_4Pak
+ImportExternal: 4pak.dae
+Resource:
+  Mesh:
+    Guid: '1dbad45b-a2ab-4ea1-ae03-d6c860b035ef'
+    Defaults:
+      Materials:
+        - Index: 0
+          Asset: '[Example]/Materials/4pak'

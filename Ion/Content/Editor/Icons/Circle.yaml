@@ -1,0 +1,8 @@
+Type: Ion.Image
+Name: Circle
+ImportExternal: Circle.png
+Resource:
+  Texture:
+    Guid: '0fe8dca7-7da9-43b0-97a4-c7e3a1ce2998'
+    Properties:
+      Filter: Nearest

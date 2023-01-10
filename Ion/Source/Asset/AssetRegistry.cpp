@@ -56,12 +56,40 @@ namespace Ion
 		// Load an existing asset
 		if (initializer.AssetXML)
 		{
-			XMLArchive xmlAr(EArchiveType::Loading);
-			xmlAr.LoadXML(initializer.AssetXML);
+			Archive* pAr = nullptr;
 
-			assetDef.Serialize(xmlAr)
+			// Load from YAML first if exists
+			String yamlPath = initializer.AssetDefinitionPath.ToString();
+			size_t dotIndex = yamlPath.find_last_of('.');
+			yamlPath = yamlPath.substr(0, dotIndex + 1) + "yaml";
+
+			YAMLArchive loadAr(EArchiveType::Loading);
+			XMLArchive xmlAr(EArchiveType::Loading);
+
+			// @TODO: VERY Temporary!
+			if (FilePath(yamlPath).Exists())
+			{
+				loadAr.LoadFromFile(File(yamlPath));
+				pAr = &loadAr;
+			}
+			else
+			{
+				xmlAr.LoadXML(initializer.AssetXML);
+				pAr = &xmlAr;
+			}
+
+			assetDef.Serialize(*pAr)
 				.Err([&](Error& err) { AssetLogger.Error("Asset \"{}\" could not be parsed.\n{}", assetDef.GetVirtualPath(), err.Message); })
 				.Ok([&] { AssetLogger.Trace("Asset \"{}\" parsed successfully.", assetDef.GetVirtualPath()); });
+
+			// Convert to YAML:
+
+			if (!(assetDef.GetType().GetName() == "Ion.Mesh" || assetDef.GetType().GetName() == "Ion.Image"))
+				return assetDef;
+
+			YAMLArchive ar(EArchiveType::Saving);
+			assetDef.Serialize(ar);
+			ar.SaveToFile(File(yamlPath));
 		}
 		// Create a new asset
 		else if (initializer.Type)

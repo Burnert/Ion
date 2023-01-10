@@ -62,27 +62,46 @@ namespace Ion
 
 		XMLArchiveAdapter xmlAr = ar;
 
+		ON_YAML_AR(ar) yml->EnterNode("Resource");
+
 		xmlAr.EnterNode(IASSET_NODE_Resource);
+
+		ON_YAML_AR(ar) yml->EnterNode("Mesh");
+
 		xmlAr.EnterNode(IASSET_NODE_Resource_Mesh);
+
+		ON_YAML_AR(ar) yml->EnterNode("Guid");
 
 		xmlAr.EnterAttribute(IASSET_ATTR_guid);
 		xmlAr << data->ResourceGuid;
 		xmlAr.ExitAttribute(); // IASSET_ATTR_guid
 
-		if (xmlAr.TryEnterNode(IASSET_NODE_Defaults))
+		ON_YAML_AR(ar) yml->ExitNode();
+
+		ON_YAML_AR(ar) yml->EnterNode("Defaults");
+
+		if (xmlAr.TryEnterNode(IASSET_NODE_Defaults) || IS_YAML_AR(ar))
 		{
 			auto LSerializeMaterial = [&](int32 index = -1)
 			{
 				ionassert(!ar.IsSaving() || index > -1);
 
+				ON_YAML_AR(ar) yml->EnterNode("Index");
+
 				xmlAr.EnterAttribute(IASSET_ATTR_index);
 				xmlAr << index;
 				xmlAr.ExitAttribute(); // IASSET_ATTR_index
+
+				ON_YAML_AR(ar) yml->ExitNode();
+
+				ON_YAML_AR(ar) yml->EnterNode("Asset");
 
 				xmlAr.EnterAttribute(IASSET_ATTR_asset);
 				String sAsset = ar.IsSaving() ? data->Description.Defaults.MaterialAssets[index]->GetVirtualPath() : EmptyString;
 				xmlAr << sAsset;
 				xmlAr.ExitAttribute(); // IASSET_ATTR_asset
+
+				ON_YAML_AR(ar) yml->ExitNode();
 
 				if (ar.IsLoading())
 				{
@@ -96,26 +115,51 @@ namespace Ion
 				}
 			};
 
+			ON_YAML_AR(ar) yml->EnterNode("Materials");
+
+			ON_YAML_AR(ar) yml->BeginSeq();
+
 			if (ar.IsLoading())
 			{
-				for (bool b = xmlAr.TryEnterNode(IASSET_NODE_Defaults_Material); b || (xmlAr.ExitNode(), 0); b = xmlAr.TryEnterSiblingNode())
-					LSerializeMaterial();
+				ON_YAML_AR(ar)
+				{
+					while (yml->IterateSeq())
+						LSerializeMaterial();
+				}
+				else
+				{
+					for (bool b = xmlAr.TryEnterNode(IASSET_NODE_Defaults_Material); b || (xmlAr.ExitNode(), 0); b = xmlAr.TryEnterSiblingNode())
+						LSerializeMaterial();
+				}
 			}
 			else if (ar.IsSaving())
 			{
 				for (int32 i = 0; i < data->Description.Defaults.MaterialAssets.size(); ++i)
 				{
+					ON_YAML_AR(ar) yml->IterateSeq();
+
 					xmlAr.EnterNode(IASSET_NODE_Defaults_Material);
 					LSerializeMaterial(i);
 					xmlAr.ExitNode(); // IASSET_NODE_Defaults_Material
 				}
 			}
+
+			ON_YAML_AR(ar) yml->EndSeq();
+
+			ON_YAML_AR(ar) yml->ExitNode();
 			
 			xmlAr.ExitNode(); // IASSET_NODE_Defaults
 		}
 
+		ON_YAML_AR(ar) yml->ExitNode();
+
 		xmlAr.ExitNode(); // IASSET_NODE_Resource_Mesh
+
+		ON_YAML_AR(ar) yml->ExitNode();
+
 		xmlAr.ExitNode(); // IASSET_NODE_Resource
+
+		ON_YAML_AR(ar) yml->ExitNode();
 
 		inOutCustomData = data;
 

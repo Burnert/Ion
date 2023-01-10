@@ -134,7 +134,7 @@ namespace Ion
 		ionassert(IsSaving());
 		ionassert(!file.IsOpen());
 
-		if (file.Open(EFileMode::Write | EFileMode::CreateNew)
+		if (file.Open(EFileMode::Write | EFileMode::CreateNew | EFileMode::Reset)
 			.Err([](Error& err)
 		{
 			SerializationLogger.Error("Cannot save YAML Archive to file.\n{}", err.Message);
@@ -168,7 +168,7 @@ namespace Ion
 			else if (IsSaving())
 			{
 				// In a saving archive, entering a node must change the current node to a map.
-				// You cannot enter child nodes when in a sequence node for example.
+				// E.g. You cannot enter nodes by key when in a sequence node.
 				m_CurrentNode |= ryml::MAP;
 			}
 		}
@@ -178,13 +178,12 @@ namespace Ion
 		{
 			node = m_CurrentNode.append_child() << ryml::key(ryml::to_csubstr(name));
 		}
-		else
+		else if (IsLoading())
 		{
 			node = m_CurrentNode[ryml::to_csubstr(name)];
+			if (!node.has_key())
+				ionerror(IOError, "Node \"{}\" not found.", name);
 		}
-
-		if (IsLoading() && !node.has_key())
-			ionerror(IOError, "Node \"{}\" not found.", name);
 
 		m_CurrentNode = node;
 	}
@@ -193,6 +192,12 @@ namespace Ion
 	{
 		ionassert(m_YAMLTree);
 		ionassert(m_CurrentNode.valid());
+
+		// NOTE: A node must have a value or else ryml crashes on emit.
+		if (m_CurrentNode.type() == ryml::KEY)
+		{
+			m_CurrentNode = ryml::csubstr();
+		}
 
 		if (!m_CurrentNode.has_parent())
 			ionerror(IOError, "Current node has no parent.");
@@ -205,6 +210,8 @@ namespace Ion
 		ionassert(m_YAMLTree);
 		ionassert(m_CurrentNode.valid());
 
+		m_SeqIndex = 0;
+
 		if (IsLoading())
 		{
 			if (!m_CurrentNode.is_seq())
@@ -216,10 +223,71 @@ namespace Ion
 		}
 	}
 
+	bool YAMLArchive::IterateSeq()
+	{
+		ionassert(m_YAMLTree);
+		ionassert(m_CurrentNode.valid());
+
+		ryml::NodeRef node;
+
+		if (IsSaving())
+		{
+			// 0 means that the current seq node has not been iterated through yet.
+			if (m_SeqIndex != 0)
+			{
+				// Return to the parent before selecting the next child
+				// if it's not the first function call in the sequence.
+				m_CurrentNode = m_CurrentNode.parent();
+			}
+
+			node = m_CurrentNode.append_child();
+
+			++m_SeqIndex;
+		}
+		else if (IsLoading())
+		{
+			// 0 means that the current seq node has not been iterated through yet.
+			if (m_SeqIndex != 0)
+			{
+				// Return to the parent before selecting the next child
+				// if it's not the first function call in the sequence.
+				m_CurrentNode = m_CurrentNode.parent();
+			}
+
+			node = m_CurrentNode.child(m_SeqIndex);
+
+			if (!node.valid())
+			{
+				//if (m_SeqIndex != 0)
+				//{
+				//	// Return to the parent on the last call.
+				//	// Don't do it if there were no children, as the node
+				//	// has never been set to a child node.
+				//	m_CurrentNode = m_CurrentNode.parent();
+				//}
+				m_SeqIndex = 0;
+				return false;
+			}
+
+			++m_SeqIndex;
+		}
+
+		m_CurrentNode = node;
+
+		return true;
+	}
+
 	void YAMLArchive::EndSeq()
 	{
 		ionassert(m_YAMLTree);
 		ionassert(m_CurrentNode.valid());
+
+		// Return to the parent if IterateSeq didn't.
+		if (m_SeqIndex != 0)
+		{
+			m_CurrentNode = m_CurrentNode.parent();
+			m_SeqIndex = 0;
+		}
 
 		if (!m_CurrentNode.is_seq())
 			ionerror(IOError, "Current node is not a sequence.");

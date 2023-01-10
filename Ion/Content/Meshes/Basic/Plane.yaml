@@ -1,0 +1,8 @@
+Type: Ion.Mesh
+Name: Plane
+ImportExternal: Plane.dae
+Resource:
+  Mesh:
+    Guid: '03a7f7c6-b138-4ae8-a47b-f5db69ea1506'
+    Defaults:
+      Materials: []

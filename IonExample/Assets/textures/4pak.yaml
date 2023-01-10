@@ -1,0 +1,8 @@
+Type: Ion.Image
+Name: T_4Pak
+ImportExternal: 4pak.png
+Resource:
+  Texture:
+    Guid: '661f6381-b701-493d-adbf-cbdfb8bd971a'
+    Properties:
+      Filter: Nearest

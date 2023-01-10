@@ -1,0 +1,8 @@
+Type: Ion.Image
+Name: T_Slovak
+ImportExternal: slovak.png
+Resource:
+  Texture:
+    Guid: 'd065ba70-a5ca-4d74-9407-210309c12560'
+    Properties:
+      Filter: Nearest

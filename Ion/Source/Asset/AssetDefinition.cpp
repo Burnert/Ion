@@ -120,10 +120,14 @@ namespace Ion
 
 		xmlAr.EnterNode(IASSET_NODE_Info);
 
+		ON_YAML_AR(ar) yml->EnterNode("Type");
+
 		xmlAr.EnterAttribute(IASSET_ATTR_type);
 		String sType = ar.IsSaving() ? m_Type->GetName() : EmptyString;
 		xmlAr << sType;
 		xmlAr.ExitAttribute(); // IASSET_ATTR_type
+
+		ON_YAML_AR(ar) yml->ExitNode();
 
 		if (IAssetType* type = AssetRegistry::FindType(sType))
 			m_Type = type;
@@ -132,6 +136,13 @@ namespace Ion
 
 		xmlAr.ExitNode(); // IASSET_NODE_Info
 
+		ON_YAML_AR(ar)
+		{
+			yml->EnterNode("Name");
+			xmlAr << m_Info.Name;
+			yml->ExitNode();
+		}
+		else
 		if (xmlAr.TryEnterNode(IASSET_NODE_Name))
 		{
 			xmlAr << m_Info.Name;
@@ -142,7 +153,9 @@ namespace Ion
 			m_Info.Name = FilePath(m_VirtualPath).LastElement();
 		}
 
-		if (ar.IsLoading() ? xmlAr.TryEnterNode(IASSET_NODE_ImportExternal) :
+		ON_YAML_AR(ar) yml->EnterNode("ImportExternal");
+
+		if (ar.IsLoading() ? xmlAr.TryEnterNode(IASSET_NODE_ImportExternal) || IS_YAML_AR(ar) :
 			(ar.IsSaving() && m_bImportExternal && (xmlAr.EnterNode(IASSET_NODE_ImportExternal), 1)))
 		{
 			m_bImportExternal = true;
@@ -151,6 +164,12 @@ namespace Ion
 			String sPath = ar.IsSaving() ? m_AssetImportPath.RelativeTo(m_AssetDefinitionPath / "..") : EmptyString;
 			xmlAr << sPath;
 			xmlAr.ExitAttribute();
+
+			// @TODO: Temporary?
+			if (IS_YAML_AR(ar) && ar.IsLoading() && sPath.empty())
+			{
+				m_bImportExternal = false;
+			}
 
 			FilePath path = sPath;
 			if (path.IsRelative())
@@ -166,6 +185,8 @@ namespace Ion
 		{
 			m_bImportExternal = false;
 		}
+
+		ON_YAML_AR(ar) yml->ExitNode();
 
 		// Serialize the custom data (different for each asset type)
 		fwdthrowall(m_Type->Serialize(ar, m_CustomData));

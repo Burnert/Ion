@@ -1,0 +1,8 @@
+Type: Ion.Image
+Name: T_Piwsko
+ImportExternal: piwsko.png
+Resource:
+  Texture:
+    Guid: 'f9c29b2b-1584-4ae7-b499-daf787c04ae1'
+    Properties:
+      Filter: Nearest

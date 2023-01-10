@@ -162,6 +162,39 @@ namespace Ion
 			return *this;
 		}
 
+		template<typename TEnum, TEnableIfT<TIsEnumV<TEnum>>* = 0>
+		FORCEINLINE void SerializeEnum(TEnum& value)
+		{
+			if (IsText())
+			{
+				String sEnum = IsSaving() ? TEnumParser<TEnum>::ToString(value) : EmptyString;
+				Serialize(sEnum);
+				if (IsLoading())
+				{
+					TOptional<TEnum> opt = TEnumParser<TEnum>::FromString(sEnum);
+					if (opt); else
+					{
+						SerializationLogger.Error("Cannot parse enum value. {} -> {}", sEnum, typeid(TEnum).name());
+						return;
+					}
+					value = *opt;
+				}
+			}
+			else if (IsBinary())
+			{
+				auto utValue = (std::underlying_type_t<TEnum>)value;
+				Serialize(utValue);
+				value = (TEnum)utValue;
+			}
+		}
+
+		template<typename T, TEnableIfT<TIsEnumV<T>>* = 0>
+		FORCEINLINE Archive& operator<<(T& value)
+		{
+			SerializeEnum(value);
+			return *this;
+		}
+
 		virtual void LoadFromFile(File& file) = 0;
 		virtual void SaveToFile(File& file) const = 0;
 

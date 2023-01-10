@@ -1,0 +1,10 @@
+Type: Ion.Mesh
+Name: SM_Ciupaga
+ImportExternal: ciupaga.dae
+Resource:
+  Mesh:
+    Guid: 'dd684d85-61c6-4d44-9dc4-79ba5675ad5a'
+    Defaults:
+      Materials:
+        - Index: 0
+          Asset: '[Example]/Materials/ciupaga'

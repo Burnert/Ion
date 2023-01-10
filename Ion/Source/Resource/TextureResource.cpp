@@ -49,30 +49,52 @@ namespace Ion
 
 		XMLArchiveAdapter xmlAr = ar;
 
+		ON_YAML_AR(ar) yml->EnterNode("Resource");
+
 		xmlAr.EnterNode(IASSET_NODE_Resource);
+
+		ON_YAML_AR(ar) yml->EnterNode("Texture");
+
 		xmlAr.EnterNode(IASSET_NODE_Resource_Texture);
+
+		ON_YAML_AR(ar) yml->EnterNode("Guid");
 
 		xmlAr.EnterAttribute(IASSET_ATTR_guid);
 		xmlAr << data->ResourceGuid;
 		xmlAr.ExitAttribute(); // IASSET_ATTR_guid
 
+		ON_YAML_AR(ar) yml->ExitNode();
+
+		ON_YAML_AR(ar) yml->EnterNode("Properties");
+
 		if (ar.IsLoading() && xmlAr.TryEnterNode(IASSET_NODE_Properties) ||
 			ar.IsSaving())
 		{
-			if (xmlAr.TryEnterNode(IASSET_NODE_Resource_Texture_Prop_Filter))
+			ON_YAML_AR(ar) yml->EnterNode("Filter");
+
+			if (xmlAr.TryEnterNode(IASSET_NODE_Resource_Texture_Prop_Filter) || IS_YAML_AR(ar))
 			{
 				xmlAr.EnterAttribute(IASSET_ATTR_value);
-				xmlAr << data->Description.Properties.Filter;
+				ar << data->Description.Properties.Filter;
 				xmlAr.ExitAttribute();
 
 				xmlAr.ExitNode(); // IASSET_NODE_Resource_Texture_Prop_Filter
 			}
 
 			xmlAr.ExitNode(); // IASSET_NODE_Properties
+
+			ON_YAML_AR(ar) yml->ExitNode();
 		}
 
+		ON_YAML_AR(ar) yml->ExitNode();
+
 		xmlAr.ExitNode(); // IASSET_NODE_Resource_Texture
+
+		ON_YAML_AR(ar) yml->ExitNode();
+
 		xmlAr.ExitNode(); // IASSET_NODE_Resource
+
+		ON_YAML_AR(ar) yml->ExitNode();
 
 		inOutCustomData = data;
 

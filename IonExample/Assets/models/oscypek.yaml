@@ -1,0 +1,10 @@
+Type: Ion.Mesh
+Name: SM_Oscypek
+ImportExternal: oscypek.dae
+Resource:
+  Mesh:
+    Guid: '7175041c-51dc-415b-9fe2-c6b4c3565565'
+    Defaults:
+      Materials:
+        - Index: 0
+          Asset: '[Example]/Materials/oscypek'

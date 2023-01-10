@@ -1,0 +1,8 @@
+Type: Ion.Image
+Name: Lightbulb
+ImportExternal: Lightbulb.png
+Resource:
+  Texture:
+    Guid: 'b1fe61f3-d508-4dc9-9d77-2d048dc732ab'
+    Properties:
+      Filter: Nearest

@@ -1,0 +1,8 @@
+Type: Ion.Image
+Name: NoMesh
+ImportExternal: NoMesh.png
+Resource:
+  Texture:
+    Guid: '1f8c2441-e714-4fd7-817b-03bb2d3f54bb'
+    Properties:
+      Filter: Nearest

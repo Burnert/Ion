@@ -5,6 +5,9 @@
 #include "Core/Memory/RefCount.h"
 #include "Core/File/YAML.h"
 
+#define ON_YAML_AR(ar) if (YAMLArchive* yml = dynamic_cast<YAMLArchive*>(&ar))
+#define IS_YAML_AR(ar) !!dynamic_cast<YAMLArchive*>(&ar)
+
 namespace Ion
 {
 	class ION_API YAMLArchive : public Archive
@@ -12,7 +15,8 @@ namespace Ion
 	public:
 		FORCEINLINE YAMLArchive(EArchiveType type) :
 			Archive(type),
-			m_YAMLTree(nullptr)
+			m_YAMLTree(nullptr),
+			m_SeqIndex(0)
 		{
 			SetFlag(EArchiveFlags::Text);
 			if (type == EArchiveType::Saving)
@@ -45,6 +49,7 @@ namespace Ion
 		void ExitNode();
 
 		void BeginSeq();
+		bool IterateSeq();
 		void EndSeq();
 
 	protected:
@@ -72,5 +77,7 @@ namespace Ion
 	private:
 		TSharedPtr<ryml::Tree> m_YAMLTree;
 		ryml::NodeRef m_CurrentNode;
+		// @TODO: This should be a stack of indices (so there can be nested sequences)
+		mutable size_t m_SeqIndex;
 	};
 }

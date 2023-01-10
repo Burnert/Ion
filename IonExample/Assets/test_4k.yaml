@@ -1,0 +1,8 @@
+Type: Ion.Image
+Name: test_4k
+ImportExternal: test_4k.png
+Resource:
+  Texture:
+    Guid: '51ac07c9-19e9-4031-a65b-a9505a4f9981'
+    Properties:
+      Filter: Nearest

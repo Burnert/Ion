@@ -1,0 +1,8 @@
+Type: Ion.Mesh
+Name: Sphere
+ImportExternal: Sphere.dae
+Resource:
+  Mesh:
+    Guid: '181a0a33-8cdd-4a89-a298-5ba448327047'
+    Defaults:
+      Materials: []

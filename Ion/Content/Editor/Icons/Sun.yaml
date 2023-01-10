@@ -1,0 +1,8 @@
+Type: Ion.Image
+Name: Sun
+ImportExternal: Sun.png
+Resource:
+  Texture:
+    Guid: 'c8c9923f-adde-4cda-b48c-55444b06645c'
+    Properties:
+      Filter: Nearest

@@ -1,0 +1,10 @@
+Type: Ion.Mesh
+Name: SM_Slovak
+ImportExternal: slovak.dae
+Resource:
+  Mesh:
+    Guid: '803618f2-f257-4e4c-8e33-a1393506a9a3'
+    Defaults:
+      Materials:
+        - Index: 0
+          Asset: '[Example]/Materials/slovak'

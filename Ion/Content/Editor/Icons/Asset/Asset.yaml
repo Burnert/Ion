@@ -1,0 +1,8 @@
+Type: Ion.Image
+Name: Asset
+ImportExternal: Asset.png
+Resource:
+  Texture:
+    Guid: '14096ee1-2a27-4241-be0f-8c7a922f5c43'
+    Properties:
+      Filter: Nearest

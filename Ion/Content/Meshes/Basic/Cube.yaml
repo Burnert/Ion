@@ -1,0 +1,8 @@
+Type: Ion.Mesh
+Name: Cube
+ImportExternal: Cube.dae
+Resource:
+  Mesh:
+    Guid: '6e24e12c-94a1-453f-97fa-85cde39cd9b0'
+    Defaults:
+      Materials: []

@@ -1,0 +1,8 @@
+Type: Ion.Image
+Name: White
+ImportExternal: White.png
+Resource:
+  Texture:
+    Guid: '9d55215c-8089-45a8-bfd0-b2e138159753'
+    Properties:
+      Filter: Nearest

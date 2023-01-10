@@ -1,0 +1,8 @@
+Type: Ion.Image
+Name: T_Ciupaga
+ImportExternal: ciupaga.png
+Resource:
+  Texture:
+    Guid: '38314780-0b2b-47e7-90a3-6235d40a6855'
+    Properties:
+      Filter: Nearest

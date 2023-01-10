@@ -1,0 +1,8 @@
+Type: Ion.Image
+Name: Mesh
+ImportExternal: Mesh.png
+Resource:
+  Texture:
+    Guid: '2506a651-a818-430e-8101-a518d7c8a791'
+    Properties:
+      Filter: Nearest

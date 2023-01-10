@@ -1,0 +1,8 @@
+Type: Ion.Mesh
+Name: Cylinder
+ImportExternal: Cylinder.dae
+Resource:
+  Mesh:
+    Guid: 'a48a2d59-acb2-4c8b-93fb-ac728fa6eded'
+    Defaults:
+      Materials: []
