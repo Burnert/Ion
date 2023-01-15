@@ -120,7 +120,7 @@ namespace Ion
 			return EmptyString;
 		}();
 
-		ar << val;
+		ar &= val;
 
 		if (ar.IsLoading())
 		{
@@ -310,7 +310,7 @@ namespace Ion
 
 		xmlAr.EnterAttribute(IASSET_ATTR_source);
 		String sSource = data->MaterialShaderCodePath.ToString();
-		nodeCode << sSource;
+		nodeCode &= sSource;
 		data->MaterialShaderCodePath = sSource;
 		xmlAr.ExitAttribute(); // IASSET_ATTR_source
 
@@ -323,14 +323,14 @@ namespace Ion
 			ArchiveNode nodeType = ar.EnterNode(node, "Type", EArchiveNodeType::Value);
 
 			xmlAr.EnterAttribute(IASSET_ATTR_type);
-			nodeType << param->Type;
+			nodeType &= param->Type;
 			xmlAr.ExitAttribute(); // IASSET_ATTR_type
 
 			ArchiveNode nodeName = ar.EnterNode(node, "Name", EArchiveNodeType::Value);
 
 			xmlAr.EnterAttribute(IASSET_ATTR_name);
 			//String sAsset = ar.IsSaving() ? data->Description.Defaults.MaterialAssets[index]->GetVirtualPath() : EmptyString;
-			nodeName << param->Name;
+			nodeName &= param->Name;
 			xmlAr.ExitAttribute(); // IASSET_ATTR_name
 
 			if (xmlAr.TryEnterNode(IASSET_NODE_Material_Parameter_Default) || IS_YAML_AR(ar))

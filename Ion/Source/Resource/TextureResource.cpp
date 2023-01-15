@@ -61,7 +61,7 @@ namespace Ion
 		ArchiveNode nodeGuid = ar.EnterNode(nodeTexture, "Guid", EArchiveNodeType::Value);
 
 		xmlAr.EnterAttribute(IASSET_ATTR_guid);
-		nodeGuid << data->ResourceGuid;
+		nodeGuid &= data->ResourceGuid;
 		xmlAr.ExitAttribute(); // IASSET_ATTR_guid
 
 		ArchiveNode nodeProperties = ar.EnterNode(nodeTexture, "Properties", EArchiveNodeType::Map);
@@ -74,7 +74,7 @@ namespace Ion
 			if (xmlAr.TryEnterNode(IASSET_NODE_Resource_Texture_Prop_Filter) || IS_YAML_AR(ar))
 			{
 				xmlAr.EnterAttribute(IASSET_ATTR_value);
-				nodeFilter << data->Description.Properties.Filter;
+				nodeFilter &= data->Description.Properties.Filter;
 				xmlAr.ExitAttribute();
 
 				xmlAr.ExitNode(); // IASSET_NODE_Resource_Texture_Prop_Filter

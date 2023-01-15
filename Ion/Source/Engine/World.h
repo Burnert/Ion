@@ -36,13 +36,13 @@ namespace Ion
 		Entity* m_Entity;
 
 	public:
-		FORCEINLINE friend Archive& operator<<(Archive& ar, WorldTreeNodeData& data)
+		FORCEINLINE friend Archive& operator&=(Archive& ar, WorldTreeNodeData& data)
 		{
 			// Serialize the node as the entity's guid.
 			if (ar.IsSaving())
 			{
 				GUID guid = data.GetEntityGuid();
-				ar << guid;
+				ar &= guid;
 			}
 			// NOTE: No deserialization, because the tree
 			// is being rebuilt from the Entity hierarchy anyway.
@@ -165,7 +165,7 @@ namespace Ion
 
 	public:
 		// Serialization
-		friend Archive& operator<<(Archive& ar, World* world);
+		friend Archive& operator&=(Archive& ar, World* world);
 	};
 
 	// Inline definitions

@@ -10,14 +10,14 @@ namespace Ion
 
 		xmlAr.EnterNode("Matter");
 
-		xmlAr << m_Class;
+		xmlAr &= m_Class;
 
 		xmlAr.EnterNode("Name");
-		xmlAr << m_Name;
+		xmlAr &= m_Name;
 		xmlAr.ExitNode(); // "Name"
 
 		xmlAr.EnterNode("Guid");
-		xmlAr << m_Guid;
+		xmlAr &= m_Guid;
 		xmlAr.ExitNode(); // "Guid"
 
 		xmlAr.ExitNode(); // "Matter"
@@ -34,7 +34,7 @@ namespace Ion
 	{
 	}
 
-	Archive& operator<<(Archive& ar, MObjectPtr& object)
+	Archive& operator&=(Archive& ar, MObjectPtr& object)
 	{
 		XMLArchiveAdapter xmlAr = ar;
 
@@ -43,7 +43,7 @@ namespace Ion
 		{
 			xmlAr.EnterNode("Matter");
 			MClass* mClass;
-			ar << mClass;
+			ar &= mClass;
 			xmlAr.ExitNode();
 
 			// @TODO: Seek() archive to before this read

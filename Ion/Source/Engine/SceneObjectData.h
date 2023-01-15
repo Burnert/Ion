@@ -15,7 +15,7 @@ namespace Ion
 		{
 		}
 
-		FORCEINLINE friend Archive& operator<<(Archive& ar, SceneObjectData& sod)
+		FORCEINLINE friend Archive& operator&=(Archive& ar, SceneObjectData& sod)
 		{
 			XMLArchiveAdapter xmlAr = ar;
 

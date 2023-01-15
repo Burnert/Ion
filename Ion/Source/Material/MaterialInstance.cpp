@@ -187,7 +187,7 @@ namespace Ion
 
 		ArchiveNode nodeParent = ar.EnterNode(nodeMaterialInstance, "Parent", EArchiveNodeType::Value);
 		xmlAr.EnterAttribute(IASSET_ATTR_parent);
-		nodeParent << data->ParentMaterialAssetVP;
+		nodeParent &= data->ParentMaterialAssetVP;
 		xmlAr.ExitAttribute(); // IASSET_ATTR_parent
 
 		auto LSerializeParameterInstance = [&](MaterialInstanceAssetData::Parameter* param)
@@ -196,13 +196,13 @@ namespace Ion
 
 			ArchiveNode nodeType = ar.EnterNode(node, "Type", EArchiveNodeType::Value);
 			xmlAr.EnterAttribute(IASSET_ATTR_type);
-			nodeType << param->Type;
+			nodeType &= param->Type;
 			xmlAr.ExitAttribute(); // IASSET_ATTR_type
 
 			ArchiveNode nodeName = ar.EnterNode(node, "Name", EArchiveNodeType::Value);
 			xmlAr.EnterAttribute(IASSET_ATTR_name);
 			//String sAsset = ar.IsSaving() ? data->Description.Defaults.MaterialAssets[index]->GetVirtualPath() : EmptyString;
-			nodeName << param->Name;
+			nodeName &= param->Name;
 			xmlAr.ExitAttribute(); // IASSET_ATTR_name
 
 			ArchiveNode nodeValue = ar.EnterAndUseNode(node, "Value", EArchiveNodeType::Value);

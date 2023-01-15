@@ -47,7 +47,7 @@ namespace Ion
 		// @TODO: Who should own the world?
 		// Worlds have to be deleted at some point
 		World* world = new World;
-		ar << world;
+		ar &= world;
 		world->OnInit();
 
 		return world;
@@ -384,17 +384,17 @@ namespace Ion
 		// ??
 	}
 
-	Archive& operator<<(Archive& ar, World* world)
+	Archive& operator&=(Archive& ar, World* world)
 	{
 		ionbreak("Not working.");
 		ionassert(world);
 
-		ar << world->m_WorldGUID;
+		ar &= world->m_WorldGUID;
 
-		//ar << &world->m_ComponentRegistry;
+		//ar &= &world->m_ComponentRegistry;
 
 		TArray<TObjectPtr<Entity>> allEntities = ar.IsSaving() ? GatherValues(world->m_Entities) : TArray<TObjectPtr<Entity>>();
-		//ar << allEntities;
+		//ar &= allEntities;
 		if (ar.IsLoading())
 		{
 			for (const TObjectPtr<Entity>& entity : allEntities)
@@ -403,7 +403,7 @@ namespace Ion
 			}
 		}
 		
-		ar << TTreeSerializer(*world->m_WorldTreeRoot, world->m_WorldTreeNodeFactory);
+		ar &= TTreeSerializer(*world->m_WorldTreeRoot, world->m_WorldTreeNodeFactory);
 
 		if (ar.IsLoading())
 		{
@@ -438,7 +438,7 @@ namespace Ion
 			}
 		}
 
-		ar << world->m_bTickWorld;
+		ar &= world->m_bTickWorld;
 
 		return ar;
 	}
@@ -462,16 +462,16 @@ namespace Ion
 		xmlAr.EnterNode(IASSET_NODE_World);
 
 		xmlAr.EnterNode(IASSET_NODE_Guid);
-		xmlAr << data->WorldGuid;
+		xmlAr &= data->WorldGuid;
 		xmlAr.ExitNode(); // IASSET_NODE_Guid
 
 		xmlAr.EnterNode(IASSET_NODE_Entities);
 		auto LSerializeEntity = [&](int32 index = -1)
 		{
 			if (ar.IsSaving())
-				;// ar << SerializeMObject(data->Entities[index]);
+				;// ar &= SerializeMObject(data->Entities[index]);
 			else if (ar.IsLoading())
-				;// ar << SerializeMObject(data->Entities.emplace_back());
+				;// ar &= SerializeMObject(data->Entities.emplace_back());
 		};
 		if (ar.IsLoading())
 		{

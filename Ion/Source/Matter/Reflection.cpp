@@ -146,13 +146,13 @@ namespace Ion
 		return methods;
 	}
 
-	Archive& operator<<(Archive& ar, MClass*& mClass)
+	Archive& operator&=(Archive& ar, MClass*& mClass)
 	{
 		XMLArchiveAdapter xmlAr = ar;
 		xmlAr.EnterNode("Class");
 
 		String className = ar.IsSaving() ? mClass->GetName() : EmptyString;
-		xmlAr << className;
+		xmlAr &= className;
 
 		if (ar.IsLoading())
 		{

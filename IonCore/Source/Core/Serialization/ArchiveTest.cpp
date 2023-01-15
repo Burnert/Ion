@@ -19,30 +19,30 @@ namespace Ion::Test
 
 		ArchiveNode nodeGuid = archive.EnterNode(root, "Guid", EArchiveNodeType::Value);
 		GUID guidTest = archive.IsSaving() ? GUID::FromString("54a6f55c-feaf-4aa9-87cd-cc9b487c31ef").Unwrap() : GUID::Zero;
-		nodeGuid << guidTest;
+		nodeGuid &= guidTest;
 		ionassert(guidTest == GUID::FromString("54a6f55c-feaf-4aa9-87cd-cc9b487c31ef").Unwrap());
 
 		// String test
 
 		ArchiveNode nodeS1 = archive.EnterNode(root, "S1", EArchiveNodeType::Value);
 		String stringTest1 = archive.IsSaving() ? "ABCDEFG_STRTEST" : EmptyString;
-		nodeS1 << stringTest1;
+		nodeS1 &= stringTest1;
 		ionassert(stringTest1 == "ABCDEFG_STRTEST");
 
 		ArchiveNode nodeS2 = archive.EnterNode(root, "S2", EArchiveNodeType::Value);
 		String stringTest2 = archive.IsSaving() ? "NextString_____" : EmptyString;
-		nodeS2 << stringTest2;
+		nodeS2 &= stringTest2;
 		ionassert(stringTest2 == "NextString_____");
 
 		ArchiveNode nodeS3 = archive.EnterNode(root, "S3", EArchiveNodeType::Value);
 		String stringTest3 = archive.IsSaving() ? "  String3      " : EmptyString;
-		nodeS3 << stringTest3;
+		nodeS3 &= stringTest3;
 		ionassert(stringTest3 == "  String3      ");
 
 		ArchiveNode nodeS4 = archive.EnterNode(root, "S4", EArchiveNodeType::Value);
 		const char utfString[] = u8"u8 简体中文";
 		String stringTest4 = archive.IsSaving() ? utfString : EmptyString;
-		nodeS4 << stringTest4;
+		nodeS4 &= stringTest4;
 		ionassert(stringTest4 == utfString);
 
 		// TArray test
@@ -58,7 +58,7 @@ namespace Ion::Test
 		{
 			std::copy(arrayTest_base.begin(), arrayTest_base.end(), std::back_inserter(arrayTest));
 		}
-		nodeArray << arrayTest;
+		nodeArray &= arrayTest;
 		ionassert(arrayTest.size() == arrayTest_base.size());
 		ionassert([&]
 		{
@@ -87,7 +87,7 @@ namespace Ion::Test
 				node5.Insert(factory.Create(8));
 			}
 
-			archive << TTreeSerializer(tree, factory);
+			archive &= TTreeSerializer(tree, factory);
 
 			ionassert(tree.GetChildrenSize() == 2);
 			ionassert(tree.GetChildren()[1]->GetChildrenSize() == 2);

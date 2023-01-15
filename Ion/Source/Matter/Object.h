@@ -46,7 +46,7 @@ namespace Ion
 		friend class MObjectSerializer;
 
 	public:
-		friend Archive& operator<<(Archive& ar, MObjectPtr& object);
+		friend Archive& operator&=(Archive& ar, MObjectPtr& object);
 	};
 
 	template<typename T, TEnableIfT<TIsConvertibleV<T*, MObject*>>*>

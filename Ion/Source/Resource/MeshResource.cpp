@@ -74,7 +74,7 @@ namespace Ion
 		ArchiveNode nodeGuid = ar.EnterNode(nodeMesh, "Guid", EArchiveNodeType::Value);
 
 		xmlAr.EnterAttribute(IASSET_ATTR_guid);
-		nodeGuid << data->ResourceGuid;
+		nodeGuid &= data->ResourceGuid;
 		xmlAr.ExitAttribute(); // IASSET_ATTR_guid
 
 		ArchiveNode nodeDefaults = ar.EnterNode(nodeMesh, "Defaults", EArchiveNodeType::Map);
@@ -88,14 +88,14 @@ namespace Ion
 				ArchiveNode nodeIndex = ar.EnterNode(node, "Index", EArchiveNodeType::Value);
 
 				xmlAr.EnterAttribute(IASSET_ATTR_index);
-				nodeIndex << index;
+				nodeIndex &= index;
 				xmlAr.ExitAttribute(); // IASSET_ATTR_index
 
 				ArchiveNode nodeAsset = ar.EnterNode(node, "Asset", EArchiveNodeType::Value);
 
 				xmlAr.EnterAttribute(IASSET_ATTR_asset);
 				String sAsset = ar.IsSaving() ? data->Description.Defaults.MaterialAssets[index]->GetVirtualPath() : EmptyString;
-				nodeAsset << sAsset;
+				nodeAsset &= sAsset;
 				xmlAr.ExitAttribute(); // IASSET_ATTR_asset
 
 				if (ar.IsLoading())

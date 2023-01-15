@@ -223,7 +223,7 @@ namespace Ion
 		{
 			xmlAr.EnterNode("Parent" IASSET_NODE_Guid);
 			GUID parentGuid = m_Parent ? m_Parent->GetGuid() : GUID::Zero;
-			ar << parentGuid;
+			ar &= parentGuid;
 			xmlAr.ExitNode();
 
 			TArray<GUID> childrenGuids;
@@ -236,7 +236,7 @@ namespace Ion
 
 		// @TODO: Temporary solution, make some kind of a field serializer or something
 		xmlAr.EnterNode("SceneData");
-		ar << m_SceneData;
+		ar &= m_SceneData;
 		xmlAr.ExitNode();
 
 		xmlAr.EnterNode("CreateEmptyRootOnSpawn");

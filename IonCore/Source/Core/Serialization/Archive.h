@@ -104,7 +104,7 @@ namespace Ion
 		}
 
 		template<typename T>
-		FORCEINLINE void operator<<(T& value)
+		FORCEINLINE void operator&=(T& value)
 		{
 			ionassert(Ar);
 			// @TODO: This assert triggers on empty nodes, which normally works
@@ -113,7 +113,7 @@ namespace Ion
 			//ionassert(Type == EArchiveNodeType::Value);
 
 			Ar->UseNode(*this);
-			*Ar << value;
+			*Ar &= value;
 		}
 	};
 
@@ -152,7 +152,7 @@ namespace Ion
 
 		virtual void Serialize(Archive& ar) override
 		{
-			ar << m_Item;
+			ar &= m_Item;
 		}
 
 	private:
@@ -219,7 +219,7 @@ namespace Ion
 
 		/**
 		 * @brief From this point on, use the specified node when performing 
-		 * serialization operations. (Serialize or operator<<)
+		 * serialization operations. (Serialize or operator&=)
 		 * 
 		 * @param node Node to use
 		 */
@@ -232,80 +232,80 @@ namespace Ion
 
 #pragma region LeftShift Operators
 
-		FORCEINLINE Archive& operator<<(bool& value)
+		FORCEINLINE Archive& operator&=(bool& value)
 		{
 			Serialize(value);
 			return *this;
 		}
 
-		FORCEINLINE Archive& operator<<(int8& value)
+		FORCEINLINE Archive& operator&=(int8& value)
 		{
 			Serialize(value);
 			return *this;
 		}
 
-		FORCEINLINE Archive& operator<<(int16& value)
+		FORCEINLINE Archive& operator&=(int16& value)
 		{
 			Serialize(value);
 			return *this;
 		}
 
-		FORCEINLINE Archive& operator<<(int32& value)
+		FORCEINLINE Archive& operator&=(int32& value)
 		{
 			Serialize(value);
 			return *this;
 		}
 
-		FORCEINLINE Archive& operator<<(int64& value)
+		FORCEINLINE Archive& operator&=(int64& value)
 		{
 			Serialize(value);
 			return *this;
 		}
 
-		FORCEINLINE Archive& operator<<(uint8& value)
+		FORCEINLINE Archive& operator&=(uint8& value)
 		{
 			Serialize(value);
 			return *this;
 		}
 
-		FORCEINLINE Archive& operator<<(uint16& value)
+		FORCEINLINE Archive& operator&=(uint16& value)
 		{
 			Serialize(value);
 			return *this;
 		}
 
-		FORCEINLINE Archive& operator<<(uint32& value)
+		FORCEINLINE Archive& operator&=(uint32& value)
 		{
 			Serialize(value);
 			return *this;
 		}
 
-		FORCEINLINE Archive& operator<<(uint64& value)
+		FORCEINLINE Archive& operator&=(uint64& value)
 		{
 			Serialize(value);
 			return *this;
 		}
 
-		FORCEINLINE Archive& operator<<(float& value)
+		FORCEINLINE Archive& operator&=(float& value)
 		{
 			Serialize(value);
 			return *this;
 		}
 
-		FORCEINLINE Archive& operator<<(double& value)
+		FORCEINLINE Archive& operator&=(double& value)
 		{
 			Serialize(value);
 			return *this;
 		}
 
-		FORCEINLINE Archive& operator<<(String& value)
+		FORCEINLINE Archive& operator&=(String& value)
 		{
 			Serialize(value);
 			return *this;
 		}
 
 		template<typename T, TEnableIfT<TIsEnumV<T>>* = 0>
-		FORCEINLINE Archive& operator<<(T& value)
+		FORCEINLINE Archive& operator&=(T& value)
 		{
 			SerializeEnum(value);
 			return *this;
@@ -356,7 +356,7 @@ namespace Ion
 
 		virtual void Serialize(ArchiveArrayItem& item) = 0;
 
-		FORCEINLINE Archive& operator<<(ArchiveArrayItem& item)
+		FORCEINLINE Archive& operator&=(ArchiveArrayItem& item)
 		{
 			Serialize(item);
 			return *this;
@@ -380,12 +380,12 @@ namespace Ion
 	public:
 		// Generic array serialization
 		template<typename T>
-		friend FORCEINLINE Archive& operator<<(Archive& ar, TArray<T>& array)
+		friend FORCEINLINE Archive& operator&=(Archive& ar, TArray<T>& array)
 		{
 			size_t count = ar.IsSaving() ? array.size() : 0;
 			if (ar.IsBinary())
 			{
-				ar << count;
+				ar &= count;
 			}
 			else if (ar.IsLoading())
 			{
@@ -402,7 +402,7 @@ namespace Ion
 				{
 					// Don't default construct the element
 					union { T element; };
-					ar << TArchiveArrayItem(element, n);
+					ar &= TArchiveArrayItem(element, n);
 					array.emplace_back(Move(element));
 				}
 			}
@@ -410,7 +410,7 @@ namespace Ion
 			{
 				for (size_t n = 0; n < count; ++n)
 				{
-					ar << TArchiveArrayItem(array.at(n), n);
+					ar &= TArchiveArrayItem(array.at(n), n);
 				}
 			}
 
@@ -418,7 +418,7 @@ namespace Ion
 		}
 	};
 
-#define SERIALIZE_BIT_FIELD(ar, f) { bool bField = f; ar << bField; f = bField; }
+#define SERIALIZE_BIT_FIELD(ar, f) { bool bField = f; ar &= bField; f = bField; }
 
 }
 

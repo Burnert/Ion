@@ -43,7 +43,7 @@ namespace Ion
 
 		xmlAr.EnterNode("Mesh");
 		String vp = /*ar.IsSaving() ? GetMeshComponent()->GetMesh()->GetMeshResource()->GetAssetHandle()->GetVirtualPath() :*/ EmptyString;
-		xmlAr << vp;
+		xmlAr &= vp;
 		xmlAr.ExitNode(); // "Mesh"
 
 		if (ar.IsLoading())

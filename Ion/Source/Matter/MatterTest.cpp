@@ -390,7 +390,7 @@ namespace Ion::Test
 
 		XMLArchive testAr(EArchiveType::Saving);
 		testAr.SeekRoot();
-		testAr << object;
+		testAr &= object;
 		{
 			File saveFile("MatterArchiveTest.xml");
 			testAr.SaveToFile(saveFile);

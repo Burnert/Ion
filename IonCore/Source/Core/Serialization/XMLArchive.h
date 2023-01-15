@@ -128,9 +128,9 @@ namespace Ion
 		}
 
 		template<typename T, TEnableIfT<!TIsEnumV<T>>* = 0>
-		FORCEINLINE Archive& operator<<(T& value)
+		FORCEINLINE Archive& operator&=(T& value)
 		{
-			m_Archive << value;
+			m_Archive &= value;
 			return m_Archive;
 		}
 
@@ -144,13 +144,13 @@ namespace Ion
 			else
 			{
 				auto utValue = (std::underlying_type_t<TEnum>)value;
-				m_Archive << utValue;
+				m_Archive &= utValue;
 				value = (TEnum)utValue;
 			}
 		}
 
 		template<typename T, TEnableIfT<TIsEnumV<T>>* = 0>
-		FORCEINLINE Archive& operator<<(T& value)
+		FORCEINLINE Archive& operator&=(T& value)
 		{
 			SerializeEnum(value);
 			return m_Archive;

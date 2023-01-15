@@ -72,7 +72,7 @@ namespace Ion
 		static inline constexpr size_t Size = sizeof(m_Bytes);
 
 		// Serialization
-		FORCEINLINE friend Archive& operator<<(Archive& ar, GUID& guid)
+		FORCEINLINE friend Archive& operator&=(Archive& ar, GUID& guid)
 		{
 			if (ar.IsBinary())
 			{

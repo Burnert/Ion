@@ -795,7 +795,7 @@ namespace Ion
 		friend class MObject;
 
 	public:
-		friend Archive& operator<<(Archive& ar, MClass*& mClass);
+		friend Archive& operator&=(Archive& ar, MClass*& mClass);
 	};
 
 	FORCEINLINE const MObject* MClass::GetClassDefaultObject() const
@@ -1230,8 +1230,8 @@ static inline MClass* const MatterRT = StaticClass();
 #define MCLASS(T) \
 MATTER_DECLARE_CLASS(T); \
 /* Implement archive operator */ \
-FORCEINLINE friend Archive& operator<<(Archive& ar, TObjectPtr<T>& value) { \
-	ar << SerializeMObject(value); \
+FORCEINLINE friend Archive& operator&=(Archive& ar, TObjectPtr<T>& value) { \
+	ar &= SerializeMObject(value); \
 	return ar; \
 }
 

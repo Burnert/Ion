@@ -126,7 +126,7 @@ namespace Ion
 
 		xmlAr.EnterAttribute(IASSET_ATTR_type);
 		String sType = ar.IsSaving() ? m_Type->GetName() : EmptyString;
-		nodeType << sType;
+		nodeType &= sType;
 		xmlAr.ExitAttribute(); // IASSET_ATTR_type
 
 		if (IAssetType* type = AssetRegistry::FindType(sType))
@@ -139,11 +139,11 @@ namespace Ion
 		ON_YAML_AR(ar)
 		{
 			ArchiveNode nodeName = ar.EnterNode(nodeRoot, "Name", EArchiveNodeType::Value);
-			nodeName << m_Info.Name;
+			nodeName &= m_Info.Name;
 		}
 		else if (xmlAr.TryEnterNode(IASSET_NODE_Name))
 		{
-			ar << m_Info.Name;
+			ar &= m_Info.Name;
 			xmlAr.ExitNode(); // IASSET_NODE_Name
 		}
 		else // Can happen only when loading
@@ -160,7 +160,7 @@ namespace Ion
 
 			xmlAr.EnterAttribute(IASSET_ATTR_path);
 			String sPath = ar.IsSaving() ? m_AssetImportPath.RelativeTo(m_AssetDefinitionPath / "..") : EmptyString;
-			nodeImportExternal << sPath;
+			nodeImportExternal &= sPath;
 			xmlAr.ExitAttribute();
 
 			// @TODO: Temporary?

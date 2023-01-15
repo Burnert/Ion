@@ -47,14 +47,14 @@ namespace Ion
 	};
 
 	template<typename TNode, typename TFactory>
-	FORCEINLINE Archive& operator<<(Archive& ar, const TTreeSerializer<TNode, TFactory>& treeSerializer)
+	FORCEINLINE Archive& operator&=(Archive& ar, const TTreeSerializer<TNode, TFactory>& treeSerializer)
 	{
-		ar << TTreeSerializer<TNode, TFactory>(treeSerializer);
+		ar &= TTreeSerializer<TNode, TFactory>(treeSerializer);
 		return ar;
 	}
 
 	template<typename TNode, typename TFactory>
-	FORCEINLINE Archive& operator<<(Archive& ar, TTreeSerializer<TNode, TFactory>&& treeSerializer)
+	FORCEINLINE Archive& operator&=(Archive& ar, TTreeSerializer<TNode, TFactory>&& treeSerializer)
 	{
 		using ElementType = typename TNode::ElementType;
 		static constexpr bool bIsFastNode = TIsFastTreeNode<TNode>::value;
@@ -67,12 +67,12 @@ namespace Ion
 		TFunction<void(TNode&)> LSerializeNode = [&](TNode& node)
 		{
 			// Get() returns a reference, not a copy. This is a valid read/write operation.
-			ar << node.Get();
+			ar &= node.Get();
 
 			// Note: If the archive is loading, the children size will be 0 here...
 			size_t childrenSize = node.GetChildrenSize();
 			// ...but will get updated here.
-			ar << childrenSize;
+			ar &= childrenSize;
 
 			for (size_t n = 0; n < childrenSize; ++n)
 			{
