@@ -74,7 +74,6 @@ namespace Ion::Test
 
 		// Tree test
 
-		ON_YAML_AR(archive) yml->EnterNode("Tree");
 		{
 			TTreeNodeFactory<uint64> factory;
 			TFastTreeNode<uint64>& tree = factory.Create(archive.IsSaving() ? 7 : 0);
@@ -94,7 +93,6 @@ namespace Ion::Test
 			ionassert(tree.GetChildren()[1]->GetChildrenSize() == 2);
 			ionassert(tree.GetChildren()[1]->GetChildren()[0]->Get() == 2);
 		}
-		ON_YAML_AR(archive) yml->ExitNode();
 	}
 
 	void TestArchives(EArchiveType type)

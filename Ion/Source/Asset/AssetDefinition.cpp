@@ -32,7 +32,7 @@ namespace Ion
 		ionassert(m_CustomData);
 		ionassert(m_Type);
 
-		XMLArchive ar(EArchiveType::Loading);
+		YAMLArchive ar(EArchiveType::Loading);
 		File file(m_AssetDefinitionPath);
 		ar.LoadFromFile(file);
 
@@ -47,7 +47,7 @@ namespace Ion
 		ionassert(m_CustomData);
 		ionassert(m_Type);
 
-		XMLArchive ar(EArchiveType::Saving);
+		YAMLArchive ar(EArchiveType::Saving);
 		
 		if (!Serialize(ar).Err([this](Error& err) { AssetLogger.Error("Cannot save asset \"{}\" to file.\n{}", m_VirtualPath, err.Message); }))
 			return;

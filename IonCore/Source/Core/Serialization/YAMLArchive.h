@@ -47,13 +47,6 @@ namespace Ion
 
 		virtual ArchiveNode GetCurrentNode() override;
 
-		void EnterNode(const String& name);
-		void ExitNode();
-
-		void BeginSeq();
-		bool IterateSeq();
-		void EndSeq();
-
 	protected:
 		virtual void Serialize(ArchiveArrayItem& item) override;
 
@@ -78,10 +71,7 @@ namespace Ion
 
 	private:
 		TSharedPtr<ryml::Tree> m_YAMLTree;
-		ryml::NodeRef m_CurrentNode;
 		size_t m_CurrentNodeIndex;
-		// @TODO: This should be a stack of indices (so there can be nested sequences)
-		mutable size_t m_SeqIndex;
 	};
 
 	template<typename T, TEnableIf<std::is_fundamental_v<T>>*>

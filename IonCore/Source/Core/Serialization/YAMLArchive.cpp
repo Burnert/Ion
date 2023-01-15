@@ -7,7 +7,6 @@ namespace Ion
 	YAMLArchive::YAMLArchive(EArchiveType type) :
 		Archive(type),
 		m_YAMLTree(nullptr),
-		m_SeqIndex(0),
 		m_CurrentNodeIndex(TNumericLimits<size_t>::max())
 	{
 		SetFlag(EArchiveFlags::Text);
@@ -15,7 +14,6 @@ namespace Ion
 		{
 			m_YAMLTree = MakeShared<ryml::Tree>();
 			m_YAMLTree->to_map(m_YAMLTree->root_id());
-			m_CurrentNode = m_YAMLTree->rootref();
 		}
 	}
 
@@ -135,7 +133,6 @@ namespace Ion
 				.UnwrapOr(EmptyString);
 
 			m_YAMLTree = MakeShared<ryml::Tree>(ryml::parse_in_arena(ryml::to_csubstr(sYAML)));
-			m_CurrentNode = m_YAMLTree->rootref();
 		}
 	}
 
@@ -301,155 +298,6 @@ namespace Ion
 		ArchiveNode node(this, key.data(), YAMLNodeTypeToArchiveNodeType(type));
 		node.SetCustomData(YAMLNodeData { m_CurrentNodeIndex });
 		return node;
-	}
-
-	void YAMLArchive::EnterNode(const String& name)
-	{
-		return;
-
-		ionassert(m_YAMLTree);
-		ionassert(m_CurrentNode.valid());
-
-		if (!m_CurrentNode.is_map())
-		{
-			if (IsLoading())
-			{
-				ionerror(IOError, "Current node is not a map.");
-			}
-			else if (IsSaving())
-			{
-				// In a saving archive, entering a node must change the current node to a map.
-				// E.g. You cannot enter nodes by key when in a sequence node.
-				m_CurrentNode |= ryml::MAP;
-			}
-		}
-
-		ryml::NodeRef node;
-		if (IsSaving())
-		{
-			node = m_CurrentNode.append_child() << ryml::key(ryml::to_csubstr(name));
-		}
-		else if (IsLoading())
-		{
-			node = m_CurrentNode[ryml::to_csubstr(name)];
-			if (!node.has_key())
-				ionerror(IOError, "Node \"{}\" not found.", name);
-		}
-
-		m_CurrentNode = node;
-	}
-
-	void YAMLArchive::ExitNode()
-	{
-		return;
-
-		ionassert(m_YAMLTree);
-		ionassert(m_CurrentNode.valid());
-
-		// NOTE: A node must have a value or else ryml crashes on emit.
-		if (m_CurrentNode.type() == ryml::KEY)
-		{
-			m_CurrentNode = ryml::csubstr();
-		}
-
-		if (!m_CurrentNode.has_parent())
-			ionerror(IOError, "Current node has no parent.");
-		
-		m_CurrentNode = m_CurrentNode.parent();
-	}
-
-	void YAMLArchive::BeginSeq()
-	{
-		return;
-
-		ionassert(m_YAMLTree);
-		ionassert(m_CurrentNode.valid());
-
-		m_SeqIndex = 0;
-
-		if (IsLoading())
-		{
-			if (!m_CurrentNode.is_seq())
-				ionerror(IOError, "Current node is not a sequence.");
-		}
-		else if (IsSaving())
-		{
-			m_CurrentNode |= ryml::SEQ;
-		}
-	}
-
-	bool YAMLArchive::IterateSeq()
-	{
-		return false;
-
-		ionassert(m_YAMLTree);
-		ionassert(m_CurrentNode.valid());
-
-		ryml::NodeRef node;
-
-		if (IsSaving())
-		{
-			// 0 means that the current seq node has not been iterated through yet.
-			if (m_SeqIndex != 0)
-			{
-				// Return to the parent before selecting the next child
-				// if it's not the first function call in the sequence.
-				m_CurrentNode = m_CurrentNode.parent();
-			}
-
-			node = m_CurrentNode.append_child();
-
-			++m_SeqIndex;
-		}
-		else if (IsLoading())
-		{
-			// 0 means that the current seq node has not been iterated through yet.
-			if (m_SeqIndex != 0)
-			{
-				// Return to the parent before selecting the next child
-				// if it's not the first function call in the sequence.
-				m_CurrentNode = m_CurrentNode.parent();
-			}
-
-			node = m_CurrentNode.child(m_SeqIndex);
-
-			if (!node.valid())
-			{
-				//if (m_SeqIndex != 0)
-				//{
-				//	// Return to the parent on the last call.
-				//	// Don't do it if there were no children, as the node
-				//	// has never been set to a child node.
-				//	m_CurrentNode = m_CurrentNode.parent();
-				//}
-				m_SeqIndex = 0;
-				return false;
-			}
-
-			++m_SeqIndex;
-		}
-
-		m_CurrentNode = node;
-
-		return true;
-	}
-
-	void YAMLArchive::EndSeq()
-	{
-		return;
-
-		ionassert(m_YAMLTree);
-		ionassert(m_CurrentNode.valid());
-
-		// Return to the parent if IterateSeq didn't.
-		if (m_SeqIndex != 0)
-		{
-			m_CurrentNode = m_CurrentNode.parent();
-			m_SeqIndex = 0;
-		}
-
-		if (!m_CurrentNode.is_seq())
-			ionerror(IOError, "Current node is not a sequence.");
 	}
 
 	void YAMLArchive::InitYAMLNode(EArchiveNodeType type, size_t node, ryml::csubstr key, ryml::csubstr val, bool bKey)
