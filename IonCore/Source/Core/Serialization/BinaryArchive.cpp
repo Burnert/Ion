@@ -101,7 +101,7 @@ namespace Ion
 		}
 	}
 
-	void BinaryArchive::Serialize(IArrayItem& item)
+	void BinaryArchive::Serialize(ArchiveArrayItem& item)
 	{
 		item.Serialize(*this);
 	}

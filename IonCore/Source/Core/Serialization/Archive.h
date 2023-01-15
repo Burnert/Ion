@@ -10,6 +10,26 @@ namespace Ion
 
 	class Archive;
 
+	namespace EArchiveFlags
+	{
+		enum Type : uint8
+		{
+			None    = 0,
+			Saving  = 1 << 0,
+			Loading = 1 << 1,
+			Binary  = 1 << 2,
+			Text    = 1 << 3,
+		};
+	}
+
+	enum class EArchiveType
+	{
+		Saving,
+		Loading,
+	};
+
+#pragma region Node Based Archive
+
 	enum class EArchiveNodeType : uint8
 	{
 		None,
@@ -97,38 +117,36 @@ namespace Ion
 		}
 	};
 
-	namespace EArchiveFlags
-	{
-		enum Type : uint8
-		{
-			None    = 0,
-			Saving  = 1 << 0,
-			Loading = 1 << 1,
-			Binary  = 1 << 2,
-			Text    = 1 << 3,
-		};
-	}
+#pragma endregion
 
-	enum class EArchiveType
-	{
-		Saving,
-		Loading,
-	};
+#pragma region Array Serialization Helpers
 
-	class IArrayItem
+	class ArchiveArrayItem
 	{
 	public:
+		ArchiveArrayItem(size_t index) :
+			m_Index(index)
+		{
+		}
+
 		virtual void Serialize(Archive& ar) = 0;
-		virtual size_t GetIndex() const = 0;
+
+		inline size_t GetIndex() const
+		{
+			return m_Index;
+		}
+
+	protected:
+		size_t m_Index;
 	};
 
 	template<typename T>
-	class TArrayItem : public IArrayItem
+	class TArchiveArrayItem : public ArchiveArrayItem
 	{
 	public:
-		TArrayItem(T& item, size_t index = (size_t)-1) :
-			m_Item(item),
-			m_Index(index)
+		TArchiveArrayItem(T& item, size_t index = (size_t)-1) :
+			ArchiveArrayItem(index),
+			m_Item(item)
 		{
 		}
 
@@ -137,15 +155,11 @@ namespace Ion
 			ar << m_Item;
 		}
 
-		virtual size_t GetIndex() const override
-		{
-			return m_Index;
-		}
-
 	private:
 		T& m_Item;
-		size_t m_Index;
 	};
+
+#pragma endregion
 
 	class ION_API Archive
 	{
@@ -335,7 +349,13 @@ namespace Ion
 			m_ArchiveFlags |= flag;
 		}
 
-		virtual void Serialize(IArrayItem& item) = 0;
+		virtual void Serialize(ArchiveArrayItem& item) = 0;
+
+		FORCEINLINE Archive& operator<<(ArchiveArrayItem& item)
+		{
+			Serialize(item);
+			return *this;
+		}
 
 		virtual size_t GetCollectionSize() const { return 0; }
 
@@ -367,20 +387,17 @@ namespace Ion
 				count = ar.GetCollectionSize();
 			}
 
-			// Clear and resize the array, so the memory to load into is available.
 			if (ar.IsLoading())
 			{
+				// Clear and resize the array, so the memory to load into is available.
 				array.clear();
 				array.reserve(count);
 
 				for (size_t n = 0; n < count; ++n)
 				{
 					// Don't default construct the element
-					union {
-						T element;
-					};
-					TArrayItem<T> arrayItem(element, n);
-					ar.Serialize(arrayItem);
+					union { T element; };
+					ar << TArchiveArrayItem(element, n);
 					array.emplace_back(Move(element));
 				}
 			}
@@ -388,8 +405,7 @@ namespace Ion
 			{
 				for (size_t n = 0; n < count; ++n)
 				{
-					TArrayItem<T> arrayItem(array.at(n), n);
-					ar.Serialize(arrayItem);
+					ar << TArchiveArrayItem(array.at(n), n);
 				}
 			}
 

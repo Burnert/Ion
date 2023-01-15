@@ -37,7 +37,7 @@ namespace Ion
 
 		virtual void Serialize(String& value) override;
 
-		virtual void Serialize(IArrayItem& item) override { };
+		virtual void Serialize(ArchiveArrayItem& item) override { };
 
 		template<typename TEnum, TEnableIfT<TIsEnumV<TEnum>>* = 0>
 		FORCEINLINE void SerializeEnum(TEnum& value)

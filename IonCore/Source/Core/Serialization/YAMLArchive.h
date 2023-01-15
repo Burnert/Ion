@@ -53,7 +53,7 @@ namespace Ion
 		void EndSeq();
 
 	protected:
-		virtual void Serialize(IArrayItem& item) override;
+		virtual void Serialize(ArchiveArrayItem& item) override;
 
 		virtual size_t GetCollectionSize() const override;
 
@@ -67,6 +67,9 @@ namespace Ion
 
 		void InitYAMLNode(EArchiveNodeType type, size_t node, ryml::csubstr key, ryml::csubstr val, bool bKey);
 
+		/**
+		 * @brief Called by every type of serialize function in the end.
+		 */
 		template<typename T>
 		void Serialize_Private(T& value);
 

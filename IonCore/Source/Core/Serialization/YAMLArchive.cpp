@@ -87,7 +87,7 @@ namespace Ion
 		Serialize_Private(value);
 	}
 
-	void YAMLArchive::Serialize(IArrayItem& item)
+	void YAMLArchive::Serialize(ArchiveArrayItem& item)
 	{
 		ionassert(m_YAMLTree->is_seq(m_CurrentNodeIndex));
 
@@ -100,17 +100,14 @@ namespace Ion
 			// NOTE: Serializes the value using operator<<
 			// That's why m_CurrentNodeIndex has to be set for every item.
 			item.Serialize(*this);
-			//m_CurrentNode = m_CurrentNode.parent();
 			m_CurrentNodeIndex = originalSeqNodeIndex;
 		}
 		else if (IsLoading())
 		{
-			//ionassert(item.GetIndex() < m_CurrentNode.num_children());
-			m_CurrentNodeIndex = m_YAMLTree->child(m_CurrentNodeIndex, item.GetIndex());
+			ionassert(item.GetIndex() < m_YAMLTree->num_children(m_CurrentNodeIndex));
 
-			//m_CurrentNode = m_CurrentNode[item.GetIndex()];
+			m_CurrentNodeIndex = m_YAMLTree->child(m_CurrentNodeIndex, item.GetIndex());
 			item.Serialize(*this);
-			//m_CurrentNode = m_CurrentNode.parent();
 			m_CurrentNodeIndex = originalSeqNodeIndex;
 		}
 	}

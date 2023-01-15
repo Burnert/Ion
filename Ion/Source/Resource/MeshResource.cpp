@@ -116,8 +116,6 @@ namespace Ion
 			{
 				ON_YAML_AR(ar)
 				{
-					//while (yml->IterateSeq())
-					//	LSerializeMaterial();
 					ArchiveNode nodeMaterial = ar.EnterNode(nodeMaterials, "", EArchiveNodeType::Map);
 					for (; nodeMaterial; nodeMaterial = ar.EnterNextNode(nodeMaterial, EArchiveNodeType::Map))
 						LSerializeMaterial(-1, nodeMaterial);
