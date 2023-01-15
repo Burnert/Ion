@@ -180,39 +180,66 @@ namespace Ion
 		TSharedPtr<MaterialInstanceAssetData> data = inOutCustomData ? PtrCast<MaterialInstanceAssetData>(inOutCustomData) : MakeShared<MaterialInstanceAssetData>();
 
 		XMLArchiveAdapter xmlAr = ar;
+		ArchiveNode nodeRoot = ar.EnterRootNode();
 
 		xmlAr.EnterNode(IASSET_NODE_MaterialInstance);
+		ArchiveNode nodeMaterialInstance = ar.EnterNode(nodeRoot, "MaterialInstance", EArchiveNodeType::Map);
 
+		ArchiveNode nodeParent = ar.EnterNode(nodeMaterialInstance, "Parent", EArchiveNodeType::Value);
 		xmlAr.EnterAttribute(IASSET_ATTR_parent);
-		xmlAr << data->ParentMaterialAssetVP;
+		nodeParent << data->ParentMaterialAssetVP;
 		xmlAr.ExitAttribute(); // IASSET_ATTR_parent
 
 		auto LSerializeParameterInstance = [&](MaterialInstanceAssetData::Parameter* param)
 		{
+			ArchiveNode node = ar.GetCurrentNode();
+
+			ArchiveNode nodeType = ar.EnterNode(node, "Type", EArchiveNodeType::Value);
 			xmlAr.EnterAttribute(IASSET_ATTR_type);
-			xmlAr << param->Type;
+			nodeType << param->Type;
 			xmlAr.ExitAttribute(); // IASSET_ATTR_type
 
+			ArchiveNode nodeName = ar.EnterNode(node, "Name", EArchiveNodeType::Value);
 			xmlAr.EnterAttribute(IASSET_ATTR_name);
 			//String sAsset = ar.IsSaving() ? data->Description.Defaults.MaterialAssets[index]->GetVirtualPath() : EmptyString;
-			xmlAr << param->Name;
+			nodeName << param->Name;
 			xmlAr.ExitAttribute(); // IASSET_ATTR_name
 
+			ArchiveNode nodeValue = ar.EnterAndUseNode(node, "Value", EArchiveNodeType::Value);
 			IMaterialParameter::SerializeParamValue(ar, param->Type, param->Values.Value);
 		};
 
+		ArchiveNode nodeParameterInstances = ar.EnterNode(nodeMaterialInstance, "ParameterInstances", EArchiveNodeType::Seq);
+
 		if (ar.IsLoading())
 		{
-			for (bool b = xmlAr.TryEnterNode(IASSET_NODE_MaterialInstance_ParameterInstance); b || (xmlAr.ExitNode(), 0); b = xmlAr.TryEnterSiblingNode())
-				LSerializeParameterInstance(&data->Parameters.emplace_back());
+			ON_YAML_AR(ar)
+			{
+				ArchiveNode nodeParameterInstance = ar.EnterAndUseNode(nodeParameterInstances, "", EArchiveNodeType::Map);
+				for (; nodeParameterInstance; nodeParameterInstance = ar.EnterAndUseNextNode(nodeParameterInstance, EArchiveNodeType::Map))
+					LSerializeParameterInstance(&data->Parameters.emplace_back());
+			}
+			else
+			{
+				for (bool b = xmlAr.TryEnterNode(IASSET_NODE_MaterialInstance_ParameterInstance); b || (xmlAr.ExitNode(), 0); b = xmlAr.TryEnterSiblingNode())
+					LSerializeParameterInstance(&data->Parameters.emplace_back());
+			}
 		}
 		else if (ar.IsSaving())
 		{
 			for (int32 i = 0; i < data->Parameters.size(); ++i)
 			{
-				xmlAr.EnterNode(IASSET_NODE_MaterialInstance_ParameterInstance);
-				LSerializeParameterInstance(&data->Parameters[i]);
-				xmlAr.ExitNode(); // IASSET_NODE_MaterialInstance_ParameterInstance
+				ON_YAML_AR(ar)
+				{
+					ArchiveNode nodeParameterInstance = ar.EnterAndUseNode(nodeParameterInstances, "", EArchiveNodeType::Map);
+					LSerializeParameterInstance(&data->Parameters[i]);
+				}
+				else
+				{
+					xmlAr.EnterNode(IASSET_NODE_MaterialInstance_ParameterInstance);
+					LSerializeParameterInstance(&data->Parameters[i]);
+					xmlAr.ExitNode(); // IASSET_NODE_MaterialInstance_ParameterInstance
+				}
 			}
 		}
 

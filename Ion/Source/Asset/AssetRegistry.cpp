@@ -84,11 +84,6 @@ namespace Ion
 
 			// Convert to YAML:
 
-			if (!(assetDef.GetType().GetName() == "Ion.Mesh" ||
-				assetDef.GetType().GetName() == "Ion.Image" ||
-				assetDef.GetType().GetName() == "Ion.Material"))
-				return assetDef;
-
 			YAMLArchive ar(EArchiveType::Saving);
 			assetDef.Serialize(ar);
 			ar.SaveToFile(File(yamlPath));

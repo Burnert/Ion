@@ -1,0 +1,15 @@
+Type: Ion.MaterialInstance
+Name: MI_Oscypek
+ImportExternal: 
+MaterialInstance:
+  Parent: '[Engine]/Materials/DefaultMaterial'
+  ParameterInstances:
+    - Type: Vector
+      Name: Color
+      Value: 1 1 1 1
+    - Type: Scalar
+      Name: Brightness
+      Value: 1
+    - Type: Texture2D
+      Name: DefaultTexture
+      Value: '[Example]/textures/oscypek'

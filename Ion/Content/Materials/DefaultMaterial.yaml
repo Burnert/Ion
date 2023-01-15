@@ -2,6 +2,7 @@ Type: Ion.Material
 Name: DefaultMaterial
 ImportExternal: 
 Material:
+  Code: DefaultMaterialCode.hlsl
   Parameters:
     - Type: Vector
       Name: Color
@@ -16,4 +17,3 @@ Material:
     - Type: Texture2D
       Name: DefaultTexture
       Default: '[Engine]/Textures/White'
-Code: DefaultMaterialCode.hlsl

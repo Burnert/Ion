@@ -306,7 +306,7 @@ namespace Ion
 		ArchiveNode nodeMaterial = ar.EnterNode(nodeRoot, "Material", EArchiveNodeType::Map);
 
 		xmlAr.EnterNode(IASSET_NODE_Material_Code);
-		ArchiveNode nodeCode = ar.EnterNode(nodeRoot, "Code", EArchiveNodeType::Value);
+		ArchiveNode nodeCode = ar.EnterNode(nodeMaterial, "Code", EArchiveNodeType::Value);
 
 		xmlAr.EnterAttribute(IASSET_ATTR_source);
 		String sSource = data->MaterialShaderCodePath.ToString();
