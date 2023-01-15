@@ -116,18 +116,18 @@ namespace Ion
 		XMLArchiveAdapter xmlAr = ar;
 		xmlAr.SeekRoot();
 
+		ArchiveNode nodeRoot = ar.EnterRootNode();
+
 		xmlAr.EnterNode(IASSET_NODE_IonAsset);
 
 		xmlAr.EnterNode(IASSET_NODE_Info);
 
-		ON_YAML_AR(ar) yml->EnterNode("Type");
+		ArchiveNode nodeType = ar.EnterNode(nodeRoot, "Type", EArchiveNodeType::Value);
 
 		xmlAr.EnterAttribute(IASSET_ATTR_type);
 		String sType = ar.IsSaving() ? m_Type->GetName() : EmptyString;
-		xmlAr << sType;
+		nodeType << sType;
 		xmlAr.ExitAttribute(); // IASSET_ATTR_type
-
-		ON_YAML_AR(ar) yml->ExitNode();
 
 		if (IAssetType* type = AssetRegistry::FindType(sType))
 			m_Type = type;
@@ -138,14 +138,12 @@ namespace Ion
 
 		ON_YAML_AR(ar)
 		{
-			yml->EnterNode("Name");
-			xmlAr << m_Info.Name;
-			yml->ExitNode();
+			ArchiveNode nodeName = ar.EnterNode(nodeRoot, "Name", EArchiveNodeType::Value);
+			nodeName << m_Info.Name;
 		}
-		else
-		if (xmlAr.TryEnterNode(IASSET_NODE_Name))
+		else if (xmlAr.TryEnterNode(IASSET_NODE_Name))
 		{
-			xmlAr << m_Info.Name;
+			ar << m_Info.Name;
 			xmlAr.ExitNode(); // IASSET_NODE_Name
 		}
 		else // Can happen only when loading
@@ -153,7 +151,7 @@ namespace Ion
 			m_Info.Name = FilePath(m_VirtualPath).LastElement();
 		}
 
-		ON_YAML_AR(ar) yml->EnterNode("ImportExternal");
+		ArchiveNode nodeImportExternal = ar.EnterNode(nodeRoot, "ImportExternal", EArchiveNodeType::Value);
 
 		if (ar.IsLoading() ? xmlAr.TryEnterNode(IASSET_NODE_ImportExternal) || IS_YAML_AR(ar) :
 			(ar.IsSaving() && m_bImportExternal && (xmlAr.EnterNode(IASSET_NODE_ImportExternal), 1)))
@@ -162,7 +160,7 @@ namespace Ion
 
 			xmlAr.EnterAttribute(IASSET_ATTR_path);
 			String sPath = ar.IsSaving() ? m_AssetImportPath.RelativeTo(m_AssetDefinitionPath / "..") : EmptyString;
-			xmlAr << sPath;
+			nodeImportExternal << sPath;
 			xmlAr.ExitAttribute();
 
 			// @TODO: Temporary?
@@ -185,8 +183,6 @@ namespace Ion
 		{
 			m_bImportExternal = false;
 		}
-
-		ON_YAML_AR(ar) yml->ExitNode();
 
 		// Serialize the custom data (different for each asset type)
 		fwdthrowall(m_Type->Serialize(ar, m_CustomData));

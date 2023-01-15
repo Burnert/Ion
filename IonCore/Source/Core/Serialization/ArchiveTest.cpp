@@ -9,51 +9,45 @@
 
 namespace Ion::Test
 {
-#define ON_YAML if (YAMLArchive* pAsYaml = dynamic_cast<YAMLArchive*>(&archive))
-
 	void GenericArchiveTest(Archive& archive)
 	{
 		// ----------------------------------------------------
 
+		ArchiveNode root = archive.EnterRootNode();
+
 		// GUID test
 
-		ON_YAML pAsYaml->EnterNode("Guid");
+		ArchiveNode nodeGuid = archive.EnterNode(root, "Guid", EArchiveNodeType::Value);
 		GUID guidTest = archive.IsSaving() ? GUID::FromString("54a6f55c-feaf-4aa9-87cd-cc9b487c31ef").Unwrap() : GUID::Zero;
-		archive << guidTest;
+		nodeGuid << guidTest;
 		ionassert(guidTest == GUID::FromString("54a6f55c-feaf-4aa9-87cd-cc9b487c31ef").Unwrap());
-		ON_YAML pAsYaml->ExitNode();
 
 		// String test
 
-		ON_YAML pAsYaml->EnterNode("S1");
+		ArchiveNode nodeS1 = archive.EnterNode(root, "S1", EArchiveNodeType::Value);
 		String stringTest1 = archive.IsSaving() ? "ABCDEFG_STRTEST" : EmptyString;
-		archive << stringTest1;
+		nodeS1 << stringTest1;
 		ionassert(stringTest1 == "ABCDEFG_STRTEST");
-		ON_YAML pAsYaml->ExitNode();
 
-		ON_YAML pAsYaml->EnterNode("S2");
+		ArchiveNode nodeS2 = archive.EnterNode(root, "S2", EArchiveNodeType::Value);
 		String stringTest2 = archive.IsSaving() ? "NextString_____" : EmptyString;
-		archive << stringTest2;
+		nodeS2 << stringTest2;
 		ionassert(stringTest2 == "NextString_____");
-		ON_YAML pAsYaml->ExitNode();
 
-		ON_YAML pAsYaml->EnterNode("S3");
+		ArchiveNode nodeS3 = archive.EnterNode(root, "S3", EArchiveNodeType::Value);
 		String stringTest3 = archive.IsSaving() ? "  String3      " : EmptyString;
-		archive << stringTest3;
+		nodeS3 << stringTest3;
 		ionassert(stringTest3 == "  String3      ");
-		ON_YAML pAsYaml->ExitNode();
 
-		ON_YAML pAsYaml->EnterNode("S4");
+		ArchiveNode nodeS4 = archive.EnterNode(root, "S4", EArchiveNodeType::Value);
 		const char utfString[] = u8"u8 简体中文";
 		String stringTest4 = archive.IsSaving() ? utfString : EmptyString;
-		archive << stringTest4;
+		nodeS4 << stringTest4;
 		ionassert(stringTest4 == utfString);
-		ON_YAML pAsYaml->ExitNode();
 
 		// TArray test
 
-		ON_YAML pAsYaml->EnterNode("Array");
-		ON_YAML pAsYaml->BeginSeq();
+		ArchiveNode nodeArray = archive.EnterNode(root, "Array", EArchiveNodeType::Seq);
 		TFixedArray<int32, 10> arrayTest_base {
 			323, 439810, 590211, 19, 69999192,
 			53589823, 328981, 2, 0, 5989391
@@ -64,7 +58,7 @@ namespace Ion::Test
 		{
 			std::copy(arrayTest_base.begin(), arrayTest_base.end(), std::back_inserter(arrayTest));
 		}
-		archive << arrayTest;
+		nodeArray << arrayTest;
 		ionassert(arrayTest.size() == arrayTest_base.size());
 		ionassert([&]
 		{
@@ -75,14 +69,12 @@ namespace Ion::Test
 			}
 			return true;
 		}());
-		ON_YAML pAsYaml->EndSeq();
-		ON_YAML pAsYaml->ExitNode();
 
-		ON_YAML return;
+		ON_YAML_AR(archive) return;
 
 		// Tree test
 
-		ON_YAML pAsYaml->EnterNode("Tree");
+		ON_YAML_AR(archive) yml->EnterNode("Tree");
 		{
 			TTreeNodeFactory<uint64> factory;
 			TFastTreeNode<uint64>& tree = factory.Create(archive.IsSaving() ? 7 : 0);
@@ -102,7 +94,7 @@ namespace Ion::Test
 			ionassert(tree.GetChildren()[1]->GetChildrenSize() == 2);
 			ionassert(tree.GetChildren()[1]->GetChildren()[0]->Get() == 2);
 		}
-		ON_YAML pAsYaml->ExitNode();
+		ON_YAML_AR(archive) yml->ExitNode();
 	}
 
 	void TestArchives(EArchiveType type)

@@ -35,6 +35,10 @@ namespace Ion
 		virtual void LoadFromFile(File& file) override;
 		virtual void SaveToFile(File& file) const override;
 
+		virtual ArchiveNode EnterRootNode() override;
+		virtual ArchiveNode EnterNode(const ArchiveNode& parentNode, StringView name, EArchiveNodeType type) override;
+		virtual ArchiveNode EnterNextNode(const ArchiveNode& currentNode, EArchiveNodeType type) override;
+		virtual void UseNode(const ArchiveNode& node) override;
 	private:
 		TArray<uint8> m_ByteArray;
 		size_t m_Cursor;

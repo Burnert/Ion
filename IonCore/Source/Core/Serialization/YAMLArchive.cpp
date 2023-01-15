@@ -4,6 +4,21 @@
 
 namespace Ion
 {
+	YAMLArchive::YAMLArchive(EArchiveType type) :
+		Archive(type),
+		m_YAMLTree(nullptr),
+		m_SeqIndex(0),
+		m_CurrentNodeIndex(TNumericLimits<size_t>::max())
+	{
+		SetFlag(EArchiveFlags::Text);
+		if (type == EArchiveType::Saving)
+		{
+			m_YAMLTree = MakeShared<ryml::Tree>();
+			m_YAMLTree->to_map(m_YAMLTree->root_id());
+			m_CurrentNode = m_YAMLTree->rootref();
+		}
+	}
+
 	void YAMLArchive::Serialize(void* const bytes, size_t size)
 	{
 		// @TODO: Encode the binary in base64
@@ -67,44 +82,42 @@ namespace Ion
 	void YAMLArchive::Serialize(String& value)
 	{
 		ionassert(m_YAMLTree);
-		ionassert(m_CurrentNode.valid());
+		//ionassert(m_CurrentNode.valid());
 
-		if (IsSaving())
-		{
-			m_CurrentNode << value;
-		}
-		else if (IsLoading())
-		{
-			m_CurrentNode >> value;
-		}
+		Serialize_Private(value);
 	}
 
 	void YAMLArchive::Serialize(IArrayItem& item)
 	{
-		ionassert(m_CurrentNode.is_seq());
+		ionassert(m_YAMLTree->is_seq(m_CurrentNodeIndex));
+
+		size_t originalSeqNodeIndex = m_CurrentNodeIndex;
 
 		if (IsSaving())
 		{
-			m_CurrentNode = m_CurrentNode.append_child();
+			m_CurrentNodeIndex = m_YAMLTree->append_child(m_CurrentNodeIndex);
+			InitYAMLNode(EArchiveNodeType::Value, m_CurrentNodeIndex, ryml::csubstr {}, ryml::csubstr {}, false);
 			// NOTE: Serializes the value using operator<<
-			// which eventually calls operator<< or operator>> on current node (ryml::NodeRef).
-			// That's why the current node has to be set for every item.
+			// That's why m_CurrentNodeIndex has to be set for every item.
 			item.Serialize(*this);
-			m_CurrentNode = m_CurrentNode.parent();
+			//m_CurrentNode = m_CurrentNode.parent();
+			m_CurrentNodeIndex = originalSeqNodeIndex;
 		}
 		else if (IsLoading())
 		{
-			ionassert(item.GetIndex() < m_CurrentNode.num_children());
+			//ionassert(item.GetIndex() < m_CurrentNode.num_children());
+			m_CurrentNodeIndex = m_YAMLTree->child(m_CurrentNodeIndex, item.GetIndex());
 
-			m_CurrentNode = m_CurrentNode[item.GetIndex()];
+			//m_CurrentNode = m_CurrentNode[item.GetIndex()];
 			item.Serialize(*this);
-			m_CurrentNode = m_CurrentNode.parent();
+			//m_CurrentNode = m_CurrentNode.parent();
+			m_CurrentNodeIndex = originalSeqNodeIndex;
 		}
 	}
 
 	size_t YAMLArchive::GetCollectionSize() const
 	{
-		return m_CurrentNode.num_children();
+		return m_YAMLTree->num_children(m_CurrentNodeIndex);
 	}
 	
 	void YAMLArchive::LoadFromFile(File& file)
@@ -154,8 +167,130 @@ namespace Ion
 		}
 	}
 
+	ArchiveNode YAMLArchive::EnterRootNode()
+	{
+		ionassert(m_YAMLTree);
+
+		size_t root = m_YAMLTree->root_id();
+		// @TODO: Resolve the root node type
+		ArchiveNode node(this, "ROOT", EArchiveNodeType::Map);
+
+		node.SetCustomData(YAMLNodeData { root });
+
+		return node;
+	}
+
+	ArchiveNode YAMLArchive::EnterNode(const ArchiveNode& parentNode, StringView name, EArchiveNodeType type)
+	{
+		ionassert(m_YAMLTree);
+
+		if (!parentNode)
+		{
+			return ArchiveNode(this);
+		}
+
+		const YAMLNodeData& parentYamlNodeData = GetYAMLNodeDataFromArchiveNode(parentNode);
+
+		size_t parentIndex = parentYamlNodeData.NodeIndex;
+		size_t nodeIndex = ryml::NONE;
+		if (IsLoading())
+		{
+			if (parentNode.Type == EArchiveNodeType::Seq)
+			{
+				nodeIndex = m_YAMLTree->first_child(parentIndex);
+			}
+			else
+			{
+				nodeIndex = m_YAMLTree->find_child(parentIndex, ryml::to_csubstr(name.data()));
+			}
+		}
+		else if (IsSaving())
+		{
+			nodeIndex = m_YAMLTree->append_child(parentIndex);
+			ryml::NodeType rymlType = ArchiveNodeTypeToYAMLNodeType(type);
+
+			// Node name only matters if the parent is a map,
+			// it is then used as a key.
+			if (parentNode.Type == EArchiveNodeType::Map)
+			{
+				ionassert(m_YAMLTree->is_map(parentYamlNodeData.NodeIndex));
+
+				ryml::csubstr strKey = m_YAMLTree->to_arena(name.data());
+				InitYAMLNode(type, nodeIndex, strKey, ryml::csubstr {}, true);
+			}
+			else
+			{
+				ionassert(!m_YAMLTree->is_map(parentYamlNodeData.NodeIndex));
+
+				InitYAMLNode(type, nodeIndex, ryml::csubstr {}, ryml::csubstr {}, false);
+			}
+		}
+		else
+		{
+			ionerror(IOError, "Archive is neither loading or saving.");
+		}
+
+		// Node not found
+		if (nodeIndex == ryml::NONE)
+		{
+			return ArchiveNode(this);
+		}
+
+		// @TODO: Resolve the node type
+		ArchiveNode node(this, name, type);
+		node.SetCustomData(YAMLNodeData { nodeIndex });
+
+		return node;
+	}
+
+	ArchiveNode YAMLArchive::EnterNextNode(const ArchiveNode& currentNode, EArchiveNodeType type)
+	{
+		ionassert(m_YAMLTree);
+
+		if (!currentNode)
+		{
+			return ArchiveNode(this);
+		}
+
+		const YAMLNodeData& yamlNodeData = GetYAMLNodeDataFromArchiveNode(currentNode);
+
+		// Not needed actually
+		//ionassert(m_YAMLTree->parent_is_seq(yamlNodeData.NodeIndex));
+
+		size_t nextNodeIndex = ryml::NONE;
+		if (IsLoading())
+		{
+			nextNodeIndex = m_YAMLTree->next_sibling(yamlNodeData.NodeIndex);
+		}
+		else if (IsSaving())
+		{
+			nextNodeIndex = m_YAMLTree->append_sibling(yamlNodeData.NodeIndex);
+			InitYAMLNode(type, nextNodeIndex, ryml::csubstr {}, ryml::csubstr {}, false);
+		}
+		else
+		{
+			ionerror(IOError, "Archive is neither loading or saving.");
+		}
+
+		if (nextNodeIndex != ryml::NONE)
+		{
+			ArchiveNode node(this, "", type);
+			node.SetCustomData(YAMLNodeData { nextNodeIndex });
+			return node;
+		}
+
+		return ArchiveNode(this);
+	}
+
+	void YAMLArchive::UseNode(const ArchiveNode& node)
+	{
+		m_CurrentNodeIndex = GetYAMLNodeDataFromArchiveNode(node).NodeIndex;
+	}
+
 	void YAMLArchive::EnterNode(const String& name)
 	{
+		return;
+
 		ionassert(m_YAMLTree);
 		ionassert(m_CurrentNode.valid());
 
@@ -190,6 +325,8 @@ namespace Ion
 
 	void YAMLArchive::ExitNode()
 	{
+		return;
+
 		ionassert(m_YAMLTree);
 		ionassert(m_CurrentNode.valid());
 
@@ -207,6 +344,8 @@ namespace Ion
 
 	void YAMLArchive::BeginSeq()
 	{
+		return;
+
 		ionassert(m_YAMLTree);
 		ionassert(m_CurrentNode.valid());
 
@@ -225,6 +364,8 @@ namespace Ion
 
 	bool YAMLArchive::IterateSeq()
 	{
+		return false;
+
 		ionassert(m_YAMLTree);
 		ionassert(m_CurrentNode.valid());
 
@@ -279,6 +420,8 @@ namespace Ion
 
 	void YAMLArchive::EndSeq()
 	{
+		return;
+
 		ionassert(m_YAMLTree);
 		ionassert(m_CurrentNode.valid());
 
@@ -291,5 +434,38 @@ namespace Ion
 
 		if (!m_CurrentNode.is_seq())
 			ionerror(IOError, "Current node is not a sequence.");
+	}
+
+	void YAMLArchive::InitYAMLNode(EArchiveNodeType type, size_t node, ryml::csubstr key, ryml::csubstr val, bool bKey)
+	{
+		ionassert(m_YAMLTree);
+
+		switch (type)
+		{
+			case EArchiveNodeType::Value:
+			{
+				if (bKey)
+					m_YAMLTree->to_keyval(node, key, val);
+				else
+					m_YAMLTree->to_val(node, val);
+				break;
+			}
+			case EArchiveNodeType::Map:
+			{
+				if (bKey)
+					m_YAMLTree->to_map(node, key);
+				else
+					m_YAMLTree->to_map(node);
+				break;
+			}
+			case EArchiveNodeType::Seq:
+			{
+				if (bKey)
+					m_YAMLTree->to_seq(node, key);
+				else
+					m_YAMLTree->to_seq(node);
+				break;
+			}
+		}
 	}
 }

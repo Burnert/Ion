@@ -10,21 +10,15 @@
 
 namespace Ion
 {
+	struct YAMLNodeData
+	{
+		size_t NodeIndex;
+	};
+
 	class ION_API YAMLArchive : public Archive
 	{
 	public:
-		FORCEINLINE YAMLArchive(EArchiveType type) :
-			Archive(type),
-			m_YAMLTree(nullptr),
-			m_SeqIndex(0)
-		{
-			SetFlag(EArchiveFlags::Text);
-			if (type == EArchiveType::Saving)
-			{
-				m_YAMLTree = MakeShared<ryml::Tree>();
-				m_CurrentNode = m_YAMLTree->rootref();
-			}
-		}
+		YAMLArchive(EArchiveType type);
 
 		virtual void Serialize(void* const bytes, size_t size) override;
 
@@ -45,6 +39,12 @@ namespace Ion
 		virtual void LoadFromFile(File& file) override;
 		virtual void SaveToFile(File& file) const override;
 
+		virtual ArchiveNode EnterRootNode() override;
+		virtual ArchiveNode EnterNode(const ArchiveNode& parentNode, StringView name, EArchiveNodeType type) override;
+		virtual ArchiveNode EnterNextNode(const ArchiveNode& currentNode, EArchiveNodeType type) override;
+
+		virtual void UseNode(const ArchiveNode& node) override;
+
 		void EnterNode(const String& name);
 		void ExitNode();
 
@@ -59,25 +59,69 @@ namespace Ion
 
 	private:
 		template<typename T, TEnableIf<std::is_fundamental_v<T>>* = 0>
-		FORCEINLINE void SerializeFundamental(T& value)
-		{
-			ionassert(m_YAMLTree);
-			ionassert(m_CurrentNode.valid());
+		void SerializeFundamental(T& value);
 
-			if (IsSaving())
-			{
-				m_CurrentNode << value;
-			}
-			else if (IsLoading())
-			{
-				m_CurrentNode >> value;
-			}
-		}
+		static const YAMLNodeData& GetYAMLNodeDataFromArchiveNode(const ArchiveNode& node);
+
+		static ryml::NodeType ArchiveNodeTypeToYAMLNodeType(EArchiveNodeType type);
+
+		void InitYAMLNode(EArchiveNodeType type, size_t node, ryml::csubstr key, ryml::csubstr val, bool bKey);
+
+		template<typename T>
+		void Serialize_Private(T& value);
 
 	private:
 		TSharedPtr<ryml::Tree> m_YAMLTree;
 		ryml::NodeRef m_CurrentNode;
+		size_t m_CurrentNodeIndex;
 		// @TODO: This should be a stack of indices (so there can be nested sequences)
 		mutable size_t m_SeqIndex;
 	};
+
+	template<typename T, TEnableIf<std::is_fundamental_v<T>>*>
+	FORCEINLINE void YAMLArchive::SerializeFundamental(T& value)
+	{
+		Serialize_Private(value);
+	}
+
+	template<typename T>
+	FORCEINLINE void YAMLArchive::Serialize_Private(T& value)
+	{
+		ionassert(m_YAMLTree);
+
+		if (IsSaving())
+		{
+			ryml::csubstr str = m_YAMLTree->to_arena(value);
+			m_YAMLTree->set_val(m_CurrentNodeIndex, str);
+		}
+		else if (IsLoading())
+		{
+			ryml::csubstr str = m_YAMLTree->val(m_CurrentNodeIndex);
+			if constexpr (TIsFloatingV<T>)
+			{
+				ryml::from_chars_float(str, &value);
+			}
+			else
+			{
+				ryml::from_chars(str, &value);
+			}
+		}
+	}
+
+	FORCEINLINE const YAMLNodeData& YAMLArchive::GetYAMLNodeDataFromArchiveNode(const ArchiveNode& node)
+	{
+		return node.GetCustomData<YAMLNodeData>();
+	}
+
+	FORCEINLINE ryml::NodeType YAMLArchive::ArchiveNodeTypeToYAMLNodeType(EArchiveNodeType type)
+	{
+		switch (type)
+		{
+		case EArchiveNodeType::None:  return ryml::NOTYPE;
+		case EArchiveNodeType::Value: return ryml::VAL;
+		case EArchiveNodeType::Map:   return ryml::MAP;
+		case EArchiveNodeType::Seq:   return ryml::SEQ;
+		}
+		return ryml::NOTYPE;
+	}
 }

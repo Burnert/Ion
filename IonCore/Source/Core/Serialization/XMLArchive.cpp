@@ -204,6 +204,25 @@ namespace Ion
 		m_CurrentAttribute = nullptr;
 	}
 
+	ArchiveNode XMLArchive::EnterRootNode()
+	{
+		return ArchiveNode(this, "ROOT", EArchiveNodeType::Map);
+	}
+
+	ArchiveNode XMLArchive::EnterNode(const ArchiveNode& parentNode, StringView name, EArchiveNodeType type)
+	{
+		return ArchiveNode(this);
+	}
+
+	ArchiveNode XMLArchive::EnterNextNode(const ArchiveNode& currentNode, EArchiveNodeType type)
+	{
+		return ArchiveNode(this);
+	}
+
+	void XMLArchive::UseNode(const ArchiveNode& node)
+	{
+	}
+
 	void XMLArchive::LoadFromFile(File& file)
 	{
 		ionassert(IsLoading());

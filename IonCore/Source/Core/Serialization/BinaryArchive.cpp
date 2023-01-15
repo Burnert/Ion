@@ -140,4 +140,22 @@ namespace Ion
 
 		}
 	}
+	ArchiveNode BinaryArchive::EnterRootNode()
+	{
+		return ArchiveNode(this, "ROOT", EArchiveNodeType::Map);
+	}
+
+	ArchiveNode BinaryArchive::EnterNode(const ArchiveNode& parentNode, StringView name, EArchiveNodeType type)
+	{
+		return ArchiveNode(this);
+	}
+
+	ArchiveNode BinaryArchive::EnterNextNode(const ArchiveNode& currentNode, EArchiveNodeType type)
+	{
+		return ArchiveNode(this);
+	}
+
+	void BinaryArchive::UseNode(const ArchiveNode& node)
+	{
+	}
 }

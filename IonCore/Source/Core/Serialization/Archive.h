@@ -6,9 +6,96 @@
 
 namespace Ion
 {
+	REGISTER_LOGGER(SerializationLogger, "Core::Serialization");
+
 	class Archive;
 
-	REGISTER_LOGGER(SerializationLogger, "Core::Serialization");
+	enum class EArchiveNodeType : uint8
+	{
+		None,
+		Value,
+		Map,
+		Seq,
+	};
+
+	struct ArchiveNode
+	{
+		Archive* Ar;
+		// @TODO: This can't be a string. Make it a string view? (str owned by archive)
+		String Name;
+		EArchiveNodeType Type;
+
+		uint8 CustomData[8];
+
+		ArchiveNode(Archive* ar, StringView name, EArchiveNodeType type) :
+			Ar(ar),
+			Name(name),
+			Type(type),
+			CustomData()
+		{
+			ionassert(ar);
+			ionassert(type != EArchiveNodeType::None);
+		}
+
+		/**
+		 * @brief Empty node initializer.
+		 * 
+		 * @details Node can still be used to serialize data even if the archive does not recognize nodes.
+		 */
+		ArchiveNode(Archive* ar) :
+			Ar(ar),
+			Name(""),
+			Type(EArchiveNodeType::None),
+			CustomData()
+		{
+		}
+
+		/**
+		 * @brief Invalid node initializer.
+		 */
+		ArchiveNode() :
+			Ar(nullptr),
+			Name(""),
+			Type(EArchiveNodeType::None),
+			CustomData()
+		{
+		}
+
+		template<typename T>
+		FORCEINLINE const T& GetCustomData() const
+		{
+			return *reinterpret_cast<const T*>(CustomData);
+		}
+
+		template<typename T>
+		FORCEINLINE void SetCustomData(const T& data)
+		{
+			*reinterpret_cast<T*>(CustomData) = data;
+		}
+
+		FORCEINLINE bool IsValid() const
+		{
+			return Ar && Type != EArchiveNodeType::None;
+		}
+
+		FORCEINLINE operator bool() const
+		{
+			return IsValid();
+		}
+
+		template<typename T>
+		FORCEINLINE void operator<<(T& value)
+		{
+			ionassert(Ar);
+			// @TODO: This assert triggers on empty nodes, which normally works
+			// on archives that don't support nodes, but on the others it would be
+			// benefitial to know if you're serializing using a wrong node type.
+			//ionassert(Type == EArchiveNodeType::Value);
+
+			Ar->UseNode(*this);
+			*Ar << value;
+		}
+	};
 
 	namespace EArchiveFlags
 	{
@@ -84,6 +171,46 @@ namespace Ion
 		virtual void Serialize(float& value) = 0;
 		virtual void Serialize(double& value) = 0;
 
+		virtual void Serialize(String& value) = 0;
+
+		template<typename TEnum, TEnableIfT<TIsEnumV<TEnum>>* = 0>
+		FORCEINLINE void SerializeEnum(TEnum& value)
+		{
+			if (IsText())
+			{
+				String sEnum = IsSaving() ? TEnumParser<TEnum>::ToString(value) : EmptyString;
+				Serialize(sEnum);
+				if (IsLoading())
+				{
+					TOptional<TEnum> opt = TEnumParser<TEnum>::FromString(sEnum);
+					if (opt); else
+					{
+						SerializationLogger.Error("Cannot parse enum value. {} -> {}", sEnum, typeid(TEnum).name());
+						return;
+					}
+					value = *opt;
+				}
+			}
+			else if (IsBinary())
+			{
+				auto utValue = (std::underlying_type_t<TEnum>)value;
+				Serialize(utValue);
+				value = (TEnum)utValue;
+			}
+		}
+
+		virtual ArchiveNode EnterRootNode() = 0;
+		virtual ArchiveNode EnterNode(const ArchiveNode& parentNode, StringView name, EArchiveNodeType type) = 0;
+		virtual ArchiveNode EnterNextNode(const ArchiveNode& currentNode, EArchiveNodeType type) = 0;
+
+		/**
+		 * @brief From this point on, use the specified node when performing 
+		 * serialization operations. (Serialize or operator<<)
+		 * 
+		 * @param node Node to use
+		 */
+		virtual void UseNode(const ArchiveNode& node) = 0;
+
 #pragma region LeftShift Operators
 
 		FORCEINLINE Archive& operator<<(bool& value)
@@ -152,40 +279,10 @@ namespace Ion
 			return *this;
 		}
 
-#pragma endregion
-
-		virtual void Serialize(String& value) = 0;
-
 		FORCEINLINE Archive& operator<<(String& value)
 		{
 			Serialize(value);
 			return *this;
-		}
-
-		template<typename TEnum, TEnableIfT<TIsEnumV<TEnum>>* = 0>
-		FORCEINLINE void SerializeEnum(TEnum& value)
-		{
-			if (IsText())
-			{
-				String sEnum = IsSaving() ? TEnumParser<TEnum>::ToString(value) : EmptyString;
-				Serialize(sEnum);
-				if (IsLoading())
-				{
-					TOptional<TEnum> opt = TEnumParser<TEnum>::FromString(sEnum);
-					if (opt); else
-					{
-						SerializationLogger.Error("Cannot parse enum value. {} -> {}", sEnum, typeid(TEnum).name());
-						return;
-					}
-					value = *opt;
-				}
-			}
-			else if (IsBinary())
-			{
-				auto utValue = (std::underlying_type_t<TEnum>)value;
-				Serialize(utValue);
-				value = (TEnum)utValue;
-			}
 		}
 
 		template<typename T, TEnableIfT<TIsEnumV<T>>* = 0>
@@ -194,6 +291,8 @@ namespace Ion
 			SerializeEnum(value);
 			return *this;
 		}
+
+#pragma endregion
 
 		virtual void LoadFromFile(File& file) = 0;
 		virtual void SaveToFile(File& file) const = 0;
@@ -241,7 +340,17 @@ namespace Ion
 		virtual size_t GetCollectionSize() const { return 0; }
 
 	private:
-		std::underlying_type_t<EArchiveFlags::Type> m_ArchiveFlags;
+		union
+		{
+			std::underlying_type_t<EArchiveFlags::Type> m_ArchiveFlags;
+			struct
+			{
+				uint8 m_bSaving : 1;
+				uint8 m_bLoading : 1;
+				uint8 m_bBinary : 1;
+				uint8 m_bText : 1;
+			};
+		};
 
 	public:
 		// Generic array serialization

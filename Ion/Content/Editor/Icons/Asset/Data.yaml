@@ -5,4 +5,4 @@ Resource:
   Texture:
     Guid: '33643168-9b2d-4fed-8902-887e1c03b3a3'
     Properties:
-      Filter: Nearest
+      Filter: Linear

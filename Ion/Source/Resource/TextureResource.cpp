@@ -48,53 +48,44 @@ namespace Ion
 		TSharedPtr<ImageAssetData> data = inOutCustomData ? PtrCast<ImageAssetData>(inOutCustomData) : MakeShared<ImageAssetData>();
 
 		XMLArchiveAdapter xmlAr = ar;
+		ArchiveNode nodeRoot = ar.EnterRootNode();
 
-		ON_YAML_AR(ar) yml->EnterNode("Resource");
+		ArchiveNode nodeResource = ar.EnterNode(nodeRoot, "Resource", EArchiveNodeType::Map);
 
 		xmlAr.EnterNode(IASSET_NODE_Resource);
 
-		ON_YAML_AR(ar) yml->EnterNode("Texture");
+		ArchiveNode nodeTexture = ar.EnterNode(nodeResource, "Texture", EArchiveNodeType::Map);
 
 		xmlAr.EnterNode(IASSET_NODE_Resource_Texture);
 
-		ON_YAML_AR(ar) yml->EnterNode("Guid");
+		ArchiveNode nodeGuid = ar.EnterNode(nodeTexture, "Guid", EArchiveNodeType::Value);
 
 		xmlAr.EnterAttribute(IASSET_ATTR_guid);
-		xmlAr << data->ResourceGuid;
+		nodeGuid << data->ResourceGuid;
 		xmlAr.ExitAttribute(); // IASSET_ATTR_guid
 
-		ON_YAML_AR(ar) yml->ExitNode();
+		ArchiveNode nodeProperties = ar.EnterNode(nodeTexture, "Properties", EArchiveNodeType::Map);
 
-		ON_YAML_AR(ar) yml->EnterNode("Properties");
-
-		if (ar.IsLoading() && xmlAr.TryEnterNode(IASSET_NODE_Properties) ||
+		if (ar.IsLoading() && (xmlAr.TryEnterNode(IASSET_NODE_Properties) || IS_YAML_AR(ar)) ||
 			ar.IsSaving())
 		{
-			ON_YAML_AR(ar) yml->EnterNode("Filter");
+			ArchiveNode nodeFilter = ar.EnterNode(nodeProperties, "Filter", EArchiveNodeType::Value);
 
 			if (xmlAr.TryEnterNode(IASSET_NODE_Resource_Texture_Prop_Filter) || IS_YAML_AR(ar))
 			{
 				xmlAr.EnterAttribute(IASSET_ATTR_value);
-				ar << data->Description.Properties.Filter;
+				nodeFilter << data->Description.Properties.Filter;
 				xmlAr.ExitAttribute();
 
 				xmlAr.ExitNode(); // IASSET_NODE_Resource_Texture_Prop_Filter
 			}
 
 			xmlAr.ExitNode(); // IASSET_NODE_Properties
-
-			ON_YAML_AR(ar) yml->ExitNode();
 		}
-
-		ON_YAML_AR(ar) yml->ExitNode();
 
 		xmlAr.ExitNode(); // IASSET_NODE_Resource_Texture
 
-		ON_YAML_AR(ar) yml->ExitNode();
-
 		xmlAr.ExitNode(); // IASSET_NODE_Resource
-
-		ON_YAML_AR(ar) yml->ExitNode();
 
 		inOutCustomData = data;
 
