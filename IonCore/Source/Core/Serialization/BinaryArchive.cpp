@@ -158,4 +158,8 @@ namespace Ion
 	void BinaryArchive::UseNode(const ArchiveNode& node)
 	{
 	}
+	ArchiveNode BinaryArchive::GetCurrentNode()
+	{
+		return ArchiveNode(this);
+	}
 }

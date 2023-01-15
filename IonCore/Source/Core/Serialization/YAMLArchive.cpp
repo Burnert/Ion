@@ -281,7 +281,26 @@ namespace Ion
 
 	void YAMLArchive::UseNode(const ArchiveNode& node)
 	{
+		ionassert(m_YAMLTree);
+
 		m_CurrentNodeIndex = GetYAMLNodeDataFromArchiveNode(node).NodeIndex;
+	}
+
+	ArchiveNode YAMLArchive::GetCurrentNode()
+	{
+		ionassert(m_YAMLTree);
+
+		if (m_CurrentNodeIndex == ryml::NONE)
+		{
+			return ArchiveNode(this);
+		}
+
+		ryml::csubstr key = m_YAMLTree->has_key(m_CurrentNodeIndex) ? m_YAMLTree->key(m_CurrentNodeIndex) : "";
+		ryml::NodeType type = m_YAMLTree->type(m_CurrentNodeIndex);
+
+		ArchiveNode node(this, key.data(), YAMLNodeTypeToArchiveNodeType(type));
+		node.SetCustomData(YAMLNodeData { m_CurrentNodeIndex });
+		return node;
 	}
 
 	void YAMLArchive::EnterNode(const String& name)

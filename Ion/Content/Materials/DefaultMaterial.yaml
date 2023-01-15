@@ -1,0 +1,19 @@
+Type: Ion.Material
+Name: DefaultMaterial
+ImportExternal: 
+Material:
+  Parameters:
+    - Type: Vector
+      Name: Color
+      Default: 1 1 1 1
+      Min: 0 0 0 0
+      Max: 1 1 1 1
+    - Type: Scalar
+      Name: Brightness
+      Default: 1
+      Min: 0
+      Max: 1
+    - Type: Texture2D
+      Name: DefaultTexture
+      Default: '[Engine]/Textures/White'
+Code: DefaultMaterialCode.hlsl

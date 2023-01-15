@@ -65,4 +65,18 @@ namespace Ion
 	{
 		return dynamic_cast<XMLArchive*>(&m_Archive);
 	}
+
+	ArchiveNode Archive::EnterAndUseNode(const ArchiveNode& parentNode, StringView name, EArchiveNodeType type)
+	{
+		ArchiveNode node = EnterNode(parentNode, name, type);
+		UseNode(node);
+		return node;
+	}
+
+	ArchiveNode Archive::EnterAndUseNextNode(const ArchiveNode& currentNode, EArchiveNodeType type)
+	{
+		ArchiveNode node = EnterNextNode(currentNode, type);
+		UseNode(node);
+		return node;
+	}
 }

@@ -225,6 +225,11 @@ namespace Ion
 		 */
 		virtual void UseNode(const ArchiveNode& node) = 0;
 
+		virtual ArchiveNode GetCurrentNode() = 0;
+
+		ArchiveNode EnterAndUseNode(const ArchiveNode& parentNode, StringView name, EArchiveNodeType type);
+		ArchiveNode EnterAndUseNextNode(const ArchiveNode& currentNode, EArchiveNodeType type);
+
 #pragma region LeftShift Operators
 
 		FORCEINLINE Archive& operator<<(bool& value)

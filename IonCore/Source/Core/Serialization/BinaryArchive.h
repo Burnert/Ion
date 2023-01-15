@@ -39,6 +39,7 @@ namespace Ion
 		virtual ArchiveNode EnterNode(const ArchiveNode& parentNode, StringView name, EArchiveNodeType type) override;
 		virtual ArchiveNode EnterNextNode(const ArchiveNode& currentNode, EArchiveNodeType type) override;
 		virtual void UseNode(const ArchiveNode& node) override;
+		virtual ArchiveNode GetCurrentNode() override;
 	private:
 		TArray<uint8> m_ByteArray;
 		size_t m_Cursor;

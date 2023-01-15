@@ -300,63 +300,94 @@ namespace Ion
 		TSharedPtr<MaterialAssetData> data = inOutCustomData ? PtrCast<MaterialAssetData>(inOutCustomData) : MakeShared<MaterialAssetData>();
 
 		XMLArchiveAdapter xmlAr = ar;
+		ArchiveNode nodeRoot = ar.EnterRootNode();
 
 		xmlAr.EnterNode(IASSET_NODE_Material);
+		ArchiveNode nodeMaterial = ar.EnterNode(nodeRoot, "Material", EArchiveNodeType::Map);
 
 		xmlAr.EnterNode(IASSET_NODE_Material_Code);
+		ArchiveNode nodeCode = ar.EnterNode(nodeRoot, "Code", EArchiveNodeType::Value);
 
 		xmlAr.EnterAttribute(IASSET_ATTR_source);
-		String sSource = ar.IsSaving() ?
-			data->MaterialShaderCodePath :
-			EmptyString;
-		xmlAr << sSource;
-		if (ar.IsLoading())
-			data->MaterialShaderCodePath = RHI::GetEngineShadersPath() / "Material" / sSource;
+		String sSource = data->MaterialShaderCodePath.ToString();
+		nodeCode << sSource;
+		data->MaterialShaderCodePath = sSource;
 		xmlAr.ExitAttribute(); // IASSET_ATTR_source
 
 		xmlAr.ExitNode(); // IASSET_NODE_Material_Code
 
 		auto LSerializeParameter = [&](MaterialAssetData::Parameter* param)
 		{
+			ArchiveNode node = ar.GetCurrentNode();
+
+			ArchiveNode nodeType = ar.EnterNode(node, "Type", EArchiveNodeType::Value);
+
 			xmlAr.EnterAttribute(IASSET_ATTR_type);
-			xmlAr << param->Type;
+			nodeType << param->Type;
 			xmlAr.ExitAttribute(); // IASSET_ATTR_type
+
+			ArchiveNode nodeName = ar.EnterNode(node, "Name", EArchiveNodeType::Value);
 
 			xmlAr.EnterAttribute(IASSET_ATTR_name);
 			//String sAsset = ar.IsSaving() ? data->Description.Defaults.MaterialAssets[index]->GetVirtualPath() : EmptyString;
-			xmlAr << param->Name;
+			nodeName << param->Name;
 			xmlAr.ExitAttribute(); // IASSET_ATTR_name
 
-			if (xmlAr.TryEnterNode(IASSET_NODE_Material_Parameter_Default))
+			if (xmlAr.TryEnterNode(IASSET_NODE_Material_Parameter_Default) || IS_YAML_AR(ar))
 			{
+				ArchiveNode nodeDefault = ar.EnterAndUseNode(node, "Default", EArchiveNodeType::Value);
+
 				IMaterialParameter::SerializeParamValue(ar, param->Type, param->Values.Default);
 				xmlAr.ExitNode();
 			}
 			// @TODO: Very ugly workaround, bleh...
-			if (param->Type != EMaterialParameterType::Texture2D && xmlAr.TryEnterNode(IASSET_NODE_Material_Parameter_Min))
+			if (param->Type != EMaterialParameterType::Texture2D && (xmlAr.TryEnterNode(IASSET_NODE_Material_Parameter_Min) || IS_YAML_AR(ar)))
 			{
+				ArchiveNode nodeMin = ar.EnterAndUseNode(node, "Min", EArchiveNodeType::Value);
+
 				IMaterialParameter::SerializeParamValue(ar, param->Type, param->Values.Min);
 				xmlAr.ExitNode();
 			}
-			if (param->Type != EMaterialParameterType::Texture2D && xmlAr.TryEnterNode(IASSET_NODE_Material_Parameter_Max))
+			if (param->Type != EMaterialParameterType::Texture2D && (xmlAr.TryEnterNode(IASSET_NODE_Material_Parameter_Max) || IS_YAML_AR(ar)))
 			{
+				ArchiveNode nodeMax = ar.EnterAndUseNode(node, "Max", EArchiveNodeType::Value);
+
 				IMaterialParameter::SerializeParamValue(ar, param->Type, param->Values.Max);
 				xmlAr.ExitNode();
 			}
 		};
 
+		ArchiveNode nodeParameters = ar.EnterNode(nodeMaterial, "Parameters", EArchiveNodeType::Seq);
+
 		if (ar.IsLoading())
 		{
-			for (bool b = xmlAr.TryEnterNode(IASSET_NODE_Material_Parameter); b || (xmlAr.ExitNode(), 0); b = xmlAr.TryEnterSiblingNode())
-				LSerializeParameter(&data->Parameters.emplace_back());
+			ON_YAML_AR(ar)
+			{
+				ArchiveNode nodeParameter = ar.EnterAndUseNode(nodeParameters, "", EArchiveNodeType::Map);
+				for (; nodeParameter; nodeParameter = ar.EnterAndUseNextNode(nodeParameter, EArchiveNodeType::Map))
+					LSerializeParameter(&data->Parameters.emplace_back());
+			}
+			else
+			{
+				for (bool b = xmlAr.TryEnterNode(IASSET_NODE_Material_Parameter); b || (xmlAr.ExitNode(), 0); b = xmlAr.TryEnterSiblingNode())
+					LSerializeParameter(&data->Parameters.emplace_back());
+			}
 		}
 		else if (ar.IsSaving())
 		{
 			for (int32 i = 0; i < data->Parameters.size(); ++i)
 			{
-				xmlAr.EnterNode(IASSET_NODE_Material_Parameter);
-				LSerializeParameter(&data->Parameters[i]);
-				xmlAr.ExitNode(); // IASSET_NODE_Material_Parameter
+				ON_YAML_AR(ar)
+				{
+					ArchiveNode nodeParameter = ar.EnterAndUseNode(nodeParameters, "", EArchiveNodeType::Map);
+					LSerializeParameter(&data->Parameters[i]);
+				}
+				else
+				{
+					xmlAr.EnterNode(IASSET_NODE_Material_Parameter);
+					LSerializeParameter(&data->Parameters[i]);
+					xmlAr.ExitNode(); // IASSET_NODE_Material_Parameter
+				}
 			}
 		}
 
@@ -572,9 +603,11 @@ namespace Ion
 		m_Asset(materialAsset)
 	{
 		TSharedPtr<MaterialAssetData> data = PtrCast<MaterialAssetData>(m_Asset->GetCustomData());
-		ionassert(data->MaterialShaderCodePath.IsFile());
 
-		LoadExternalMaterialCode(data->MaterialShaderCodePath);
+		FilePath absoluteShaderCodePath = RHI::GetEngineShadersPath() / "Material" / data->MaterialShaderCodePath;
+		ionassert(absoluteShaderCodePath.IsFile());
+
+		LoadExternalMaterialCode(absoluteShaderCodePath);
 
 		for (const MaterialAssetData::Parameter& param : data->Parameters)
 		{

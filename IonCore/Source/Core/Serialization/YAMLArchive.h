@@ -45,6 +45,8 @@ namespace Ion
 
 		virtual void UseNode(const ArchiveNode& node) override;
 
+		virtual ArchiveNode GetCurrentNode() override;
+
 		void EnterNode(const String& name);
 		void ExitNode();
 
@@ -64,6 +66,7 @@ namespace Ion
 		static const YAMLNodeData& GetYAMLNodeDataFromArchiveNode(const ArchiveNode& node);
 
 		static ryml::NodeType ArchiveNodeTypeToYAMLNodeType(EArchiveNodeType type);
+		static EArchiveNodeType YAMLNodeTypeToArchiveNodeType(ryml::NodeType type);
 
 		void InitYAMLNode(EArchiveNodeType type, size_t node, ryml::csubstr key, ryml::csubstr val, bool bKey);
 
@@ -126,5 +129,16 @@ namespace Ion
 		case EArchiveNodeType::Seq:   return ryml::SEQ;
 		}
 		return ryml::NOTYPE;
+	}
+
+	FORCEINLINE EArchiveNodeType YAMLArchive::YAMLNodeTypeToArchiveNodeType(ryml::NodeType type)
+	{
+		if (type.is_seq())
+			return EArchiveNodeType::Seq;
+		if (type.is_map())
+			return EArchiveNodeType::Map;
+		if (type.has_val())
+			return EArchiveNodeType::Value;
+		return EArchiveNodeType::None;
 	}
 }

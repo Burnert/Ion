@@ -223,6 +223,11 @@ namespace Ion
 	{
 	}
 
+	ArchiveNode XMLArchive::GetCurrentNode()
+	{
+		return ArchiveNode(this);
+	}
+
 	void XMLArchive::LoadFromFile(File& file)
 	{
 		ionassert(IsLoading());

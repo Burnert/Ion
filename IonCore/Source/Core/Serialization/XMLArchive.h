@@ -74,6 +74,7 @@ namespace Ion
 		virtual ArchiveNode EnterNode(const ArchiveNode& parentNode, StringView name, EArchiveNodeType type) override;
 		virtual ArchiveNode EnterNextNode(const ArchiveNode& currentNode, EArchiveNodeType type) override;
 		virtual void UseNode(const ArchiveNode& node) override;
+		virtual ArchiveNode GetCurrentNode() override;
 
 		void LoadXML(const std::shared_ptr<XMLDocument>& xml);
 		std::shared_ptr<XMLDocument> SaveXML() const;
