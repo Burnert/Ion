@@ -96,14 +96,12 @@ namespace Ion
 	struct AssetInitializer
 	{
 		class IAssetType* Type;
-		std::shared_ptr<XMLDocument> AssetXML;
 		String VirtualPath;
 		FilePath AssetDefinitionPath;
 
 		// Existing asset initializer
-		AssetInitializer(const std::shared_ptr<XMLDocument>& xml, const String& virtualPath, const FilePath& assetDefinitionPath) :
+		AssetInitializer(const String& virtualPath, const FilePath& assetDefinitionPath) :
 			Type(nullptr),
-			AssetXML(xml),
 			VirtualPath(virtualPath),
 			AssetDefinitionPath(assetDefinitionPath)
 		{
@@ -112,7 +110,6 @@ namespace Ion
 		// New asset initializer
 		AssetInitializer(IAssetType* type, const String& virtualPath, const FilePath& assetDefinitionPath) :
 			Type(type),
-			AssetXML(nullptr),
 			VirtualPath(virtualPath),
 			AssetDefinitionPath(assetDefinitionPath)
 		{

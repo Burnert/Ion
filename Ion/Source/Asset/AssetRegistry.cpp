@@ -54,42 +54,17 @@ namespace Ion
 		AssetLogger.Info("Registered asset \"{}\".", assetDef.GetVirtualPath());
 
 		// Load an existing asset
-		if (initializer.AssetXML)
+		if (!initializer.Type)
 		{
-			Archive* pAr = nullptr;
+			YAMLArchive ar(EArchiveType::Loading);
+			ar.LoadFromFile(File(assetDef.GetDefinitionPath()));
 
-			// Load from YAML first if exists
-			String yamlPath = initializer.AssetDefinitionPath.ToString();
-			size_t dotIndex = yamlPath.find_last_of('.');
-			yamlPath = yamlPath.substr(0, dotIndex + 1) + "yaml";
-
-			YAMLArchive loadAr(EArchiveType::Loading);
-			XMLArchive xmlAr(EArchiveType::Loading);
-
-			// @TODO: VERY Temporary!
-			if (FilePath(yamlPath).Exists())
-			{
-				loadAr.LoadFromFile(File(yamlPath));
-				pAr = &loadAr;
-			}
-			else
-			{
-				xmlAr.LoadXML(initializer.AssetXML);
-				pAr = &xmlAr;
-			}
-
-			assetDef.Serialize(*pAr)
+			assetDef.Serialize(ar)
 				.Err([&](Error& err) { AssetLogger.Error("Asset \"{}\" could not be parsed.\n{}", assetDef.GetVirtualPath(), err.Message); })
 				.Ok([&] { AssetLogger.Trace("Asset \"{}\" parsed successfully.", assetDef.GetVirtualPath()); });
-
-			// Convert to YAML:
-
-			YAMLArchive ar(EArchiveType::Saving);
-			assetDef.Serialize(ar);
-			ar.SaveToFile(File(yamlPath));
 		}
 		// Create a new asset
-		else if (initializer.Type)
+		else
 		{
 			assetDef.m_Type = initializer.Type;
 			assetDef.m_CustomData = initializer.Type->CreateDefaultCustomData();

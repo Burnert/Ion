@@ -104,7 +104,7 @@ namespace Ion
 			melse assetDefinition = R.Unwrap();
 		);
 
-		AssetInitializer initializer(std::make_shared<XMLDocument>(assetDefinition), virtualPath, path);
+		AssetInitializer initializer(virtualPath, path);
 		return AssetRegistry::Register(initializer).GetHandle();
 	}
 
