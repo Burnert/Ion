@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Component.h"
+#include "ComponentOld.h"
 #include "Engine/SceneObjectData.h"
 
 namespace Ion

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Editor/EditorCommon.h"
-#include "Engine/Components/Component.h"
+#include "Engine/Components/ComponentOld.h"
 #include "Asset/Asset.h"
 #include "Application/Layer/Layer.h"
 #include "Application/Event/Event.h"

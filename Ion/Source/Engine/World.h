@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Components/Component.h"
+#include "Components/ComponentOld.h"
 #include "Asset/Asset.h"
 #include "Matter/ObjectPtr.h"
 

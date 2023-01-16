@@ -5,7 +5,7 @@
 #include "Engine/SceneObjectData.h"
 #include "Engine/Entity/Entity.h"
 #include "Engine/Entity/MeshEntity.h"
-#include "Engine/Components/Component.h"
+#include "Engine/Components/ComponentOld.h"
 #include "Engine/Components/SceneComponent.h"
 #include "Engine/Components/MeshComponent.h"
 #include "Engine/Components/LightComponent.h"

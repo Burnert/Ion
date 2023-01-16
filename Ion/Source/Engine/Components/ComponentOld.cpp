@@ -1,6 +1,6 @@
 #include "IonPCH.h"
 
-#include "Component.h"
+#include "ComponentOld.h"
 #include "SceneComponent.h"
 #include "Engine/Entity/Entity.h"
 #include "Engine/World.h"

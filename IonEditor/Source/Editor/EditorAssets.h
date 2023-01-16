@@ -2,7 +2,7 @@
 
 #include "EditorCore/EditorCore.h"
 #include "Application/EnginePath.h"
-#include "Engine/Components/Component.h"
+#include "Engine/Components/ComponentOld.h"
 
 #include "Resource/TextureResource.h"
 

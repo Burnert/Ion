@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Engine/Components/Component.h"
+#include "Engine/Components/ComponentOld.h"
 #include "Asset/Asset.h"
 
 namespace Ion::Editor
