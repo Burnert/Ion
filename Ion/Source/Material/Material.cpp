@@ -252,45 +252,6 @@ namespace Ion
 
 #pragma endregion
 
-	Result<TSharedPtr<IAssetCustomData>, IOError> MaterialAssetType::Parse(const std::shared_ptr<XMLDocument>& xml) const
-	{
-		TSharedPtr<MaterialAssetData> data = MakeShared<MaterialAssetData>();
-
-		XMLParserResult result = AssetParser(xml)
-			.BeginAsset(AT_MaterialAssetType)
-			.Begin(IASSET_NODE_Material) // <Material>
-			.ParseAttributes(IASSET_NODE_Material_Code,
-				IASSET_ATTR_source, [&, this](String source)
-				{
-					data->MaterialShaderCodePath = RHI::GetEngineShadersPath() + "Material" + source;
-				}
-			)
-			.EnterEachNode(IASSET_NODE_Material_Parameter, [&, this](AssetParser& parser)
-			{
-				String paramName;
-				EMaterialParameterType paramType = EMaterialParameterType::Null;
-
-				parser.ParseCurrentEnumAttribute(IASSET_ATTR_type, paramType);
-				parser.GetCurrentAttribute(IASSET_ATTR_name, paramName);
-
-				MaterialAssetParameterValues values;
-				parser.TryParseNodeValue(IASSET_NODE_Material_Parameter_Default, [&](String def) { values.Default = IMaterialParameter::ParseParamValue(def, paramType, parser); });
-				parser.TryParseNodeValue(IASSET_NODE_Material_Parameter_Min,     [&](String min) { values.Min =     IMaterialParameter::ParseParamValue(min, paramType, parser); });
-				parser.TryParseNodeValue(IASSET_NODE_Material_Parameter_Max,     [&](String max) { values.Max =     IMaterialParameter::ParseParamValue(max, paramType, parser); });
-
-				data->Parameters.emplace_back(MaterialAssetData::Parameter { values, paramName, paramType, });
-			})
-			.End() // </Material>
-			.Finalize();
-
-		if (!result.OK())
-		{
-			result.PrintMessages();
-			ionthrow(IOError, result.GetFailMessage());
-		}
-		return data;
-	}
-
 	Result<void, IOError> MaterialAssetType::Serialize(Archive& ar, TSharedPtr<IAssetCustomData>& inOutCustomData) const
 	{
 		// @TODO: Make this work for binary archives too (not that trivial with xml)

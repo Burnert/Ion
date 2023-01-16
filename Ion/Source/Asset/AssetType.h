@@ -36,20 +36,6 @@ namespace Ion
 	{
 	public:
 		/**
-		 * @brief Asset type object. Handles parsing/exporting the specific asset type.
-		 *
-		 * @details This function is called when registering the asset file.
-		 * On a successful parse, it returns a custom object, derived from IAssetCustomData,
-		 * which is a representation of the parsed data. It can later be cast to get
-		 * the data (e.g. when creating a mesh / texture).
-		 *
-		 * @return Pointer to IAssetCustomData with the parsed data or IOError on error.
-		 */
-		virtual Result<TSharedPtr<IAssetCustomData>, IOError> Parse(const std::shared_ptr<XMLDocument>& xml) const { ionthrow(IOError, "Parse function not implemented."); };
-
-		virtual Result<std::shared_ptr<XMLDocument>, IOError> Export(const TSharedPtr<IAssetCustomData>& data) const { ionthrow(IOError, "Export function not implemented."); }
-
-		/**
 		 * @brief Serialize the custom asset data relevant for the type.
 		 * 
 		 * @param ar Archive reference to (de)serialize to/from.

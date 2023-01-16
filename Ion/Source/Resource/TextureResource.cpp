@@ -8,37 +8,6 @@
 
 namespace Ion
 {
-	Result<TSharedPtr<IAssetCustomData>, IOError> ImageAssetType::Parse(const std::shared_ptr<XMLDocument>& xml) const
-	{
-		TSharedPtr<ImageAssetData> data = MakeShared<ImageAssetData>();
-
-		XMLParserResult result = AssetParser(xml)
-			.BeginAsset(AT_ImageAssetType)
-			.Begin(IASSET_NODE_Resource) // <Resource>
-			.Begin(IASSET_NODE_Resource_Texture) // <Texture>
-			.ParseCurrentAttributeTyped(IASSET_ATTR_guid, data->ResourceGuid)
-			.TryEnterNode(IASSET_NODE_Properties, [&data](AssetParser& parser) // <Defaults>
-			{
-				parser.TryEnterNode(IASSET_NODE_Resource_Texture_Prop_Filter, [&data](AssetParser& parser)
-				{
-					ETextureFilteringMethod filter = ETextureFilteringMethod::Default;
-					parser.ParseCurrentEnumAttribute(IASSET_ATTR_value, filter);
-
-					data->Description.Properties.Filter = filter;
-				});
-			}) // </Defaults>
-			.End() // </Texture>
-			.End() // </Resource>
-			.Finalize();
-
-		if (!result.OK())
-		{
-			result.PrintMessages();
-			ionthrow(IOError, result.GetFailMessage());
-		}
-		return data;
-	}
-
 	Result<void, IOError> ImageAssetType::Serialize(Archive& ar, TSharedPtr<IAssetCustomData>& inOutCustomData) const
 	{
 		// @TODO: Make this work for binary archives too (not that trivial with xml)

@@ -133,44 +133,6 @@ namespace Ion
 
 #pragma endregion
 
-	Result<TSharedPtr<IAssetCustomData>, IOError> Ion::MaterialInstanceAssetType::Parse(const std::shared_ptr<XMLDocument>& xml) const
-	{
-		TSharedPtr<MaterialInstanceAssetData> data = MakeShared<MaterialInstanceAssetData>();
-
-		XMLParserResult result = AssetParser(xml)
-			.BeginAsset(AT_MaterialInstanceAssetType)
-			.Begin(IASSET_NODE_MaterialInstance) // <MaterialInstance>
-			.ParseCurrentAttributes(
-				IASSET_ATTR_parent, [&, this](String parent)
-				{
-					data->ParentMaterialAssetVP = parent;
-				}
-			)
-			.EnterEachNode(IASSET_NODE_MaterialInstance_ParameterInstance, [&, this](AssetParser& parser)
-				{
-					String paramName;
-					EMaterialParameterType paramType = EMaterialParameterType::Null;
-
-					parser.ParseCurrentEnumAttribute(IASSET_ATTR_type, paramType);
-					parser.GetCurrentAttribute(IASSET_ATTR_name, paramName);
-
-					MaterialInstanceAssetParameterInstanceValues values;
-					parser.ParseCurrentNodeValue([&](String val) { values.Value = IMaterialParameter::ParseParamValue(val, paramType, parser); });
-
-					data->Parameters.emplace_back(MaterialInstanceAssetData::Parameter { values, paramName, paramType });
-				}
-			)
-			.End() // </MaterialInstance>
-			.Finalize();
-
-		if (!result.OK())
-		{
-			result.PrintMessages();
-			ionthrow(IOError, result.GetFailMessage());
-		}
-		return data;
-	}
-
 	Result<void, IOError> MaterialInstanceAssetType::Serialize(Archive& ar, TSharedPtr<IAssetCustomData>& inOutCustomData) const
 	{
 		// @TODO: Make this work for binary archives too (not that trivial with xml)
