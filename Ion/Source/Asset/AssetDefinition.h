@@ -93,8 +93,6 @@ namespace Ion
 	private:
 		explicit AssetDefinition(const AssetInitializer& initializer);
 
-		Result<void, IOError> ParseAssetDefinitionFile(const std::shared_ptr<XMLDocument>& xml);
-
 		Result<void, IOError> Serialize(Archive& ar);
 
 	private:
