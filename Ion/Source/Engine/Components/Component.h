@@ -79,7 +79,7 @@ DECLARE_COMPONENT_SERIALCALL_HELPER_EX(func, comp.func())
 template<> \
 struct FInstantiateComponent<class className> \
 { \
-	static Component* Call(ComponentRegistry* registry); \
+	static ComponentOld* Call(ComponentRegistry* registry); \
 }; \
 template<> \
 struct FInstantiateComponentContainer<class className> \
@@ -117,11 +117,11 @@ public: \
 	using Type          = ComponentContainerImpl; \
 	using ComponentT    = className; \
 	using RawContainerT = RawComponentContainerType; \
-	virtual void Erase(Component* component) override; \
-	virtual Component* Find(Component* component) const override; \
+	virtual void Erase(ComponentOld* component) override; \
+	virtual ComponentOld* Find(ComponentOld* component) const override; \
 	virtual ComponentTypeID GetTypeID() const override; \
 	virtual void* GetRawContainer() override; \
-	virtual Component* ForEachHelper(void*& inOutGenericIt) override; \
+	virtual ComponentOld* ForEachHelper(void*& inOutGenericIt) override; \
 	RawComponentContainerType Container; \
 }; \
 static inline const String ClassName = #className; \
@@ -134,7 +134,7 @@ virtual const ComponentDatabase::TypeInfo& GetFinalTypeInfo() const override \
 /* @TODO: Add GetTypeData */ \
 virtual const String& GetClassName() const override { return ClassName; } \
 virtual const String& GetClassDisplayName() const override { return ClassDisplayName; } \
-virtual Component* Duplicate_Internal(ComponentRegistry& registry) const override; \
+virtual ComponentOld* Duplicate_Internal(ComponentRegistry& registry) const override; \
 friend class ComponentRegistry;
 
 /* Put in the component's .cpp file (one per file). */
@@ -163,12 +163,12 @@ namespace ComponentSerialCall::Private \
 	}; \
 	static OnRegisterListeners s_OnRegisterListeners; \
 } \
-void className::ComponentContainerImpl::Erase(Component* component) \
+void className::ComponentContainerImpl::Erase(ComponentOld* component) \
 { \
 	ionassert(Container.find(component->GetGUID()) != Container.end()); \
 	Container.erase(component->GetGUID()); \
 } \
-Component* className::ComponentContainerImpl::Find(Component* component) const \
+ComponentOld* className::ComponentContainerImpl::Find(ComponentOld* component) const \
 { \
 	auto it = Container.find(component->GetGUID()); \
 	if (it == Container.end()) \
@@ -185,7 +185,7 @@ void* className::ComponentContainerImpl::GetRawContainer() \
 { \
 	return &Container; \
 } \
-Component* className::ComponentContainerImpl::ForEachHelper(void*& inOutGenericIt) \
+ComponentOld* className::ComponentContainerImpl::ForEachHelper(void*& inOutGenericIt) \
 { \
 	RawComponentContainerType::iterator*& typedIt = (RawComponentContainerType::iterator*&)inOutGenericIt; \
 	if (!typedIt) \
@@ -197,10 +197,10 @@ Component* className::ComponentContainerImpl::ForEachHelper(void*& inOutGenericI
 	typedIt = nullptr; \
 	return nullptr; \
 } \
-/* Component class overrides */ \
-Component* className::Duplicate_Internal(ComponentRegistry& registry) const \
+/* ComponentOld class overrides */ \
+ComponentOld* className::Duplicate_Internal(ComponentRegistry& registry) const \
 { \
-	return (Component*)registry.DuplicateComponent(this); \
+	return (ComponentOld*)registry.DuplicateComponent(this); \
 } \
 /* Entity Component Property setup */ \
 using NCPropsContianerType = THashSet<INCProperty*>; \
@@ -220,7 +220,7 @@ static void _AddNCProperty(INCProperty* prop) \
 	_GetNCPropContainer().insert(prop); \
 } \
 /* Component instantiate function for runtime creation (type not known at compile-time). */ \
-Component* FInstantiateComponent<className>::Call(ComponentRegistry* registry) \
+ComponentOld* FInstantiateComponent<className>::Call(ComponentRegistry* registry) \
 { \
 	ionassert(registry); \
 	IComponentContainer* icontainer = registry->GetContainer(className::GetTypeID()); \
@@ -320,7 +320,7 @@ namespace Ion
 	template<typename T>
 	static constexpr bool TIsComponentTypeFinal = THasGetTypeID<T>;
 
-	class Component;
+	class ComponentOld;
 	class ComponentRegistry;
 	class IComponentContainer;
 
@@ -329,13 +329,13 @@ namespace Ion
 	template<typename T>
 	using TCompContainer = THashMap<GUID, T>;
 
-	using InstantiateComponentFPtr          = Component*(*)(ComponentRegistry*);
+	using InstantiateComponentFPtr          = ComponentOld*(*)(ComponentRegistry*);
 	using InstantiateComponentContainerFPtr = IComponentContainer*(*)(ComponentRegistry*);
 
 	template<typename CompT>
 	struct FInstantiateComponent
 	{
-		static Component* Call(ComponentRegistry*) { return nullptr; }
+		static ComponentOld* Call(ComponentRegistry*) { return nullptr; }
 	};
 
 	template<typename CompT>
@@ -356,7 +356,7 @@ namespace Ion
 		static void Call() { }
 	};
 
-	// Entity Component Property:
+	// Entity ComponentOld Property:
 
 	enum class ENCPropertyType : uint8
 	{
@@ -410,7 +410,7 @@ namespace Ion
 		}
 	};
 
-	/* Entity Component Property interface */
+	/* Entity ComponentOld Property interface */
 	class INCProperty
 	{
 	public:
@@ -422,7 +422,7 @@ namespace Ion
 		virtual void OnRegister() = 0;
 
 	private:
-		virtual void Init(Component& component) = 0;
+		virtual void Init(ComponentOld& component) = 0;
 		
 		template<typename T>
 		friend struct FRegisterPropertiesForComponent;
@@ -433,8 +433,8 @@ namespace Ion
 	class TINCPropertyTyped : public INCProperty
 	{
 	public:
-		virtual void Set(Component& object, const T& value) = 0;
-		virtual const T& Get(Component& object) const = 0;
+		virtual void Set(ComponentOld& object, const T& value) = 0;
+		virtual const T& Get(ComponentOld& object) const = 0;
 
 		virtual const TNCPropertyOptionalParams<T>& GetParams() const = 0;
 
@@ -444,7 +444,7 @@ namespace Ion
 		}
 	};
 
-	/* Entity Component Property template
+	/* Entity ComponentOld Property template
 	   Instantiated once per class, not per object. */
 	template<typename T, typename CompT>
 	class TNCProperty : public TINCPropertyTyped<T>
@@ -471,7 +471,7 @@ namespace Ion
 			//}
 		}
 
-		virtual void Set(Component& object, const T& value) override
+		virtual void Set(ComponentOld& object, const T& value) override
 		{
 			//LOG_DEBUG("TNCProperty::Update [{0}::{1}]", CompT::ClassName, MemberName);
 			T& member = ((CompT&)object).*MemberPtr = value;
@@ -480,7 +480,7 @@ namespace Ion
 				OnChanged(value);
 		}
 
-		virtual const T& Get(Component& object) const override
+		virtual const T& Get(ComponentOld& object) const override
 		{
 			ionassert(dynamic_cast<CompT*>(&object));
 			return ((CompT&)object).*MemberPtr;
@@ -542,7 +542,7 @@ namespace Ion
 			return true;
 		}
 
-		virtual void Init(Component& component) override
+		virtual void Init(ComponentOld& component) override
 		{
 			T& member = ((CompT&)component).*MemberPtr;
 
@@ -558,7 +558,7 @@ namespace Ion
 		friend struct ComponentDatabase;
 	};
 
-	// Component Database:
+	// ComponentOld Database:
 
 	struct ComponentDatabase
 	{
@@ -592,7 +592,7 @@ namespace Ion
 			template<typename T>
 			bool Is() const
 			{
-				static_assert(TIsBaseOfV<Component, T> && TIsComponentTypeFinal<T>);
+				static_assert(TIsBaseOfV<ComponentOld, T> && TIsComponentTypeFinal<T>);
 				return ID == T::GetTypeID();
 			}
 
@@ -628,7 +628,7 @@ namespace Ion
 			return RegisteredTypes.find(id)->second;
 		}
 
-		void InitProperties(ComponentTypeID id, Component& component)
+		void InitProperties(ComponentTypeID id, ComponentOld& component)
 		{
 			TypeInfo& typeInfo = GetTypeInfo_Internal(id);
 			for (INCProperty* prop : typeInfo.EditableProperties)
@@ -646,7 +646,7 @@ namespace Ion
 	DECLARE_COMPONENT_SERIALCALL(BuildRendererData, RRendererData&);
 
 	/* Abstract class */
-	class ION_API Component
+	class ION_API ComponentOld
 	{
 	public:
 		/* Called by the ComponentRegistry */
@@ -654,7 +654,7 @@ namespace Ion
 		/* Called by the ComponentRegistry */
 		virtual void OnDestroy();
 
-		Component* Duplicate() const;
+		ComponentOld* Duplicate() const;
 
 		/* If bReparent is true, the children will get
 		   reparented to the parent of this component.
@@ -672,18 +672,18 @@ namespace Ion
 		void SetName(const String& name);
 		const String& GetName() const;
 
-		/* Returns the Entity that owns the Component. */
+		/* Returns the Entity that owns the ComponentOld. */
 		Entity* GetOwner() const;
 
-		/* Returns the GUID of the Component.
-		   A GUID is initiated at the creation of the Component. */
+		/* Returns the GUID of the ComponentOld.
+		   A GUID is initiated at the creation of the ComponentOld. */
 		const GUID& GetGUID() const;
 
-		/* Returns a pointer to the World the Component is currently in. */
+		/* Returns a pointer to the World the ComponentOld is currently in. */
 		World* GetWorldContext() const;
 
-		bool operator==(const Component& other) const;
-		bool operator!=(const Component& other) const;
+		bool operator==(const ComponentOld& other) const;
+		bool operator!=(const ComponentOld& other) const;
 
 		// Overriden in final classes by ENTITY_COMPONENT_CLASS_BODY
 
@@ -691,7 +691,7 @@ namespace Ion
 		virtual const String& GetClassName() const = 0;
 		virtual ComponentTypeID GetFinalTypeID() const = 0;
 		virtual const ComponentDatabase::TypeInfo& GetFinalTypeInfo() const = 0;
-		virtual Component* Duplicate_Internal(ComponentRegistry& registry) const = 0;
+		virtual ComponentOld* Duplicate_Internal(ComponentRegistry& registry) const = 0;
 
 		// End of overriden in final classes ...
 
@@ -700,7 +700,7 @@ namespace Ion
 		bool IsOfType(ComponentTypeID id) const;
 
 	protected:
-		Component();
+		ComponentOld();
 
 		void InitAsSceneComponent();
 
@@ -734,12 +734,12 @@ namespace Ion
 	class IComponentContainer
 	{
 	public:
-		// No Insert function, only the Component Registry can
+		// No Insert function, only the ComponentOld Registry can
 		// emplace components because the type has to be known.
 		// FInstantiateComponent is used for that.
 
-		virtual void Erase(Component* component) = 0;
-		virtual Component* Find(Component* component) const = 0;
+		virtual void Erase(ComponentOld* component) = 0;
+		virtual ComponentOld* Find(ComponentOld* component) const = 0;
 
 		virtual ComponentTypeID GetTypeID() const = 0;
 		virtual void* GetRawContainer() = 0;
@@ -748,18 +748,18 @@ namespace Ion
 		void ForEach(Lambda forEach);
 
 	private:
-		virtual Component* ForEachHelper(void*& inOutGenericIt) = 0;
+		virtual ComponentOld* ForEachHelper(void*& inOutGenericIt) = 0;
 	};
 
-	/** Lambda type must be void(Component*) */
+	/** Lambda type must be void(ComponentOld*) */
 	template<typename Lambda>
 	inline void IComponentContainer::ForEach(Lambda forEach)
 	{
 		// For Each lambda type check
-		static_assert(TIsConvertibleV<Lambda, TFunction<void(Component*)>>);
+		static_assert(TIsConvertibleV<Lambda, TFunction<void(ComponentOld*)>>);
 		
 		void* genericIt = nullptr;
-		while (Component* comp = ForEachHelper(genericIt))
+		while (ComponentOld* comp = ForEachHelper(genericIt))
 		{
 			forEach(comp);
 		}
@@ -778,7 +778,7 @@ namespace Ion
 		template<typename CompT, typename... Args>
 		CompT* CreateComponent(Args&&... args);
 		template<typename... Args>
-		Component* CreateComponent(ComponentTypeID id, Args&&... args);
+		ComponentOld* CreateComponent(ComponentTypeID id, Args&&... args);
 
 		template<typename CompT>
 		CompT* DuplicateComponent(const CompT* other);
@@ -788,15 +788,15 @@ namespace Ion
 		template<typename CompT, TEnableIfT<!TIsComponentTypeFinal<CompT>>* = 0>
 		void DestroyComponent(CompT* component);
 
-		Component* FindComponentByGUID(const GUID& guid) const;
+		ComponentOld* FindComponentByGUID(const GUID& guid) const;
 
-		/** Lambda type must be void(Component*) */
+		/** Lambda type must be void(ComponentOld*) */
 		template<typename Lambda>
 		void ForEachComponentOfType(ComponentTypeID id, Lambda forEach);
 
 		/** Sequentially calls ForEachComponentOfType for every component type
 		  * that has its container initialized.
-		  * Lambda type must be void(ComponentTypeID, Component*) */
+		  * Lambda type must be void(ComponentTypeID, ComponentOld*) */
 		template<typename Lambda>
 		void ForEachComponent(Lambda forEach);
 
@@ -806,7 +806,7 @@ namespace Ion
 		template<typename Lambda>
 		void ForEachSceneComponent(Lambda forEach);
 
-		void MarkForDestroy(Component* component);
+		void MarkForDestroy(ComponentOld* component);
 
 		void DestroyInvalidComponents();
 
@@ -842,8 +842,8 @@ namespace Ion
 
 	private:
 		THashMap<ComponentTypeID, IComponentContainer*> m_Containers;
-		THashMap<ComponentTypeID, TArray<Component*>> m_InvalidComponents;
-		THashMap<GUID, Component*> m_ComponentsByGUID;
+		THashMap<ComponentTypeID, TArray<ComponentOld*>> m_InvalidComponents;
+		THashMap<GUID, ComponentOld*> m_ComponentsByGUID;
 
 		World* m_WorldContext;
 
@@ -857,54 +857,54 @@ namespace Ion
 		friend struct FRegisterPropertiesForComponent;
 	};
 
-	// Component inline definitions
+	// ComponentOld inline definitions
 
-	inline bool Component::IsTickEnabled() const
+	inline bool ComponentOld::IsTickEnabled() const
 	{
 		return m_bTickEnabled;
 	}
 	
-	inline bool Component::IsSceneComponent() const
+	inline bool ComponentOld::IsSceneComponent() const
 	{
 		return m_bIsSceneComponent;
 	}
 
-	inline void Component::SetName(const String& name)
+	inline void ComponentOld::SetName(const String& name)
 	{
 		m_Name = name;
 	}
 
-	inline const String& Component::GetName() const
+	inline const String& ComponentOld::GetName() const
 	{
 		return m_Name;
 	}
 
-	inline Entity* Component::GetOwner() const
+	inline Entity* ComponentOld::GetOwner() const
 	{
 		return m_OwningEntity;
 	}
 
-	inline const GUID& Component::GetGUID() const
+	inline const GUID& ComponentOld::GetGUID() const
 	{
 		return m_GUID;
 	}
 
-	inline World* Component::GetWorldContext() const
+	inline World* ComponentOld::GetWorldContext() const
 	{
 		return m_WorldContext;
 	}
 
-	inline bool Component::IsPendingKill() const
+	inline bool ComponentOld::IsPendingKill() const
 	{
 		return m_bPendingKill;
 	}
 
-	inline bool Component::operator==(const Component& other) const
+	inline bool ComponentOld::operator==(const ComponentOld& other) const
 	{
 		return m_GUID == other.m_GUID;
 	}
 
-	inline bool Component::operator!=(const Component& other) const
+	inline bool ComponentOld::operator!=(const ComponentOld& other) const
 	{
 		return m_GUID != other.m_GUID;
 	}
@@ -914,7 +914,7 @@ namespace Ion
 	template<typename CompT>
 	inline ComponentTypeID ComponentRegistry::RegisterComponentClass()
 	{
-		static_assert(TIsBaseOfV<Component, CompT> && TIsComponentTypeFinal<CompT>);
+		static_assert(TIsBaseOfV<ComponentOld, CompT> && TIsComponentTypeFinal<CompT>);
 
 		ComponentLogger.Debug("ComponentRegistry::RegisterComponentClass<{0}>", CompT::ClassName);
 
@@ -948,7 +948,7 @@ namespace Ion
 	template<typename CompT, typename... Args>
 	inline CompT* ComponentRegistry::CreateComponent(Args&&... args)
 	{
-		static_assert(TIsBaseOfV<Component, CompT>);
+		static_assert(TIsBaseOfV<ComponentOld, CompT>);
 		using CompContainer = typename CompT::RawComponentContainerType;
 
 		// Initialize the array if it's the first component of that type
@@ -977,7 +977,7 @@ namespace Ion
 
 	/* Runtime version */
 	template<typename... Args>
-	inline Component* ComponentRegistry::CreateComponent(ComponentTypeID id, Args&&... args)
+	inline ComponentOld* ComponentRegistry::CreateComponent(ComponentTypeID id, Args&&... args)
 	{
 		// Initialize the array if it's the first component of that type
 		if (!IsContainerInitialized(id))
@@ -990,7 +990,7 @@ namespace Ion
 		InstantiateComponentFPtr instantiateFPtr = database->GetTypeInfo(id).m_InstantiateType;
 		ionverify(instantiateFPtr);
 		// This will add the component to the registry container
-		Component* componentPtr = instantiateFPtr(this);
+		ComponentOld* componentPtr = instantiateFPtr(this);
 		ionverify(componentPtr);
 
 		m_ComponentsByGUID[componentPtr->GetGUID()] = componentPtr;
@@ -1008,7 +1008,7 @@ namespace Ion
 	template<typename CompT>
 	inline CompT* ComponentRegistry::DuplicateComponent(const CompT* other)
 	{
-		static_assert(TIsBaseOfV<Component, CompT>);
+		static_assert(TIsBaseOfV<ComponentOld, CompT>);
 		using CompContainer = typename CompT::RawComponentContainerType;
 
 		CompContainer& container = GetRawContainer<CompT>();
@@ -1026,7 +1026,7 @@ namespace Ion
 	template<typename CompT, TEnableIfT<TIsComponentTypeFinal<CompT>>*>
 	inline void ComponentRegistry::DestroyComponent(CompT* component)
 	{
-		static_assert(TIsBaseOfV<Component, CompT>);
+		static_assert(TIsBaseOfV<ComponentOld, CompT>);
 		using CompContainer = CompT::RawComponentContainerType;
 
 		if (component)
@@ -1056,7 +1056,7 @@ namespace Ion
 	template<typename CompT, TEnableIfT<!TIsComponentTypeFinal<CompT>>*>
 	inline void ComponentRegistry::DestroyComponent(CompT* component)
 	{
-		static_assert(TIsBaseOfV<Component, CompT>);
+		static_assert(TIsBaseOfV<ComponentOld, CompT>);
 
 		if (component)
 		{
@@ -1065,7 +1065,7 @@ namespace Ion
 			ionassert(IsContainerInitialized(typeId));
 
 			IComponentContainer* container = GetContainer(typeId);
-			if (Component* found = container->Find(component))
+			if (ComponentOld* found = container->Find(component))
 			{
 				ionassert(found == component);
 				component->OnDestroy();
@@ -1092,12 +1092,12 @@ namespace Ion
 	template<typename Lambda>
 	inline void ComponentRegistry::ForEachComponent(Lambda forEach)
 	{
-		static_assert(TIsConvertibleV<Lambda, TFunction<void(ComponentTypeID, Component*)>>);
+		static_assert(TIsConvertibleV<Lambda, TFunction<void(ComponentTypeID, ComponentOld*)>>);
 
 		const ComponentDatabase* database = GetComponentTypeDatabase();
 		for (auto& [id, type] : database->RegisteredTypes)
 		{
-			ForEachComponentOfType(id, [id, &forEach](Component* component)
+			ForEachComponentOfType(id, [id, &forEach](ComponentOld* component)
 			{
 				forEach(id, component);
 			});
@@ -1115,7 +1115,7 @@ namespace Ion
 			if (!type.bIsSceneComponent)
 				continue;
 
-			ForEachComponentOfType(id, [id, &forEach](Component* component)
+			ForEachComponentOfType(id, [id, &forEach](ComponentOld* component)
 			{
 				forEach((SceneComponent*)component);
 			});
@@ -1136,7 +1136,7 @@ namespace Ion
 	template<typename CompT>
 	inline void ComponentRegistry::InitializeComponentContainter()
 	{
-		static_assert(TIsBaseOfV<Component, CompT>);
+		static_assert(TIsBaseOfV<ComponentOld, CompT>);
 		using CompContainer = CompT::ComponentContainerImpl;
 
 		ComponentLogger.Debug("ComponentRegistry::InitializeComponentContainter<{0}>", CompT::ClassName);
@@ -1145,7 +1145,7 @@ namespace Ion
 
 		CompContainer* container = new CompContainer;
 		m_Containers.insert({ CompT::GetTypeID(), container });
-		m_InvalidComponents.insert({ CompT::GetTypeID(), TArray<Component*>() });
+		m_InvalidComponents.insert({ CompT::GetTypeID(), TArray<ComponentOld*>() });
 	}
 
 	inline void ComponentRegistry::InitializeComponentContainter(ComponentTypeID id)
@@ -1163,7 +1163,7 @@ namespace Ion
 		ionverify(containerPtr);
 
 		m_Containers.insert({ containerPtr->GetTypeID(), containerPtr });
-		m_InvalidComponents.insert({ containerPtr->GetTypeID(), TArray<Component*>() });
+		m_InvalidComponents.insert({ containerPtr->GetTypeID(), TArray<ComponentOld*>() });
 	}
 
 	template<typename CompT>
@@ -1180,7 +1180,7 @@ namespace Ion
 	template<typename CompT>
 	typename CompT::RawComponentContainerType& ComponentRegistry::GetRawContainer()
 	{
-		static_assert(TIsBaseOfV<Component, CompT>);
+		static_assert(TIsBaseOfV<ComponentOld, CompT>);
 		using ContainerT = CompT::ComponentContainerImpl;
 		using RawContainerT = CompT::RawComponentContainerType;
 
@@ -1223,13 +1223,13 @@ namespace Ion
 	}
 
 	template<typename T>
-	inline bool Component::IsOfType() const
+	inline bool ComponentOld::IsOfType() const
 	{
-		static_assert(TIsBaseOfV<Component, T> && TIsComponentTypeFinal<T>);
+		static_assert(TIsBaseOfV<ComponentOld, T> && TIsComponentTypeFinal<T>);
 		return GetFinalTypeID() == T::GetTypeID();
 	}
 
-	inline bool Component::IsOfType(ComponentTypeID id) const
+	inline bool ComponentOld::IsOfType(ComponentTypeID id) const
 	{
 		return GetFinalTypeID() == id;
 	}

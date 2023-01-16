@@ -14,7 +14,7 @@ namespace Ion
 		MCLASS(Entity)
 		using Super = MObject;
 
-		using ComponentSet = THashSet<Component*>;
+		using ComponentSet = THashSet<ComponentOld*>;
 
 		Entity();
 
@@ -47,20 +47,20 @@ namespace Ion
 		TArray<SceneComponent*> GetAllOwnedSceneComponents() const;
 
 		/* Adds a non-scene component */
-		void AddComponent(Component* component);
+		void AddComponent(ComponentOld* component);
 		/* Removes a non-scene component */
-		void RemoveComponent(Component* component);
-		bool HasNonSceneComponent(Component* component) const;
+		void RemoveComponent(ComponentOld* component);
+		bool HasNonSceneComponent(ComponentOld* component) const;
 		const ComponentSet& GetComponents() const;
 
-		bool HasComponent(Component* component) const;
+		bool HasComponent(ComponentOld* component) const;
 
 		/* Set entity related component data and add the component to entity's collection. 
 		   Updates scene component's world transform cache. */
-		void BindComponent(Component* component);
+		void BindComponent(ComponentOld* component);
 		/* Reset entity related component data and remove the component from entity's collection.
 		   Updates scene component's world transform cache. */
-		void UnbindComponent(Component* component);
+		void UnbindComponent(ComponentOld* component);
 
 		Entity* Duplicate() const;
 	protected:

@@ -14,8 +14,8 @@ namespace Ion
 	struct SceneObjectData;
 	// Entity.h
 	class Entity;
-	// Components/Component.h
-	class Component;
+	// Components/ComponentOld.h
+	class ComponentOld;
 	class IComponentContainer;
 	struct ComponentDatabase;
 	class ComponentRegistry;

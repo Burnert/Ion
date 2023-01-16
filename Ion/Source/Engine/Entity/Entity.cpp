@@ -83,7 +83,7 @@ namespace Ion
 		return TArray<SceneComponent*>(m_SceneComponents.begin(), m_SceneComponents.end());
 	}
 
-	void Entity::AddComponent(Component* component)
+	void Entity::AddComponent(ComponentOld* component)
 	{
 		ionassert(!component->IsSceneComponent(),
 			"Add Scene Components using SceneComponent::AttachTo.");
@@ -92,7 +92,7 @@ namespace Ion
 		BindComponent(component);
 	}
 
-	void Entity::RemoveComponent(Component* component)
+	void Entity::RemoveComponent(ComponentOld* component)
 	{
 		ionassert(!component->IsSceneComponent(),
 			"Remove Scene Components using SceneComponent::Detach.");
@@ -101,13 +101,13 @@ namespace Ion
 		UnbindComponent(component);
 	}
 
-	bool Entity::HasNonSceneComponent(Component* component) const
+	bool Entity::HasNonSceneComponent(ComponentOld* component) const
 	{
 		ionassert(!component->IsSceneComponent());
 		return m_Components.find(component) != m_Components.end();
 	}
 
-	bool Entity::HasComponent(Component* component) const
+	bool Entity::HasComponent(ComponentOld* component) const
 	{
 		if (!component)
 			return false;
@@ -275,7 +275,7 @@ namespace Ion
 		}
 	}
 
-	void Entity::BindComponent(Component* component)
+	void Entity::BindComponent(ComponentOld* component)
 	{
 		ionassert(component);
 
@@ -291,7 +291,7 @@ namespace Ion
 		}
 	}
 
-	void Entity::UnbindComponent(Component* component)
+	void Entity::UnbindComponent(ComponentOld* component)
 	{
 		ionassert(component);
 
@@ -320,8 +320,8 @@ namespace Ion
 
 		// Duplicate the non-scene components
 
-		THashSet<Component*> newComponents;
-		for (const Component* const& component : newEntity->m_Components)
+		THashSet<ComponentOld*> newComponents;
+		for (const ComponentOld* const& component : newEntity->m_Components)
 		{
 			auto [it, bUnique] = newComponents.insert(component->Duplicate());
 			(*it)->m_OwningEntity = newEntity;
@@ -380,11 +380,11 @@ namespace Ion
 
 		// Destroy the components too
 
-		// Can't use the for loop because Component::Destroy
+		// Can't use the for loop because ComponentOld::Destroy
 		// removes the component from m_Components.
 		while (!m_Components.empty())
 		{
-			Component* component = *m_Components.begin();
+			ComponentOld* component = *m_Components.begin();
 			component->Destroy();
 		}
 		m_Components.clear();

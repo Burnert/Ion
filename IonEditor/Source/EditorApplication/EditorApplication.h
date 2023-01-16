@@ -39,17 +39,17 @@ namespace Ion::Editor
 		// End of IApp overrides
 
 		Entity* GetSelectedEntity() const;
-		Component* GetSelectedComponent() const;
+		ComponentOld* GetSelectedComponent() const;
 		bool IsAnyObjectSelected() const;
 
 		void SelectObject(Entity* entity);
-		void SelectObject(Component* component);
+		void SelectObject(ComponentOld* component);
 		void DeselectCurrentEntity();
 		void DeselectCurrentComponent();
 		void DeselectCurrentObject();
 
 		void DeleteObject(Entity* entity);
-		bool DeleteObject(Component* component);
+		bool DeleteObject(ComponentOld* component);
 		void DeleteSelectedObject();
 
 		void DuplicateObject(Entity* entity);
@@ -81,7 +81,7 @@ namespace Ion::Editor
 		void DriveCapturedViewportCameraRotation(const Vector2& axisValues);
 
 		void SetSelectedEntity(Entity* entity);
-		void SetSelectedComponent(Component* component);
+		void SetSelectedComponent(ComponentOld* component);
 
 		void DriveCameraUpdate(float deltaTime);
 
@@ -102,7 +102,7 @@ namespace Ion::Editor
 
 		World* m_EditorMainWorld;
 		Entity* m_SelectedEntity;
-		Component* m_SelectedComponent;
+		ComponentOld* m_SelectedComponent;
 
 		THashMap<GUID, std::shared_ptr<EditorViewport>> m_Viewports;
 		std::weak_ptr<EditorViewport> m_MainViewport;
@@ -120,7 +120,7 @@ namespace Ion::Editor
 		return m_SelectedEntity;
 	}
 
-	inline Component* EditorApplication::GetSelectedComponent() const
+	inline ComponentOld* EditorApplication::GetSelectedComponent() const
 	{
 		return m_SelectedComponent;
 	}

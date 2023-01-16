@@ -14,7 +14,7 @@ namespace Ion
 {
 	// Component
 
-	Component::Component() :
+	ComponentOld::ComponentOld() :
 		m_bTickEnabled(true),
 		m_WorldContext(nullptr),
 		m_OwningEntity(nullptr),
@@ -24,23 +24,23 @@ namespace Ion
 	{
 	}
 
-	void Component::OnCreate()
+	void ComponentOld::OnCreate()
 	{
 	}
 
-	void Component::OnDestroy()
+	void ComponentOld::OnDestroy()
 	{
 		
 	}
 
-	Component* Component::Duplicate() const
+	ComponentOld* ComponentOld::Duplicate() const
 	{
 		ionassert(m_WorldContext);
-		Component* copy = Duplicate_Internal(m_WorldContext->GetComponentRegistry());
+		ComponentOld* copy = Duplicate_Internal(m_WorldContext->GetComponentRegistry());
 		return copy;
 	}
 
-	void Component::Destroy(bool bReparent)
+	void ComponentOld::Destroy(bool bReparent)
 	{
 		ionassert(m_WorldContext);
 
@@ -90,12 +90,12 @@ namespace Ion
 		m_WorldContext->GetComponentRegistry().MarkForDestroy(this);
 	}
 
-	void Component::SetTickEnabled(bool bTick)
+	void ComponentOld::SetTickEnabled(bool bTick)
 	{
 		m_bTickEnabled = bTick;
 	}
 
-	void Component::InitAsSceneComponent()
+	void ComponentOld::InitAsSceneComponent()
 	{
 		m_bIsSceneComponent = true;
 		//m_bUpdateSceneData = true;
@@ -134,7 +134,7 @@ namespace Ion
 		RegisterComponentClass<MeshComponent>();
 	}
 
-	Component* ComponentRegistry::FindComponentByGUID(const GUID& guid) const
+	ComponentOld* ComponentRegistry::FindComponentByGUID(const GUID& guid) const
 	{
 		auto it = m_ComponentsByGUID.find(guid);
 		if (it != m_ComponentsByGUID.end())
@@ -142,7 +142,7 @@ namespace Ion
 		return nullptr;
 	}
 
-	void ComponentRegistry::MarkForDestroy(Component* component)
+	void ComponentRegistry::MarkForDestroy(ComponentOld* component)
 	{
 		ionassert(component->IsPendingKill());
 		ionassert(m_InvalidComponents.find(component->GetFinalTypeID()) != m_InvalidComponents.end());
@@ -158,7 +158,7 @@ namespace Ion
 		// using the MarkForDestroy function.
 		for (auto& [id, container] : m_InvalidComponents)
 		{
-			for (Component* invalidComponent : container)
+			for (ComponentOld* invalidComponent : container)
 			{
 				ionassert(id == invalidComponent->GetFinalTypeID());
 				DestroyComponent(invalidComponent);

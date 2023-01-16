@@ -370,7 +370,7 @@ namespace Ion::Editor
 		m_SelectedEntity = entity;
 	}
 
-	void EditorApplication::SetSelectedComponent(Component* component)
+	void EditorApplication::SetSelectedComponent(ComponentOld* component)
 	{
 		m_SelectedComponent = component;
 	}
@@ -384,7 +384,7 @@ namespace Ion::Editor
 		SetSelectedEntity(entity);
 	}
 
-	void EditorApplication::SelectObject(Component* component)
+	void EditorApplication::SelectObject(ComponentOld* component)
 	{
 		// If the component has a different owner than the selected entity,
 		// select the owner entity first.
@@ -423,7 +423,7 @@ namespace Ion::Editor
 		SetSelectedEntity(nullptr);
 	}
 
-	bool EditorApplication::DeleteObject(Component* component)
+	bool EditorApplication::DeleteObject(ComponentOld* component)
 	{
 		ionassert(component);
 		Entity* owner = component->GetOwner();
@@ -679,7 +679,7 @@ namespace Ion::Editor
 		else
 		{
 			DeselectCurrentComponent();
-			Component* selectedComponent = GetEditorWorld()->GetComponentRegistry().FindComponentByGUID(clickedGuid);
+			ComponentOld* selectedComponent = GetEditorWorld()->GetComponentRegistry().FindComponentByGUID(clickedGuid);
 			ionassert(selectedComponent);
 			ionassert(selectedComponent->GetOwner());
 			SelectObject(selectedComponent->GetOwner());

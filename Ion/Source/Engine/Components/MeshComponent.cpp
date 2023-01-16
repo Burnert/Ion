@@ -42,7 +42,7 @@ namespace Ion
 		//m_MeshResource->Take([worldGuid = this->GetWorldContext()->GetGuid(), guid = this->GetGUID()](TShared<Mesh> mesh)
 		//{
 		//	World* world = g_Engine->FindWorld(worldGuid);
-		//	Component* component = world->GetComponentRegistry().FindComponentByGUID(guid);
+		//	ComponentOld* component = world->GetComponentRegistry().FindComponentByGUID(guid);
 		//	ionassert(component->IsOfType<MeshComponent>());
 		//	MeshComponent* meshComponent = (MeshComponent*)component;
 		//	meshComponent->SetMesh(mesh);
@@ -51,7 +51,7 @@ namespace Ion
 
 	//void MeshComponent::Tick(float deltaTime)
 	//{
-	//	Component::Tick(deltaTime);
+	//	ComponentOld::Tick(deltaTime);
 	//	LOG_INFO("MeshComponent::Tick({0})", deltaTime);
 	//}
 

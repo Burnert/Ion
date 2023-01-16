@@ -65,7 +65,7 @@ namespace Ion::Editor
 			EditorApplication::Get()->DeleteObject(entity);
 		}
 		m_EntitiesToDestroy.clear();
-		for (Component* component : m_ComponentsToDestroy)
+		for (ComponentOld* component : m_ComponentsToDestroy)
 		{
 			EditorApplication::Get()->DeleteObject(component);
 		}
@@ -281,7 +281,7 @@ namespace Ion::Editor
 				{
 					DrawInsertPanelElement<ESceneObjectType::Component>(info.ClassDisplayName,
 					// This will be called on (drag) drop
-					[](World* context, ComponentTypeID id) -> Component*
+					[](World* context, ComponentTypeID id) -> ComponentOld*
 					{
 						return context->GetComponentRegistry().CreateComponent(id);
 					}, &info);
@@ -550,7 +550,7 @@ namespace Ion::Editor
 				Entity* selectedEntity = EditorApplication::Get()->GetSelectedEntity();
 				if (selectedEntity)
 				{
-					Component* selectedComponent = EditorApplication::Get()->GetSelectedComponent();
+					ComponentOld* selectedComponent = EditorApplication::Get()->GetSelectedComponent();
 
 					const String& selectedObjectName = selectedComponent ?
 						selectedComponent->GetName() :
@@ -725,7 +725,7 @@ namespace Ion::Editor
 					ionassert(payload->DataSize == sizeof(DNDInsertComponentData));
 
 					DNDInsertComponentData& data = *(DNDInsertComponentData*)payload->Data;
-					Component* component = data.Instantiate(EditorApplication::Get()->GetEditorWorld(), data.ID);
+					ComponentOld* component = data.Instantiate(EditorApplication::Get()->GetEditorWorld(), data.ID);
 					entity.AddComponent(component);
 				}
 				ImGui::EndDragDropTarget();
@@ -783,7 +783,7 @@ namespace Ion::Editor
 		}
 	}
 
-	void EditorLayer::DrawComponentDetails(Component& component)
+	void EditorLayer::DrawComponentDetails(ComponentOld& component)
 	{
 		TRACE_FUNCTION();
 
@@ -802,7 +802,7 @@ namespace Ion::Editor
 	}
 
 	template<typename T>
-	static void DrawPropertyScalar(Component& component, INCProperty* prop, ImGuiDataType type, int32 nDims)
+	static void DrawPropertyScalar(ComponentOld& component, INCProperty* prop, ImGuiDataType type, int32 nDims)
 	{
 		TINCPropertyTyped<T>* tProp = (TINCPropertyTyped<T>*)prop;
 		const TNCPropertyOptionalParams<T>& params = tProp->GetParams();
@@ -822,7 +822,7 @@ namespace Ion::Editor
 		}
 	}
 
-	void EditorLayer::DrawComponentDetailsProperty(Component& component, INCProperty* prop)
+	void EditorLayer::DrawComponentDetailsProperty(ComponentOld& component, INCProperty* prop)
 	{
 		ionassert(prop);
 
@@ -896,7 +896,7 @@ namespace Ion::Editor
 		}
 	}
 
-	void EditorLayer::DrawDetailsComponentSection(Component& component)
+	void EditorLayer::DrawDetailsComponentSection(ComponentOld& component)
 	{
 		if (component.IsSceneComponent())
 		{
@@ -1165,7 +1165,7 @@ namespace Ion::Editor
 		String nodeName = component.GetName();
 
 		// Highlight the selected component
-		if ((Component*)&component == EditorApplication::Get()->GetSelectedComponent())
+		if ((ComponentOld*)&component == EditorApplication::Get()->GetSelectedComponent())
 		{
 			imguiNodeFlags |= ImGuiTreeNodeFlags_Selected;
 		}
@@ -1238,7 +1238,7 @@ namespace Ion::Editor
 		const Entity::ComponentSet& nonSceneComponents = entity.GetComponents();
 
 		int64 uniqueIndex = 0;
-		for (Component* component : nonSceneComponents)
+		for (ComponentOld* component : nonSceneComponents)
 		{
 			ionassert(component);
 

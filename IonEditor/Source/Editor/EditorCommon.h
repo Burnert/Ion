@@ -22,7 +22,7 @@ namespace Ion::Editor
 
 	struct DNDInsertComponentData
 	{
-		using InstantiateFunc = Component*(World*, ComponentTypeID);
+		using InstantiateFunc = ComponentOld*(World*, ComponentTypeID);
 		InstantiateFunc* Instantiate;
 		ComponentTypeID ID;
 	};

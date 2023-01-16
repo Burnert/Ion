@@ -66,13 +66,13 @@ namespace Ion::Editor
 		void DrawDetailsEntitySection(Entity& entity);
 		void DrawDetailsTransformSection(Entity& entity);
 		void DrawDetailsRenderingSection(Entity& entity);
-		void DrawDetailsComponentSection(Component& component);
+		void DrawDetailsComponentSection(ComponentOld& component);
 
 		void DrawSceneComponentDetails(SceneComponent& component);
 		void DrawSceneComponentDetailsTransformSection(SceneComponent& component);
 		void DrawSceneComponentDetailsRenderingSection(SceneComponent& component);
-		void DrawComponentDetails(Component& component);
-		void DrawComponentDetailsProperty(Component& component, INCProperty* prop);
+		void DrawComponentDetails(ComponentOld& component);
+		void DrawComponentDetailsProperty(ComponentOld& component, INCProperty* prop);
 
 		/* Returns true if the transform has changed. */
 		bool DrawTransformSection(Transform& inOutTransform);
@@ -108,7 +108,7 @@ namespace Ion::Editor
 		TArray<WorldTreeNode*> m_ExpandWorldTreeChain;
 
 		TArray<Entity*> m_EntitiesToDestroy;
-		TArray<Component*> m_ComponentsToDestroy;
+		TArray<ComponentOld*> m_ComponentsToDestroy;
 
 		TArray<Entity*> m_EntitiesToDuplicate;
 

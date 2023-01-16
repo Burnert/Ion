@@ -6,7 +6,7 @@
 namespace Ion
 {
 	/* Abstract class */
-	class ION_API SceneComponent : public Component
+	class ION_API SceneComponent : public ComponentOld
 	{
 	public:
 		void SetTransform(const Transform& transform);
