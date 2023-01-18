@@ -64,11 +64,11 @@ namespace Ion
 
 		template<typename T>
 		bool Is() const;
-		bool Is(MType* mType) const;
+		bool Is(const MType* mType) const;
 
 		template<typename T>
 		bool IsConvertibleTo() const;
-		bool IsConvertibleTo(MType* mType) const;
+		bool IsConvertibleTo(const MType* mType) const;
 
 		bool IsFundamental() const;
 		bool IsClass() const;
@@ -117,7 +117,7 @@ namespace Ion
 		return typeid(T).hash_code() == m_HashCode;
 	}
 
-	FORCEINLINE bool MType::Is(MType* mType) const
+	FORCEINLINE bool MType::Is(const MType* mType) const
 	{
 		return m_HashCode == mType->m_HashCode;
 	}
@@ -154,6 +154,8 @@ namespace Ion
 			return *reinterpret_cast<const T*>(GetPointer());
 		}
 
+		virtual MObjectPtr AsMObject() const = 0;
+
 	protected:
 		virtual const void* GetPointer() const = 0;
 	};
@@ -171,6 +173,19 @@ namespace Ion
 		virtual MType* GetType() const override
 		{
 			return TGetReflectableType<T>::Type();
+		}
+
+		virtual MObjectPtr AsMObject() const override
+		{
+			if constexpr (TIsObjectPtrV<T>)
+			{
+				return m_Value;
+			}
+			else
+			{
+				ionbreak("MValue::AsMObject called on a non-MObject value.");
+				return nullptr;
+			}
 		}
 
 	protected:
@@ -376,6 +391,7 @@ namespace Ion
 
 	using FMFieldSetterGetter = TFunction<void(MObjectPtr, MValuePtr&)>;
 	using FMFieldReferenceGetter = TFunction<void(MObjectPtr, MReferencePtr&)>;
+	using FMFieldMObjectSetter = TFunction<void(const MObjectPtr&, const MObjectPtr&)>;
 
 	struct MFieldInitializer
 	{
@@ -385,6 +401,7 @@ namespace Ion
 		String Name;
 		FMFieldSetterGetter FSetterGetter;
 		FMFieldReferenceGetter FReferenceGetter;
+		FMFieldMObjectSetter FMObjectSetter;
 		union
 		{
 			EFieldFlags::UType Flags;
@@ -444,6 +461,7 @@ namespace Ion
 
 		FMFieldSetterGetter m_FSetterGetter;
 		FMFieldReferenceGetter m_FReferenceGetter;
+		FMFieldMObjectSetter m_FMObjectSetter;
 
 		union
 		{
@@ -458,6 +476,7 @@ namespace Ion
 		};
 
 		friend class MReflection;
+		friend class MClass;
 	};
 
 	FORCEINLINE const String& MField::GetName() const
@@ -752,7 +771,7 @@ namespace Ion
 
 #pragma region Matter Reflection Class class
 
-	using FMClassInstantiateDefault = TFunction<MObjectPtr(const MObject*)>;
+	using FMClassInstantiateDefault = TFunction<MObjectPtr(const MObjectPtr&)>;
 
 	struct MClassInitializer
 	{
@@ -768,10 +787,10 @@ namespace Ion
 	public:
 		MObjectPtr Instantiate() const;
 
-		const MObject* GetClassDefaultObject() const;
+		const MObjectPtr& GetClassDefaultObject() const;
 
 		template<typename T>
-		const T& GetClassDefaultObjectTyped() const;
+		TObjectPtr<T> GetClassDefaultObjectTyped() const;
 
 		MClass* GetSuperClass() const;
 
@@ -783,12 +802,14 @@ namespace Ion
 
 		void SetupClassDefaultObject(const String& name);
 
+		MObjectPtr CopyFrom(const MObjectPtr& other) const;
+
 	private:
 		MClass* m_SuperClass;
 		TArray<MField*> m_Fields;
 		TArray<MMethod*> m_Methods;
 
-		MObject* m_CDO;
+		MObjectPtr m_CDO;
 		FMClassInstantiateDefault m_FInstantiate;
 
 		friend class MReflection;
@@ -798,16 +819,16 @@ namespace Ion
 		friend Archive& operator&=(Archive& ar, MClass*& mClass);
 	};
 
-	FORCEINLINE const MObject* MClass::GetClassDefaultObject() const
+	FORCEINLINE const MObjectPtr& MClass::GetClassDefaultObject() const
 	{
 		return m_CDO;
 	}
 
 	template<typename T>
-	FORCEINLINE const T& MClass::GetClassDefaultObjectTyped() const
+	FORCEINLINE TObjectPtr<T> MClass::GetClassDefaultObjectTyped() const
 	{
 		ionassert(m_CDO->GetClass()->GetHashCode() == typeid(T).hash_code());
-		return *reinterpret_cast<T*>(m_CDO);
+		return PtrCast<T>(m_CDO);
 	}
 
 	FORCEINLINE MClass* MClass::GetSuperClass() const
@@ -1120,7 +1141,7 @@ namespace Ion
 		return IsConvertibleTo(TGetReflectableType<T>::Type());
 	}
 
-	FORCEINLINE bool MType::IsConvertibleTo(MType* mType) const
+	FORCEINLINE bool MType::IsConvertibleTo(const MType* mType) const
 	{
 		ionassert(mType);
 
@@ -1218,8 +1239,8 @@ FORCEINLINE static MClass* StaticClass() { \
 		/* The super class (nullptr if MObject as it doesn't inherit from anything) */ \
 		TGetReflectableSuperClass<T>::Class(), \
 		/* Instantiate function - Copy construct a new object from the CDO instance. */ \
-		[](const MObject* cdo) -> MObjectPtr { \
-			return MakeShared<T>(*static_cast<const T*>(cdo)); \
+		[](const MObjectPtr& cdo) -> MObjectPtr { \
+			return MakeShared<T>(*static_cast<const T*>(cdo.Raw())); \
 		} \
 	}; \
 	static MClass* c_Class = MReflection::RegisterClass(c_Initializer); \
@@ -1236,6 +1257,16 @@ FORCEINLINE friend Archive& operator&=(Archive& ar, TObjectPtr<T>& value) { \
 }
 
 #define MFIELD(name) \
+template<typename T, typename = void> \
+struct __TMObjectSetter_##name { \
+	void operator()(const MObjectPtr& object, const MObjectPtr& mValue) { } \
+}; \
+template<typename T> \
+struct __TMObjectSetter_##name<typename T, typename TEnableIfT<TIsObjectPtrV<T>>> { \
+	void operator()(const MObjectPtr& object, const MObjectPtr& mValue) { \
+		PtrCast<TThisClass>(object).Raw()->*(&TThisClass::name) = PtrCast<TRemoveObjectPtr<T>::Type>(mValue); \
+	} \
+}; \
 static inline MField* MatterRF_##name = [] { \
 	using TField = decltype(name); \
 	static MType* fieldType = TGetReflectableType<TField>::Type(); \
@@ -1261,6 +1292,8 @@ static inline MField* MatterRF_##name = [] { \
 			TField& fieldRef = PtrCast<TThisClass>(object).Raw()->*(&TThisClass::name); \
 			referenceRef = MakeShared<TMReference<TField>>(fieldRef); \
 		}, \
+		/* MField of MObject type setter for CDO instantiation. */ \
+		__TMObjectSetter_##name<TField>(), \
 		/* Attributes (accessibility, static, etc.) */ \
 		EFieldFlags::None  /* @TODO: I don't think there's a way to get the visibility of a field without code parsing. */ \
 	}; \

@@ -20,7 +20,8 @@ namespace Ion
 		m_Flags(initializer.Flags),
 		m_Name(initializer.Name),
 		m_FSetterGetter(initializer.FSetterGetter),
-		m_FReferenceGetter(initializer.FReferenceGetter)
+		m_FReferenceGetter(initializer.FReferenceGetter),
+		m_FMObjectSetter(initializer.FMObjectSetter)
 	{
 	}
 
@@ -111,13 +112,35 @@ namespace Ion
 
 	MObjectPtr MClass::Instantiate() const
 	{
-		// @TODO: new is used here anyway (needs to be destroyed at some point)
-		// Make this thing use shared ptrs or something
-		MObjectPtr object = m_FInstantiate(GetClassDefaultObject());
+		return CopyFrom(GetClassDefaultObject());
+	}
+
+	MObjectPtr MClass::CopyFrom(const MObjectPtr& other) const
+	{
+		ionassert(other, "Cannot copy from a null pointer.");
+		ionassert(other->GetClass()->Is(this), "Cannot copy an object using a different class.");
+		
+		MObjectPtr object = m_FInstantiate(other);
 
 		// New GUID is needed because it was just copied from the CDO.
 		object->m_Guid = GUID();
 
+		// Perform a deep copy over MObject fields
+		for (MField* field : m_Fields)
+		{
+			ionassert(field);
+
+			if (const MType* fieldType = field->GetType(); fieldType->IsClass())
+			{
+				MObjectPtr defaultValue = field->GetValueEx(object)->AsMObject();
+				if (defaultValue)
+				{
+					defaultValue = static_cast<const MClass*>(fieldType)->CopyFrom(defaultValue);
+				}
+				// The field can be set using a generic MObjectPtr, as this function casts the pointer internally.
+				field->m_FMObjectSetter(object, defaultValue);
+			}
+		}
 		return object;
 	}
 

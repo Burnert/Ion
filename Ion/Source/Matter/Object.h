@@ -17,6 +17,9 @@ namespace Ion
 		template<typename T, TEnableIfT<TIsConvertibleV<T*, MObject*>>* = 0>
 		static TObjectPtr<T> New();
 
+		template<typename T, TEnableIfT<TIsConvertibleV<T*, MObject*>>* = 0>
+		static TObjectPtr<T> ConstructDefault();
+
 		MClass* GetClass() const;
 
 		void SetName(const String& name);
@@ -53,10 +56,18 @@ namespace Ion
 	FORCEINLINE TObjectPtr<T> MObject::New()
 	{
 		MClass* mClass = T::StaticClass();
+		ionassert(mClass);
 
-		TObjectPtr<T> object = PtrCast<T>(mClass->Instantiate());
+		return PtrCast<T>(mClass->Instantiate());
+	}
 
-		return object;
+	template<typename T, TEnableIfT<TIsConvertibleV<T*, MObject*>>*>
+	FORCEINLINE TObjectPtr<T> MObject::ConstructDefault()
+	{
+		MClass* mClass = T::StaticClass();
+		ionassert(mClass);
+
+		return PtrCast<T>(mClass->Instantiate());
 	}
 
 	FORCEINLINE MClass* MObject::GetClass() const

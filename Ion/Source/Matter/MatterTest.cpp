@@ -39,6 +39,8 @@ namespace Ion
 }
 namespace Ion::Test
 {
+#pragma region Matter generic test
+
 	class MMatterTest : public MObject
 	{
 		MCLASS(MMatterTest)
@@ -106,7 +108,7 @@ namespace Ion::Test
 		MMETHOD(Void_IntRefMethod, int32&)
 	};
 
-	void MatterTest()
+	void MatterClassTest()
 	{
 		TObjectPtr<MMatterTest> object = MObject::New<MMatterTest>();
 		ionassert(object);
@@ -397,5 +399,88 @@ namespace Ion::Test
 		}
 
 		//ionbreak();
+	}
+
+#pragma endregion
+
+#pragma region Matter Composite test
+	
+	class MMatterComponent : public MObject
+	{
+		MCLASS(MMatterComponent)
+		using Super = MObject;
+
+		MMatterComponent()
+		{
+		}
+
+		String Str = "TestString";
+		MFIELD(Str)
+
+		int32 Int = 69;
+		MFIELD(Int)
+	};
+	
+	class MMatterComposite : public MObject
+	{
+		MCLASS(MMatterComposite)
+		using Super = MObject;
+
+		MMatterComposite() :
+			Component(MObject::ConstructDefault<MMatterComponent>())
+		{
+			Component->Int = 420;
+			Component->Str = "From Composite";
+		}
+
+		TObjectPtr<MMatterComponent> Component;
+		MFIELD(Component)
+
+		using adfd = TRemoveObjectPtr<decltype(Component)>;
+		String CompositeStr = "CompositeString";
+		MFIELD(CompositeStr)
+	};
+
+	void MatterCompositeTest()
+	{
+		MClass* componentClass = MMatterComponent::MatterRT;
+		MClass* compositeClass = MMatterComposite::MatterRT;
+
+		TObjectPtr<MMatterComponent> component0 = MObject::New<MMatterComponent>();
+
+		TObjectPtr<MMatterComposite> composite0 = MObject::New<MMatterComposite>();
+		TObjectPtr<MMatterComposite> composite1 = MObject::New<MMatterComposite>();
+
+		ionassert(component0->GetClass()->Is(componentClass));
+		ionassert(composite0->GetClass()->Is(compositeClass));
+		ionassert(composite1->GetClass()->Is(compositeClass));
+
+		ionassert(MMatterComposite::MatterRF_Component->GetType()->Is(componentClass));
+
+		ionassert(MMatterComposite::MatterRT->GetClassDefaultObjectTyped<MMatterComposite>()->Component != MMatterComponent::MatterRT->GetClassDefaultObject());
+
+		ionassert(MMatterComposite::MatterRT->GetClassDefaultObjectTyped<MMatterComposite>()->Component->Int == 420);
+		ionassert(composite0->Component->Int == MMatterComposite::MatterRT->GetClassDefaultObjectTyped<MMatterComposite>()->Component->Int);
+		ionassert(composite0->Component->Int == 420);
+		ionassert(composite0->Component->Str == "From Composite");
+		ionassert(MMatterComponent::MatterRT->GetClassDefaultObjectTyped<MMatterComponent>()->Int == 69);
+		ionassert(component0->Int == 69);
+		ionassert(component0->Str == "TestString");
+		ionassert(component0->Int == MMatterComponent::MatterRT->GetClassDefaultObjectTyped<MMatterComponent>()->Int);
+
+		composite0->Component->Int = 10;
+		composite1->Component->Int = 20;
+		ionassert(composite0->Component->Int == 10);
+		ionassert(composite1->Component->Int == 20);
+		ionassert(composite0->Component->Int != composite1->Component->Int);
+		ionassert(composite0->Component != composite1->Component);
+	}
+
+#pragma endregion
+
+	void MatterTest()
+	{
+		MatterClassTest();
+		MatterCompositeTest();
 	}
 }
