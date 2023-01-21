@@ -1,7 +1,7 @@
 #include "IonPCH.h"
 
 #include "SceneComponent.h"
-#include "Engine/Entity/Entity.h"
+#include "Engine/Entity/EntityOld.h"
 
 namespace Ion
 {

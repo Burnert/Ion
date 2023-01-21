@@ -67,7 +67,7 @@ namespace Ion
 		SceneComponent* m_Parent;
 		TArray<SceneComponent*> m_Children;
 
-		friend class Entity;
+		friend class EntityOld;
 	};
 
 	ENTITY_COMPONENT_CLASS_HEADER(EmptySceneComponent);

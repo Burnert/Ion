@@ -1,15 +1,15 @@
 #pragma once
 
-#include "Entity.h"
+#include "EntityOld.h"
 #include "Engine/Components/MeshComponent.h"
 #include "Asset/AssetCommon.h"
 
 namespace Ion
 {
-	class ION_API MeshEntity : public Entity
+	class ION_API MeshEntity : public EntityOld
 	{
 		MCLASS(MeshEntity)
-		using Super = Entity;
+		using Super = EntityOld;
 
 		MeshEntity();
 
@@ -20,16 +20,16 @@ namespace Ion
 		void SetMesh(const std::shared_ptr<Mesh>& mesh);
 		std::shared_ptr<Mesh> GetMesh() const;
 
-		// Entity overrides
+		// EntityOld overrides
 
 		virtual void Serialize(Archive& ar) override;
 
-		virtual Entity* Duplicate_Internal() const override;
+		virtual EntityOld* Duplicate_Internal() const override;
 
 	protected:
 		virtual void OnSpawn(World* worldContext) override;
 		virtual void OnDestroy() override;
 
-		// End of Entity overrides
+		// End of EntityOld overrides
 	};
 }

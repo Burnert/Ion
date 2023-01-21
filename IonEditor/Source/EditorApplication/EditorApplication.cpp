@@ -44,7 +44,7 @@ namespace Ion::Editor
 	}
 
 	constexpr int32 g_nHarnasSqrt = 20;
-	static TArray<Entity*> g_HarnasArray;
+	static TArray<EntityOld*> g_HarnasArray;
 
 	void EditorApplication::OnInit()
 	{
@@ -238,7 +238,7 @@ namespace Ion::Editor
 		//c_Time += deltaTime;
 
 		//int32 nHarnas = 0;
-		//for (Entity*& harnas : g_HarnasArray)
+		//for (EntityOld*& harnas : g_HarnasArray)
 		//{
 		//	if (harnas && m_EditorMainWorld->DoesOwnEntity(harnas))
 		//	{
@@ -365,7 +365,7 @@ namespace Ion::Editor
 		}
 	}
 
-	void EditorApplication::SetSelectedEntity(Entity* entity)
+	void EditorApplication::SetSelectedEntity(EntityOld* entity)
 	{
 		m_SelectedEntity = entity;
 	}
@@ -375,7 +375,7 @@ namespace Ion::Editor
 		m_SelectedComponent = component;
 	}
 
-	void EditorApplication::SelectObject(Entity* entity)
+	void EditorApplication::SelectObject(EntityOld* entity)
 	{
 		if (!entity || m_SelectedComponent && entity != m_SelectedComponent->GetOwner())
 		{
@@ -416,7 +416,7 @@ namespace Ion::Editor
 		DeselectCurrentEntity();
 	}
 
-	void EditorApplication::DeleteObject(Entity* entity)
+	void EditorApplication::DeleteObject(EntityOld* entity)
 	{
 		ionassert(entity);
 		entity->Destroy();
@@ -426,7 +426,7 @@ namespace Ion::Editor
 	bool EditorApplication::DeleteObject(ComponentOld* component)
 	{
 		ionassert(component);
-		Entity* owner = component->GetOwner();
+		EntityOld* owner = component->GetOwner();
 		ionassert(owner);
 
 		// Destroy the component only if it's not the root
@@ -446,7 +446,7 @@ namespace Ion::Editor
 		{
 			if (m_SelectedComponent)
 			{
-				Entity* owner = m_SelectedComponent->GetOwner();
+				EntityOld* owner = m_SelectedComponent->GetOwner();
 				ionassert(owner == m_SelectedEntity);
 
 				// If it's the root component, it won't get deleted,
@@ -461,10 +461,10 @@ namespace Ion::Editor
 		}
 	}
 
-	void EditorApplication::DuplicateObject(Entity* entity)
+	void EditorApplication::DuplicateObject(EntityOld* entity)
 	{
 		ionassert(entity);
-		TObjectPtr<Entity> newEntity = GetEditorWorld()->DuplicateEntity(entity->This());
+		TObjectPtr<EntityOld> newEntity = GetEditorWorld()->DuplicateEntity(entity->This());
 		SetSelectedEntity(newEntity.Raw());
 	}
 

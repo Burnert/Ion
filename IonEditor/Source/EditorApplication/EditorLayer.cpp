@@ -7,7 +7,7 @@
 #include "Editor/LogSettings.h"
 
 #include "Engine/World.h"
-#include "Engine/Entity/Entity.h"
+#include "Engine/Entity/EntityOld.h"
 #include "Engine/Components/SceneComponent.h"
 #include "Engine/Components/MeshComponent.h"
 #include "Engine/Entity/MeshEntity.h"
@@ -60,7 +60,7 @@ namespace Ion::Editor
 
 		DrawEditorUI();
 
-		for (Entity* entity : m_EntitiesToDestroy)
+		for (EntityOld* entity : m_EntitiesToDestroy)
 		{
 			EditorApplication::Get()->DeleteObject(entity);
 		}
@@ -71,7 +71,7 @@ namespace Ion::Editor
 		}
 		m_ComponentsToDestroy.clear();
 
-		for (Entity* entity : m_EntitiesToDuplicate)
+		for (EntityOld* entity : m_EntitiesToDuplicate)
 		{
 			EditorApplication::Get()->DuplicateObject(entity);
 		}
@@ -256,11 +256,11 @@ namespace Ion::Editor
 			ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysUseWindowPadding;
 			if (ImGui::BeginChild("InsertEntityFrame", ImVec2(0, 0), false, flags))
 			{
-				DrawInsertPanelElement<ESceneObjectType::Entity>("Empty Entity", [](World* context, void*) -> Entity*
+				DrawInsertPanelElement<ESceneObjectType::Entity>("Empty Entity", [](World* context, void*) -> EntityOld*
 				{
-					return context->SpawnEntityOfClass<Entity>().Raw();
+					return context->SpawnEntityOfClass<EntityOld>().Raw();
 				});
-				DrawInsertPanelElement<ESceneObjectType::Entity>("Mesh Entity", [](World* context, void*) -> Entity*
+				DrawInsertPanelElement<ESceneObjectType::Entity>("Mesh Entity", [](World* context, void*) -> EntityOld*
 				{
 					return context->SpawnEntityOfClass<MeshEntity>().Raw();
 				});
@@ -396,7 +396,7 @@ namespace Ion::Editor
 
 		bool bHasChildren = node.HasChildren();
 		String nodeName;
-		Entity* entity = nullptr;
+		EntityOld* entity = nullptr;
 
 		ImGuiTreeNodeFlags imguiNodeFlags =
 			ImGuiTreeNodeFlags_DefaultOpen |
@@ -472,7 +472,7 @@ namespace Ion::Editor
 			m_HoveredWorldTreeNodeDragTarget.SetMetaFlag<0>(true);
 
 			bool bCanAttachTo = false;
-			Entity* sourceEntity = nullptr;
+			EntityOld* sourceEntity = nullptr;
 
 			ImGuiDragDropFlags dndFlags = ImGuiDragDropFlags_AcceptPeekOnly;
 			// First, check if the drag and drop node can even be attached to the target.
@@ -547,7 +547,7 @@ namespace Ion::Editor
 		{
 			if (ImGui::Begin("Details", &m_bDetailsPanelOpen))
 			{
-				Entity* selectedEntity = EditorApplication::Get()->GetSelectedEntity();
+				EntityOld* selectedEntity = EditorApplication::Get()->GetSelectedEntity();
 				if (selectedEntity)
 				{
 					ComponentOld* selectedComponent = EditorApplication::Get()->GetSelectedComponent();
@@ -590,7 +590,7 @@ namespace Ion::Editor
 		}
 	}
 
-	void EditorLayer::DrawDetailsNameSection(Entity& entity)
+	void EditorLayer::DrawDetailsNameSection(EntityOld& entity)
 	{
 		TRACE_FUNCTION();
 
@@ -609,7 +609,7 @@ namespace Ion::Editor
 		ImGui::PopID();
 	}
 
-	void EditorLayer::DrawDetailsRelationsSection(Entity& entity)
+	void EditorLayer::DrawDetailsRelationsSection(EntityOld& entity)
 	{
 		TRACE_FUNCTION();
 
@@ -619,7 +619,7 @@ namespace Ion::Editor
 		{
 			// Parent
 
-			Entity* parent = entity.GetParent().Raw();
+			EntityOld* parent = entity.GetParent().Raw();
 			const String& parentNameStr = parent ? parent->GetName() : "None";
 
 			ImGui::Indent();
@@ -669,7 +669,7 @@ namespace Ion::Editor
 		ImGui::PopID();
 	}
 
-	void EditorLayer::DrawDetailsRelationsChildrenSection(Entity& entity)
+	void EditorLayer::DrawDetailsRelationsChildrenSection(EntityOld& entity)
 	{
 		TRACE_FUNCTION();
 
@@ -677,9 +677,9 @@ namespace Ion::Editor
 		if (ImGui::BeginChild("children_list", ImVec2(-FLT_MIN, 4 * ImGui::GetTextLineHeightWithSpacing()), true))
 		{
 			ImGuiStyle& style = ImGui::GetStyle();
-			const TArray<TObjectPtr<Entity>>& children = entity.GetChildren();
+			const TArray<TObjectPtr<EntityOld>>& children = entity.GetChildren();
 			int32 index = 0;
-			for (const TObjectPtr<Entity>& child : children)
+			for (const TObjectPtr<EntityOld>& child : children)
 			{
 				ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 
@@ -703,7 +703,7 @@ namespace Ion::Editor
 		ImGui::PopStyleVar();
 	}
 
-	void EditorLayer::DrawDetailsComponentTreeSection(Entity& entity)
+	void EditorLayer::DrawDetailsComponentTreeSection(EntityOld& entity)
 	{
 		TRACE_FUNCTION();
 
@@ -733,7 +733,7 @@ namespace Ion::Editor
 		}
 	}
 
-	void EditorLayer::DrawDetailsEntitySection(Entity& entity)
+	void EditorLayer::DrawDetailsEntitySection(EntityOld& entity)
 	{
 		DrawDetailsTransformSection(entity);
 		DrawDetailsRenderingSection(entity);
@@ -872,7 +872,7 @@ namespace Ion::Editor
 		}
 	}
 
-	void EditorLayer::DrawDetailsTransformSection(Entity& entity)
+	void EditorLayer::DrawDetailsTransformSection(EntityOld& entity)
 	{
 		TRACE_FUNCTION();
 
@@ -883,7 +883,7 @@ namespace Ion::Editor
 		}
 	}
 
-	void EditorLayer::DrawDetailsRenderingSection(Entity& entity)
+	void EditorLayer::DrawDetailsRenderingSection(EntityOld& entity)
 	{
 		TRACE_FUNCTION();
 
@@ -1097,7 +1097,7 @@ namespace Ion::Editor
 		}
 	}
 
-	void EditorLayer::DrawComponentTreeContent(Entity& entity)
+	void EditorLayer::DrawComponentTreeContent(EntityOld& entity)
 	{
 		TRACE_FUNCTION();
 
@@ -1198,7 +1198,7 @@ namespace Ion::Editor
 		}
 		if (ImGui::BeginPopupContextItem())
 		{
-			Entity* owner = component.GetOwner();
+			EntityOld* owner = component.GetOwner();
 			ionassert(owner);
 			bool bCanDelete = component.GetOwner()->GetRootComponent() != &component;
 			String deleteLabel = bCanDelete ? "Delete" : "Delete Entity";
@@ -1231,11 +1231,11 @@ namespace Ion::Editor
 		return bHasChildren && bImguiTreeNodeOpen;
 	}
 
-	void EditorLayer::DrawComponentTreeNonSceneComponents(Entity& entity)
+	void EditorLayer::DrawComponentTreeNonSceneComponents(EntityOld& entity)
 	{
 		TRACE_FUNCTION();
 
-		const Entity::ComponentSet& nonSceneComponents = entity.GetComponents();
+		const EntityOld::ComponentSet& nonSceneComponents = entity.GetComponents();
 
 		int64 uniqueIndex = 0;
 		for (ComponentOld* component : nonSceneComponents)
@@ -1261,7 +1261,7 @@ namespace Ion::Editor
 		}
 	}
 
-	void EditorLayer::ExpandWorldTreeToEntity(Entity* entity)
+	void EditorLayer::ExpandWorldTreeToEntity(EntityOld* entity)
 	{
 		ionassert(entity);
 

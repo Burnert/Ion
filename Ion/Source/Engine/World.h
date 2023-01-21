@@ -8,12 +8,12 @@ namespace Ion
 {
 #pragma region World
 
-	class Entity;
+	class EntityOld;
 	class World;
 
 	struct WorldTreeNodeData
 	{
-		FORCEINLINE Entity* GetEntity() const
+		FORCEINLINE EntityOld* GetEntity() const
 		{
 			return m_Entity;
 		}
@@ -21,7 +21,7 @@ namespace Ion
 		const String& GetName() const;
 		const GUID& GetEntityGuid() const;
 
-		FORCEINLINE WorldTreeNodeData(Entity* entity) :
+		FORCEINLINE WorldTreeNodeData(EntityOld* entity) :
 			m_Entity(entity)
 		{
 		}
@@ -33,7 +33,7 @@ namespace Ion
 		}
 
 	private:
-		Entity* m_Entity;
+		EntityOld* m_Entity;
 
 	public:
 		FORCEINLINE friend Archive& operator&=(Archive& ar, WorldTreeNodeData& data)
@@ -53,7 +53,7 @@ namespace Ion
 
 	struct WorldTreeFindNodeByEntityPred
 	{
-		WorldTreeFindNodeByEntityPred(Entity* entity) : m_Entity(entity) { }
+		WorldTreeFindNodeByEntityPred(EntityOld* entity) : m_Entity(entity) { }
 
 		bool operator()(WorldTreeNodeData& nodeData)
 		{
@@ -61,7 +61,7 @@ namespace Ion
 		}
 
 	private:
-		Entity* m_Entity;
+		EntityOld* m_Entity;
 	};
 
 	struct WorldInitializer
@@ -72,9 +72,9 @@ namespace Ion
 	class ION_API World
 	{
 	public:
-		using EntityArray = TArray<Entity*>;
-		using EntitySet   = THashSet<Entity*>;
-		using EntityMap   = THashMap<GUID, TObjectPtr<Entity>>;
+		using EntityArray = TArray<EntityOld*>;
+		using EntitySet   = THashSet<EntityOld*>;
+		using EntityMap   = THashMap<GUID, TObjectPtr<EntityOld>>;
 
 		using WorldTreeNodeFactory = TTreeNodeFactory<WorldTreeNodeData>;
 		using WorldTreeNode        = TFastTreeNode<WorldTreeNodeData>;
@@ -94,26 +94,26 @@ namespace Ion
 		TObjectPtr<EntityT> SpawnEntityOfClass(Args&&... args);
 		/* Instantiates an entity of type EntityT, adds it to the world and parents it to the specified entity. */
 		template<typename EntityT, typename... Args>
-		TObjectPtr<EntityT> SpawnAndAttachEntityOfClass(const TObjectPtr<Entity>& attachTo, Args&&... args);
+		TObjectPtr<EntityT> SpawnAndAttachEntityOfClass(const TObjectPtr<EntityOld>& attachTo, Args&&... args);
 
-		TObjectPtr<Entity> DuplicateEntity(const TObjectPtr<Entity>& entity);
+		TObjectPtr<EntityOld> DuplicateEntity(const TObjectPtr<EntityOld>& entity);
 
-		bool DoesOwnEntity(const TObjectPtr<Entity>& entity) const;
+		bool DoesOwnEntity(const TObjectPtr<EntityOld>& entity) const;
 		bool DoesOwnEntity(const GUID& guid) const;
-		TObjectPtr<Entity> FindEntity(const GUID& guid);
+		TObjectPtr<EntityOld> FindEntity(const GUID& guid);
 
-		void ReparentEntityInWorld(const TObjectPtr<Entity>& entity, const TObjectPtr<Entity>& parent);
+		void ReparentEntityInWorld(const TObjectPtr<EntityOld>& entity, const TObjectPtr<EntityOld>& parent);
 
-		void MarkEntityForDestroy(const TObjectPtr<Entity>& entity);
+		void MarkEntityForDestroy(const TObjectPtr<EntityOld>& entity);
 
 		Scene* GetScene() const;
 
 		WorldTreeNode& GetWorldTreeRoot();
 		/* Returns nullptr if the node does not exist. */
-		WorldTreeNode* FindWorldTreeNode(const TObjectPtr<Entity>& entity) const;
-		WorldTreeNode& InsertWorldTreeNode(const TObjectPtr<Entity>& entity);
-		WorldTreeNode& InsertWorldTreeNode(const TObjectPtr<Entity>& entity, WorldTreeNode& parent);
-		void RemoveWorldTreeNode(const TObjectPtr<Entity>& entity);
+		WorldTreeNode* FindWorldTreeNode(const TObjectPtr<EntityOld>& entity) const;
+		WorldTreeNode& InsertWorldTreeNode(const TObjectPtr<EntityOld>& entity);
+		WorldTreeNode& InsertWorldTreeNode(const TObjectPtr<EntityOld>& entity, WorldTreeNode& parent);
+		void RemoveWorldTreeNode(const TObjectPtr<EntityOld>& entity);
 
 		ComponentRegistry& GetComponentRegistry();
 
@@ -122,10 +122,10 @@ namespace Ion
 		const GUID& GetGuid() const;
 
 	private:
-		void InitEntity(const TObjectPtr<Entity>& entity);
-		void AddEntity(const TObjectPtr<Entity>& entity);
-		void AddEntity(const TObjectPtr<Entity>& entity, const TObjectPtr<Entity>& attachTo);
-		void RemoveEntity(const TObjectPtr<Entity>& entity);
+		void InitEntity(const TObjectPtr<EntityOld>& entity);
+		void AddEntity(const TObjectPtr<EntityOld>& entity);
+		void AddEntity(const TObjectPtr<EntityOld>& entity, const TObjectPtr<EntityOld>& attachTo);
+		void RemoveEntity(const TObjectPtr<EntityOld>& entity);
 
 	protected:
 		void BuildRendererData(RRendererData& data, float deltaTime);
@@ -138,11 +138,11 @@ namespace Ion
 	private:
 		World();
 
-		void AddEntityToCollection(const TObjectPtr<Entity>& entity);
-		void RemoveEntityFromCollection(const TObjectPtr<Entity>& entity);
+		void AddEntityToCollection(const TObjectPtr<EntityOld>& entity);
+		void RemoveEntityFromCollection(const TObjectPtr<EntityOld>& entity);
 
-		void AddChildEntity(const TObjectPtr<Entity>& child);
-		void RemoveChildEntity(const TObjectPtr<Entity>& child);
+		void AddChildEntity(const TObjectPtr<EntityOld>& child);
+		void RemoveChildEntity(const TObjectPtr<EntityOld>& child);
 
 	private:
 		GUID m_WorldGUID;
@@ -155,7 +155,7 @@ namespace Ion
 
 		WorldTreeNodeFactory m_WorldTreeNodeFactory;
 		WorldTreeNode* m_WorldTreeRoot;
-		THashMap<Entity*, WorldTreeNode*> m_EntityToWorldTreeNodeMap;
+		THashMap<EntityOld*, WorldTreeNode*> m_EntityToWorldTreeNodeMap;
 
 		Scene* m_Scene; // World is the owner of the scene
 
@@ -173,7 +173,7 @@ namespace Ion
 	template<typename EntityT, typename... Args>
 	inline TObjectPtr<EntityT> World::SpawnEntityOfClass(Args&&... args)
 	{
-		static_assert(TIsBaseOfV<Entity, EntityT>);
+		static_assert(TIsBaseOfV<EntityOld, EntityT>);
 
 		// @TODO: Use some sort of an allocator here
 		TObjectPtr<EntityT> entity = MObject::New<EntityT>(Forward<Args>(args)...);
@@ -182,9 +182,9 @@ namespace Ion
 	}
 
 	template<typename EntityT, typename ...Args>
-	inline TObjectPtr<EntityT> World::SpawnAndAttachEntityOfClass(const TObjectPtr<Entity>& attachTo, Args&& ...args)
+	inline TObjectPtr<EntityT> World::SpawnAndAttachEntityOfClass(const TObjectPtr<EntityOld>& attachTo, Args&& ...args)
 	{
-		static_assert(TIsBaseOfV<Entity, EntityT>);
+		static_assert(TIsBaseOfV<EntityOld, EntityT>);
 
 		EntityT* entity = MObject::New<EntityT>(Forward<Args>(args)...);
 		AddEntity(entity, attachTo);
@@ -224,7 +224,7 @@ namespace Ion
 	{
 	public:
 		GUID WorldGuid = GUID::Zero;
-		TArray<Entity*> Entities;
+		TArray<EntityOld*> Entities;
 		// @TODO: Components here vvvvv
 
 		ASSET_DATA_GETTYPE_IMPL(AT_MapAssetType)

@@ -60,14 +60,14 @@ namespace Ion
 		}
 	}
 
-	Entity* MeshEntity::Duplicate_Internal() const
+	EntityOld* MeshEntity::Duplicate_Internal() const
 	{
 		return nullptr;// new MeshEntity(*this);
 	}
 
 	void MeshEntity::OnSpawn(World* worldContext)
 	{
-		Entity::OnSpawn(worldContext);
+		EntityOld::OnSpawn(worldContext);
 
 		ComponentRegistry& registry = worldContext->GetComponentRegistry();
 		SetRootComponent(registry.CreateComponent<MeshComponent>());
@@ -76,6 +76,6 @@ namespace Ion
 
 	void MeshEntity::OnDestroy()
 	{
-		Entity::OnDestroy();
+		EntityOld::OnDestroy();
 	}
 }

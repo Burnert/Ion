@@ -1,13 +1,13 @@
 #include "IonPCH.h"
 
-#include "Entity.h"
+#include "EntityOld.h"
 #include "MeshEntity.h"
 #include "Engine/World.h"
 #include "Engine/Components/SceneComponent.h"
 
 namespace Ion
 {
-	Entity::Entity() :
+	EntityOld::EntityOld() :
 		m_WorldContext(nullptr),
 		m_Parent(nullptr),
 		m_RootComponent(nullptr),
@@ -18,7 +18,7 @@ namespace Ion
 		m_ClassName = "Entity";
 	}
 
-	void Entity::SetTransform(const Transform& transform)
+	void EntityOld::SetTransform(const Transform& transform)
 	{
 		ionassert(m_RootComponent);
 		m_RootComponent->SetTransform(transform);
@@ -26,7 +26,7 @@ namespace Ion
 		UpdateChildrenWorldTransformCache();
 	}
 
-	void Entity::SetLocation(const Vector3& location)
+	void EntityOld::SetLocation(const Vector3& location)
 	{
 		ionassert(m_RootComponent);
 		m_RootComponent->SetLocation(location);
@@ -34,7 +34,7 @@ namespace Ion
 		UpdateChildrenWorldTransformCache();
 	}
 
-	void Entity::SetRotation(const Rotator& rotation)
+	void EntityOld::SetRotation(const Rotator& rotation)
 	{
 		ionassert(m_RootComponent);
 		m_RootComponent->SetRotation(rotation);
@@ -42,7 +42,7 @@ namespace Ion
 		UpdateChildrenWorldTransformCache();
 	}
 
-	void Entity::SetScale(const Vector3& scale)
+	void EntityOld::SetScale(const Vector3& scale)
 	{
 		ionassert(m_RootComponent);
 		m_RootComponent->SetScale(scale);
@@ -50,7 +50,7 @@ namespace Ion
 		UpdateChildrenWorldTransformCache();
 	}
 
-	void Entity::SetRootComponent(SceneComponent* component)
+	void EntityOld::SetRootComponent(SceneComponent* component)
 	{
 		// Reset the previous root first
 		if (m_RootComponent)
@@ -66,7 +66,7 @@ namespace Ion
 		m_RootComponent->UpdateWorldTransformCache();
 	}
 
-	bool Entity::HasSceneComponent(SceneComponent* component) const
+	bool EntityOld::HasSceneComponent(SceneComponent* component) const
 	{
 		if (m_RootComponent == component)
 			return true;
@@ -78,12 +78,12 @@ namespace Ion
 		//return it != descendants.end();
 	}
 
-	TArray<SceneComponent*> Entity::GetAllOwnedSceneComponents() const
+	TArray<SceneComponent*> EntityOld::GetAllOwnedSceneComponents() const
 	{
 		return TArray<SceneComponent*>(m_SceneComponents.begin(), m_SceneComponents.end());
 	}
 
-	void Entity::AddComponent(ComponentOld* component)
+	void EntityOld::AddComponent(ComponentOld* component)
 	{
 		ionassert(!component->IsSceneComponent(),
 			"Add Scene Components using SceneComponent::AttachTo.");
@@ -92,7 +92,7 @@ namespace Ion
 		BindComponent(component);
 	}
 
-	void Entity::RemoveComponent(ComponentOld* component)
+	void EntityOld::RemoveComponent(ComponentOld* component)
 	{
 		ionassert(!component->IsSceneComponent(),
 			"Remove Scene Components using SceneComponent::Detach.");
@@ -101,13 +101,13 @@ namespace Ion
 		UnbindComponent(component);
 	}
 
-	bool Entity::HasNonSceneComponent(ComponentOld* component) const
+	bool EntityOld::HasNonSceneComponent(ComponentOld* component) const
 	{
 		ionassert(!component->IsSceneComponent());
 		return m_Components.find(component) != m_Components.end();
 	}
 
-	bool Entity::HasComponent(ComponentOld* component) const
+	bool EntityOld::HasComponent(ComponentOld* component) const
 	{
 		if (!component)
 			return false;
@@ -126,7 +126,7 @@ namespace Ion
 		//return it != descendants.end();
 	}
 
-	void Entity::AttachTo(const TObjectPtr<Entity>& parent)
+	void EntityOld::AttachTo(const TObjectPtr<EntityOld>& parent)
 	{
 		if (!parent)
 		{
@@ -157,7 +157,7 @@ namespace Ion
 		UpdateWorldTransformCache();
 	}
 
-	void Entity::Detach()
+	void EntityOld::Detach()
 	{
 		if (m_Parent)
 		{
@@ -169,14 +169,14 @@ namespace Ion
 		}
 	}
 
-	bool Entity::CanAttachTo(const TObjectPtr<Entity>& parent) const
+	bool EntityOld::CanAttachTo(const TObjectPtr<EntityOld>& parent) const
 	{
 		// Can attach if parent isn't a part of the children
-		TArray<TObjectPtr<Entity>> children = GetAllChildren();
+		TArray<TObjectPtr<EntityOld>> children = GetAllChildren();
 		return std::find(children.begin(), children.end(), parent) == children.end();
 	}
 
-	void Entity::Update(float deltaTime)
+	void EntityOld::Update(float deltaTime)
 	{
 		if (m_bTickEnabled)
 		{
@@ -184,18 +184,18 @@ namespace Ion
 		}
 	}
 
-	void Entity::SetNoCreateRootOnSpawn()
+	void EntityOld::SetNoCreateRootOnSpawn()
 	{
-		ionassert(!m_RootComponent, "Only call this in the constructor of a custom Entity class.");
+		ionassert(!m_RootComponent, "Only call this in the constructor of a custom EntityOld class.");
 		m_bCreateEmptyRootOnSpawn = false;
 	}
 
-	void Entity::Tick(float deltaTime)
+	void EntityOld::Tick(float deltaTime)
 	{
 
 	}
 
-	void Entity::OnSpawn(World* worldContext)
+	void EntityOld::OnSpawn(World* worldContext)
 	{
 		if (m_bCreateEmptyRootOnSpawn)
 		{
@@ -205,12 +205,12 @@ namespace Ion
 		}
 	}
 
-	void Entity::OnDestroy()
+	void EntityOld::OnDestroy()
 	{
 
 	}
 
-	void Entity::Serialize(Archive& ar)
+	void EntityOld::Serialize(Archive& ar)
 	{
 		Super::Serialize(ar);
 
@@ -228,7 +228,7 @@ namespace Ion
 
 			TArray<GUID> childrenGuids;
 			childrenGuids.reserve(m_Children.size());
-			std::transform(m_Children.begin(), m_Children.end(), std::back_inserter(childrenGuids), [](const TObjectPtr<Entity>& ent)
+			std::transform(m_Children.begin(), m_Children.end(), std::back_inserter(childrenGuids), [](const TObjectPtr<EntityOld>& ent)
 			{
 				return ent->GetGuid();
 			});
@@ -249,7 +249,7 @@ namespace Ion
 		// @TODO: serialize components
 	}
 
-	void Entity::AddChild(const TObjectPtr<Entity>& child)
+	void EntityOld::AddChild(const TObjectPtr<EntityOld>& child)
 	{
 		ionassert(child);
 		ionassert(std::find(m_Children.begin(), m_Children.end(), child) == m_Children.end());
@@ -257,7 +257,7 @@ namespace Ion
 		m_Children.push_back(child);
 	}
 
-	void Entity::RemoveChild(const TObjectPtr<Entity>& child)
+	void EntityOld::RemoveChild(const TObjectPtr<EntityOld>& child)
 	{
 		ionassert(child);
 
@@ -266,16 +266,16 @@ namespace Ion
 			m_Children.erase(it);
 	}
 
-	void Entity::GetAllChildren(TArray<TObjectPtr<Entity>>& outChildren) const
+	void EntityOld::GetAllChildren(TArray<TObjectPtr<EntityOld>>& outChildren) const
 	{
-		for (const TObjectPtr<Entity>& child : m_Children)
+		for (const TObjectPtr<EntityOld>& child : m_Children)
 		{
 			outChildren.push_back(child);
 			child->GetAllChildren(outChildren);
 		}
 	}
 
-	void Entity::BindComponent(ComponentOld* component)
+	void EntityOld::BindComponent(ComponentOld* component)
 	{
 		ionassert(component);
 
@@ -291,7 +291,7 @@ namespace Ion
 		}
 	}
 
-	void Entity::UnbindComponent(ComponentOld* component)
+	void EntityOld::UnbindComponent(ComponentOld* component)
 	{
 		ionassert(component);
 
@@ -307,10 +307,10 @@ namespace Ion
 		}
 	}
 
-	Entity* Entity::Duplicate() const
+	EntityOld* EntityOld::Duplicate() const
 	{
 		ionassert(!IsPendingKill());
-		Entity* newEntity = Duplicate_Internal();
+		EntityOld* newEntity = Duplicate_Internal();
 
 		//newEntity->m_GUID = GUID();
 
@@ -343,12 +343,12 @@ namespace Ion
 		return newEntity;
 	}
 
-	Entity* Entity::Duplicate_Internal() const
+	EntityOld* EntityOld::Duplicate_Internal() const
 	{
-		return nullptr;// new Entity(*this);
+		return nullptr;// new EntityOld(*this);
 	}
 
-	void Entity::Destroy(bool bReparent)
+	void EntityOld::Destroy(bool bReparent)
 	{
 		ionassert(m_WorldContext);
 
@@ -363,11 +363,11 @@ namespace Ion
 		{
 			// If it doesn't have a parent it will 
 			// get parented to the world root anyway.
-			TObjectPtr<Entity> attachTo = bReparent ?
+			TObjectPtr<EntityOld> attachTo = bReparent ?
 				GetParent() : // World root if none
 				nullptr;      // World root
 
-			for (const TObjectPtr<Entity>& child : m_Children)
+			for (const TObjectPtr<EntityOld>& child : m_Children)
 			{
 				child->AttachTo(attachTo);
 			}
@@ -394,11 +394,11 @@ namespace Ion
 		m_RootComponent = nullptr;
 	}
 
-	void Entity::DestroyWithChildren()
+	void EntityOld::DestroyWithChildren()
 	{
 		if (HasChildren())
 		{
-			for (const TObjectPtr<Entity>& child : m_Children)
+			for (const TObjectPtr<EntityOld>& child : m_Children)
 			{
 				child->DestroyWithChildren();
 			}
@@ -407,16 +407,16 @@ namespace Ion
 		Destroy(false);
 	}
 
-	void Entity::UpdateWorldTransformCache()
+	void EntityOld::UpdateWorldTransformCache()
 	{
 		ionassert(m_RootComponent);
 		m_RootComponent->UpdateWorldTransformCache();
 		UpdateChildrenWorldTransformCache();
 	}
 
-	void Entity::UpdateChildrenWorldTransformCache()
+	void EntityOld::UpdateChildrenWorldTransformCache()
 	{
-		for (const TObjectPtr<Entity>& child : m_Children)
+		for (const TObjectPtr<EntityOld>& child : m_Children)
 		{
 			child->UpdateWorldTransformCache();
 		}

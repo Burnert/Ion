@@ -3,7 +3,7 @@
 #include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "Engine/SceneObjectData.h"
-#include "Engine/Entity/Entity.h"
+#include "Engine/Entity/EntityOld.h"
 #include "Engine/Entity/MeshEntity.h"
 #include "Engine/Components/ComponentOld.h"
 #include "Engine/Components/SceneComponent.h"

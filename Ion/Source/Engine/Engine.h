@@ -3,7 +3,7 @@
 #include "EngineCore.h"
 #include "Matter/Object.h"
 #include "World.h"
-#include "Entity/Entity.h"
+#include "Entity/EntityOld.h"
 
 namespace Ion
 {

@@ -673,7 +673,7 @@ namespace Ion
 		const String& GetName() const;
 
 		/* Returns the Entity that owns the ComponentOld. */
-		Entity* GetOwner() const;
+		EntityOld* GetOwner() const;
 
 		/* Returns the GUID of the ComponentOld.
 		   A GUID is initiated at the creation of the ComponentOld. */
@@ -718,7 +718,7 @@ namespace Ion
 		GUID m_GUID;
 
 	private:
-		Entity* m_OwningEntity;
+		EntityOld* m_OwningEntity;
 		World* m_WorldContext;
 
 		uint8 m_bTickEnabled : 1;
@@ -728,7 +728,7 @@ namespace Ion
 		String m_Name;
 
 		friend class ComponentRegistry;
-		friend class Entity;
+		friend class EntityOld;
 	};
 
 	class IComponentContainer
@@ -879,7 +879,7 @@ namespace Ion
 		return m_Name;
 	}
 
-	inline Entity* ComponentOld::GetOwner() const
+	inline EntityOld* ComponentOld::GetOwner() const
 	{
 		return m_OwningEntity;
 	}

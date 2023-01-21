@@ -2,7 +2,7 @@
 
 #include "ComponentOld.h"
 #include "SceneComponent.h"
-#include "Engine/Entity/Entity.h"
+#include "Engine/Entity/EntityOld.h"
 #include "Engine/World.h"
 
 #include "BehaviorComponent.h"

@@ -27,7 +27,7 @@ namespace Ion::Editor
 
 		EditorLayer(const char* name);
 
-		void ExpandWorldTreeToEntity(Entity* entity);
+		void ExpandWorldTreeToEntity(EntityOld* entity);
 
 	protected:
 		virtual void OnAttach() override;
@@ -59,13 +59,13 @@ namespace Ion::Editor
 		void DrawWorldTreeNode(const WorldTreeNode& node, WorldTreeNode* nextExpandNode = nullptr);
 
 		void DrawDetailsPanel();
-		void DrawDetailsNameSection(Entity& entity);
-		void DrawDetailsRelationsSection(Entity& entity);
-		void DrawDetailsRelationsChildrenSection(Entity& entity);
-		void DrawDetailsComponentTreeSection(Entity& entity);
-		void DrawDetailsEntitySection(Entity& entity);
-		void DrawDetailsTransformSection(Entity& entity);
-		void DrawDetailsRenderingSection(Entity& entity);
+		void DrawDetailsNameSection(EntityOld& entity);
+		void DrawDetailsRelationsSection(EntityOld& entity);
+		void DrawDetailsRelationsChildrenSection(EntityOld& entity);
+		void DrawDetailsComponentTreeSection(EntityOld& entity);
+		void DrawDetailsEntitySection(EntityOld& entity);
+		void DrawDetailsTransformSection(EntityOld& entity);
+		void DrawDetailsRenderingSection(EntityOld& entity);
 		void DrawDetailsComponentSection(ComponentOld& component);
 
 		void DrawSceneComponentDetails(SceneComponent& component);
@@ -83,10 +83,10 @@ namespace Ion::Editor
 
 		void DrawDiagnosticsPanel();
 
-		void DrawComponentTreeContent(Entity& entity);
+		void DrawComponentTreeContent(EntityOld& entity);
 		void DrawComponentTreeNodeChildren(SceneComponent& component, int64 startId = 0);
 		bool DrawComponentTreeSceneComponentNode(SceneComponent& component, int64 id = 0, bool bDrawChildren = false);
-		void DrawComponentTreeNonSceneComponents(Entity& entity);
+		void DrawComponentTreeNonSceneComponents(EntityOld& entity);
 
 		// End of UI drawing related functions
 
@@ -107,10 +107,10 @@ namespace Ion::Editor
 
 		TArray<WorldTreeNode*> m_ExpandWorldTreeChain;
 
-		TArray<Entity*> m_EntitiesToDestroy;
+		TArray<EntityOld*> m_EntitiesToDestroy;
 		TArray<ComponentOld*> m_ComponentsToDestroy;
 
-		TArray<Entity*> m_EntitiesToDuplicate;
+		TArray<EntityOld*> m_EntitiesToDuplicate;
 
 		/* bit 0 - keep the hovered node set */
 		TMetaPointer<const WorldTreeNode> m_HoveredWorldTreeNodeDragTarget;

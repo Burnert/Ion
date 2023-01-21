@@ -2,7 +2,7 @@
 
 #include "MeshComponent.h"
 #include "Engine/Engine.h"
-#include "Engine/Entity/Entity.h"
+#include "Engine/Entity/EntityOld.h"
 #include "Renderer/Renderer.h"
 
 #pragma warning(disable:26815)
