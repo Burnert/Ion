@@ -1,6 +1,7 @@
 #pragma once
 
 #include "EngineCore.h"
+#include "Matter/Object.h"
 #include "World.h"
 #include "Entity/Entity.h"
 
@@ -8,11 +9,23 @@ namespace Ion
 {
 	REGISTER_LOGGER(EngineLogger, "Engine");
 
+	class EngineMObjectInterface
+	{
+		static void RegisterObject(const MObjectPtr& object);
+		static void SetObjectTickEnabled(const MObjectPtr& object, bool bEnabled);
+
+		friend class MObject;
+	};
+
 	class ION_API Engine
 	{
 	public:
+		Engine();
+
 		void Init();
 		void Shutdown();
+
+		/** Main Engine loop */
 		void Update(float deltaTime);
 
 		// Create a world using an initializer
@@ -30,9 +43,27 @@ namespace Ion
 		float GetGlobalDeltaTime() const;
 
 	private:
+		void RemoveInvalidObjectPointers();
+
+		// EngineMObjectInterface:
+
+		void RegisterObject(const MObjectPtr& object);
+		bool IsObjectRegistered(const GUID& guid);
+		void SetObjectTickEnabled(const MObjectPtr& object, bool bEnabled);
+
+		// End of EngineMObjectInterface
+
+	private:
 		TArray<World*> m_RegisteredWorlds;
 
+		// @TODO: Use contiguous collections for faster iteration
+		THashMap<GUID, MWeakObjectPtr> m_MObjects;
+		THashMap<GUID, MWeakObjectPtr> m_TickingMObjects;
+		mutable TArray<GUID> m_InvalidMObjects;
+
 		float m_DeltaTime;
+
+		friend class EngineMObjectInterface;
 	};
 
 	/* Global Engine pointer. Assume it is never null. */
@@ -40,7 +71,7 @@ namespace Ion
 
 	// Inline definitions
 
-	inline float Engine::GetGlobalDeltaTime() const
+	FORCEINLINE float Engine::GetGlobalDeltaTime() const
 	{
 		return m_DeltaTime;
 	}

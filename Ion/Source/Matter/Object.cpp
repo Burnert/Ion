@@ -1,6 +1,7 @@
 #include "IonPCH.h"
 
 #include "Object.h"
+#include "Engine/Engine.h"
 
 namespace Ion
 {
@@ -25,13 +26,28 @@ namespace Ion
 
 	MObject::MObject() :
 		m_Class(nullptr),
-		m_Guid(GUID::Zero)
+		m_Guid(GUID::Zero),
+		m_bTickEnabled(false)
 	{
 		// NOTE: The MObject fields will get set after the constructor is called if the MObject::New method was used.
 	}
 
+	// This is here because Engine.h cannot be included in Object.h
+	void MObject::Register(const MObjectPtr& object)
+	{
+		EngineMObjectInterface::RegisterObject(object);
+	}
+
 	MObject::~MObject()
 	{
+		OnDestroy();
+	}
+
+	void MObject::SetTickEnabled(bool bEnabled)
+	{
+		m_bTickEnabled = bEnabled;
+
+		EngineMObjectInterface::SetObjectTickEnabled(SharedFromThis(), bEnabled);
 	}
 
 	Archive& operator&=(Archive& ar, MObjectPtr& object)

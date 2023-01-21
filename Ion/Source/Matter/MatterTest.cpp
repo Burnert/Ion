@@ -46,7 +46,9 @@ namespace Ion::Test
 		MCLASS(MMatterTest)
 		using Super = MObject;
 
-		MMatterTest() { }
+		MMatterTest()
+		{
+		}
 
 		int32 IntField = 0;
 		MFIELD(IntField)
@@ -476,11 +478,44 @@ namespace Ion::Test
 		ionassert(composite0->Component != composite1->Component);
 	}
 
+	class MMatterTickTest : public MObject
+	{
+		MCLASS(MMatterTickTest)
+		using Super = MObject;
+
+	public:
+		MMatterTickTest()
+		{
+			SetTickEnabled(true);
+		}
+
+		virtual void OnCreate() override
+		{
+			MReflectionLogger.Trace("OnCreate {}.", GetName());
+		}
+
+		virtual void OnDestroy() override
+		{
+			MReflectionLogger.Trace("OnDestroy {}.", GetName());
+		}
+
+		virtual void Tick(float deltaTime) override
+		{
+			MReflectionLogger.Trace("Tick {} {:.2f}ms", GetName(), deltaTime * 1000.0f);
+		}
+	};
+
+	void MatterTickTest()
+	{
+		static TObjectPtr<MMatterTickTest> tickTest = MObject::New<MMatterTickTest>();
+	}
+
 #pragma endregion
 
 	void MatterTest()
 	{
 		MatterClassTest();
 		MatterCompositeTest();
+		MatterTickTest();
 	}
 }
