@@ -1,10 +1,13 @@
 #pragma once
 
 #include "ComponentOld.h"
+#include "Component.h"
 #include "Engine/SceneObjectData.h"
 
 namespace Ion
 {
+#pragma region Old Scene Component
+
 	/* Abstract class */
 	class ION_API SceneComponent : public ComponentOld
 	{
@@ -129,4 +132,31 @@ namespace Ion
 	{
 		return m_Children;
 	}
+
+#pragma endregion
+
+	class ION_API MSceneComponent : public MComponent
+	{
+		MCLASS(MSceneComponent)
+		using Super = MComponent;
+
+	public:
+		MSceneComponent();
+
+	protected:
+		virtual void OnCreate() override;
+		virtual void OnDestroy() override;
+		virtual void Tick(float deltaTime) override;
+
+	private:
+		// @TODO: Make transform reflectable
+		Transform m_Transform;
+		//MFIELD(m_Transform)
+
+		bool m_bVisible;
+		MFIELD(m_bVisible)
+
+		bool m_bVisibleInGame;
+		MFIELD(m_bVisibleInGame)
+	};
 }

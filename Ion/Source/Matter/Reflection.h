@@ -24,7 +24,7 @@ namespace Ion
 
 	namespace ETypeFlags
 	{
-		enum Type
+		enum Type : uint8
 		{
 			None        = 0,
 			Fundamental = 1 << 0,
@@ -1215,6 +1215,7 @@ template<> struct TGetReflectableType<T> { static MType* Type() { return MatterR
 template<> struct TIsReflectableType<T> { static constexpr bool Value = true; };
 
 #define MATTER_DECLARE_CLASS(T) \
+friend class MObject; \
 public: \
 using TThisClass = T; \
 T(const T&) = default; \

@@ -4,6 +4,7 @@
 #include "Matter/Object.h"
 #include "World.h"
 #include "Entity/EntityOld.h"
+#include "Entity/Entity.h"
 
 namespace Ion
 {

@@ -16,8 +16,6 @@ namespace Ion
 		virtual void OnDestroy() override;
 		virtual void Tick(float deltaTime) override;
 
-		
-
 	private:
 	};
 }

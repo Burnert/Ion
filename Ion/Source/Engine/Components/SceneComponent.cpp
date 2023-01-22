@@ -5,6 +5,8 @@
 
 namespace Ion
 {
+#pragma region Old Scene Component
+
 	DECLARE_ENTITY_COMPONENT_CLASS(EmptySceneComponent)
 
 	void SceneComponent::SetTransform(const Transform& transform)
@@ -183,5 +185,25 @@ namespace Ion
 	EmptySceneComponent::EmptySceneComponent()
 	{
 		SetTickEnabled(false);
+	}
+
+#pragma endregion
+
+	MSceneComponent::MSceneComponent() :
+		m_bVisible(true),
+		m_bVisibleInGame(true)
+	{
+	}
+
+	void MSceneComponent::OnCreate()
+	{
+	}
+
+	void MSceneComponent::OnDestroy()
+	{
+	}
+
+	void MSceneComponent::Tick(float deltaTime)
+	{
 	}
 }

@@ -17,6 +17,7 @@
 #include "Engine/Components/DirectionalLightComponent.h"
 #include "Engine/Components/BehaviorComponent.h"
 #include "Engine/Entity/MeshEntity.h"
+#include "Engine/Entity/NullEntity.h"
 
 #include "Material/Material.h"
 
@@ -162,6 +163,10 @@ namespace Ion::Editor
 		RefCountPtrTest();
 
 		Test::ArchiveTest();
+
+		MObjectPtr testObject = MObject::New<MObject>();
+		TObjectPtr<MComponent> testComponent = MObject::New<MComponent>();
+		TObjectPtr<MNullEntity> testEntity = MObject::New<MNullEntity>();
 
 		// Test ryml
 		{
