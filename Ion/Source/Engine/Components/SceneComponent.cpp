@@ -206,4 +206,13 @@ namespace Ion
 	void MSceneComponent::Tick(float deltaTime)
 	{
 	}
+
+	void MSceneComponent::Attach(const TObjectPtr<MSceneComponent>& component)
+	{
+		ionassert(component);
+
+		// @TODO: Make sure the component is not already attached somewhere in the hierarchy.
+
+		m_ChildComponents.emplace_back(component);
+	}
 }

@@ -143,10 +143,17 @@ namespace Ion
 	public:
 		MSceneComponent();
 
+		void SetTransform(const Transform& transform);
 		const Transform& GetTransform() const;
+
+		void SetVisible(bool bVisible);
+		MMETHOD(SetVisible, bool)
 
 		bool IsVisible() const;
 		MMETHOD(IsVisible)
+
+		void Attach(const TObjectPtr<MSceneComponent>& component);
+		MMETHOD(Attach, const TObjectPtr<MSceneComponent>&)
 
 	protected:
 		virtual void OnCreate() override;
@@ -158,6 +165,9 @@ namespace Ion
 		Transform m_Transform;
 		//MFIELD(m_Transform)
 
+		TArray<TObjectPtr<MSceneComponent>> m_ChildComponents;
+		MFIELD(m_ChildComponents)
+
 		bool m_bVisible;
 		MFIELD(m_bVisible)
 
@@ -165,9 +175,19 @@ namespace Ion
 		MFIELD(m_bVisibleInGame)
 	};
 
+	FORCEINLINE void MSceneComponent::SetTransform(const Transform& transform)
+	{
+		m_Transform = transform;
+	}
+
 	FORCEINLINE const Transform& MSceneComponent::GetTransform() const
 	{
 		return m_Transform;
+	}
+
+	FORCEINLINE void MSceneComponent::SetVisible(bool bVisible)
+	{
+		m_bVisible = bVisible;
 	}
 
 	FORCEINLINE bool MSceneComponent::IsVisible() const

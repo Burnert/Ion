@@ -544,7 +544,7 @@ namespace Ion
 		{
 			// @TODO: Gather all components
 			const TObjectPtr<MSceneComponent>& root = entity->GetRootComponent();
-			if (root->IsVisible())
+			if (root && root->IsVisible())
 			{
 				components.emplace_back(root);
 			}

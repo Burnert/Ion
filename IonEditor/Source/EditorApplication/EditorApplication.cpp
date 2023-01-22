@@ -118,6 +118,10 @@ namespace Ion::Editor
 			g_Engine->AddWorld(m_EditorWorld);
 
 			TObjectPtr<MNullEntity> nullEntity = m_EditorWorld->SpawnEntity<MNullEntity>();
+			TObjectPtr<MEntity> entity = m_EditorWorld->SpawnEntity<MEntity>();
+			TObjectPtr<MSceneComponent> sceneComponent = MObject::New<MSceneComponent>();
+			sceneComponent->SetTransform(Transform(Vector3(0.0f, 1.0f, 2.0f)));
+			nullEntity->GetRootComponent()->Attach(sceneComponent);
 		}
 
 		// Unicode test
