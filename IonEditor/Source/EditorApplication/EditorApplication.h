@@ -8,6 +8,13 @@
 
 #include "Renderer/RendererCore.h"
 
+#include "Matter/ObjectPtr.h"
+
+namespace Ion
+{
+	class MWorld;
+}
+
 namespace Ion::Editor
 {
 	class EditorLayer;
@@ -100,7 +107,9 @@ namespace Ion::Editor
 
 		std::shared_ptr<EditorPassData> m_EditorPassData;
 
+		TObjectPtr<MWorld> m_EditorWorld;
 		World* m_EditorMainWorld;
+
 		EntityOld* m_SelectedEntity;
 		ComponentOld* m_SelectedComponent;
 

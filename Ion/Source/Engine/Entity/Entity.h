@@ -8,6 +8,8 @@ namespace Ion
 {
 	REGISTER_LOGGER(MEntityLogger, "Engine::Entity");
 
+	class MWorld;
+
 	class ION_API MEntity : public MObject
 	{
 		MCLASS(MEntity)
@@ -32,13 +34,27 @@ namespace Ion
 		virtual void OnDestroy() override;
 		virtual void Tick(float deltaTime) override;
 
+		/**
+		 * @brief Called right after the entity is spawned in a World.
+		 * m_WorldContext will have been valid by the time this function gets called.
+		 * 
+		 * @see MWorld::SpawnEntity
+		 */
+		virtual void OnSpawn();
+
 	protected:
 		TObjectPtr<MSceneComponent> m_RootComponent;
 		MFIELD(m_RootComponent)
 
 	private:
+		TWeakObjectPtr<MWorld> m_WorldContext;
+		// @TODO: Can't do this because World.h cannot be included here
+		//MFIELD(m_WorldContext)
+
 		TArray<TObjectPtr<MComponent>> m_Components;
 		MFIELD(m_Components)
+
+		friend class MWorld;
 	};
 
 	FORCEINLINE TObjectPtr<MSceneComponent> MEntity::GetRootComponent() const

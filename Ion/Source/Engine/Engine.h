@@ -43,6 +43,10 @@ namespace Ion
 
 		float GetGlobalDeltaTime() const;
 
+		void AddWorld(const TObjectPtr<MWorld>& world);
+		void RemoveWorld(const TObjectPtr<MWorld>& world);
+		void RemoveWorld(const GUID& guid);
+
 	private:
 		void RemoveInvalidObjectPointers();
 
@@ -61,6 +65,8 @@ namespace Ion
 		THashMap<GUID, MWeakObjectPtr> m_MObjects;
 		THashMap<GUID, MWeakObjectPtr> m_TickingMObjects;
 		mutable TArray<GUID> m_InvalidMObjects;
+
+		THashMap<GUID, TObjectPtr<MWorld>> m_ActiveWorlds;
 
 		float m_DeltaTime;
 

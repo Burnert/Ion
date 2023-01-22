@@ -157,6 +157,34 @@ namespace Ion
 
 			scene->LoadSceneData(data);
 		}
+
+		for (auto& [guid, world] : m_ActiveWorlds)
+		{
+			if (!world->GetScene())
+				continue;
+
+			RRendererData data { };
+			world->BuildRendererData(data);
+
+			world->GetScene()->LoadSceneData(data);
+		}
+	}
+
+	void Engine::AddWorld(const TObjectPtr<MWorld>& world)
+	{
+		ionassert(m_ActiveWorlds.find(world->GetGuid()) == m_ActiveWorlds.end());
+
+		m_ActiveWorlds.emplace(world->GetGuid(), world);
+	}
+
+	void Engine::RemoveWorld(const TObjectPtr<MWorld>& world)
+	{
+		RemoveWorld(world->GetGuid());
+	}
+
+	void Engine::RemoveWorld(const GUID& guid)
+	{
+		m_ActiveWorlds.erase(guid);
 	}
 
 	void Engine::RemoveInvalidObjectPointers()

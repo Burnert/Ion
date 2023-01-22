@@ -80,5 +80,6 @@ namespace Ion
 		friend class OpenGLRenderer;
 		friend class DX11Renderer;
 		friend class World;
+		friend class MWorld;
 	};
 }

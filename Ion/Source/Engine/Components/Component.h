@@ -12,6 +12,7 @@ namespace Ion
 	public:
 		MComponent();
 
+	protected:
 		virtual void OnCreate() override;
 		virtual void OnDestroy() override;
 		virtual void Tick(float deltaTime) override;

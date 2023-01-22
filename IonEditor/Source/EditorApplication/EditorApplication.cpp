@@ -95,7 +95,7 @@ namespace Ion::Editor
 
 		Test::MatterTest();
 
-		if (auto result = Asset::Resolve("[Example]/Maps/Dev_Map1"))
+		if (auto result = Asset::Resolve("[Example]/Maps/Dev_Map1"); 0)
 		{
 			m_EditorMainWorld = g_Engine->CreateWorldFromMapAsset(result.Unwrap());
 		}
@@ -111,6 +111,13 @@ namespace Ion::Editor
 			std::shared_ptr<Mesh> mesh = Mesh::CreateFromResource(meshResource);
 			meshEntity->SetMesh(mesh);
 			meshEntity->SetName("MaterialExampleMesh");
+
+			// New MWorld:
+
+			m_EditorWorld = MObject::New<MWorld>();
+			g_Engine->AddWorld(m_EditorWorld);
+
+			TObjectPtr<MNullEntity> nullEntity = m_EditorWorld->SpawnEntity<MNullEntity>();
 		}
 
 		// Unicode test
@@ -166,6 +173,7 @@ namespace Ion::Editor
 
 		MObjectPtr testObject = MObject::New<MObject>();
 		TObjectPtr<MComponent> testComponent = MObject::New<MComponent>();
+		TObjectPtr<MSceneComponent> testSceneComponent = MObject::New<MSceneComponent>();
 		TObjectPtr<MNullEntity> testEntity = MObject::New<MNullEntity>();
 
 		// Test ryml

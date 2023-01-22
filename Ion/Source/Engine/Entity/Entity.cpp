@@ -1,6 +1,7 @@
 #include "IonPCH.h"
 
 #include "Entity.h"
+#include "Engine/World.h"
 
 namespace Ion
 {
@@ -28,5 +29,12 @@ namespace Ion
 	
 	void MEntity::Tick(float deltaTime)
 	{
+	}
+
+	void MEntity::OnSpawn()
+	{
+		ionassert(m_WorldContext);
+
+		MEntityLogger.Trace("Entity {} has been spawned in world {}.", GetName(), m_WorldContext.Raw()->GetName());
 	}
 }

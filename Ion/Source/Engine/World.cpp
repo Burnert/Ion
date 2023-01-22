@@ -2,6 +2,7 @@
 
 #include "World.h"
 #include "Entity/EntityOld.h"
+#include "Entity/Entity.h"
 #include "Renderer/Scene.h"
 #include "Asset/AssetDefinition.h"
 
@@ -496,6 +497,68 @@ namespace Ion
 		inOutCustomData = data;
 
 		return Ok();
+	}
+
+#pragma endregion
+
+#pragma region MWorld
+
+	MWorld::MWorld() :
+		m_Scene(nullptr)
+	{
+	}
+
+	void MWorld::OnCreate()
+	{
+		TRACE_FUNCTION();
+
+		m_Scene = new Scene;
+	}
+	
+	void MWorld::OnDestroy()
+	{
+		checked_delete(m_Scene);
+	}
+	
+	void MWorld::Tick(float deltaTime)
+	{
+	}
+
+	void MWorld::BuildRendererData(RRendererData& data)
+	{
+		TArray<TObjectPtr<MSceneComponent>> visibleComponents = GatherVisibleSceneComponents();
+
+		for (const TObjectPtr<MSceneComponent>& component : visibleComponents)
+		{
+			// component->BuildRendererData(data);
+		}
+	}
+
+	TArray<TObjectPtr<MSceneComponent>> MWorld::GatherVisibleSceneComponents() const
+	{
+		TArray<TObjectPtr<MSceneComponent>> components;
+		// It will probably not be enough if the entities have multiple scene components visible.
+		components.reserve(m_Entities.size());
+		
+		for (auto& [guid, entity] : m_Entities)
+		{
+			// @TODO: Gather all components
+			const TObjectPtr<MSceneComponent>& root = entity->GetRootComponent();
+			if (root->IsVisible())
+			{
+				components.emplace_back(root);
+			}
+		}
+
+		return components;
+	}
+
+	void MWorld::AddEntity(const TObjectPtr<MEntity>& entity)
+	{
+		ionassert(m_Entities.find(entity->GetGuid()) == m_Entities.end(), "Entity {} is already owned by world {}.", entity->GetName(), GetName());
+
+		m_Entities.emplace(entity->GetGuid(), entity);
+		entity->OnSpawn();
 	}
 
 #pragma endregion

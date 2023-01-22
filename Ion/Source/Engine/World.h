@@ -3,6 +3,8 @@
 #include "Components/ComponentOld.h"
 #include "Asset/Asset.h"
 #include "Matter/ObjectPtr.h"
+#include "Matter/Object.h"
+#include "Entity/Entity.h"
 
 namespace Ion
 {
@@ -10,6 +12,7 @@ namespace Ion
 
 	class EntityOld;
 	class World;
+	class MSceneComponent;
 
 	struct WorldTreeNodeData
 	{
@@ -231,6 +234,68 @@ namespace Ion
 	};
 
 	ASSET_TYPE_DEFAULT_DATA_INL_IMPL(MapAssetType, MapAssetData)
+
+#pragma endregion
+
+#pragma region MWorld
+
+	class ION_API MWorld : public MObject
+	{
+		MCLASS(MWorld)
+		using Super = MObject;
+
+	public:
+		MWorld();
+
+		template<typename T, TEnableIfT<TIsConvertibleV<T*, MEntity*>>* = 0>
+		TObjectPtr<T> SpawnEntity();
+
+		const THashMap<GUID, TObjectPtr<MEntity>> GetEntities() const;
+		MMETHOD(GetEntities)
+
+		Scene* GetScene() const;
+
+	protected:
+		virtual void OnCreate() override;
+		virtual void OnDestroy() override;
+		virtual void Tick(float deltaTime) override;
+
+	private:
+		void BuildRendererData(RRendererData& data);
+
+		TArray<TObjectPtr<MSceneComponent>> GatherVisibleSceneComponents() const;
+
+		void AddEntity(const TObjectPtr<MEntity>& entity);
+
+	private:
+		THashMap<GUID, TObjectPtr<MEntity>> m_Entities;
+		MFIELD(m_Entities)
+
+		Scene* m_Scene;
+
+		friend class Engine;
+	};
+
+	template<typename T, TEnableIfT<TIsConvertibleV<T*, MEntity*>>*>
+	FORCEINLINE TObjectPtr<T> MWorld::SpawnEntity()
+	{
+		TObjectPtr<T> entity = MObject::New<T>();
+		entity->m_WorldContext = This();
+
+		AddEntity(entity);
+
+		return entity;
+	}
+
+	FORCEINLINE const THashMap<GUID, TObjectPtr<MEntity>> MWorld::GetEntities() const
+	{
+		return m_Entities;
+	}
+
+	FORCEINLINE Scene* MWorld::GetScene() const
+	{
+		return m_Scene;
+	}
 
 #pragma endregion
 }

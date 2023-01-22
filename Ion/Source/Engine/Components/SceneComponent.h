@@ -143,6 +143,11 @@ namespace Ion
 	public:
 		MSceneComponent();
 
+		const Transform& GetTransform() const;
+
+		bool IsVisible() const;
+		MMETHOD(IsVisible)
+
 	protected:
 		virtual void OnCreate() override;
 		virtual void OnDestroy() override;
@@ -159,4 +164,14 @@ namespace Ion
 		bool m_bVisibleInGame;
 		MFIELD(m_bVisibleInGame)
 	};
+
+	FORCEINLINE const Transform& MSceneComponent::GetTransform() const
+	{
+		return m_Transform;
+	}
+
+	FORCEINLINE bool MSceneComponent::IsVisible() const
+	{
+		return m_bVisible;
+	}
 }
