@@ -1198,20 +1198,17 @@ namespace Ion
 #pragma region Reflection Macros
 
 #define MTYPE(T) \
-inline MType* const MatterRT_##T = [] { \
-	static MTypeInitializer c_Initializer { \
-		/* MType name (same as MClass if used as a base) */ \
-		#T, \
-		/* The compiler provided type hash code */ \
-		typeid(T).hash_code(), \
-		/* Type size in bytes */ \
-		sizeof(T), \
-		/* Type attributes */ \
-		ETypeFlags::Fundamental \
-	}; \
+inline MType* const __RT_##T = [] \
+{ \
+	static MTypeInitializer c_Initializer; \
+	/* The name is same as MClass name if this type is used as its base */ \
+	c_Initializer.Name = #T; \
+	c_Initializer.HashCode = typeid(T).hash_code(); \
+	c_Initializer.Size = sizeof(T); \
+	c_Initializer.Flags = ETypeFlags::Fundamental; \
 	return MReflection::RegisterType(c_Initializer); \
 }(); \
-template<> struct TGetReflectableType<T> { static MType* Type() { return MatterRT_##T; } }; \
+template<> struct TGetReflectableType<T> { static MType* Type() { return __RT_##T; } }; \
 template<> struct TIsReflectableType<T> { static constexpr bool Value = true; };
 
 #define MATTER_DECLARE_CLASS(T) \
@@ -1220,151 +1217,146 @@ public: \
 using TThisClass = T; \
 T(const T&) = default; \
 T(T&&) = default; \
-TObjectPtr<TThisClass> This() { return PtrCast<TThisClass>(SharedFromThis()); } \
-FORCEINLINE static MClass* StaticClass() { \
-	static MClassInitializer c_Initializer { \
-		MTypeInitializer { \
-			/* The MClass name (C_ prefix to differentiate a class name from an object name) */ \
-			"C_"s + #T, \
-			/* The compiler provided type hash code */ \
-			typeid(T).hash_code(), \
-			/* Type size in bytes */ \
-			sizeof(T), \
-			/* Type attributes */ \
-			ETypeFlags::Class \
-		}, \
-		/* Default MObject name */ \
-		#T, \
-		/* CDO instance */ \
-		new T, \
-		/* The super class (nullptr if MObject as it doesn't inherit from anything) */ \
-		TGetReflectableSuperClass<T>::Class(), \
-		/* Instantiate function - Copy construct a new object from the CDO instance. */ \
-		[](const MObjectPtr& cdo) -> MObjectPtr { \
+TObjectPtr<TThisClass> This() \
+{ \
+	return PtrCast<TThisClass>(SharedFromThis()); \
+} \
+FORCEINLINE static MClass* StaticClass() \
+{ \
+	static MClass* c_Class = MReflection::RegisterClass([] \
+	{ \
+		static MTypeInitializer c_TypeInitializer; \
+		/* C_ prefix to differentiate a class name from an object name */ \
+		c_TypeInitializer.Name = "C_" #T; \
+		c_TypeInitializer.HashCode = typeid(T).hash_code(); \
+		c_TypeInitializer.Size = sizeof(T); \
+		c_TypeInitializer.Flags = ETypeFlags::Class; \
+		static MClassInitializer c_ClassInitializer; \
+		c_ClassInitializer.TypeInitializer = c_TypeInitializer; \
+		c_ClassInitializer.CDOName = #T; \
+		c_ClassInitializer.CDO = new T; \
+		/* nullptr if MObject as it doesn't inherit from anything */ \
+		c_ClassInitializer.SuperClass = TGetReflectableSuperClass<T>::Class(); \
+		/* Copy construct a new object from the CDO instance */ \
+		c_ClassInitializer.InstantiateFunc = [](const MObjectPtr& cdo) -> MObjectPtr \
+		{ \
 			return MakeShared<T>(*static_cast<const T*>(cdo.Raw())); \
-		} \
-	}; \
-	static MClass* c_Class = MReflection::RegisterClass(c_Initializer); \
+		}; \
+		return c_ClassInitializer; \
+	}()); \
 	return c_Class; \
 } \
-static inline MClass* const MatterRT = StaticClass();
+static inline MClass* const __RT = StaticClass();
 
 #define MCLASS(T) \
 MATTER_DECLARE_CLASS(T); \
 /* Implement archive operator */ \
-FORCEINLINE friend Archive& operator&=(Archive& ar, TObjectPtr<T>& value) { \
+FORCEINLINE friend Archive& operator&=(Archive& ar, TObjectPtr<T>& value) \
+{ \
 	ar &= SerializeMObject(value); \
 	return ar; \
 }
 
 #define MFIELD(name) \
 template<typename T, typename = void> \
-struct __TMObjectSetter_##name { \
+struct __TMObjectSetter_##name \
+{ \
 	void operator()(const MObjectPtr& object, const MObjectPtr& mValue) { } \
 }; \
 template<typename T> \
-struct __TMObjectSetter_##name<typename T, typename TEnableIfT<TIsObjectPtrV<T>>> { \
-	void operator()(const MObjectPtr& object, const MObjectPtr& mValue) { \
+struct __TMObjectSetter_##name<typename T, typename TEnableIfT<TIsObjectPtrV<T>>> \
+{ \
+	void operator()(const MObjectPtr& object, const MObjectPtr& mValue) \
+	{ \
 		PtrCast<TThisClass>(object).Raw()->*(&TThisClass::name) = PtrCast<TRemoveObjectPtr<T>::Type>(mValue); \
 	} \
 }; \
-static inline MField* MatterRF_##name = [] { \
+static inline MField* __RF_##name = [] \
+{ \
 	using TField = decltype(name); \
-	static MType* fieldType = TGetReflectableType<TField>::Type(); \
-	static MFieldInitializer c_Initializer { \
-		/* The owning class */ \
-		StaticClass(), \
-		/* Reflectable field type */ \
-		fieldType, \
-		/* Offset of the actual field (calculated using a pointer to member) */ \
-		[] { return (size_t)&(((TThisClass*)nullptr)->*(&TThisClass::name)); }(), \
-		/* The name of the field */ \
-		#name, \
-		/* MField FSetterGetter function */ \
-		[](MObjectPtr object, MValuePtr& valueRef) { \
-			/* If the pointer is not null, the function should be used as a setter. */ \
-			if (valueRef) \
-				PtrCast<TThisClass>(object).Raw()->*(&TThisClass::name) = valueRef->As<TField>(); \
-			else \
-				valueRef = MakeShared<TMValue<TField>>(PtrCast<TThisClass>(object).Raw()->*(&TThisClass::name)); \
-		}, \
-		/* MField FReferenceGetter function */ \
-		[](MObjectPtr object, MReferencePtr& referenceRef) { \
-			TField& fieldRef = PtrCast<TThisClass>(object).Raw()->*(&TThisClass::name); \
-			referenceRef = MakeShared<TMReference<TField>>(fieldRef); \
-		}, \
-		/* MField of MObject type setter for CDO instantiation. */ \
-		__TMObjectSetter_##name<TField>(), \
-		/* Attributes (accessibility, static, etc.) */ \
-		EFieldFlags::None  /* @TODO: I don't think there's a way to get the visibility of a field without code parsing. */ \
+	static MFieldInitializer c_Initializer; \
+	c_Initializer.Class = StaticClass(); \
+	c_Initializer.FieldType = TGetReflectableType<TField>::Type(); \
+	c_Initializer.Name = #name; \
+	/* @TODO: I don't think there's a way to get the visibility of a field without a pre-build code generation. */ \
+	c_Initializer.FSetterGetter = [](MObjectPtr object, MValuePtr& valueRef) \
+	{ \
+		/* If the pointer is not null, the function should be used as a setter. */ \
+		if (valueRef) \
+			PtrCast<TThisClass>(object).Raw()->*(&TThisClass::name) = valueRef->As<TField>(); \
+		else \
+			valueRef = MakeShared<TMValue<TField>>(PtrCast<TThisClass>(object).Raw()->*(&TThisClass::name)); \
 	}; \
+	c_Initializer.FReferenceGetter = [](MObjectPtr object, MReferencePtr& referenceRef) \
+	{ \
+		TField& fieldRef = PtrCast<TThisClass>(object).Raw()->*(&TThisClass::name); \
+		referenceRef = MakeShared<TMReference<TField>>(fieldRef); \
+	}; \
+	/* Used in CDO instantiation. */ \
+	c_Initializer.FMObjectSetter = __TMObjectSetter_##name<TField>(); \
+	c_Initializer.Flags = EFieldFlags::None; \
+	/* Offset is calculated using a pointer to member */ \
+	c_Initializer.FieldOffset = [] \
+	{ \
+		return (size_t)&(((TThisClass*)nullptr)->*(&TThisClass::name)); \
+	}(); \
 	return MReflection::RegisterField(c_Initializer); \
 }();
 	
 #define MMETHOD(name, ...) \
-static inline MMethod* MatterRM_##name = [] { \
+static inline MMethod* __RM_##name = [] \
+{ \
 	using FMethod = decltype(&TThisClass::name); \
 	using TMethodParamTypes = TMethodParamPack<__VA_ARGS__>; \
-	static constexpr size_t ParamCount = TMethodParamTypes::Count; \
 	using TReturn = typename TMethodGetReturnType<TThisClass, FMethod, TMethodParamTypes>::Type; \
+	static constexpr size_t ParamCount = TMethodParamTypes::Count; \
 	static_assert(TIsReflectableTypeV<TRemoveConstRef<TReturn>>, "The return type is not reflectable."); \
-	static TArray<MMethodType> parameterTypes = TMethodGetReflectableParamTypes<TMethodParamTypes>::Params(); \
-	static MMethodType returnType = TMethodGetMethodType<TReturn>::Type(); \
-	ionassert(std::all_of(parameterTypes.begin(), parameterTypes.end(), [](const MMethodType& type) { return type.PlainType; })); \
-	static MMethodInitializer c_Initializer { \
-		/* The owning class */ \
-		StaticClass(), \
-		/* Method return type */ \
-		returnType, \
-		/* Method parameter types */ \
-		parameterTypes, \
-		/* The name of the method */ \
-		#name, \
-		/* MMethod FInvoke function */ \
-		[](MObjectPtr object, TArray<MMethodTypeInstance> parameters, MMethodTypeInstance& outRetVal) { \
-			/* Using pure black magic, invoke the function with "unknown" return type, parameter types or count. */ \
-			TMethodInvoker<TThisClass, FMethod, &TThisClass::name, TReturn, TMethodParamTypes>::Invoke(PtrCast<TThisClass>(object), parameters, outRetVal); \
-		}, \
-		/* Attributes (accessibility, static, etc.) */ \
-		EMethodFlags::None \
+	static MMethodInitializer c_Initializer; \
+	c_Initializer.Class = StaticClass(); \
+	c_Initializer.ReturnType = TMethodGetMethodType<TReturn>::Type(); \
+	c_Initializer.ParameterTypes = TMethodGetReflectableParamTypes<TMethodParamTypes>::Params(); \
+	ionassert(std::all_of(c_Initializer.ParameterTypes.begin(), c_Initializer.ParameterTypes.end(), [](const MMethodType& type) { return type.PlainType; })); \
+	c_Initializer.Name = #name; \
+	c_Initializer.FInvoke = [](MObjectPtr object, TArray<MMethodTypeInstance> parameters, MMethodTypeInstance& outRetVal) \
+	{ \
+		/* Using template meta-black-magic, invoke the function with "unknown" return type, parameter types or count. */ \
+		TMethodInvoker<TThisClass, FMethod, &TThisClass::name, TReturn, TMethodParamTypes>::Invoke(PtrCast<TThisClass>(object), parameters, outRetVal); \
 	}; \
+	c_Initializer.Flags = EMethodFlags::None; \
 	return MReflection::RegisterMethod(c_Initializer); \
 }();
 
 #define MENUM(T) \
-static inline MEnum* MatterRE_##T = [] { \
+static inline MEnum* __RE_##T = [] \
+{ \
 	using TUnderlying = std::underlying_type_t<T>; \
 	using TParser = TEnumParser<T>; \
-	static MEnumInitializer c_Initializer { \
-		MTypeInitializer { \
-			/* The MEnum name (E_ prefix) */ \
-			"E_"s + #T, \
-			/* The compiler provided type hash code */ \
-			typeid(T).hash_code(), \
-			/* Type size in bytes */ \
-			sizeof(T), \
-			/* Type attributes */ \
-			ETypeFlags::Enum \
-		}, \
-		/* Underlying enum type */ \
-		TGetReflectableType<TUnderlying>::Type(), \
-		/* 2-way conversion function */ \
-		[](uint64& value, String& sValue) -> bool { \
-			/* If the string is empty, apply ToString conversion */ \
-			if (sValue.empty()) { \
-				sValue = TParser::ToString((T)value); \
-				return !sValue.empty(); \
-			} \
-			else { \
-				TOptional<T> opt = TParser::FromString(sValue); \
-				if (opt) value = (uint64)*opt; \
-				return (bool)opt; \
-			} \
+	static MTypeInitializer c_TypeInitializer; \
+	c_TypeInitializer.Name = "E_" #T; \
+	c_TypeInitializer.HashCode = typeid(T).hash_code(); \
+	c_TypeInitializer.Size = sizeof(T); \
+	c_TypeInitializer.Flags = ETypeFlags::Enum; \
+	static MEnumInitializer c_EnumInitializer; \
+	c_EnumInitializer.TypeInitializer = c_TypeInitializer; \
+	c_EnumInitializer.UnderlyingType = TGetReflectableType<TUnderlying>::Type(); \
+	c_EnumInitializer.FConverter = [](uint64& value, String& sValue) -> bool \
+	{ \
+		/* If the string is empty, apply ToString conversion */ \
+		if (sValue.empty()) \
+		{ \
+			sValue = TParser::ToString((T)value); \
+			return !sValue.empty(); \
+		} \
+		else \
+		{ \
+			TOptional<T> opt = TParser::FromString(sValue); \
+			if (opt) value = (uint64)*opt; \
+			return (bool)opt; \
 		} \
 	}; \
-	return MReflection::RegisterEnum(c_Initializer); \
+	return MReflection::RegisterEnum(c_EnumInitializer); \
 }(); \
-template<> struct TGetReflectableType<T> { static MType* Type() { return MatterRE_##T; } }; \
+template<> struct TGetReflectableType<T> { static MType* Type() { return __RE_##T; } }; \
 template<> struct TIsReflectableType<T> { static constexpr bool Value = true; };
 
 #pragma endregion
@@ -1384,7 +1376,7 @@ template<> struct TIsReflectableType<T> { static constexpr bool Value = true; };
 	MTYPE(double)
 
 	/* Custom void type (can't be used as a field or parameter, only method return type) */
-	inline MType* const MatterRT_void = [] {
+	inline MType* const __RT_void = [] {
 		static MTypeInitializer c_Initializer { };
 		c_Initializer.Name = "void";
 		c_Initializer.HashCode = typeid(void).hash_code();
@@ -1392,7 +1384,7 @@ template<> struct TIsReflectableType<T> { static constexpr bool Value = true; };
 		c_Initializer.Flags = ETypeFlags::Void;
 		return MReflection::RegisterType(c_Initializer);
 	}();
-	template<> struct TGetReflectableType<void> { static MType* Type() { return MatterRT_void; } };
+	template<> struct TGetReflectableType<void> { static MType* Type() { return __RT_void; } };
 	template<> struct TIsReflectableType<void> { static constexpr bool Value = true; };
 
 #pragma endregion
@@ -1458,7 +1450,7 @@ template<> struct TIsReflectableType<T> { static constexpr bool Value = true; };
 
 		// Lazily register a new type for every possible element type.
 		MArrayInitializer initializer { };
-		initializer.TypeInitializer.Name = fmt::format("Array<{}>", TGetReflectableType<T>::Type()->GetName());
+		initializer.TypeInitializer.Name = fmt::format("Array<{}>", elementType->GetName());
 		initializer.TypeInitializer.HashCode = typeid(TArray<T>).hash_code();
 		initializer.TypeInitializer.Size = sizeof(TArray<T>);
 		initializer.TypeInitializer.Flags = ETypeFlags::Collection;
@@ -1554,7 +1546,7 @@ template<> struct TIsReflectableType<T> { static constexpr bool Value = true; };
 
 		// Lazily register a new type for every possible element type.
 		MHashMapInitializer initializer { };
-		initializer.TypeInitializer.Name = fmt::format("HashMap<{}, {}>", TGetReflectableType<K>::Type()->GetName(), TGetReflectableType<V>::Type()->GetName());
+		initializer.TypeInitializer.Name = fmt::format("HashMap<{}, {}>", keyType->GetName(), valueType->GetName());
 		initializer.TypeInitializer.HashCode = typeid(THashMap<K, V>).hash_code();
 		initializer.TypeInitializer.Size = sizeof(THashMap<K, V>);
 		initializer.TypeInitializer.Flags = ETypeFlags::Collection;
