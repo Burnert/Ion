@@ -190,9 +190,34 @@ namespace Ion
 #pragma endregion
 
 	MSceneComponent::MSceneComponent() :
-		m_bVisible(true),
-		m_bVisibleInGame(true)
+		bVisible(true),
+		bVisibleInGame(true)
 	{
+	}
+
+	void MSceneComponent::Attach(const TObjectPtr<MSceneComponent>& component)
+	{
+		ionassert(component);
+
+		TArray<TObjectPtr<MSceneComponent>> children = component->GetAllChildren();
+
+		if (std::find(children.begin(), children.end(), This()) != children.end())
+		{
+			m_ChildComponents.emplace_back(component);
+		}
+		else
+		{
+			MComponentLogger.Warn("Cannot attach {} to {}. The second component is a child of the first.", component->GetName(), GetName());
+		}
+	}
+
+	TArray<TObjectPtr<MSceneComponent>> MSceneComponent::GetAllChildren() const
+	{
+		TArray<TObjectPtr<MSceneComponent>> children;
+		// Roughly approximate possible child count
+		children.reserve(m_ChildComponents.size() * 3);
+		GetAllChildren_Internal(children);
+		return children;
 	}
 
 	void MSceneComponent::OnCreate()
@@ -207,12 +232,12 @@ namespace Ion
 	{
 	}
 
-	void MSceneComponent::Attach(const TObjectPtr<MSceneComponent>& component)
+	void MSceneComponent::GetAllChildren_Internal(TArray<TObjectPtr<MSceneComponent>>& outChildren) const
 	{
-		ionassert(component);
-
-		// @TODO: Make sure the component is not already attached somewhere in the hierarchy.
-
-		m_ChildComponents.emplace_back(component);
+		for (const TObjectPtr<MSceneComponent>& child : m_ChildComponents)
+		{
+			outChildren.emplace_back(child);
+			child->GetAllChildren_Internal(outChildren);
+		}
 	}
 }

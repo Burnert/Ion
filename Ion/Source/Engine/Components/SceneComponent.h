@@ -143,17 +143,14 @@ namespace Ion
 	public:
 		MSceneComponent();
 
-		void SetTransform(const Transform& transform);
-		const Transform& GetTransform() const;
-
-		void SetVisible(bool bVisible);
-		MMETHOD(SetVisible, bool)
-
-		bool IsVisible() const;
-		MMETHOD(IsVisible)
-
 		void Attach(const TObjectPtr<MSceneComponent>& component);
 		MMETHOD(Attach, const TObjectPtr<MSceneComponent>&)
+
+		const TArray<TObjectPtr<MSceneComponent>> GetChildComponents() const;
+		MMETHOD(GetChildComponents)
+
+		TArray<TObjectPtr<MSceneComponent>> GetAllChildren() const;
+		MMETHOD(GetAllChildren)
 
 	protected:
 		virtual void OnCreate() override;
@@ -161,37 +158,27 @@ namespace Ion
 		virtual void Tick(float deltaTime) override;
 
 	private:
+		void GetAllChildren_Internal(TArray<TObjectPtr<MSceneComponent>>& outChildren) const;
+
+	public:
 		// @TODO: Make transform reflectable
-		Transform m_Transform;
+		Transform Transform;
 		//MFIELD(m_Transform)
 
+	private:
 		TArray<TObjectPtr<MSceneComponent>> m_ChildComponents;
 		MFIELD(m_ChildComponents)
 
-		bool m_bVisible;
-		MFIELD(m_bVisible)
+	public:
+		bool bVisible;
+		MFIELD(bVisible)
 
-		bool m_bVisibleInGame;
-		MFIELD(m_bVisibleInGame)
+		bool bVisibleInGame;
+		MFIELD(bVisibleInGame)
 	};
 
-	FORCEINLINE void MSceneComponent::SetTransform(const Transform& transform)
+	FORCEINLINE const TArray<TObjectPtr<MSceneComponent>> MSceneComponent::GetChildComponents() const
 	{
-		m_Transform = transform;
-	}
-
-	FORCEINLINE const Transform& MSceneComponent::GetTransform() const
-	{
-		return m_Transform;
-	}
-
-	FORCEINLINE void MSceneComponent::SetVisible(bool bVisible)
-	{
-		m_bVisible = bVisible;
-	}
-
-	FORCEINLINE bool MSceneComponent::IsVisible() const
-	{
-		return m_bVisible;
+		return m_ChildComponents;
 	}
 }

@@ -4,6 +4,8 @@
 
 namespace Ion
 {
+	REGISTER_LOGGER(MComponentLogger, "Engine::MComponent");
+
 	class ION_API MComponent : public MObject
 	{
 		MCLASS(MComponent)
