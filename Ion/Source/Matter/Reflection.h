@@ -1347,7 +1347,6 @@ template<> struct TIsReflectableType<T> { static constexpr bool Value = true; };
 #define MATTER_DECLARE_CLASS(T) \
 friend class MObject; \
 friend MClass* _Private_Matter::_MakeMClass<T>(const char* className, const char* cdoName); \
-public: \
 using TThisClass = T; \
 T(const T&) = default; \
 T(T&&) = default; \

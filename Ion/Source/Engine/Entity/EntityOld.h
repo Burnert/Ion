@@ -11,6 +11,7 @@ namespace Ion
 
 	class ION_API EntityOld : public MObject
 	{
+	public:
 		MCLASS(EntityOld)
 		using Super = MObject;
 

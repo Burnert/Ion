@@ -6,6 +6,7 @@ namespace Ion
 {
 	class ION_API MNullEntity : public MEntity
 	{
+	public:
 		MCLASS(MNullEntity)
 		using Super = MEntity;
 

@@ -241,6 +241,7 @@ namespace Ion
 
 	class ION_API MWorld : public MObject
 	{
+	public:
 		MCLASS(MWorld)
 		using Super = MObject;
 

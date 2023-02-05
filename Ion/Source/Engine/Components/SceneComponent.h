@@ -137,6 +137,7 @@ namespace Ion
 
 	class ION_API MSceneComponent : public MComponent
 	{
+	public:
 		MCLASS(MSceneComponent)
 		using Super = MComponent;
 

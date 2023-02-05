@@ -12,6 +12,7 @@ namespace Ion
 
 	class ION_API MEntity : public MObject
 	{
+	public:
 		MCLASS(MEntity)
 		using Super = MObject;
 

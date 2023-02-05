@@ -8,6 +8,7 @@ namespace Ion
 
 	class ION_API MComponent : public MObject
 	{
+	public:
 		MCLASS(MComponent)
 		using Super = MObject;
 

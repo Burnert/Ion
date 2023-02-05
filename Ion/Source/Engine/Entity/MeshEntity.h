@@ -8,6 +8,7 @@ namespace Ion
 {
 	class ION_API MeshEntity : public EntityOld
 	{
+	public:
 		MCLASS(MeshEntity)
 		using Super = EntityOld;
 

@@ -43,6 +43,7 @@ namespace Ion::Test
 
 	class MMatterTest : public MObject
 	{
+	public:
 		MCLASS(MMatterTest)
 		using Super = MObject;
 
@@ -409,6 +410,7 @@ namespace Ion::Test
 	
 	class MMatterComponent : public MObject
 	{
+	public:
 		MCLASS(MMatterComponent)
 		using Super = MObject;
 
@@ -425,6 +427,7 @@ namespace Ion::Test
 	
 	class MMatterComposite : public MObject
 	{
+	public:
 		MCLASS(MMatterComposite)
 		using Super = MObject;
 
@@ -480,6 +483,7 @@ namespace Ion::Test
 
 	class MMatterTickTest : public MObject
 	{
+	public:
 		MCLASS(MMatterTickTest)
 		using Super = MObject;
 
