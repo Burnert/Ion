@@ -481,7 +481,7 @@ namespace Ion::Editor
 	void EditorApplication::DuplicateObject(EntityOld* entity)
 	{
 		ionassert(entity);
-		TObjectPtr<EntityOld> newEntity = GetEditorWorld()->DuplicateEntity(entity->This());
+		TObjectPtr<EntityOld> newEntity = GetEditorWorld()->DuplicateEntity(entity->AsPtr());
 		SetSelectedEntity(newEntity.Raw());
 	}
 

@@ -147,12 +147,12 @@ namespace Ion
 		// Update children in parents
 		
 		if (m_Parent)
-			m_Parent->RemoveChild(This());
+			m_Parent->RemoveChild(AsPtr());
 
-		parent->AddChild(This());
+		parent->AddChild(AsPtr());
 
 		m_Parent = parent;
-		m_WorldContext->ReparentEntityInWorld(This(), parent);
+		m_WorldContext->ReparentEntityInWorld(AsPtr(), parent);
 
 		UpdateWorldTransformCache();
 	}
@@ -161,9 +161,9 @@ namespace Ion
 	{
 		if (m_Parent)
 		{
-			m_Parent->RemoveChild(This());
+			m_Parent->RemoveChild(AsPtr());
 			m_Parent = nullptr;
-			m_WorldContext->ReparentEntityInWorld(This(), nullptr);
+			m_WorldContext->ReparentEntityInWorld(AsPtr(), nullptr);
 
 			UpdateWorldTransformCache();
 		}
@@ -376,7 +376,7 @@ namespace Ion
 		Detach();
 
 		// World is going to remove the entity from its collections
-		m_WorldContext->MarkEntityForDestroy(This());
+		m_WorldContext->MarkEntityForDestroy(AsPtr());
 
 		// Destroy the components too
 

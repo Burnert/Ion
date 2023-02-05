@@ -81,7 +81,7 @@ namespace Ion::Test
 		int32 Int_IntMethod(int32 param) { MReflectionLogger.Debug("Int_IntMethod called {}", param); return param; }
 		MMETHOD(Int_IntMethod, int32)
 
-		TObjectPtr<MMatterTest> MMatterTest_IntMethod(int32 param) { MReflectionLogger.Debug("MMatterTest_IntMethod called {}", param); return This(); }
+		TObjectPtr<MMatterTest> MMatterTest_IntMethod(int32 param) { MReflectionLogger.Debug("MMatterTest_IntMethod called {}", param); return AsPtr(); }
 		MMETHOD(MMatterTest_IntMethod, int32)
 
 		MObjectPtr MObject_MObjectMethod(MObjectPtr const& param) { MReflectionLogger.Debug("MObject_MObjectMethod called {}", (void*)param.Raw()); return param; }

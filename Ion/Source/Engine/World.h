@@ -280,7 +280,7 @@ namespace Ion
 	FORCEINLINE TObjectPtr<T> MWorld::SpawnEntity()
 	{
 		TObjectPtr<T> entity = MObject::New<T>();
-		entity->m_WorldContext = This();
+		entity->m_WorldContext = AsPtr();
 
 		AddEntity(entity);
 

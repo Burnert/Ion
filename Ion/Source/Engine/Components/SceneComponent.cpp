@@ -201,7 +201,7 @@ namespace Ion
 
 		TArray<TObjectPtr<MSceneComponent>> children = component->GetAllChildren();
 
-		if (std::find(children.begin(), children.end(), This()) != children.end())
+		if (std::find(children.begin(), children.end(), AsPtr()) != children.end())
 		{
 			m_ChildComponents.emplace_back(component);
 		}

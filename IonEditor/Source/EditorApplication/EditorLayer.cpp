@@ -454,7 +454,7 @@ namespace Ion::Editor
 			{
 				// Show the action that is going to be performed
 				const WorldTreeNodeData& hovered = m_HoveredWorldTreeNodeDragTarget->Get();
-				bool bCanAttach = entity->CanAttachTo(hovered.GetEntity()->This());
+				bool bCanAttach = entity->CanAttachTo(hovered.GetEntity()->AsPtr());
 				const char* action = bCanAttach ? "Attach" : "Cannot attach";
 				ImGui::Text("%s %s to %s", action, node.Get().GetName().c_str(), hovered.GetName().c_str());
 			}
@@ -486,7 +486,7 @@ namespace Ion::Editor
 					ionassert(sourceEntity);
 					// If the target entity is in the source entity's children,
 					// it cannot be attached to.
-					bCanAttachTo = sourceEntity->CanAttachTo(entity->This());
+					bCanAttachTo = sourceEntity->CanAttachTo(entity->AsPtr());
 				}
 			}
 			if (bCanAttachTo)
@@ -495,7 +495,7 @@ namespace Ion::Editor
 				if (ImGui::AcceptDragDropPayload(DNDID_WorldTreeNode, ImGuiDragDropFlags_None))
 				{
 					// Attach source entity to this node's entity
-					sourceEntity->AttachTo(entity->This());
+					sourceEntity->AttachTo(entity->AsPtr());
 					ExpandWorldTreeToEntity(sourceEntity);
 				}
 			}
@@ -1268,7 +1268,7 @@ namespace Ion::Editor
 		// Discard the previous attempt
 		m_ExpandWorldTreeChain.clear();
 
-		WorldTreeNode* node = EditorApplication::Get()->GetEditorWorld()->FindWorldTreeNode(entity->This());
+		WorldTreeNode* node = EditorApplication::Get()->GetEditorWorld()->FindWorldTreeNode(entity->AsPtr());
 		// Don't include the tree root
 		while ((node = node->GetParent()) && node->HasParent())
 		{

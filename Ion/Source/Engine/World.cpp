@@ -66,7 +66,7 @@ namespace Ion
 
 		for (EntityOld* entity : mapData->Entities)
 		{
-			world->AddEntity(entity->This());
+			world->AddEntity(entity->AsPtr());
 		}
 
 		// @TODO: setup relations
@@ -114,7 +114,7 @@ namespace Ion
 		// Destroy entities that are pending kill
 		for (EntityOld* entity : m_EntitiesPendingKill)
 		{
-			RemoveEntity(entity->This());
+			RemoveEntity(entity->AsPtr());
 		}
 		m_EntitiesPendingKill.clear();
 
@@ -180,7 +180,7 @@ namespace Ion
 		WorldTreeNode* parentNode = FindWorldTreeNode(attachTo);
 		ionverify(parentNode, "Entity to attach to doesn't exist in the world.");
 
-		TObjectPtr<EntityOld> parent = parentNode->Get().GetEntity()->This();
+		TObjectPtr<EntityOld> parent = parentNode->Get().GetEntity()->AsPtr();
 
 		InitEntity(entity);
 

@@ -1351,7 +1351,7 @@ public: \
 using TThisClass = T; \
 T(const T&) = default; \
 T(T&&) = default; \
-TObjectPtr<TThisClass> This() \
+TObjectPtr<TThisClass> AsPtr() \
 { \
 	return PtrCast<TThisClass>(SharedFromThis()); \
 } \
